@@ -1,0 +1,23 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
+
+  <ItemGroup>
+    <ProjectFile Include="Analysis\Analysis.csproj"/>
+    <ProjectFile Include="Analyzer\Analyzer.csproj"/>
+    <ProjectFile Include="Attacher\Attacher.csproj"/>
+    <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
+    <ProjectFile Include="Hpc\Hpc.csproj"/>
+    <ProjectFile Include="IronPython\IronPython.csproj"/>
+    <ProjectFile Include="Profiling\Profiling.csproj"/>
+    <ProjectFile Include="PythonTools\PythonTools.csproj"/>
+
+    <ProjectFile Include="ReplWindow\ReplWindow.csproj"/>
+
+    <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
+    <ProjectFile Include="VsPyProf\VsPyProf.vcxproj"/>
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+
+</Project>

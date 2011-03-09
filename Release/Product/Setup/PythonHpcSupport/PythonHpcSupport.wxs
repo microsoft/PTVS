@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define InstallLocationName = "PythonHpc" ?>
+
+  <Module Id="PythonHpc" Language="1033" Version="1.0.0.0">
+    <Package Id="EE61D3B2-4D07-4EDE-84CE-1338B956ABF0" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
+
+    <Property Id="VSINSTALLPATH">
+      <RegistrySearch Id="VSInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\10.0\Setup\VS" Name="EnvironmentDirectory" Type="directory" />
+    </Property>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="VSINSTALLPATH">
+        <Directory Id="_EB81DD59F2004D80920C8419FDB26819" Name="Extensions">
+          <Directory Id="_53E246BD78E24B9BB99B7BBE8C7F077C" Name="Microsoft">
+            <Directory Id="_CECA38A01D8B4B79B2F2BE809AFAD70C" Name="Python Tools HPC Support">
+              <Directory Id="INSTALLLOCATION" Name="1.0">
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <ComponentGroupRef Id="PythonHpcSupportExt"/>
+  </Module>
+</Wix>

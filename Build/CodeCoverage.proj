@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="">
+
+  <Target Name="MessagesCC">
+    <Message Text="Code Coverage Build"></Message>
+    <Message Text="%24(TemplateFile) = %22$(TemplateFile)%22"></Message>
+    <Message Text="%24(OutputFile) = %22$(OutputFile)%22"></Message>
+  </Target>
+
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)'==''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dirs.proj))</BuildRoot>
+    <GenCCItemsCommand>&quot;$(BuildRoot)\Tools\bin\GenCodeCoverageItems.exe&quot;</GenCCItemsCommand>
+    <TemplateFile>&quot;$(BuildRoot)\Build\CodeCoverage\codecoverage.testsettings&quot;</TemplateFile>
+    <OutputFile>&quot;$(BuildRoot)\Build\CodeCoverage\outputcodecoverage.testsettings&quot;</OutputFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--Team build uses this-->
+    <OutPath Condition="'$(OutDir)' != ''">$(OutDir)\</OutPath>
+    <!--Local build uses this-->
+    <OutPath Condition="'$(OutDir)' == ''">$(OutputPath)</OutPath>
+  </PropertyGroup>
+
+  <Target Name="CodeCoverage">
+    <CallTarget Targets="MessagesCC" />
+    <!--Something needs to be done here for purging output directories before local builds.-->
+    <MSBuild Projects="@(ProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
+    <CallTarget Targets="GenCodeCoverageSettings" />
+  </Target>
+
+  <Target Name="GenCodeCoverageSettings">
+    <Message Text="%24(OutPath) = %22$(OutPath)%22"></Message>
+    <Message Text="%24(OutDir) = %22$(OutDir)%22"></Message>
+    <Message Text="%24(OutputPath) = %22$(OutputPath)%22"></Message>
+    <Message Text="%24(UserHomePath) = %22$(UserHomePath)%22"></Message>
+
+    <Exec Command="$(GenCCItemsCommand) /t:$(TemplateFile) /o:$(OutputFile) /p:&quot;$(MSBuildProjectFullPath)&quot; /v /a:&quot;$(OutPath)&quot; "
+          ContinueOnError="false"/>
+  </Target>
+
+</Project>

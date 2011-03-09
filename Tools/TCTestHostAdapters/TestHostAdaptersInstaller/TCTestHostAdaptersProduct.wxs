@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include TCTestHostAdaptersVars.wxi ?>
+  <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" UpgradeCode="$(var.InstallerUpgradeGuid)" Manufacturer="Microsoft Corporation" Version="1.0.0" Language="1033">
+    <Package Id="*" Description="$(var.ProductDescription)" Comments="$(var.ProductDescription); Copyright (C) Microsoft Corporation, All rights reserved." Manufacturer="Microsoft Corporation" InstallerVersion="200" Platform="x86" Languages="1033" Compressed="yes" SummaryCodepage="1252" />
+    <Media Id="1" EmbedCab="yes" Cabinet="VSHost.cab" />
+
+    <!-- Properties -->
+    <Property Id="ALLUSERS" Value="1" />
+    <Property Id="ARPCONTACT" Value="$(var.ProductUrl)" />
+    <Property Id="ARPURLINFOABOUT" Value="$(var.ProductUrl)" />
+    <Property Id="ARPHELPLINK" Value="$(var.ProductUrl)" />
+    <Property Id="ARPURLUPDATEINFO" Value="$(var.ProductUrl)" />
+    <Property Id="ARPCOMMENTS" Value="$(var.ProductDescription)" />
+
+    <!-- Install conditions -->
+    <Condition Message="Visual Studio 2010 must be installed">VSINSTALLDIR</Condition>
+
+    <!-- Directories, files, shortcuts -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramMenuFolder" />
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR" Name="$(var.ProductName)" >
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <!-- Features -->
+    <Feature Id="DefaultFeature" Level="1" ConfigurableDirectory="TARGETDIR">
+      <ComponentGroupRef Id="VsIdeTestHostComponentGroup" />
+    </Feature>
+  </Product>
+</Wix>

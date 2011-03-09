@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC">
+    <Name>IronPython Interpreter</Name>
+    <Author>Microsoft</Author>
+    <Version>1.0</Version>
+    <Description xml:space="preserve"></Description>
+    <Locale>1033</Locale>
+    <MoreInfoUrl>http://ironpython.codeplex.com</MoreInfoUrl>
+    <GettingStartedGuide>http://ironpython.codeplex.com</GettingStartedGuide>
+    <InstalledByMsi>false</InstalledByMsi>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="F350C244-7712-4ED7-9BE9-0D5AE0862E59" MinVersion="1.0" MaxVersion="1.0">
+      <Name>Python Tools for Visual Studio</Name>
+    </Reference>
+  </References>
+  <Content>
+    <Assembly AssemblyName="Microsoft.PythonTools.IronPython">Microsoft.PythonTools.IronPython</Assembly>
+    <VsPackage>|%CurrentProject%|</VsPackage>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+    <ProjectTemplate>Templates\Projects\SilverlightProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\WinformsProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\WpfProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\ConsoleProject</ProjectTemplate>
+    <ItemTemplate>Templates\Files\WpfWindow</ItemTemplate>
+  </Content>
+</Vsix>

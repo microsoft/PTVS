@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLLOCATION">
+            <Directory Id="dir10D6490D7F4741868DF54BB19BCE400F" Name="Templates">
+                <Directory Id="dir7B61D4A4A47F448591E6FBA39831CE26" Name="Projects" >
+                    <Directory Id="dirDB60FDC6880B412AAF8ACD9FB2E9F798" Name="HpcMpiProject" />
+                </Directory>
+            </Directory>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="PythonHpcSupportExt">
+            <Component Id="cmpC37DE5B7CDC34285A20C395FE9B7C60D" Directory="INSTALLLOCATION" Guid="{C885A8D8-77C6-4F66-9F1B-AFBB1E37FD23}">
+                <File Id="fil4070C2CC31704C61B15FD6607B2E4E46" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Hpc.dll" />
+            </Component>
+            <Component Id="cmpBEFDE579EC5F4E968AC0EFA8CE65090E" Directory="INSTALLLOCATION" Guid="{361A8DF3-B4BF-438A-B479-DD03E92BE4FA}">
+                <File Id="fil5AF26ADCFD204FB8A40AFB936931D886" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.MpiShim.exe" />
+            </Component>
+            <Component Id="cmp4FE678B5431D4E78B615AF9FF3E794BF" Directory="INSTALLLOCATION" Guid="{CB04F233-2489-4A30-B4DA-D7207D2F0B54}">
+                <File Id="fil059A199DE7664A02BBEFD0399424ED4A" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Hpc.pkgdef" />
+            </Component>
+            <Component Id="cmp3DA13923AD6149C7815E67F1BE629E20" Directory="INSTALLLOCATION" Guid="{7A1ADF5E-AC7C-4D47-9072-C155C9DCA6C2}">
+                <File Id="fil888B12CADE9D43AAB2478E070052B2D5" KeyPath="yes" Source="$(var.ObjDir)\extension.vsixmanifest" />
+            </Component>
+            <Component Id="cmp6A505238B0B94551B74D0C09B7F4BE04" Directory="dirDB60FDC6880B412AAF8ACD9FB2E9F798" Guid="{AC99DA69-242A-4E45-9C4A-9058A0B1B4C0}">
+                <File Id="fil61D7599C3767439994764A8A78DD77C3" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\HpcMpiProject\HpcMpiApp.zip" />
+            </Component>
+		</ComponentGroup>
+    </Fragment>
+</Wix>

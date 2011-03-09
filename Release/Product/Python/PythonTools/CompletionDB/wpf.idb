@@ -1,0 +1,79 @@
+(dp0
+Vmembers
+p1
+(dp2
+VLoadComponent
+p3
+(dp4
+Vkind
+p5
+Vfunction
+p6
+sVvalue
+p7
+(dp8
+Voverloads
+p9
+((dp10
+Vret_type
+p11
+(V__builtin__
+p12
+Vobject
+p13
+tp14
+sVargs
+p15
+(lp16
+(dp17
+Vtype
+p18
+(g12
+g13
+tp19
+sVname
+p20
+Vself
+p21
+sa(dp22
+g18
+(g12
+Vstr
+p23
+tp24
+sg20
+Vfilename
+p25
+sastp26
+sVdoc
+p27
+VLoadComponent(self: object, filename: str) -> object\u000a\u000a    Loads XAML from the specified XmlReader and returns the deserialized object.  Any event handlers\u000a            are bound to \u000a     methods defined in the provided module.  Any named objects are assigned to the object.\u000a            \u000a            The provided \u000a     object is expected to be the same type as the root of the XAML element.\u000a\u000aLoadComponent(self: object, stream: Stream) -> object\u000a\u000a    Loads XAML from the specified XmlReader and returns the deserialized object.  Any event handlers\u000a            are bound to \u000a     methods defined in the provided module.  Any named objects are assigned to the object.\u000a            \u000a            The provided \u000a     object is expected to be the same type as the root of the XAML element.\u000a\u000aLoadComponent(self: object, xmlReader: XmlReader) -> object\u000a\u000a    Loads XAML from the specified XmlReader and returns the deserialized object.  Any event handlers\u000a            are bound to \u000a     methods defined in the provided module.  Any named objects are assigned to the object.\u000a            \u000a            The provided \u000a     object is expected to be the same type as the root of the XAML element.\u000a\u000aLoadComponent(self: object, filename: TextReader) -> object\u000a\u000a    Loads XAML from the specified XmlReader and returns the deserialized object.  Any event handlers\u000a            are bound to \u000a     methods defined in the provided module.  Any named objects are assigned to the object.\u000a            \u000a            The provided \u000a     object is expected to be the same type as the root of the XAML element.\u000a\u000aLoadComponent(self: object, reader: XamlXmlReader) -> object\u000a\u000a    Loads XAML from the specified XmlReader and returns the deserialized object.  Any event handlers\u000a            are bound to \u000a     methods defined in the provided module.  Any named objects are assigned to the object.\u000a            \u000a            The provided \u000a     object is expected to be the same type as the root of the XAML element.\u000a\u000a
+p28
+sssV__name__
+p29
+(dp30
+g5
+Vdata
+p31
+sg7
+(dp32
+g18
+(g12
+g23
+tp33
+sssV__package__
+p34
+(dp35
+g5
+g31
+sg7
+(dp36
+g18
+(g12
+VNoneType
+p37
+tp38
+ssssg27
+Vmodule()\u000a
+p39
+s.
