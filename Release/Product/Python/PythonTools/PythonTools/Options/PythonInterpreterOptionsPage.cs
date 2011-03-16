@@ -110,6 +110,8 @@ namespace Microsoft.PythonTools.Options {
                 if (defaultInterpreter.Id != GetDefaultInterpreterId() || defaultVersion != GetDefaultInterpreterVersion()) {
                     SaveString(DefaultInterpreterSetting, defaultInterpreter.Id.ToString());
                     SaveString(DefaultInterpreterVersionSetting, defaultVersion.ToString());
+                    _defaultInterpreter = defaultInterpreter.Id;
+                    _defaultInterpreterVersion = defaultVersion;
                     PythonToolsPackage.Instance.UpdateDefaultAnalyzer();
                 }
             }
@@ -167,6 +169,8 @@ namespace Microsoft.PythonTools.Options {
 
                 i++;
             }
+
+            PythonToolsPackage.Instance.RefreshReplCommands();
         }
 
         private static string GetInterpreterSettingPath(Guid id, Version version) {

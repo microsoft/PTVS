@@ -19,9 +19,12 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.Win32;
 
 namespace Microsoft.VisualStudio.Repl {
+
     [Export(typeof(IReplWindowProvider))]
+    [PartCreationPolicy(CreationPolicy.Shared)]
     internal sealed class ReplWindowProvider : IReplWindowProvider {
         private readonly IReplEvaluatorProvider[] _evaluators;
         private readonly Dictionary<int, ReplWindow> _windows = new Dictionary<int, ReplWindow>();
@@ -73,6 +76,98 @@ namespace Microsoft.VisualStudio.Repl {
             return _windows.Values;
         }
 
+        private static IReplEvaluator GetReplEvaluator(IComponentModel model, string replId) {
+            foreach (var provider in model.GetExtensions<IReplEvaluatorProvider>()) {
+                var evaluator = provider.GetEvaluator(replId);
+
+                if (evaluator != null) {
+                    return evaluator;
+                }
+            }
+            return null;
+        }
+
+        #endregion
+
+        #region Registry Serialization
+
+        private const string ActiveReplsKey = "ActiveRepls";
+        private const string ContentTypeKey = "ContentType";
+        private const string TitleKey = "Title";
+        private const string ReplIdKey = "ReplId";
+        private const string LanguageServiceGuidKey = "LanguageServiceGuid";
+
+        private static RegistryKey GetRegistryRoot() {
+            return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, writable: true).CreateSubKey(ActiveReplsKey);
+        }
+
+        private void SaveReplInfo(int id, IReplEvaluator evaluator, IContentType contentType, string title, Guid languageServiceGuid, string replId) {
+            using (var root = GetRegistryRoot()) {
+                if (root != null) {
+                    using (var replInfo = root.CreateSubKey(id.ToString())) {
+                        replInfo.SetValue(ContentTypeKey, contentType.TypeName);
+                        replInfo.SetValue(TitleKey, title);
+                        replInfo.SetValue(ReplIdKey, replId.ToString());
+                        replInfo.SetValue(LanguageServiceGuidKey, languageServiceGuid.ToString());
+                    }
+                }
+            }
+        }
+
+        internal bool CreateFromRegistry(IComponentModel model, int id) {
+            string contentTypeName, title, replId, languageServiceId;
+
+            using (var root = GetRegistryRoot()) {
+                if (root == null) {
+                    return false;
+                }
+
+                using (var replInfo = root.OpenSubKey(id.ToString())) {
+                    if (replInfo == null) {
+                        return false;
+                    }
+
+                    contentTypeName = replInfo.GetValue(ContentTypeKey) as string;
+                    if (contentTypeName == null) {
+                        return false;
+                    }
+
+                    title = replInfo.GetValue(TitleKey) as string;
+                    if (title == null) {
+                        return false;
+                    }
+
+                    replId = replInfo.GetValue(ReplIdKey) as string;
+                    if (replId == null) {
+                        return false;
+                    }
+
+                    languageServiceId = replInfo.GetValue(LanguageServiceGuidKey) as string;
+                    if (languageServiceId == null) {
+                        return false;
+                    }
+                }
+            }
+
+            Guid languageServiceGuid;
+            if (!Guid.TryParse(languageServiceId, out languageServiceGuid)) {
+                return false;
+            }
+            
+            var contentTypes = model.GetService<IContentTypeRegistryService>();
+            var contentType = contentTypes.GetContentType(contentTypeName);
+            if (contentType == null) {
+                return false;
+            }
+
+            var evaluator = GetReplEvaluator(model, replId);
+            if (evaluator == null) {
+                return false;
+            }
+
+            CreateReplWindow(evaluator, contentType, id, title, languageServiceGuid, replId);
+            return true;
+        }
 
         #endregion
 
@@ -104,7 +199,9 @@ namespace Microsoft.VisualStudio.Repl {
                 }
             }
 
-            var replWindow = new ReplWindow(model, evaluator, contentType, title, languageServiceGuid, replId, id, listeners.ToArray());
+            SaveReplInfo(id, evaluator, contentType, title, languageServiceGuid, replId);
+
+            var replWindow = new ReplWindow(model, evaluator, contentType, title, languageServiceGuid, replId, listeners.ToArray());
 
             Guid clsId = replWindow.ToolClsid;
             Guid toolType = typeof(ReplWindow).GUID;

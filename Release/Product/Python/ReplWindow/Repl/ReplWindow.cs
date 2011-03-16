@@ -112,7 +112,7 @@ namespace Microsoft.VisualStudio.Repl {
         private static readonly char[] _whitespaceChars = new[] { '\r', '\n', ' ', '\t' };
         private const string _boxSelectionCutCopyTag = "MSDEVColumnSelect";
 
-        public ReplWindow(IComponentModel/*!*/ model, IReplEvaluator/*!*/ evaluator, IContentType/*!*/ contentType, string/*!*/ title, Guid languageServiceGuid, string replId, int? id, IReplWindowCreationListener[] listeners) {
+        public ReplWindow(IComponentModel/*!*/ model, IReplEvaluator/*!*/ evaluator, IContentType/*!*/ contentType, string/*!*/ title, Guid languageServiceGuid, string replId, IReplWindowCreationListener[] listeners) {
             Contract.Assert(evaluator != null);
             Contract.Assert(contentType != null);
             Contract.Assert(title != null);
@@ -133,10 +133,6 @@ namespace Microsoft.VisualStudio.Repl {
             // the strip being 16x16.
             BitmapResourceID = 301;
             BitmapIndex = 1;
-
-            if (id != null) {
-                ReplWindowPackage.Instance.SaveReplInfo(id.Value, evaluator, contentType, title, languageServiceGuid, replId);
-            }
 
             _componentModel = model;
             _evaluator = evaluator;

@@ -20,7 +20,7 @@ namespace Microsoft.PythonTools.Debugger {
     /// Represents the result of an evaluation of an expression against a given stack frame.
     /// </summary>
     class PythonEvaluationResult {
-        private readonly string _expression, _objRepr, _typeName, _exceptionText, _childText;
+        private readonly string _expression, _objRepr, _typeName, _exceptionText, _childText, _hexRepr;
         private readonly PythonStackFrame _frame;
         private readonly PythonProcess _process;
         private readonly bool _isExpandable, _childIsIndex;
@@ -28,11 +28,12 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Creates a PythonObject for an expression which successfully returned a value.
         /// </summary>
-        public PythonEvaluationResult(PythonProcess process, string objRepr, string typeName, string expression, string childText, bool childIsIndex, PythonStackFrame frame, bool isExpandable) {
+        public PythonEvaluationResult(PythonProcess process, string objRepr, string hexRepr, string typeName, string expression, string childText, bool childIsIndex, PythonStackFrame frame, bool isExpandable) {
             _process = process;
             _expression = expression;
             _frame = frame;
             _objRepr = objRepr;
+            _hexRepr = hexRepr;
             _typeName = typeName;
             _isExpandable = isExpandable;
             _childText = childText;
@@ -96,6 +97,15 @@ namespace Microsoft.PythonTools.Debugger {
         public string StringRepr {
             get {
                 return _objRepr;
+            }
+        }
+
+        /// <summary>
+        /// Gets the string representation of this evaluation in hexadecimal or null if the hex value was not computable.
+        /// </summary>
+        public string HexRepr {
+            get {
+                return _hexRepr;
             }
         }
 

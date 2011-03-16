@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Construct an instance of IEnumDebugPropertyInfo2 for the combined locals and parameters.
-        private void CreateLocalsPlusArgsProperties(out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject) {
+        private void CreateLocalsPlusArgsProperties(uint radix, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject) {
             elementsReturned = 0;
 
             int localsLength = 0;
@@ -141,14 +141,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (_locals != null) {
                 for (int i = 0; i < _locals.Length; i++) {
                     AD7Property property = new AD7Property(this, _locals[i], true);
-                    propInfo[i] = property.ConstructDebugPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
+                    propInfo[i] = property.ConstructDebugPropertyInfo(radix, enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
                 }
             }
 
             if (_parameters != null) {
                 for (int i = 0; i < _parameters.Length; i++) {
                     AD7Property property = new AD7Property(this, _parameters[i], true);
-                    propInfo[localsLength + i] = property.ConstructDebugPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
+                    propInfo[localsLength + i] = property.ConstructDebugPropertyInfo(radix, enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
                 }
             }
 
@@ -156,26 +156,26 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Construct an instance of IEnumDebugPropertyInfo2 for the locals collection only.
-        private void CreateLocalProperties(out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject) {
+        private void CreateLocalProperties(uint radix, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject) {
             elementsReturned = (uint)_locals.Length;
             DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[_locals.Length];
 
             for (int i = 0; i < propInfo.Length; i++) {
                 AD7Property property = new AD7Property(this, _locals[i], true);
-                propInfo[i] = property.ConstructDebugPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
+                propInfo[i] = property.ConstructDebugPropertyInfo(radix, enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
             }
 
             enumObject = new AD7PropertyInfoEnum(propInfo);
         }
 
         // Construct an instance of IEnumDebugPropertyInfo2 for the parameters collection only.
-        private void CreateParameterProperties(out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject) {
+        private void CreateParameterProperties(uint radix, out uint elementsReturned, out IEnumDebugPropertyInfo2 enumObject) {
             elementsReturned = (uint)_parameters.Length;
             DEBUG_PROPERTY_INFO[] propInfo = new DEBUG_PROPERTY_INFO[_parameters.Length];
 
             for (int i = 0; i < propInfo.Length; i++) {
                 AD7Property property = new AD7Property(this, _parameters[i], true);
-                propInfo[i] = property.ConstructDebugPropertyInfo(enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
+                propInfo[i] = property.ConstructDebugPropertyInfo(radix, enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_STANDARD);
             }
 
             enumObject = new AD7PropertyInfoEnum(propInfo);
@@ -197,13 +197,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (guidFilter == DebuggerConstants.guidFilterLocalsPlusArgs ||
                     guidFilter == DebuggerConstants.guidFilterAllLocalsPlusArgs ||
                     guidFilter == DebuggerConstants.guidFilterAllLocals) {
-                CreateLocalsPlusArgsProperties(out elementsReturned, out enumObject);
+                CreateLocalsPlusArgsProperties(nRadix, out elementsReturned, out enumObject);
                 hr = VSConstants.S_OK;
             } else if (guidFilter == DebuggerConstants.guidFilterLocals) {
-                CreateLocalProperties(out elementsReturned, out enumObject);
+                CreateLocalProperties(nRadix, out elementsReturned, out enumObject);
                 hr = VSConstants.S_OK;
             } else if (guidFilter == DebuggerConstants.guidFilterArgs) {
-                CreateParameterProperties(out elementsReturned, out enumObject);
+                CreateParameterProperties(nRadix, out elementsReturned, out enumObject);
                 hr = VSConstants.S_OK;
             } else {
                 hr = VSConstants.E_NOTIMPL;

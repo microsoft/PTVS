@@ -36,16 +36,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
             switch (name) {
                 case "append":
                     EnsureAppend();
-                    return _appendMethod.SelfSet;
+                    if (_appendMethod != null) {
+                        return _appendMethod.SelfSet;
+                    }
+                    break;
                 case "pop":
                     EnsurePop();
-                    return _popMethod.SelfSet;
+                    if (_popMethod != null) {
+                        return _popMethod.SelfSet;
+                    }
+                    break;
                 case "insert":
                     EnsureInsert();
-                    return _insertMethod.SelfSet;
+                    if (_insertMethod != null) {
+                        return _insertMethod.SelfSet;
+                    }
+                    break;
                 case "extend":
                     EnsureExtend();
-                    return _extendMethod.SelfSet;                
+                    if (_extendMethod != null) {
+                        return _extendMethod.SelfSet;
+                    }
+                    break;
             }
 
             return base.GetMember(node, unit, name);
@@ -68,29 +80,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private void EnsureAppend() {
             if (_appendMethod == null) {
-                var appendMeth = this["append"];
-                _appendMethod = new ListAppendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)appendMeth.First());
+                ISet<Namespace> value;
+                if (TryGetMember("append", out value)) {                    
+                    _appendMethod = new ListAppendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
+                }
             }
         }
 
         private void EnsurePop() {
             if (_popMethod == null) {
-                var popMethod = this["pop"];
-                _popMethod = new ListPopBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)popMethod.First());
+                ISet<Namespace> value;
+                if (TryGetMember("pop", out value)) {
+                    _popMethod = new ListPopBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
+                }
             }
         }
 
         private void EnsureInsert() {
             if (_insertMethod == null) {
-                var method = this["insert"];
-                _insertMethod = new ListInsertBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)method.First());
+                ISet<Namespace> value;
+                if (TryGetMember("insert", out value)) {
+                    _insertMethod = new ListInsertBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
+                }
             }
         }
 
         private void EnsureExtend() {
             if (_extendMethod == null) {
-                var method = this["extend"];
-                _extendMethod = new ListExtendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)method.First());
+                ISet<Namespace> value;
+                if (TryGetMember("extend", out value)) {
+                    _extendMethod = new ListExtendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
+                }
             }
         }
     }

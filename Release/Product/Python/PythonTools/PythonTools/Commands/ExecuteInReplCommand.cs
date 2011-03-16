@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Commands {
 
         internal static IReplWindow/*!*/ EnsureReplWindow(IPythonInterpreterFactory factory) {
             var compModel = PythonToolsPackage.ComponentModel;
-            var provider = compModel.GetExtensions<IReplWindowProvider>().First();
+            var provider = compModel.GetService<IReplWindowProvider>();
 
             string replId = PythonReplEvaluatorProvider.GetReplId(factory);
             var window = provider.FindReplWindow(replId);

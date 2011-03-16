@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools {
     [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]
     [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
     [Description("Python Tools Package")]
-    [ProvideAutomationObject("PythonOptions")]
+    [ProvideAutomationObject("VsPython")]
     [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advenced", "114")]
     [ProvideOptionPage(typeof(PythonInterpreterOptionsPage), "Python Tools", "Interpreters", 115, 116, true)]
     [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
@@ -126,8 +126,8 @@ namespace Microsoft.PythonTools {
         private LanguagePreferences _langPrefs;
         public static PythonToolsPackage Instance;
         private ProjectAnalyzer _analyzer;
-        private static Command[] _commands;
-        private AutomationOptions _autoOptions = new AutomationOptions();
+        private static Dictionary<Command, MenuCommand> _commands = new Dictionary<Command,MenuCommand>();
+        private PythonAutomation _autoObject = new PythonAutomation();
         private IContentType _contentType;
 
         /// <summary>
@@ -171,8 +171,8 @@ namespace Microsoft.PythonTools {
         }
 
         protected override object GetAutomationObject(string name) {
-            if (name == "PythonOptions") {
-                return _autoOptions;
+            if (name == "VsPython") {
+                return _autoObject;
             }
 
             return base.GetAutomationObject(name);
@@ -368,10 +368,53 @@ namespace Microsoft.PythonTools {
 
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
 
-            //new SendToDefiningModuleCommand(),
-            List<Command> commands = new List<Command>() { new ExecuteInReplCommand(), new SendToReplCommand(), new FillParagraphCommand(), new SendToDefiningModuleCommand() };
+            // Add our command handlers for menu (commands must exist in the .vsct file)
+            RegisterCommands(new Command[] { new ExecuteInReplCommand(), new SendToReplCommand(), new FillParagraphCommand(), new SendToDefiningModuleCommand() });
+            RegisterCommands(GetReplCommands());
+        }
 
-            var factories = model.GetAllPythonInterpreterFactories();
+        private void RegisterCommands(IEnumerable<Command> commands) {
+            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (null != mcs) {
+                foreach (var command in commands) {
+                    var beforeQueryStatus = command.BeforeQueryStatus;
+                    CommandID toolwndCommandID = new CommandID(GuidList.guidPythonToolsCmdSet, command.CommandId);
+                    if (beforeQueryStatus == null) {
+                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);                        
+                        mcs.AddCommand(menuToolWin);
+                        _commands[command] = menuToolWin;
+                    } else {
+                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);                        
+                        menuToolWin.BeforeQueryStatus += beforeQueryStatus;
+                        mcs.AddCommand(menuToolWin);
+                        _commands[command] = menuToolWin;
+                    }
+                }
+            }
+        }
+
+        internal void RefreshReplCommands() {
+            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            List<OpenReplCommand> replCommands = new List<OpenReplCommand>();
+            foreach (var keyValue in _commands) {
+                var command = keyValue.Key;
+                OpenReplCommand openRepl = command as OpenReplCommand;
+                if (openRepl != null) {
+                    replCommands.Add(openRepl);
+
+                    mcs.RemoveCommand(keyValue.Value);
+                }
+            }
+
+            foreach (var command in replCommands) {
+                _commands.Remove(command);
+            }
+
+            RegisterCommands(GetReplCommands());
+        }
+
+        private List<OpenReplCommand> GetReplCommands() {
+            var factories = ComponentModel.GetAllPythonInterpreterFactories();
             var defaultFactory = GetDefaultInterpreter(factories);
             // sort so default always comes first, and otherwise in sorted order
             Array.Sort(factories, (x, y) => {
@@ -386,29 +429,14 @@ namespace Microsoft.PythonTools {
                 }
             });
 
+            var replCommands = new List<OpenReplCommand>();
             for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow); i++) {
                 var factory = i < factories.Length ? factories[i] : null;
 
-                commands.Add(new OpenReplCommand((int)PkgCmdIDList.cmdidReplWindow + i, factory));
+                var cmd = new OpenReplCommand((int)PkgCmdIDList.cmdidReplWindow + i, factory);
+                replCommands.Add(cmd);
             }
-            _commands = commands.ToArray();
-
-            // Add our command handlers for menu (commands must exist in the .vsct file)
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs) {
-                foreach (var command in Commands) {
-                    var beforeQueryStatus = command.BeforeQueryStatus;
-                    CommandID toolwndCommandID = new CommandID(GuidList.guidPythonToolsCmdSet, command.CommandId);
-                    if (beforeQueryStatus == null) {
-                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
-                        mcs.AddCommand(menuToolWin);
-                    } else {
-                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
-                        menuToolWin.BeforeQueryStatus += beforeQueryStatus;
-                        mcs.AddCommand(menuToolWin);
-                    }
-                }
-            }
+            return replCommands;
         }
 
         internal static bool TryGetStartupFileAndDirectory(out string filename, out string dir, out ProjectAnalyzer analyzer) {
@@ -453,7 +481,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal static Command[] Commands {
+        internal static Dictionary<Command, MenuCommand> Commands {
             get {
                 return _commands;
             }

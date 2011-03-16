@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             string pyPathEnvVar = "PYTHONPATH";
-            if (options.TryGetValue(InterpreterFactoryOptions.PythonWindowsPath, out value)) {
+            if (options.TryGetValue(InterpreterFactoryOptions.PathEnvVar, out value)) {
                 if (value is string) {
                     pyPathEnvVar = (string)value;
                 } else {

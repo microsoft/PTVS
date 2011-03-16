@@ -29,6 +29,10 @@ namespace Microsoft.PythonTools.Debugger {
         internal static string ReadString(this Socket socket) {
             byte[] cmd_buffer = new byte[4];
             if (socket.Receive(cmd_buffer, 1, SocketFlags.None) == 1) {
+                if (cmd_buffer[0] == 'N') {
+                    // null string
+                    return null;
+                }
                 bool isUnicode = cmd_buffer[0] == 'U';
 
                 if (socket.Receive(cmd_buffer) == 4) {

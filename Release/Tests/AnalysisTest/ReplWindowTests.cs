@@ -21,6 +21,7 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using AnalysisTest.UI;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Options;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -100,7 +101,7 @@ namespace AnalysisTest {
 
             // commit entry
             Keyboard.PressAndRelease(Key.Tab);
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.conjugate");
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x." + IntFirstMember);
             interactive.WaitForSessionDismissed();
 
             // clear input at repl
@@ -203,7 +204,7 @@ namespace AnalysisTest {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionFullText() {
             var interactive = Prepare();
-            var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("PythonOptions");
+            var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
             options.Intellisense.AddNewLineAtEndOfFullyTypedWord = false;
 
             const string code = "x = 42";
@@ -427,12 +428,12 @@ namespace AnalysisTest {
         public void HistoryUpdateDef() {
             var interactive = Prepare();
 
-            string hiCode = "def f():\r\n" + SecondPrompt + "    print 'hi'\r\n" + SecondPrompt + "    ";
-            string helloCode = "def f():\r\n" + SecondPrompt + "    print 'hello'\r\n" + SecondPrompt + "    ";
-            string helloCodeNotCommitted = "def f():\r\n" + SecondPrompt + "    print 'hello'";
-            string hiCodeNotCommitted = "def f():\r\n" + SecondPrompt + "    print 'hi'";
+            string hiCode = "def f():\r\n" + SecondPrompt + "    print('hi')\r\n" + SecondPrompt + "    ";
+            string helloCode = "def f():\r\n" + SecondPrompt + "    print('hello')\r\n" + SecondPrompt + "    ";
+            string helloCodeNotCommitted = "def f():\r\n" + SecondPrompt + "    print('hello')";
+            string hiCodeNotCommitted = "def f():\r\n" + SecondPrompt + "    print('hi')";
             Keyboard.Type("def f():\r");
-            Keyboard.Type("print 'hi'\r\r");
+            Keyboard.Type("print('hi')\r\r");
 
             interactive.WaitForText(ReplPrompt + hiCode, ReplPrompt);
 
@@ -442,8 +443,9 @@ namespace AnalysisTest {
             Keyboard.Type(Key.Back);
             Keyboard.Type(Key.Back);
             Keyboard.Type(Key.Back);
+            Keyboard.Type(Key.Back);
 
-            Keyboard.Type("'hello'");
+            Keyboard.Type("'hello')");
             Keyboard.Type(Key.Enter);
             Keyboard.Type(Key.Enter);
 
@@ -465,16 +467,16 @@ namespace AnalysisTest {
         public void HistoryAppendDef() {
             var interactive = Prepare();
 
-            string hiCode = "def f():\r\n" + SecondPrompt + "    print 'hi'\r\n" + SecondPrompt + "    ";
-            string finalCode = hiCode + "print 'hello'\r\n" + SecondPrompt + "    ";
+            string hiCode = "def f():\r\n" + SecondPrompt + "    print('hi')\r\n" + SecondPrompt + "    ";
+            string finalCode = hiCode + "print('hello')\r\n" + SecondPrompt + "    ";
             Keyboard.Type("def f():\r");
-            Keyboard.Type("print 'hi'\r\r");
+            Keyboard.Type("print('hi')\r\r");
 
             interactive.WaitForText(ReplPrompt + hiCode, ReplPrompt);
 
             Keyboard.Type(Key.Up);
             Keyboard.Type(Key.Enter);
-            Keyboard.Type("print 'hello'\r\r");
+            Keyboard.Type("print('hello')\r\r");
 
             interactive.WaitForText(ReplPrompt + hiCode, ReplPrompt + finalCode, ReplPrompt);
         }
@@ -579,7 +581,7 @@ namespace AnalysisTest {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RegressionImportSysBackspace() {
-            var item = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("PythonOptions");
+            var item = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
             item.Intellisense.AddNewLineAtEndOfFullyTypedWord = true;
 
             var interactive = Prepare();
@@ -752,7 +754,7 @@ namespace AnalysisTest {
             Keyboard.Type(code + "\r");
 
             interactive.WaitForTextStart(ReplPrompt + code, 
-                ReplPrompt + "print 'hello world'",
+                ReplPrompt + "print('hello world')",
                 "hello world",
                 ReplPrompt
             );
@@ -878,17 +880,17 @@ namespace AnalysisTest {
         public void EditInsertInMiddleOfLine() {
             var interactive = Prepare();
 
-            Keyboard.Type("def f(): print 'hello'");
-            interactive.WaitForText(ReplPrompt + "def f(): print 'hello'");
+            Keyboard.Type("def f(): print('hello')");
+            interactive.WaitForText(ReplPrompt + "def f(): print('hello')");
 
             // move to left of print
-            for (int i = 0; i < 13; i++) {
+            for (int i = 0; i < 14; i++) {
                 Keyboard.Type(Key.Left);
             }
 
             Keyboard.Type(Key.Enter);
 
-            interactive.WaitForText(ReplPrompt + "def f(): ", SecondPrompt + "    print 'hello'");
+            interactive.WaitForText(ReplPrompt + "def f(): ", SecondPrompt + "    print('hello')");
 
             Keyboard.PressAndRelease(Key.Escape);
 
@@ -921,8 +923,8 @@ namespace AnalysisTest {
                 for (int i = 0; i < 2; i++) {
                     var interactive = Prepare();
 
-                    Keyboard.Type("def f():\rprint 'hi'");
-                    interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print 'hi'");
+                    Keyboard.Type("def f():\rprint('hi')");
+                    interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                     Keyboard.Type(Key.Home);
                     Keyboard.Type(Key.Left);
@@ -951,8 +953,8 @@ namespace AnalysisTest {
             if (SecondPrompt.Length > 0) {
                 var interactive = Prepare();
 
-                Keyboard.Type("def f():\rprint 'hi'");
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print 'hi'");
+                Keyboard.Type("def f():\rprint('hi')");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                 Keyboard.Type(Key.Home);
                 Keyboard.Type(Key.Left);
@@ -976,8 +978,8 @@ namespace AnalysisTest {
             if (SecondPrompt.Length > 0) {
                 var interactive = Prepare();
 
-                Keyboard.Type("def f():\rprint 'hi'");
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print 'hi'");
+                Keyboard.Type("def f():\rprint('hi')");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                 Keyboard.Type(Key.Home);
                 Keyboard.Type(Key.Left);
@@ -988,7 +990,7 @@ namespace AnalysisTest {
 
                 Keyboard.ControlV();
 
-                interactive.WaitForText(ReplPrompt + "def f():    print 'hi'");
+                interactive.WaitForText(ReplPrompt + "def f():    print('hi')");
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -1011,8 +1013,8 @@ namespace AnalysisTest {
                     Clipboard.SetText("pass", TextDataFormat.Text);
                 }));
 
-                Keyboard.Type("def f():\rprint 'hi'");
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print 'hi'");
+                Keyboard.Type("def f():\rprint('hi')");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                 Keyboard.Type(Key.Home);
                 Keyboard.Type(Key.Left);
@@ -1070,9 +1072,9 @@ namespace AnalysisTest {
         public void TestRawInput() {
             var interactive = Prepare();
 
-            string inputCode = "x = raw_input()";
+            string inputCode = "x = " + RawInput + "()";
             string text = "hello";
-            string printCode = "print x";
+            string printCode = "print(x)";
             Keyboard.Type(inputCode + "\r");
             interactive.WaitForText(ReplPrompt + inputCode, "");
 
@@ -1116,7 +1118,7 @@ namespace AnalysisTest {
             interactive.WaitForText(ReplPrompt + inputCode);
             Keyboard.Type("\r");
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
-            string printCode = "print 'hello'";
+            string printCode = "print('hello')";
             Keyboard.Type(printCode);
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + printCode);
 
@@ -1145,7 +1147,7 @@ namespace AnalysisTest {
             interactive.WaitForText(ReplPrompt + inputCode);
             Keyboard.Type("\r");
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
-            string printCode = "print 'hello'";
+            string printCode = "print('hello')";
             Keyboard.Type(printCode);
 
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + printCode);
@@ -1162,7 +1164,7 @@ namespace AnalysisTest {
         public void TestDelInOutput() {
             var interactive = Prepare();
 
-            string inputCode = "print 'abc'";            
+            string inputCode = "print('abc')";            
             Keyboard.Type(inputCode);
             interactive.WaitForText(ReplPrompt + inputCode);
             Keyboard.Type("\r");
@@ -1207,6 +1209,10 @@ namespace AnalysisTest {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonMode() {
+            if (!IPythonSupported) {
+                return;
+            }
+
             GetInteractiveOptions().ExecutionMode = "IPython";
             var interactive = Prepare(true);
             try {
@@ -1244,6 +1250,10 @@ namespace AnalysisTest {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonCtrlBreakAborts() {
+            if (!IPythonSupported) {
+                return;
+            }
+
             GetInteractiveOptions().ExecutionMode = "IPython";
             var interactive = Prepare(true);
             try {
@@ -1272,6 +1282,10 @@ namespace AnalysisTest {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IPythonSimpleCompletion() {
+            if (!IPythonSupported) {
+                return;
+            }
+
             GetInteractiveOptions().ExecutionMode = "IPython";
             var interactive = Prepare(true);
             try {
@@ -1324,6 +1338,10 @@ namespace AnalysisTest {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IPythonSimpleSignatureHelp() {
+            if (!IPythonSupported) {
+                return;
+            }
+
             GetInteractiveOptions().ExecutionMode = "IPython";
             var interactive = Prepare(true);
             try {
@@ -1361,8 +1379,9 @@ namespace AnalysisTest {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
             ConfigurePrompts();
-            VsIdeTestHostContext.Dte.ExecuteCommand("View.PythonInteractiveDefault");
-            var interactive = app.GetInteractiveWindow("Python 2.6 Interactive");
+            
+            GetPythonAutomation().OpenInteractive(InterpreterDescription);
+            var interactive = app.GetInteractiveWindow(InterpreterDescription);
             if (reset) {
                 interactive.Reset();
                 System.Threading.Thread.Sleep(1000);
@@ -1372,6 +1391,30 @@ namespace AnalysisTest {
             interactive.ClearScreen();
             interactive.WaitForText(ReplPrompt);
             return interactive;
+        }
+
+        protected virtual string InterpreterDescription {
+            get {
+                return "Python 2.6 Interactive";
+            }
+        }
+
+        protected virtual bool IPythonSupported {
+            get {
+                return true;
+            }
+        }
+
+        protected virtual string RawInput {
+            get {
+                return "raw_input";
+            }
+        }
+
+        public virtual string IntFirstMember {
+            get {
+                return "conjugate";
+            }
         }
 
         protected virtual string ReplPrompt {
@@ -1394,7 +1437,11 @@ namespace AnalysisTest {
         }
 
         protected static IPythonInteractiveOptions GetInteractiveOptions() {
-            return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("PythonOptions")).GetInteractiveOptions("Python 2.6");
+            return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions("Python 2.6");
+        }
+
+        protected static IVsPython GetPythonAutomation() {
+            return ((IVsPython)VsIdeTestHostContext.Dte.GetObject("VsPython"));
         }
     }
 
@@ -1441,6 +1488,33 @@ namespace AnalysisTest {
             options.UseInterpreterPrompts = false;
             options.PrimaryPrompt = ">";
             options.SecondaryPrompt = "*";
+        }
+    }
+
+    [TestClass]
+    public class Python3kReplWindowTests : ReplWindowTests {
+        protected override string InterpreterDescription {
+            get {
+                return "Python 3.2 Interactive";
+            }
+        }
+
+        protected override string RawInput {
+            get {
+                return "input";
+            }
+        }
+
+        public override string IntFirstMember {
+            get {
+                return "bit_length";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return false;
+            }
         }
     }
 }

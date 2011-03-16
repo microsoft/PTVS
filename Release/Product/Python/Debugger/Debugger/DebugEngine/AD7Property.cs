@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Construct a DEBUG_PROPERTY_INFO representing this local or parameter.
-        public DEBUG_PROPERTY_INFO ConstructDebugPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields) {
+        public DEBUG_PROPERTY_INFO ConstructDebugPropertyInfo(uint radix, enum_DEBUGPROP_INFO_FLAGS dwFields) {
             DEBUG_PROPERTY_INFO propertyInfo = new DEBUG_PROPERTY_INFO();
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_FULLNAME) != 0) {
@@ -64,8 +64,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE) != 0) {
                 if (_evalResult.ExceptionText != null) {
                     propertyInfo.bstrValue = "error: " + _evalResult.ExceptionText;
-                } else {
+                } else if (radix != 16) {
                     propertyInfo.bstrValue = _evalResult.StringRepr;
+                } else {
+                    propertyInfo.bstrValue = _evalResult.HexRepr ?? _evalResult.StringRepr;
                 }
                 propertyInfo.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_VALUE;
             }
@@ -101,7 +103,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (children != null) {
                 DEBUG_PROPERTY_INFO[] properties = new DEBUG_PROPERTY_INFO[children.Length];
                 for (int i = 0; i < children.Length; i++) {
-                    properties[i] = new AD7Property(_frame, children[i], true).ConstructDebugPropertyInfo(dwFields);
+                    properties[i] = new AD7Property(_frame, children[i], true).ConstructDebugPropertyInfo(dwRadix, dwFields);
                 }
                 ppEnum = new AD7PropertyEnum(properties);
                 return VSConstants.S_OK;
@@ -143,7 +145,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public int GetPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields, uint dwRadix, uint dwTimeout, IDebugReference2[] rgpArgs, uint dwArgCount, DEBUG_PROPERTY_INFO[] pPropertyInfo) {
             pPropertyInfo[0] = new DEBUG_PROPERTY_INFO();
             rgpArgs = null;
-            pPropertyInfo[0] = ConstructDebugPropertyInfo(dwFields);
+            pPropertyInfo[0] = ConstructDebugPropertyInfo(dwRadix, dwFields);
             return VSConstants.S_OK;
         }
 

@@ -18,6 +18,11 @@
     <SccProvider>SAK</SccProvider>
     <StyleCopEnabled>false</StyleCopEnabled>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartAction>Program</StartAction>
+    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix Exp</StartArguments>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -176,6 +181,7 @@
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
     <Compile Include="PythonTools\ImpersonationHelper.cs" />
     <Compile Include="PythonTools\Intellisense\XamlTextViewCreationListener.cs" />
+    <Compile Include="PythonTools\IVsPython.cs" />
     <Compile Include="PythonTools\Navigation\AssignmentScopeNode.cs" />
     <Compile Include="PythonTools\Navigation\PythonFileLibraryNode.cs" />
     <Compile Include="PythonTools\Project\DefaultLauncherProvider.cs" />
@@ -246,7 +252,7 @@
     <Compile Include="PythonTools\Navigation\SimpleObject.cs" />
     <Compile Include="PythonTools\Navigation\SimpleObjectList.cs" />
     <Compile Include="PythonTools\Navigation\TextLineEventListener.cs" />
-    <Compile Include="PythonTools\Options\AutomationOptions.cs" />
+    <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\GenerateIntellisenseDbDialog.cs">
       <SubType>Form</SubType>
     </Compile>

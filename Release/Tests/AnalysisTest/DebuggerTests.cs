@@ -41,12 +41,12 @@ namespace AnalysisTest {
 
         [TestMethod]
         public void EnumChildrenTest() {
-            const int lastLine = 21;
+            const int lastLine = 26;
 
-            ChildTest("EnumChildTest.py", lastLine, "cinst", new ChildInfo("abc", "42"));
-            ChildTest("EnumChildTest.py", lastLine, "c2inst", new ChildInfo("abc", "42"), new ChildInfo("bar", "100"));
+            ChildTest("EnumChildTest.py", lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"));
+            ChildTest("EnumChildTest.py", lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
             ChildTest("EnumChildTest.py", lastLine, "l", new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
-            ChildTest("EnumChildTest.py", lastLine, "d1", new ChildInfo("[42]", "100"));
+            ChildTest("EnumChildTest.py", lastLine, "d1", new ChildInfo("[42]", "100", "0x64"));
             ChildTest("EnumChildTest.py", lastLine, "d2", new ChildInfo("['abc']", "'foo'"));
             ChildTest("EnumChildTest.py", lastLine, "i", null);
         }
@@ -95,9 +95,11 @@ namespace AnalysisTest {
 
                 Assert.IsTrue(children.Length == childrenReceived.Count);
                 for (int i = 0; i < children.Length; i++) {
+                    var curChild = children[i];
                     bool foundChild = false;
                     for (int j = 0; j < childrenReceived.Count; j++) {
-                        if (childrenReceived[j].ChildText == children[i].ChildText && childrenReceived[j].StringRepr == children[i].Repr) {
+                        var curReceived = childrenReceived[j];
+                        if (ChildrenMatch(curChild, curReceived)) {
                             foundChild = true;
 
                             if (children[i].ChildText.StartsWith("[")) {
@@ -122,13 +124,21 @@ namespace AnalysisTest {
             process.WaitForExit();
         }
 
+        private static bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
+            return curReceived.ChildText == curChild.ChildText && 
+                curReceived.StringRepr == curChild.Repr &&
+                (curChild.HexRepr == null || curChild.HexRepr == curReceived.HexRepr);
+        }
+
         class ChildInfo {
             public readonly string ChildText;
             public readonly string Repr;
+            public readonly string HexRepr;
 
-            public ChildInfo(string key, string value) {
+            public ChildInfo(string key, string value, string hexRepr = null) {
                 ChildText = key;
                 Repr = value;
+                HexRepr = hexRepr;
             }
         }
 

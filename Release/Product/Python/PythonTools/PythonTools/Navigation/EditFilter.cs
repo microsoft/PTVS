@@ -639,7 +639,7 @@ namespace Microsoft.PythonTools.Language {
                         break;
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
-                foreach (var command in PythonToolsPackage.Commands) {
+                foreach (var command in PythonToolsPackage.Commands.Keys) {
                     if (command.CommandId == nCmdID) {
                         command.DoCommand(this, EventArgs.Empty);
                         return VSConstants.S_OK;
@@ -698,7 +698,7 @@ namespace Microsoft.PythonTools.Language {
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 for (int i = 0; i < cCmds; i++) {
-                    foreach (var command in PythonToolsPackage.Commands) {
+                    foreach (var command in PythonToolsPackage.Commands.Keys) {
                         if (command.CommandId == prgCmds[i].cmdID) {
                             int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
                             if (res != null) {

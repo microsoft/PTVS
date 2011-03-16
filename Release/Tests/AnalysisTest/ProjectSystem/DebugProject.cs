@@ -598,7 +598,7 @@ namespace AnalysisTest.ProjectSystem {
         }
 
         protected static IPythonOptions GetOptions() {
-            return (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("PythonOptions");
+            return (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
         }
 
 

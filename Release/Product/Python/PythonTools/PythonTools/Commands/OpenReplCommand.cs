@@ -58,7 +58,13 @@ namespace Microsoft.PythonTools.Commands {
                 oleMenu.Visible = true;
                 oleMenu.Enabled = true;
                 oleMenu.Supported = true;
-                oleMenu.Text = _factory.GetInterpreterDisplay() + " Interactive";
+                oleMenu.Text = Description;
+            }
+        }
+
+        public string Description {
+            get {
+                return _factory.GetInterpreterDisplay() + " Interactive";
             }
         }
         

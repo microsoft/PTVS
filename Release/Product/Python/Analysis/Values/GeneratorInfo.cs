@@ -29,24 +29,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public GeneratorInfo(FunctionInfo functionInfo)
             : base(functionInfo.ProjectState._generatorType) {
             _functionInfo = functionInfo;
-            ISet<Namespace> nextMeth;
-            if (functionInfo._analysisUnit.ProjectState.LanguageVersion.Is3x()) {
-                nextMeth = this["__next__"];
-            } else {
-                nextMeth = this["next"];
+            ISet<Namespace> nextMeth, sendMeth;
+            if (TryGetMember("__next__", out nextMeth) || TryGetMember("next", out nextMeth)) {
+                _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
             }
-            var sendMeth = this["send"];
 
-            _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
-            _sendMethod = new GeneratorSendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)sendMeth.First());
+            if (TryGetMember("send", out sendMeth)) {
+                _sendMethod = new GeneratorSendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)sendMeth.First());
+            }
 
             _sends = new VariableDef();
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             switch(name) {
-                case "next": return _nextMethod.SelfSet;
-                case "send": return _sendMethod.SelfSet;
+                case "next":
+                    if (_nextMethod != null) {
+                        return _nextMethod.SelfSet;
+                    }
+                    break;
+                case "send":
+                    if (_sendMethod != null) {
+                        return _sendMethod.SelfSet;
+                    }
+                    break;
             }
             
             return base.GetMember(node, unit, name);

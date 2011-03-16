@@ -51,13 +51,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public ISet<Namespace> this[string name] {
             get {
-                ISet<Namespace> res;
-                if (_specializedValues != null && _specializedValues.TryGetValue(name, out res)) {
-                    return res;
-                }
-                var member = _type.GetMember(ProjectState._defaultContext, name);
-                if (member != null) {
-                    return ProjectState.GetNamespaceFromObjects(member);
+                ISet<Namespace> value;
+                if (TryGetMember(name, out value)) {
+                    return value;
                 }
                 throw new KeyNotFoundException(String.Format("Key {0} not found", name));
             }
@@ -67,6 +63,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 _specializedValues[name] = value;
             }
+        }
+
+        public bool TryGetMember(string name, out ISet<Namespace> value) {
+            ISet<Namespace> res;
+            if (_specializedValues != null && _specializedValues.TryGetValue(name, out res)) {
+                value = res;
+                return true;
+            }
+            var member = _type.GetMember(ProjectState._defaultContext, name);
+            if (member != null) {
+                value = ProjectState.GetNamespaceFromObjects(member);
+                return true;
+            }
+            value = null;
+            return false;
         }
 
         public PythonAnalyzer ProjectState {

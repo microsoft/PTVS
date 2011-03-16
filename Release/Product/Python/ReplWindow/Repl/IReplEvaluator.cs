@@ -47,11 +47,11 @@ namespace Microsoft.VisualStudio.Repl {
         bool CanExecuteText(string/*!*/ text);
 
         /// <summary>
-        /// Executes the specified text asynchronously and calls back the given completion when the tex has been executed.
+        /// Executes the specified text asynchronously and calls back the given completion when the text has been executed.
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="completion"></param>
-        /// <returns></returns>
+        /// <param name="text">The code snippet to execute.</param>
+        /// <param name="completion">Callback to invoke on execution completion. Do not invoke the callback if this method returns false.</param>
+        /// <returns>True on success.</returns>
         bool ExecuteText(string text, Action<ExecutionResult> completion);
         
         void ExecuteFile(string filename);

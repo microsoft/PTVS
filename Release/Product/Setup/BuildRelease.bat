@@ -1,4 +1,4 @@
-set MySku=Public
+set MySku=Internal
 @echo off
 if "%1" == "" (
 	echo Must provide out dir
@@ -60,7 +60,7 @@ copy ..\..\..\Binaries\x64\Release\*.dll %1\Release\Binaries\x64
 copy ..\..\..\Binaries\x64\Release\*.exe %1\Release\Binaries\x64
 
 
-:tfpt scorch /noprompt
+tfpt scorch /noprompt
 
 mkdir %1\Sources\Incubation
 xcopy /s ..\..\..\* %1\Sources

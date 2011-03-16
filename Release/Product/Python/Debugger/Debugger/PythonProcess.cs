@@ -340,9 +340,10 @@ namespace Microsoft.PythonTools.Debugger {
 
         private PythonEvaluationResult ReadPythonObject(Socket socket, string text, string childText, bool childIsIndex, PythonStackFrame frame) {
             string objRepr = socket.ReadString();
+            string hexRepr = socket.ReadString();
             string typeName = socket.ReadString();
             bool isExpandable = socket.ReadInt() == 1;
-            return new PythonEvaluationResult(this, objRepr, typeName, text, childText, childIsIndex, frame, isExpandable);
+            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, text, childText, childIsIndex, frame, isExpandable);
         }
 
         private void HandleThreadFrameList(Socket socket) {

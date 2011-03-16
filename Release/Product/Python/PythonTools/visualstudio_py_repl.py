@@ -14,6 +14,7 @@ import traceback
 import random
 import os
 import inspect
+import types
 from collections import deque
 
 try:
@@ -241,7 +242,7 @@ actual inspection and introspection."""
 
     def _write_member_dict(self, mem_dict):
         self.conn.send(struct.pack('i', len(mem_dict)))
-        for name, type_name in mem_dict.iteritems():
+        for name, type_name in mem_dict.items():
             self._write_string(name)
             self._write_string(type_name)
 
@@ -394,7 +395,7 @@ class BasicReplBackend(ReplBackend):
             try:
                 self.run_file_as_main(self.launch_file)
             except:
-                print 'error in launching startup script:'
+                print('error in launching startup script:')
                 traceback.print_exc()
 
         while True:
@@ -522,6 +523,12 @@ class BasicReplBackend(ReplBackend):
         doc = val.__doc__
         args, vargs, varkw, defaults = inspect.getargspec(val)
 
+        if type(val) is types.MethodType:
+            if ((sys.version >= '3.0' and val.__self__ is not None) or
+               (sys.version < '3.0' and val.im_self is not None)):
+                # remove self for instance methods
+                args = args[1:]
+            
         if defaults is not None:
             defaults = [repr(default) for default in defaults]
             
@@ -537,7 +544,7 @@ class BasicReplBackend(ReplBackend):
 
     def get_module_names(self):
         res = []
-        for name, module in sys.modules.iteritems():
+        for name, module in sys.modules.items():
             try:
                 if (name == '__main__' or 
                    (name != 'visualstudio_py_repl' and module.__file__ is not None)):
