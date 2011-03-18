@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -20,25 +21,52 @@ using Microsoft.VisualStudio.ComponentModelHost;
 namespace Microsoft.PythonTools.Project {
     public partial class PythonGeneralyPropertyPageControl : UserControl {
         private readonly PythonGeneralPropertyPage _propPage;
-        private readonly IPythonInterpreterFactory[] _interpreters;
+        private readonly List<IPythonInterpreterFactory> _interpreters = new List<IPythonInterpreterFactory>();
 
         public PythonGeneralyPropertyPageControl() {
             InitializeComponent();
 
+            InitializeInterpreters();
+            PythonToolsPackage.Instance.InterpreterOptionsPage.InterpretersChanged += InterpreterOptionsPage_InterpretersChanged;
+        }
+
+        private void InitializeInterpreters() {
             var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            _interpreters = model.GetAllPythonInterpreterFactories();
-            
+            _interpreters.AddRange(model.GetAllPythonInterpreterFactories());
+
             foreach (var interpreter in _interpreters) {
                 _defaultInterpreter.Items.Add(interpreter.GetInterpreterDisplay());
             }
+            
             if (_defaultInterpreter.Items.Count == 0) {
-
                 _defaultInterpreter.Enabled = false;
                 _defaultInterpreter.Items.Add("No Python Interpreters Installed");
                 _defaultInterpreter.SelectedIndexChanged -= this.Changed;
                 _defaultInterpreter.SelectedIndex = 0;
                 _defaultInterpreter.SelectedIndexChanged += this.Changed;
             }
+        }
+
+        private void InterpreterOptionsPage_InterpretersChanged(object sender, EventArgs e) {
+            _defaultInterpreter.SelectedIndexChanged -= Changed;
+            
+            _interpreters.Clear();
+            _defaultInterpreter.Items.Clear();
+            InitializeInterpreters();
+
+            Guid guid;
+            Version version;
+            if (Guid.TryParse(_propPage.Project.GetProjectProperty(PythonConstants.InterpreterId, false), out guid) &&
+                Version.TryParse(_propPage.Project.GetProjectProperty(PythonConstants.InterpreterVersion, false), out version)) {
+                SetDefaultInterpreter(guid, version);
+            }
+
+            _defaultInterpreter.SelectedIndexChanged += Changed;
+        }
+        
+        protected override void OnHandleDestroyed(EventArgs e) {
+            base.OnHandleDestroyed(e);
+            PythonToolsPackage.Instance.InterpreterOptionsPage.InterpretersChanged -= InterpreterOptionsPage_InterpretersChanged;
         }
 
         internal PythonGeneralyPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage)
@@ -71,7 +99,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void SetDefaultInterpreter(Guid id, Version version) {
-            for (int i = 0; i < _interpreters.Length; i++) {
+            for (int i = 0; i < _interpreters.Count; i++) {
                 var interpreter = _interpreters[i];
                 if (interpreter.Id == id && interpreter.Configuration.Version == version) {
                     _defaultInterpreter.SelectedIndex = i;

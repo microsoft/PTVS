@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Project {
         public override string Caption {
             get {
                 if (_caption == null) {
-                    _caption = CommonUtils.CreateFriendlyPath(
+                    _caption = CommonUtils.CreateFriendlyDirectoryPath(
                         Path.GetDirectoryName(this.ProjectMgr.BaseURI.Uri.LocalPath), this.Url);
                 }
                 return _caption;

@@ -76,6 +76,10 @@ namespace Microsoft.PythonTools.Options {
                     }
                 );
             }
+
+            if (_window != null) {
+                _window.InitInterpreters();
+            }
         }
 
         private static string FormatArchitecture(ProcessorArchitecture arch) {
@@ -103,17 +107,30 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void SaveSettingsToStorage() {
-            var defaultInterpreter = GetWindow().GetOption(GetWindow().DefaultInterpreter);            
+            var defaultInterpreter = GetWindow().GetOption(GetWindow().DefaultInterpreter);
 
-            Version defaultVersion;
-            if (Version.TryParse(defaultInterpreter.Version, out defaultVersion)) {
+            if (defaultInterpreter != null) {
+                Version defaultVersion;
+                if (!Version.TryParse(defaultInterpreter.Version, out defaultVersion)) {
+                    defaultVersion = new Version(2, 6);
+                    defaultInterpreter.Version = "2.6";
+                }
+
+                if (defaultInterpreter.Id == Guid.Empty) {
+                    defaultInterpreter.Id = Guid.NewGuid();
+                }
+
                 if (defaultInterpreter.Id != GetDefaultInterpreterId() || defaultVersion != GetDefaultInterpreterVersion()) {
-                    SaveString(DefaultInterpreterSetting, defaultInterpreter.Id.ToString());
-                    SaveString(DefaultInterpreterVersionSetting, defaultVersion.ToString());
                     _defaultInterpreter = defaultInterpreter.Id;
                     _defaultInterpreterVersion = defaultVersion;
+
+                    SaveString(DefaultInterpreterSetting, defaultInterpreter.Id.ToString());
+                    SaveString(DefaultInterpreterVersionSetting, defaultVersion.ToString());
                     PythonToolsPackage.Instance.UpdateDefaultAnalyzer();
                 }
+            } else {
+                _defaultInterpreter = Guid.Empty;
+                _defaultInterpreterVersion = new Version();
             }
 
             var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
@@ -136,6 +153,16 @@ namespace Microsoft.PythonTools.Options {
                     }
                     option.Added = false;
                     added = true;
+                }
+
+                if (_defaultInterpreter == Guid.Empty) {
+                    _defaultInterpreter = _options[i].Id;
+                    Version defaultVers;
+                    if (!Version.TryParse(_options[i].Version, out defaultVers)) {
+                        defaultVers = new Version(2, 6);
+                        _options[i].Version = "2.6";
+                    }
+                    _defaultInterpreterVersion = defaultVers;
                 }
 
                 if (option.IsConfigurable) {
@@ -170,8 +197,13 @@ namespace Microsoft.PythonTools.Options {
                 i++;
             }
 
-            PythonToolsPackage.Instance.RefreshReplCommands();
+            var interpChanged = InterpretersChanged;
+            if (interpChanged != null) {
+                interpChanged(this, EventArgs.Empty);
+            }
         }
+
+        public event EventHandler InterpretersChanged;
 
         private static string GetInterpreterSettingPath(Guid id, Version version) {
             return id.ToString() + "\\" + version.ToString() + "\\";

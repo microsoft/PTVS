@@ -40,8 +40,6 @@ namespace Microsoft.VisualStudio.Repl
     [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideKeyBindingTable(ReplWindow.TypeGuid, 200)]        // Resource ID: "Interactive Console"
-    [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]
-    [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
     [ProvideToolWindow(typeof(ReplWindow), MultiInstances = true)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [Guid(GuidList.guidReplWindowPkgString)]

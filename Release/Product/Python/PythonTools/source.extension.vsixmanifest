@@ -21,6 +21,11 @@
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
   </Identifier>
+  <References>
+    <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="1.0">
+      <Name>Microsoft.VisualStudio.ReplWindow</Name>
+    </Reference>
+  </References>
   <Content>
     <VsPackage>|%CurrentProject%|</VsPackage>
     <Assembly AssemblyName="Microsoft.PythonTools">Microsoft.PythonTools</Assembly>

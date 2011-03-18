@@ -48,11 +48,24 @@ namespace Microsoft.PythonTools {
         /// Tries to create friendly directory path: '.' if the same as base path,
         /// relative path if short, absolute path otherwise.
         /// </summary>
-        public static string CreateFriendlyPath(string basePath, string path) {
+        public static string CreateFriendlyDirectoryPath(string basePath, string path) {
             string normalizedBaseDir = NormalizeDirectoryPath(basePath);
             string normalizedDir = NormalizeDirectoryPath(path);
-            return normalizedBaseDir == normalizedDir ? " . " :
+            return normalizedBaseDir == normalizedDir ? "." :
                 new DirectoryInfo(normalizedDir).Name;
+        }
+
+        public static string CreateFriendlyFilePath(string basePath, string path) {
+            string friendlyDir = CreateFriendlyDirectoryPath(basePath, System.IO.Path.GetDirectoryName(path));
+
+            if (friendlyDir == ".") {
+                return Path.GetFileName(path);
+            }
+
+            return System.IO.Path.Combine(
+                friendlyDir,
+                System.IO.Path.GetFileName(path)
+            );
         }
     }
 }

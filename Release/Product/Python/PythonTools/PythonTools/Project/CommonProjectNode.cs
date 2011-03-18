@@ -43,6 +43,37 @@ namespace Microsoft.PythonTools.Project {
     }
 
     public abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
+        private CommonProjectPackage/*!*/ _package;
+        private Guid _mruPageGuid = new Guid(CommonConstants.AddReferenceMRUPageGuid);
+        private static ImageList _imageList;
+        private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;
+        private static int _imageOffset;
+        private CommonSearchPathContainerNode _searchPathContainer;
+        private FileSystemWatcher _watcher;
+        private string _projectDir;
+        private bool _isRefreshing;
+        private object _automationObject;
+        private CommonPropertyPage _propPage;
+
+        public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
+            Contract.Assert(package != null);
+            Contract.Assert(imageList != null);
+
+            _package = package;
+            CanFileNodesHaveChilds = true;
+            OleServiceProvider.AddService(typeof(VSLangProj.VSProject), new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
+            SupportsProjectDesigner = true;
+            _imageList = imageList;
+
+            //Store the number of images in ProjectNode so we know the offset of the language icons.
+            _imageOffset = ImageHandler.ImageList.Images.Count;
+            foreach (Image img in ImageList.Images) {
+                ImageHandler.AddImage(img);
+            }
+
+            InitializeCATIDs();            
+        }
+
         #region abstract methods
 
         public abstract Type GetProjectFactoryType();
@@ -59,21 +90,6 @@ namespace Microsoft.PythonTools.Project {
         public abstract Type GetGeneralPropertyPageType();
         public abstract Type GetLibraryManagerType();
         public abstract string GetProjectFileExtension();
-
-        #endregion
-
-        #region fields
-
-        private CommonProjectPackage/*!*/ _package;
-        private Guid _mruPageGuid = new Guid(CommonConstants.AddReferenceMRUPageGuid);
-        private static ImageList _imageList;
-        private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;
-        private static int _imageOffset;
-        private CommonSearchPathContainerNode _searchPathContainer;
-        private string _projectDir;
-        private bool _isRefreshing;
-        private object _automationObject;
-        private CommonPropertyPage _propPage;
 
         #endregion
 
@@ -127,29 +143,6 @@ namespace Microsoft.PythonTools.Project {
         public CommonPropertyPage PropertyPage { 
             get { return _propPage; } 
             set { _propPage = value; } 
-        }
-
-        #endregion
-
-        #region ctor
-
-        public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
-            Contract.Assert(package != null);
-            Contract.Assert(imageList != null);
-
-            _package = package;
-            CanFileNodesHaveChilds = true;
-            OleServiceProvider.AddService(typeof(VSLangProj.VSProject), new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
-            SupportsProjectDesigner = true;
-            _imageList = imageList;
-
-            //Store the number of images in ProjectNode so we know the offset of the language icons.
-            _imageOffset = ImageHandler.ImageList.Images.Count;
-            foreach (Image img in ImageList.Images) {
-                ImageHandler.AddImage(img);
-            }
-
-            InitializeCATIDs();
         }
 
         #endregion
@@ -352,6 +345,38 @@ namespace Microsoft.PythonTools.Project {
             base.Reload();
             RefreshHierarchy();
             OnProjectPropertyChanged += new EventHandler<ProjectPropertyChangedArgs>(CommonProjectNode_OnProjectPropertyChanged);
+
+            // track file creation/deletes and update our glyphs when files start/stop existing for files in the project.
+            if (_watcher != null) {
+                _watcher.EnableRaisingEvents = false;
+                _watcher.Dispose();
+            }
+            
+            _watcher = new FileSystemWatcher(ProjectDir);
+            _watcher.IncludeSubdirectories = true;
+            _watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
+            _watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
+            _watcher.Renamed += new RenamedEventHandler(FileNameChanged);
+            _watcher.EnableRaisingEvents = true;
+        }
+
+        private void FileNameChanged(object sender, RenamedEventArgs e) {
+            var child = FindChild(e.OldFullPath);
+            if (child != null) {
+                child.ReDraw(UIHierarchyElement.Icon);
+            }
+
+            child = FindChild(e.FullPath);
+            if (child != null) {
+                child.ReDraw(UIHierarchyElement.Icon);
+            }            
+        }
+
+        private void FileExistanceChanged(object sender, FileSystemEventArgs e) {
+            var child = FindChild(e.FullPath);
+            if (child != null) {
+                child.ReDraw(UIHierarchyElement.Icon);
+            }
         }
 
         public override int GetGuidProperty(int propid, out Guid guid) {

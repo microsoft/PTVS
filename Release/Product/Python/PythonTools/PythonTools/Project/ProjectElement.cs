@@ -147,6 +147,7 @@ namespace Microsoft.PythonTools.Project
             {
                 deleted = true;
                 itemProject.BuildProject.RemoveItem(item);
+                itemProject.SetProjectFileDirty(true);
             }
             itemProject = null;
             item = null;

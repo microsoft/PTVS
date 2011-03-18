@@ -371,6 +371,12 @@ namespace Microsoft.PythonTools {
             // Add our command handlers for menu (commands must exist in the .vsct file)
             RegisterCommands(new Command[] { new ExecuteInReplCommand(), new SendToReplCommand(), new FillParagraphCommand(), new SendToDefiningModuleCommand() });
             RegisterCommands(GetReplCommands());
+            
+            InterpreterOptionsPage.InterpretersChanged += new EventHandler(InterpretersChanged);
+        }
+
+        private void InterpretersChanged(object sender, EventArgs e) {
+            RefreshReplCommands();
         }
 
         private void RegisterCommands(IEnumerable<Command> commands) {
@@ -430,8 +436,8 @@ namespace Microsoft.PythonTools {
             });
 
             var replCommands = new List<OpenReplCommand>();
-            for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow); i++) {
-                var factory = i < factories.Length ? factories[i] : null;
+            for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow) && i < factories.Length; i++) {
+                var factory = factories[i];
 
                 var cmd = new OpenReplCommand((int)PkgCmdIDList.cmdidReplWindow + i, factory);
                 replCommands.Add(cmd);

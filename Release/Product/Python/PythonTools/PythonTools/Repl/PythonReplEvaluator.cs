@@ -392,8 +392,10 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandleOutput() {
                 string data = Socket.ReadString();
-                using (new SocketUnlock(this)) {
-                    Window.WriteOutput(FixNewLines(data));
+                if (data != null) {
+                    using (new SocketUnlock(this)) {
+                        Window.WriteOutput(FixNewLines(data));
+                    }
                 }
             }
 

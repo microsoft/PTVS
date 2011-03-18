@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
@@ -29,11 +30,18 @@ namespace Microsoft.PythonTools.Options {
             _toolTips.SetToolTip(_interactiveOptionsValue, optionsToolTip);
             _toolTips.SetToolTip(_interactiveOptions, optionsToolTip);
 
+            InitInterpreters();
+        }
+
+        internal void InitInterpreters() {
+            _showSettingsFor.Items.Clear();
+            _defaultInterpreter.Items.Clear();
+
             foreach (var interpreter in OptionsPage._options) {
                 var display = interpreter.Display;
                 int index = _defaultInterpreter.Items.Add(display);
                 _showSettingsFor.Items.Add(display);
-                
+
                 if (IsDefaultInterpreter(interpreter)) {
                     _defaultInterpreter.SelectedIndex = index;
                     _showSettingsFor.SelectedIndex = index;
@@ -88,14 +96,18 @@ namespace Microsoft.PythonTools.Options {
                     _loadingOptions = false;
                 }
             } else {
-                _removeInterpreter.Enabled = _path.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _pathEnvVar.Enabled = false;
-                _generateCompletionDb.Enabled = false;
-                _showSettingsFor.Items.Add("No Python Interpreters Installed");
-                _defaultInterpreter.Items.Add("No Python Interpreters Installed");
-                _showSettingsFor.SelectedIndex = _defaultInterpreter.SelectedIndex = 0;
-                _defaultInterpreter.Enabled = false;
-                _showSettingsFor.Enabled = false;
+                InitializeWithNoInterpreters();
             }
+        }
+
+        private void InitializeWithNoInterpreters() {
+            _removeInterpreter.Enabled = _path.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _pathEnvVar.Enabled = false;
+            _generateCompletionDb.Enabled = false;
+            _showSettingsFor.Items.Add("No Python Interpreters Installed");
+            _defaultInterpreter.Items.Add("No Python Interpreters Installed");
+            _showSettingsFor.SelectedIndex = _defaultInterpreter.SelectedIndex = 0;
+            _defaultInterpreter.Enabled = false;
+            _showSettingsFor.Enabled = false;
         }
 
         private void ShowSettingsForSelectedIndexChanged(object sender, EventArgs e) {
@@ -189,12 +201,29 @@ namespace Microsoft.PythonTools.Options {
                     _defaultInterpreter.Enabled = true;
                     _showSettingsFor.Enabled = true;
                 }
-                OptionsPage._options.Add(
+                var newOptions = new InterpreterOptions() { Display = newInterp.InterpreterDescription, Added = true, IsConfigurable = true };
+
+                // two indicies to track: the indicies in our drop down (the realIndex) and the indicies in our
+                // options list which may still have uncommitted changes.
+                int realIndex = 0, optionsIndex = OptionsPage._options.Count;
+                for (int i = 0; i < OptionsPage._options.Count; i++) {
+                    var curOption = OptionsPage._options[i];
+                    if (String.Compare(newOptions.Display, curOption.Display) < 0) {
+                        optionsIndex = i;
+                        break;
+                    }
+                    if (!curOption.Removed) {
+                        realIndex++;
+                    }
+                }                
+
+                OptionsPage._options.Insert(
+                    optionsIndex,
                     new InterpreterOptions() { Display = newInterp.InterpreterDescription, Added = true, IsConfigurable = true }
                 );
-                _showSettingsFor.Items.Add(newInterp.InterpreterDescription);
-                _showSettingsFor.SelectedIndex = _showSettingsFor.Items.Count - 1;
-                _defaultInterpreter.Items.Add(newInterp.InterpreterDescription);
+                _showSettingsFor.Items.Insert(realIndex, newInterp.InterpreterDescription);
+                _showSettingsFor.SelectedIndex = realIndex;
+                _defaultInterpreter.Items.Insert(realIndex, newInterp.InterpreterDescription);
                 if (_defaultInterpreter.SelectedIndex == -1) {
                     _defaultInterpreter.SelectedIndex = 0;
                 }
@@ -207,8 +236,20 @@ namespace Microsoft.PythonTools.Options {
                 if (res == DialogResult.Yes) {
                     var curOption = CurrentOptions;
                     curOption.Removed = true;
-                    _showSettingsFor.Items.RemoveAt(_showSettingsFor.SelectedIndex);
+                    int index = _showSettingsFor.SelectedIndex;
+                    _showSettingsFor.Items.RemoveAt(index);
+                    _defaultInterpreter.Items.RemoveAt(index);
+
+                    if (_showSettingsFor.Items.Count == 0) {
+                        // last interpreter removed...
+                        InitializeWithNoInterpreters();
+                    }
+
+                    if (_defaultInterpreter.SelectedIndex == -1) {
+                        _defaultInterpreter.SelectedIndex = 0;
+                    }
                     _showSettingsFor.SelectedIndex = 0;
+                    
                 }
             }
         }

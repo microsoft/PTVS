@@ -15,6 +15,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio;
@@ -88,7 +89,9 @@ namespace Microsoft.PythonTools.Project {
 
         public override int ImageIndex {
             get {
-                if (IsFormSubType) {
+                if (!File.Exists(Url)) {
+                    return (int)ProjectNode.ImageName.MissingFile;
+                } else if (IsFormSubType) {
                     return (int)ProjectNode.ImageName.WindowsForm;
                 } else if (this.FileName.ToLower().EndsWith(this._project.GetCodeFileExtension())) {
                     if (NativeMethods.IsSamePath(this.Url, _project.GetStartupFile())) {
@@ -210,7 +213,10 @@ namespace Microsoft.PythonTools.Project {
                 switch (cmd) {
                     case CommonConstants.SetAsStartupFileCmdId:
                         // Set the StartupFile project property to the Url of this node
-                        ProjectMgr.SetProjectProperty(CommonConstants.StartupFile, CommonUtils.CreateFriendlyPath(this.ProjectMgr.ProjectFolder, this.Url));
+                        ProjectMgr.SetProjectProperty(
+                            CommonConstants.StartupFile, 
+                            CommonUtils.CreateFriendlyFilePath(this.ProjectMgr.ProjectFolder, Url)
+                        );
                         break;
                     case CommonConstants.StartDebuggingCmdId:
                     case CommonConstants.StartWithoutDebuggingCmdId:

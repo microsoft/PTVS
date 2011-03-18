@@ -65,7 +65,8 @@ namespace Microsoft.PythonTools.Editor {
             int tabSize = view.Options.GetIndentSize();
             var tokens = classifier.GetClassificationSpans(line.Extent);
             if (tokens.Count > 0) {
-                if (!tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment)) {
+                if (!tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment) &&
+                    !tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
                     var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
                     if (lastChar == ':') {
                         indentation += tabSize;

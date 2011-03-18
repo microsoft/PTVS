@@ -355,7 +355,7 @@ namespace Microsoft.PythonTools.Project
 
 				if(node == null)
 				{
-					child.SetEditLabel(child.Caption);
+					child.SetEditLabel(child.GetEditLabel());
 				}
 				else
 				{
