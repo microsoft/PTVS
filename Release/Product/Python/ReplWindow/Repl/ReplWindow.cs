@@ -95,7 +95,13 @@ namespace Microsoft.VisualStudio.Repl {
         private OleMenuCommandService _commandService;
         private readonly Guid _langSvcGuid;
         private readonly string _replId;
+
+        //
+        // A list of scopes if this REPL is multi-scoped
+        // 
         private string[] _currentScopes;
+        private bool _scopeListVisible;
+        
         private readonly IProjectionBufferFactoryService _projectionFactory;   // the factory service for creating ellison 
         private readonly ITextBufferFactoryService _bufferFactory;
         private readonly IClassifierAggregatorService _classifierAgg;
@@ -105,7 +111,6 @@ namespace Microsoft.VisualStudio.Repl {
         private readonly IReplWindowCreationListener[] _creationListeners;
         private readonly List<ReplSpan> _spans = new List<ReplSpan>();       // List of spans we've added to the projection buffer
         private ITextBuffer _currentLanguageBuffer;
-        private OleMenuCommand _multipleScopesCommand;
         private readonly List<OutputColors> _outputColors = new List<OutputColors>();
 
         private static Guid DefaultFileType = new Guid(0x8239bec4, 0xee87, 0x11d0, 0x8c, 0x98, 0x0, 0xc0, 0x4f, 0xc2, 0xab, 0x22);
@@ -1747,17 +1752,30 @@ namespace Microsoft.VisualStudio.Repl {
             return lines;
         }
 
+        private IEditorOperations GetEditorOperations(IWpfTextView textView) {
+            IEditorOperationsFactoryService factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
+            return factory.GetEditorOperations(textView);
+        }
+
+        #endregion
+
+        #region Scopes
+
+        private void InitializeScopeList() {
+            IMultipleScopeEvaluator multiScopeEval = _evaluator as IMultipleScopeEvaluator;
+            if (multiScopeEval != null) {
+                _scopeListVisible = IsMultiScopeEnabled();
+                UpdateScopeList(this, EventArgs.Empty);
+                multiScopeEval.AvailableScopesChanged += UpdateScopeList;
+                multiScopeEval.MultipleScopeSupportChanged += MultipleScopeSupportChanged;
+            }
+        }
+
         internal void SetCurrentScope(string newItem) {
             StoreUncommittedInput();
             WriteLine(String.Format("Current scope changed to {0}", newItem));
-            ((IMultipleScopeEvaluator)Evaluator).SetScope(newItem);
+            ((IMultipleScopeEvaluator)_evaluator).SetScope(newItem);
             InsertUncommittedInput();
-        }
-
-        internal string[] CurrentScopes {
-            get {
-                return _currentScopes;
-            }
         }
 
         private void UpdateScopeList(object sender, EventArgs e) {
@@ -1766,12 +1784,39 @@ namespace Microsoft.VisualStudio.Repl {
                 return;
             }
 
-            _currentScopes = ((IMultipleScopeEvaluator)Evaluator).GetAvailableScopes().ToArray();
+            _currentScopes = ((IMultipleScopeEvaluator)_evaluator).GetAvailableScopes().ToArray();
         }
 
-        private IEditorOperations GetEditorOperations(IWpfTextView textView) {
-            IEditorOperationsFactoryService factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
-            return factory.GetEditorOperations(textView);
+        private bool IsMultiScopeEnabled() {
+            var multiScope = Evaluator as IMultipleScopeEvaluator;
+            return multiScope != null && multiScope.EnableMultipleScopes;
+        }
+
+        private void MultipleScopeSupportChanged(object sender, EventArgs e) {
+            _scopeListVisible = IsMultiScopeEnabled();
+        }
+
+        /// <summary>
+        /// Handles getting or setting the current value of the combo box.
+        /// </summary>
+        private void ScopeComboBoxHandler(IntPtr newValue, IntPtr outCurrentValue) {
+            // getting the current value
+            if (outCurrentValue != IntPtr.Zero) {
+                Marshal.GetNativeVariantForObject(((IMultipleScopeEvaluator)Evaluator).CurrentScopeName, outCurrentValue);
+            }
+
+            // setting the current value
+            if (newValue != IntPtr.Zero) {
+                SetCurrentScope((string)Marshal.GetObjectForNativeVariant(newValue));
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of scopes that should be available in the combo box.
+        /// </summary>
+        private void ScopeComboBoxGetList(IntPtr outList) {
+            Debug.Assert(outList != IntPtr.Zero);
+            Marshal.GetNativeVariantForObject(_currentScopes, outList);
         }
 
         #endregion
@@ -1885,6 +1930,14 @@ namespace Microsoft.VisualStudio.Repl {
                         ApplyProtection();
                         return VSConstants.S_OK;
                     case PkgCmdIDList.cmdidBreakLine: ExecuteText(); return VSConstants.S_OK;
+
+                    case PkgCmdIDList.comboIdReplScopes:
+                        ScopeComboBoxHandler(pvaIn, pvaOut);
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.comboIdReplScopesGetList:
+                        ScopeComboBoxGetList(pvaOut);
+                        return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == VSConstants.VSStd2K) {
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
@@ -2338,6 +2391,14 @@ namespace Microsoft.VisualStudio.Repl {
                     case PkgCmdIDList.cmdidBreakLine:
                         prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
                         return VSConstants.S_OK;
+
+                    case PkgCmdIDList.comboIdReplScopes:
+                        if (_scopeListVisible) {
+                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        } else {
+                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        }
+                        return VSConstants.S_OK;
                 }
             }
 
@@ -2384,13 +2445,7 @@ namespace Microsoft.VisualStudio.Repl {
 
             PrepareForInput();
             ApplyProtection();
-
-            IMultipleScopeEvaluator multiScopeEval = Evaluator as IMultipleScopeEvaluator;
-            if (multiScopeEval != null) {
-                UpdateScopeList(this, EventArgs.Empty);
-                multiScopeEval.AvailableScopesChanged += UpdateScopeList;
-                multiScopeEval.MultipleScopeSupportChanged += MultipleScopeSupportChanged;
-            }
+            InitializeScopeList();
 
             SetDefaultFontSize(ComponentModel, textView);
             
@@ -2399,10 +2454,6 @@ namespace Microsoft.VisualStudio.Repl {
 
             _view =  ComponentModel.GetService<IVsEditorAdaptersFactoryService>().GetViewAdapter(textView);
             _findTarget = _view as IVsFindTarget;
-        }
-
-        private void MultipleScopeSupportChanged(object sender, EventArgs e) {
-            _multipleScopesCommand.Enabled = IsMultiScopeEnabled();
         }
 
         /// <summary>
@@ -2470,19 +2521,6 @@ namespace Microsoft.VisualStudio.Repl {
             cmd = new OleMenuCommand(SmartExecute, id);
             _commandService.AddCommand(cmd);
 
-            var menuMyIndexComboCommandID = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.comboIdReplScopes);
-            var menuMyIndexComboCommand = new OleMenuCommand(ScopeComboBoxHandler, menuMyIndexComboCommandID);
-            menuMyIndexComboCommand.ParametersDescription = "$";
-            menuMyIndexComboCommand.BeforeQueryStatus += QueryMultipleScopes;
-            _multipleScopesCommand = menuMyIndexComboCommand;
-            menuMyIndexComboCommand.Visible = false;
-            _commandService.AddCommand(menuMyIndexComboCommand);
-
-            // --- Initialize the “GetList” command for IndexCombo
-            var menuMyIndexComboGetListCommandID = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.comboIdReplScopesGetList);
-            var menuMyIndexComboGetListCommand = new OleMenuCommand(ScopeComboBoxGetList, menuMyIndexComboGetListCommandID);
-            _commandService.AddCommand(menuMyIndexComboGetListCommand);
-
             base.OnToolWindowCreated();
 
             // add our toolbar which  is defined in our VSCT file
@@ -2492,62 +2530,6 @@ namespace Microsoft.VisualStudio.Repl {
             IVsToolWindowToolbarHost tbh = otbh as IVsToolWindowToolbarHost;
             Guid guidPerfMenuGroup = GuidList.guidReplWindowCmdSet;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdReplToolbar));
-        }
-
-        private void QueryMultipleScopes(object sender, EventArgs e) {
-            var menuCmd = (OleMenuCommand)sender;
-            menuCmd.Visible = menuCmd.Supported = menuCmd.Enabled = IsMultiScopeEnabled();
-        }
-
-        private bool IsMultiScopeEnabled() {
-            var multiScope = Evaluator as IMultipleScopeEvaluator;
-            bool isMultiScope = multiScope != null && multiScope.EnableMultipleScopes;
-            return isMultiScope;
-        }
-
-        /// <summary>
-        /// Handles getting or setting the current value of the combo box.
-        /// </summary>
-        private void ScopeComboBoxHandler(object sender, EventArgs e) {
-            var eventArgs = e as OleMenuCmdEventArgs;
-            if (eventArgs != null) {
-                IntPtr vOut = eventArgs.OutValue;
-                if (vOut != IntPtr.Zero) {
-                    // getting the current value
-                    Marshal.GetNativeVariantForObject(((IMultipleScopeEvaluator)Evaluator).CurrentScopeName, vOut);
-                }
-
-                object input = eventArgs.InValue;
-                if (input != null) {
-                    // setting the current value
-                    SetCurrentScope((string)input);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of scopes that should be available in the combo box.
-        /// </summary>
-        private void ScopeComboBoxGetList(object sender, EventArgs e) {
-            if ((null == e) || (e == EventArgs.Empty)) {
-                // --- We should never get here; EventArgs are required.
-
-                throw new ArgumentNullException("event args required");
-            }
-
-            var eventArgs = e as OleMenuCmdEventArgs;
-            if (eventArgs != null) {
-                object inParam = eventArgs.InValue;
-                IntPtr vOut = eventArgs.OutValue;
-
-                if (inParam != null) {
-                    throw new ArgumentException("in param illegal");
-                } else if (vOut != IntPtr.Zero) {
-                    Marshal.GetNativeVariantForObject(CurrentScopes, vOut);
-                } else {
-                    throw new ArgumentException("out param requierd");
-                }
-            }
         }
 
         public void HistoryNext(object sender, EventArgs e) {

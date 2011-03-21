@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             lock (_syncLock) {
                 _programCreated = true;
-                AD7ProgramCreateEvent.Send(this);
+                
 
                 if (_processLoadedThread != null) {
                     SendLoadComplete(_processLoadedThread);
@@ -181,6 +181,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private void SendLoadComplete(AD7Thread thread) {
             Debug.WriteLine("Sending load complete" + GetHashCode());
+            AD7ProgramCreateEvent.Send(this);
+
             Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
 
             if (_startModule != null) {
@@ -349,6 +351,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // in which case Visual Studio uses the IDebugEngineLaunch2::LaunchSuspended method
         // The IDebugEngineLaunch2::ResumeProcess method is called to start the process after the process has been successfully launched in a suspended state.
         int IDebugEngineLaunch2.LaunchSuspended(string pszServer, IDebugPort2 port, string exe, string args, string dir, string env, string options, enum_LAUNCH_FLAGS launchFlags, uint hStdInput, uint hStdOutput, uint hStdError, IDebugEventCallback2 ad7Callback, out IDebugProcess2 process) {
+            Debug.WriteLine("--------------------------------------------------------------------------------");
             Debug.WriteLine("PythonEngine LaunchSuspended Begin " + launchFlags + " " + GetHashCode());
             AssertMainThread();
             Debug.Assert(_events == null);
@@ -469,21 +472,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 Debug.WriteLine("ResumeProcess fails, empty program guid");
                 Debug.Fail("Unexpected problem -- IDebugEngine2.Attach wasn't called");
                 return VSConstants.E_FAIL;
-            }
-
-            // wait for the load event to complete, and pump messages
-
-            while (!_process.HasExited && !_loadComplete.WaitOne(100)) {
-                Debug.WriteLine("ResumeProcess waiting for load complete");
-            }
-
-            // Resume the threads in the debuggee process
-            if (_process.HasExited) {
-                Debug.WriteLine("ResumeProcess resume all");
-                _process.Resume();
-            } else {
-                // return failure?
-                Debug.WriteLine("Process exited");
             }
 
             Debug.WriteLine("ResumeProcess return S_OK");
