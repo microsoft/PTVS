@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             foreach(var file in Directory.GetFiles(dir)) {
-                if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+                if (IsPythonFile(file)) {
                     libFiles.Add(file);
                 }
             }
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static void CollectFilesWorker(string dir, List<string> files) {
             foreach (string file in Directory.GetFiles(dir)) {
-                if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+                if (IsPythonFile(file)) { 
                     files.Add(file);
                 }
             }
@@ -198,6 +198,11 @@ namespace Microsoft.PythonTools.Analysis {
                 CollectFilesWorker(nestedDir, files);
             }
         }
-
+        
+        private static bool IsPythonFile(string file) {
+            string filename = Path.GetFileName(file);
+            return filename.Length > 0 && Char.IsLetter(filename[0]) && // distros include things like '1col.py' in tests which aren't valid module names, ignore those.
+                file.EndsWith(".py", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".pyw", StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

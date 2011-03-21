@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -46,16 +47,28 @@ namespace Microsoft.PythonTools.Project {
             return new PythonNonCodeFileNode(this, item);
         }
 
+        /// <summary>
+        /// Evaluates if a file is a current language code file based on is extension
+        /// </summary>
+        /// <param name="strFileName">The filename to be evaluated</param>
+        /// <returns>true if is a code file</returns>
+        public override bool IsCodeFile(string strFileName) {
+            return IsPythonFile(strFileName);
+        }
+
+        internal static bool IsPythonFile(string strFileName) {
+            var ext = Path.GetExtension(strFileName);
+
+            return String.Equals(ext, PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) ||
+                String.Equals(ext, PythonConstants.WindowsFileExtension, StringComparison.OrdinalIgnoreCase);
+        }
+
         public override Type GetProjectFactoryType() {
             return typeof(PythonProjectFactory);
         }
 
         public override string GetProjectName() {
             return "PythonProject";
-        }
-
-        public override string GetCodeFileExtension() {
-            return PythonConstants.FileExtension;
         }
 
         public override string GetFormatList() {
@@ -72,10 +85,6 @@ namespace Microsoft.PythonTools.Project {
 
         public override Type GetLibraryManagerType() {
             return typeof(IPythonLibraryManager);
-        }
-
-        public override string GetProjectFileExtension() {
-            return ".pyproj";
         }
 
         protected override NodeProperties CreatePropertiesObject() {

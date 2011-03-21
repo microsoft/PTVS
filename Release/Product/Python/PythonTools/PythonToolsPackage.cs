@@ -66,7 +66,8 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonAdvancedOptionsPage), "Python Tools", "Advanced", 115, 118, true)]
     [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID        
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = false, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
-    [ProvideLanguageExtension(typeof(PythonLanguageInfo), ".py")]
+    [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
+    [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
     [ProvideDebugEngine("Python Debugging", typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId)]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", AD7Engine.DebugEngineId)]
     [ProvidePythonExecutionModeAttribute(ExecutionMode.StandardModeId, "Standard", "Standard")]
@@ -179,7 +180,7 @@ namespace Microsoft.PythonTools {
         }
 
         public override bool IsRecognizedFile(string filename) {
-            return filename.EndsWith(".py", StringComparison.OrdinalIgnoreCase);
+            return PythonProjectNode.IsPythonFile(filename);
         }
 
         public override Type GetLibraryManagerType() {

@@ -20,6 +20,10 @@ namespace Microsoft.PythonTools {
         public const string LanguageName = "Python";
         public const string TextEditorSettingsRegistryKey = LanguageName;
         public const string FileExtension = ".py";
+        /// <summary>
+        /// The extension for Python files which represent Windows applications.
+        /// </summary>
+        public const string WindowsFileExtension = ".pyw";
         public const string ProjectImageList = "Microsoft.PythonImageList.bmp";
         
         public const string LibraryManagerGuid = "888888e5-b976-4366-9e98-e7bc01f1842c";

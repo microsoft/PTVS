@@ -139,17 +139,18 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
                         proc = new Process();
                         proc.StartInfo = psi;
-                        proc.Exited += (sender, args) => {
-                            if (proc.ExitCode == 0) {
-                                lock (_interpreters) {
-                                    _typeDb = new TypeDatabase(outPath, Is3x);
-                                    OnNewDatabaseAvailable();
-                                }
-                            }
 
-                            databaseGenerationCompleted();
-                        };
                         proc.Start();
+                        proc.WaitForExit();
+
+                        if (proc.ExitCode == 0) {
+                            lock (_interpreters) {
+                                _typeDb = new TypeDatabase(outPath, Is3x);
+                                OnNewDatabaseAvailable();
+                            }
+                        }
+
+                        databaseGenerationCompleted();
                     }
                 });
                 t.Start();
@@ -191,7 +192,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
         private static string GetPythonToolsInstallPath() {
             string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "PyDebugAttach.dll"))) {
+            if (File.Exists(Path.Combine(path, "Microsoft.PythonTools.dll"))) {
                 return path;
             }
 
@@ -200,7 +201,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
                     var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\1.0");
-                    if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
+                    if (File.Exists(Path.Combine(toolsPath, "Microsoft.PythonTools.dll"))) {
                         return toolsPath;
                     }
                 }

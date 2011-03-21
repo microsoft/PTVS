@@ -13,13 +13,9 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Project;
-
-using Microsoft.Windows.Design.Host;
+using System.IO;
 using Microsoft.PythonTools.Designer;
+using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Project {
     class PythonNonCodeFileNode : CommonNonCodeFileNode {
@@ -35,7 +31,20 @@ namespace Microsoft.PythonTools.Project {
                     _designerContext = new DesignerContext();
                     //Set the EventBindingProvider for this XAML file so the designer will call it
                     //when event handlers need to be generated
-                    _designerContext.EventBindingProvider = new WpfEventBindingProvider(this.Parent.FindChild(this.Url.Replace(".xaml", ".py")) as PythonFileNode);
+                    var dirName = Path.GetDirectoryName(Url);
+                    var fileName = Path.GetFileNameWithoutExtension(Url);
+                    var filenameWithoutExt = Path.Combine(dirName, fileName);
+
+                    // look for foo.py
+                    var child = Parent.FindChild(filenameWithoutExt + PythonConstants.FileExtension);
+                    if (child == null) {
+                        // then look for foo.pyw
+                        child = Parent.FindChild(filenameWithoutExt + PythonConstants.WindowsFileExtension);
+                    }
+
+                    if (child != null) {
+                        _designerContext.EventBindingProvider = new WpfEventBindingProvider(child as PythonFileNode);
+                    }
                 }
                 return _designerContext;
             }

@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public IPythonFunction GetConstructors() {
             IMember member;
-            if (_members.TryGetValue("__new__", out member)) {
+            if (_members.TryGetValue("__new__", out member) || _members.TryGetValue("__init__", out member)) {
                 return member as IPythonFunction;
             }
             return null;

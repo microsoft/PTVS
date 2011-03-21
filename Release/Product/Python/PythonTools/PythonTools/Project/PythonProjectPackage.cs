@@ -25,7 +25,9 @@ namespace Microsoft.PythonTools.Project {
     [ProvideObject(typeof(PythonGeneralPropertyPage))]
     [ProvideObject(typeof(PythonDebugPropertyPage))]
     [ProvideObject(typeof(PublishPropertyPage))]
-    [ProvideEditorExtension(typeof(PythonEditorFactory), ".py", 32)]
+    [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 32)]
+    [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 32)]
+    [ProvideFileFilterAttribute(PythonConstants.EditorFactoryGuid, "/1", "Python Files (*.py;*.pyw);*.py, *.pyw", 1000)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a703-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_TextView
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a702-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Designer
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a701-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Code

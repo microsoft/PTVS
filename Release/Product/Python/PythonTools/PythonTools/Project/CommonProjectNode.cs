@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Project {
         public abstract Type GetProjectFactoryType();
         public abstract Type GetEditorFactoryType();
         public abstract string GetProjectName();
-        public abstract string GetCodeFileExtension();
+        
         public virtual CommonFileNode CreateCodeFileNode(ProjectElement item) {
             return new CommonFileNode(this, item);
         }
@@ -89,7 +89,6 @@ namespace Microsoft.PythonTools.Project {
         public abstract string GetFormatList();
         public abstract Type GetGeneralPropertyPageType();
         public abstract Type GetLibraryManagerType();
-        public abstract string GetProjectFileExtension();
 
         #endregion
 
@@ -457,21 +456,6 @@ namespace Microsoft.PythonTools.Project {
         }
         
         /// <summary>
-        /// Evaluates if a file is a current language code file based on is extension
-        /// </summary>
-        /// <param name="strFileName">The filename to be evaluated</param>
-        /// <returns>true if is a code file</returns>
-        public override bool IsCodeFile(string strFileName) {
-            // We do not want to assert here, just return silently.
-            if (String.IsNullOrEmpty(strFileName)) {
-                return false;
-            }
-            return (String.Compare(Path.GetExtension(strFileName),
-                GetCodeFileExtension(),
-                StringComparison.OrdinalIgnoreCase) == 0);
-        }
-
-        /// <summary>
         /// Create a file node based on an msbuild item.
         /// </summary>
         /// <param name="item">The msbuild item to be analyzed</param>        
@@ -479,7 +463,7 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNull("item", item);
 
             CommonFileNode newNode;
-            if (string.Compare(GetCodeFileExtension(), Path.GetExtension(item.GetFullPathForElement()), StringComparison.OrdinalIgnoreCase) == 0) {
+            if (IsCodeFile(item.GetFullPathForElement())) {
                 newNode = CreateCodeFileNode(item);
             } else {
                 newNode = CreateNonCodeFileNode(item);

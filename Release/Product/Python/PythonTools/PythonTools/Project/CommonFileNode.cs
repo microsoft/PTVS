@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
+using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
 namespace Microsoft.PythonTools.Project {
     public class CommonFileNode : FileNode {
@@ -93,7 +94,7 @@ namespace Microsoft.PythonTools.Project {
                     return (int)ProjectNode.ImageName.MissingFile;
                 } else if (IsFormSubType) {
                     return (int)ProjectNode.ImageName.WindowsForm;
-                } else if (this.FileName.ToLower().EndsWith(this._project.GetCodeFileExtension())) {
+                } else if (this._project.IsCodeFile(FileName)) {
                     if (NativeMethods.IsSamePath(this.Url, _project.GetStartupFile())) {
                         return CommonProjectNode.ImageOffset + (int)CommonImageName.StartupFile;
                     } else {
@@ -208,7 +209,6 @@ namespace Microsoft.PythonTools.Project {
             Debug.Assert(this.ProjectMgr != null, "The Dynamic FileNode has no project manager");
 
             Utilities.CheckNotNull(this.ProjectMgr);
-
             if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case CommonConstants.SetAsStartupFileCmdId:
@@ -237,7 +237,14 @@ namespace Microsoft.PythonTools.Project {
         /// Handles the menuitems
         /// </summary>
         protected override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (guidCmdGroup == Microsoft.VisualStudio.Shell.VsMenus.guidStandardCommandSet2K) {
+            if (guidCmdGroup == VsMenus.guidStandardCommandSet97) {
+                switch ((VsCommands)cmd) {
+                    case VsCommands.AddNewItem:
+                    case VsCommands.AddExistingItem:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
+                }
+            } else if (guidCmdGroup == Microsoft.VisualStudio.Shell.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.EXCLUDEFROMPROJECT:
                     case VsCommands2K.RUNCUSTOMTOOL:

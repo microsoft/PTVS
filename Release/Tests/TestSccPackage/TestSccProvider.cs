@@ -71,35 +71,47 @@ namespace Microsoft.TestSccPackage {
             
             CALPOLESTR[] str = new CALPOLESTR[1];
             CADWORD[] cadword = new CADWORD[1];
-            // try it once w/ the correct item ID
-            var projectId = GetItemId((IVsHierarchy)pscp2Project);
-            if (ErrorHandler.Failed(pscp2Project.GetSccFiles(projectId, str, cadword))) {
-                Fail("Failed to get SccFiles");
-            }
-            string[] files = UnpackCALPOLESTR(str[0]);
-            foreach (var file in files) {
-                uint pItemId;
-                if (ErrorHandler.Succeeded(((IVsHierarchy)pscp2Project).ParseCanonicalName(file, out pItemId))) {
-                    project.Files.Add(file, new FileInfo(project, file, pItemId));
-                }
-            }
-
-            // try it once w/ VSITEMID_ROOT, make sure we get the same count back...
+            // try it once w/ VSITEMID_ROOT, make sure we get back just the project.
             if (ErrorHandler.Failed(pscp2Project.GetSccFiles(VSConstants.VSITEMID_ROOT, str, cadword))) {
                 Fail("Failed to get SccFiles");
             }
-            AreEqual(UnpackCALPOLESTR(str[0]).Length, files.Length);
+            AreEqual(UnpackCALPOLESTR(str[0]).Length, 1);
+
+            object propRes;
+            if(ErrorHandler.Failed(((IVsHierarchy)pscp2Project).GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_FirstChild, out propRes))) {
+                Fail("Failed to get first child of root node");
+            }
+
+            int curSibling = (int)propRes;
+            while(ErrorHandler.Succeeded(((IVsHierarchy)pscp2Project).GetProperty((uint)curSibling, (int)__VSHPROPID.VSHPROPID_NextSibling, out propRes))) {
+                curSibling = (int)propRes;
+                if(curSibling == unchecked((int)VSConstants.VSITEMID_NIL)) {
+                    break;
+                }
+                
+                if (ErrorHandler.Failed(pscp2Project.GetSccFiles((uint)curSibling, str, cadword))) {
+                    Fail("Failed to get SccFiles");
+                }
+
+                string[] files = UnpackCALPOLESTR(str[0]);
+                foreach (var file in files) {
+                    uint pItemId;
+                    if (ErrorHandler.Succeeded(((IVsHierarchy)pscp2Project).ParseCanonicalName(file, out pItemId))) {
+                        project.Files.Add(file, new FileInfo(project, file, pItemId));
+                    }
+                }
+            }
 
 
             // couple extra test cases to make sure we handle weird inputs...
-            pscp2Project.GetSccFiles(projectId, null, null);
-            pscp2Project.GetSccFiles(projectId, new CALPOLESTR[0], new CADWORD[0]);
+            pscp2Project.GetSccFiles(VSConstants.VSITEMID_ROOT, null, null);
+            pscp2Project.GetSccFiles(VSConstants.VSITEMID_ROOT, new CALPOLESTR[0], new CADWORD[0]);
 
             AreEqual(VSConstants.E_INVALIDARG, pscp2Project.GetSccFiles(VSConstants.VSITEMID_SELECTION, null, null));
             AreEqual(VSConstants.E_INVALIDARG, pscp2Project.GetSccFiles(0xffffffff, null, null));
 
-            pscp2Project.GetSccSpecialFiles(projectId, "", str, cadword);
-            pscp2Project.GetSccSpecialFiles(projectId, "", null, null);
+            pscp2Project.GetSccSpecialFiles(VSConstants.VSITEMID_ROOT, "", str, cadword);
+            pscp2Project.GetSccSpecialFiles(VSConstants.VSITEMID_ROOT, "", null, null);
 
             AreEqual(VSConstants.E_INVALIDARG, pscp2Project.GetSccSpecialFiles(VSConstants.VSITEMID_SELECTION, "", null, null));
             AreEqual(VSConstants.E_INVALIDARG, pscp2Project.GetSccSpecialFiles(0xffffffff, "", null, null));

@@ -3876,8 +3876,19 @@ namespace Microsoft.PythonTools.Project
             if (itemid == VSConstants.VSITEMID_SELECTION)
             {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "itemid");
+            } else if (itemid == VSConstants.VSITEMID_ROOT) {
+                // Root node.  Return our project file path.
+                if (stringsOut != null && stringsOut.Length > 0) {
+                    stringsOut[0] = Utilities.CreateCALPOLESTR(new[] { filename });
+                }
+
+                if (flagsOut != null && flagsOut.Length > 0) {
+                    flagsOut[0] = Utilities.CreateCADWORD(new[] { tagVsSccFilesFlags.SFF_NoFlags });
+                }
+                return VSConstants.S_OK;
             }
 
+            // otherwise delegate to either a file or a folder to get the SCC files
             HierarchyNode n = this.NodeFromItemId(itemid);
             if (n == null)
             {
@@ -4013,6 +4024,7 @@ namespace Microsoft.PythonTools.Project
                 this.buildProject.SetProperty(ProjectFileConstants.SccProvider, sccProvider);
                 this.buildProject.SetProperty(ProjectFileConstants.SccAuxPath, sccAuxPath);
                 this.buildProject.SetProperty(ProjectFileConstants.SccLocalPath, sccLocalPath);
+                SetProjectFileDirty(true);
             }
 
             this.isRegisteredWithScc = true;

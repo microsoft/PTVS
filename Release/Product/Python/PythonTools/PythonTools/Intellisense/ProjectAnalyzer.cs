@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public IProjectEntry AnalyzeFile(string path) {
             IProjectEntry item;
             if (!_projectFiles.TryGetValue(path, out item)) {
-                if (path.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+                if (PythonProjectNode.IsPythonFile(path)) {
                     var modName = PythonAnalyzer.PathToModuleName(path);
 
                     item = _analysisState.AddModule(
@@ -397,7 +397,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void ParseFile(IProjectEntry projectEntry, string filename, TextReader content, Severity indentationSeverity) {
             IProjectEntry analysis;
             IExternalProjectEntry externalEntry;
-            if (filename.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
+            if (PythonProjectNode.IsPythonFile(filename)) {
                 PythonAst ast;
                 CollectingErrorSink errorSink;
                 ParsePythonCode(content, indentationSeverity, out ast, out errorSink);
