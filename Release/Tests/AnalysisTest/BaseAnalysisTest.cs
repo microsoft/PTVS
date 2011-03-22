@@ -45,7 +45,7 @@ namespace AnalysisTest {
             PyObjectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
             IntType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);
             ComplexType = Interpreter.GetBuiltinType(BuiltinTypeId.Complex);
-            StringType = Interpreter.GetBuiltinType(BuiltinTypeId.Str);
+            StringType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
             FloatType = Interpreter.GetBuiltinType(BuiltinTypeId.Float);
             TypeType = Interpreter.GetBuiltinType(BuiltinTypeId.Type);
             ListType = Interpreter.GetBuiltinType(BuiltinTypeId.List);

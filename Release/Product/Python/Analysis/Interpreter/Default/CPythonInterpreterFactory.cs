@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         private bool Is3x {
             get {
-                return Configuration.Version.MajorRevision == 3;
+                return Configuration.Version.Major == 3;
             }
         }
 

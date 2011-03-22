@@ -22,24 +22,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _value = value;
         }
 
-        internal static ConstantExpression MakeUnicode(string value) {
-            return new ConstantExpression(new UnicodeWrapper(value));
-        }
-
         public object Value {
             get {
-                UnicodeWrapper wrapper;
-                if ((wrapper = _value as UnicodeWrapper) != null) {
-                    return wrapper.Value;
-                }
-                
                 return _value; 
-            }
-        }
-
-        internal bool IsUnicodeString {
-            get {
-                return _value is UnicodeWrapper;
             }
         }
 
@@ -63,12 +48,5 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        class UnicodeWrapper {
-            public readonly object Value;
-
-            public UnicodeWrapper(string value) {
-                Value = value;
-            }
-        }
     }
 }

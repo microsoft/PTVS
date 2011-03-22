@@ -77,29 +77,30 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         private void ReAnalyzeTextBuffers(BufferParser bufferParser) {
             ITextBuffer[] buffers = bufferParser.Buffers;
+            if (buffers.Length > 0) {
+                var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));
+                foreach (var buffer in buffers) {
+                    buffer.Properties.RemoveProperty(typeof(IProjectEntry));
+                    buffer.Properties.AddProperty(typeof(IProjectEntry), projEntry);
 
-            var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));
-            foreach (var buffer in buffers) {
-                buffer.Properties.RemoveProperty(typeof(IProjectEntry));
-                buffer.Properties.AddProperty(typeof(IProjectEntry), projEntry);
-
-                var classifier = buffer.GetPythonClassifier();
-                if (classifier != null) {
-                    ((PythonClassifier)classifier).NewVersion();
+                    var classifier = buffer.GetPythonClassifier();
+                    if (classifier != null) {
+                        ((PythonClassifier)classifier).NewVersion();
+                    }
                 }
-            }
 
-            bufferParser._currentProjEntry = _openFiles[bufferParser] = projEntry;
-            bufferParser._parser = this;
+                bufferParser._currentProjEntry = _openFiles[bufferParser] = projEntry;
+                bufferParser._parser = this;
 
-            foreach (var buffer in buffers) {
-                DropDownBarClient client;
-                if (buffer.Properties.TryGetProperty<DropDownBarClient>(typeof(DropDownBarClient), out client)) {
-                    client.UpdateProjectEntry(projEntry);
+                foreach (var buffer in buffers) {
+                    DropDownBarClient client;
+                    if (buffer.Properties.TryGetProperty<DropDownBarClient>(typeof(DropDownBarClient), out client)) {
+                        client.UpdateProjectEntry(projEntry);
+                    }
                 }
-            }
 
-            bufferParser.Requeue();
+                bufferParser.Requeue();
+            }
         }
 
         public void SwitchAnalyzers(ProjectAnalyzer oldAnalyzer) {

@@ -79,6 +79,7 @@
     <Compile Include="Debugger\Extensions.cs" />
     <Compile Include="Debugger\IdDispenser.cs" />
     <Compile Include="Debugger\OutputEventArgs.cs" />
+    <Compile Include="Debugger\PythonDebugOptions.cs" />
     <Compile Include="Debugger\PythonEvaluationResult.cs" />
     <Compile Include="Debugger\PythonStackFrame.cs" />
     <Compile Include="Debugger\BreakpointEventArgs.cs" />

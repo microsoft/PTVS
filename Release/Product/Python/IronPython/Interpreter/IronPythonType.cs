@@ -150,6 +150,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                             return BuiltinTypeId.Type;
                         } else if (clrType == typeof(PythonTuple)) {
                             return BuiltinTypeId.Tuple;
+                        } else if (clrType == typeof(Bytes)) {
+                            return BuiltinTypeId.Bytes;
                         }
                         break;
                 }

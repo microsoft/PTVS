@@ -102,7 +102,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public string Name {
-            get { return _typeName; }
+            get {
+                if (TypeId != BuiltinTypeId.Unknown) {
+                    return _module.TypeDb.GetBuiltinTypeName(TypeId);
+                }
+                return _typeName; 
+            }
         }
 
         public string Documentation {

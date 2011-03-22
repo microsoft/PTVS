@@ -32,11 +32,17 @@ namespace Microsoft.PythonTools.Interpreter {
         Set,
         Type,
         Object,
+        /// <summary>
+        /// The unicode string type
+        /// </summary>
         Str,
         BuiltinMethodDescriptor,
         BuiltinFunction,
         NoneType,
-        Ellipsis
-
+        Ellipsis,
+        /// <summary>
+        /// The non-unicode string type
+        /// </summary>
+        Bytes,
     }
 }

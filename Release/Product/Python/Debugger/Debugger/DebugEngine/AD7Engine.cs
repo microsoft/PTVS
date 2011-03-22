@@ -66,9 +66,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string VersionSetting = "VERSION";
 
         /// <summary>
-        /// Specifies whether the process should prompt for input before exiting.
+        /// Specifies whether the process should prompt for input before exiting on an abnormal exit.
         /// </summary>
         public const string WaitOnAbnormalExitSetting = "WAIT_ON_ABNORMAL_EXIT";
+
+        /// <summary>
+        /// Specifies whether the process should prompt for input before exiting on a normal exit.
+        /// </summary>
+        public const string WaitOnNormalExitSetting = "WAIT_ON_NORMAL_EXIT";
 
         /// <summary>
         /// Specifies if the output should be redirected to the visual studio output window.
@@ -363,11 +368,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _events = ad7Callback;
 
             PythonLanguageVersion version = DefaultVersion;
-            bool waitOnAbnormalExit = false;
-            bool redirectOutput = false;
+            PythonDebugOptions debugOptions = PythonDebugOptions.None;
             List<string[]> dirMapping = null;
             if (options != null) {
-                var splitOptions = options.Split(new[] { ';' }, 2);
+                var splitOptions = options.Split(new[] { ';' });
                 foreach (var optionSetting in splitOptions) {
                     var setting = optionSetting.Split(new[] { '=' }, 2);
 
@@ -376,13 +380,18 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             case VersionSetting: version = GetLanguageVersion(setting[1]); break;
                             case WaitOnAbnormalExitSetting:
                                 bool value;
-                                if (Boolean.TryParse(setting[1], out value)) {
-                                    waitOnAbnormalExit = value;
+                                if (Boolean.TryParse(setting[1], out value) && value) {
+                                    debugOptions |= PythonDebugOptions.WaitOnAbnormalExit;
+                                }
+                                break;
+                            case WaitOnNormalExitSetting:
+                                if (Boolean.TryParse(setting[1], out value) && value) {
+                                    debugOptions |= PythonDebugOptions.WaitOnNormalExit;
                                 }
                                 break;
                             case RedirectOutputSetting:
                                 if (Boolean.TryParse(setting[1], out value)) {
-                                    redirectOutput = value;
+                                    debugOptions |= PythonDebugOptions.RedirectOutput;
                                 }
                                 break;
                             case DirMappingSetting:
@@ -399,8 +408,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     }
                 }
             }
-            
-            _process = new PythonProcess(version, exe, args, dir, env, waitOnAbnormalExit, redirectOutput, dirMapping);
+
+            _process = new PythonProcess(version, exe, args, dir, env, debugOptions, dirMapping);
 
             AttachEvents(_process);
 

@@ -1,9 +1,10 @@
-d1 = {42 : 100}
+﻿d1 = {42 : 100}
 d2 = {'abc' : 'foo'}
-
+u1 = u"привет мир"
 
 class C(object):
     abc = 42
+    uc = u"привет мир"
     def f(self): pass
 
 cinst = C()

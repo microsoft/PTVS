@@ -2092,11 +2092,7 @@ namespace Microsoft.PythonTools.Parsing {
                         }
                     }
 
-                    if (cv is string) {
-                        ret = ConstantExpression.MakeUnicode((string)cv);
-                    } else {
-                        ret = new ConstantExpression(cv);
-                    }
+                    ret = new ConstantExpression(cv);
                     ret.SetLoc(_globalParent, start, GetEnd());
                     return ret;
                 default:

@@ -258,6 +258,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 case BuiltinTypeId.Object: return GetTypeFromType(typeof(object));
                 case BuiltinTypeId.Set: return GetTypeFromType(typeof(SetCollection));
                 case BuiltinTypeId.Str: return GetTypeFromType(typeof(string));
+                case BuiltinTypeId.Bytes: return GetTypeFromType(typeof(string));   // keep strings and bytes the same on Ipy because '' and u'abc' create the same type
                 case BuiltinTypeId.Tuple: return GetTypeFromType(typeof(PythonTuple));
                 case BuiltinTypeId.Type: return GetTypeFromType(typeof(PythonType));
                 case BuiltinTypeId.NoneType: return GetTypeFromType(typeof(DynamicNull));

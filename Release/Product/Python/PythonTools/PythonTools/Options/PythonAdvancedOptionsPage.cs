@@ -19,7 +19,7 @@ using Microsoft.PythonTools.Parsing;
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonAdvancedOptionsPage : PythonDialogPage {
-        private bool _promptBeforeRunningWithBuildError, _waitOnExit, _autoAnalysis;
+        private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut;
         private Severity _indentationInconsistencySeverity;
         private PythonAdvancedOptionsControl _window;
 
@@ -49,6 +49,11 @@ namespace Microsoft.PythonTools.Options {
             set { _autoAnalysis = value; }
         }
 
+        public bool TeeStandardOutput {
+            get { return _teeStdOut; }
+            set { _teeStdOut = value; }
+        }
+
         public Severity IndentationInconsistencySeverity {
             get { return _indentationInconsistencySeverity; }
             set { 
@@ -60,9 +65,14 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        public bool WaitOnExit {
-            get { return _waitOnExit; }
-            set { _waitOnExit = value; }
+        public bool WaitOnAbnormalExit {
+            get { return _waitOnAbnormalExit; }
+            set { _waitOnAbnormalExit = value; }
+        }
+
+        public bool WaitOnNormalExit {
+            get { return _waitOnNormalExit; }
+            set { _waitOnNormalExit = value; }
         }
 
         public event EventHandler IndentationInconsistencyChanged;
@@ -71,26 +81,35 @@ namespace Microsoft.PythonTools.Options {
 
         public override void ResetSettings() {
             _promptBeforeRunningWithBuildError = false;
-            _waitOnExit = true;
+            _waitOnAbnormalExit = true;
             _indentationInconsistencySeverity = Severity.Warning;
+            _waitOnNormalExit = false;
+            _autoAnalysis = true;
+            _teeStdOut = true;
         }
 
         private const string DontPromptBeforeRunningWithBuildErrorSetting = "DontPromptBeforeRunningWithBuildError";
         private const string IndentationInconsistencySeveritySetting = "IndentationInconsistencySeverity";
-        private const string WaitOnExitSetting = "WaitOnExit";
+        private const string WaitOnAbnormalExitSetting = "WaitOnAbnormalExit";
+        private const string WaitOnNormalExitSetting = "WaitOnNormalExit";
         private const string AutoAnalysisSetting = "AutoAnalysis";
+        private const string TeeStandardOutSetting = "TeeStandardOut";
 
         public override void LoadSettingsFromStorage() {
             _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
-            _waitOnExit = LoadBool(WaitOnExitSetting) ?? true;
+            _waitOnAbnormalExit = LoadBool(WaitOnAbnormalExitSetting) ?? true;
+            _waitOnNormalExit = LoadBool(WaitOnNormalExitSetting) ?? false;
             _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
+            _teeStdOut = LoadBool(TeeStandardOutSetting) ?? true;
             _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
         }
 
         public override void SaveSettingsToStorage() {
             SaveBool(DontPromptBeforeRunningWithBuildErrorSetting, !_promptBeforeRunningWithBuildError);
-            SaveBool(WaitOnExitSetting, _waitOnExit);
+            SaveBool(WaitOnAbnormalExitSetting, _waitOnAbnormalExit);
+            SaveBool(WaitOnNormalExitSetting, _waitOnNormalExit);
             SaveBool(AutoAnalysisSetting, _autoAnalysis);
+            SaveBool(TeeStandardOutSetting, _teeStdOut);
             SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
         }
 

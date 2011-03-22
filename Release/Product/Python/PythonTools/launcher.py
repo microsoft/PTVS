@@ -21,8 +21,13 @@ try:
 
     wait_on_exception = False
     redirect_output = False
+    wait_on_exit = False
     if len(sys.argv) >= 1 and sys.argv[0] == '--wait-on-exception':
         wait_on_exception = True
+        del sys.argv[0]
+
+    if len(sys.argv) >= 1 and sys.argv[0] == '--wait-on-exit':
+        wait_on_exit = True
         del sys.argv[0]
 
     if len(sys.argv) >= 1 and sys.argv[0] == '--redirect-output':
@@ -36,7 +41,7 @@ try:
     del sys, os
 
     # and start debugging
-    debugger.debug(__file__, port_num, debug_id, globals(), locals(), wait_on_exception, redirect_output)    
+    debugger.debug(__file__, port_num, debug_id, globals(), locals(), wait_on_exception, redirect_output, wait_on_exit)    
     #input()
 except:
     #input()

@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, bool waitOnErrorExit = false, bool redirectOutput = false, List<string[]> dirMapping = null)
+        public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
             : this(languageVersion) {
             if (dir.EndsWith("\\")) {
                 dir = dir.Substring(0, dir.Length - 1);
@@ -91,8 +91,9 @@ namespace Microsoft.PythonTools.Debugger {
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +
                 " " + _processGuid + " " +
-                (waitOnErrorExit ? " --wait-on-exception " : "") +
-                (redirectOutput ? " --redirect-output " : "") +
+                (((options & PythonDebugOptions.WaitOnAbnormalExit) != 0) ? " --wait-on-exception " : "") +
+                (((options & PythonDebugOptions.WaitOnNormalExit) != 0) ? " --wait-on-exit " : "") +
+                (((options & PythonDebugOptions.RedirectOutput) != 0) ? " --redirect-output " : "") +
                 args;
             
             Debug.WriteLine(String.Format("Launching: {0} {1}", processInfo.FileName, processInfo.Arguments));
@@ -343,6 +344,11 @@ namespace Microsoft.PythonTools.Debugger {
             string hexRepr = socket.ReadString();
             string typeName = socket.ReadString();
             bool isExpandable = socket.ReadInt() == 1;
+
+            if ((typeName == "unicode" && LanguageVersion.Is2x()) ||
+                (typeName == "str" && LanguageVersion.Is3x())) {
+                    objRepr = objRepr.FixupEscapedUnicodeChars();
+            }
             return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, text, childText, childIsIndex, frame, isExpandable);
         }
 

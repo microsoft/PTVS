@@ -23,11 +23,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly List<Action> _fixups = new List<Action>();
         private readonly string _dbDir;
         private readonly Dictionary<CPythonType, CPythonConstant> _constants = new Dictionary<CPythonType, CPythonConstant>();
+        private readonly bool _is3x;
         private CPythonModule _builtinModule;
 
         public TypeDatabase(string databaseDirectory, bool is3x = false) {
             _dbDir = databaseDirectory;
             _modules["__builtin__"] = _builtinModule = new CPythonModule(this, "__builtin__", Path.Combine(databaseDirectory, is3x ? "builtins.idb" : "__builtin__.idb"), true);
+            _is3x = is3x;
 
             foreach (var file in Directory.GetFiles(databaseDirectory)) {
                 if (!file.EndsWith(".idb", StringComparison.OrdinalIgnoreCase)) {
@@ -90,6 +92,47 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return BuiltinModule.GetAnyMember("object") as CPythonType;
             }
             return null;
+        }
+
+        internal string GetBuiltinTypeName(BuiltinTypeId id) {
+            string name;
+            switch (id) {
+                case BuiltinTypeId.Bool: name = "bool"; break;
+                case BuiltinTypeId.Complex: name = "complex"; break;
+                case BuiltinTypeId.Dict: name = "dict"; break;
+                case BuiltinTypeId.Float: name = "float"; break;
+                case BuiltinTypeId.Int: name = "int"; break;
+                case BuiltinTypeId.List: name = "list"; break;
+                case BuiltinTypeId.Long: name = "long"; break;
+                case BuiltinTypeId.Object: name = "object"; break;
+                case BuiltinTypeId.Set: name = "set"; break;
+                case BuiltinTypeId.Str:
+                    if (_is3x) {
+                        name = "str";
+                    } else {
+                        name = "unicode";
+                    }
+                    break;
+                case BuiltinTypeId.Bytes:
+                    if (_is3x) {
+                        name = "bytes";
+                    } else {
+                        name = "str";
+                    }
+                    break;
+                case BuiltinTypeId.Tuple: name = "tuple"; break;
+                case BuiltinTypeId.Type: name = "type"; break;
+
+                case BuiltinTypeId.BuiltinFunction: name = "builtin_function"; break;
+                case BuiltinTypeId.BuiltinMethodDescriptor: name = "builtin_method_descriptor"; break;
+                case BuiltinTypeId.Function: name = "function"; break;
+                case BuiltinTypeId.Generator: name = "generator"; break;
+                case BuiltinTypeId.NoneType: name = "NoneType"; break;
+                case BuiltinTypeId.Ellipsis: name = "ellipsis"; break;
+
+                default: return null;
+            }
+            return name;
         }
 
         /// <summary>
@@ -237,7 +280,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return new CPythonType(container, this, typeName, valueDict, typeId);
         }
 
-        private static BuiltinTypeId GetBuiltinTypeId(string typeName) {
+        private BuiltinTypeId GetBuiltinTypeId(string typeName) {
             switch (typeName) {
                 case "list": return BuiltinTypeId.List;
                 case "tuple": return BuiltinTypeId.Tuple;
@@ -251,7 +294,15 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 case "set": return BuiltinTypeId.Set;
                 case "type": return BuiltinTypeId.Type;
                 case "object": return BuiltinTypeId.Object;
-                case "str": return BuiltinTypeId.Str;
+                case "str":
+                    if (_is3x) {
+                        return BuiltinTypeId.Str;
+                    }
+                    return BuiltinTypeId.Bytes;
+                case "unicode":
+                    return BuiltinTypeId.Str;
+                case "bytes":
+                    return BuiltinTypeId.Bytes;
                 case "builtin_function": return BuiltinTypeId.BuiltinFunction;
                 case "builtin_method_descriptor": return BuiltinTypeId.BuiltinMethodDescriptor;
                 case "NoneType": return BuiltinTypeId.NoneType;

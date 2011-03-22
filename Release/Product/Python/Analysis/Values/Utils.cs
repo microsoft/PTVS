@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var found = new HashSet<IPythonType>();
             foreach (var target in func.Overloads) {
                 var pyType = target.ReturnType;
-                if (!found.Contains(pyType)) {
+                if (pyType != null && !found.Contains(pyType)) {
                     result.Add(((BuiltinClassInfo)projectState.GetNamespaceFromObjects(pyType)).Instance);
                     found.Add(pyType);
                 }

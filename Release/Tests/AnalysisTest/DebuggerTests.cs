@@ -41,14 +41,15 @@ namespace AnalysisTest {
 
         [TestMethod]
         public void EnumChildrenTest() {
-            const int lastLine = 26;
+            const int lastLine = 27;
 
-            ChildTest("EnumChildTest.py", lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"));
+            ChildTest("EnumChildTest.py", lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
             ChildTest("EnumChildTest.py", lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
             ChildTest("EnumChildTest.py", lastLine, "l", new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
             ChildTest("EnumChildTest.py", lastLine, "d1", new ChildInfo("[42]", "100", "0x64"));
             ChildTest("EnumChildTest.py", lastLine, "d2", new ChildInfo("['abc']", "'foo'"));
             ChildTest("EnumChildTest.py", lastLine, "i", null);
+            ChildTest("EnumChildTest.py", lastLine, "u1", null);
         }
 
         private void ChildTest(string filename, int lineNo, string text, params ChildInfo[] children) {

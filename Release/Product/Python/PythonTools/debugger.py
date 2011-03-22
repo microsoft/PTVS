@@ -174,14 +174,17 @@ class Thread(object):
 
         return self.trace_func
         
-    def not_our_code_v3(self, code_obj):
-        return code_obj == execfile.__code__ or code_obj.co_filename.startswith(sys.prefix)
+    def not_our_code(self, code_obj):
+        if sys.version >= '3':
+            return code_obj == execfile.__code__ or code_obj.co_filename.startswith(sys.prefix)
+        else:
+            return code_obj.co_filename.startswith(sys.prefix)
 
     def handle_line(self, frame, arg):
         if (((self.stepping == STEPPING_OVER or self.stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
             or self.stepping == STEPPING_LAUNCH_BREAK):
             if ((self.stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
-                (sys.version >= '3' and self.not_our_code_v3(frame.f_code))):
+                (self.not_our_code(frame.f_code))):
                 # don't break into inital Python code needed to set things up                
                 return self.trace_func
             
@@ -873,7 +876,7 @@ def report_children(execution_id, children, is_index):
 def get_code_filename(code):
     return path.abspath(code.co_filename)
 
-NONEXPANDABLE_TYPES = [int, str, bool, float, object, type(None)]
+NONEXPANDABLE_TYPES = [int, str, bool, float, object, type(None), unicode]
 try:
     NONEXPANDABLE_TYPES.append(long)
 except NameError: pass
@@ -935,7 +938,6 @@ def new_thread(tid = None):
     return cur_thread
 
 def do_wait():
-    traceback.print_exc()
     print('Press enter to continue...')
     if sys.version >= '3.':
         input()
@@ -980,7 +982,40 @@ class _DebuggerOutput(object):
             return "<stderr>"
 
 
-def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output):
+def is_same_py_file(file1, file2):
+    """compares 2 filenames accounting for .pyc files"""
+    if file1.endswith('.pyc'):
+        if file2.endswith('.pyc'):
+            return file1 == file2
+        return file1[:-1] == file2
+    elif file2.endswith('.pyc'):
+        return file1 == file2[:-1]
+    else:
+        return file1 == file2
+
+
+def print_exception():
+    # count the debugger frames to be removed
+    tb_value = sys.exc_info()[2]
+    debugger_count = 0
+    while tb_value is not None:
+        if is_same_py_file(tb_value.tb_frame.f_code.co_filename, __file__):
+            debugger_count += 1
+        tb_value = tb_value.tb_next
+        
+    # print the traceback
+    tb = traceback.extract_tb(sys.exc_info()[2])[debugger_count:]         
+    if tb:
+        print('Traceback (most recent call last):')
+        for out in traceback.format_list(tb):
+            sys.stdout.write(out)
+    
+    # print the exception
+    for out in traceback.format_exception_only(sys.exc_info()[0], sys.exc_info()[1]):
+        sys.stdout.write(out)
+    
+
+def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit):
     # remove us from modules so there's no trace of us
     sys.modules['$debugger'] = sys.modules['debugger']
     __name__ = '$debugger'
@@ -989,6 +1024,7 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     del globals_obj['debugger']
     del globals_obj['wait_on_exception']
     del globals_obj['redirect_output']
+    del globals_obj['wait_on_exit']
     del globals_obj['debug_id']
 
     attach_process(port_num, debug_id)
@@ -1014,16 +1050,20 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
             del THREADS[cur_thread.id]
             THREADS_LOCK.release()
             report_thread_exit(cur_thread)
+
+        if wait_on_exit:
+            do_wait()
     except SystemExit:
         report_process_exit(sys.exc_info()[1].code)
         if wait_on_exception and sys.exc_info()[1].code != 0:
+            print_exception()
             do_wait()
         raise
     except:
-        traceback.print_exc()
-        report_process_exit(1)
+        print_exception()
         if wait_on_exception:
             do_wait()
+        report_process_exit(1)
         raise
     
     report_process_exit(0)

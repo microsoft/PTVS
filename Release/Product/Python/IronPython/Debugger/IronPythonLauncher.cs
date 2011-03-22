@@ -80,7 +80,7 @@ namespace Microsoft.IronPythonTools.Debugger {
             bool isWindows;
             string interpreter = GetInterpreterExecutableInternal(out isWindows);
             ProcessStartInfo startInfo;
-            if (!isWindows && PythonToolsPackage.Instance.OptionsPage.WaitOnExit) {
+            if (!isWindows && PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
                 command = "/c \"\"" + interpreter + "\" " + command + " & if errorlevel 1 pause\"";
                 startInfo = new ProcessStartInfo("cmd.exe", command);
             } else {

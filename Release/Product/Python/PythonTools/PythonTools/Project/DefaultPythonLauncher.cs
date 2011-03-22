@@ -169,8 +169,16 @@ namespace Microsoft.PythonTools.Project {
             dbgInfo.fSendStdoutToOutputWindow = 0;
             StringDictionary env = new StringDictionary();
             dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
-            if (!isWindows && PythonToolsPackage.Instance.OptionsPage.WaitOnExit) {
-                dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnAbnormalExitSetting + "=True";
+            if (!isWindows) {
+                if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnAbnormalExitSetting + "=True";
+                }
+                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnNormalExitSetting + "=True";
+                }
+            }
+            if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
+                dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
             }
 
             SetupEnvironment(env);
@@ -222,8 +230,19 @@ namespace Microsoft.PythonTools.Project {
             bool isWindows;
             string interpreter = GetInterpreterExecutableInternal(out isWindows);
             ProcessStartInfo startInfo;
-            if (!isWindows && PythonToolsPackage.Instance.OptionsPage.WaitOnExit) {
-                command = "/c \"\"" + interpreter + "\" " + command + " & if errorlevel 1 pause\"";
+            if (!isWindows && (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit || PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit)) {
+                command = "/c \"\"" + interpreter + "\" " + command;
+
+                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit &&
+                    PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    command += " & pause";
+                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                    command += " & if not errorlevel 1 pause";
+                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    command += " & if errorlevel 1 pause";
+                }
+
+                command += "\"";
                 startInfo = new ProcessStartInfo("cmd.exe", command);
             } else {
                 startInfo = new ProcessStartInfo(interpreter, command);

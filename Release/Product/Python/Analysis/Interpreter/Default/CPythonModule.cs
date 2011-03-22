@@ -94,6 +94,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
+        internal TypeDatabase TypeDb {
+            get {
+                return _typeDb;
+            }
+        }
         
         #region IPythonModule Members
 

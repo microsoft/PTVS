@@ -32,7 +32,9 @@ namespace Microsoft.PythonTools.Options {
                 default: _indentationInconsistentCombo.SelectedIndex = DontIndex; break;
             }
 
-            _waitOnExit.Checked = PythonToolsPackage.Instance.OptionsPage.WaitOnExit;
+            _waitOnAbnormalExit.Checked = PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit;
+            _waitOnNormalExit.Checked = PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit;
+            _teeStdOut.Checked = PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput;
             _autoAnalysis.Checked = PythonToolsPackage.Instance.OptionsPage.AutoAnalyzeStandardLibrary;
         }
 
@@ -49,11 +51,19 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void _waitOnExit_CheckedChanged(object sender, EventArgs e) {
-            PythonToolsPackage.Instance.OptionsPage.WaitOnExit = _waitOnExit.Checked;
+            PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit = _waitOnAbnormalExit.Checked;
         }
 
         private void _autoAnalysis_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.OptionsPage.AutoAnalyzeStandardLibrary = _autoAnalysis.Checked;
+        }
+
+        private void _waitOnNormalExit_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit = _waitOnNormalExit.Checked;
+        }
+
+        private void _redirectOutputToVs_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput = _teeStdOut.Checked;
         }
     }
 }

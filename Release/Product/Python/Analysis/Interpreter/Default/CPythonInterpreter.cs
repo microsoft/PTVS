@@ -28,36 +28,16 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region IPythonInterpreter Members
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
-            var builtinModule = _typeDb.BuiltinModule;
-            string name;
-            switch (id) {
-                case BuiltinTypeId.Bool: name = "bool"; break;
-                case BuiltinTypeId.Complex: name = "complex"; break;
-                case BuiltinTypeId.Dict: name = "dict"; break;
-                case BuiltinTypeId.Float: name = "float"; break;
-                case BuiltinTypeId.Int: name = "int"; break;
-                case BuiltinTypeId.List: name = "list"; break;
-                case BuiltinTypeId.Long: name = "long"; break;
-                case BuiltinTypeId.Object: name = "object"; break;
-                case BuiltinTypeId.Set: name = "set"; break;
-                case BuiltinTypeId.Str: name = "str"; break;
-                case BuiltinTypeId.Tuple: name = "tuple"; break;
-                case BuiltinTypeId.Type: name = "type"; break;
-
-                case BuiltinTypeId.BuiltinFunction: name = "builtin_function"; break;
-                case BuiltinTypeId.BuiltinMethodDescriptor: name = "builtin_method_descriptor"; break;
-                case BuiltinTypeId.Function: name = "function"; break;
-                case BuiltinTypeId.Generator: name = "generator"; break;
-                case BuiltinTypeId.NoneType: name = "NoneType"; break;
-                case BuiltinTypeId.Ellipsis: name = "ellipsis"; break;
-
-                default: return null;
+            string name = _typeDb.GetBuiltinTypeName(id);
+            if (name == null) {
+                return null;
             }
 
-            var res = builtinModule.GetAnyMember(name) as IPythonType;
+            var res = _typeDb.BuiltinModule.GetAnyMember(name) as IPythonType;
             Debug.Assert(res != null);
             return res;
         }
+
 
         public IList<string> GetModuleNames() {
             return new List<string>(_typeDb.GetModuleNames());

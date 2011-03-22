@@ -26,8 +26,10 @@
             this._promptOnBuildError = new System.Windows.Forms.CheckBox();
             this._indentationInconsistentCombo = new System.Windows.Forms.ComboBox();
             this._indentationInconsistentLabel = new System.Windows.Forms.Label();
-            this._waitOnExit = new System.Windows.Forms.CheckBox();
+            this._waitOnAbnormalExit = new System.Windows.Forms.CheckBox();
             this._autoAnalysis = new System.Windows.Forms.CheckBox();
+            this._waitOnNormalExit = new System.Windows.Forms.CheckBox();
+            this._teeStdOut = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // _promptOnBuildError
@@ -49,7 +51,7 @@
             "Errors",
             "Warnings",
             "Don\'t"});
-            this._indentationInconsistentCombo.Location = new System.Drawing.Point(188, 81);
+            this._indentationInconsistentCombo.Location = new System.Drawing.Point(188, 124);
             this._indentationInconsistentCombo.Name = "_indentationInconsistentCombo";
             this._indentationInconsistentCombo.Size = new System.Drawing.Size(121, 21);
             this._indentationInconsistentCombo.TabIndex = 5;
@@ -58,27 +60,27 @@
             // _indentationInconsistentLabel
             // 
             this._indentationInconsistentLabel.AutoSize = true;
-            this._indentationInconsistentLabel.Location = new System.Drawing.Point(6, 84);
+            this._indentationInconsistentLabel.Location = new System.Drawing.Point(6, 127);
             this._indentationInconsistentLabel.Name = "_indentationInconsistentLabel";
             this._indentationInconsistentLabel.Size = new System.Drawing.Size(167, 13);
             this._indentationInconsistentLabel.TabIndex = 6;
             this._indentationInconsistentLabel.Text = "&Report inconsistent indentation as";
             // 
-            // _waitOnExit
+            // _waitOnAbnormalExit
             // 
-            this._waitOnExit.AutoSize = true;
-            this._waitOnExit.Location = new System.Drawing.Point(7, 35);
-            this._waitOnExit.Name = "_waitOnExit";
-            this._waitOnExit.Size = new System.Drawing.Size(286, 17);
-            this._waitOnExit.TabIndex = 7;
-            this._waitOnExit.Text = "&Wait for input when debugged process exits abnormally";
-            this._waitOnExit.UseVisualStyleBackColor = true;
-            this._waitOnExit.CheckedChanged += new System.EventHandler(this._waitOnExit_CheckedChanged);
+            this._waitOnAbnormalExit.AutoSize = true;
+            this._waitOnAbnormalExit.Location = new System.Drawing.Point(7, 35);
+            this._waitOnAbnormalExit.Name = "_waitOnAbnormalExit";
+            this._waitOnAbnormalExit.Size = new System.Drawing.Size(235, 17);
+            this._waitOnAbnormalExit.TabIndex = 7;
+            this._waitOnAbnormalExit.Text = "&Wait for input when process exits abnormally";
+            this._waitOnAbnormalExit.UseVisualStyleBackColor = true;
+            this._waitOnAbnormalExit.CheckedChanged += new System.EventHandler(this._waitOnExit_CheckedChanged);
             // 
             // _autoAnalysis
             // 
             this._autoAnalysis.AutoSize = true;
-            this._autoAnalysis.Location = new System.Drawing.Point(7, 58);
+            this._autoAnalysis.Location = new System.Drawing.Point(7, 104);
             this._autoAnalysis.Name = "_autoAnalysis";
             this._autoAnalysis.Size = new System.Drawing.Size(272, 17);
             this._autoAnalysis.TabIndex = 8;
@@ -86,12 +88,36 @@
             this._autoAnalysis.UseVisualStyleBackColor = true;
             this._autoAnalysis.CheckedChanged += new System.EventHandler(this._autoAnalysis_CheckedChanged);
             // 
+            // _waitOnNormalExit
+            // 
+            this._waitOnNormalExit.AutoSize = true;
+            this._waitOnNormalExit.Location = new System.Drawing.Point(7, 58);
+            this._waitOnNormalExit.Name = "_waitOnNormalExit";
+            this._waitOnNormalExit.Size = new System.Drawing.Size(223, 17);
+            this._waitOnNormalExit.TabIndex = 9;
+            this._waitOnNormalExit.Text = "Wai&t for input when process exits normally";
+            this._waitOnNormalExit.UseVisualStyleBackColor = true;
+            this._waitOnNormalExit.CheckedChanged += new System.EventHandler(this._waitOnNormalExit_CheckedChanged);
+            // 
+            // _teeStdOut
+            // 
+            this._teeStdOut.AutoSize = true;
+            this._teeStdOut.Location = new System.Drawing.Point(7, 81);
+            this._teeStdOut.Name = "_teeStdOut";
+            this._teeStdOut.Size = new System.Drawing.Size(240, 17);
+            this._teeStdOut.TabIndex = 10;
+            this._teeStdOut.Text = "Tee program output to &Debug Ouptut window";
+            this._teeStdOut.UseVisualStyleBackColor = true;
+            this._teeStdOut.CheckedChanged += new System.EventHandler(this._redirectOutputToVs_CheckedChanged);
+            // 
             // PythonAdvancedOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this._promptOnBuildError);
-            this.Controls.Add(this._waitOnExit);
+            this.Controls.Add(this._waitOnAbnormalExit);
+            this.Controls.Add(this._waitOnNormalExit);
+            this.Controls.Add(this._teeStdOut);
             this.Controls.Add(this._autoAnalysis);
             this.Controls.Add(this._indentationInconsistentLabel);
             this.Controls.Add(this._indentationInconsistentCombo);
@@ -107,7 +133,9 @@
         private System.Windows.Forms.CheckBox _promptOnBuildError;
         private System.Windows.Forms.ComboBox _indentationInconsistentCombo;
         private System.Windows.Forms.Label _indentationInconsistentLabel;
-        private System.Windows.Forms.CheckBox _waitOnExit;
+        private System.Windows.Forms.CheckBox _waitOnAbnormalExit;
         private System.Windows.Forms.CheckBox _autoAnalysis;
+        private System.Windows.Forms.CheckBox _waitOnNormalExit;
+        private System.Windows.Forms.CheckBox _teeStdOut;
     }
 }

@@ -596,7 +596,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (value.GetType() == typeof(Complex)) {
                         return Types.Complex;
                     } else if(value.GetType() == typeof(byte[])) {
-                        return Types.Str;
+                        return Types.Bytes;
                     } else if (value.GetType() == typeof(BigInteger)) {
                         if (LanguageVersion.Is3x()) {
                             return Types.Int;
