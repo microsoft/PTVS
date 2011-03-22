@@ -14,9 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Numerics;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -227,7 +230,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Documentation {
             get {
                 if (FunctionDefinition.Body != null) {
-                    return FunctionDefinition.Body.Documentation;
+                    return FunctionDefinition.Body.Documentation.TrimDocumentation();
                 }
                 return "";
             }
@@ -281,8 +284,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 // onto Python ASTs so they can round trip
                 ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
                 if (defaultValue != null) {
-                    // FIXME: Use Python Repr
-                    name = name + " = " + (defaultValue.Value == null ? "None" : defaultValue.Value.ToString()); //PythonOps.Repr(state.CodeContext, defaultValue.Value);
+                    name = name + " = " + GetConstantRepr(state, defaultValue);
                 }
 
                 NameExpression nameExpr = curParam.DefaultValue as NameExpression;
@@ -320,6 +322,90 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             var newParam = new ParameterResult(name);
             return newParam;
+        }
+
+        private static string GetConstantRepr(PythonAnalyzer state, ConstantExpression value) {
+            if (value.Value == null) {
+                return "None";
+            } else if (value.Value is byte[]) {
+                StringBuilder res = new StringBuilder();
+                if (state.LanguageVersion.Is3x()) {
+                    res.Append("b");
+                }
+                res.Append("'");
+                byte[] bytes = value.Value as byte[];
+                for (int i = 0; i < bytes.Length; i++) {
+                    if (bytes[i] == '\'') {
+                        res.Append("\\'");
+                    } else {
+                        res.Append((char)bytes[i]);
+                    }
+                }
+                res.Append("'");
+                return res.ToString();
+            } else if (value.Value is string) {
+                StringBuilder res = new StringBuilder();
+                if (state.LanguageVersion.Is2x()) {
+                    res.Append("u");
+                }
+
+                res.Append("'");
+                string str = value.Value as string;
+                for (int i = 0; i < str.Length; i++) {
+                    if (str[i] == '\'') {
+                        res.Append("\\'");
+                    } else {
+                        res.Append(str[i]);
+                    }
+                }
+                res.Append("'");
+                return res.ToString();
+            } else if (value.Value is Complex) {
+                Complex x = (Complex)value.Value;
+
+                if (x.Real != 0) {
+                    if (x.Imaginary < 0 || IsNegativeZero(x.Imaginary)) {
+                        return "(" + FormatComplexValue(x.Real) + FormatComplexValue(x.Imaginary) + "j)";
+                    } else /* x.Imaginary() is NaN or >= +0.0 */ {
+                        return "(" + FormatComplexValue(x.Real) + "+" + FormatComplexValue(x.Imaginary) + "j)";
+                    }
+                }
+
+                return FormatComplexValue(x.Imaginary) + "j";
+            } else if (value.Value is BigInteger) {
+                if (state.LanguageVersion.Is2x()) {
+                    return value.Value.ToString() + "L";
+                }
+            }
+
+            // TODO: We probably need to handle more primitives here
+            return value.Value.ToString();
+        }
+
+        private static NumberFormatInfo FloatingPointNumberFormatInfo;
+
+        private static NumberFormatInfo nfi {
+            get {
+                if (FloatingPointNumberFormatInfo == null) {
+                    NumberFormatInfo numberFormatInfo = ((CultureInfo)CultureInfo.InvariantCulture.Clone()).NumberFormat;
+                    // The CLI formats as "Infinity", but CPython formats differently
+                    numberFormatInfo.PositiveInfinitySymbol = "inf";
+                    numberFormatInfo.NegativeInfinitySymbol = "-inf";
+                    numberFormatInfo.NaNSymbol = "nan";
+                    numberFormatInfo.NumberDecimalDigits = 0;
+
+                    FloatingPointNumberFormatInfo = numberFormatInfo;
+                }
+                return FloatingPointNumberFormatInfo;
+            }
+        }
+
+        private static string FormatComplexValue(double x) {
+            return String.Format(nfi, "{0,0:f0}", x);            
+        }
+
+        private static bool IsNegativeZero(double value) {
+            return (value == 0.0) && double.IsNegativeInfinity(1.0 / value);
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {

@@ -135,12 +135,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return null;
         }
 
-        internal override string ScopeDocumentation {
-            get {
-                return GetDocumentation(_body);
-            }
-        }
-
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_decorators != null) {

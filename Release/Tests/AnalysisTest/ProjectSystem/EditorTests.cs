@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using AnalysisTest.UI;
+using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -92,6 +93,74 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("whitespace", 33, 35, "\r\n"),
                 new Classifcation("string", 35, 46, "'abc\\\r\ndef'")
             );
+        }
+
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AutoIndent() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AutoIndent.sln");
+
+            AutoIndentTest(project, "if True:\rpass\r\r42\r\r", @"if True:
+    pass
+
+42
+
+");
+
+            AutoIndentTest(project, "def f():\rreturn\r\r42\r\r", @"def f():
+    return
+
+42
+
+");
+
+            AutoIndentTest(project, "if True: #foo\rpass\relse: #bar\rpass\r\r42\r\r", @"if True: #foo
+    pass
+else: #bar
+    pass
+
+42
+
+");
+
+            AutoIndentTest(project, "if True:\rraise Exception()\r\r42\r\r", @"if True:
+    raise Exception()
+
+42
+
+");
+
+            AutoIndentTest(project, "while True:\rcontinue\r\r42\r\r", @"while True:
+    continue
+
+42
+
+");
+
+            AutoIndentTest(project, "while True:\rbreak\r\r42\r\r", @"while True:
+    break
+
+42
+
+");
+        }
+
+        private static void AutoIndentTest(Project project, string typedText, string expectedText) {
+
+            var item = project.ProjectItems.Item("Program.py");
+            var window = item.Open();
+            window.Activate();
+
+            Keyboard.Type(typedText);
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            Assert.AreEqual(snapshot.GetText(), expectedText);
+
+            window.Document.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
         #endregion

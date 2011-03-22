@@ -55,5 +55,17 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             return null;
         }
+
+        /// <summary>
+        /// Removes all trailing white space including new lines, tabs, and form feeds.
+        /// </summary>
+        /// <param name="self"></param>
+        /// <returns></returns>
+        public static string TrimDocumentation(this string self) {
+            if (self != null) {
+                return self.TrimEnd('\n', '\r', ' ', '\f', '\t');
+            } 
+            return self;
+        }
     }
 }

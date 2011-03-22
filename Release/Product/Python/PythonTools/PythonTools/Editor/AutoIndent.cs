@@ -59,42 +59,60 @@ namespace Microsoft.PythonTools.Editor {
             return _groupingChars.IndexOf(c) >= 0;
         }
 
-        private static int CalculateIndentation(string baseline, ITextSnapshotLine line, IWpfTextView view, IClassifier classifier) {
+        private static int CalculateIndentation(int lineLength, ITextSnapshotLine line, IWpfTextView view, IClassifier classifier) {
+            string baseline = line.GetText().Substring(0, lineLength);
             int indentation = GetIndentation(baseline, view.Options.GetTabSize());
-            var sline = baseline.Trim();
             int tabSize = view.Options.GetIndentSize();
-            var tokens = classifier.GetClassificationSpans(line.Extent);
+            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, lineLength));
+
             if (tokens.Count > 0) {
-                if (!tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment) &&
-                    !tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
-                    var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
-                    if (lastChar == ':') {
-                        indentation += tabSize;
-                    } else if (IsGroupingChar(lastChar)) {
-                        if (tokens != null) {
-                            var groupings = new Stack<ClassificationSpan>();
-                            foreach (var token in tokens) {
-                                if (token.Span.Start.Position > view.Caret.Position.BufferPosition.Position) {
-                                    break;
+                if (!tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+                    int tokenIndex = tokens.Count - 1;
+
+                    while(tokenIndex >= 0 &&
+                        (tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment) ||
+                        tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.WhiteSpace))) {
+                        tokenIndex--;
+                    }
+
+                    if(tokenIndex >= 0) {
+                        string sline = tokens[tokenIndex].Span.GetText();
+                    
+                        var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
+                        if (lastChar == ':') {
+                            indentation += tabSize;
+                        } else if (IsGroupingChar(lastChar)) {
+                            if (tokens != null) {
+                                var groupings = new Stack<ClassificationSpan>();
+                                foreach (var token in tokens) {
+                                    if (token.Span.Start.Position > view.Caret.Position.BufferPosition.Position) {
+                                        break;
+                                    }
+                                    if (StartsGrouping(token)) {
+                                        groupings.Push(token);
+                                    } else if (groupings.Count > 0 && EndsGrouping(token)) {
+                                        groupings.Pop();
+                                    }
                                 }
-                                if (StartsGrouping(token)) {
-                                    groupings.Push(token);
-                                } else if (groupings.Count > 0 && EndsGrouping(token)) {
-                                    groupings.Pop();
+                                if (groupings.Count > 0) {
+                                    indentation = groupings.Peek().Span.End.Position - line.Extent.Start.Position;
                                 }
                             }
-                            if (groupings.Count > 0) {
-                                indentation = groupings.Peek().Span.End.Position - line.Extent.Start.Position;
+                        } else if (indentation >= tabSize) {
+                            if (tokens.Count > 0 && 
+                                tokens[0].ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && 
+                                ShouldDedentAfterKeyword(tokens[0].Span.GetText())) {
+                                indentation -= tabSize;
                             }
-                        }
-                    } else if (indentation >= tabSize) {
-                        if (tokens.Count > 0 && tokens[0].ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && tokens[0].Span.GetText() == "return") {
-                            indentation -= tabSize;
                         }
                     }
                 }
             }
             return indentation;
+        }
+
+        private static bool ShouldDedentAfterKeyword(string keyword) {
+            return keyword == "pass" || keyword == "return" || keyword == "break" || keyword == "continue" || keyword == "raise";
         }
 
         private static bool IsCaretInStringLiteral(IReplWindow buffer) {
@@ -207,12 +225,15 @@ namespace Microsoft.PythonTools.Editor {
             bool hasNonWhiteSpace = false;
             string lineText;
             ITextSnapshotLine line;
+            int lineLength;
             do {
                 line = snapshot.GetLineFromLineNumber(curLine);
                 if (curLine == startLine) {
                     // if we're in the middle of a line only consider text to the left for white space detection
+                    lineLength = point.Position - caretLine.Start;
                     lineText = line.GetText().Substring(0, point.Position - caretLine.Start);
                 } else {
+                    lineLength = line.Length;
                     lineText = line.GetText();
                 }
                 foreach (char c in lineText) {
@@ -227,7 +248,7 @@ namespace Microsoft.PythonTools.Editor {
             } while (!hasNonWhiteSpace && curLine > 0);
 
             var classifier = point.Snapshot.TextBuffer.GetPythonClassifier();
-            int indentation = CalculateIndentation(lineText, line, view, classifier);
+            int indentation = CalculateIndentation(lineLength, line, view, classifier);
             if (curLine != startLine) {
                 // enter on a blank line, don't re-indent instead just maintain the current indentation
                 indentation = Math.Min(indentation, GetIndentation(caretLine.GetText(), view.Options.GetIndentSize()));

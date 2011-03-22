@@ -12,12 +12,14 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.Threading;
 using IronPython.Hosting;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace AnalysisTest.Mocks {
@@ -78,18 +80,80 @@ C().fff";
             //AreEqual(emptyAnalysis.Expression, "");
 
             for (int i = -1; i >= -3; i--) {
-                var analysis = AnalyzeExpression(i, code);
+                var analysis = AnalyzeExpression(i, code, forCompletion: false);
                 Assert.AreEqual(analysis.Expression, "C().fff");
             }
 
-            var classAnalysis = AnalyzeExpression(-6, code);
+            var classAnalysis = AnalyzeExpression(-6, code, forCompletion: false);
             Assert.AreEqual(classAnalysis.Expression, "C()");
 
-            var defAnalysis = AnalyzeExpression(code.IndexOf("def fff")+4, code);
+            var defAnalysis = AnalyzeExpression(code.IndexOf("def fff") + 4, code, forCompletion: false);
             Assert.AreEqual(defAnalysis.Expression, "fff");
         }
 
-        private static ExpressionAnalysis AnalyzeExpression(int location, string sourceCode) {
+        [TestMethod]
+        public void Scenario_QuickInfo() {
+            string code = @"
+x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
+cls._parse_block(ast.expr)
+
+
+f(a,
+(b, c, d),
+e)
+
+
+def f():
+    """"""helpful information
+    
+    
+""""""
+
+while True:
+    pass";
+
+
+            // we get the appropriate subexpression
+            TestQuickInfo(code, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: ");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: ");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4, "ast: ");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3, "ast.expr: ");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 5 + 3 + 1 + 1, "cls._parse_block(ast.expr): ");
+
+            // the whole strieng shows up in quick info
+            TestQuickInfo(code, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
+
+            // trailing new lines don't show up in quick info
+            TestQuickInfo(code, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f(...)\r\nhelpful information");
+
+            // keywords don't show up in quick info
+            TestQuickInfo(code, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
+
+            // multiline function, hover at the close paren
+            TestQuickInfo(code, code.IndexOf("e)") + 1, code.IndexOf("e)") + 2, @"f(a,
+(b, c, d),
+e): ");
+        }
+
+        private static void TestQuickInfo(string code, int start, int end, params string[] expected) {
+
+            for (int i = start; i < end; i++) {
+                var analysis = AnalyzeExpression(i, code, forCompletion: false);
+                List<object> quickInfo = new List<object>();
+                ITrackingSpan span;
+                QuickInfoSource.AugmentQuickInfoWorker(
+                    analysis,
+                    quickInfo,
+                    out span);
+
+                Assert.AreEqual(expected.Length, quickInfo.Count);
+                for (int j = 0; j < expected.Length; j++) {
+                    Assert.AreEqual(expected[j], quickInfo[j]);
+                }
+            }
+        }
+
+        private static ExpressionAnalysis AnalyzeExpression(int location, string sourceCode, bool forCompletion = true) {
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
@@ -100,12 +164,12 @@ C().fff";
             var textView = new MockTextView(buffer);
             var item = analyzer.MonitorTextBuffer(textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
             while (!item.ProjectEntry.IsAnalyzed) {
-                Thread.Sleep(100);
+                Thread.Sleep(10);
             }
             
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
-            return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1));
+            return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
         }
 
         private static void MemberCompletionTest(int location, string sourceCode, string expectedExpression) {

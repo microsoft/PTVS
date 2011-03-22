@@ -219,24 +219,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var loc = parser.Span.GetSpan(parser.Snapshot.Version);
             var exprRange = parser.GetExpressionRange(forCompletion);
+            
             if (exprRange == null) {
-                if (parser.Tokens.Count > 0) {
-                    var lastToken = parser.Tokens[parser.Tokens.Count - 1];
-                    string wholeToken = GetWholeTokenRight(snapshot, lastToken.Span);
-                    if (wholeToken != null) {
-                        return new ExpressionAnalysis(wholeToken, null, lastToken.Span.Start.GetContainingLine().LineNumber, null);
-                    }
-                }
                 return ExpressionAnalysis.Empty;
-            }
+            }            
 
-            // extend right for any partial expression the user is hovering on, for example:
-            // "x.Baz" where the user is hovering over the B in baz we want the complete
-            // expression.
-            string text = GetWholeTokenRight(snapshot, exprRange.Value);
-            if (text == null) {
-                return ExpressionAnalysis.Empty;
-            }
+            string text = exprRange.Value.GetText();
 
             var applicableSpan = parser.Snapshot.CreateTrackingSpan(
                 exprRange.Value.Span,
@@ -258,30 +246,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return ExpressionAnalysis.Empty;
-        }
-
-        /// <summary>
-        /// Moves right to get the full token
-        /// </summary>
-        private static string GetWholeTokenRight(ITextSnapshot snapshot, SnapshotSpan exprRange) {
-            string text = exprRange.GetText();
-            var endingLine = exprRange.End.GetContainingLine();
-            if (endingLine.End.Position - exprRange.End.Position < 0) {
-                return null;
-            }
-            var endText = snapshot.GetText(exprRange.End.Position, endingLine.End.Position - exprRange.End.Position);
-            bool allChars = true;
-            for (int i = 0; i < endText.Length; i++) {
-                if (!Char.IsLetterOrDigit(endText[i]) && endText[i] != '_') {
-                    text += endText.Substring(0, i);
-                    allChars = false;
-                    break;
-                }
-            }
-            if (allChars) {
-                text += endText;
-            }
-            return text;
         }
 
         /// <summary>

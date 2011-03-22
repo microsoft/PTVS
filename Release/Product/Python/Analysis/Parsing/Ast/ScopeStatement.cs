@@ -123,12 +123,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal virtual string ScopeDocumentation {
-            get {
-                return null;
-            }
-        }
-
         internal void AddFreeVariable(PythonVariable variable, bool accessedInScope) {
             if (_freeVars == null) {
                 _freeVars = new List<PythonVariable>();

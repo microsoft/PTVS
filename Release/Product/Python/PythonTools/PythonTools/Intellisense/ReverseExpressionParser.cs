@@ -14,7 +14,7 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var loc = span.GetSpan(snapshot);
             var line = _curLine = snapshot.GetLineFromPosition(loc.Start);
-
+            
             var targetSpan = new Span(line.Start.Position, span.GetEndPoint(snapshot).Position - line.Start.Position);
             _tokens = Classifier.GetClassificationSpans(new SnapshotSpan(snapshot, targetSpan));
         }
@@ -66,6 +66,11 @@ namespace Microsoft.PythonTools.Intellisense {
             // Walks backwards over all the lines
             if (Tokens.Count > 0) {
                 lastToken = Tokens[Tokens.Count - 1];
+                if (Tokens.Count > 1 && ShouldSkipAsLastToken(lastToken)) {
+                    // skip trailing new line if the user is hovering at the end of the line
+                    lastToken = Tokens[Tokens.Count - 2];
+                }
+
                 while (true) {
                     // Walk backwards over the tokens in the current line
                     for (int t = Tokens.Count - 1; t >= 0; t--) {
@@ -92,6 +97,10 @@ namespace Microsoft.PythonTools.Intellisense {
                                     sigStart = token.Span.Start;
                                 }
                             } else {
+                                if (start == null) {
+                                    // hovering directly over an open paren, don't provide a tooltip
+                                    return null;
+                                }
                                 break;
                             }
                         } else if (token.ClassificationType == Classifier.Provider.CloseGroupingClassification ||
@@ -140,6 +149,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return _span.GetSpan(_snapshot);
+        }
+
+        /// <summary>
+        /// Returns true if we should skip this token when it's the last token that the user hovers over.  Currently true
+        /// for new lines and dot classifications.  
+        /// </summary>
+        private bool ShouldSkipAsLastToken(ClassificationSpan lastToken) {
+            return (lastToken.ClassificationType.Classification == PredefinedClassificationTypeNames.WhiteSpace &&
+                    (lastToken.Span.GetText() == "\r\n" || lastToken.Span.GetText() == "\n" || lastToken.Span.GetText() == "\r")) ||
+                    (lastToken.ClassificationType == Classifier.Provider.DotClassification);
         }
 
         public IPythonClassifier Classifier {

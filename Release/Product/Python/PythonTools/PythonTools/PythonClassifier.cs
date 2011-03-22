@@ -250,7 +250,7 @@ namespace Microsoft.PythonTools {
                 var tokenSpan = new Span(index, token.SourceSpan.Length);
                 var intersection = span.Intersection(tokenSpan);
                 if (intersection != null && intersection.Value.Length > 0) {
-                    return new ClassificationSpan(new SnapshotSpan(span.Snapshot, intersection.Value), classification);
+                    return new ClassificationSpan(new SnapshotSpan(span.Snapshot, tokenSpan), classification);
                 }
             }
 

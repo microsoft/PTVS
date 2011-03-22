@@ -574,6 +574,7 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
+                    // TODO: ISmartIndentProvider
                     case VSConstants.VSStd2KCmdID.RETURN:
                         if (PythonToolsPackage.Instance.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart) {
                             // smart indent
@@ -581,6 +582,7 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
+
                     case VSConstants.VSStd2KCmdID.BACKSPACE:
 
                         if (PythonToolsPackage.Instance.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart &&

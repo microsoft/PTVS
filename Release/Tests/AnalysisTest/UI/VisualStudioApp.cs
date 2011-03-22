@@ -88,6 +88,21 @@ namespace AnalysisTest.UI {
                     )
                 )
             );
+            if (elem == null) {
+                // maybe the file has been modified, try again with a *
+                elem = Element.FindFirst(TreeScope.Descendants,
+                    new AndCondition(
+                        new PropertyCondition(
+                            AutomationElement.ClassNameProperty,
+                            "TabItem"
+                        ),
+                        new PropertyCondition(
+                            AutomationElement.NameProperty,
+                            windowName + "*"
+                        )
+                    )
+                );
+            }
 
             elem = elem.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(

@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             _reader = reader;
-
+            
             if (_buffer == null || _buffer.Length < bufferCapacity) {
                 _buffer = new char[bufferCapacity];
             }
@@ -730,7 +730,7 @@ namespace Microsoft.PythonTools.Parsing {
                 if (data.Count == 0) {
                     return new ConstantValueToken(new byte[0]);
                 }
-
+                
                 return new ConstantValueToken(data.ToArray());
             }
         }

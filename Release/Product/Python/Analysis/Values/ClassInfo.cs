@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Documentation {
             get {
                 if (ClassDefinition.Body != null) {
-                    return ClassDefinition.Body.Documentation;
+                    return ClassDefinition.Body.Documentation.TrimDocumentation();
                 }
                 return "";
             }

@@ -433,25 +433,28 @@ namespace Microsoft.PythonTools.Parsing {
             BigInteger ret = BigInteger.Zero;
             BigInteger m = BigInteger.One;
 
-            int i = text.Length - 1;
-            if (text[i] == 'l' || text[i] == 'L') i -= 1;
+            if (text.Length != 0) {
 
-            int groupMax = 7;
-            if (b <= 10) groupMax = 9;// 2 147 483 647
+                int i = text.Length - 1;
+                if (text[i] == 'l' || text[i] == 'L') i -= 1;
 
-            while (i >= 0) {
-                // extract digits in a batch
-                int smallMultiplier = 1;
-                uint uval = 0;
+                int groupMax = 7;
+                if (b <= 10) groupMax = 9;// 2 147 483 647
 
-                for (int j = 0; j < groupMax && i >= 0; j++) {
-                    uval = (uint)(CharValue(text[i--], b) * smallMultiplier + uval);
-                    smallMultiplier *= b;
+                while (i >= 0) {
+                    // extract digits in a batch
+                    int smallMultiplier = 1;
+                    uint uval = 0;
+
+                    for (int j = 0; j < groupMax && i >= 0; j++) {
+                        uval = (uint)(CharValue(text[i--], b) * smallMultiplier + uval);
+                        smallMultiplier *= b;
+                    }
+
+                    // this is more generous than needed
+                    ret += m * (BigInteger)uval;
+                    if (i >= 0) m = m * (smallMultiplier);
                 }
-
-                // this is more generous than needed
-                ret += m * (BigInteger)uval;
-                if (i >= 0) m = m * (smallMultiplier);
             }
 
             return ret;

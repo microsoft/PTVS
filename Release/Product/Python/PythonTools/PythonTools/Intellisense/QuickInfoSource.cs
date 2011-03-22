@@ -37,13 +37,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 false
             );
 
+            AugmentQuickInfoWorker(vars, quickInfoContent, out applicableToSpan);
+        }
+
+        internal static void AugmentQuickInfoWorker(ExpressionAnalysis vars, System.Collections.Generic.IList<object> quickInfoContent, out ITrackingSpan applicableToSpan) {
             applicableToSpan = vars.Span;
             if (applicableToSpan == null || String.IsNullOrWhiteSpace(vars.Expression)) {
                 return;
             }
 
             bool first = true;
-            var result = new StringBuilder();            
+            var result = new StringBuilder();
             int count = 0;
             List<IAnalysisValue> listVars = new List<IAnalysisValue>(vars.Values);
             HashSet<string> descriptions = new HashSet<string>();

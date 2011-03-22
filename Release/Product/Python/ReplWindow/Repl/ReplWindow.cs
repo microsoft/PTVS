@@ -89,12 +89,17 @@ namespace Microsoft.VisualStudio.Repl {
         private bool _displayPromptInMargin, _formattedPrompts;
         private int? _inputStart;
         private int _currentInput = 1;
-        private readonly Dictionary<VSConstants.VSStd2KCmdID, Action> _commands2k = new Dictionary<VSConstants.VSStd2KCmdID, Action>();
         private IVsFindTarget _findTarget;
         private IVsTextView _view;
-        private OleMenuCommandService _commandService;
-        private readonly Guid _langSvcGuid;
-        private readonly string _replId;
+
+        //
+        // Command filter chain: 
+        // window -> pre-language -> language services -> post-language -> editor
+        //
+        private IOleCommandTarget _preLanguageCommandFilter;
+        private IOleCommandTarget _languageServiceCommandFilter;
+        private IOleCommandTarget _postLanguageCommandFilter;
+        private IOleCommandTarget _editorCommandFilter;
 
         //
         // A list of scopes if this REPL is multi-scoped
@@ -102,6 +107,8 @@ namespace Microsoft.VisualStudio.Repl {
         private string[] _currentScopes;
         private bool _scopeListVisible;
         
+        private readonly Guid _langSvcGuid;
+        private readonly string _replId;
         private readonly IProjectionBufferFactoryService _projectionFactory;   // the factory service for creating ellison 
         private readonly ITextBufferFactoryService _bufferFactory;
         private readonly IClassifierAggregatorService _classifierAgg;
@@ -321,10 +328,6 @@ namespace Microsoft.VisualStudio.Repl {
             _primaryClassifier.AddClassifier(_projectionBuffer, _outputBuffer, outputClassifier);
 
             _textViewHost = res;
-
-            foreach (var listener in _creationListeners) {
-                listener.ReplWindowCreated(this);
-            }
         }
 
         /// <summary>
@@ -1821,115 +1824,93 @@ namespace Microsoft.VisualStudio.Repl {
 
         #endregion
 
-        /// <summary>
-        /// A command filter which runs before the text view for all commands used for certain commands we need to intercept.
-        /// </summary>
-        class EarlyCommandFilter : IOleCommandTarget {
-            internal IOleCommandTarget _nextTarget;
-            private ReplWindow _replWindow;
+        private sealed class CommandFilter : IOleCommandTarget {
+            private readonly ReplWindow _replWindow;
+            private readonly bool _preLanguage;
 
-            public EarlyCommandFilter(ReplWindow vsReplWindow) {
+            public CommandFilter(ReplWindow vsReplWindow, bool preLanguage) {
                 _replWindow = vsReplWindow;
-            }
-
-            #region IOleCommandTarget Members
-
-            public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-                if (pguidCmdGroup == VSConstants.VSStd2K) {
-                    switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                        case VSConstants.VSStd2KCmdID.SHOWCONTEXTMENU:
-                            _replWindow.ShowContextMenu();
-                            return VSConstants.S_OK;
-                        case VSConstants.VSStd2KCmdID.TYPECHAR:
-                            char typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
-                            if (!_replWindow.CaretInCodeInputRegion && !_replWindow.CaretInStandardInputRegion) {
-                                _replWindow.EditorOperations.MoveToEndOfDocument(false);
-                            }
-                            
-                            if (!_replWindow.TextView.Selection.IsEmpty) {
-                                // delete selected text first
-                                _replWindow.CutOrDelete(false);
-                            }
-
-                            return _nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                    }
-                } else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
-                    switch ((VSConstants.VSStd97CmdID)nCmdID) {
-                        case VSConstants.VSStd97CmdID.Paste:
-                            if (!_replWindow.TextView.Selection.IsEmpty) {
-                                _replWindow.CutOrDelete(false);
-                            }
-                            _replWindow.PasteClipboard();
-                            return VSConstants.S_OK;
-                        case VSConstants.VSStd97CmdID.Cut:
-                            if (!_replWindow.TextView.Selection.IsEmpty && _replWindow.CutOrDelete(true)) {
-                                return VSConstants.S_OK;
-                            }
-                            break;
-                        case VSConstants.VSStd97CmdID.Delete:
-                            if (_replWindow.TextView.Selection.IsEmpty) {
-                                var caretLine = _replWindow.TextView.Caret.ContainingTextViewLine;
-                                var pos = _replWindow.TextView.Caret.Position.BufferPosition;
-
-                                var langLoc = _replWindow.TextView.BufferGraph.MapDownToBuffer(
-                                    pos,
-                                    PointTrackingMode.Positive,
-                                    _replWindow._currentLanguageBuffer,
-                                    PositionAffinity.Predecessor
-                                );
-
-                                // langLoc is null if the user deletes in the output, prompt, or old language buffers
-                                if (langLoc != null && langLoc.Value != _replWindow._currentLanguageBuffer.CurrentSnapshot.Length) {
-                                    // get the next character in outer buffer
-                                    var nextLangLinePoint = _replWindow.TextView.BufferGraph.MapUpToBuffer(
-                                        langLoc.Value + caretLine.LineBreakLength + 1,
-                                        PointTrackingMode.Positive,
-                                        PositionAffinity.Predecessor,
-                                        _replWindow._projectionBuffer
-                                    ) - 1;
-
-                                    // we should always map back up into the buffer
-                                    Debug.Assert(nextLangLinePoint != null);
-
-                                    if (caretLine.End == pos &&
-                                        _replWindow.TryRemovePromptForBackspace(nextLangLinePoint.Value)) {
-                                        _replWindow._currentLanguageBuffer.Delete(new Span(langLoc.Value, caretLine.LineBreakLength));
-                                        return VSConstants.S_OK;
-                                    }
-                                }
-                            }else if (_replWindow.CutOrDelete(false)) {
-                                return VSConstants.S_OK;
-                            }
-                            break;
-                    }
-                }
-
-                return _nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                _preLanguage = preLanguage;
             }
 
             public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-                return _nextTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+                if (_preLanguage) {
+                    return _replWindow.PreLanguageCommandFilterQueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+                } else {
+                    return _replWindow.PostLanguageCommandFilterQueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+                }
             }
 
-            #endregion
+            public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+                if (_preLanguage) {
+                    return _replWindow.PreLanguageCommandFilterExec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                } else {
+                    return _replWindow.PostLanguageCommandFilterExec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                }
+            }
         }
 
-        #region IOleCommandTarget Members
+        #region Window IOleCommandTarget
+
+        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            var nextTarget = _preLanguageCommandFilter;
+
+            if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
+                switch (prgCmds[0].cmdID) {
+                    case PkgCmdIDList.cmdidReplHistoryNext:
+                    case PkgCmdIDList.cmdidReplHistoryPrevious:
+                    case PkgCmdIDList.cmdidSmartExecute:
+                    case PkgCmdIDList.cmdidBreakLine:
+                        prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.comboIdReplScopes:
+                        if (_scopeListVisible) {
+                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        } else {
+                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        }
+                        return VSConstants.S_OK;
+                }
+            }
+
+            return nextTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            var nextTarget = _preLanguageCommandFilter;
+            
             if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
                 switch (nCmdID) {
-                    case PkgCmdIDList.cmdidBreakRepl: BreakRepl(this, EventArgs.Empty); return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidSmartExecute: SmartExecute(this, EventArgs.Empty); return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidResetRepl: ResetRepl(this, EventArgs.Empty); return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidReplHistoryNext: HistoryNext(this, EventArgs.Empty); return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidReplHistoryPrevious: HistoryPrevious(this, EventArgs.Empty); return VSConstants.S_OK;
+                    case PkgCmdIDList.cmdidBreakRepl:
+                        AbortCommand();
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidResetRepl:
+                        Reset();
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidSmartExecute:
+                        SmartExecute();
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidReplHistoryNext: 
+                        HistoryNext(); 
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidReplHistoryPrevious: 
+                        HistoryPrevious(); 
+                        return VSConstants.S_OK;
+
                     case PkgCmdIDList.cmdidReplClearScreen: 
                         ClearScreen(); 
                         PrepareForInput();
                         ApplyProtection();
                         return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidBreakLine: ExecuteText(); return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidBreakLine: 
+                        ExecuteText(); 
+                        return VSConstants.S_OK;
 
                     case PkgCmdIDList.comboIdReplScopes:
                         ScopeComboBoxHandler(pvaIn, pvaOut);
@@ -1939,7 +1920,23 @@ namespace Microsoft.VisualStudio.Repl {
                         ScopeComboBoxGetList(pvaOut);
                         return VSConstants.S_OK;
                 }
-            } else if (pguidCmdGroup == VSConstants.VSStd2K) {
+            }
+
+            return nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);            
+        }
+
+        #endregion
+
+        #region Pre-langauge service IOleCommandTarget
+
+        private int PreLanguageCommandFilterQueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            return _languageServiceCommandFilter.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
+
+        private int PreLanguageCommandFilterExec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            var nextTarget = _languageServiceCommandFilter;
+
+            if (pguidCmdGroup == VSConstants.VSStd2K) {
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.RETURN:
                         int res = VSConstants.S_OK;
@@ -1971,9 +1968,7 @@ namespace Microsoft.VisualStudio.Repl {
                             if (enterPoint != null) {
                                 var caretLine = TextView.Caret.Position.BufferPosition.GetContainingLine();
 
-                                if (_commandService != null) {
-                                    res = ((IOleCommandTarget)_commandService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                                }
+                                res = nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
 
                                 if (caretLine.LineNumber < TextView.Caret.Position.BufferPosition.GetContainingLine().LineNumber) {
                                     // if we appended a new line, try and execute the text
@@ -1993,34 +1988,153 @@ namespace Microsoft.VisualStudio.Repl {
                             }
                         }
                         break;
+
                     case VSConstants.VSStd2KCmdID.BACKSPACE:
                         if (!TextView.Selection.IsEmpty) {
                             if (CutOrDelete(false)) {
                                 return VSConstants.S_OK;
                             }
                         } else if (TryRemovePromptForBackspace()) {
-                            if (_commandService != null) {
-                                res = ((IOleCommandTarget)_commandService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                                CheckLanguageSpans();
-                                return res;
-                            }
+                            res = nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                            CheckLanguageSpans();
+                            return res;
                         }
                         break;
-                    default:
-                        Action action;
-                        if (_commands2k.TryGetValue((VSConstants.VSStd2KCmdID)nCmdID, out action)) {
-                            action();
+
+                    case VSConstants.VSStd2KCmdID.CANCEL: 
+                        VsCancel();
+                        return VSConstants.S_OK;
+
+                    case VSConstants.VSStd2KCmdID.UP:
+                        SmartUpArrow();
+                        return VSConstants.S_OK;
+
+                    case VSConstants.VSStd2KCmdID.DOWN:
+                        SmartDownArrow();
+                        return VSConstants.S_OK;
+
+                    case VSConstants.VSStd2KCmdID.BOL:
+                        Home(false);
+                        return VSConstants.S_OK;
+
+                    case VSConstants.VSStd2KCmdID.BOL_EXT:
+                        Home(true);
+                        return VSConstants.S_OK;
+
+                    case VSConstants.VSStd2KCmdID.SHOWCONTEXTMENU:
+                        ShowContextMenu();
+                        return VSConstants.S_OK;
+
+                    case VSConstants.VSStd2KCmdID.TYPECHAR:
+                        char typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
+                        if (!CaretInCodeInputRegion && !CaretInStandardInputRegion) {
+                            EditorOperations.MoveToEndOfDocument(false);
+                        }
+                            
+                        if (!TextView.Selection.IsEmpty) {
+                            // delete selected text first
+                            CutOrDelete(false);
+                        }
+                        break;
+                }
+            } else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
+                switch ((VSConstants.VSStd97CmdID)nCmdID) {
+                    case VSConstants.VSStd97CmdID.Paste:
+                        if (!TextView.Selection.IsEmpty) {
+                            CutOrDelete(false);
+                        }
+                        PasteClipboard();
+                        return VSConstants.S_OK;
+
+                    case VSConstants.VSStd97CmdID.Cut:
+                        if (!TextView.Selection.IsEmpty && CutOrDelete(true)) {
+                            return VSConstants.S_OK;
+                        }
+                        break;
+
+                    case VSConstants.VSStd97CmdID.Delete:
+                        if (TextView.Selection.IsEmpty) {
+                            var caretLine = TextView.Caret.ContainingTextViewLine;
+                            var pos = TextView.Caret.Position.BufferPosition;
+
+                            var langLoc = TextView.BufferGraph.MapDownToBuffer(
+                                pos,
+                                PointTrackingMode.Positive,
+                                _currentLanguageBuffer,
+                                PositionAffinity.Predecessor
+                            );
+
+                            // langLoc is null if the user deletes in the output, prompt, or old language buffers
+                            if (langLoc != null && langLoc.Value != _currentLanguageBuffer.CurrentSnapshot.Length) {
+                                // get the next character in outer buffer
+                                var nextLangLinePoint = TextView.BufferGraph.MapUpToBuffer(
+                                    langLoc.Value + caretLine.LineBreakLength + 1,
+                                    PointTrackingMode.Positive,
+                                    PositionAffinity.Predecessor,
+                                    _projectionBuffer
+                                ) - 1;
+
+                                // we should always map back up into the buffer
+                                Debug.Assert(nextLangLinePoint != null);
+
+                                if (caretLine.End == pos &&
+                                    TryRemovePromptForBackspace(nextLangLinePoint.Value)) {
+                                    _currentLanguageBuffer.Delete(new Span(langLoc.Value, caretLine.LineBreakLength));
+                                    return VSConstants.S_OK;
+                                }
+                            }
+                        } else if (CutOrDelete(false)) {
                             return VSConstants.S_OK;
                         }
                         break;
                 }
             }
-            if (_commandService != null) {
-                return ((IOleCommandTarget)_commandService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-            }
 
-            return VSConstants.S_OK;
+            return nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
+
+        #endregion
+
+        #region Post-language service IOleCommandTarget
+
+        private int PostLanguageCommandFilterQueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            return _editorCommandFilter.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
+
+        private int PostLanguageCommandFilterExec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            var nextTarget = _editorCommandFilter;
+
+            // TODO:
+            // if (pguidCmdGroup == VSConstants.VSStd2K) {
+            //     switch ((VSConstants.VSStd2KCmdID)nCmdID) {
+            //         case VSConstants.VSStd2KCmdID.RETURN:
+            //             // RETURN that is not handled by any language service is a "try submit" command
+            // 
+            //             var enterPoint = TextView.BufferGraph.MapDownToBuffer(
+            //                 TextView.Caret.Position.BufferPosition,
+            //                 PointTrackingMode.Positive,
+            //                 _currentLanguageBuffer,
+            //                 PositionAffinity.Successor
+            //             );
+            // 
+            //             if (enterPoint != null) {
+            //                 if (TryExecuteInput()) {
+            //                     Caret.EnsureVisible();
+            //                     return VSConstants.S_OK;
+            //                 }
+            //                 Caret.EnsureVisible();
+            // 
+            //                 InsertSecondaryPrompt(enterPoint.Value.Position);
+            //                 // return VSConstants.S_OK;
+            //             }
+            //             break;
+            //     }
+            // }
+
+            return nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        #endregion
 
         private bool CutOrDelete(bool isCut) {
             bool includesPrompts = false, includesCode = false;
@@ -2381,44 +2495,23 @@ namespace Microsoft.VisualStudio.Repl {
             );
         }
 
-
-        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
-                switch (prgCmds[0].cmdID) {
-                    case PkgCmdIDList.cmdidReplHistoryNext:
-                    case PkgCmdIDList.cmdidReplHistoryPrevious:
-                    case PkgCmdIDList.cmdidSmartExecute:
-                    case PkgCmdIDList.cmdidBreakLine:
-                        prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                        return VSConstants.S_OK;
-
-                    case PkgCmdIDList.comboIdReplScopes:
-                        if (_scopeListVisible) {
-                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                        } else {
-                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                        }
-                        return VSConstants.S_OK;
-                }
-            }
-
-            int hr = (int)Microsoft.VisualStudio.OLE.Interop.Constants.OLECMDERR_E_NOTSUPPORTED;
-
-            if (_commandService != null) {
-                hr = ((IOleCommandTarget)_commandService).QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
-            }
-
-            return hr;
-        }
-
-        #endregion
-
         #region VS Initialization
 
         protected override void OnCreate() {
             CreateTextViewHost();
 
             var textView = _textViewHost.TextView;
+
+            _view = ComponentModel.GetService<IVsEditorAdaptersFactoryService>().GetViewAdapter(textView);
+            _findTarget = _view as IVsFindTarget;
+
+            _postLanguageCommandFilter = new CommandFilter(this, preLanguage: false);
+            ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_postLanguageCommandFilter, out _editorCommandFilter));
+
+            // may add command filters
+            foreach (var listener in _creationListeners) {
+                listener.ReplWindowCreated(this);
+            }
 
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.HorizontalScrollBarId, false);
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.LineNumberMarginId, false);
@@ -2443,17 +2536,30 @@ namespace Microsoft.VisualStudio.Repl {
             //    _margin = _textViewHost.GetTextViewMargin(PredefinedMarginNames.Glyph);
             //}
 
+            // may add command filters
             PrepareForInput();
+
             ApplyProtection();
             InitializeScopeList();
-
             SetDefaultFontSize(ComponentModel, textView);
-            
-            // create adapters so VS is happy...
-            var serviceProvider = (Microsoft.VisualStudio.OLE.Interop.IServiceProvider)GetService(typeof(Microsoft.VisualStudio.OLE.Interop.IServiceProvider));
+        }
 
-            _view =  ComponentModel.GetService<IVsEditorAdaptersFactoryService>().GetViewAdapter(textView);
-            _findTarget = _view as IVsFindTarget;
+        public override void OnToolWindowCreated() {
+            Guid commandUiGuid = Microsoft.VisualStudio.VSConstants.GUID_TextEditorFactory;
+            ((IVsWindowFrame)Frame).SetGuidProperty((int)__VSFPROPID.VSFPROPID_InheritKeyBindings, ref commandUiGuid);
+
+            _preLanguageCommandFilter = new CommandFilter(this, preLanguage: true);
+            ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_preLanguageCommandFilter, out _languageServiceCommandFilter));
+
+            base.OnToolWindowCreated();
+
+            // add our toolbar which  is defined in our VSCT file
+            var frame = (IVsWindowFrame)Frame;
+            object otbh;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out otbh));
+            IVsToolWindowToolbarHost tbh = otbh as IVsToolWindowToolbarHost;
+            Guid guidPerfMenuGroup = GuidList.guidReplWindowCmdSet;
+            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdReplToolbar));
         }
 
         /// <summary>
@@ -2478,68 +2584,6 @@ namespace Microsoft.VisualStudio.Repl {
             classMap.DefaultTextProperties = defaultProps;
         }
 
-        public override void OnToolWindowCreated() {
-            Guid commandUiGuid = Microsoft.VisualStudio.VSConstants.GUID_TextEditorFactory;
-            ((IVsWindowFrame)Frame).SetGuidProperty((int)__VSFPROPID.VSFPROPID_InheritKeyBindings, ref commandUiGuid);
-
-            var earlyFilter = new EarlyCommandFilter(this);
-            ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(earlyFilter, out earlyFilter._nextTarget));
-            _commandService = new OleMenuCommandService(this, (IOleCommandTarget)_view);
-
-            AddCommand(VSConstants.VSStd2KCmdID.CANCEL, () => VsCancel());
-
-            AddCommand(VSConstants.VSStd2KCmdID.UP, SmartUpArrow);
-            AddCommand(VSConstants.VSStd2KCmdID.DOWN, SmartDownArrow);
-            AddCommand(VSConstants.VSStd2KCmdID.BOL, () => Home(false));
-            AddCommand(VSConstants.VSStd2KCmdID.BOL_EXT, () => Home(true));
-
-            AddCommand(VSConstants.VSStd2KCmdID.SHOWCONTEXTMENU, ShowContextMenu);
-
-            var id = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.cmdidBreakRepl);
-            var cmd = new OleMenuCommand(BreakRepl, id);
-            _commandService.AddCommand(cmd);
-
-            id = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.cmdidResetRepl);
-            cmd = new OleMenuCommand(ResetRepl, id);
-            _commandService.AddCommand(cmd);
-
-            id = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.cmdidSmartExecute);
-            cmd = new OleMenuCommand(SmartExecute, id);
-            _commandService.AddCommand(cmd);
-
-
-            id = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.cmdidReplHistoryNext);
-            cmd = new OleMenuCommand(SmartExecute, id);
-            _commandService.AddCommand(cmd);
-
-            id = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.cmdidBreakLine);
-            cmd = new OleMenuCommand(SmartExecute, id);
-            _commandService.AddCommand(cmd);
-
-
-            id = new CommandID(GuidList.guidReplWindowCmdSet, (int)PkgCmdIDList.cmdidReplHistoryPrevious);
-            cmd = new OleMenuCommand(SmartExecute, id);
-            _commandService.AddCommand(cmd);
-
-            base.OnToolWindowCreated();
-
-            // add our toolbar which  is defined in our VSCT file
-            var frame = (IVsWindowFrame)Frame;
-            object otbh;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out otbh));
-            IVsToolWindowToolbarHost tbh = otbh as IVsToolWindowToolbarHost;
-            Guid guidPerfMenuGroup = GuidList.guidReplWindowCmdSet;
-            Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdReplToolbar));
-        }
-
-        public void HistoryNext(object sender, EventArgs e) {
-            HistoryNext();
-        }
-
-        public void HistoryPrevious(object sender, EventArgs e) {
-            HistoryPrevious();
-        }
-
         public void ShowContextMenu() {
             var uishell = (IVsUIShell)GetService(typeof(SVsUIShell));
             if (uishell != null) {
@@ -2557,28 +2601,6 @@ namespace Microsoft.VisualStudio.Repl {
             }
         }
 
-        public void BreakRepl(object sender, EventArgs args) {
-            AbortCommand();
-        }
-
-        public void ResetRepl(object sender, EventArgs args) {
-            Reset();
-        }
-
-        public void SmartExecute(object sender, EventArgs args) {
-            SmartExecute();
-        }
-
-        private void AddCommand(VSConstants.VSStd2KCmdID command, Action action) {
-            var id = new CommandID(typeof(VSConstants.VSStd2KCmdID).GUID, (int)command);
-            var cmd = new OleMenuCommand(OnReturn, id);
-            _commandService.AddCommand(cmd);
-            _commands2k[command] = action;
-        }
-
-        private void OnReturn(object sender, EventArgs args) {
-        }
-
         #endregion
 
         #region Overridden Methods
@@ -2594,21 +2616,6 @@ namespace Microsoft.VisualStudio.Repl {
                 return _textViewHost;
             }
             set { }
-        }
-
-        /// <summary>
-        /// Return the service of the given type.
-        /// This override is needed to be able to use a different command service from the one
-        /// implemented in the base class.
-        /// </summary>
-        protected override object GetService(Type serviceType) {
-            if ((typeof(IOleCommandTarget) == serviceType) ||
-                (typeof(IMenuCommandService) == serviceType)) {
-                if (null != _commandService) {
-                    return _commandService;
-                }
-            }
-            return base.GetService(serviceType);
         }
 
         #endregion
