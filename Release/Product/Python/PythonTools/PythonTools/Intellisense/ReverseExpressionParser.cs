@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // Walks backwards over all the lines
             if (Tokens.Count > 0) {
                 lastToken = Tokens[Tokens.Count - 1];
-                if (Tokens.Count > 1 && ShouldSkipAsLastToken(lastToken)) {
+                if (!forCompletion && Tokens.Count > 1 && ShouldSkipAsLastToken(lastToken)) {
                     // skip trailing new line if the user is hovering at the end of the line
                     lastToken = Tokens[Tokens.Count - 2];
                 }
