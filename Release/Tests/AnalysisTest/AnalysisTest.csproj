@@ -853,11 +853,12 @@
   </ItemGroup>
   <Import Project="..\..\Product\Python\Python.settings" />
   <Import Project="$(TargetsPath)\TCWB.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
   <Target Name="BeforeCompile">
+    <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" />
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

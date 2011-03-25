@@ -1,4 +1,3 @@
-set MySku=Internal
 @echo off
 if "%1" == "" (
 	echo Must provide out dir
@@ -21,6 +20,10 @@ if errorlevel 1 (
 
 mkdir %1\Debug
 copy ..\..\..\Binaries\Win32\Debug\PythonToolsInstaller.msi %1\Debug\PythonToolsInstaller.msi
+copy PythonToolsInstaller\SnInternal.reg %1\Debug\EnableSkipVerification.reg
+copy PythonToolsInstaller\SnInternal64.reg %1\Debug\EnableSkipVerificationX64.reg
+copy PythonToolsInstaller\SnInternalRemove.reg %1\Debug\DisableSkipVerification.reg
+copy PythonToolsInstaller\SnInternal64Remove.reg %1\Debug\DisableSkipVerificationX64.reg
 
 mkdir %1\Debug\Symbols
 copy ..\..\..\Binaries\Win32\Debug\*.pdb %1\Debug\Symbols\
@@ -41,6 +44,10 @@ copy ..\Python\ReplWindow\obj\Win32\Debug\extension.vsixmanifest %1\Debug\Binari
 
 mkdir %1\Release
 copy ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi %1\Release\PythonToolsInstaller.msi
+copy PythonToolsInstaller\SnInternal.reg %1\Release\EnableSkipVerification.reg
+copy PythonToolsInstaller\SnInternal64.reg %1\Release\EnableSkipVerificationX64.reg
+copy PythonToolsInstaller\SnInternalRemove.reg %1\Release\DisableSkipVerification.reg
+copy PythonToolsInstaller\SnInternal64Remove.reg %1\Release\DisableSkipVerificationX64.reg
 
 mkdir %1\Release\Symbols
 copy ..\..\..\Binaries\Win32\Release\*.pdb %1\Release\Symbols\

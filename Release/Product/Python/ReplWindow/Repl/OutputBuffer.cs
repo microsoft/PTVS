@@ -228,12 +228,9 @@ namespace Microsoft.VisualStudio.Repl {
 
             if (entries.Length > 0) {
                 foreach (var entry in entries) {
-                    if (entry.Properties.Kind == OutputEntryKind.StdOut) {
-                        _window.OutputBufferedText(entry.Properties.Color, entry.Buffer.ToString());
-                    } else {
-                        _window.OutputBufferedError(entry.Properties.Color, entry.Buffer.ToString());
-                    }
+                    _window.AppendOutput(entry.Properties.Color, entry.Buffer.ToString());
                 }
+                _window.TextView.Caret.EnsureVisible();
             }
         }
 

@@ -16,7 +16,7 @@ using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.VisualStudio.Repl {
     /// <summary>
-    /// This is a custom span which is like an EdgeInclusive span.  We need a custom span because ellision buffers
+    /// This is a custom span which is like an EdgeInclusive span.  We need a custom span because elision buffers
     /// do not allow EdgeInclusive unless it spans the entire buffer.  We create snippets of our language spans
     /// and these are initially zero length.  When we insert at the beginning of these we'll end up keeping the
     /// span zero length if we're just EdgePostivie tracking.

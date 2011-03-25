@@ -99,10 +99,10 @@ namespace Microsoft.VisualStudio.Repl {
         void WriteError(object value);
 
         /// <summary>
-        /// Reads input from the REL window.
+        /// Reads input from the REPL window.
         /// </summary>
         /// <returns></returns>
-        string ReadInput();
+        string ReadStandardInput();
 
         /// <summary>
         /// Sets the current value for the specified option.

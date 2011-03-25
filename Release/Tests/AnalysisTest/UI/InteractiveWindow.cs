@@ -146,5 +146,20 @@ namespace AnalysisTest.UI {
         public void Reset() {
             ReplWindow.Reset();
         }
+
+        public void WithStandardInputPrompt(string prompt, Action<string> action) {
+            if ((bool)ReplWindow.GetOptionValue(ReplOptions.DisplayPromptInMargin)) {
+                action("");
+                return;
+            }
+
+            string oldPrompt = (string)ReplWindow.GetOptionValue(ReplOptions.StandardInputPrompt);
+            ReplWindow.SetOptionValue(ReplOptions.StandardInputPrompt, prompt);
+            try {
+                action(prompt);
+            } finally {
+                ReplWindow.SetOptionValue(ReplOptions.StandardInputPrompt, oldPrompt);
+            }
+        }
     }
 }

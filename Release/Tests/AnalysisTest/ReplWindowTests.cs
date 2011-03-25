@@ -256,7 +256,6 @@ namespace AnalysisTest {
             Keyboard.Type(Key.Left);
             Keyboard.Type(Key.Left);
             Keyboard.Type(Key.Enter);
-            Keyboard.Type(Key.Tab);
             Keyboard.Type("pass");
             Keyboard.PressAndRelease(Key.Enter, Key.LeftCtrl);
             interactive.WaitForText(ReplPrompt + "def f(): ", SecondPrompt + "    pass#foo", ReplPrompt);
@@ -1072,18 +1071,20 @@ namespace AnalysisTest {
         public void TestRawInput() {
             var interactive = Prepare();
 
-            string inputCode = "x = " + RawInput + "()";
-            string text = "hello";
-            string printCode = "print(x)";
-            Keyboard.Type(inputCode + "\r");
-            interactive.WaitForText(ReplPrompt + inputCode, "");
+            interactive.WithStandardInputPrompt("INPUT: ", (stdInputPrompt) => {
+                string inputCode = "x = " + RawInput + "()";
+                string text = "hello";
+                string printCode = "print(x)";
+                Keyboard.Type(inputCode + "\r");
+                interactive.WaitForText(ReplPrompt + inputCode, stdInputPrompt);
 
-            Keyboard.Type(text + "\r");
-            interactive.WaitForText(ReplPrompt + inputCode, text, ReplPrompt);
+                Keyboard.Type(text + "\r");
+                interactive.WaitForText(ReplPrompt + inputCode, stdInputPrompt + text, ReplPrompt);
 
-            Keyboard.Type(printCode + "\r");
+                Keyboard.Type(printCode + "\r");
 
-            interactive.WaitForText(ReplPrompt + inputCode, text, ReplPrompt + printCode, text, ReplPrompt);
+                interactive.WaitForText(ReplPrompt + inputCode, stdInputPrompt + text, ReplPrompt + printCode, text, ReplPrompt);
+            });
         }
 
         /// <summary>
@@ -1185,22 +1186,24 @@ namespace AnalysisTest {
         public void TestIndirectInput() {
             var interactive = Prepare();
 
-            string text = null;
-            ThreadPool.QueueUserWorkItem(
-                x => {
-                    text = interactive.ReplWindow.ReadInput();
-                });
+            interactive.WithStandardInputPrompt("INPUT: ", (stdInputPrompt) => {
+                string text = null;
+                ThreadPool.QueueUserWorkItem(
+                    x => {
+                        text = interactive.ReplWindow.ReadStandardInput();
+                    });
 
 
-            // prompt should disappear
-            interactive.WaitForText();
+                // prompt should disappear
+                interactive.WaitForText(stdInputPrompt);
 
-            Keyboard.Type("abc");
-            interactive.WaitForText("abc");
-            Keyboard.Type("\r");
-            interactive.WaitForText("abc", ReplPrompt);
+                Keyboard.Type("abc");
+                interactive.WaitForText(stdInputPrompt + "abc");
+                Keyboard.Type("\r");
+                interactive.WaitForText(stdInputPrompt + "abc", ReplPrompt);
 
-            Assert.AreEqual(text, "abc\r\n");
+                Assert.AreEqual(text, "abc\r\n");
+            });
         }
 
         /// <summary>

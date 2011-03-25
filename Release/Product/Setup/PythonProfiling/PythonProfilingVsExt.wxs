@@ -2,6 +2,15 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
         <ComponentGroup Id="PythonProfilingExt">
+            <!-- Per user components -->
+            <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{3A0AEDAE-0D3C-415C-A586-F91CBBEC2673}">
+                <Condition>NOT ALLUSERS = 1</Condition>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\10.0\ExtensionManager\EnabledExtensions'>
+                    <RegistryValue Type='string' Name='81da0100-e6db-4783-91ea-c38c3fa1b81e,1.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\PythonProfiling\1.0\'/>
+                </RegistryKey>
+            </Component>
+
+            <!-- Both per user and all user components -->
             <Component Id="cmpB1338B49644B4C6DBF9D3980DD31C5B1" Directory="INSTALLLOCATION" Guid="{25572FC4-9256-43B0-876E-28C4A2D07C4F}">
                 <File Id="fil8EDEB70C247E4F11AA5A32BCB51E64F1" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Profiling.dll" />
             </Component>

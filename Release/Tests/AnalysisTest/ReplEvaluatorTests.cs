@@ -178,7 +178,7 @@ namespace AnalysisTest {
                 Output.Append(value.ToString());
             }
 
-            public string ReadInput() {
+            public string ReadStandardInput() {
                 throw new NotImplementedException();
             }
 

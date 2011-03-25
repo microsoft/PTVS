@@ -13,6 +13,33 @@
     </Fragment>
     <Fragment>
         <ComponentGroup Id="PythonToolsExt">
+            <!-- Per user components -->
+            <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{F0602549-7439-4DEC-8DCC-BF986EA53DF0}">
+                <Condition>NOT ALLUSERS = 1</Condition>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\10.0\ExtensionManager\EnabledExtensions'>
+                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools for Visual Studio\1.0\'/>
+                </RegistryKey>
+            </Component>
+            
+            <!-- All user components -->
+            <Component Id="cmp5BDDB568168248128EC9CF83E9466234" Directory="GAC" Guid="{224E48AF-A97D-4F05-B514-A86FEB4A8804}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil08DEB3712AB6448C8A369B97AE879B82" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.dll" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp405551D10EB0492D917A0485605C59F8" Directory="GAC" Guid="{7E4B1A16-010E-489E-A87B-BF8C5703DDC0}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil4FCAAD86363A4F83AF6CD8AD61DCCA24" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analysis.dll" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp3723207D6F2145329EC08053A702A410" Directory="GAC" Guid="{0827FC63-ACCC-4861-9652-76E76A63732B}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil6A9A63D82A864CE1B93D313CE0447135" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Attacher.exe" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp51C3DCAB961D460BA67710418F3C2125" Directory="GAC" Guid="{8706DC70-E1E1-48CD-B3AA-ABDA7A2BB6F0}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="filD4798D96AC5E4F9A96A44CA110175A98" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.dll" Assembly=".net"/>
+            </Component>
+
+            <!-- Both per user and all user components -->
             <Component Id="cmp859EFD7B5E5F8E214EC472E7DC763EBF" Directory="INSTALLLOCATION" Guid="{FCF50E4C-2843-4D32-A900-B1D0FCE2F297}">
                 <File Id="fil4E68ECDFDC7C76EEDFACF0055409671A" KeyPath="yes" Source="$(var.ObjDir)\extension.vsixmanifest" />
             </Component>
@@ -24,18 +51,6 @@
             </Component>
             <Component Id="cmp6D5E90B270732C7CF3CA0505224114C6" Directory="INSTALLLOCATION" Guid="{43A11BE3-DC0C-49D6-A1CF-7A2C12629A8B}">
                 <File Id="filE15A5066C20482C91FF1B652A7525942" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
-            </Component>
-            <Component Id="cmp5BDDB568168248128EC9CF83E9466234" Directory="GAC" Guid="{224E48AF-A97D-4F05-B514-A86FEB4A8804}" >
-                <File Id="fil08DEB3712AB6448C8A369B97AE879B82" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.dll" Assembly=".net"/>
-            </Component>
-            <Component Id="cmp405551D10EB0492D917A0485605C59F8" Directory="GAC" Guid="{7E4B1A16-010E-489E-A87B-BF8C5703DDC0}" >
-                <File Id="fil4FCAAD86363A4F83AF6CD8AD61DCCA24" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analysis.dll" Assembly=".net"/>
-            </Component>
-            <Component Id="cmp3723207D6F2145329EC08053A702A410" Directory="GAC" Guid="{0827FC63-ACCC-4861-9652-76E76A63732B}" >
-                <File Id="fil6A9A63D82A864CE1B93D313CE0447135" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Attacher.exe" Assembly=".net"/>
-            </Component>
-            <Component Id="cmp51C3DCAB961D460BA67710418F3C2125" Directory="GAC" Guid="{8706DC70-E1E1-48CD-B3AA-ABDA7A2BB6F0}" >
-                <File Id="filD4798D96AC5E4F9A96A44CA110175A98" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.dll" Assembly=".net"/>
             </Component>
             <Component Id="cmpEF47FA8913654BB49C6272600811A0F4" Directory="INSTALLLOCATION" Guid="{5704A9C3-E8C1-4F91-936F-639AEC8ED786}">
                 <File Id="fil9A920B42E2294FA6A15F1F88235DA801" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.MpiShim.exe" />

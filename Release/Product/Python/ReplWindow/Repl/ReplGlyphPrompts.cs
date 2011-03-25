@@ -57,7 +57,7 @@ namespace Microsoft.VisualStudio.Repl {
 
             public IEnumerable<ITagSpan<ReplGlyphTag>>/*!*/ GetTags(NormalizedSnapshotSpanCollection/*!*/ spans) {
                 foreach (SnapshotSpan span in spans) {
-                    switch (_promptProvider.HasPromptForLine(span.Snapshot, span.Start.GetContainingLine().LineNumber)) {
+                    switch (_promptProvider.GetPromptForLine(span.Snapshot, span.Start.GetContainingLine().LineNumber)) {
                         case ReplSpanKind.Prompt:
                             yield return new TagSpan<ReplGlyphTag>(span, ReplGlyphTag.MainPrompt);
                             break;
@@ -80,11 +80,8 @@ namespace Microsoft.VisualStudio.Repl {
         [TextViewRole(ReplConstants.ReplTextViewRole)]
         internal sealed class TaggerProvider : ITaggerProvider {
             public ITagger<T> CreateTagger<T>(ITextBuffer/*!*/ buffer) where T : ITag {
-                ReplWindow promptProvider;
-                if (buffer.Properties.TryGetProperty(typeof(ReplWindow), out promptProvider)) {
-                    return (ITagger<T>)(object)new Tagger(promptProvider);
-                }
-                return null;
+                ReplWindow repl = ReplWindow.FromBuffer(buffer);
+                return (repl != null) ? (ITagger<T>)(object)new Tagger(repl) : null;
             }
         }
 
@@ -121,11 +118,8 @@ namespace Microsoft.VisualStudio.Repl {
         [TextViewRole(ReplConstants.ReplTextViewRole)]
         internal sealed class GlyphFactoryProvider : IGlyphFactoryProvider {
             public IGlyphFactory GetGlyphFactory(IWpfTextView/*!*/ view, IWpfTextViewMargin/*!*/ margin) {
-                ReplWindow promptProvider;
-                if (view.TextBuffer.Properties.TryGetProperty(typeof(ReplWindow), out promptProvider)) {
-                    return new GlyphFactory(promptProvider);
-                }
-                return null;
+                ReplWindow repl = ReplWindow.FromBuffer(view.TextBuffer);
+                return (repl != null) ? new GlyphFactory(repl) : null;
             }
         }
     }

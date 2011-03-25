@@ -275,7 +275,7 @@ namespace Microsoft.PythonTools.Repl {
                 // perform the input on a new thread so that we don't block additional commands (such as output) from being processed by us
                 // (this is called on the output thread)
                 ThreadPool.QueueUserWorkItem(x => {
-                    string input = UnfixNewLines(Window.ReadInput());
+                    string input = UnfixNewLines(Window.ReadStandardInput());
                     using (new SocketLock(this)) {
                         Socket.Send(InputLineCommandBytes);
                         SendString(input);
