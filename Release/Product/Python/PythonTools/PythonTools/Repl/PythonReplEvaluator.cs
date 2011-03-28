@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 #else
             // read what socket we should connect back to
-            var socket = _process.StandardOutput.ReadLine();
+            var socket = process.StandardOutput.ReadLine();
 #endif
 
             Socket connection = null;
