@@ -80,6 +80,7 @@ namespace Microsoft.PythonTools.Project {
                     _dirtyCount++;
                 } else {
                     _dirtyCount--;
+                    _dirtyPages.Remove(sender);
                 }
             }
 

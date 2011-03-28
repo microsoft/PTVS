@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using IronPython.Hosting;
@@ -57,12 +58,18 @@ namespace AnalysisTest.Mocks {
                 new { Expr = "a().f(1, a if True else b,", Param = 2, Function="a().f" }, 
                 new { Expr = "a(2, 3, 4).f(1, a if True else b,", Param = 2, Function="a(2, 3, 4).f" }, 
                 new { Expr = "a(2, (3, 4), 4).f(1, a if True else b,", Param = 2, Function="a(2, (3, 4), 4).f" }, 
+                new { Expr = "f(lambda a, b, c: 42", Param = 0, Function="f" } ,
+                new { Expr = "f(lambda a, b, c", Param = 0, Function="f" } ,
+                new { Expr = "f(lambda a: lambda b, c: 42", Param = 0, Function="f" } ,
+                new { Expr = "f(z, lambda a, b, c: 42", Param = 1, Function="f" } ,
+                new { Expr = "f(z, lambda a, b, c", Param = 1, Function="f" } ,
+                new { Expr = "f(z, lambda a: lambda b, c: 42", Param = 1, Function="f" } ,
             };
             
             foreach (var prefix in prefixes) {
                 foreach (var sig in sigs) {
                     var test  = prefix + sig.Expr;
-                    //Console.WriteLine("   -- {0}", test);
+                    Console.WriteLine("   -- {0}", test);
                     SignatureTest(-1, test, sig.Function, sig.Param);
                 }
             }

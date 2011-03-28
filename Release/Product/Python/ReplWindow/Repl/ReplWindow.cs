@@ -105,7 +105,9 @@ namespace Microsoft.VisualStudio.Repl {
         private ITextBuffer _currentLanguageBuffer;
         private readonly List<ITrackingSpan> _secondaryPrompts = new List<ITrackingSpan>(); // prompts we've discarded and can re-use 
         private Dictionary<int, ReplSpan> _prompts = new Dictionary<int, ReplSpan>();       // Maps projection buffer line # to the prompt on that line
-        private readonly List<ReplSpan> _spans = new List<ReplSpan>();                      // List of spans we've added to the projection buffer
+
+        // List of projection buffer spans - the projection buffer doesn't allow us to enumerate spans so we need to track them manually:
+        private readonly List<ReplSpan> _projectionSpans = new List<ReplSpan>();                      
 
         // We use one or two regions to protect span [0, input start) from modifications:
         private readonly IReadOnlyRegion[]/*!*/ _readOnlyRegions;
@@ -488,8 +490,7 @@ namespace Microsoft.VisualStudio.Repl {
             InlineReplAdornmentProvider.RemoveAllAdornments(TextView);
 
             // remove all the spans except our initial span from the projection buffer
-            _projectionBuffer.DeleteSpans(0, _spans.Count);
-            _spans.Clear();
+            ClearProjection();
             _prompts.Clear();
 
             // then clear our output and prompt buffers
@@ -1437,7 +1438,7 @@ namespace Microsoft.VisualStudio.Repl {
         private void AppendInput(string text) {
             Debug.Assert(CheckAccess());
 
-            var inputSpan = _spans[_spans.Count - 1];
+            var inputSpan = _projectionSpans[_projectionSpans.Count - 1];
             Debug.Assert(inputSpan.Kind == ReplSpanKind.Language || inputSpan.Kind == ReplSpanKind.StandardInput);
             Debug.Assert(inputSpan.Span.TrackingMode == SpanTrackingMode.Custom);
 
@@ -1448,46 +1449,46 @@ namespace Microsoft.VisualStudio.Repl {
                 edit.Apply();
             }
 
-            var replSpan = _spans[_spans.Count - 1] = new ReplSpan(
+            var replSpan = new ReplSpan(
                 new CustomTrackingSpan(
                     buffer.CurrentSnapshot,
                     new Span(span.Start, span.Length + text.Length)
                 ),
                 inputSpan.Kind
             );
-            _projectionBuffer.ReplaceSpans(_spans.Count - 1, 1, new[] { replSpan.Span }, EditOptions.None, null);
+
+            ReplaceProjectionSpan(_projectionSpans.Count - 1, replSpan);
 
             Caret.EnsureVisible();
         }
 
         private void ClearInput() {
-            Debug.Assert(_spans.Count > 0);
+            Debug.Assert(_projectionSpans.Count > 0);
 
             // Finds the last primary prompt (standard input or code input).
             // Removes all spans following the primary prompt from the projection buffer, 
             // recycling secondary spans and removing read-only regions.
-            int i = _spans.Count - 1;
+            int i = _projectionSpans.Count - 1;
             while (i >= 0) {
-                if (_spans[i].Kind == ReplSpanKind.SecondaryPrompt) {
-                    _secondaryPrompts.Add(_spans[i].Span);
+                if (_projectionSpans[i].Kind == ReplSpanKind.SecondaryPrompt) {
+                    _secondaryPrompts.Add(_projectionSpans[i].Span);
 
                     // remove read-only region:
                     using (var readOnlyEdit = _promptBuffer.CreateReadOnlyRegionEdit()) {
-                        readOnlyEdit.RemoveReadOnlyRegion(_spans[i].ReadOnlyRegion);
+                        readOnlyEdit.RemoveReadOnlyRegion(_projectionSpans[i].ReadOnlyRegion);
                         readOnlyEdit.Apply();
                     }
-                } else if (_spans[i].Kind == ReplSpanKind.Prompt || _spans[i].Kind == ReplSpanKind.StandardInputPrompt) {
-                    Debug.Assert(i != _spans.Count - 1);
+                } else if (_projectionSpans[i].Kind == ReplSpanKind.Prompt || _projectionSpans[i].Kind == ReplSpanKind.StandardInputPrompt) {
+                    Debug.Assert(i != _projectionSpans.Count - 1);
 
                     // remove all spans following the primary span:
-                    _projectionBuffer.DeleteSpans(i + 1, _spans.Count - (i + 1));
-                    _spans.RemoveRange(i + 1, _spans.Count - (i + 1));
+                    RemoveProjectionSpans(i + 1, _projectionSpans.Count - (i + 1));
                     break;
                 } 
                 i--;
             }
 
-            if (_spans[i].Kind != ReplSpanKind.StandardInputPrompt) {
+            if (_projectionSpans[i].Kind != ReplSpanKind.StandardInputPrompt) {
                 _currentLanguageBuffer.Delete(new Span(0, _currentLanguageBuffer.CurrentSnapshot.Length));
                 AddInitialLanguageSpan();
                 CheckLanguageSpans();
@@ -1546,10 +1547,9 @@ namespace Microsoft.VisualStudio.Repl {
                 // TODO: What do we do if we weren't running?
                 if (_isRunning) {
                     _isRunning = false;
-                } else if (_spans.Count > 0 && _spans[_spans.Count - 1].Kind == ReplSpanKind.Language) {
+                } else if (_projectionSpans.Count > 0 && _projectionSpans[_projectionSpans.Count - 1].Kind == ReplSpanKind.Language) {
                     // we need to remove our input prompt.
-                    _projectionBuffer.DeleteSpans(_spans.Count - 2, 2);
-                    _spans.RemoveRange(_spans.Count - 2, 2);                    
+                    RemoveProjectionSpans(_projectionSpans.Count - 2, 2);                 
                 }
 
                 _buffer.Flush();
@@ -1583,18 +1583,18 @@ namespace Microsoft.VisualStudio.Repl {
                 RemoveProtection();
 
                 // replace previous span w/ a span that won't grow...
-                Debug.Assert(_spans[_spans.Count - 1].Kind == ReplSpanKind.StandardInput);
+                Debug.Assert(_projectionSpans[_projectionSpans.Count - 1].Kind == ReplSpanKind.StandardInput);
 
-                var newSpan = _spans[_spans.Count - 1] = new ReplSpan(
+                var newSpan = new ReplSpan(
                     new CustomTrackingSpan(
                         _stdInputBuffer.CurrentSnapshot,
-                        _spans[_spans.Count - 1].Span.GetSpan(_stdInputBuffer.CurrentSnapshot),
+                        _projectionSpans[_projectionSpans.Count - 1].Span.GetSpan(_stdInputBuffer.CurrentSnapshot),
                         PointTrackingMode.Negative,
                         PointTrackingMode.Negative
                     ),
                     ReplSpanKind.StandardInput
                 );
-                _projectionBuffer.ReplaceSpans(_spans.Count - 1, 1, new[] { newSpan.Span }, EditOptions.None, null);
+                ReplaceProjectionSpan(_projectionSpans.Count - 1, newSpan);
 
                 if (wasRunning) {
                     _isRunning = true;
@@ -1736,12 +1736,12 @@ namespace Microsoft.VisualStudio.Repl {
                 // insert output before current input
                 var promptUpdates = new List<KeyValuePair<int, ITrackingSpan>>();
 
-                for (int i = _spans.Count - 1; i >= 0; i--) {
-                    var curKind = _spans[i].Kind;
+                for (int i = _projectionSpans.Count - 1; i >= 0; i--) {
+                    var curKind = _projectionSpans[i].Kind;
 
                     if (curKind == ReplSpanKind.Prompt || curKind == ReplSpanKind.SecondaryPrompt) {
                         var pt = TextView.BufferGraph.MapUpToBuffer(
-                            _spans[i].Span.GetStartPoint(_spans[i].Span.TextBuffer.CurrentSnapshot),
+                            _projectionSpans[i].Span.GetStartPoint(_projectionSpans[i].Span.TextBuffer.CurrentSnapshot),
                             PointTrackingMode.Positive,
                             PositionAffinity.Successor,
                             _projectionBuffer
@@ -1751,14 +1751,13 @@ namespace Microsoft.VisualStudio.Repl {
                         promptUpdates.Add(
                             new KeyValuePair<int, ITrackingSpan>(
                                 pt.Value.GetContainingLine().LineNumber,
-                                _spans[i].Span
+                                _projectionSpans[i].Span
                             )
                         );
                     }
 
                     if (curKind == ReplSpanKind.Prompt) {
-                        _spans.Insert(i, replSpan);
-                        _projectionBuffer.InsertSpan(i, span);
+                        InsertProjectionSpan(i, replSpan);
                         appended = true;
                         break;
                     }
@@ -1783,8 +1782,7 @@ namespace Microsoft.VisualStudio.Repl {
             }
 
             if (!appended) {
-                _spans.Add(replSpan);
-                _projectionBuffer.InsertSpan(_spans.Count - 1, span);
+                AppendProjectionSpan(replSpan);
             }
         }
 
@@ -2115,8 +2113,7 @@ namespace Microsoft.VisualStudio.Repl {
                 SpanTrackingMode.EdgeExclusive
             );
             var replSpan = new ReplSpan(span, promptKind);
-            _spans.Add(replSpan);
-            _projectionBuffer.InsertSpan(_spans.Count - 1, span);
+            AppendProjectionSpan(replSpan);
             _prompts[_projectionBuffer.CurrentSnapshot.GetLineNumberFromPosition(CurrentSnapshot.Length)] = replSpan;
         }
 
@@ -2199,14 +2196,7 @@ namespace Microsoft.VisualStudio.Repl {
             // replace the language span of the previous line and then insert the prompt
             // and new line
             const int spansPerLineOfInput = 2;
-            int targetSpan = FirstLanguageSpanIndexForCurrentInput + prevLine.LineNumber * spansPerLineOfInput;
-            _projectionBuffer.ReplaceSpans(
-                targetSpan,
-                1,
-                new object[] { updatedLangSpan, secondPromptSpan, newLangSpan },
-                EditOptions.None,
-                null
-            );
+            int spanToReplace = FirstLanguageSpanIndexForCurrentInput + prevLine.LineNumber * spansPerLineOfInput;
 
             // mark the secondary prompt as read-only and hold onto the region so we can clear it later
             IReadOnlyRegion readOnlySecondPrompt;
@@ -2216,12 +2206,13 @@ namespace Microsoft.VisualStudio.Repl {
                 );
                 readOnlyEdit.Apply();
             }
+            ReplSpan promptSpan = new ReplSpan(secondPromptSpan, ReplSpanKind.SecondaryPrompt, readOnlySecondPrompt);
 
-            // update our tracking state of the spans
-            _spans[targetSpan] = new ReplSpan(updatedLangSpan, ReplSpanKind.Language);
-            var promptSpan = new ReplSpan(secondPromptSpan, ReplSpanKind.SecondaryPrompt, readOnlySecondPrompt);
-            _spans.Insert(targetSpan + 1, promptSpan);
-            _spans.Insert(targetSpan + 2, new ReplSpan(newLangSpan, ReplSpanKind.Language));
+            ReplaceProjectionSpan(spanToReplace,
+                new ReplSpan(updatedLangSpan, ReplSpanKind.Language),
+                promptSpan,
+                new ReplSpan(newLangSpan, ReplSpanKind.Language)
+            );
 
             if (pt != null) {
                 _prompts[pt.Value.GetContainingLine().LineNumber + 1] = promptSpan;
@@ -2248,8 +2239,8 @@ namespace Microsoft.VisualStudio.Repl {
             // we walk the spans here instead of using Buffergraph.MapDownTo because that won't map down to
             // a zero length span (which we'll have if the secondary prompt is empty - we keep zero-length prompts
             // in place in case the prompts change).
-            for (int i = 0; i < _spans.Count && length <= caretPos; i++) {
-                var curSpan = _spans[i];
+            for (int i = 0; i < _projectionSpans.Count && length <= caretPos; i++) {
+                var curSpan = _projectionSpans[i];
                 switch(curSpan.Kind) {
                     case ReplSpanKind.Language:
                     case ReplSpanKind.Output:
@@ -2270,32 +2261,29 @@ namespace Microsoft.VisualStudio.Repl {
                             // recycle the secondary prompt
                             _secondaryPrompts.Add(curSpan.Span);
 
-                            Debug.Assert(i < _spans.Count - 1);  // we should have at least one language span after us
-                            var oldLangSpan = _spans[i + 1];
+                            Debug.Assert(i < _projectionSpans.Count - 1);  // we should have at least one language span after us
+                            var oldLangSpan = _projectionSpans[i + 1];
 
                             // remove the spans
-                            _projectionBuffer.DeleteSpans(i, 2);
-                            _spans.RemoveRange(i, 2);
+                            RemoveProjectionSpans(i, 2);
 
                             // combine the two adjacent language spans back together
                             Debug.Assert(i > 0);
-                            Debug.Assert(_spans[i - 1].Kind == ReplSpanKind.Language);
+                            Debug.Assert(_projectionSpans[i - 1].Kind == ReplSpanKind.Language);
 
                             var span = Span.FromBounds(
-                                _spans[i - 1].Span.GetStartPoint(_currentLanguageBuffer.CurrentSnapshot),
+                                _projectionSpans[i - 1].Span.GetStartPoint(_currentLanguageBuffer.CurrentSnapshot),
                                 oldLangSpan.Span.GetEndPoint(_currentLanguageBuffer.CurrentSnapshot)
                             );
                             ITrackingSpan trackingSpan = null;
-                            if (i == _spans.Count) {
+                            if (i == _projectionSpans.Count) {
                                 trackingSpan = CreateLanguageTrackingSpan(span);
                             } else {
                                 trackingSpan = CreateOldLanguageTrackingSpan(span);
                             }
 
-                            _spans[i - 1] = new ReplSpan(trackingSpan, ReplSpanKind.Language);
-
-                            _projectionBuffer.ReplaceSpans(i - 1, 1, new[] { _spans[i - 1].Span }, EditOptions.None, null);
-
+                            ReplaceProjectionSpan(i - 1, new ReplSpan(trackingSpan, ReplSpanKind.Language));
+                            
                             // move the caret to the beginning of the current line so the delete deletes the new line
                             var lineStart = TextView.BufferGraph.MapUpToBuffer(
                                 oldLangSpan.Span.GetStartPoint(_currentLanguageBuffer.CurrentSnapshot),
@@ -2316,7 +2304,7 @@ namespace Microsoft.VisualStudio.Repl {
         }
         
         private void UpdatePrompts(ReplSpanKind promptKind, string oldPrompt, string newPrompt) {
-            if ((oldPrompt != newPrompt || oldPrompt == null) && _spans.Count > 0)  {                
+            if ((oldPrompt != newPrompt || oldPrompt == null) && _projectionSpans.Count > 0)  {                
                 if (promptKind == ReplSpanKind.SecondaryPrompt) {
                     _secondaryPrompts.Clear();
                 }
@@ -2324,8 +2312,8 @@ namespace Microsoft.VisualStudio.Repl {
 
                 // find and replace all the prompts
                 int curInput = 1;
-                for (int i = 0; i < _spans.Count; i++) {
-                    if (_spans[i].Kind == promptKind) {
+                for (int i = 0; i < _projectionSpans.Count; i++) {
+                    if (_projectionSpans[i].Kind == promptKind) {
                         int location = _promptBuffer.CurrentSnapshot.Length;
                         _promptBuffer.Insert(
                             _promptBuffer.CurrentSnapshot.Length,
@@ -2337,7 +2325,6 @@ namespace Microsoft.VisualStudio.Repl {
                             newPromptSpan,
                             SpanTrackingMode.EdgeExclusive
                         );
-                        _projectionBuffer.ReplaceSpans(i, 1, new[] { promptSpan }, EditOptions.None, null);
 
                         IReadOnlyRegion readOnlyRegion = null;
                         if (promptKind == ReplSpanKind.SecondaryPrompt) {
@@ -2347,14 +2334,10 @@ namespace Microsoft.VisualStudio.Repl {
                             }
                         }
 
-                        _spans[i] = new ReplSpan(
-                            promptSpan,
-                            promptKind,
-                            readOnlyRegion
-                        );
+                        ReplaceProjectionSpan(i, new ReplSpan(promptSpan, promptKind, readOnlyRegion));
                     }
 
-                    if (_spans[i].Kind == ReplSpanKind.Prompt) {
+                    if (_projectionSpans[i].Kind == ReplSpanKind.Prompt) {
                         curInput++;
                     }
                 }
@@ -2434,7 +2417,7 @@ namespace Microsoft.VisualStudio.Repl {
         /// </summary>
         private int FirstLanguageSpanIndexForCurrentInput {
             get {
-                return _spans.Count - (_currentLanguageBuffer.CurrentSnapshot.LineCount - 1) * 2 + 1;
+                return _projectionSpans.Count - (_currentLanguageBuffer.CurrentSnapshot.LineCount - 1) * 2 + 1;
             }
         }
 
@@ -2466,8 +2449,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         private void AddInitialLanguageSpan() {
             var span = CreateLanguageTrackingSpan(new Span(0, 0));
-            _spans.Add(new ReplSpan(span, ReplSpanKind.Language));
-            _projectionBuffer.InsertSpan(_spans.Count - 1, span);
+            AppendProjectionSpan(new ReplSpan(span, ReplSpanKind.Language));
         }
 
         /// <summary>
@@ -2504,8 +2486,7 @@ namespace Microsoft.VisualStudio.Repl {
                 _stdInputBuffer.CurrentSnapshot,
                 new Span(_stdInputBuffer.CurrentSnapshot.Length, 0)
             );
-            _spans.Add(new ReplSpan(stdInputSpan, ReplSpanKind.StandardInput));
-            _projectionBuffer.InsertSpan(_spans.Count - 1, stdInputSpan);
+            AppendProjectionSpan(new ReplSpan(stdInputSpan, ReplSpanKind.StandardInput));
         }
 
         /// <summary>
@@ -2519,14 +2500,45 @@ namespace Microsoft.VisualStudio.Repl {
         [Conditional("DEBUG")]
         private void CheckLanguageSpans() {
             int firstLangSpan = FirstLanguageSpanIndexForCurrentInput - 2;
-            Debug.Assert(_spans[firstLangSpan - 1].Kind == ReplSpanKind.Prompt);
-            for (int i = firstLangSpan; i < _spans.Count; i += 2) {
-                Debug.Assert(_spans[i].Kind == ReplSpanKind.Language);
+            Debug.Assert(_projectionSpans[firstLangSpan - 1].Kind == ReplSpanKind.Prompt);
+            for (int i = firstLangSpan; i < _projectionSpans.Count; i += 2) {
+                Debug.Assert(_projectionSpans[i].Kind == ReplSpanKind.Language);
 
-                if (i < _spans.Count - 1) {
-                    Debug.Assert(_spans[i + 1].Kind == ReplSpanKind.SecondaryPrompt);
+                if (i < _projectionSpans.Count - 1) {
+                    Debug.Assert(_projectionSpans[i + 1].Kind == ReplSpanKind.SecondaryPrompt);
                 }
             }
+        }
+
+        private void ClearProjection() {
+            _projectionBuffer.DeleteSpans(0, _projectionSpans.Count);
+            _projectionSpans.Clear();
+        }
+
+        private void AppendProjectionSpan(ReplSpan span) {
+            _projectionBuffer.InsertSpan(_projectionSpans.Count, span.Span);
+            _projectionSpans.Add(span);
+        }
+
+        private void InsertProjectionSpan(int index, ReplSpan span) {
+            _projectionBuffer.InsertSpan(index, span.Span);
+            _projectionSpans.Insert(index, span);
+        }
+
+        private void ReplaceProjectionSpan(int spanToReplace, ReplSpan newSpan) {
+            _projectionBuffer.ReplaceSpans(spanToReplace, 1, new[] { newSpan.Span }, EditOptions.None, null);
+            _projectionSpans[spanToReplace] = newSpan;
+        }
+
+        private void ReplaceProjectionSpan(int spanToReplace, ReplSpan newSpan0, ReplSpan newSpan1, ReplSpan newSpan2) {
+            _projectionBuffer.ReplaceSpans(spanToReplace, 1, new[] { newSpan0.Span, newSpan1.Span, newSpan2.Span }, EditOptions.None, null);
+            _projectionSpans[spanToReplace] = newSpan0;
+            _projectionSpans.InsertRange(spanToReplace + 1, new[] { newSpan1, newSpan2 });
+        }
+
+        private void RemoveProjectionSpans(int index, int count) {
+            _projectionBuffer.DeleteSpans(index, count);
+            _projectionSpans.RemoveRange(index, count);
         }
 
         #endregion

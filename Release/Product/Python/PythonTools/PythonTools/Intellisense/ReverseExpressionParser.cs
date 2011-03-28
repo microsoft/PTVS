@@ -71,6 +71,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     lastToken = Tokens[Tokens.Count - 2];
                 }
 
+                int currentParamAtLastColon = -1;   // used to track the current param index at this last colon, before we hit a lambda.
                 while (true) {
                     // Walk backwards over the tokens in the current line
                     for (int t = Tokens.Count - 1; t >= 0; t--) {
@@ -80,14 +81,28 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (token.ClassificationType == Classifier.Provider.Keyword ||
                             (token.ClassificationType == Classifier.Provider.Operator &&
                             text != "[" && text != "]" && text != "}" && text != "{")) {
-                            if (nesting == 0) {
-                                if (start == null) {
-                                    // hovering directly over a keyword, don't provide a tooltip
-                                    return null;
-                                } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
-                                    return null;
+                            if (token.ClassificationType == Classifier.Provider.Keyword && text == "lambda") {
+                                if (currentParamAtLastColon != -1) {
+                                    paramIndex = currentParamAtLastColon;
+                                    currentParamAtLastColon = -1;
+                                } else {
+                                    // fabcd(lambda a, b, c[PARAMINFO]
+                                    // We have to be the 1st param.
+                                    paramIndex = 0;
                                 }
-                                break;
+                            } else {
+                                if (text == ":") {
+                                    currentParamAtLastColon = paramIndex;                                    
+                                }
+                                if (nesting == 0) {
+                                    if (start == null) {
+                                        // hovering directly over a keyword, don't provide a tooltip
+                                        return null;
+                                    } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
+                                        return null;
+                                    }
+                                    break;
+                                }
                             }
                         } else if (token.ClassificationType == Classifier.Provider.OpenGroupingClassification || text == "[" || text == "{") {
                             if (nesting != 0) {

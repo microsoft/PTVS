@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -196,16 +197,24 @@ namespace Microsoft.PythonTools.Profiling {
         internal static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
             var interpreterId = (string)projectToProfile.Properties.Item("InterpreterId").Value;
             var interpreterVersion = (string)projectToProfile.Properties.Item("InterpreterVersion").Value;
+            var args = (string)projectToProfile.Properties.Item("CommandLineArguments").Value;
+            var interpreterPath = (string)projectToProfile.Properties.Item("InterpreterPath").Value;
+            var searchPath = (string)projectToProfile.Properties.Item("SearchPath").Value;
             string interpreter;
 
             Guid intGuid;
             Version intVersion;
             ProcessorArchitecture arch;
+            string searchPathEnvVarName;
             if (!Guid.TryParse(interpreterId, out intGuid) ||
                 !Version.TryParse(interpreterVersion, out intVersion) ||
-                !TryGetInterpreter(intVersion, intGuid, out interpreter, out arch)) {
+                !TryGetInterpreter(intVersion, intGuid, out interpreter, out searchPathEnvVarName, out arch)) {
                 MessageBox.Show(String.Format("Could not find interpreter for project {0}", projectToProfile.Name));
                 return;
+            }
+
+            if (!String.IsNullOrWhiteSpace(interpreterPath)) {
+                interpreter = interpreterPath;
             }
 
             string startupFile = (string)projectToProfile.Properties.Item("StartupFile").Value;
@@ -219,7 +228,11 @@ namespace Microsoft.PythonTools.Profiling {
                 workingDir = Path.GetDirectoryName(projectToProfile.FullName);
             }
 
-            RunProfiler(session, interpreter, startupFile, null, workingDir, openReport, arch);
+            var env = new Dictionary<string, string>();
+            if (!String.IsNullOrWhiteSpace(searchPath) && !String.IsNullOrWhiteSpace(searchPathEnvVarName)) {
+                env[searchPathEnvVarName] = searchPath;
+            }
+            RunProfiler(session, interpreter, startupFile, args, workingDir, env, openReport, arch);
         }
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
@@ -229,7 +242,8 @@ namespace Microsoft.PythonTools.Profiling {
 
                 Version selectedVersion = new Version(runTarget.PythonInterpreter.Version);
                 Guid interpreterId = runTarget.PythonInterpreter.Id;
-                if (!TryGetInterpreter(selectedVersion, interpreterId, out interpreter, out arch)) {
+                string searchPathEnv;
+                if (!TryGetInterpreter(selectedVersion, interpreterId, out interpreter, out searchPathEnv, out arch)) {
                     return;
                 }
             } else {
@@ -237,12 +251,13 @@ namespace Microsoft.PythonTools.Profiling {
                 arch = ProcessorArchitecture.X86;
             }
 
-            RunProfiler(session, interpreter, runTarget.Script, runTarget.Arguments, runTarget.WorkingDirectory, openReport, arch);
+            RunProfiler(session, interpreter, runTarget.Script, runTarget.Arguments, runTarget.WorkingDirectory, null, openReport, arch);
         }
 
-        private static bool TryGetInterpreter(Version selectedVersion, Guid interpreterId, out string interpreter, out ProcessorArchitecture architecture) {
+        private static bool TryGetInterpreter(Version selectedVersion, Guid interpreterId, out string interpreter, out string searchPathEnv, out ProcessorArchitecture architecture) {
             interpreter = null;
             architecture = ProcessorArchitecture.None;
+            searchPathEnv = null;
             var service = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
             var factoryProviders = service.GetExtensions<IPythonInterpreterFactoryProvider>();
             
@@ -252,6 +267,7 @@ namespace Microsoft.PythonTools.Profiling {
                         fact.Configuration.Version == selectedVersion) {
                         interpreter = fact.Configuration.InterpreterPath;
                         architecture = fact.Configuration.Architecture;
+                        searchPathEnv = fact.Configuration.PathEnvironmentVariable;
                         break;
                     }
                 }
@@ -264,8 +280,8 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
 
-        private static void RunProfiler(SessionNode session, string interpreter, string script, string arguments, string workingDir, bool openReport, ProcessorArchitecture arch) {
-            var process = new ProfiledProcess(interpreter, String.Format("\"{0}\" {1}", script, arguments), workingDir, arch);
+        private static void RunProfiler(SessionNode session, string interpreter, string script, string arguments, string workingDir, Dictionary<string, string> env, bool openReport, ProcessorArchitecture arch) {
+            var process = new ProfiledProcess(interpreter, String.Format("\"{0}\" {1}", script, arguments), workingDir, env, arch);
 
             string baseName = Path.GetFileNameWithoutExtension(session.Filename);
             string date = DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + DateTime.Now.Day.ToString();
@@ -282,7 +298,7 @@ namespace Microsoft.PythonTools.Profiling {
                 _profilingProcess = null;
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
-                if (openReport) {
+                if (openReport && File.Exists(outPath)) {                    
                     dte.ItemOperations.OpenFile(outPath);
                 }
             };

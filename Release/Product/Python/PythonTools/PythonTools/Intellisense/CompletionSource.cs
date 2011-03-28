@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
             var textBuffer = _textBuffer;
-            var span = session.CreateTrackingSpan0(textBuffer);
+            var span = session.CreateTrackingSpan(textBuffer);
             bool intersectMembers = true;
             bool hideAdvanced = false;
             if (PythonToolsPackage.Instance != null) {

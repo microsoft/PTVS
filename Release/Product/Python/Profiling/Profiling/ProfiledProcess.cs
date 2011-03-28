@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -25,7 +26,7 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly ProcessorArchitecture _arch;
         private readonly Process _process;
 
-        public ProfiledProcess(string exe, string args, string dir, ProcessorArchitecture arch) {
+        public ProfiledProcess(string exe, string args, string dir, Dictionary<string, string> envVars, ProcessorArchitecture arch) {
             if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64) {
                 throw new InvalidOperationException(String.Format("Unsupported architecture: {0}", arch));
             }
@@ -45,6 +46,10 @@ namespace Microsoft.PythonTools.Profiling {
             processInfo.CreateNoWindow = false;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
+            
+            foreach (var keyValue in envVars) {
+                processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
+            }
 
             string pythonInstallDir = GetPythonToolsInstallPath();
             string dll = _arch == ProcessorArchitecture.Amd64 ? "x64\\vspyprof.dll" : "vspyprof.dll";

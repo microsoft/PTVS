@@ -1,7 +1,7 @@
 ﻿d1 = {42 : 100}
 d2 = {'abc' : 'foo'}
 u1 = u"привет мир"
-
+s = set([frozenset([2,3,4])])
 class C(object):
     abc = 42
     uc = u"привет мир"

@@ -23,12 +23,12 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly string _expression, _objRepr, _typeName, _exceptionText, _childText, _hexRepr;
         private readonly PythonStackFrame _frame;
         private readonly PythonProcess _process;
-        private readonly bool _isExpandable, _childIsIndex;
+        private readonly bool _isExpandable, _childIsIndex, _childIsEnumerate;
 
         /// <summary>
         /// Creates a PythonObject for an expression which successfully returned a value.
         /// </summary>
-        public PythonEvaluationResult(PythonProcess process, string objRepr, string hexRepr, string typeName, string expression, string childText, bool childIsIndex, PythonStackFrame frame, bool isExpandable) {
+        public PythonEvaluationResult(PythonProcess process, string objRepr, string hexRepr, string typeName, string expression, string childText, bool childIsIndex, bool childIsEnumerate, PythonStackFrame frame, bool isExpandable) {
             _process = process;
             _expression = expression;
             _frame = frame;
@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Debugger {
             _isExpandable = isExpandable;
             _childText = childText;
             _childIsIndex = childIsIndex;
+            _childIsEnumerate = childIsEnumerate;
         }
 
         /// <summary>
@@ -76,7 +77,7 @@ namespace Microsoft.PythonTools.Debugger {
             AutoResetEvent childrenEnumed = new AutoResetEvent(false);
             PythonEvaluationResult[] res = null;
 
-            _process.EnumChildren(Expression, _frame, (children) => {
+            _process.EnumChildren(Expression, _frame, _childIsEnumerate, (children) => {
                 res = children;
                 childrenEnumed.Set();
             });

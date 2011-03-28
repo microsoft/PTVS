@@ -36,7 +36,6 @@ namespace Microsoft.PythonTools.Editor {
 
         public void ReplWindowCreated(IReplWindow window) {
             var textViewAdapter = _adapterFact.GetViewAdapter(window.TextView);
-            BraceMatcher.WatchBraceHighlights(window.TextView, PythonToolsPackage.ComponentModel);
 
             new EditFilter(window.TextView, textViewAdapter, _editorOpsFactory.GetEditorOperations(window.TextView));
         }

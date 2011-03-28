@@ -234,8 +234,6 @@ namespace Microsoft.PythonTools.Intellisense {
             if (sig != null) {
                 var prevBuffer = sig.ApplicableToSpan.TextBuffer;
                 var textBuffer = _textView.TextBuffer;
-                if (prevBuffer != textBuffer) {
-                }
 
                 var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
                     new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
@@ -296,8 +294,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void TriggerSignatureHelp() {
-            Debug.Assert(_sigHelpSession == null);
+        internal void TriggerSignatureHelp() {
+            if (_sigHelpSession != null) {
+                _sigHelpSession.Dismiss();
+            }
+
             _sigHelpSession = SignatureBroker.TriggerSignatureHelp(_textView);
 
             if (_sigHelpSession != null) {
@@ -433,7 +434,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         case VSConstants.VSStd2KCmdID.TAB:
                             _activeSession.Commit();
-                            return VSConstants.S_OK;
+                            return VSConstants.S_OK;                        
                     }
                 }
             } else if (_sigHelpSession != null) {
@@ -462,7 +463,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
                             _sigHelpSession.Dismiss();
                             _sigHelpSession = null;
-                            break;
+                            break;                        
                     }
                 }
             }

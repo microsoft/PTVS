@@ -371,7 +371,7 @@ class BasicReplBackend(ReplBackend):
         sys.stdin = _ReplInput(self)
 
     def run_file_as_main(self, filename):
-        code = compile(file(filename).read(), filename, 'exec')
+        code = compile(open(filename).read(), filename, 'exec')
         self.exec_mod.__file__ = filename
         exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
 

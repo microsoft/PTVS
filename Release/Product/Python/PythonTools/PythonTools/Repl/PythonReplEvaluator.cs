@@ -37,7 +37,6 @@ namespace Microsoft.PythonTools.Repl {
     public class PythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator {
         private readonly IPythonInterpreterFactory _interpreter;
         private ListenerThread _curListener;
-        private Process _process;
         private IReplWindow _window;
         private bool _multipleScopes = true;
 
@@ -138,16 +137,16 @@ namespace Microsoft.PythonTools.Repl {
 
             processInfo.Arguments = String.Join(" ", args);
 
-            _process = new Process();
-            _process.StartInfo = processInfo;
-            _process.Start();
+            var process = new Process();
+            process.StartInfo = processInfo;
+            process.Start();
 
 #if DEBUG
             string socket;
             if (debugMode) {
                 socket = "5000";
             } else {
-                socket = _process.StandardOutput.ReadLine();
+                socket = process.StandardOutput.ReadLine();
             }
 #else
             // read what socket we should connect back to
@@ -169,45 +168,17 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            _curListener = new ListenerThread(this, connection);
+            _curListener = new ListenerThread(this, connection, processInfo.RedirectStandardOutput, process);
             var outputThread = new Thread(_curListener.OutputThread);
             outputThread.Name = "PythonReplEvaluator: " + _interpreter.GetInterpreterDisplay();
             outputThread.Start();
-
-            if (processInfo.RedirectStandardOutput) {
-                var readOutputThread = new Thread(ReadOutput);
-                readOutputThread.Start();
-            }
-
-            if (processInfo.RedirectStandardError) {
-                var readErrorThread = new Thread(ReadError);
-                readErrorThread.Start();
-            }
         }
 
-        private void ReadOutput() {
-            var buffer = new char[1024];
-            try {
-                while (!_process.HasExited) {
-                    _process.StandardOutput.Read(buffer, 0, buffer.Length);
-                }
-            } catch {
-            }
-        }
-
-        private void ReadError() {
-            var buffer = new char[1024];
-            try {
-                while (!_process.HasExited) {
-                    _process.StandardError.Read(buffer, 0, buffer.Length);
-                }
-            } catch {
-            }
-        }
-
+        
         class ListenerThread {
             private readonly PythonReplEvaluator _eval;
             private readonly object _socketLock = new object();
+            private readonly Process _process;
             private Socket _socket;
             private Action<ExecutionResult> _completion;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
@@ -220,9 +191,21 @@ namespace Microsoft.PythonTools.Repl {
             private Thread _socketLockedThread;
 #endif
 
-            public ListenerThread(PythonReplEvaluator evaluator, Socket socket) {
+            public ListenerThread(PythonReplEvaluator evaluator, Socket socket, bool redirectOutput, Process process) {
                 _eval = evaluator;
                 _socket = socket;
+                _process = process;
+
+
+                if (redirectOutput) {
+                    var readOutputThread = new Thread(ReadOutput);
+                    readOutputThread.Start();
+                }
+
+                if (redirectOutput) {
+                    var readErrorThread = new Thread(ReadError);
+                    readErrorThread.Start();
+                }
             }
 
             public void OutputThread() {
@@ -255,6 +238,26 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 } catch (SocketException) {
                     _socket = null;
+                }
+            }
+
+            private void ReadOutput() {
+                var buffer = new char[1024];
+                try {
+                    while (!_process.HasExited) {
+                        _process.StandardOutput.Read(buffer, 0, buffer.Length);
+                    }
+                } catch {
+                }
+            }
+
+            private void ReadError() {
+                var buffer = new char[1024];
+                try {
+                    while (!_process.HasExited) {
+                        _process.StandardError.Read(buffer, 0, buffer.Length);
+                    }
+                } catch {
                 }
             }
 
@@ -539,6 +542,14 @@ namespace Microsoft.PythonTools.Repl {
                         socket.Close();
                     }
                 }
+
+                if (!_process.HasExited) {
+                    try {
+                        _process.Kill();
+                    } catch (InvalidOperationException) {
+                        // race w/ killing the process
+                    }
+                }
             }
 
             private void SendString(string text) {
@@ -815,14 +826,6 @@ namespace Microsoft.PythonTools.Repl {
 
         private void Close() {
             _curListener.Close();
-
-            if (!_process.HasExited) {
-                try {
-                    _process.Kill();
-                } catch (InvalidOperationException) {
-                    // race w/ killing the process
-                }
-            }
         }
 
         #endregion

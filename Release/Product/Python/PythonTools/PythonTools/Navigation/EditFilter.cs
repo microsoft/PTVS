@@ -54,6 +54,9 @@ namespace Microsoft.PythonTools.Language {
         public EditFilter(IWpfTextView textView, IVsTextView vsTextView, IEditorOperations editorOps) {
             _textView = textView;
             _editorOps = editorOps;
+
+            BraceMatcher.WatchBraceHighlights(textView, PythonToolsPackage.ComponentModel);
+
             ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
         }
 
@@ -617,6 +620,13 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
+                    case VSConstants.VSStd2KCmdID.PARAMINFO:
+                        controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
+                        if (controller != null) {
+                            controller.TriggerSignatureHelp();
+                            return VSConstants.S_OK;
+                        }
+                        break;
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
                         tagger = _textView.TextBuffer.GetOutliningTagger();
                         if (tagger != null) {
@@ -715,6 +725,7 @@ namespace Microsoft.PythonTools.Language {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                         case VSConstants.VSStd2KCmdID.COMPLETEWORD:
+                        case VSConstants.VSStd2KCmdID.PARAMINFO:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
                         case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:

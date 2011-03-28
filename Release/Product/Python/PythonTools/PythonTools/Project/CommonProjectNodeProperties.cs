@@ -75,6 +75,24 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        /// <summary>
+        /// Gets the command line arguments for the project.
+        /// </summary>
+        public string CommandLineArguments {
+            get {
+                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.CommandLineArguments, true);
+            }
+        }
+
+        /// <summary>
+        /// Gets the override for the interpreter path to used for launching the project.
+        /// </summary>
+        public string InterpreterPath {
+            get {
+                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
+            }
+        }
+
         //We don't need this property, but still have to provide it, otherwise
         //Add New Item wizard (which seems to be unmanaged) fails.
         [Browsable(false)]

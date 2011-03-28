@@ -96,11 +96,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // cached for quick checks to see if we're a call to clr.AddReference
 
-            try {
-                SpecializeFunction("wpf", "LoadComponent", LoadComponent);
-            } catch (KeyNotFoundException) {
-                // IronPython.Wpf.dll isn't available...
-            }
+            SpecializeFunction("wpf", "LoadComponent", LoadComponent);
         }
 
         void ModuleNamesChanged(object sender, EventArgs e) {
@@ -297,16 +293,18 @@ namespace Microsoft.PythonTools.Analysis {
         /// to providing the interpretation of when the function is called as well.
         /// </summary>
         private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg) {
-            var module = Modules[moduleName];
-            
-            BuiltinModule builtin = module.Module as BuiltinModule;
-            Debug.Assert(builtin != null);
-            if (builtin != null) {
-                foreach (var v in builtin[name]) {
-                    BuiltinFunctionInfo funcInfo = v as BuiltinFunctionInfo;
-                    if (funcInfo != null) {
-                        builtin[name] = new SpecializedBuiltinFunction(this, funcInfo.Function, dlg).SelfSet;
-                        break;
+            ModuleReference module;
+
+            if (Modules.TryGetValue(moduleName, out module)) {
+                BuiltinModule builtin = module.Module as BuiltinModule;
+                Debug.Assert(builtin != null);
+                if (builtin != null) {
+                    foreach (var v in builtin[name]) {
+                        BuiltinFunctionInfo funcInfo = v as BuiltinFunctionInfo;
+                        if (funcInfo != null) {
+                            builtin[name] = new SpecializedBuiltinFunction(this, funcInfo.Function, dlg).SelfSet;
+                            break;
+                        }
                     }
                 }
             }

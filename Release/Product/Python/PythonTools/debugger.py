@@ -320,16 +320,39 @@ class Thread(object):
         except:
             report_execution_exception(execution_id, sys.exc_info())
 
-    def enum_child_on_thread(self, text, cur_frame, execution_id):
-        self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id))
+    def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate):
+        self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate))
 
-    def enum_child_locally(self, text, cur_frame, execution_id):
+    def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate):
         try:
+            if child_is_enumerate:
+                # remove index from eval, then get the index back.
+                index_size = 0
+                enumerate_index = 0
+                for c in reversed(text):
+                    index_size += 1
+                    if c.isdigit():
+                        enumerate_index = enumerate_index * 10 + (ord(c) - ord('0'))
+                    elif c == '[':
+                        text = text[:-index_size]
+                        break
+            
             code = compile(text, cur_frame.f_code.co_name, 'eval')
-
             res = eval(code, cur_frame.f_globals, cur_frame.f_locals)
-
+            
+            if child_is_enumerate:
+                for index, value in enumerate(res):
+                    if enumerate_index == index:
+                        res = value
+                        break
+                else:
+                    # value changed?
+                    report_children(execution_id, [], False, False)
+                    return
+            
             is_index = False
+            is_enumerate = False
+            maybe_enumerate = False
             try:
                 if hasattr(res, 'items'):
                     # dictionary-like object
@@ -337,11 +360,21 @@ class Thread(object):
                 else:
                     # indexable object
                     enum = enumerate(res)
+                    maybe_enumerate = True
 
                 items = []
                 for index, item in enum:
                     try:
                         items.append( ('[' + repr(index) + ']', item) )
+                        if maybe_enumerate and not is_enumerate:
+                            # check if we can index back into this object, or if we have to use
+                            # enumerate to get values out of it.
+                            try:
+                                fetched = res[index]
+                                if fetched is not item:
+                                    is_enumerate = True
+                            except:
+                                is_enumerate = True
                     except:
                         # ignore bad objects for now...
                         pass
@@ -359,9 +392,9 @@ class Thread(object):
                         except:
                             # skip this item if we can't display it...
                             pass
-            report_children(execution_id, items, is_index)
+            report_children(execution_id, items, is_index, is_enumerate)
         except:
-            report_children(execution_id, [], False)
+            report_children(execution_id, [], False, False)
 
     def enum_thread_frames_on_thread(self):
         self.schedule_work(self.enum_thread_frames_locally)
@@ -670,6 +703,7 @@ class DebuggerLoop(object):
         tid = read_int(self.conn) # thread id
         fid = read_int(self.conn) # frame id
         eid = read_int(self.conn) # execution id
+        child_is_enumerate = read_int(self.conn)
                 
         thread = get_thread_from_id(tid)
         if thread is not None:
@@ -677,7 +711,7 @@ class DebuggerLoop(object):
             for i in xrange(fid):
                 cur_frame = cur_frame.f_next
 
-            thread.enum_child_on_thread(text, cur_frame, eid)
+            thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate)
     
     def command_detach(self):
         # tell all threads to stop tracing...
@@ -859,7 +893,7 @@ def report_execution_result(execution_id, result):
     write_object(res_type, obj_repr, hex_repr, type_name)
     send_lock.release()
 
-def report_children(execution_id, children, is_index):
+def report_children(execution_id, children, is_index, is_enumerate):
     children = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__) for index, result in children]
 
     send_lock.acquire()
@@ -867,6 +901,7 @@ def report_children(execution_id, children, is_index):
     conn.send(struct.pack('i', execution_id))
     conn.send(struct.pack('i', len(children)))
     conn.send(struct.pack('i', is_index))
+    conn.send(struct.pack('i', is_enumerate))
     for child_name, obj_repr, hex_repr, res_type, type_name in children:
         write_string(child_name)
         write_object(res_type, obj_repr, hex_repr, type_name)

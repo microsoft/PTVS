@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _pendingExecutes.Remove(execId);
                 _ids.Free(execId);
             }
-            completion.Completion(ReadPythonObject(socket, completion.Text, "", false, completion.Frame));
+            completion.Completion(ReadPythonObject(socket, completion.Text, "", false, false, completion.Frame));
         }
 
         private void HandleEnumChildren(Socket socket) {
@@ -331,15 +331,16 @@ namespace Microsoft.PythonTools.Debugger {
 
             int childCount = socket.ReadInt();
             bool childIsIndex = socket.ReadInt() == 1;
+            bool childIsEnumerate = socket.ReadInt() == 1;
             PythonEvaluationResult[] res = new PythonEvaluationResult[childCount];
             for (int i = 0; i < res.Length; i++) {
                 string expr = socket.ReadString();
-                res[i] = ReadPythonObject(socket, completion.Text, expr, childIsIndex, completion.Frame);
+                res[i] = ReadPythonObject(socket, completion.Text, expr, childIsIndex, childIsEnumerate, completion.Frame);
             }
             completion.Completion(res);
         }
 
-        private PythonEvaluationResult ReadPythonObject(Socket socket, string text, string childText, bool childIsIndex, PythonStackFrame frame) {
+        private PythonEvaluationResult ReadPythonObject(Socket socket, string text, string childText, bool childIsIndex, bool childIsEnumerate, PythonStackFrame frame) {
             string objRepr = socket.ReadString();
             string hexRepr = socket.ReadString();
             string typeName = socket.ReadString();
@@ -349,7 +350,7 @@ namespace Microsoft.PythonTools.Debugger {
                 (typeName == "str" && LanguageVersion.Is3x())) {
                     objRepr = objRepr.FixupEscapedUnicodeChars();
             }
-            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, text, childText, childIsIndex, frame, isExpandable);
+            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, text, childText, childIsIndex, childIsEnumerate, frame, isExpandable);
         }
 
         private void HandleThreadFrameList(Socket socket) {
@@ -371,7 +372,7 @@ namespace Microsoft.PythonTools.Debugger {
                 var frame = new PythonStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i);
                 for (int j = 0; j < variables.Length; j++) {
                     string name = socket.ReadString();
-                    variables[j] = ReadPythonObject(socket, name, "", false, frame);
+                    variables[j] = ReadPythonObject(socket, name, "", false, false, frame);
                 }
                 frame.SetVariables(variables);
                 frames.Add(frame);
@@ -635,7 +636,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        internal void EnumChildren(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult[]> completion) {
+        internal void EnumChildren(string text, PythonStackFrame pythonStackFrame, bool childIsEnumerate, Action<PythonEvaluationResult[]> completion) {
             DebugWriteCommand("Enum Children");
             _socket.Send(GetChildrenCommandBytes);
             SendString(_socket, text);
@@ -644,6 +645,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.Thread.Id));
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.FrameId));
                 _socket.Send(BitConverter.GetBytes(executeId));
+                _socket.Send(BitConverter.GetBytes(childIsEnumerate ? 1 : 0));
                 _pendingChildEnums[executeId] = new ChildrenInfo(completion, text, pythonStackFrame);
             }
         }
