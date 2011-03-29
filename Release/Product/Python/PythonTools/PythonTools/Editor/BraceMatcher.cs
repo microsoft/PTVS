@@ -124,60 +124,63 @@ namespace Microsoft.PythonTools.Editor {
 
         private bool HighlightBrace(BraceKind brace, SnapshotPoint position, int direction) {
             var classifier = position.Snapshot.TextBuffer.GetPythonClassifier();
-            var snapshot = position.Snapshot;
-            var span = new SnapshotSpan(snapshot, position.Position - 1, 1);
-            var originalSpan = span;
+            
+            if (classifier != null) {
+                var snapshot = position.Snapshot;
+                var span = new SnapshotSpan(snapshot, position.Position - 1, 1);
+                var originalSpan = span;
 
-            var spans = classifier.GetClassificationSpans(span);
-            // we don't highlight braces if we're in a comment or string literal
-            if (spans.Count == 0 ||
-                (spans.Count == 1 &&
-                (!spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) &&
-                !spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment)))) {
+                var spans = classifier.GetClassificationSpans(span);
+                // we don't highlight braces if we're in a comment or string literal
+                if (spans.Count == 0 ||
+                    (spans.Count == 1 &&
+                    (!spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) &&
+                    !spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment)))) {
 
-                // find the opening span
-                var curLine = snapshot.GetLineFromPosition(position);
-                int curLineNo = curLine.LineNumber;
+                    // find the opening span
+                    var curLine = snapshot.GetLineFromPosition(position);
+                    int curLineNo = curLine.LineNumber;
 
-                if (direction == 1) {
-                    span = new SnapshotSpan(snapshot, position, curLine.End.Position - position);
-                } else {
-                    span = new SnapshotSpan(curLine.Start, position - 1);
-                }
+                    if (direction == 1) {
+                        span = new SnapshotSpan(snapshot, position, curLine.End.Position - position);
+                    } else {
+                        span = new SnapshotSpan(curLine.Start, position - 1);
+                    }
 
-                int depth = 1;
-                for (; ; ) {
-                    spans = classifier.GetClassificationSpans(span);
-                    for (int i = direction == -1 ? spans.Count - 1 : 0; i >= 0 && i < spans.Count; i += direction) {
-                        if (IsCloseSpan(spans, i)) {
-                            if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
-                                depth -= direction;
+                    int depth = 1;
+                    for (; ; ) {
+                        spans = classifier.GetClassificationSpans(span);
+                        for (int i = direction == -1 ? spans.Count - 1 : 0; i >= 0 && i < spans.Count; i += direction) {
+                            if (IsCloseSpan(spans, i)) {
+                                if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
+                                    depth -= direction;
+                                }
+                            } else if (IsOpenSpan(spans, i)) {
+                                if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
+                                    depth += direction;
+                                }
                             }
-                        } else if (IsOpenSpan(spans, i)) {
-                            if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
-                                depth += direction;
+
+                            if (depth == 0) {
+                                RemoveExistingHighlights();
+                                _markedBuffer = snapshot.TextBuffer;
+
+                                // left brace
+                                GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(spans[i].Span, SpanTrackingMode.EdgeExclusive), _tag);
+                                // right brace
+                                GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(new SnapshotSpan(snapshot, position - 1, 1), SpanTrackingMode.EdgeExclusive), _tag);
+                                return true;
                             }
                         }
 
-                        if (depth == 0) {
-                            RemoveExistingHighlights();
-                            _markedBuffer = snapshot.TextBuffer;
-
-                            // left brace
-                            GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(spans[i].Span, SpanTrackingMode.EdgeExclusive), _tag);
-                            // right brace
-                            GetTextMarker(snapshot.TextBuffer).CreateTagSpan(snapshot.CreateTrackingSpan(new SnapshotSpan(snapshot, position - 1, 1), SpanTrackingMode.EdgeExclusive), _tag);
-                            return true;
+                        curLineNo += direction;
+                        if (curLineNo < 0 || curLineNo >= snapshot.LineCount) {
+                            break;
                         }
-                    }
 
-                    curLineNo += direction;
-                    if (curLineNo < 0 || curLineNo >= snapshot.LineCount) {
-                        break;
+                        var line = snapshot.GetLineFromLineNumber(curLineNo);
+                        span = new SnapshotSpan(line.Start, line.End);
                     }
-
-                    var line = snapshot.GetLineFromLineNumber(curLineNo);
-                    span = new SnapshotSpan(line.Start, line.End);
                 }
             }
             return false;

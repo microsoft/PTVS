@@ -237,14 +237,7 @@ namespace Microsoft.PythonTools.Project {
         /// Handles the menuitems
         /// </summary>
         protected override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (guidCmdGroup == VsMenus.guidStandardCommandSet97) {
-                switch ((VsCommands)cmd) {
-                    case VsCommands.AddNewItem:
-                    case VsCommands.AddExistingItem:
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                        return VSConstants.S_OK;
-                }
-            } else if (guidCmdGroup == Microsoft.VisualStudio.Shell.VsMenus.guidStandardCommandSet2K) {
+            if (guidCmdGroup == Microsoft.VisualStudio.Shell.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.EXCLUDEFROMPROJECT:
                     case VsCommands2K.RUNCUSTOMTOOL:

@@ -100,6 +100,12 @@ namespace Microsoft.PythonTools.Project {
             return true;
         }
 
+        public override bool CanAddFiles {
+            get {
+                return false;
+            }
+        }
+
         protected override NodeProperties CreatePropertiesObject() {
             return new CommonSearchPathNodeProperties(this);
         }

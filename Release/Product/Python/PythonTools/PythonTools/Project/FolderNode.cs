@@ -65,6 +65,13 @@ namespace Microsoft.PythonTools.Project
 				return VsStateIcon.STATEICON_NOSTATEICON;
 			}
 		}
+
+        public override bool CanAddFiles {
+            get {
+                return true;
+            }
+        }
+
 		#endregion
 
 		#region overridden methods
@@ -215,8 +222,6 @@ namespace Microsoft.PythonTools.Project
 						return VSConstants.S_OK;
 
 					case VsCommands.NewFolder:
-					case VsCommands.AddNewItem:
-					case VsCommands.AddExistingItem:
 						result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
 						return VSConstants.S_OK;
 				}

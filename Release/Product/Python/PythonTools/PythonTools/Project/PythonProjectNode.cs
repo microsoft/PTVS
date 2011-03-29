@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Project {
         private IPythonInterpreter _interpreter;
         private ProjectAnalyzer _analyzer;
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
-
+        private bool _defaultInterpreter;
         public PythonProjectNode(CommonProjectPackage package)
             : base(package, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
         }
@@ -161,6 +161,10 @@ namespace Microsoft.PythonTools.Project {
                     analyzer.UnloadFile(node.GetAnalysis());
                 }
             }
+
+            if (_defaultInterpreter) {
+                PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;
+            }
         }
 
         public IPythonInterpreter GetInterpreter() {
@@ -234,11 +238,23 @@ namespace Microsoft.PythonTools.Project {
 
             if (fact == null) {
                 fact = PythonToolsPackage.Instance.GetDefaultInterpreter(allFactories);
+                _defaultInterpreter = true;
+
+                PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged += DefaultInterpreterChanged;
+            } else {
+                if (_defaultInterpreter) {
+                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;
+                }
+                _defaultInterpreter = false;
             }
 
             PythonToolsPackage.EnsureCompletionDb(fact);
 
             return fact;
+        }
+
+        private void DefaultInterpreterChanged(object sender, EventArgs e) {
+            ClearInterpreter();
         }
 
         /// <summary>

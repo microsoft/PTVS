@@ -510,10 +510,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>A loaded msbuild project.</returns>
         internal static MSBuild.Project InitializeMsBuildProject(MSBuild.ProjectCollection buildEngine, string fullProjectPath)
         {
-            if(String.IsNullOrEmpty(fullProjectPath))
-            {
-                throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "fullProjectPath");
-            }
+            Utilities.ArgumentNotNullOrEmpty("fullProjectPath", fullProjectPath);
 
             // Call GetFullPath to expand any relative path passed into this method.
             fullProjectPath = Path.GetFullPath(fullProjectPath);

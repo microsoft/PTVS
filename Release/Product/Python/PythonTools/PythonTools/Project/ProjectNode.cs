@@ -330,6 +330,13 @@ namespace Microsoft.PythonTools.Project
                 }
             }
         }
+
+        public override bool CanAddFiles {
+            get {
+                return true;
+            }
+        }
+
         #endregion
 
         #region properties
@@ -1087,8 +1094,6 @@ namespace Microsoft.PythonTools.Project
                         return VSConstants.S_OK;
 
                     case VsCommands.NewFolder:
-                    case VsCommands.AddNewItem:
-                    case VsCommands.AddExistingItem:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
 
@@ -1190,11 +1195,7 @@ namespace Microsoft.PythonTools.Project
             Debug.Assert(!String.IsNullOrEmpty(this.ProjectFolder), "The Project Folder is not specified for this project.");
 
             Utilities.ArgumentNotNull("parentNode", parentNode);
-
-            if (String.IsNullOrEmpty(itemName))
-            {
-                throw new ArgumentNullException("itemName");
-            }
+            Utilities.ArgumentNotNullOrEmpty("itemName", itemName);
 
             // We just validate for length, since we assume other validation has been performed by the dlgOwner.
             if (this.ProjectFolder.Length + itemName.Length + 1 > NativeMethods.MAX_PATH)
@@ -3360,7 +3361,7 @@ namespace Microsoft.PythonTools.Project
                 return VSConstants.E_INVALIDARG;
             }
 
-            while ((!(n is ProjectNode)) && (!(n is FolderNode)) && (!this.CanFileNodesHaveChilds || !(n is FileNode))) {
+            while (!n.CanAddFiles && (!this.CanFileNodesHaveChilds || !(n is FileNode))) {
                 n = n.Parent;
             }
             Debug.Assert(n != null, "We should at this point have either a ProjectNode or FolderNode or a FileNode as a container for the new filenodes");

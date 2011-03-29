@@ -8,6 +8,6 @@
   </TemplateData>
   <TemplateContent>
     <References/>
-    <ProjectItem SubType="Code" TargetFileName="$fileinputname$.py">empty.py</ProjectItem>
+    <ProjectItem SubType="Code" TargetFileName="$fileinputname$.$fileinputextension$">empty.py</ProjectItem>
   </TemplateContent>
 </VSTemplate>

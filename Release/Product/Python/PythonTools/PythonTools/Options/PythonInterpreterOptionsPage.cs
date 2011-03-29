@@ -126,7 +126,11 @@ namespace Microsoft.PythonTools.Options {
 
                     SaveString(DefaultInterpreterSetting, defaultInterpreter.Id.ToString());
                     SaveString(DefaultInterpreterVersionSetting, defaultVersion.ToString());
-                    PythonToolsPackage.Instance.UpdateDefaultAnalyzer();
+
+                    var defaultInterpChanged = DefaultInterpreterChanged;
+                    if (defaultInterpChanged != null) {
+                        DefaultInterpreterChanged(this, EventArgs.Empty);
+                    }
                 }
             } else {
                 _defaultInterpreter = Guid.Empty;
@@ -204,6 +208,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public event EventHandler InterpretersChanged;
+        public event EventHandler DefaultInterpreterChanged;
 
         private static string GetInterpreterSettingPath(Guid id, Version version) {
             return id.ToString() + "\\" + version.ToString() + "\\";

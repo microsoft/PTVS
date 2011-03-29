@@ -863,6 +863,12 @@ namespace Microsoft.PythonTools.Project
 			return VSConstants.S_OK;
 		}
 
+        public virtual bool CanAddFiles {
+            get {
+                return false;
+            }
+        }
+
 		/// <summary>
 		/// Set a guid property.
 		/// </summary>
@@ -1708,7 +1714,16 @@ namespace Microsoft.PythonTools.Project
 		[SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "p")]
 		protected virtual int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
 		{
-			if(cmdGroup == VsMenus.guidStandardCommandSet2K)
+            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
+                switch ((VsCommands)cmd) 
+                {
+                    case VsCommands.AddNewItem:
+                    case VsCommands.AddExistingItem:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
+                }
+            }
+            else if(cmdGroup == VsMenus.guidStandardCommandSet2K)
 			{
 				if((VsCommands2K)cmd == VsCommands2K.SHOWALLFILES)
 				{

@@ -294,7 +294,7 @@ namespace Microsoft.PythonTools {
             return defaultInterpreter;
         }
 
-        internal void UpdateDefaultAnalyzer() {
+        private void UpdateDefaultAnalyzer(object sender, EventArgs args) {
             // no need to update if analyzer isn't created yet.
             if (_analyzer != null) {
                 var analyzer = CreateAnalyzer();
@@ -373,7 +373,8 @@ namespace Microsoft.PythonTools {
             RegisterCommands(new Command[] { new ExecuteInReplCommand(), new SendToReplCommand(), new FillParagraphCommand(), new SendToDefiningModuleCommand() });
             RegisterCommands(GetReplCommands());
             
-            InterpreterOptionsPage.InterpretersChanged += new EventHandler(InterpretersChanged);
+            InterpreterOptionsPage.InterpretersChanged += InterpretersChanged;
+            InterpreterOptionsPage.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
         }
 
         private void InterpretersChanged(object sender, EventArgs e) {
