@@ -71,27 +71,9 @@ actual inspection and introspection."""
         self.input_event.acquire()  # lock starts acquired (we use it like a manual reset event)        
         self.input_string = None
     
-    def connect(self):
-        while 1:
-            if DEBUG:
-                port = 5000
-            else:
-                port = random.randint(2000, 4000)
-    
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            try:
-                sock.bind(('127.0.0.1', port))
-                sock.listen(1)
-                break;
-            except SocketError:
-                pass
-
-        # send port to remote process
-        print(port)
-        sys.stdout.flush()
-
-        # wait for the connection
-        self.conn, address = sock.accept()
+    def connect(self, port):
+        self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conn.connect(('127.0.0.1', port))
 
         # start a new thread for communicating w/ the remote process
         thread.start_new_thread(self._repl_loop, ())
@@ -364,8 +346,8 @@ class BasicReplBackend(ReplBackend):
         self.execute_item_lock = threading.Lock()
         self.execute_item_lock.acquire()    # lock starts acquired (we use it like manual reset event)
 
-    def connect(self):
-        ReplBackend.connect(self)
+    def connect(self, port):
+        ReplBackend.connect(self, port)
         sys.stdout = _ReplOutput(self, is_stdout = True)
         sys.stderr = _ReplOutput(self, is_stdout = False)
         sys.stdin = _ReplInput(self)
@@ -379,7 +361,7 @@ class BasicReplBackend(ReplBackend):
         """loop on the main thread which is responsible for executing code"""
         
         # save our selves so global lookups continue to work (required pre-2.6)...
-        cur_modules = self._get_cur_module_set()
+        cur_modules = set()
         try:
             cur_ps1 = sys.ps1
             cur_ps2 = sys.ps2
@@ -400,6 +382,14 @@ class BasicReplBackend(ReplBackend):
 
         while True:
             try:    
+                new_modules = self._get_cur_module_set()
+                try:
+                    if new_modules != cur_modules:
+                        self.send_modules_changed()
+                except:
+                    pass
+                cur_modules = new_modules
+
                 self.execute_item_lock.acquire()
 
                 if self.execute_item is not None:
@@ -413,14 +403,6 @@ class BasicReplBackend(ReplBackend):
                 except SocketError:
                     return
             
-                new_modules = self._get_cur_module_set()
-                try:
-                    if new_modules != cur_modules:
-                        self.send_modules_changed()
-                except:
-                    pass
-                cur_modules = new_modules
-
                 try:
                     if cur_ps1 != sys.ps1 or cur_ps2 != sys.ps2:
                         new_ps1 = str(sys.ps1)
@@ -621,6 +603,8 @@ def _run_repl():
     from optparse import OptionParser
 
     parser = OptionParser(prog='repl', description='Process REPL options')
+    parser.add_option('--port', dest='port',
+                   help='the port to connect back to')
     parser.add_option('--launch_file', dest='launch_file',
                    help='the script file to run on startup')
     parser.add_option('--execution_mode', dest='backend',
@@ -655,7 +639,7 @@ def _run_repl():
 
     global BACKEND
     BACKEND = backend_type(launch_file=options.launch_file)
-    BACKEND.connect()
+    BACKEND.connect(int(options.port))
 
     if backend_error is not None:
         sys.stderr.write('Error using selected REPL back-end:\n')

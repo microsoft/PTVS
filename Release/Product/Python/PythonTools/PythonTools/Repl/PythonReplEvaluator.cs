@@ -78,9 +78,8 @@ namespace Microsoft.PythonTools.Repl {
         private void Connect() {
             var processInfo = new ProcessStartInfo(_interpreter.Configuration.InterpreterPath);
 
-            bool debugMode = Environment.GetEnvironmentVariable("DEBUG_REPL") != null;
 #if DEBUG
-
+            bool debugMode = Environment.GetEnvironmentVariable("DEBUG_REPL") != null;
             processInfo.CreateNoWindow = !debugMode;
             processInfo.UseShellExecute = debugMode;
             processInfo.RedirectStandardOutput = !debugMode;
@@ -91,6 +90,11 @@ namespace Microsoft.PythonTools.Repl {
             processInfo.RedirectStandardOutput = true;
             processInfo.RedirectStandardError = true;
 #endif
+
+            var conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            conn.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            conn.Listen(0);
+            int portNum = ((IPEndPoint)conn.LocalEndPoint).Port;
 
             string filename, dir;
             ProjectAnalyzer analyzer;
@@ -106,6 +110,9 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             List<string> args = new List<string>() { "\"" + Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "visualstudio_py_repl.py") + "\"" };
+            args.Add("--port");
+            args.Add(portNum.ToString());
+
             if (!String.IsNullOrWhiteSpace(CurrentOptions.StartupScript)) {
                 args.Add("--launch_file");
                 args.Add("\"" + CurrentOptions.StartupScript + "\"");
@@ -139,39 +146,14 @@ namespace Microsoft.PythonTools.Repl {
 
             var process = new Process();
             process.StartInfo = processInfo;
-            process.Start();
-
-#if DEBUG
-            string socket;
-            if (debugMode) {
-                socket = "5000";
-            } else {
-                socket = process.StandardOutput.ReadLine();
-            }
-#else
-            // read what socket we should connect back to
-            var socket = process.StandardOutput.ReadLine();
-#endif
-
-            Socket connection = null;
-            for (int i = 0; i < 10; i++) {
-                try {
-                    // connect back to the socket
-                    connection = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
-                    connection.Blocking = true;
-                    connection.Connect(new IPEndPoint(IPAddress.Loopback, Int32.Parse(socket)));
-                    break;
-                } catch (SocketException) {
-                    if (i == 9) {
-                        throw;
-                    }
-                }
+            try {
+                process.Start();
+            } catch(Exception e) {
+                _window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
+                return;
             }
 
-            _curListener = new ListenerThread(this, connection, processInfo.RedirectStandardOutput, process);
-            var outputThread = new Thread(_curListener.OutputThread);
-            outputThread.Name = "PythonReplEvaluator: " + _interpreter.GetInterpreterDisplay();
-            outputThread.Start();
+            _curListener = new ListenerThread(this, conn, processInfo.RedirectStandardOutput, process);
         }
 
         
@@ -196,6 +178,9 @@ namespace Microsoft.PythonTools.Repl {
                 _socket = socket;
                 _process = process;
 
+                var outputThread = new Thread(OutputThread);
+                outputThread.Name = "PythonReplEvaluator: " + evaluator._interpreter.GetInterpreterDisplay();
+                outputThread.Start();
 
                 if (redirectOutput) {
                     var readOutputThread = new Thread(ReadOutput);
@@ -211,6 +196,7 @@ namespace Microsoft.PythonTools.Repl {
             public void OutputThread() {
                 byte[] cmd_buffer = new byte[4];
                 try {
+                    _socket = _socket.Accept();
                     Socket socket;
                     while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
                         using (new SocketLock(this)) {
@@ -645,7 +631,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void UpdatePrompts() {
-            if (CurrentOptions.UseInterpreterPrompts) {
+            if (CurrentOptions.UseInterpreterPrompts && _curListener != null) {
                 _window.SetOptionValue(ReplOptions.PrimaryPrompt, _curListener._prompt1);
                 _window.SetOptionValue(ReplOptions.SecondaryPrompt, _curListener._prompt2);
             } else {
@@ -738,19 +724,28 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public bool ExecuteText(string text, Action<ExecutionResult> completion) {
-            for (int i = 0; i < 2; i++) {
-                if (!_curListener.ExecuteText(text, completion)) {
-                    // we've become disconnected, try again 1 time
-                    Reset();
-                } else {
-                    break;
+            if (_curListener != null) {
+                for (int i = 0; i < 2; i++) {
+                    if (!_curListener.ExecuteText(text, completion)) {
+                        // we've become disconnected, try again 1 time
+                        Reset();
+                    } else {
+                        break;
+                    }
                 }
+                return true;
+            } else {
+                _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
             }
-            return true;
+            return false;
         }
 
         public void ExecuteFile(string filename) {
-            _curListener.ExecuteFile(filename);
+            if (_curListener != null) {
+                _curListener.ExecuteFile(filename);
+            } else {
+                _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+            }
         }
 
         public void AbortCommand() {
@@ -825,7 +820,9 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void Close() {
-            _curListener.Close();
+            if (_curListener != null) {
+                _curListener.Close();
+            }
         }
 
         #endregion
@@ -855,7 +852,7 @@ namespace Microsoft.PythonTools.Repl {
 
         #region IMultipleScopeEvaluator Members
 
-        public IEnumerable<string> GetAvailableScopes() {
+        public IEnumerable<string> GetAvailableScopes() {            
             return _curListener.GetAvailableScopes();
         }
 
@@ -867,7 +864,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string CurrentScopeName {
-            get { return _curListener._currentScope; }
+            get {
+                if (_curListener != null) {
+                    return _curListener._currentScope;
+                }
+                return "<disconnected>";
+            }
         }
 
         public bool EnableMultipleScopes {

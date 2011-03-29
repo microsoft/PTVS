@@ -24,6 +24,7 @@
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <Assembly AssemblyName="Microsoft.VisualStudio.ReplWindow, Version=0.7.4100.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">Microsoft.VisualStudio.ReplWindow</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>
   </Content>
 </Vsix>

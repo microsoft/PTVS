@@ -2035,7 +2035,6 @@ namespace Microsoft.VisualStudio.Repl {
             IMultipleScopeEvaluator multiScopeEval = _evaluator as IMultipleScopeEvaluator;
             if (multiScopeEval != null) {
                 _scopeListVisible = IsMultiScopeEnabled();
-                UpdateScopeList(this, EventArgs.Empty);
                 multiScopeEval.AvailableScopesChanged += UpdateScopeList;
                 multiScopeEval.MultipleScopeSupportChanged += MultipleScopeSupportChanged;
             }
