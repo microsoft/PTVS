@@ -161,6 +161,7 @@ namespace Microsoft.PythonTools.Repl {
             private readonly PythonReplEvaluator _eval;
             private readonly object _socketLock = new object();
             private readonly Process _process;
+            private bool _connected;
             private Socket _socket;
             private Action<ExecutionResult> _completion;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
@@ -197,6 +198,7 @@ namespace Microsoft.PythonTools.Repl {
                 byte[] cmd_buffer = new byte[4];
                 try {
                     _socket = _socket.Accept();
+                    _connected = true;
                     Socket socket;
                     while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
                         using (new SocketLock(this)) {
@@ -252,6 +254,12 @@ namespace Microsoft.PythonTools.Repl {
 #if DEBUG
                     Debug.Assert(_socketLockedThread == Thread.CurrentThread);
 #endif
+                    for (int i = 0; i < 20 && !_connected; i++) {
+                        // wait for connection...
+                        System.Threading.Thread.Sleep(100);
+                    }
+
+                    Debug.Assert(_socket.Connected);
                     var res = _socket;
                     if (res == null) {
                         throw new SocketException();
@@ -265,7 +273,7 @@ namespace Microsoft.PythonTools.Repl {
                 // (this is called on the output thread)
                 ThreadPool.QueueUserWorkItem(x => {
                     string input = UnfixNewLines(Window.ReadStandardInput());
-                    using (new SocketLock(this)) {
+                    using (new SocketLock(this)) {                        
                         Socket.Send(InputLineCommandBytes);
                         SendString(input);
                     }
