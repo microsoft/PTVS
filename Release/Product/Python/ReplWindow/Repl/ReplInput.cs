@@ -19,17 +19,10 @@ namespace Microsoft.VisualStudio.Repl {
     class ReplSpan {
         public readonly ITrackingSpan Span;
         public readonly ReplSpanKind Kind;
-        public readonly IReadOnlyRegion ReadOnlyRegion;
 
         public ReplSpan(ITrackingSpan span, ReplSpanKind kind) {
             Span = span;
             Kind = kind;
-        }
-
-        public ReplSpan(ITrackingSpan span, ReplSpanKind kind, IReadOnlyRegion readOnlyRegion) {
-            Span = span;
-            Kind = kind;
-            ReadOnlyRegion = readOnlyRegion;
         }
 
         public override string ToString() {

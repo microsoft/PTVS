@@ -150,7 +150,8 @@ namespace Microsoft.PythonTools.Hpc {
                         _pickNodesCombo.Items.Clear();
                         foreach (var group in groups) {
                             _pickNodesCombo.Items.Add(group);
-                            if (group == _environment.PickNodesFrom) {
+                            if (group == _environment.PickNodesFrom || 
+                                (String.IsNullOrWhiteSpace(_environment.PickNodesFrom) && group == "ComputeNodes")) {
                                 _pickNodesCombo.SelectedIndex = _pickNodesCombo.Items.Count - 1;
                             }
                         }

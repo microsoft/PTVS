@@ -109,8 +109,11 @@ namespace Microsoft.VisualStudio.Repl {
         // List of projection buffer spans - the projection buffer doesn't allow us to enumerate spans so we need to track them manually:
         private readonly List<ReplSpan> _projectionSpans = new List<ReplSpan>();                      
 
-        // We use one or two regions to protect span [0, input start) from modifications:
-        private readonly IReadOnlyRegion[]/*!*/ _readOnlyRegions;
+        // We use one or two regions to protect projection span [0, input start) from modifications:
+        private readonly IReadOnlyRegion[] _readOnlyRegions;
+        
+        // Protects the entire _promptBuffer content from modifications:
+        private IReadOnlyRegion _promptReadOnlyRegion;
 
         // non-null if reading from stdin - position in the _inputBuffer where we map stdin
         private int? _stdInputStart;
@@ -215,8 +218,9 @@ namespace Microsoft.VisualStudio.Repl {
 
             // may add command filters
             PrepareForInput();
-
             ApplyProtection();
+            ApplyPromptProtection();
+
             InitializeScopeList();
             SetDefaultFontSize(ComponentModel, textView);
         }
@@ -478,12 +482,17 @@ namespace Microsoft.VisualStudio.Repl {
         /// See IReplWindow
         /// </summary>
         public void ClearScreen() {
+            ClearScreen(insertInputPrompt: false);
+        }
+
+        private void ClearScreen(bool insertInputPrompt) {
             if (!CheckAccess()) {
                 Dispatcher.Invoke(new Action(ClearScreen));
                 return;
             }
 
             RemoveProtection();
+            RemovePromptProtection();
             
             _secondaryPrompts.Clear();
             _adornmentToMinimize = false;
@@ -508,6 +517,12 @@ namespace Microsoft.VisualStudio.Repl {
             }
             _currentInputId = 1;
             _outputColors.Clear();
+
+            if (insertInputPrompt) {
+                PrepareForInput();
+                ApplyProtection();
+                ApplyPromptProtection();
+            }
         }
 
         /// <summary>
@@ -563,8 +578,10 @@ namespace Microsoft.VisualStudio.Repl {
                 Evaluator.AbortCommand();
             } else {
                 UIThread(() => {
+                    RemovePromptProtection();
                     AppendNewLineToActiveCode();
                     PrepareForInput();
+                    ApplyPromptProtection();
                 });
             }
         }
@@ -1015,9 +1032,7 @@ namespace Microsoft.VisualStudio.Repl {
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.cmdidReplClearScreen:
-                        ClearScreen();
-                        PrepareForInput();
-                        ApplyProtection();
+                        ClearScreen(insertInputPrompt: true);
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.cmdidBreakLine:
@@ -1472,12 +1487,6 @@ namespace Microsoft.VisualStudio.Repl {
             while (i >= 0) {
                 if (_projectionSpans[i].Kind == ReplSpanKind.SecondaryPrompt) {
                     _secondaryPrompts.Add(_projectionSpans[i].Span);
-
-                    // remove read-only region:
-                    using (var readOnlyEdit = _promptBuffer.CreateReadOnlyRegionEdit()) {
-                        readOnlyEdit.RemoveReadOnlyRegion(_projectionSpans[i].ReadOnlyRegion);
-                        readOnlyEdit.Apply();
-                    }
                 } else if (_projectionSpans[i].Kind == ReplSpanKind.Prompt || _projectionSpans[i].Kind == ReplSpanKind.StandardInputPrompt) {
                     Debug.Assert(i != _projectionSpans.Count - 1);
 
@@ -1498,7 +1507,7 @@ namespace Microsoft.VisualStudio.Repl {
                 AddStandardInputSpan();
             }
         }
-
+        
         private void PrepareForInput() {
             _buffer.Flush();
             _buffer.ResetColors();
@@ -1544,6 +1553,8 @@ namespace Microsoft.VisualStudio.Repl {
 
             UIThread(() => {
                 RemoveProtection();
+                RemovePromptProtection();
+
                 // TODO: What do we do if we weren't running?
                 if (_isRunning) {
                     _isRunning = false;
@@ -1574,6 +1585,7 @@ namespace Microsoft.VisualStudio.Repl {
                 _stdInputStart = _stdInputBuffer.CurrentSnapshot.Length;
 
                 ApplyProtection();
+                ApplyPromptProtection();
             });
 
             _inputEvent.WaitOne();
@@ -1581,6 +1593,7 @@ namespace Microsoft.VisualStudio.Repl {
 
             UIThread(() => {
                 RemoveProtection();
+                RemovePromptProtection();
 
                 // replace previous span w/ a span that won't grow...
                 Debug.Assert(_projectionSpans[_projectionSpans.Count - 1].Kind == ReplSpanKind.StandardInput);
@@ -1602,6 +1615,7 @@ namespace Microsoft.VisualStudio.Repl {
                     PrepareForInput();
                 }
                 ApplyProtection();
+                ApplyPromptProtection();
             });
 
             _history.Add(_inputValue);
@@ -1815,19 +1829,21 @@ namespace Microsoft.VisualStudio.Repl {
         #region Read Only Protection
 
         private bool RemoveProtection() {
-            bool wasProtected = false;
-            using (var edit = TextBuffer.CreateReadOnlyRegionEdit()) {
-                foreach (var region in _readOnlyRegions) {
-                    if (region != null) {
-                        edit.RemoveReadOnlyRegion(region);
-                        wasProtected = true;
-                    }
-                }
-                edit.Apply();
-                _readOnlyRegions[0] = _readOnlyRegions[1] = null;
+            if (_readOnlyRegions[0] == null) {
+                Debug.Assert(_readOnlyRegions[1] == null);
+                return false;
             }
 
-            return wasProtected;
+            using (var edit = TextBuffer.CreateReadOnlyRegionEdit()) {
+                edit.RemoveReadOnlyRegion(_readOnlyRegions[0]);
+                if (_readOnlyRegions[1] != null) {
+                    edit.RemoveReadOnlyRegion(_readOnlyRegions[1]);
+                }
+                edit.Apply();
+            }
+
+            _readOnlyRegions[0] = _readOnlyRegions[1] = null;
+            return true;
         }
 
         /// <summary>
@@ -1870,6 +1886,30 @@ namespace Microsoft.VisualStudio.Repl {
                     ApplyProtection();
                 }
             }
+        }
+
+        private void ApplyPromptProtection() {
+            Debug.Assert(_promptReadOnlyRegion == null);
+
+            using (var readOnlyEdit = _promptBuffer.CreateReadOnlyRegionEdit()) {
+                _promptReadOnlyRegion = readOnlyEdit.CreateReadOnlyRegion(
+                    new Span(0, _promptBuffer.CurrentSnapshot.Length)
+                );
+                readOnlyEdit.Apply();
+            }
+        }
+
+        private bool RemovePromptProtection() {
+            if (_promptReadOnlyRegion == null) {
+                return false;
+            }
+
+            using (var readOnlyEdit = _promptBuffer.CreateReadOnlyRegionEdit()) {
+                readOnlyEdit.RemoveReadOnlyRegion(_promptReadOnlyRegion);
+                readOnlyEdit.Apply();
+            }
+            _promptReadOnlyRegion = null;
+            return true;
         }
         
         #endregion
@@ -1959,6 +1999,8 @@ namespace Microsoft.VisualStudio.Repl {
 
         private void FinishExecute(ExecutionResult result) {
             PerformWrite(() => {
+                RemovePromptProtection();
+
                 _sw.Stop();
                 _buffer.Flush();
                 
@@ -1970,7 +2012,9 @@ namespace Microsoft.VisualStudio.Repl {
                         _history.Last.Failed = true;
                     }
                 }
+
                 PrepareForInput();
+                ApplyPromptProtection();
             });
         }
 
@@ -2158,11 +2202,13 @@ namespace Microsoft.VisualStudio.Repl {
             } else {
                 int oldPromptBufferLen = _promptBuffer.CurrentSnapshot.Length;
 
+                RemovePromptProtection();
                 string secondPrompt = FormatPrompt(_secondPrompt, _currentInputId - 1);
                 using (var edit = _promptBuffer.CreateEdit()) {
                     edit.Insert(oldPromptBufferLen, _displayPromptInMargin ? " " :  secondPrompt + " ");
                     edit.Apply();
                 }
+                ApplyPromptProtection();
 
                 int promptLen = (_displayPromptInMargin || String.IsNullOrEmpty(secondPrompt)) ? 
                     0 : 
@@ -2172,6 +2218,7 @@ namespace Microsoft.VisualStudio.Repl {
                     new Span(oldPromptBufferLen, promptLen),
                     SpanTrackingMode.EdgeExclusive
                 );
+
             }
 
             var newLine = _currentLanguageBuffer.CurrentSnapshot.GetLineFromLineNumber(prevLine.LineNumber + 1);
@@ -2198,14 +2245,7 @@ namespace Microsoft.VisualStudio.Repl {
             int spanToReplace = FirstLanguageSpanIndexForCurrentInput + prevLine.LineNumber * spansPerLineOfInput;
 
             // mark the secondary prompt as read-only and hold onto the region so we can clear it later
-            IReadOnlyRegion readOnlySecondPrompt;
-            using (var readOnlyEdit = _promptBuffer.CreateReadOnlyRegionEdit()) {
-                readOnlySecondPrompt = readOnlyEdit.CreateReadOnlyRegion(
-                    secondPromptSpan.GetSpan(_promptBuffer.CurrentSnapshot)
-                );
-                readOnlyEdit.Apply();
-            }
-            ReplSpan promptSpan = new ReplSpan(secondPromptSpan, ReplSpanKind.SecondaryPrompt, readOnlySecondPrompt);
+            ReplSpan promptSpan = new ReplSpan(secondPromptSpan, ReplSpanKind.SecondaryPrompt);
 
             ReplaceProjectionSpan(spanToReplace,
                 new ReplSpan(updatedLangSpan, ReplSpanKind.Language),
@@ -2250,12 +2290,8 @@ namespace Microsoft.VisualStudio.Repl {
                     case ReplSpanKind.SecondaryPrompt:
                         length += curSpan.Span.GetSpan(_promptBuffer.CurrentSnapshot).Length;
                         if (length == caretPos) {
-                            // we are deleting a secondary prompt, remove the protection and then the prompt, and
+                            // we are deleting a secondary prompt, remove the prompt, and
                             // condense any existing code onto the previous line
-                            using (var readOnlyEdit = _promptBuffer.CreateReadOnlyRegionEdit()) {
-                                readOnlyEdit.RemoveReadOnlyRegion(curSpan.ReadOnlyRegion);
-                                readOnlyEdit.Apply();
-                            }
 
                             // recycle the secondary prompt
                             _secondaryPrompts.Add(curSpan.Span);
@@ -2325,15 +2361,7 @@ namespace Microsoft.VisualStudio.Repl {
                             SpanTrackingMode.EdgeExclusive
                         );
 
-                        IReadOnlyRegion readOnlyRegion = null;
-                        if (promptKind == ReplSpanKind.SecondaryPrompt) {
-                            using (var readonlyEdit = _promptBuffer.CreateReadOnlyRegionEdit()) {
-                                readOnlyRegion = readonlyEdit.CreateReadOnlyRegion(newPromptSpan);
-                                readonlyEdit.Apply();
-                            }
-                        }
-
-                        ReplaceProjectionSpan(i, new ReplSpan(promptSpan, promptKind, readOnlyRegion));
+                        ReplaceProjectionSpan(i, new ReplSpan(promptSpan, promptKind));
                     }
 
                     if (_projectionSpans[i].Kind == ReplSpanKind.Prompt) {
