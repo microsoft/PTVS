@@ -931,9 +931,9 @@ try:
 except NameError:
     # Py3k, execfile no longer exists
     def execfile(file, globals, locals): 
-        f = open(file, "r")
+        f = open(file, "rb")
         try:
-            exec(compile(f.read(), file, 'exec'), globals, locals) 
+            exec(compile(f.read().replace(cmd('\r\n'), cmd('\n')), file, 'exec'), globals, locals) 
         finally:
             f.close()
 

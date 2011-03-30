@@ -210,14 +210,14 @@ namespace Microsoft.PythonTools.Editor {
 
         private static bool IsOpenSpan(IList<VisualStudio.Text.Classification.ClassificationSpan> spans, int i) {
             return spans[i].ClassificationType == PythonClassifierProvider.Instance.OpenGroupingClassification ||
-                (spans[i].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Operator) &&
+                (spans[i].ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Operator) &&
                 spans[i].Span.Length == 1 &&
                 (spans[i].Span.GetText() == "{" || spans[i].Span.GetText() == "["));
         }
 
         private static bool IsCloseSpan(IList<VisualStudio.Text.Classification.ClassificationSpan> spans, int i) {
             return spans[i].ClassificationType == PythonClassifierProvider.Instance.CloseGroupingClassification ||
-                (spans[i].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Operator) &&
+                (spans[i].ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Operator) &&
                 spans[i].Span.Length == 1 &&
                 (spans[i].Span.GetText() == "}" || spans[i].Span.GetText() == "]"));
         }

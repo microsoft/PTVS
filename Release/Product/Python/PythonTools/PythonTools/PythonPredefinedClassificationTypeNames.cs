@@ -35,5 +35,10 @@ namespace Microsoft.PythonTools {
         /// Classification used for . characters when used outside of a literal, comment, etc...
         /// </summary>
         public const string Dot = "Python dot";
+
+        /// <summary>
+        /// Classification used for all other operators
+        /// </summary>
+        public const string Operator = "Python operator";
     }
 }

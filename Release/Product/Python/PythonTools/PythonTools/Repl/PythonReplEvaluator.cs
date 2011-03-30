@@ -254,16 +254,16 @@ namespace Microsoft.PythonTools.Repl {
 #if DEBUG
                     Debug.Assert(_socketLockedThread == Thread.CurrentThread);
 #endif
-                    for (int i = 0; i < 20 && !_connected; i++) {
+                    for (int i = 0; i < 40 && !_connected; i++) {
                         // wait for connection...
                         System.Threading.Thread.Sleep(100);
                     }
 
-                    Debug.Assert(_socket.Connected);
                     var res = _socket;
                     if (res == null) {
                         throw new SocketException();
                     }
+                    Debug.Assert(res.Connected);
                     return res;
                 }
             }

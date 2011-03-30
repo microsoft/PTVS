@@ -46,9 +46,11 @@ namespace Microsoft.PythonTools.Profiling {
             processInfo.CreateNoWindow = false;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
-            
-            foreach (var keyValue in envVars) {
-                processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
+
+            if (envVars != null) {
+                foreach (var keyValue in envVars) {
+                    processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
+                }
             }
 
             string pythonInstallDir = GetPythonToolsInstallPath();

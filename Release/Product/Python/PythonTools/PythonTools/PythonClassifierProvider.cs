@@ -14,13 +14,12 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Windows.Media;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -62,23 +61,28 @@ namespace Microsoft.PythonTools {
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.OpenGrouping)]
-        [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
+        [BaseDefinition(PythonPredefinedClassificationTypeNames.Operator)]
         internal static ClassificationTypeDefinition OpenGroupingClassificationDefinition = null; // Set via MEF
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.CloseGrouping)]
-        [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
+        [BaseDefinition(PythonPredefinedClassificationTypeNames.Operator)]
         internal static ClassificationTypeDefinition CloseGroupingClassificationDefinition = null; // Set via MEF
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.Dot)]
-        [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
+        [BaseDefinition(PythonPredefinedClassificationTypeNames.Operator)]
         internal static ClassificationTypeDefinition DotClassificationDefinition = null; // Set via MEF
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.Comma)]
-        [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
+        [BaseDefinition(PythonPredefinedClassificationTypeNames.Operator)]
         internal static ClassificationTypeDefinition CommaClassificationDefinition = null; // Set via MEF
+
+        [Export]
+        [Name(PythonPredefinedClassificationTypeNames.Operator)]
+        [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
+        internal static ClassificationTypeDefinition OperatorClassificationDefinition = null; // Set via MEF
 
         #endregion
 
@@ -153,9 +157,9 @@ namespace Microsoft.PythonTools {
             categoryMap[TokenCategory.Keyword] = _keyword = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
             categoryMap[TokenCategory.Directive] = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
             categoryMap[TokenCategory.Identifier] = registry.GetClassificationType(PredefinedClassificationTypeNames.Identifier);
-            categoryMap[TokenCategory.Operator] = _operator = registry.GetClassificationType(PredefinedClassificationTypeNames.Operator);
-            categoryMap[TokenCategory.Delimiter] = registry.GetClassificationType(PredefinedClassificationTypeNames.Operator);
-            categoryMap[TokenCategory.Grouping] = registry.GetClassificationType(PredefinedClassificationTypeNames.Operator);
+            categoryMap[TokenCategory.Operator] = _operator = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Operator);
+            categoryMap[TokenCategory.Delimiter] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Operator);
+            categoryMap[TokenCategory.Grouping] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Operator);
             categoryMap[TokenCategory.WhiteSpace] = registry.GetClassificationType(PredefinedClassificationTypeNames.WhiteSpace);
             categoryMap[TokenCategory.RegularExpressionLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
             _openGroupingClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.OpenGrouping);
@@ -170,36 +174,64 @@ namespace Microsoft.PythonTools {
     #region Editor Format Definitions
 
     [Export(typeof(EditorFormatDefinition))]
+    [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Operator)]
+    [Name(PythonPredefinedClassificationTypeNames.Operator)]
+    [DisplayName(PythonPredefinedClassificationTypeNames.Operator)]
+    [UserVisible(true)]
+    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    internal sealed class OperatorFormat : ClassificationFormatDefinition {
+        public OperatorFormat() {
+            ForegroundColor = Colors.Black;
+        }
+    }
+
+    [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.OpenGrouping)]
     [Name(PythonPredefinedClassificationTypeNames.OpenGrouping)]
-    [DisplayName("Open grouping character")]
+    [DisplayName(PythonPredefinedClassificationTypeNames.OpenGrouping)]
     [UserVisible(true)]
-    [Order(After = Priority.Default, Before = Priority.High)]
-    internal sealed class OpenGroupingFormat : ClassificationFormatDefinition { }
+    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    internal sealed class OpenGroupingFormat : ClassificationFormatDefinition {
+        public OpenGroupingFormat() {
+            ForegroundColor = Colors.Black;
+        }
+    }
 
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.CloseGrouping)]
     [Name(PythonPredefinedClassificationTypeNames.CloseGrouping)]
-    [DisplayName("Close grouping character")]
+    [DisplayName(PythonPredefinedClassificationTypeNames.CloseGrouping)]
     [UserVisible(true)]
-    [Order(After = Priority.Default, Before = Priority.High)]
-    internal sealed class CloseGroupingFormat : ClassificationFormatDefinition { }
+    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    internal sealed class CloseGroupingFormat : ClassificationFormatDefinition {
+        public CloseGroupingFormat() {
+            ForegroundColor = Colors.Black;
+        }
+    }
 
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Comma)]
     [Name(PythonPredefinedClassificationTypeNames.Comma)]
-    [DisplayName("Comma character")]
+    [DisplayName(PythonPredefinedClassificationTypeNames.Comma)]
     [UserVisible(true)]
-    [Order(After = Priority.Default, Before = Priority.High)]
-    internal sealed class CommaFormat : ClassificationFormatDefinition { }
+    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    internal sealed class CommaFormat : ClassificationFormatDefinition {
+        public CommaFormat() {
+            ForegroundColor = Colors.Black;
+        }
+    }
 
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Dot)]
     [Name(PythonPredefinedClassificationTypeNames.Dot)]
-    [DisplayName("Dot character")]
+    [DisplayName(PythonPredefinedClassificationTypeNames.Dot)]
     [UserVisible(true)]
-    [Order(After = Priority.Default, Before = Priority.High)]
-    internal sealed class DotFormat : ClassificationFormatDefinition { }
+    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
+    internal sealed class DotFormat : ClassificationFormatDefinition {
+        public DotFormat() {
+            ForegroundColor = Colors.Blue;
+        }
+    }
 
     #endregion
 }

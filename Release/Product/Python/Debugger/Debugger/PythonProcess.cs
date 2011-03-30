@@ -441,6 +441,7 @@ namespace Microsoft.PythonTools.Debugger {
             int moduleId = socket.ReadInt();
             string filename = socket.ReadString();
             if (filename != null) {
+                Debug.WriteLine(String.Format("Module Loaded ({0}): {1}", moduleId, filename));
                 var module = new PythonModule(moduleId, filename);
 
                 var loaded = ModuleLoaded;
@@ -495,6 +496,7 @@ namespace Microsoft.PythonTools.Debugger {
             int tid = socket.ReadInt();
             string desc = socket.ReadString();
             if (typeName != null && desc != null) {
+                Debug.WriteLine("Exception: " + desc);
                 var excepRaised = ExceptionRaised;
                 if (excepRaised != null) {
                     excepRaised(this, new ExceptionRaisedEventArgs(_threads[tid], new PythonException(typeName, desc)));

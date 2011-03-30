@@ -43,14 +43,28 @@ namespace AnalysisTest {
         public void EnumChildrenTest() {
             const int lastLine = 27;
 
-            ChildTest("EnumChildTest.py", lastLine, "s", new ChildInfo("[0]", "frozenset([2, 3, 4])"));
-            ChildTest("EnumChildTest.py", lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
-            ChildTest("EnumChildTest.py", lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
-            ChildTest("EnumChildTest.py", lastLine, "l", new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
-            ChildTest("EnumChildTest.py", lastLine, "d1", new ChildInfo("[42]", "100", "0x64"));
-            ChildTest("EnumChildTest.py", lastLine, "d2", new ChildInfo("['abc']", "'foo'"));
-            ChildTest("EnumChildTest.py", lastLine, "i", null);
-            ChildTest("EnumChildTest.py", lastLine, "u1", null);
+            if (Version.Version.Is3x()) {
+                ChildTest(EnumChildrenTestName, lastLine, "s", new ChildInfo("[0]", "frozenset({2, 3, 4})"));
+            } else {
+                ChildTest(EnumChildrenTestName, lastLine, "s", new ChildInfo("[0]", "frozenset([2, 3, 4])"));
+            }
+            if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
+                // IronPython unicode repr differs
+                // 3.x: http://pytools.codeplex.com/workitem/76
+                ChildTest(EnumChildrenTestName, lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
+            }
+            ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
+            ChildTest(EnumChildrenTestName, lastLine, "l", new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
+            ChildTest(EnumChildrenTestName, lastLine, "d1", new ChildInfo("[42]", "100", "0x64"));
+            ChildTest(EnumChildrenTestName, lastLine, "d2", new ChildInfo("['abc']", "'foo'"));
+            ChildTest(EnumChildrenTestName, lastLine, "i", null);
+            ChildTest(EnumChildrenTestName, lastLine, "u1", null);
+        }
+
+        public virtual string EnumChildrenTestName {
+            get {
+                return "EnumChildTest.py";
+            }
         }
 
         private void ChildTest(string filename, int lineNo, string text, params ChildInfo[] children) {
@@ -73,7 +87,7 @@ namespace AnalysisTest {
 
             process.Start();
 
-            brkHit.WaitOne();
+            AssertWaited(brkHit);
 
             var frames = thread.GetFrames();
 
@@ -84,7 +98,7 @@ namespace AnalysisTest {
                 evalComplete.Set();
             });
 
-            evalComplete.WaitOne();
+            AssertWaited(evalComplete);
             Assert.IsTrue(evalRes != null);
 
 
@@ -126,10 +140,10 @@ namespace AnalysisTest {
             process.WaitForExit();
         }
 
-        private static bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
+        private bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
             return curReceived.ChildText == curChild.ChildText && 
                 curReceived.StringRepr == curChild.Repr &&
-                (curChild.HexRepr == null || curChild.HexRepr == curReceived.HexRepr);
+                (Version.Version.Is3x() || (curChild.HexRepr == null || curChild.HexRepr == curReceived.HexRepr));// __hex__ no longer used in 3.x, http://mail.python.org/pipermail/python-list/2009-September/1218287.html
         }
 
         class ChildInfo {
@@ -177,7 +191,7 @@ namespace AnalysisTest {
 
             process.Start();
 
-            brkHit.WaitOne();
+            AssertWaited(brkHit);
 
             var moduleFrame = thread.GetFrames()[0];
             Assert.AreEqual(moduleFrame.StartLine, 1);
@@ -193,16 +207,16 @@ namespace AnalysisTest {
             newBp.Add();
 
             process.Resume();
-            brkHit.WaitOne();
+            AssertWaited(brkHit);
 
             thread.StepOver(); // step over x = 42
-            stepDone.WaitOne();
+            AssertWaited(stepDone);
 
             // skip y = 100
             Assert.IsTrue(moduleFrame.SetLineNumber(9));
 
             thread.StepOver(); // step over z = 200
-            stepDone.WaitOne();
+            AssertWaited(stepDone);
 
             // z shouldn't be defined
             var frames = thread.GetFrames();
@@ -212,7 +226,7 @@ namespace AnalysisTest {
             newBp = process.AddBreakPoint("SetNextLine.py", 13);
             newBp.Add();
             thread.Resume();
-            brkHit.WaitOne();
+            AssertWaited(brkHit);
 
             // f shouldn't be defined.
             frames = thread.GetFrames();
@@ -243,9 +257,7 @@ namespace AnalysisTest {
             };
 
             process.Start();
-            if (!loaded.WaitOne(10000)) {
-                Assert.Fail("Failed to load");
-            }
+            AssertWaited(loaded);
 
             // let loop run
             Thread.Sleep(500);
@@ -257,15 +269,19 @@ namespace AnalysisTest {
             };
 
             process.Break();
-            if (!breakComplete.WaitOne(10000)) {
-                Assert.Fail("failed to break");
-            }
+            AssertWaited(breakComplete);
 
             Assert.AreEqual(breakThread, thread);
 
             process.Resume();
 
             process.Terminate();
+        }
+
+        private static void AssertWaited(EventWaitHandle eventObj) {
+            if (!eventObj.WaitOne(10000)) {
+                Assert.Fail("Failed to wait on event");
+            }
         }
 
         [TestMethod]
@@ -283,9 +299,7 @@ namespace AnalysisTest {
             };
 
             process.Start();
-            if (!loaded.WaitOne(10000)) {
-                Assert.Fail("Failed to load");
-            }
+            AssertWaited(loaded);
 
             AutoResetEvent breakComplete = new AutoResetEvent(false);
             process.AsyncBreakComplete += (sender, args) => {
@@ -378,7 +392,7 @@ namespace AnalysisTest {
 
             process.Start();
 
-            brkHit.WaitOne();
+            AssertWaited(brkHit);
 
             var frames = thread.GetFrames();
 
@@ -398,7 +412,7 @@ namespace AnalysisTest {
                     textExecuted.Set();
                 }
                 );
-                textExecuted.WaitOne();
+                AssertWaited(textExecuted);
                 eval.Validate(obj);
             }
 
@@ -452,7 +466,7 @@ namespace AnalysisTest {
 
             process.Start();
 
-            brkHit.WaitOne();
+            AssertWaited(brkHit);
 
             var frames = thread.GetFrames();
             var localsExpected = new HashSet<string>(localsNames);
@@ -603,7 +617,7 @@ namespace AnalysisTest {
                 // process the stepping events as they occur, we cannot callback during the
                 // event because the notificaiton happens on the debugger thread and we 
                 // need to callback to get the frames.
-                processEvent.WaitOne();
+                AssertWaited(processEvent);
 
                 // first time through we hit process load, each additional time we should hit step complete.
                 Debug.Assert((processLoad == true && stepComplete == false && curStep == 0) ||
@@ -1062,44 +1076,42 @@ namespace AnalysisTest {
         }
     }
 
+    public abstract class DebuggerTests3x : DebuggerTests {
+        public override string EnumChildrenTestName {
+            get {
+                return "EnumChildTestV3.py";
+            }
+        }
+        public override string ComplexExceptions {
+            get {
+                return "ComplexExceptionsV3.py";
+            }
+        }
+    }
+
     [TestClass]
-    public class DebuggerTests30 : DebuggerTests {
+    public class DebuggerTests30 : DebuggerTests3x {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python30;
             }
         }
-        public override string ComplexExceptions {
-            get {
-                return "ComplexExceptionsV3.py";
-            }
-        }
     }
 
     [TestClass]
-    public class DebuggerTests31 : DebuggerTests {
+    public class DebuggerTests31 : DebuggerTests3x {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python31;
             }
         }
-        public override string ComplexExceptions {
-            get {
-                return "ComplexExceptionsV3.py";
-            }
-        }
     }
 
     [TestClass]
-    public class DebuggerTests32 : DebuggerTests {
+    public class DebuggerTests32 : DebuggerTests3x {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python32;
-            }
-        }
-        public override string ComplexExceptions {
-            get {
-                return "ComplexExceptionsV3.py";
             }
         }
     }

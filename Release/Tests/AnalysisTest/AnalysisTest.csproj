@@ -333,6 +333,9 @@
     <Content Include="Python.VS.TestData\AutoIndent.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\DebuggerProject\EnumChildTestV3.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\DebuggerProject\InfiniteThreads.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -860,5 +863,4 @@
   <Target Name="BeforeCompile">
     <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" />
   </Target>
-
 </Project>
