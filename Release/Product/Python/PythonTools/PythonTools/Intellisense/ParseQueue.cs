@@ -78,12 +78,17 @@ namespace Microsoft.PythonTools.Intellisense {
         public void EnqueueFile(IProjectEntry projEntry, string filename) {
             var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
             EnqueWorker(() => {
-                try {
-                    using (var reader = new StreamReader(new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))) {
-                        _parser.ParseFile(projEntry, filename, reader, severity);
+                for (int i = 0; i < 10; i++) {
+                    try {
+                        using (var reader = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
+                            _parser.ParseFile(projEntry, filename, reader, severity);
+                            return;
+                        }
+                    } catch (IOException) {
+                        // file being copied, try again...
+                        Thread.Sleep(100);
                     }
-                } catch (IOException) {
-                }
+                } 
             });
         }
 

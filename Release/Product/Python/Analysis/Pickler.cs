@@ -364,19 +364,6 @@ namespace Microsoft.PythonTools.Intellisense {
             Write(Newline);
         }
 
-        private static string MakeString(IList<byte> bytes) {
-            return MakeString(bytes, bytes.Count);
-        }
-
-        private static string MakeString(IList<byte> bytes, int maxBytes) {
-            int bytesToCopy = Math.Min(bytes.Count, maxBytes);
-            StringBuilder b = new StringBuilder(bytesToCopy);
-            for (int i = 0; i < bytesToCopy; i++) {
-                b.Append((char)bytes[i]);
-            }
-            return b.ToString();
-        }
-
         /// <summary>
         /// Write value in pickle unicodestring4 format.
         /// </summary>

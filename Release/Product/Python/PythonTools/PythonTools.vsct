@@ -11,15 +11,15 @@
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" key1="E" mod1="Control" key2="M" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow" key1="I" mod1="Alt" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" key1="E" mod1="Control" key2="P" mod2="Control" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" key1="W" mod1="Control" key2="1" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" key1="W" mod1="Control" key2="2" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" key1="W" mod1="Control" key2="3" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" key1="W" mod1="Control" key2="4" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" key1="W" mod1="Control" key2="5" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" key1="W" mod1="Control" key2="6" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" key1="W" mod1="Control" key2="7" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" key1="W" mod1="Control" key2="8" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" key1="W" mod1="Control" key2="9" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" key1="K" mod1="Control" key2="1" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" key1="K" mod1="Control" key2="2" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" key1="K" mod1="Control" key2="3" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" key1="K" mod1="Control" key2="4" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" key1="K" mod1="Control" key2="5" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" key1="K" mod1="Control" key2="6" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" key1="K" mod1="Control" key2="7" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" key1="K" mod1="Control" key2="8" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" key1="K" mod1="Control" key2="9" editor="guidVSStd97"/>
   </KeyBindings>
 
   <!--The Commands section is where we the commands, menus and menu groups are defined.

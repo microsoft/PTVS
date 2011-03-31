@@ -19,6 +19,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Numerics;
 using System.Text;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Parsing {
@@ -67,11 +68,7 @@ namespace Microsoft.PythonTools.Parsing {
             Reset(FutureOptions.None);
         }
 
-        public static Parser CreateParser(TextReader reader, ErrorSink errors, PythonLanguageVersion version) {
-            return CreateParser(reader, errors, version, Severity.Ignore);
-        }
-
-        public static Parser CreateParser(TextReader reader, ErrorSink errors, PythonLanguageVersion version, Severity indentationInconsistencySeverity) {
+        public static Parser CreateParser(TextReader reader, ErrorSink errors, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
             Tokenizer tokenizer = new Tokenizer(version, errors);
 
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
@@ -80,6 +77,15 @@ namespace Microsoft.PythonTools.Parsing {
             Parser result = new Parser(tokenizer, errors, version);
             result._sourceReader = reader;
             return result;
+        }
+
+        /// <summary>
+        /// Creates a new parser from a seekable stream including scanning the BOM or looking for a # coding: comment to detect the appropriate coding.
+        /// </summary>
+        public static Parser CreateParser(Stream stream, ErrorSink errors, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
+            var reader = GetStreamReaderWithEncoding(stream, PythonAsciiEncoding.Instance, errors);
+
+            return CreateParser(reader, errors, version, indentationInconsistencySeverity);
         }
 
         #endregion
@@ -2086,7 +2092,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (cvs != null) {
                         cv = FinishStringPlus(cvs);
                     } else {
-                        byte[] bytes = cv as byte[];
+                        AsciiString bytes = cv as AsciiString;
                         if (bytes != null) {
                             cv = FinishBytesPlus(bytes);
                         }
@@ -2110,18 +2116,18 @@ namespace Microsoft.PythonTools.Parsing {
             while (true) {
                 if (t is ConstantValueToken) {
                     string cvs;
-                    byte[] bytes;
+                    AsciiString bytes;
                     if ((cvs = t.Value as String) != null) {
                         s += cvs;
                         NextToken();
                         t = PeekToken();
                         continue;
-                    } else if ((bytes = t.Value as byte[]) != null) {
+                    } else if ((bytes = t.Value as AsciiString) != null) {
                         if (_langVersion.Is3x()) {
                             ReportSyntaxError("cannot mix bytes and nonbytes literals");
                         }
 
-                        s += MakeString(bytes);
+                        s += bytes.String;
                         NextToken();
                         t = PeekToken();
                         continue;
@@ -2142,16 +2148,16 @@ namespace Microsoft.PythonTools.Parsing {
             return res.ToString();
         }
 
-        private object FinishBytesPlus(byte[] s) {
+        private object FinishBytesPlus(AsciiString s) {
             Token t = PeekToken();
             while (true) {
                 if (t is ConstantValueToken) {
-                    byte[] cvs;
+                    AsciiString cvs;
                     string str;
-                    if ((cvs = t.Value as byte[]) != null) {
-                        List<byte> res = new List<byte>(s);
-                        res.AddRange(cvs);
-                        s = res.ToArray();
+                    if ((cvs = t.Value as AsciiString) != null) {
+                        List<byte> res = new List<byte>(s.Bytes);
+                        res.AddRange(cvs.Bytes);
+                        s = new AsciiString(res.ToArray(), s.String + cvs.String);
                         NextToken();
                         t = PeekToken();
                         continue;
@@ -2160,7 +2166,7 @@ namespace Microsoft.PythonTools.Parsing {
                             ReportSyntaxError("cannot mix bytes and nonbytes literals");
                         }
 
-                        string final = MakeString(s) + str;
+                        string final = s.String + str;
                         NextToken();
 
                         return FinishStringPlus(final);
@@ -3209,7 +3215,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (_langVersion.Is3x()) {
                 return ce.Value is string;
             }
-            return ce.Value is byte[];
+            return ce.Value is AsciiString;
         }
 
         private Statement InternalParseInteractiveInput(out bool parsingMultiLineCmpdStmt, out bool isEmptyStmt) {
@@ -3412,6 +3418,128 @@ namespace Microsoft.PythonTools.Parsing {
 
                 _parser.ErrorSink.Add(message, lineLocations, startIndex, endIndex, errorCode, severity);
             }
+        }
+
+        #endregion
+
+        #region Encoding support
+
+        private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {
+            // we choose ASCII by default, if the file has a Unicode pheader though
+            // we'll automatically get it as unicode.
+            Encoding encoding = PythonAsciiEncoding.SourceEncoding;
+
+            long startPosition = stream.Position;
+
+            StreamReader sr = new StreamReader(stream, PythonAsciiEncoding.SourceEncoding);
+            byte[] bomBuffer = new byte[3];
+            int bomRead = stream.Read(bomBuffer, 0, 3);
+            int bytesRead = 0;
+            bool isUtf8 = false;
+            if (bomRead == 3 && (bomBuffer[0] == 0xef && bomBuffer[1] == 0xbb && bomBuffer[2] == 0xbf)) {
+                isUtf8 = true;
+                bytesRead = 3;
+            } else {
+                stream.Seek(0, SeekOrigin.Begin);
+            }
+
+            string line;
+            try {
+                line = ReadOneLine(sr, ref bytesRead);
+            } catch (BadSourceException) {
+                errors.Add("failed to read encoding", null, 0, 0, ErrorCodes.SyntaxError, Severity.FatalError);
+                return new StreamReader(stream, defaultEncoding);
+            }
+
+            bool gotEncoding = false;
+            string encodingName = null;
+            // magic encoding must be on line 1 or 2
+            if (line != null && !(gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName))) {
+                try {
+                    line = ReadOneLine(sr, ref bytesRead);
+                } catch (BadSourceException) {
+                    errors.Add("failed to read encoding", null, 0, 0, ErrorCodes.SyntaxError, Severity.FatalError);
+                    return new StreamReader(stream, defaultEncoding);
+                }
+
+                if (line != null) {
+                    gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName);
+                }
+            }
+
+            if (gotEncoding && isUtf8 && encodingName != "utf-8") {
+                // we have both a BOM & an encoding type, throw an error
+                errors.Add("file has both Unicode marker and PEP-263 file encoding.  You can only use \"utf-8\" as the encoding name when a BOM is present.", null, 0, 0, ErrorCodes.SyntaxError, Severity.FatalError);
+            } else if (encoding == null) {
+                return new StreamReader(stream, defaultEncoding);
+            }
+
+            // if we didn't get an encoding seek back to the beginning...
+            if (!gotEncoding || stream.Position != stream.Length) {
+                stream.Seek(startPosition, SeekOrigin.Begin);
+            }
+
+            // re-read w/ the correct encoding type...
+            return new StreamReader(stream, encoding);
+        }
+
+        /// <summary>
+        /// Reads one line keeping track of the # of bytes read
+        /// </summary>
+        private static string ReadOneLine(StreamReader reader, ref int totalRead) {
+            Stream sr = reader.BaseStream;
+            byte[] buffer = new byte[256];
+            StringBuilder builder = null;
+
+            int bytesRead = sr.Read(buffer, 0, buffer.Length);
+
+            while (bytesRead > 0) {
+                totalRead += bytesRead;
+
+                bool foundEnd = false;
+                for (int i = 0; i < bytesRead; i++) {
+                    if (buffer[i] == '\r') {
+                        if (i + 1 < bytesRead) {
+                            if (buffer[i + 1] == '\n') {
+                                totalRead -= (bytesRead - (i + 2));   // skip cr/lf
+                                sr.Seek(i + 2, SeekOrigin.Begin);
+                                reader.DiscardBufferedData();
+                                foundEnd = true;
+                            }
+                        } else {
+                            totalRead -= (bytesRead - (i + 1)); // skip cr
+                            sr.Seek(i + 1, SeekOrigin.Begin);
+                            reader.DiscardBufferedData();
+                            foundEnd = true;
+                        }
+                    } else if (buffer[i] == '\n') {
+                        totalRead -= (bytesRead - (i + 1)); // skip lf
+                        sr.Seek(i + 1, SeekOrigin.Begin);
+                        reader.DiscardBufferedData();
+                        foundEnd = true;
+                    }
+
+                    if (foundEnd) {
+                        if (builder != null) {
+                            builder.Append(Parser.MakeString(buffer), 0, i);
+                            return builder.ToString();
+                        }
+                        return MakeString(buffer).Substring(0, i);
+                    }
+                }
+
+                if (builder == null) builder = new StringBuilder();
+                builder.Append(MakeString(buffer), 0, bytesRead);
+                bytesRead = sr.Read(buffer, 0, buffer.Length);
+            }
+
+            // no string
+            if (builder == null) {
+                return null;
+            }
+
+            // no new-line
+            return builder.ToString();
         }
 
         #endregion

@@ -56,6 +56,8 @@
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisVariable.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Parsing\AsciiString.cs" />
+    <Compile Include="Parsing\PythonAsciiEncoding.cs" />
     <Compile Include="SetOfOne.cs" />
     <Compile Include="Deque.cs" />
     <Compile Include="FileCookie.cs" />

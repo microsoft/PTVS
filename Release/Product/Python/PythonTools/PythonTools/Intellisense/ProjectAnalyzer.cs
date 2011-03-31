@@ -359,7 +359,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void ParseFile(IProjectEntry projectEntry, string filename, TextReader content, Severity indentationSeverity) {
+        public void ParseFile(IProjectEntry projectEntry, string filename, FileStream content, Severity indentationSeverity) {
             IProjectEntry analysis;
             IExternalProjectEntry externalEntry;
             if (PythonProjectNode.IsPythonFile(filename)) {
@@ -391,7 +391,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
             } else if (_projectFiles.TryGetValue(filename, out analysis) && (externalEntry = (analysis as IExternalProjectEntry)) != null) {
-                externalEntry.ParseContent(content, new FileCookie(filename));
+                externalEntry.ParseContent(new StreamReader(content), new FileCookie(filename));
                 _analysisQueue.Enqueue(analysis, AnalysisPriority.Normal);
             }
         }
@@ -528,32 +528,34 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        private void ParsePythonCode(FileStream content, Severity indentationSeverity, out PythonAst ast, out CollectingErrorSink errorSink) {
+            ast = null;
+            errorSink = new CollectingErrorSink();
+
+            using (var parser = Parser.CreateParser(content, errorSink, _interpreterFactory.GetLanguageVersion(), indentationSeverity)) {
+                ast = ParseOneFile(ast, parser);
+            }
+        }
+
         private void ParsePythonCode(TextReader content, Severity indentationSeverity, out PythonAst ast, out CollectingErrorSink errorSink) {
             ast = null;
             errorSink = new CollectingErrorSink();
 
-            using (var parser = MakeParser(content, errorSink, indentationSeverity)) {
-                if (parser != null) {
-                    try {
-                        ast = parser.ParseFile();
-                    } catch (Exception e) {
-                        Debug.Assert(false, String.Format("Failure in Python parser: {0}", e.ToString()));
-                    }
-
-                }
+            using (var parser = Parser.CreateParser(content, errorSink, _interpreterFactory.GetLanguageVersion(), indentationSeverity)) {
+                ast = ParseOneFile(ast, parser);
             }
         }
 
-        private Parser MakeParser(TextReader reader, ErrorSink sink, Severity indentationSeverity) {
-            for (int i = 0; i < 10; i++) {
+        private static PythonAst ParseOneFile(PythonAst ast, Parser parser) {
+            if (parser != null) {
                 try {
-                    return Parser.CreateParser(reader, sink, _interpreterFactory.GetLanguageVersion(), indentationSeverity);                        
-                } catch (IOException) {
-                    // file being copied, try again...
-                    Thread.Sleep(100);
+                    ast = parser.ParseFile();
+                } catch (Exception e) {
+                    Debug.Assert(false, String.Format("Failure in Python parser: {0}", e.ToString()));
                 }
+
             }
-            return null;
+            return ast;
         }
 
         private static ITrackingSpan CreateSpan(ITextSnapshot snapshot, SourceSpan span) {

@@ -26,6 +26,7 @@ using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Providers;
@@ -188,7 +189,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             // so that it contains the newly loaded assembly.
             foreach (var arg in node.Args) {
                 var cexpr = arg.Expression as Microsoft.PythonTools.Parsing.Ast.ConstantExpression;
-                if (cexpr == null || !(cexpr.Value is string || cexpr.Value is byte[])) {
+                if (cexpr == null || !(cexpr.Value is string || cexpr.Value is AsciiString)) {
                     // can't process this add reference
                     continue;
                 }
@@ -200,13 +201,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 var asmName = cexpr.Value as string;
                 if (asmName == null) {
                     // check for byte string
-                    var bytes = cexpr.Value as byte[];
+                    var bytes = cexpr.Value as AsciiString;
                     if (bytes != null) {
-                        StringBuilder tmp = new StringBuilder();
-                        for (int i = 0; i < bytes.Length; i++) {
-                            tmp.Append((char)bytes[i]);
-                        }
-                        asmName = tmp.ToString();
+                        asmName = bytes.String;
                     }
                 }
                 if (asmName != null && _assemblyLoadSet.Add(asmName)) {

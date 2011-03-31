@@ -145,10 +145,10 @@ namespace Microsoft.PythonTools.Parsing {
             return new String(text, start, length);
         }
 
-        internal static List<byte> ParseBytes(char[] text, int start, int length, bool isRaw, bool normalizeLineEndings) {
+        internal static List<char> ParseBytes(char[] text, int start, int length, bool isRaw, bool normalizeLineEndings) {
             Debug.Assert(text != null);
 
-            List<byte> buf = new List<byte>(length);
+            List<char> buf = new List<char>(length);
 
             int i = start;
             int l = start + length;
@@ -161,23 +161,23 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     ch = text[i++];
                     switch (ch) {
-                        case 'a': buf.Add((byte)'\a'); continue;
-                        case 'b': buf.Add((byte)'\b'); continue;
-                        case 'f': buf.Add((byte)'\f'); continue;
-                        case 'n': buf.Add((byte)'\n'); continue;
-                        case 'r': buf.Add((byte)'\r'); continue;
-                        case 't': buf.Add((byte)'\t'); continue;
-                        case 'v': buf.Add((byte)'\v'); continue;
-                        case '\\': buf.Add((byte)'\\'); continue;
-                        case '\'': buf.Add((byte)'\''); continue;
-                        case '\"': buf.Add((byte)'\"'); continue;
+                        case 'a': buf.Add('\a'); continue;
+                        case 'b': buf.Add('\b'); continue;
+                        case 'f': buf.Add('\f'); continue;
+                        case 'n': buf.Add('\n'); continue;
+                        case 'r': buf.Add('\r'); continue;
+                        case 't': buf.Add('\t'); continue;
+                        case 'v': buf.Add('\v'); continue;
+                        case '\\': buf.Add('\\'); continue;
+                        case '\'': buf.Add('\''); continue;
+                        case '\"': buf.Add('\"'); continue;
                         case '\r': if (i < l && text[i] == '\n') i++; continue;
                         case '\n': continue;
                         case 'x': //hex
                             if (!TryParseInt(text, i, 2, 16, out val)) {
                                 goto default;
                             }
-                            buf.Add((byte)val);
+                            buf.Add((char)val);
                             i += 2;
                             continue;
                         case '0':
@@ -200,11 +200,11 @@ namespace Microsoft.PythonTools.Parsing {
                                 }
                             }
 
-                            buf.Add((byte)val);
+                            buf.Add((char)val);
                             continue;
                         default:
-                            buf.Add((byte)'\\');
-                            buf.Add((byte)ch);
+                            buf.Add('\\');
+                            buf.Add(ch);
                             continue;
                     }
                 } else if (ch == '\r' && normalizeLineEndings) {
@@ -212,9 +212,9 @@ namespace Microsoft.PythonTools.Parsing {
                     if (i < text.Length && text[i] == '\n') {
                         i++;
                     }
-                    buf.Add((byte)'\n');
+                    buf.Add('\n');
                 } else {
-                    buf.Add((byte)ch);
+                    buf.Add(ch);
                 }
             }
 

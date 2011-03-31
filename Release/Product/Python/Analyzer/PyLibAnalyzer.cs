@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.Analysis {
                     for (int i = 0; i < modules.Count; i++) {
                         PythonAst ast = null;
                         try {
-                            var sourceUnit = new StreamReader(files[i]);
+                            var sourceUnit = new FileStream(files[i], FileMode.Open, FileAccess.Read, FileShare.Read);
 
                             ast = Parser.CreateParser(sourceUnit, Microsoft.PythonTools.Parsing.ErrorSink.Null, PythonLanguageVersion.V27).ParseFile();
                         } catch (Exception) {

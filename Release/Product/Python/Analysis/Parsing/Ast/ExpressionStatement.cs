@@ -40,8 +40,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 if (ce != null) {
                     if (ce.Value is string) {
                         return ce.Value as string;
-                    } else if (ce.Value is byte[]) {
-                        return Parser.MakeString((byte[])ce.Value);
+                    } else if (ce.Value is AsciiString) {
+                        return ((AsciiString)ce.Value).String;
                     }
                 }
                 return null;

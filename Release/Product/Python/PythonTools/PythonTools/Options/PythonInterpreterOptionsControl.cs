@@ -166,7 +166,10 @@ namespace Microsoft.PythonTools.Options {
                     _invalidVersionToolTip.ShowAlways = true;
                     _invalidVersionToolTip.IsBalloon = true;
                     _invalidVersionToolTip.ToolTipIcon = ToolTipIcon.None;
-                    _invalidVersionToolTip.Show("Version is not in invalid format and will not be updated.", _version, new System.Drawing.Point(_version.Width, _version.Height / 2), 5000);
+                    _invalidVersionToolTip.Show("Version is not in invalid format and will not be updated.", 
+                        this, 
+                        new System.Drawing.Point(_version.Location.X + 10, _version.Location.Y + _interpreterSettingsGroup.Location.Y + _version.Height - 5), 
+                        5000);
                 }
             }
         }

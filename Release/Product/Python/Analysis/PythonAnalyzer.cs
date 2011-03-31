@@ -318,13 +318,9 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var arg in xaml) {
                     string strConst = arg.GetConstantValue() as string;
                     if (strConst == null) {
-                        byte[] bytes = arg.GetConstantValue() as byte[];
+                        var bytes = arg.GetConstantValue() as AsciiString;
                         if (bytes != null) {
-                            var tmp = new System.Text.StringBuilder();
-                            foreach(var curByte in bytes) {
-                                tmp.Append((char)curByte);
-                            }
-                            strConst = tmp.ToString();
+                            strConst = bytes.String;
                         }
                     }
 
@@ -593,7 +589,7 @@ namespace Microsoft.PythonTools.Analysis {
                 case TypeCode.Object:
                     if (value.GetType() == typeof(Complex)) {
                         return Types.Complex;
-                    } else if(value.GetType() == typeof(byte[])) {
+                    } else if(value.GetType() == typeof(AsciiString)) {
                         return Types.Bytes;
                     } else if (value.GetType() == typeof(BigInteger)) {
                         if (LanguageVersion.Is3x()) {

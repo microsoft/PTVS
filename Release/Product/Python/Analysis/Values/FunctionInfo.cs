@@ -327,18 +327,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private static string GetConstantRepr(PythonAnalyzer state, ConstantExpression value) {
             if (value.Value == null) {
                 return "None";
-            } else if (value.Value is byte[]) {
+            } else if (value.Value is AsciiString) {
                 StringBuilder res = new StringBuilder();
                 if (state.LanguageVersion.Is3x()) {
                     res.Append("b");
                 }
                 res.Append("'");
-                byte[] bytes = value.Value as byte[];
+                var bytes = ((AsciiString)value.Value).String;
                 for (int i = 0; i < bytes.Length; i++) {
                     if (bytes[i] == '\'') {
                         res.Append("\\'");
                     } else {
-                        res.Append((char)bytes[i]);
+                        res.Append(bytes[i]);
                     }
                 }
                 res.Append("'");
