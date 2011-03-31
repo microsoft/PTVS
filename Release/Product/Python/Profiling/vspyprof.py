@@ -44,8 +44,12 @@ def profile(file, globals_obj, locals_obj, profdll):
 	global profiler, pyprofdll
 
 	pyprofdll = ctypes.PyDLL(profdll)
+	pyprofdll.CreateProfiler.restype = ctypes.c_void_p
+	pyprofdll.CloseThread.argtypes = [ctypes.c_void_p]
+	pyprofdll.CloseProfiler.argtypes = [ctypes.c_void_p]
+	pyprofdll.InitProfiler.argtypes = [ctypes.c_void_p]
+	
 	profiler = pyprofdll.CreateProfiler(sys.dllhandle)
-
 	handle = start_profiling()
 
 	try:

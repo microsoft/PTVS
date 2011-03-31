@@ -110,7 +110,7 @@
         <Parent guid="guidPerfMenuGroup" id="IDG_PERF_BAR_GENERAL" />
         <Strings>
           <CommandName>cmdidStartPythonProfiling</CommandName>
-          <ButtonText>Launch Python Profiling...</ButtonText>
+          <ButtonText>Launch &amp;Python Profiling...</ButtonText>
         </Strings>
       </Button>
       
