@@ -219,7 +219,7 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
 
                 case TokenKind.Constant:
-                    result.Category = (token.Value is string || token.Value is byte[]) ? TokenCategory.StringLiteral : TokenCategory.NumericLiteral;
+                    result.Category = (token.Value is string || token.Value is AsciiString) ? TokenCategory.StringLiteral : TokenCategory.NumericLiteral;
                     break;
 
                 case TokenKind.LeftParenthesis:

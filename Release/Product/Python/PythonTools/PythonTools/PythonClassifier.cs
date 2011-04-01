@@ -229,10 +229,8 @@ namespace Microsoft.PythonTools {
                     classification = _provider.DotClassification;
                 }
             } else if (token.Category == TokenCategory.Grouping) {
-                if (token.Trigger == (TokenTriggers.MatchBraces | TokenTriggers.ParameterStart)) {
-                    classification = _provider.OpenGroupingClassification;
-                } else if (token.Trigger == (TokenTriggers.MatchBraces | TokenTriggers.ParameterEnd)) {
-                    classification = _provider.CloseGroupingClassification;
+                if ((token.Trigger & TokenTriggers.MatchBraces) != 0) {
+                    classification = _provider.GroupingClassification;
                 }
             } else if (token.Category == TokenCategory.Delimiter) {
                 if (token.Trigger == TokenTriggers.ParameterNext) {

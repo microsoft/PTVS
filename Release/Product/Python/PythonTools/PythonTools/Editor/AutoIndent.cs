@@ -39,10 +39,6 @@ namespace Microsoft.PythonTools.Editor {
             return res;
         }
 
-        private static bool StartsGrouping(ClassificationSpan token) {
-            return token.ClassificationType.IsOfType("OpenGroupingClassification");
-        }
-
         private static string CurrentLine(IWpfTextView buffer) {
             return buffer.TextSnapshot.GetLineFromPosition(buffer.Caret.Position.BufferPosition.Position).GetText();
         }
@@ -88,7 +84,7 @@ namespace Microsoft.PythonTools.Editor {
                                     if (token.Span.Start.Position > view.Caret.Position.BufferPosition.Position) {
                                         break;
                                     }
-                                    if (StartsGrouping(token)) {
+                                    if (token.IsOpenGrouping()) {
                                         groupings.Push(token);
                                     } else if (groupings.Count > 0 && EndsGrouping(token)) {
                                         groupings.Pop();

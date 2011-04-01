@@ -16,16 +16,11 @@
 namespace Microsoft.PythonTools {
     public static class PythonPredefinedClassificationTypeNames {
         /// <summary>
-        /// Open grouping classification.  Used for (, [, etc...  A subtype of the pre-defined
+        /// Open grouping classification.  Used for (, [, {, ), ], and }...  A subtype of the Python
         /// operator grouping.
         /// </summary>
-        public const string OpenGrouping = "Python open grouping";
-        /// <summary>
-        /// Closed grouping classification.  Used for ), ], etc...  A subtype of the pre-defined
-        /// operator grouping.
-        /// </summary>
-        public const string CloseGrouping = "Python close grouping";
-
+        public const string Grouping = "Python grouping";
+       
         /// <summary>
         /// Classification used for comma characters when used outside of a literal, comment, etc...
         /// </summary>

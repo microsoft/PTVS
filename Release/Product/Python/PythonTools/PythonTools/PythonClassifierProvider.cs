@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools {
         private IClassificationType _stringLiteral;
         private IClassificationType _keyword;
         private IClassificationType _operator;
-        private IClassificationType _openGroupingClassification;
+        private IClassificationType _groupingClassification;
         private IClassificationType _loseGroupingClassification;
         private IClassificationType _dotClassification;
         private IClassificationType _commaClassification;
@@ -60,14 +60,9 @@ namespace Microsoft.PythonTools {
         #region DLR Classification Type Definitions
 
         [Export]
-        [Name(PythonPredefinedClassificationTypeNames.OpenGrouping)]
+        [Name(PythonPredefinedClassificationTypeNames.Grouping)]
         [BaseDefinition(PythonPredefinedClassificationTypeNames.Operator)]
-        internal static ClassificationTypeDefinition OpenGroupingClassificationDefinition = null; // Set via MEF
-
-        [Export]
-        [Name(PythonPredefinedClassificationTypeNames.CloseGrouping)]
-        [BaseDefinition(PythonPredefinedClassificationTypeNames.Operator)]
-        internal static ClassificationTypeDefinition CloseGroupingClassificationDefinition = null; // Set via MEF
+        internal static ClassificationTypeDefinition GroupingClassificationDefinition = null; // Set via MEF
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.Dot)]
@@ -123,12 +118,8 @@ namespace Microsoft.PythonTools {
             get { return _operator; }
         }
 
-        public IClassificationType OpenGroupingClassification {
-            get { return _openGroupingClassification; }
-        }
-
-        public IClassificationType CloseGroupingClassification {
-            get { return _loseGroupingClassification; }
+        public IClassificationType GroupingClassification {
+            get { return _groupingClassification; }
         }
 
         public IClassificationType DotClassification {
@@ -162,8 +153,7 @@ namespace Microsoft.PythonTools {
             categoryMap[TokenCategory.Grouping] = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Operator);
             categoryMap[TokenCategory.WhiteSpace] = registry.GetClassificationType(PredefinedClassificationTypeNames.WhiteSpace);
             categoryMap[TokenCategory.RegularExpressionLiteral] = registry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
-            _openGroupingClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.OpenGrouping);
-            _loseGroupingClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.CloseGrouping);
+            _groupingClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Grouping);
             _commaClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Comma);
             _dotClassification = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Dot);
 
@@ -186,25 +176,13 @@ namespace Microsoft.PythonTools {
     }
 
     [Export(typeof(EditorFormatDefinition))]
-    [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.OpenGrouping)]
-    [Name(PythonPredefinedClassificationTypeNames.OpenGrouping)]
-    [DisplayName(PythonPredefinedClassificationTypeNames.OpenGrouping)]
+    [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.Grouping)]
+    [Name(PythonPredefinedClassificationTypeNames.Grouping)]
+    [DisplayName(PythonPredefinedClassificationTypeNames.Grouping)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class OpenGroupingFormat : ClassificationFormatDefinition {
-        public OpenGroupingFormat() {
-            ForegroundColor = Colors.Black;
-        }
-    }
-
-    [Export(typeof(EditorFormatDefinition))]
-    [ClassificationType(ClassificationTypeNames = PythonPredefinedClassificationTypeNames.CloseGrouping)]
-    [Name(PythonPredefinedClassificationTypeNames.CloseGrouping)]
-    [DisplayName(PythonPredefinedClassificationTypeNames.CloseGrouping)]
-    [UserVisible(true)]
-    [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class CloseGroupingFormat : ClassificationFormatDefinition {
-        public CloseGroupingFormat() {
+    internal sealed class GroupingFormat : ClassificationFormatDefinition {
+        public GroupingFormat() {
             ForegroundColor = Colors.Black;
         }
     }

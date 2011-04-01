@@ -40,11 +40,7 @@ namespace Microsoft.PythonTools {
             get;
         }
 
-        IClassificationType OpenGroupingClassification {
-            get;
-        }
-
-        IClassificationType CloseGroupingClassification {
+        IClassificationType GroupingClassification {
             get;
         }
 

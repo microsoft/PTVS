@@ -151,11 +151,11 @@ namespace Microsoft.PythonTools.Editor {
                     for (; ; ) {
                         spans = classifier.GetClassificationSpans(span);
                         for (int i = direction == -1 ? spans.Count - 1 : 0; i >= 0 && i < spans.Count; i += direction) {
-                            if (IsCloseSpan(spans, i)) {
+                            if (spans[i].IsCloseGrouping()) {
                                 if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
                                     depth -= direction;
                                 }
-                            } else if (IsOpenSpan(spans, i)) {
+                            } else if (spans[i].IsOpenGrouping()) {
                                 if (IsSameBraceKind(spans[i].Span.GetText(), brace)) {
                                     depth += direction;
                                 }
@@ -209,17 +209,15 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private static bool IsOpenSpan(IList<VisualStudio.Text.Classification.ClassificationSpan> spans, int i) {
-            return spans[i].ClassificationType == PythonClassifierProvider.Instance.OpenGroupingClassification ||
-                (spans[i].ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Operator) &&
+            return spans[i].ClassificationType == PythonClassifierProvider.Instance.GroupingClassification &&
                 spans[i].Span.Length == 1 &&
-                (spans[i].Span.GetText() == "{" || spans[i].Span.GetText() == "["));
+                (spans[i].Span.GetText() == "{" || spans[i].Span.GetText() == "[" || spans[i].Span.GetText() == "(");
         }
 
         private static bool IsCloseSpan(IList<VisualStudio.Text.Classification.ClassificationSpan> spans, int i) {
-            return spans[i].ClassificationType == PythonClassifierProvider.Instance.CloseGroupingClassification ||
-                (spans[i].ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Operator) &&
+            return spans[i].ClassificationType == PythonClassifierProvider.Instance.GroupingClassification &&
                 spans[i].Span.Length == 1 &&
-                (spans[i].Span.GetText() == "}" || spans[i].Span.GetText() == "]"));
+                (spans[i].Span.GetText() == "}" || spans[i].Span.GetText() == "]" || spans[i].Span.GetText() == ")");
         }
     }
 }

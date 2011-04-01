@@ -535,7 +535,7 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("YieldStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new Action<Parameter>[0], 
+                        CheckFuncDef("f", NoParameters, 
                             CheckSuite(
                                 CheckYieldStmt(One),
                                 CheckYieldStmt(CheckTupleExpr(One, Two))
@@ -552,7 +552,7 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("YieldExpr.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new Action<Parameter>[0],
+                        CheckFuncDef("f", NoParameters,
                             CheckSuite(
                                 CheckYieldStmt(None)
                             )
@@ -600,7 +600,7 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("GlobalStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new Action<Parameter>[0],
+                        CheckFuncDef("f", NoParameters,
                             CheckSuite(
                                 CheckGlobal("a"),
                                 CheckGlobal("a", "b")
@@ -617,11 +617,11 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("NonlocalStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("g", new Action<Parameter>[0],
+                        CheckFuncDef("g", NoParameters,
                             CheckSuite(
                                 CheckAssignment(Foo, One),
                                 CheckAssignment(Bar, One),
-                                CheckFuncDef("f", new Action<Parameter>[0],
+                                CheckFuncDef("f", NoParameters,
                                     CheckSuite(
                                         CheckNonlocal("foo"),
                                         CheckNonlocal("foo", "bar")
@@ -629,9 +629,9 @@ namespace AnalysisTest {
                                 )
                             )
                         ),
-                        CheckFuncDef("g", new Action<Parameter>[0],
+                        CheckFuncDef("g", NoParameters,
                             CheckSuite(
-                                CheckFuncDef("f", new Action<Parameter>[0],
+                                CheckFuncDef("f", NoParameters,
                                     CheckSuite(
                                         CheckNonlocal("foo")
                                     )
@@ -639,7 +639,7 @@ namespace AnalysisTest {
                                 CheckAssignment(Foo, One)
                             )
                         ),
-                        CheckFuncDef("f", new Action<Parameter>[0],                            
+                        CheckFuncDef("f", NoParameters,                            
                             CheckSuite(
                                 CheckClassDef("C", 
                                     CheckSuite(
@@ -1014,7 +1014,7 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("FromImportStmtV2.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new Action<Parameter>[0], 
+                        CheckFuncDef("f", NoParameters, 
                             CheckSuite(CheckFromImport("sys", new[] { "*" }))
                         ),
                         CheckClassDef("C",
@@ -1053,15 +1053,40 @@ namespace AnalysisTest {
         }
         
         [TestMethod]
+        public void FromImportStmtIncomplete() {
+
+            foreach (var version in AllVersions) {
+                CheckAst(
+                    ParseFile("FromImportStmtIncomplete.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckFuncDef(
+                            "f",
+                            NoParameters,
+                            CheckSuite(
+                                CheckFromImport("sys", new[] { "abc", null })
+                            )
+                        )
+                    )
+                );
+
+                ParseErrors(
+                    "FromImportStmtIncomplete.py",
+                    version,
+                    new ErrorInfo("unexpected token '<newline>'", 35, 2, 26, 37, 3, 1)
+                );
+            }
+        }
+
+        [TestMethod]
         public void DecoratorsFuncDef() {
             foreach (var version in AllVersions) {
                 CheckAst(
                     ParseFile("DecoratorsFuncDef.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new Action<Parameter>[0], CheckSuite(Pass), new[] { Foo }),
-                        CheckFuncDef("f", new Action<Parameter>[0], CheckSuite(Pass), new[] { CheckMemberExpr(Foo, "bar") }),
-                        CheckFuncDef("f", new Action<Parameter>[0], CheckSuite(Pass), new[] { CheckCallExpression(Foo, PositionalArg(Bar)) }),
-                        CheckFuncDef("f", new Action<Parameter>[0], CheckSuite(Pass), new[] { Foo, Bar })
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Foo }),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckMemberExpr(Foo, "bar") }),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckCallExpression(Foo, PositionalArg(Bar)) }),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Foo, Bar })
                     )
                 );
             }
@@ -1171,15 +1196,15 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("FuncDef.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new Action<Parameter>[0], CheckSuite(Pass)),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass)),
                         CheckFuncDef("f", new [] { CheckParameter("a") }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a"), CheckParameter("b", ParameterKind.List) }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a"), CheckParameter("b", ParameterKind.List), CheckParameter("c", ParameterKind.Dictionary) }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List) }, CheckSuite(Pass)),
                         CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.Dictionary) }, CheckSuite(Pass)),
 
-                        CheckFuncDef("f", new Action<Parameter>[0], CheckSuite(CheckReturnStmt(One))),
-                        CheckFuncDef("f", new Action<Parameter>[0], CheckSuite(CheckReturnStmt()))
+                        CheckFuncDef("f", NoParameters, CheckSuite(CheckReturnStmt(One))),
+                        CheckFuncDef("f", NoParameters, CheckSuite(CheckReturnStmt()))
                     )
                 );
             }
@@ -1217,7 +1242,7 @@ namespace AnalysisTest {
                         CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.Dictionary, annotation: One) }, Pass),
                         CheckFuncDef("f", new[] { CheckParameter("a", annotation: Zero), CheckParameter("b", ParameterKind.List, annotation: One), CheckParameter("c", ParameterKind.Dictionary, annotation: Two) }, Pass),
 
-                        CheckFuncDef("f", new Action<Parameter>[0], Pass, returnAnnotation: One),
+                        CheckFuncDef("f", NoParameters, Pass, returnAnnotation: One),
 
                         CheckFuncDef("f", new[] { CheckParameter("a", annotation: One) }, Pass, returnAnnotation: One),
 
@@ -1360,7 +1385,7 @@ namespace AnalysisTest {
                     CheckSuite(
                         CheckFuncDef(
                             "f",
-                            new Action<Parameter>[0],
+                            NoParameters,
                             CheckSuite(
                                 CheckAssignment(Foo, CheckYieldExpr(One)),
                                 CheckAssignment(Foo, PythonOperator.Add, CheckYieldExpr(One))
@@ -1431,7 +1456,7 @@ namespace AnalysisTest {
                         CheckAssignment(Two, One),
                         CheckAssignment(CheckGeneratorComp(Bar, CheckForStmt(Foo, IgnoreExpr(), CheckYieldStmt(Foo))), One),
                         CheckAssignment(CheckTupleExpr(Foo, Bar), PythonOperator.Add, One),
-                        CheckFuncDef("f", new Action<Parameter>[0], 
+                        CheckFuncDef("f", NoParameters, 
                             CheckSuite(    
                                 CheckAssignment(CheckYieldExpr(Foo), One)
                             )
@@ -2553,6 +2578,8 @@ namespace AnalysisTest {
         private static Action<Statement> IgnoreStmt() {
             return stmt => { };
         }
+
+        private static Action<Parameter>[] NoParameters = new Action<Parameter>[0];
 
         private static void CollectFiles(string dir, List<string> files) {
             foreach (string file in Directory.GetFiles(dir)) {

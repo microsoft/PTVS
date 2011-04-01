@@ -20,7 +20,6 @@ using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -28,6 +27,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools {
@@ -228,5 +228,16 @@ namespace Microsoft.PythonTools {
             return res;
         }
 
+        internal static bool IsOpenGrouping(this ClassificationSpan span) {
+            return span.ClassificationType == PythonClassifierProvider.Instance.GroupingClassification &&
+                span.Span.Length == 1 &&
+                (span.Span.GetText() == "{" || span.Span.GetText() == "[" || span.Span.GetText() == "(");
+        }
+
+        internal static bool IsCloseGrouping(this ClassificationSpan span) {
+            return span.ClassificationType == PythonClassifierProvider.Instance.GroupingClassification &&
+                span.Span.Length == 1 &&
+                (span.Span.GetText() == "}" || span.Span.GetText() == "]" || span.Span.GetText() == ")");
+        }
     }
 }

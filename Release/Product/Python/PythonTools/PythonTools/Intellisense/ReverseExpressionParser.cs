@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                     break;
                                 }
                             }
-                        } else if (token.ClassificationType == Classifier.Provider.OpenGroupingClassification || text == "[" || text == "{") {
+                        } else if (token.IsOpenGrouping()) {
                             if (nesting != 0) {
                                 nesting--;
                                 nestingChanged = true;
@@ -118,8 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 }
                                 break;
                             }
-                        } else if (token.ClassificationType == Classifier.Provider.CloseGroupingClassification ||
-                            text == "]" || text == "}") {
+                        } else if (token.IsCloseGrouping()) {
                             nesting++;
                             nestingChanged = true;
                         } else if (token.ClassificationType == Classifier.Provider.CommaClassification) {

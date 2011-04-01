@@ -105,7 +105,6 @@
         <Directory Id="Dir_StartMenu" Name="$(var.ProductName)">
           <Component Id="Comp_StartMenuItems" DiskId="1" Guid="6E28799A-BDE6-4713-BE45-FA935484CFBA">
             <Shortcut Id="Shortcut_Readme" Directory="Dir_StartMenu" Name="Readme" Target="[#File_Readme.html]" />
-            <Shortcut Id="Shortcut_PyTools" Directory="Dir_StartMenu" Name="Python Tools for Visual Studio" Target="[DEVENV_PATH]devenv.exe" />
 
             <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools' Type='string' Value='Installed' KeyPath='yes' />
             <RemoveFolder Id='Comp_StartMenuItems' On='uninstall'/>

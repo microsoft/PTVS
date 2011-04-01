@@ -209,7 +209,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public void Define(string name) {
             PythonVariable binding;
-            if (_variables.TryGetValue(name, out binding)) {
+            if (name != null && _variables.TryGetValue(name, out binding)) {
                 SetAssigned(binding, true);
                 SetInitialized(binding, true);
             }
