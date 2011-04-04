@@ -864,8 +864,8 @@ namespace Microsoft.PythonTools.Project
             {
                 case (__VSHPROPID)__VSHPROPID4.VSHPROPID_TargetFrameworkMoniker:
                     // really only here for testing so WAP projects load correctly...
-                    return "NETFramework,Version=v4.0,Profile=Client";
-
+                    // But this also impacts the toolbox by filtering what available items there are.
+                    return ".NETFramework,Version=v4.0,Profile=Client";
                 case __VSHPROPID.VSHPROPID_ConfigurationProvider:
                     return this.ConfigProvider;
 

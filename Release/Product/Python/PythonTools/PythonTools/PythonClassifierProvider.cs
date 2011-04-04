@@ -38,7 +38,6 @@ namespace Microsoft.PythonTools {
         private IClassificationType _keyword;
         private IClassificationType _operator;
         private IClassificationType _groupingClassification;
-        private IClassificationType _loseGroupingClassification;
         private IClassificationType _dotClassification;
         private IClassificationType _commaClassification;
         private readonly IContentType _type;
