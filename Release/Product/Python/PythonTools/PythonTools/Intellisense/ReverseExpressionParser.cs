@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (start.HasValue) {
+            if (start.HasValue && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0) {
                 return new SnapshotSpan(
                     Snapshot,
                     new Span(

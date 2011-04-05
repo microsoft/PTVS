@@ -278,7 +278,8 @@ namespace Microsoft.PythonTools.Options {
                 );
             }
 
-            switch(new GenerateIntellisenseDbDialog(CurrentOptions, DatabaseGenerated).ShowDialog()) {
+            var curFactory = CurrentOptions.Factory;
+            switch(new GenerateIntellisenseDbDialog(CurrentOptions, () => DatabaseGenerated(curFactory)).ShowDialog()) {
                 case DialogResult.OK:
                     MessageBox.Show("Analysis is complete and now available.");
                     break;
@@ -288,9 +289,9 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        private void DatabaseGenerated() {
+        private void DatabaseGenerated(IPythonInterpreterFactory curFactory) {
             // default analyzer
-            if (PythonToolsPackage.Instance.DefaultAnalyzer.InterpreterFactory == CurrentOptions.Factory) {
+            if (PythonToolsPackage.Instance.DefaultAnalyzer.InterpreterFactory == curFactory) {
                 PythonToolsPackage.Instance.RecreateAnalyzer();
             }
 
@@ -299,7 +300,7 @@ namespace Microsoft.PythonTools.Options {
                 var pyProj = project.GetPythonProject();
                 if (pyProj != null) {
                     var analyzer = pyProj.GetAnalyzer();
-                    if (analyzer != null && analyzer.InterpreterFactory == CurrentOptions.Factory) {
+                    if (analyzer != null && analyzer.InterpreterFactory == curFactory) {
                         pyProj.ClearInterpreter();
                     }
                 }

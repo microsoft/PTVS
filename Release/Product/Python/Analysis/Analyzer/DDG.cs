@@ -158,17 +158,17 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             // look for builtin / user-defined modules first
             ModuleInfo module = userMod as ModuleInfo;
             if (module != null) {
-                var modVal = module.Scope.CreateVariable(node, _unit, impName);
-                Scopes[Scopes.Length - 1].GetLinkedVariables(saveName).Add(modVal);
+                var importedValue = module.Scope.CreateVariable(node, _unit, impName);
+                Scopes[Scopes.Length - 1].GetLinkedVariables(saveName).Add(importedValue);
 
-                newTypes = newTypes.Union(modVal.Types, ref madeSet);
+                newTypes = newTypes.Union(importedValue.Types, ref madeSet);
             }
 
             BuiltinModule builtinModule = userMod as BuiltinModule;
             if (builtinModule != null) {
-                var modVal = builtinModule.GetMember(node, _unit, impName);
+                var importedValue = builtinModule.GetMember(node, _unit, impName);
 
-                newTypes = newTypes.Union(modVal, ref madeSet);
+                newTypes = newTypes.Union(importedValue, ref madeSet);
 
                 builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
             }

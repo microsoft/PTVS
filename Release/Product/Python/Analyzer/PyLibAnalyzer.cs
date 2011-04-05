@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Analysis {
         
         private static bool IsPythonFile(string file) {
             string filename = Path.GetFileName(file);
-            return filename.Length > 0 && Char.IsLetter(filename[0]) && // distros include things like '1col.py' in tests which aren't valid module names, ignore those.
+            return filename.Length > 0 && (Char.IsLetter(filename[0]) || filename[0] == '_') && // distros include things like '1col.py' in tests which aren't valid module names, ignore those.
                 file.EndsWith(".py", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".pyw", StringComparison.OrdinalIgnoreCase);
         }
     }
