@@ -4,7 +4,7 @@ if ($args.Length -eq 0) {
 }
 
 tf edit ..\..\..\Build\AssemblyVersion.cs
-if ($LASTERRORCODE -gt 0) {
+if ($LASTEXITCODE -gt 0) {
     echo "Failed to check out"
     exit 2
 }
@@ -16,13 +16,13 @@ $text = $text.Replace("0.7.4100.000", $version)
 [System.IO.File]::WriteAllText((Resolve-Path ..\..\..\Build\AssemblyVersion.cs), $text)
 
 msbuild .\dirs.proj /m /p:Configuration=Release /p:WixVersion=$version
-if ($LASTERRORCODE -gt 0) {
+if ($LASTEXITCODE -gt 0) {
 	echo Build failed
 	exit 3
 }
 
 msbuild .\dirs.proj /p:Configuration=Debug /p:WixVersion=$version
-if ($LASTERRORCODE -gt 0) {
+if ($LASTEXITCODE -gt 0) {
 	echo "Build failed"
 	exit 4
 }
@@ -77,13 +77,13 @@ copy -force -recurse ..\..\..\Binaries\x64\Release\*.dll $args\Release\Binaries\
 copy -force -recurse ..\..\..\Binaries\x64\Release\*.exe $args\Release\Binaries\x64
 
 
-tfpt scorch /noprompt
+#tfpt scorch /noprompt
 
 mkdir $args\Sources\Incubation
 xcopy /s ..\..\..\* $args\Sources
 
 tf undo /noprompt ..\..\..\Build\AssemblyVersion.cs
-if ($LASTERRORCODE -gt 0) {
+if ($LASTEXITCODE -gt 0) {
     echo "Failed to check out"
     exit 2
 }
