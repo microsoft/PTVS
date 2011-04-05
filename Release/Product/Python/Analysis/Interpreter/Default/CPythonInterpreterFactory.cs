@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -100,6 +101,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return GenerateCompletionDatabaseWorker(options, databaseGenerationCompleted);
         }
 
+        const string EventViewerSource = "Python Tools for Visual Studio";
+        const string EventViewerLog = "Application";
+
         private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
             if (String.IsNullOrEmpty(Configuration.InterpreterPath)) {
                 return false;
@@ -122,8 +126,17 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             var proc = new Process();
             proc.StartInfo = psi;
-            proc.Start();
-            proc.WaitForExit();
+            try {
+                proc.Start();
+                proc.WaitForExit();
+            } catch (Win32Exception ex) {
+                // failed to start process, interpreter doesn't exist?           
+                if (!EventLog.SourceExists(EventViewerSource))
+                    EventLog.CreateEventSource(EventViewerSource, EventViewerLog);
+
+                EventLog.WriteEntry(EventViewerSource, "Failed to start analysis " + ex.ToString(), EventLogEntryType.Error);
+                return false;
+            }
 
             if (proc.ExitCode == 0 && (options & GenerateDatabaseOptions.StdLibDatabase) != 0) {
                 Thread t = new Thread(x => {
@@ -140,14 +153,22 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         proc = new Process();
                         proc.StartInfo = psi;
 
-                        proc.Start();
-                        proc.WaitForExit();
-
-                        if (proc.ExitCode == 0) {
-                            lock (_interpreters) {
-                                _typeDb = new TypeDatabase(outPath, Is3x);
-                                OnNewDatabaseAvailable();
+                        try {
+                            proc.Start();
+                            proc.WaitForExit();
+                            
+                            if (proc.ExitCode == 0) {
+                                lock (_interpreters) {
+                                    _typeDb = new TypeDatabase(outPath, Is3x);
+                                    OnNewDatabaseAvailable();
+                                }
                             }
+                        } catch (Win32Exception ex) {
+                            // failed to start the process           
+                            if (!EventLog.SourceExists(EventViewerSource))
+                                EventLog.CreateEventSource(EventViewerSource, EventViewerLog);
+
+                            EventLog.WriteEntry(EventViewerSource, "Failed to start 2nd analysis " + ex.ToString(), EventLogEntryType.Error);
                         }
 
                         databaseGenerationCompleted();

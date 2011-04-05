@@ -14,7 +14,8 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-        PyToolsDir=$(ProjectDir)..\..\Python\PythonTools\
+        PyToolsDir=$(ProjectDir)..\..\Python\PythonTools\;
+        MsiVersion=$(WixVersion)
     </DefineConstants>
   </PropertyGroup>
   <PropertyGroup>

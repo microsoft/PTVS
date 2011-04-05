@@ -3,7 +3,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include PythonToolsInstallerVars.wxi ?>
 
-  <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="0.7.4100.0" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
+  <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
     <Package InstallerVersion="300" Compressed="yes"  />   
 
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
