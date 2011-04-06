@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools {
     [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
-    [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advenced", "114")]
+    [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "114")]
     [ProvideOptionPage(typeof(PythonInterpreterOptionsPage), "Python Tools", "Interpreters", 115, 116, true)]
     [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
     [ProvideOptionPage(typeof(PythonAdvancedOptionsPage), "Python Tools", "Advanced", 115, 118, true)]

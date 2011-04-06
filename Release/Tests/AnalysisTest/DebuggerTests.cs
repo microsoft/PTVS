@@ -89,7 +89,7 @@ namespace AnalysisTest {
 
             AssertWaited(brkHit);
 
-            var frames = thread.GetFrames();
+            var frames = thread.Frames;
 
             AutoResetEvent evalComplete = new AutoResetEvent(false);
             PythonEvaluationResult evalRes = null;
@@ -193,7 +193,7 @@ namespace AnalysisTest {
 
             AssertWaited(brkHit);
 
-            var moduleFrame = thread.GetFrames()[0];
+            var moduleFrame = thread.Frames[0];
             Assert.AreEqual(moduleFrame.StartLine, 1);
             if (GetType() != typeof(DebuggerTestsIpy)) {
                 Assert.AreEqual(moduleFrame.EndLine, 13);
@@ -219,7 +219,7 @@ namespace AnalysisTest {
             AssertWaited(stepDone);
 
             // z shouldn't be defined
-            var frames = thread.GetFrames();
+            var frames = thread.Frames;
             new HashSet<string>(new[] { "x", "z" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
 
             // set break point in module, run until we hit it.
@@ -229,7 +229,7 @@ namespace AnalysisTest {
             AssertWaited(brkHit);
 
             // f shouldn't be defined.
-            frames = thread.GetFrames();
+            frames = thread.Frames;
             new HashSet<string>(new[] { "sys", "g" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
 
             process.Continue();
@@ -394,7 +394,7 @@ namespace AnalysisTest {
 
             AssertWaited(brkHit);
 
-            var frames = thread.GetFrames();
+            var frames = thread.Frames;
 
             PythonEvaluationResult obj = null;
             string errorMsg;
@@ -468,7 +468,7 @@ namespace AnalysisTest {
 
             AssertWaited(brkHit);
 
-            var frames = thread.GetFrames();
+            var frames = thread.Frames;
             var localsExpected = new HashSet<string>(localsNames);
             var paramsExpected = new HashSet<string>(paramNames);
             Assert.IsTrue(localsExpected.ContainsExactly(frames[0].Locals.Select(x => x.Expression)));
@@ -625,7 +625,7 @@ namespace AnalysisTest {
 
                 processLoad = stepComplete = false;
 
-                var frames = thread.GetFrames();
+                var frames = thread.Frames;
                 var stepInfo = kinds[curStep];
                 Assert.AreEqual(stepInfo.StartLine, frames[0].LineNo, String.Format("{0} != {1} on {2} step", stepInfo.StartLine, frames[0].LineNo, curStep));
 

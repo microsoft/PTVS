@@ -1734,6 +1734,44 @@ abc = 42
             AssertContainsExactly(x.Analysis.GetTypesFromName("abc", 1), IntType);
         }
 
+        [TestMethod]
+        public void TestPackageRelativeImport() {
+            string tempPath = Path.GetTempPath();
+            Directory.CreateDirectory(Path.Combine(tempPath, "foo"));
+
+            var files = new[] { 
+                new { Content = "",                   FullPath = Path.Combine(tempPath, "foo\\__init__.py") },
+                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "foo\\x.py") } ,
+                new { Content = "abc = 42",           FullPath = Path.Combine(tempPath, "foo\\y.py") } 
+            };
+
+            var srcs = new TextReader[files.Length];
+            for(int i = 0; i<files.Length; i++) {
+                srcs[i] = GetSourceUnit(files[i].Content, files[i].FullPath);
+                File.WriteAllText(files[i].FullPath, files[i].Content);
+            }
+            
+            var src1 = srcs[0];
+            var src2 = srcs[1];
+            var src3 = srcs[2];
+
+            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+
+            var package = state.AddModule("foo", files[0].FullPath, EmptyAnalysisCookie.Instance);
+            var x = state.AddModule("foo.x", files[1].FullPath, EmptyAnalysisCookie.Instance);
+            var y = state.AddModule("foo.y", files[2].FullPath, EmptyAnalysisCookie.Instance);
+
+            Prepare(package, src1);
+            Prepare(x, src2);
+            Prepare(y, src3);
+
+            package.Analyze();
+            x.Analyze();
+            y.Analyze();
+
+            AssertContainsExactly(x.Analysis.GetTypesFromName("abc", 1), IntType);
+        }
+
         /// <summary>
         /// Verify that the analyzer has the proper algorithm for turning a filename into a package name
         /// </summary>

@@ -111,8 +111,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (oldParent != null) {
                 // update us in our parent package
-                _myScope.ParentPackage = oldParent;
-                oldParent.Scope.SetVariable(_tree, _unit, _moduleName.Substring(_moduleName.IndexOf('.') + 1), _myScope.SelfSet, false);
+                oldParent.AddChildPackage(_myScope, _unit, _moduleName.Substring(_moduleName.IndexOf('.') + 1));
             }
 
             var unit = _unit = new AnalysisUnit(_tree, new InterpreterScope[] { _myScope.Scope });
@@ -159,8 +158,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                         ModuleInfo childModule;
                         if (_projectState.ModulesByFilename.TryGetValue(file, out childModule)) {
-                            _myScope.Scope.SetVariable(childModule.ProjectEntry.Tree, _unit, Path.GetFileNameWithoutExtension(file), childModule, false);
-                            childModule.ParentPackage = _myScope;
+                            _myScope.AddChildPackage(childModule, _unit, Path.GetFileNameWithoutExtension(file));
                         }
                     }
 
@@ -168,8 +166,7 @@ namespace Microsoft.PythonTools.Analysis {
                         string package = Path.Combine(packageDir, "__init__.py");
                         ModuleInfo childPackage;
                         if (File.Exists(package) && _projectState.ModulesByFilename.TryGetValue(package, out childPackage)) {
-                            _myScope.Scope.SetVariable(childPackage.ProjectEntry.Tree, _unit, Path.GetFileName(packageDir), childPackage, false);
-                            childPackage.ParentPackage = _myScope;
+                            _myScope.AddChildPackage(childPackage, _unit, Path.GetFileName(packageDir));
                         }
                     }
                 }

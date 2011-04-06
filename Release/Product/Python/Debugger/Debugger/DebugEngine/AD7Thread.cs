@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private string GetCurrentLocation(bool fIncludeModuleName) {
-            return _debuggedThread.GetFrames()[0].FunctionName;
+            return _debuggedThread.Frames[0].FunctionName;
         }
 
         internal PythonThread GetDebuggedThread() {
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Retrieves a list of the stack frames for this thread.
         // We currently call into the process and get the frames.  We might want to cache the frame info.
         int IDebugThread2.EnumFrameInfo(enum_FRAMEINFO_FLAGS dwFieldSpec, uint nRadix, out IEnumDebugFrameInfo2 enumObject) {
-            var stackFrames = _debuggedThread.GetFrames();
+            var stackFrames = _debuggedThread.Frames;
             int numStackFrames = stackFrames.Count;
             FRAMEINFO[] frameInfoArray;
 
@@ -205,8 +205,19 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                 if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_CATEGORY) != 0) {
                     // Thread category is being requested
-                    props[0].dwThreadCategory = 0;
+                    if (_debuggedThread.IsWorkerThread) {
+                        props[0].dwThreadCategory = (uint)enum_THREADCATEGORY.THREADCATEGORY_Worker;
+                    } else {
+                        props[0].dwThreadCategory = (uint)enum_THREADCATEGORY.THREADCATEGORY_Main;
+                    }
+                    
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_CATEGORY;
+                }
+
+                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_ID) != 0) {
+                    // Thread category is being requested
+                    props[0].dwThreadId = (uint)_debuggedThread.Id;
+                    props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_ID;
                 }
 
                 if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_AFFINITY) != 0) {
@@ -226,6 +237,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return hRes;
         }
 
+        enum enum_THREADCATEGORY {
+            THREADCATEGORY_Worker = 0,
+            THREADCATEGORY_UI = (THREADCATEGORY_Worker + 1),
+            THREADCATEGORY_Main = (THREADCATEGORY_UI + 1),
+            THREADCATEGORY_RPC = (THREADCATEGORY_Main + 1),
+            THREADCATEGORY_Unknown = (THREADCATEGORY_RPC + 1)
+        }
+   
         #endregion
 
         #region Uncalled interface methods

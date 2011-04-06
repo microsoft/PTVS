@@ -426,18 +426,21 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal BuiltinModule ImportModule(string modName, bool bottom = true) {
-            IPythonModule mod;
+        internal BuiltinModule ImportBuiltinModule(string modName, bool bottom = true) {
+            IPythonModule mod = null;
 
             if (modName.IndexOf('.') != -1) {
                 string[] names = modName.Split('.');
-                mod = _interpreter.ImportModule(names[0]);
-                if (bottom) {
-                    int curIndex = 1;
-                    while (mod != null && curIndex < names.Length) {
-                        mod = mod.GetMember(_defaultContext, names[curIndex++]) as IPythonModule;
+                if (names[0].Length > 0) {
+                    mod = _interpreter.ImportModule(names[0]);
+                    if (bottom) {
+                        int curIndex = 1;
+                        while (mod != null && curIndex < names.Length) {
+                            mod = mod.GetMember(_defaultContext, names[curIndex++]) as IPythonModule;
+                        }
                     }
                 }
+                // else relative import, we're not getting a builtin module...
             } else {
                 mod = _interpreter.ImportModule(modName);
             }

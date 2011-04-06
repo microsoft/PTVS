@@ -18,10 +18,13 @@ namespace Microsoft.PythonTools.Debugger {
     class PythonThread {
         private readonly int _identity;
         private readonly PythonProcess _process;
+        private readonly bool _isWorkerThread;
+        private IList<PythonStackFrame> _frames;
 
-        internal PythonThread(PythonProcess process, int identity) {
+        internal PythonThread(PythonProcess process, int identity, bool isWorkerThread) {
             _process = process;
             _identity = identity;
+            _isWorkerThread = isWorkerThread;
         }
 
         public void StepInto() {
@@ -40,13 +43,23 @@ namespace Microsoft.PythonTools.Debugger {
             _process.SendResumeThread(_identity);
         }
 
+        public bool IsWorkerThread {
+            get {
+                return _isWorkerThread;
+            }
+        }
 
         internal void ClearSteppingState() {
             _process.SendClearStepping(_identity);
         }
 
-        public IList<PythonStackFrame> GetFrames() {
-            return _process.GetThreadFrames(_identity);
+        public IList<PythonStackFrame> Frames {
+            get {
+                return _frames;
+            }
+            set {
+                _frames = value;
+            }
         }
 
         public PythonProcess Process {

@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly Dictionary<int, PythonThread> _threads = new Dictionary<int, PythonThread>();
         private readonly Dictionary<int, PythonBreakpoint> _breakpoints = new Dictionary<int, PythonBreakpoint>();
         private readonly IdDispenser _ids = new IdDispenser();
-        private readonly AutoResetEvent _frameEvent = new AutoResetEvent(false);        // set when list of pending frames returns
         private readonly AutoResetEvent _lineEvent = new AutoResetEvent(false);         // set when result of setting current line returns
         private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();        
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
@@ -45,8 +44,8 @@ namespace Microsoft.PythonTools.Debugger {
         private bool _sentExited;
         private Socket _socket;
         private int _breakpointCounter;
-        private List<PythonStackFrame> _frames;         // contains list of frames for passing back to requesting thread        
         private bool _setLineResult;                    // contains result of attempting to set the current line of a frame
+        private bool _createdFirstThread;
 
         private static Random _portGenerator = new Random();
 
@@ -379,8 +378,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             Debug.WriteLine("Received frames for thread {0}", tid);
-            _frames = frames;
-            _frameEvent.Set();
+            thread.Frames = frames;
         }
 
         private void HandleProcessLoad(Socket socket) {
@@ -469,7 +467,8 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleThreadCreate(Socket socket) {
             // new thread
             int threadId = socket.ReadInt();
-            var thread = _threads[threadId] = new PythonThread(this, threadId);
+            var thread = _threads[threadId] = new PythonThread(this, threadId, _createdFirstThread);
+            _createdFirstThread = true;
 
             var created = ThreadCreated;
             if (created != null) {
@@ -547,20 +546,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         [DllImport("kernel32", SetLastError = true, ExactSpelling = true)]
         public static extern Int32 WaitForSingleObject(SafeWaitHandle handle, Int32 milliseconds);
-
-        internal IList<PythonStackFrame> GetThreadFrames(int threadId) {
-            Debug.WriteLine("Requesting frames for thread {0}", threadId);
-            _socket.Send(GetThreadFramesCommandBytes);
-            _socket.Send(BitConverter.GetBytes(threadId));
-
-            // wait up to 2 seconds for frames...
-            for (int i = 0; i < 20 && 
-                _socket.Connected && 
-                WaitForSingleObject(_frameEvent.SafeWaitHandle, 100) != 0; i++) {
-            }
-
-            return Interlocked.Exchange(ref _frames, null) ?? (IList<PythonStackFrame>)new PythonStackFrame[0];
-        }
 
         internal void BindBreakpoint(PythonBreakpoint breakpoint) {
             DebugWriteCommand("Bind Breakpoint");
@@ -679,7 +664,7 @@ namespace Microsoft.PythonTools.Debugger {
             // wait up to 2 seconds for line event...
             for (int i = 0; i < 20 &&
                 _socket.Connected &&
-                WaitForSingleObject(_frameEvent.SafeWaitHandle, 100) != 0; i++) {
+                WaitForSingleObject(_lineEvent.SafeWaitHandle, 100) != 0; i++) {
             }
 
             return _setLineResult;

@@ -271,6 +271,9 @@ class Thread(object):
         assert not self._is_blocked
         assert self.id == thread.get_ident(), 'wrong thread identity' + str(self.id) + ' ' + str(thread.get_ident())    # we should only ever block ourselves
         
+        # send thread frames before we block
+        self.enum_thread_frames_locally()
+        
         self.stopped_on_line = self.cur_frame.f_lineno
         # need to synchronize w/ sending the reason we're blocking
         self._block_starting_lock.acquire()
@@ -395,9 +398,6 @@ class Thread(object):
             report_children(execution_id, items, is_index, is_enumerate)
         except:
             report_children(execution_id, [], False, False)
-
-    def enum_thread_frames_on_thread(self):
-        self.schedule_work(self.enum_thread_frames_locally)
 
     def enum_thread_frames_locally(self):
         send_lock.acquire()
@@ -536,7 +536,6 @@ class DebuggerLoop(object):
             cmd('brka') : self.command_break_all,
             cmd('resa') : self.command_resume_all,
             cmd('rest') : self.command_resume_thread,
-            cmd('thrf') : self.command_enumerate_thread_frames,
             cmd('exec') : self.command_execute_code,
             cmd('chld') : self.command_enum_children,
             cmd('setl') : self.command_set_lineno,
@@ -672,16 +671,6 @@ class DebuggerLoop(object):
             self.conn.send(struct.pack('i', 0))
             send_lock.release()
 
-    def command_enumerate_thread_frames(self):
-        # enumerate thread frames
-        tid = read_int(self.conn)
-        thread = get_thread_from_id(tid)
-                
-        # enumerate the threads on the frame which we're interested in.  This avoids deadlocks if
-        # this thread happens to hold the import lock and calling repr() would result in the 
-        # import lock running.  It also makes this call async so we don't block our message loop.
-        thread.enum_thread_frames_on_thread()
-    
     def command_execute_code(self):
         # execute given text in specified frame
         text = read_string(self.conn)

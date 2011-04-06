@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
@@ -29,6 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly Dictionary<Node, InterpreterScope> _scopes;    // scopes from Ast node to InterpreterScope
         private readonly WeakReference _weakModule;
         private readonly IModuleContext _context;
+        private Dictionary<string, WeakReference> _packageModules;
         private ModuleInfo _parentPackage;
         private DependentData _definition = new DependentData();
 
@@ -60,6 +62,35 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public ModuleInfo ParentPackage {
             get { return _parentPackage; }
             set { _parentPackage = value; }
+        }
+
+        public void AddChildPackage(ModuleInfo childPackage, AnalysisUnit curUnit, string name) {
+            string realName = childPackage.Name;
+            int lastDot;
+            if ((lastDot = childPackage.Name.LastIndexOf('.')) != -1) {
+                realName = childPackage.Name.Substring(lastDot + 1);
+            }
+            Debug.Assert(name == realName);
+            childPackage.ParentPackage = this;            
+            Scope.SetVariable(childPackage.ProjectEntry.Tree, curUnit, name, childPackage.SelfSet, false);
+
+            if (_packageModules == null) {
+                _packageModules = new Dictionary<string, WeakReference>();
+            }
+            _packageModules[realName] = childPackage.WeakModule;
+        }
+
+        public ModuleInfo GetChildPackage(string name) {
+            WeakReference weakMod;
+            if (_packageModules != null && _packageModules.TryGetValue(name, out weakMod)) {
+                var res = weakMod.Target;
+                if (res != null) {
+                    return (ModuleInfo)res;
+                }
+
+                _packageModules.Remove(name);
+            }
+            return null;
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {

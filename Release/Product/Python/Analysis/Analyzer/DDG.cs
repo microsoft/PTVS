@@ -179,16 +179,33 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public override bool Walk(FromImportStatement node) {
             ModuleReference moduleRef;
             Namespace userMod = null;
-            var modName = node.Root.MakeString();
+            RelativeModuleName relativeName = node.Root as RelativeModuleName;
+            if (relativeName != null) {
+                // attempt relative import...
+                var curPackage = GlobalScope;
+                for (int i = 0; i < relativeName.DotCount && curPackage != null; i++) {
+                    curPackage = curPackage.ParentPackage;
+                }
 
-            if (!ProjectState.Modules.TryGetValue(modName, out moduleRef)) {                
-                userMod = ProjectState.ImportModule(modName);
+                for (int i = 0; i < relativeName.Names.Count && curPackage != null; i++) {
+                    curPackage = curPackage.GetChildPackage(relativeName.Names[i]);
+                }
+
+                userMod = curPackage;
             }
 
-            if (moduleRef != null) {
-                userMod = moduleRef.Module;
-            } else if(userMod == null) {
-                moduleRef = ProjectState.Modules[modName] = new ModuleReference();
+            if (userMod == null) {
+                var modName = node.Root.MakeString();
+
+                if (!ProjectState.Modules.TryGetValue(modName, out moduleRef)) {
+                    userMod = ProjectState.ImportBuiltinModule(modName);
+                }
+
+                if (moduleRef != null) {
+                    userMod = moduleRef.Module;
+                } else if (userMod == null) {
+                    moduleRef = ProjectState.Modules[modName] = new ModuleReference();
+                }
             }
 
             var asNames = node.AsNames ?? node.Names;
@@ -344,7 +361,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 var def = Scopes[Scopes.Length - 1].CreateVariable(impNode, _unit, saveName);
                 if (!ProjectState.Modules.TryGetValue(strImpName, out modRef)) {
-                    var builtinModule = ProjectState.ImportModule(strImpName, impNode.Names.Count > 1 && !String.IsNullOrEmpty(newName));
+                    var builtinModule = ProjectState.ImportBuiltinModule(strImpName, impNode.Names.Count > 1 && !String.IsNullOrEmpty(newName));
 
                     if (builtinModule != null) {
                         builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
