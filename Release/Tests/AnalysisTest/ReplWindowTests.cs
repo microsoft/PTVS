@@ -1158,6 +1158,58 @@ namespace AnalysisTest {
         }
 
         /// <summary>
+        /// Type some text that leaves auto-indent at the end of the input and also outputs, make sure the auto indent (regression for http://pytools.codeplex.com/workitem/92)
+        /// is gone before we do the input.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestPrintWithParens() {
+            var interactive = Prepare();
+
+            string inputCode = "print ('a',";
+            const string autoIndent = "       ";
+            Keyboard.Type(inputCode);
+            interactive.WaitForText(ReplPrompt + inputCode);
+            Keyboard.Type("\r");
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
+            const string b = "'b',";
+            Keyboard.Type(b + "\r");
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent);
+            const string c = "'c')";
+            Keyboard.Type(c + "\r");
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt + autoIndent);
+            Keyboard.Type(Key.Back);    // auto-delete
+            Keyboard.Type(Key.Back);    // delete 1 space
+            Keyboard.Type(Key.Back);    // delete 1 space
+            Keyboard.Type(Key.Back);    // delete 1 space
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt);
+        }
+
+        /// <summary>
+        /// Make sure that we can successfully delete an autoindent inputted span (regression for http://pytools.codeplex.com/workitem/93)
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestUndeletableIndent() {
+            var interactive = Prepare();
+
+            string inputCode = "print ('a',";
+            const string autoIndent = "       ";
+            Keyboard.Type(inputCode);
+            interactive.WaitForText(ReplPrompt + inputCode);
+            Keyboard.Type("\r");
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
+            const string b = "'b',";
+            Keyboard.Type(b + "\r");
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent);
+            const string c = "'c')";
+            Keyboard.Type(c + "\r");
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt + autoIndent);
+            Keyboard.Type("\r");
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt + autoIndent, "('a', 'b', 'c')", ReplPrompt);
+        }
+
+        /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]

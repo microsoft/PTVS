@@ -19,10 +19,7 @@ namespace Microsoft.IronPythonTools {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [Description("Python Tools IronPython Interpreter")]
     class IpyToolsPackage : Package {
-        internal static IpyToolsPackage Instance;
-
         public IpyToolsPackage() {
-            Instance = this;
         }
     }
 }

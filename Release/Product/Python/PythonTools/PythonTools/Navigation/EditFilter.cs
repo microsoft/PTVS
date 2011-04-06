@@ -592,22 +592,31 @@ namespace Microsoft.PythonTools.Language {
                             _textView.Selection.IsEmpty) {
                             int indentSize = _textView.Options.GetIndentSize();
                             // smart dedent
-                            var containingLine = _textView.Caret.Position.BufferPosition.GetContainingLine();
-                            var curLineLine = containingLine.GetText();
-                            
-                            int lineOffset = _textView.Caret.Position.BufferPosition.Position - containingLine.Start.Position;
-                            if (lineOffset >= indentSize) {
-                                bool allSpaces = true;
-                                for (int i = lineOffset - 1; i >= lineOffset - indentSize; i--) {
-                                    if (curLineLine[i] != ' ') {
-                                        allSpaces = false;
-                                        break;
-                                    }
-                                }
+                            var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
+                                new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, _textView.Caret.Position.BufferPosition),
+                                PointTrackingMode.Positive,
+                                PythonCoreConstants.IsPythonContent,
+                                PositionAffinity.Successor
+                            );
 
-                                if (allSpaces) {
-                                    _textView.TextBuffer.Delete(new Span(_textView.Caret.Position.BufferPosition.Position - indentSize, indentSize));
-                                    return VSConstants.S_OK;
+                            if (targetPt != null) {
+                                var containingLine = targetPt.Value.GetContainingLine();
+                                var curLineLine = containingLine.GetText();
+
+                                int lineOffset = targetPt.Value.Position - containingLine.Start.Position;
+                                if (lineOffset >= indentSize) {
+                                    bool allSpaces = true;
+                                    for (int i = lineOffset - 1; i >= lineOffset - indentSize; i--) {
+                                        if (curLineLine[i] != ' ') {
+                                            allSpaces = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (allSpaces) {
+                                        _textView.TextBuffer.Delete(new Span(_textView.Caret.Position.BufferPosition.Position - indentSize, indentSize));
+                                        return VSConstants.S_OK;
+                                    }
                                 }
                             }
                         }

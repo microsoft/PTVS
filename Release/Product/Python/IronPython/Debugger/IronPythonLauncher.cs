@@ -261,7 +261,8 @@ namespace Microsoft.IronPythonTools.Debugger {
                 dbgInfo.clsidCustom = debugEngine.Value;
                 dbgInfo.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd | (uint)__VSDBGLAUNCHFLAGS4.DBGLAUNCH_UseDefaultBrowser;
                 dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
-                VsShellUtilities.LaunchDebugger(IpyToolsPackage.Instance, dbgInfo);
+                
+                VsShellUtilities.LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
             } else {
                 // run the users default browser
                 var handler = GetBrowserHandlerProgId();
@@ -367,9 +368,11 @@ namespace Microsoft.IronPythonTools.Debugger {
                 if (ipy != null) {
                     using (var twoSeven = ipy.OpenSubKey("2.7")) {
                         if (twoSeven != null) {
-                            var path = twoSeven.GetValue("") as string;
-                            if (path != null) {
-                                return path;
+                            using (var installPath = twoSeven.OpenSubKey("InstallPath")) {
+                                var path = installPath.GetValue("") as string;
+                                if (path != null) {
+                                    return path;
+                                }
                             }
                         }
                     }

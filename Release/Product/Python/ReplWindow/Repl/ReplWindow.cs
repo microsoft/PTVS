@@ -1924,6 +1924,8 @@ namespace Microsoft.VisualStudio.Repl {
         private bool TryExecuteActiveCode() {
             bool tryIt = CanExecuteActiveCode();
             if (tryIt) {
+                TrimAutoIndentWhiteSpace();
+
                 ExecuteActiveCode();
             }
             return tryIt;

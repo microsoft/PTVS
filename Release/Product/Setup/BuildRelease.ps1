@@ -5,8 +5,9 @@ if ($args.Length -eq 0) {
 
 tf edit ..\..\..\Build\AssemblyVersion.cs
 if ($LASTEXITCODE -gt 0) {
-    echo "Failed to check out"
-    exit 2
+    # running outside of MS
+    attrib -r ..\..\..\Build\AssemblyVersion.cs
+    copy -force ..\..\..\Build\AssemblyVersion.cs ..\..\..\Build\AssemblyVersion.cs.bak
 }
 
 $version = "0.8." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
@@ -84,6 +85,7 @@ xcopy /s ..\..\..\* $args\Sources
 
 tf undo /noprompt ..\..\..\Build\AssemblyVersion.cs
 if ($LASTEXITCODE -gt 0) {
-    echo "Failed to check out"
-    exit 2
+    copy -force ..\..\..\Build\AssemblyVersion.cs.bak ..\..\..\Build\AssemblyVersion.cs 
+    attrib +r ..\..\..\Build\AssemblyVersion.cs
+    del ..\..\..\Build\AssemblyVersion.cs.bak 
 }
