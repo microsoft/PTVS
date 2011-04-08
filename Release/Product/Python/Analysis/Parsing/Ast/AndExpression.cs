@@ -33,6 +33,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _right; }
         }
 
+        public override string NodeName {
+            get {
+                return "and expression";
+            }
+        }
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_left != null) {

@@ -26,6 +26,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             this._falseExpr = falseExpression;
         }
 
+        public override string NodeName {
+            get {
+                return "conditional expression";
+            }
+        }
+
         public Expression FalseExpression {
             get { return _falseExpr; }
         }

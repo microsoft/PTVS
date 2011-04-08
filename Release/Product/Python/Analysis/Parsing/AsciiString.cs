@@ -24,5 +24,9 @@ namespace Microsoft.PythonTools.Parsing {
                 return _str;
             }
         }
+
+        public override string ToString() {
+            return String;
+        }
     }
 }

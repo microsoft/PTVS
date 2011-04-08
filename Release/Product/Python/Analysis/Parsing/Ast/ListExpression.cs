@@ -20,6 +20,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             : base(items) {
         }
 
+        public override string NodeName {
+            get {
+                return "list display";
+            }
+        }
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (Items != null) {

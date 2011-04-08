@@ -152,7 +152,7 @@
         <MergeRef Id="PythonHpc"/>
       </Feature>
       
-      <Feature Id="Feature_IronPython" Absent="disallow" AllowAdvertise="yes" Level="1" Title="IronPython" Description="IronPython support">
+      <Feature Id="Feature_IronPython" Absent="disallow" AllowAdvertise="yes" Level="1" Title="IronPython support" Description="IronPython support">
         <Condition Level="2">NOT IPY_INSTALLED</Condition>
         <MergeRef Id="IronPythonInterpreter"/>
       </Feature>

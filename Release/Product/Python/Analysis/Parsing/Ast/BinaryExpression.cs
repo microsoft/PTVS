@@ -62,8 +62,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return false;
         }
 
-        internal override string CheckAssign() {
-            return "can't assign to operator";
+        public override string NodeName {
+            get {
+                return "binary operator";
+            }
         }
 
         public override void Walk(PythonWalker walker) {

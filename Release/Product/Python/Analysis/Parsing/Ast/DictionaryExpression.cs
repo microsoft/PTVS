@@ -27,6 +27,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _items; }
         }
 
+        public override string NodeName {
+            get {
+                return "dictionary display";
+            }
+        }
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_items != null) {

@@ -26,8 +26,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public Expression Left {
             get { return _left; }
         }
+
         public Expression Right {
             get { return _right; }
+        }
+
+        public override string NodeName {
+            get {
+                return "or expression";
+            }
         }
 
         public override void Walk(PythonWalker walker) {

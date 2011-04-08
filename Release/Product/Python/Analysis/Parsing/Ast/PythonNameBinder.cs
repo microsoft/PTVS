@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     name.Reference = 
 #endif
                     _binder.Reference(name.Name);
-                } else {                    
+                } else if (innerNode is TupleExpression) {                    
                     WalkTuple((TupleExpression)innerNode);
                 }
             }

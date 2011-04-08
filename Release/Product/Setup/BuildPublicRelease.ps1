@@ -5,7 +5,8 @@ if ($args.Length -eq 0) {
 
 ###################################################################
 # Build the actual binaries
-.\BuildRelease.ps1 $args > release_output.txt
+echo "Building release to $args ..."
+.\BuildRelease.ps1 $args[0] > release_output.txt
 
 ###################################################################
 # Index symbols
@@ -22,7 +23,7 @@ $request += "StatusMail=$env:username;dinov;smortaz`n"
 $request += "UserName=$env:username`n" 
 
 mkdir -force requests
-[System.IO.File]::WriteAllText((Resolve-Path 'request.txt'), $request)
+[System.IO.File]::WriteAllText((get-location).Path + '\request.txt', $request)
 \\symbols\tools\createrequest.cmd -i request.txt -d .\requests -c -s
 
 [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.4, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
@@ -107,11 +108,12 @@ foreach($job in $jobs) {
     do {
         $files = dir $job.JobCompletionPath
         [Console]::Write(".")
+        sleep 5
     } while(!$files);
 }
 
 # save binaries to release share
-$destpath = $args\Release\SignedBinaries
+$destpath = "$args\Release\SignedBinaries"
 mkdir $destpath
 # copy files back to binaries
 foreach($file in dir $firstjob.JobCompletionPath) {
@@ -140,7 +142,7 @@ foreach($file in dir $thirdjob.JobCompletionPath) {
 }
 
 # now generate MSI with signed binaries.
-$file = [System.IO.File]::ReadAllLines('release_output.txt')
+$file = [System.IO.File]::ReadAllLines((get-location).Path + '\release_output.txt')
 foreach($line in $file) {
     if($line.IndexOf('Light.exe') -ne -1) { 
         if($line.IndexOf('Release') -ne -1) { 
@@ -171,6 +173,15 @@ foreach($line in $file) {
     }
 }
 
+$destpath = "$args\Release\UnsignedMsi"
+mkdir $destpath
+move $args\Release\PythonToolsInstaller.msi $args\Release\UnsignedMsi\PythonToolsInstaller.msi
+
+$destpath = "$args\Release\SignedBinariesUnsignedMsi"
+mkdir $destpath
+copy ((get-location).Path + "\..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi") $args\Release\SignedBinariesUnsignedMsi\PythonToolsInstaller.msi
+copy ((get-location).Path + "\..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi") $args\Release\PythonToolsInstaller.msi
+
 #################################################################
 ### Now submit the MSI for signing
 
@@ -185,6 +196,17 @@ $job.AddApprover("mradmila");
 $job.AddApprover("johncos");
 $job.AddApprover("pavaga");
 
-$job.AddFile("..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+$job.AddFile((get-location).Path + "\..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
 
 $job.Send()
+
+[Console]::WriteLine("Waiting for job to complete", $job.JobID)
+do {
+    $files = dir $job.JobCompletionPath
+    [Console]::Write(".")
+    sleep 5
+} while(!$files);
+
+foreach($file in dir $job.JobCompletionPath) {
+    copy -force $file.FullName [System.IO.Path]::Combine($args, "Release\" + $file.Name)
+}

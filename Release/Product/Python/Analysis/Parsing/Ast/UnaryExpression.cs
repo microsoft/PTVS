@@ -34,6 +34,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _op; }
         }
 
+        public override string NodeName {
+            get {
+                return "unary operator";
+            }
+        }
+
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_expression != null) {

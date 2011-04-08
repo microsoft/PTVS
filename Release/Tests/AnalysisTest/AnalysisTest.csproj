@@ -339,6 +339,9 @@
     <Content Include="Python.VS.TestData\DebuggerProject\InfiniteThreads.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\Grammar\AllErrors.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\Grammar\FromImportStmtIncomplete.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
