@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 if (result.Count == 0) {
                     // Old style class?
-                    result.Add(new SimpleOverloadResult(new ParameterResult[0], ClassDefinition.Name, ClassDefinition.Body.Documentation));
+                    result.Add(new SimpleOverloadResult(new ParameterResult[0], ClassDefinition.Name, ClassDefinition.Body.Documentation.TrimDocumentation()));
                 }
 
                 // TODO: Filter out duplicates?
@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return new SimpleOverloadResult(
                 overload.Parameters.RemoveFirst(),
                 ClassDefinition.Name,
-                String.IsNullOrEmpty(doc) ? ClassDefinition.Body.Documentation : doc
+                String.IsNullOrEmpty(doc) ? Documentation : doc
             );
         }
 
@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return new SimpleOverloadResult(
                 overload.Parameters.RemoveFirst(),
                 ClassDefinition.Name,
-                String.IsNullOrEmpty(doc) ? ClassDefinition.Body.Documentation : doc
+                String.IsNullOrEmpty(doc) ? Documentation : doc
             );
         }
 

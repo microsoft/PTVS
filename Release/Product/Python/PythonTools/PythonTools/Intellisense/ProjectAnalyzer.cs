@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
@@ -33,6 +32,7 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -115,12 +115,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Starts monitoring a buffer for changes so we will re-parse the buffer to update the analysis
         /// as the text changes.
         /// </summary>
-        public MonitoredBufferResult MonitorTextBuffer(ITextBuffer buffer) {
+        public MonitoredBufferResult MonitorTextBuffer(ITextView textView, ITextBuffer buffer) {
             IProjectEntry projEntry = CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot));
 
             // kick off initial processing on the buffer        
             lock (_openFiles) {
-                var bufferParser = _queue.EnqueueBuffer(projEntry, buffer);
+                var bufferParser = _queue.EnqueueBuffer(projEntry, textView, buffer);
                 _openFiles[bufferParser] = projEntry;
                 return new MonitoredBufferResult(bufferParser, projEntry);
             }

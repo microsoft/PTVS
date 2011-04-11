@@ -14,6 +14,7 @@
 
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Language;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Operations;
@@ -36,6 +37,7 @@ namespace Microsoft.PythonTools.Editor {
 
         public void ReplWindowCreated(IReplWindow window) {
             var textViewAdapter = _adapterFact.GetViewAdapter(window.TextView);
+            window.TextView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
 
             new EditFilter(window.TextView, textViewAdapter, _editorOpsFactory.GetEditorOperations(window.TextView));
         }

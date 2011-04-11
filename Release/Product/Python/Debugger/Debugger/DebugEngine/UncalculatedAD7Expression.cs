@@ -75,6 +75,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (_frame.StackFrame.Thread.Process.HasExited || result == null) {
                 ppResult = null;
                 return VSConstants.E_FAIL;
+            } else if (result == null) {
+                ppResult = null;
+                return DebuggerConstants.E_EVALUATE_TIMEOUT;
             }
             ppResult = new AD7Property(_frame, result, _writable);
 

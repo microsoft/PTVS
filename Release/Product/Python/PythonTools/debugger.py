@@ -368,6 +368,11 @@ class Thread(object):
                 items = []
                 for index, item in enum:
                     try:
+                        if len(items) > 10000:
+                            # report at most 10000 items.
+                            items.append( ('[...]', 'Evaluation halted because sequence included too many items...') )
+                            break
+                        
                         items.append( ('[' + repr(index) + ']', item) )
                         if maybe_enumerate and not is_enumerate:
                             # check if we can index back into this object, or if we have to use
@@ -378,6 +383,7 @@ class Thread(object):
                                     is_enumerate = True
                             except:
                                 is_enumerate = True
+                                
                     except:
                         # ignore bad objects for now...
                         pass
@@ -962,11 +968,9 @@ def new_thread(tid = None):
     return cur_thread
 
 def do_wait():
-    print('Press enter to continue...')
-    if sys.version >= '3.':
-        input()
-    else:
-        raw_input()
+    import msvcrt    
+    sys.stdout.write('Press any key to continue . . . ')
+    msvcrt.getch()
 
 class _DebuggerOutput(object):
     """file like object which redirects output to the repl window."""

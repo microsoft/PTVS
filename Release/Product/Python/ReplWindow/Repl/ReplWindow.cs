@@ -1074,6 +1074,10 @@ namespace Microsoft.VisualStudio.Repl {
 
         #region Command Filters
 
+        // LineBreak is sent as RETURN to language services. We set this flag to distinguish LineBreak from RETURN 
+        // when we receive it back in post-language command filter.
+        private bool ReturnIsLineBreak;
+
         private sealed class CommandFilter : IOleCommandTarget {
             private readonly ReplWindow _replWindow;
             private readonly bool _preLanguage;
@@ -1110,7 +1114,6 @@ namespace Microsoft.VisualStudio.Repl {
                     case PkgCmdIDList.cmdidReplHistoryNext:
                     case PkgCmdIDList.cmdidReplHistoryPrevious:
                     case PkgCmdIDList.cmdidSmartExecute:
-                    case PkgCmdIDList.cmdidBreakLine:
                         prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
                         return VSConstants.S_OK;
 
@@ -1156,10 +1159,6 @@ namespace Microsoft.VisualStudio.Repl {
                         ClearScreen(insertInputPrompt: true);
                         return VSConstants.S_OK;
 
-                    case PkgCmdIDList.cmdidBreakLine:
-                        ExecuteActiveCode();
-                        return VSConstants.S_OK;
-
                     case PkgCmdIDList.comboIdReplScopes:
                         ScopeComboBoxHandler(pvaIn, pvaOut);
                         return VSConstants.S_OK;
@@ -1178,7 +1177,17 @@ namespace Microsoft.VisualStudio.Repl {
         #region Pre-langauge service IOleCommandTarget
 
         private int PreLanguageCommandFilterQueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            return _languageServiceCommandFilter.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+            var nextTarget = _languageServiceCommandFilter;
+
+            if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
+                switch (prgCmds[0].cmdID) {
+                    case PkgCmdIDList.cmdidBreakLine:
+                        prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        return VSConstants.S_OK;
+                }
+            }
+
+            return nextTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
         private int PreLanguageCommandFilterExec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
@@ -1194,6 +1203,7 @@ namespace Microsoft.VisualStudio.Repl {
                             return VSConstants.S_OK;
                         }
                         
+                        ReturnIsLineBreak = false;
                         break;
 
                     // TODO: move these commands to post-language filter
@@ -1235,6 +1245,14 @@ namespace Microsoft.VisualStudio.Repl {
                         }
                         break;
                 }
+            } else if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
+                switch (nCmdID) {
+                    case PkgCmdIDList.cmdidBreakLine:
+                        // map to RETURN, so that IntelliSense and other services treat this as a new line
+                        Guid group = VSConstants.VSStd2K;
+                        ReturnIsLineBreak = true;
+                        return nextTarget.Exec(ref group, (int)VSConstants.VSStd2KCmdID.RETURN, 0, IntPtr.Zero, IntPtr.Zero);
+                }
             }
 
             return nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
@@ -1254,6 +1272,10 @@ namespace Microsoft.VisualStudio.Repl {
             if (pguidCmdGroup == VSConstants.VSStd2K) {
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.RETURN:
+                        // RETURN might be sent by LineBreak command:
+                        bool trySubmit = !ReturnIsLineBreak;
+                        ReturnIsLineBreak = false;
+    
                         // RETURN that is not handled by any language service is a "try submit" command
                         
                         var langCaret = TextView.BufferGraph.MapDownToBuffer(
@@ -1264,7 +1286,7 @@ namespace Microsoft.VisualStudio.Repl {
                         );
 
                         if (langCaret != null) {
-                            if (CanExecuteActiveCode()) {
+                            if (trySubmit && CanExecuteActiveCode()) {
                                 Submit();
                                 return VSConstants.S_OK;
                             }
@@ -1272,7 +1294,7 @@ namespace Microsoft.VisualStudio.Repl {
                             // insert new line (triggers secondary prompt injection in buffer changed event):
                             _currentLanguageBuffer.Insert(langCaret.Value.Position, GetLineBreak());
                             IndentCurrentLine();
-                            
+
                             return VSConstants.S_OK;
                         }
                         break;

@@ -16,16 +16,19 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Text.Adornments;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IReplEvaluatorProvider))]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         private readonly IPythonInterpreterFactoryProvider[] _interpreters;
+        private readonly IErrorProviderFactory _errorProviderFactory;
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
 
         [ImportingConstructor]
-        public PythonReplEvaluatorProvider([ImportMany]IPythonInterpreterFactoryProvider[] interpreters) {
+        public PythonReplEvaluatorProvider([ImportMany]IPythonInterpreterFactoryProvider[] interpreters, IErrorProviderFactory errorProviderFactory) {
             _interpreters = interpreters;
+            _errorProviderFactory = errorProviderFactory;
         }
 
         #region IReplEvaluatorProvider Members
@@ -37,7 +40,7 @@ namespace Microsoft.PythonTools.Repl {
                 foreach (var interpreter in _interpreters) {
                     foreach (var factory in interpreter.GetInterpreterFactories()) {
                         if (factory.Id == interpreterGuid && version == factory.Configuration.Version) {
-                            return new PythonReplEvaluator(factory);
+                            return new PythonReplEvaluator(factory, _errorProviderFactory);
                         }
                     }
                 }

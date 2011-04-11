@@ -84,6 +84,22 @@ namespace Microsoft.PythonTools.Project
 			throw new NotImplementedException();
 		}
 
+        /// <summary>
+        /// Open a document using a specific editor. This method has no implementation.
+        /// </summary>
+        /// <param name="editorFlags">Specifies actions to take when opening a specific editor. Possible editor flags are defined in the enumeration Microsoft.VisualStudio.Shell.Interop.__VSOSPEFLAGS</param>
+        /// <param name="editorType">Unique identifier of the editor type</param>
+        /// <param name="physicalView">Name of the physical view. If null, the environment calls MapLogicalView on the editor factory to determine the physical view that corresponds to the logical view. In this case, null does not specify the primary view, but rather indicates that you do not know which view corresponds to the logical view</param>
+        /// <param name="logicalView">In MultiView case determines view to be activated by IVsMultiViewDocumentView. For a list of logical view GUIDS, see constants starting with LOGVIEWID_ defined in NativeMethods class</param>
+        /// <param name="docDataExisting">IntPtr to the IUnknown interface of the existing document data object</param>
+        /// <param name="frame">A reference to the window frame that is mapped to the document</param>
+        /// <param name="windowFrameAction">Determine the UI action on the document window</param>
+        /// <returns>NotImplementedException</returns>
+        /// <remarks>See FileDocumentManager for an implementation of this method</remarks>
+        public virtual int ReOpenWithSpecific(uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame frame, WindowFrameShowAction windowFrameAction) {
+            return OpenWithSpecific(editorFlags, ref editorType, physicalView, ref logicalView, docDataExisting, out frame, windowFrameAction);
+        }
+
 		/// <summary>
 		/// Close an open document window
 		/// </summary>

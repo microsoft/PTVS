@@ -43,7 +43,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void LoadSettings() {
-            _control.LoadSettings();            
+             Loading = true;
+             try {
+                 _control.LoadSettings();
+             } finally {
+                 Loading = false;
+             }
         }
     }
 }

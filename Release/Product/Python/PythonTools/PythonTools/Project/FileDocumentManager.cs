@@ -71,6 +71,24 @@ namespace Microsoft.PythonTools.Project
 			return this.Open(newFile, openWith, editorFlags, ref editorType, physicalView, ref logicalView, docDataExisting, out windowFrame, windowFrameAction);
 		}
 
+        /// <summary>
+        /// Open a file with a specific editor
+        /// </summary>
+        /// <param name="editorFlags">Specifies actions to take when opening a specific editor. Possible editor flags are defined in the enumeration Microsoft.VisualStudio.Shell.Interop.__VSOSPEFLAGS</param>
+        /// <param name="editorType">Unique identifier of the editor type</param>
+        /// <param name="physicalView">Name of the physical view. If null, the environment calls MapLogicalView on the editor factory to determine the physical view that corresponds to the logical view. In this case, null does not specify the primary view, but rather indicates that you do not know which view corresponds to the logical view</param>
+        /// <param name="logicalView">In MultiView case determines view to be activated by IVsMultiViewDocumentView. For a list of logical view GUIDS, see constants starting with LOGVIEWID_ defined in NativeMethods class</param>
+        /// <param name="docDataExisting">IntPtr to the IUnknown interface of the existing document data object</param>
+        /// <param name="windowFrame">A reference to the window frame that is mapped to the file</param>
+        /// <param name="windowFrameAction">Determine the UI action on the document window</param>
+        /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
+        public override int ReOpenWithSpecific(uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame windowFrame, WindowFrameShowAction windowFrameAction) {
+            windowFrame = null;
+            bool newFile = false;
+            bool openWith = false;
+            return Open(newFile, openWith, editorFlags, ref editorType, physicalView, ref logicalView, docDataExisting, out windowFrame, windowFrameAction, reopen: true);
+        }
+
 		#endregion
 
 		#region public methods
@@ -161,7 +179,7 @@ namespace Microsoft.PythonTools.Project
 
 		#region helper methods
 
-		private int Open(bool newFile, bool openWith, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame windowFrame, WindowFrameShowAction windowFrameAction)
+		private int Open(bool newFile, bool openWith, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame windowFrame, WindowFrameShowAction windowFrameAction, bool reopen = false)
 		{
 			windowFrame = null;
 			if(this.Node == null || this.Node.ProjectMgr == null || this.Node.ProjectMgr.IsClosed)
@@ -178,7 +196,7 @@ namespace Microsoft.PythonTools.Project
 			string fullPath = this.GetFullPathForDocument();
 
 			// Make sure that the file is on disk before we open the editor and display message if not found
-			if(!((FileNode)this.Node).IsFileOnDisk(true))
+			if(!((FileNode)this.Node).IsFileOnDisk(!reopen))
 			{
 				// Inform clients that we have an invalid item (wrong icon)
 				this.Node.OnInvalidateItems(this.Node.Parent);

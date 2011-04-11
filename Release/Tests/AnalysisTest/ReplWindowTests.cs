@@ -322,6 +322,31 @@ namespace AnalysisTest {
         }
 
         /// <summary>
+        /// LineBReak should insert a new line and not submit.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LineBreak() {
+            var interactive = Prepare();
+            
+            const string quotes = "\"\"\"";
+            Keyboard.Type(quotes);
+            Keyboard.Type(Key.Enter);
+            Keyboard.PressAndRelease(Key.Enter, Key.LeftShift);
+            Keyboard.Type(quotes);
+            Keyboard.Type(Key.Enter);
+            Keyboard.Type(Key.Enter);
+
+            interactive.WaitForText(
+                ReplPrompt + quotes, 
+                SecondPrompt, 
+                SecondPrompt + quotes,
+                SecondPrompt,
+                "'\\n\\n'",
+                ReplPrompt);
+        }
+
+        /// <summary>
         /// Escape should clear both lines
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -789,8 +814,8 @@ namespace AnalysisTest {
 
             Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
             Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
-            Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python open grouping");
-            Assert.AreEqual(classifications[3].ClassificationType.Classification, "Python close grouping");
+            Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python grouping");
+            Assert.AreEqual(classifications[3].ClassificationType.Classification, "Python grouping");
 
             Assert.AreEqual(classifications[0].Span.GetText(), "raise");
             Assert.AreEqual(classifications[1].Span.GetText(), "Exception");

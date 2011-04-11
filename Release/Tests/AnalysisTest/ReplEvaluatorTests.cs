@@ -75,7 +75,7 @@ namespace AnalysisTest {
         }
 
         private static PythonReplEvaluator MakeEvaluator() {
-            return new PythonReplEvaluator(new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", "C:\\Python26\\python.exe", "C:\\Python26\\pythonw.exe", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86));
+            return new PythonReplEvaluator(new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", "C:\\Python26\\python.exe", "C:\\Python26\\pythonw.exe", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86), null);
         }
 
         private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {

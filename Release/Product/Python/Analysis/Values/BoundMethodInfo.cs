@@ -94,12 +94,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 for (int i = 1; i < p.Count; i++) {
                     pp[i - 1] = FunctionInfo.MakeParameterResult(_function.ProjectState, p[i]);
                 }
-                string doc;
-                if (_function.FunctionDefinition.Body != null) {
-                    doc = _function.FunctionDefinition.Body.Documentation;
-                } else {
-                    doc = String.Empty;
-                }
+                string doc = _function.Documentation;
+
                 return new ReadOnlyCollection<OverloadResult>(
                     new OverloadResult[] {
                         new SimpleOverloadResult(pp, _function.FunctionDefinition.Name, doc)

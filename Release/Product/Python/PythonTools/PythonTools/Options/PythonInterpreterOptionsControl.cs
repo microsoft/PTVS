@@ -13,7 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
+using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
@@ -162,11 +162,14 @@ namespace Microsoft.PythonTools.Options {
                 if (Version.TryParse(_version.Text, out vers)) {
                     CurrentOptions.Version = _version.Text;
                     _invalidVersionToolTip.RemoveAll();
+                    _invalidVersionToolTip.Hide(this);
+                    _versionLabel.ForeColor = SystemColors.ControlText;
                 } else {
                     _invalidVersionToolTip.ShowAlways = true;
+                    _versionLabel.ForeColor = Color.Red;
                     _invalidVersionToolTip.IsBalloon = true;
                     _invalidVersionToolTip.ToolTipIcon = ToolTipIcon.None;
-                    _invalidVersionToolTip.Show("Version is not in invalid format and will not be updated.", 
+                    _invalidVersionToolTip.Show("Version is not in invalid format and will not be saved.\r\n\r\nValid formats are in the form of Major.Minor[.Build[.Revision]].", 
                         this, 
                         new System.Drawing.Point(_version.Location.X + 10, _version.Location.Y + _interpreterSettingsGroup.Location.Y + _version.Height - 5), 
                         5000);

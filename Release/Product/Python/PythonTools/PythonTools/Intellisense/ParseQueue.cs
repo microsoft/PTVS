@@ -19,7 +19,9 @@ using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -44,12 +46,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// the parse tree asynchronously as the buffer changes.
         /// </summary>
         /// <param name="buffer"></param>
-        public BufferParser EnqueueBuffer(IProjectEntry projEntry, ITextBuffer buffer) {
+        public BufferParser EnqueueBuffer(IProjectEntry projEntry, ITextView textView, ITextBuffer buffer) {
             // only attach one parser to each buffer, we can get multiple enqueue's
             // for example if a document is already open when loading a project.
             BufferParser bufferParser;
             if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
-                bufferParser = new BufferParser(projEntry, _parser, new[] { buffer });
+                bufferParser = new BufferParser(textView, projEntry, _parser, new[] { buffer });
                 
                 buffer.Properties.AddProperty(typeof(BufferParser), bufferParser);
                 
@@ -120,6 +122,7 @@ namespace Microsoft.PythonTools.Intellisense {
     class BufferParser {
         internal ProjectAnalyzer _parser;
         private readonly Timer _timer;
+        private readonly ITextView _textView;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         internal IProjectEntry _currentProjEntry;
@@ -127,7 +130,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(IProjectEntry initialProjectEntry, ProjectAnalyzer parser, IList<ITextBuffer> buffers) {
+        public BufferParser(ITextView textView, IProjectEntry initialProjectEntry, ProjectAnalyzer parser, IList<ITextBuffer> buffers) {
             _parser = parser;
             _timer = new Timer(ReparseWorker, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = buffers;
@@ -136,6 +139,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _indentationInconsistencySeverity = PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity;
                 PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged += OptionsPage_IndentationInconsistencyChanged;
             }
+            _textView = textView;
             foreach (var buffer in buffers) {
                 InitBuffer(buffer);
             }
@@ -185,6 +189,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void InitBuffer(ITextBuffer buffer) {
+            PythonReplEvaluator replEvaluator;
+            if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
+                buffer.Properties.AddProperty(typeof(ProjectAnalyzer), replEvaluator.ReplAnalyzer);
+            }
             buffer.ChangedLowPriority += BufferChangedLowPriority;
             buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
         }

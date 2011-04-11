@@ -169,7 +169,7 @@ e): ");
             var buffer = new MockTextBuffer(sourceCode);
             buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
             var textView = new MockTextView(buffer);
-            var item = analyzer.MonitorTextBuffer(textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
+            var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
             while (!item.ProjectEntry.IsAnalyzed) {
                 Thread.Sleep(10);
             }

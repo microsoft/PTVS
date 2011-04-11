@@ -35,7 +35,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void LoadSettings() {
-            _control.PublishUrl = Project.GetProjectProperty(CommonConstants.PublishUrl);
+            Loading = true;
+            try {
+                _control.PublishUrl = Project.GetProjectProperty(CommonConstants.PublishUrl);
+            } finally {
+                Loading = false;
+            }
         }
 
         public override string Name {

@@ -31,14 +31,17 @@ using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Repl {
-    public class PythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator {
+    internal class PythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator {
         private readonly IPythonInterpreterFactory _interpreter;
+        private readonly IErrorProviderFactory _errorProviderFactory;
         private ListenerThread _curListener;
         private IReplWindow _window;
         private bool _multipleScopes = true;
+        private ProjectAnalyzer _replAnalyzer;
 
         private static readonly byte[] RunCommandBytes = MakeCommand("run ");
         private static readonly byte[] AbortCommandBytes = MakeCommand("abrt");
@@ -50,13 +53,23 @@ namespace Microsoft.PythonTools.Repl {
         private static readonly byte[] InputLineCommandBytes = MakeCommand("inpl");
         private static readonly byte[] ExecuteFileCommandBytes = MakeCommand("excf");
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter) {
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory) {
             _interpreter = interpreter;
+            _errorProviderFactory = errorProviderFactory;
         }
 
         public IPythonInterpreterFactory Interpreter {
             get {
                 return _interpreter;
+            }
+        }
+
+        internal ProjectAnalyzer ReplAnalyzer {
+            get {
+                if (_replAnalyzer == null) {
+                    _replAnalyzer = new ProjectAnalyzer(_interpreter, _errorProviderFactory);
+                }
+                return _replAnalyzer;
             }
         }
 

@@ -56,6 +56,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         static public Guid guidLanguagePython {
             get { return _guidLanguagePython; }
         }
+        public const int E_EVALUATE_BUSY_WITH_EVALUATION=unchecked((int)0x80040030);
+        public const int E_EVALUATE_TIMEOUT=unchecked((int)0x80040031);
     }
 
     // Flags passed by the debugger to the engine to describe the desired format and execution options for properties 

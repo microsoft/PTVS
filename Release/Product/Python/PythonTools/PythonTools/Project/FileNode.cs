@@ -259,7 +259,8 @@ namespace Microsoft.PythonTools.Project
 
             // Verify that the file extension is unchanged
             string strRelPath = Path.GetFileName(this.ItemNode.GetMetadata(ProjectFileConstants.Include));
-            if(String.Compare(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase) != 0)
+            if(String.Compare(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase) != 0 &&
+                !IsToAndFromValidPythonExtension(label, strRelPath))
             {
                 // Prompt to confirm that they really want to change the extension of the file
                 string message = SR.GetString(SR.ConfirmExtensionChange, CultureInfo.CurrentUICulture, new string[] { label });
@@ -287,6 +288,15 @@ namespace Microsoft.PythonTools.Project
             }
 
             return SetEditLabel(label, strRelPath);
+        }
+
+        /// <summary>
+        /// Checks if both the to and from file extensions are valid Python code file extensions.
+        /// </summary>
+        private static bool IsToAndFromValidPythonExtension(string label, string strRelPath) {
+            return ((Path.GetExtension(strRelPath).Equals(".py", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(label).Equals(".pyw", StringComparison.OrdinalIgnoreCase)) ||
+                (Path.GetExtension(strRelPath).Equals(".pyw", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(label).Equals(".py", StringComparison.OrdinalIgnoreCase))
+                );
         }
 
         public override string GetMkDocument()

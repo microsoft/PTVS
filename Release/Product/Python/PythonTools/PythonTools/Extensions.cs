@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -127,6 +128,10 @@ namespace Microsoft.PythonTools {
         }
 
         internal static ProjectAnalyzer GetAnalyzer(this ITextView textView) {
+            PythonReplEvaluator evaluator;
+            if (textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out evaluator)) {
+                return evaluator.ReplAnalyzer;
+            }
             return textView.TextBuffer.GetAnalyzer();
         }
 

@@ -65,19 +65,23 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void LoadSettings() {
-            _control.StartupFile = this.Project.GetProjectProperty(CommonConstants.StartupFile, false);
-            _control.WorkingDirectory = this.Project.GetProjectProperty(CommonConstants.WorkingDirectory, false);
-            if (string.IsNullOrEmpty(_control.WorkingDirectory)) {
-                _control.WorkingDirectory = ".";
-            }
-            _control.IsWindowsApplication = Convert.ToBoolean(this.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
-            Guid guid;
-            Version version;
-            if (Guid.TryParse(this.Project.GetProjectProperty(PythonConstants.InterpreterId, false), out guid) &&
-                Version.TryParse(this.Project.GetProjectProperty(PythonConstants.InterpreterVersion, false), out version)) {
+            Loading = true;
+            try {
+                _control.StartupFile = this.Project.GetProjectProperty(CommonConstants.StartupFile, false);
+                _control.WorkingDirectory = this.Project.GetProjectProperty(CommonConstants.WorkingDirectory, false);
+                if (string.IsNullOrEmpty(_control.WorkingDirectory)) {
+                    _control.WorkingDirectory = ".";
+                }
+                _control.IsWindowsApplication = Convert.ToBoolean(this.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
+                Guid guid;
+                Version version;
+                if (Guid.TryParse(this.Project.GetProjectProperty(PythonConstants.InterpreterId, false), out guid) &&
+                    Version.TryParse(this.Project.GetProjectProperty(PythonConstants.InterpreterVersion, false), out version)) {
                     _control.SetDefaultInterpreter(guid, version);
-            }            
-            IsDirty = false;
+                }
+            } finally {
+                Loading = false;
+            }
         }
     }
 }

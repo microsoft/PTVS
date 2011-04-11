@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (oldParent != null) {
                 // update us in our parent package
-                oldParent.AddChildPackage(_myScope, _unit, _moduleName.Substring(_moduleName.IndexOf('.') + 1));
+                oldParent.AddChildPackage(_myScope, _unit);
             }
 
             var unit = _unit = new AnalysisUnit(_tree, new InterpreterScope[] { _myScope.Scope });
@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                         ModuleInfo childModule;
                         if (_projectState.ModulesByFilename.TryGetValue(file, out childModule)) {
-                            _myScope.AddChildPackage(childModule, _unit, Path.GetFileNameWithoutExtension(file));
+                            _myScope.AddChildPackage(childModule, _unit);
                         }
                     }
 
@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Analysis {
                         string package = Path.Combine(packageDir, "__init__.py");
                         ModuleInfo childPackage;
                         if (File.Exists(package) && _projectState.ModulesByFilename.TryGetValue(package, out childPackage)) {
-                            _myScope.AddChildPackage(childPackage, _unit, Path.GetFileName(packageDir));
+                            _myScope.AddChildPackage(childPackage, _unit);
                         }
                     }
                 }

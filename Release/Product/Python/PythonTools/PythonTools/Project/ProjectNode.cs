@@ -3753,8 +3753,8 @@ namespace Microsoft.PythonTools.Project
             // Delegate to the document manager object that knows how to open the item
             DocumentManager documentManager = n.GetDocumentManager();
             if (documentManager != null)
-            {
-                return documentManager.OpenWithSpecific(0, ref editorType, physicalView, ref logicalView, docDataExisting, out frame, WindowFrameShowAction.DoNotShow);
+            {                
+                return documentManager.ReOpenWithSpecific(0, ref editorType, physicalView, ref logicalView, docDataExisting, out frame, WindowFrameShowAction.DoNotShow);
             }
 
             // This node does not have an associated document manager and we must fail

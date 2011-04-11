@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analyzer != null) {
                 var buffer = subjectBuffers[0];
 
-                var entry = analyzer.MonitorTextBuffer(buffer);
+                var entry = analyzer.MonitorTextBuffer(textView, buffer);
                 textView.Closed += (sender, args) => analyzer.StopMonitoringTextBuffer(entry.BufferParser);
 
                 for (int i = 1; i < subjectBuffers.Count; i++) {

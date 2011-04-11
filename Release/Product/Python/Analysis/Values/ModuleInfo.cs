@@ -64,15 +64,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             set { _parentPackage = value; }
         }
 
-        public void AddChildPackage(ModuleInfo childPackage, AnalysisUnit curUnit, string name) {
+        public void AddChildPackage(ModuleInfo childPackage, AnalysisUnit curUnit) {
             string realName = childPackage.Name;
             int lastDot;
             if ((lastDot = childPackage.Name.LastIndexOf('.')) != -1) {
                 realName = childPackage.Name.Substring(lastDot + 1);
             }
-            Debug.Assert(name == realName);
+
             childPackage.ParentPackage = this;            
-            Scope.SetVariable(childPackage.ProjectEntry.Tree, curUnit, name, childPackage.SelfSet, false);
+            Scope.SetVariable(childPackage.ProjectEntry.Tree, curUnit, realName, childPackage.SelfSet, false);
 
             if (_packageModules == null) {
                 _packageModules = new Dictionary<string, WeakReference>();
@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 var result = new StringBuilder("Python module ");
                 result.Append(Name);
-                var doc = ProjectEntry.Tree.Documentation;
+                var doc = ProjectEntry.Tree.Documentation.TrimDocumentation();
                 if (doc != null) {
                     result.Append("\n\n");
                     result.Append(doc);

@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     public abstract class CommonPropertyPage : IPropertyPage {
         private IPropertyPageSite _site;
-        private bool _dirty;
+        private bool _dirty, _loading;
         private CommonProjectNode _project;
 
         public abstract Control Control {
@@ -49,12 +49,21 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public bool Loading {
+            get {
+                return _loading;
+            }
+            set{
+                _loading = value;
+            }
+        }
+
         public bool IsDirty {
             get {
                 return _dirty;
             }
             set {
-                if (_dirty != value) {
+                if (_dirty != value && !Loading) {
                     _dirty = value;
                     if (_site != null) {
                         _site.OnStatusChange((uint)(_dirty ? PropPageStatus.Dirty : PropPageStatus.Clean));
