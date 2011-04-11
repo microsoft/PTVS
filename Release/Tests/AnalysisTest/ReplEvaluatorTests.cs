@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -134,6 +135,10 @@ namespace AnalysisTest {
                 get { throw new NotImplementedException(); }
             }
 
+            public Microsoft.VisualStudio.Text.ITextBuffer CurrentLanguageBuffer {
+                get { throw new NotImplementedException(); }
+            }
+
             public IReplEvaluator Evaluator {
                 get { throw new NotImplementedException(); }
             }
@@ -154,7 +159,11 @@ namespace AnalysisTest {
                 throw new NotImplementedException();
             }
 
-            public void PasteText(string text) {
+            public void InsertCode(string text) {
+                throw new NotImplementedException();
+            }
+
+            public void Submit(IEnumerable<string> inputs) {
                 throw new NotImplementedException();
             }
 
@@ -190,6 +199,8 @@ namespace AnalysisTest {
             }
 
             #endregion
+
+            
         }
     }
 }

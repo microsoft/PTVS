@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
@@ -46,18 +47,27 @@ namespace Microsoft.PythonTools.Language {
     /// added by updating our CommandTable class to contain a new command.  These commands also need
     /// to be registered in our .vsct file so that VS knows about them.
     /// </summary>
-    class EditFilter : IOleCommandTarget {
-        private readonly IWpfTextView _textView;
+    internal sealed class EditFilter : IOleCommandTarget {
+        private readonly ITextView _textView;
         private readonly IOleCommandTarget _next;
         private readonly IEditorOperations _editorOps;
 
-        public EditFilter(IWpfTextView textView, IVsTextView vsTextView, IEditorOperations editorOps) {
+        public EditFilter(ITextView textView, IVsTextView vsTextView, IEditorOperations editorOps) {
             _textView = textView;
             _editorOps = editorOps;
 
             BraceMatcher.WatchBraceHighlights(textView, PythonToolsPackage.ComponentModel);
 
             ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
+        }
+
+        private SnapshotPoint? GetCaretPosition() {
+            return _textView.BufferGraph.MapDownToFirstMatch(
+               new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, _textView.Caret.Position.BufferPosition),
+               PointTrackingMode.Positive,
+               PythonCoreConstants.IsPythonContent,
+               PositionAffinity.Successor
+            );
         }
 
         /// <summary>
@@ -191,10 +201,10 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private ExpressionAnalysis GetExpressionAnalysis() {
-            var textView = _textView;
-            var textBuffer = _textView.TextBuffer;
-            var snapshot = textBuffer.CurrentSnapshot;
-            int caretPos = _textView.Caret.Position.BufferPosition.Position;
+            var caretPoint = GetCaretPosition();
+            Debug.Assert(caretPoint != null);
+            var snapshot = caretPoint.Value.Snapshot;
+            var caretPos = caretPoint.Value.Position;
 
             // foo(
             //    ^
@@ -577,50 +587,45 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    // TODO: ISmartIndentProvider
-                    case VSConstants.VSStd2KCmdID.RETURN:
-                        if (PythonToolsPackage.Instance.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart) {
-                            // smart indent
-                            AutoIndent.HandleReturn(_textView);
-                            return VSConstants.S_OK;
-                        }
-                        break;
-
                     case VSConstants.VSStd2KCmdID.BACKSPACE:
-
+                        // smart dedent
                         if (PythonToolsPackage.Instance.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart &&
                             _textView.Selection.IsEmpty) {
+
                             int indentSize = _textView.Options.GetIndentSize();
-                            // smart dedent
-                            var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
+
+                            var langPoint = _textView.BufferGraph.MapDownToFirstMatch(
                                 new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, _textView.Caret.Position.BufferPosition),
                                 PointTrackingMode.Positive,
                                 PythonCoreConstants.IsPythonContent,
                                 PositionAffinity.Successor
                             );
 
-                            if (targetPt != null) {
-                                var containingLine = targetPt.Value.GetContainingLine();
-                                var curLineLine = containingLine.GetText();
+                            if (langPoint == null) {
+                                break;
+                            }
 
-                                int lineOffset = targetPt.Value.Position - containingLine.Start.Position;
-                                if (lineOffset >= indentSize) {
-                                    bool allSpaces = true;
-                                    for (int i = lineOffset - 1; i >= lineOffset - indentSize; i--) {
-                                        if (curLineLine[i] != ' ') {
-                                            allSpaces = false;
-                                            break;
-                                        }
-                                    }
+                            var containingLine = langPoint.Value.GetContainingLine();
+                            var curLineLine = containingLine.GetText();
 
-                                    if (allSpaces) {
-                                        _textView.TextBuffer.Delete(new Span(_textView.Caret.Position.BufferPosition.Position - indentSize, indentSize));
-                                        return VSConstants.S_OK;
+                            int lineOffset = langPoint.Value.Position - containingLine.Start.Position;
+                            if (lineOffset >= indentSize) {
+                                bool allSpaces = true;
+                                for (int i = lineOffset - 1; i >= lineOffset - indentSize; i--) {
+                                    if (curLineLine[i] != ' ') {
+                                        allSpaces = false;
+                                        break;
                                     }
+                                }
+                            
+                                if (allSpaces) {
+                                    langPoint.Value.Snapshot.TextBuffer.Delete(new Span(langPoint.Value.Position - indentSize, indentSize));
+                                    return VSConstants.S_OK;
                                 }
                             }
                         }
                         break;
+
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
                         var controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
@@ -629,6 +634,7 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
+
                     case VSConstants.VSStd2KCmdID.PARAMINFO:
                         controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
                         if (controller != null) {
@@ -636,27 +642,35 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
+
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                        tagger = _textView.TextBuffer.GetOutliningTagger();
+                        tagger = _textView.GetOutliningTagger();
                         if (tagger != null) {
                             tagger.Disable();
                         }
                         // let VS get the event as well
                         break;
+
                     case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                        tagger = _textView.TextBuffer.GetOutliningTagger();
+                        tagger = _textView.GetOutliningTagger();
                         if (tagger != null) {
                             tagger.Enable();
                         }
                         // let VS get the event as well
                         break;
+
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                     case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
-                        _textView.CommentBlock();
+                        if (EditorExtensions.CommentOrUncommentBlock(_textView, comment: true)) {
+                            return VSConstants.S_OK;
+                        }
                         break;
+
                     case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
                     case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
-                        _textView.UncommentBlock();
+                        if (EditorExtensions.CommentOrUncommentBlock(_textView, comment: false)) {
+                            return VSConstants.S_OK;
+                        }
                         break;
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
@@ -737,18 +751,21 @@ namespace Microsoft.PythonTools.Language {
                         case VSConstants.VSStd2KCmdID.PARAMINFO:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
+
                         case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
-                            tagger = _textView.TextBuffer.GetOutliningTagger();
+                            tagger = _textView.GetOutliningTagger();
                             if (tagger != null && tagger.Enabled) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
                             return VSConstants.S_OK;
+
                         case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
-                            tagger = _textView.TextBuffer.GetOutliningTagger();
+                            tagger = _textView.GetOutliningTagger();
                             if (tagger != null && !tagger.Enabled) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             }
                             return VSConstants.S_OK;
+
                         case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                         case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
                         case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:

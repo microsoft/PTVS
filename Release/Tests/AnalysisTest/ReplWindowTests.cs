@@ -240,7 +240,6 @@ namespace AnalysisTest {
             interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.real", "42", ReplPrompt);
         }
 
-
         /// <summary>
         /// Enter in a middle of a line should insert new line
         /// </summary>
@@ -259,6 +258,67 @@ namespace AnalysisTest {
             Keyboard.Type("pass");
             Keyboard.PressAndRelease(Key.Enter, Key.LeftCtrl);
             interactive.WaitForText(ReplPrompt + "def f(): ", SecondPrompt + "    pass#foo", ReplPrompt);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void Reset() {
+            var interactive = Prepare();
+
+            // TODO (bug): Reset doesn't clean up completely. 
+            // This causes a space to appear in the buffer even after reseting the REPL.
+
+            // const string print1 = "print 1,";
+            // Keyboard.Type(print1);
+            // Keyboard.Type(Key.Enter);
+            // 
+            // interactive.WaitForText(ReplPrompt + print1, "1", ReplPrompt);
+
+            // CtrlBreakInStandardInput();
+        }
+
+        /// <summary>
+        /// Prompts always inserted at the beginning of a line.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void PromptPositions() {
+            var interactive = Prepare();
+
+            // TODO (bug): this insert a space somwhere in the socket stream
+            // const string print1 = "print 1,";
+            // Keyboard.Type(print1);
+            // Keyboard.Type(Key.Enter);
+            // 
+            // interactive.WaitForText(ReplPrompt + print1, "1", ReplPrompt);
+
+            // The data received from the socket include " ", so it's not a REPL issue.
+            // const string print2 = "print 2,";
+            // Keyboard.Type(print2);
+            // Keyboard.Type(Key.Enter);
+            // 
+            // interactive.WaitForText(ReplPrompt + print1, "1", ReplPrompt + print2, "2", ReplPrompt);
+        }
+
+        /// <summary>
+        /// Enter in a middle of a line should insert new line
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void EnterAtBeginningOfLine() {
+            // TODO (bug): complete statement detection
+        //    var interactive = Prepare();
+        // 
+        //    const string code = "\"\"\"";
+        //    Keyboard.Type(code);
+        //    Keyboard.Type(Key.Enter);
+        //    Keyboard.Type(Key.Enter);
+        //    interactive.WaitForText(ReplPrompt + "\"\"\"", SecondPrompt, SecondPrompt);
+
+        //    Keyboard.Type("a");
+        //    Keyboard.Type(Key.Left);
+        //    Keyboard.Type(Key.Enter);
+        //    interactive.WaitForText(ReplPrompt + "\"\"\"", SecondPrompt, SecondPrompt, SecondPrompt + "a");
         }
 
         /// <summary>
@@ -331,6 +391,67 @@ namespace AnalysisTest {
         }
 
         /// <summary>
+        /// Ctrl-Break while entering standard input should return an empty input and append a primary prompt.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CtrlBreakInStandardInput() {
+            var interactive = Prepare();
+
+            interactive.WithStandardInputPrompt("INPUT: ", (stdInputPrompt) => {
+                interactive.WaitForText(ReplPrompt);
+
+                Keyboard.Type("raw_input()\r");
+                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
+
+                Keyboard.Type("ignored");
+                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "ignored");
+
+                interactive.CancelExecution();
+
+                interactive.WaitForText(
+                    ReplPrompt     + RawInput + "()", 
+                    stdInputPrompt + "ignored", 
+                                     "u''", 
+                    ReplPrompt
+                );
+
+                Keyboard.Type(Key.Up); // prev history
+                Keyboard.Type(Key.Enter);
+
+                interactive.WaitForText(
+                    ReplPrompt     + RawInput + "()",
+                    stdInputPrompt + "ignored",
+                                     "u''",
+                    ReplPrompt     + RawInput + "()",
+                    stdInputPrompt
+                );
+
+                Keyboard.Type("ignored2");
+
+                interactive.WaitForText(
+                    ReplPrompt     + RawInput + "()",
+                    stdInputPrompt + "ignored",
+                                     "u''",
+                    ReplPrompt     + RawInput + "()",
+                    stdInputPrompt + "ignored2"                    
+                );
+
+                interactive.CancelExecution();
+
+                interactive.WaitForText(
+                    ReplPrompt     + RawInput + "()",
+                    stdInputPrompt + "ignored",
+                                     "u''",
+                    ReplPrompt     + RawInput + "()",
+                    stdInputPrompt + "ignored2",
+                                     "u''",
+                    ReplPrompt
+                );
+            });
+        }
+
+        /// <summary>
         /// while True: pass / Right Click -> Break Execution (or Ctrl-Break) should break execution
         /// 
         /// This version runs for 1/2 second which kicks in the running UI.
@@ -370,7 +491,7 @@ namespace AnalysisTest {
             Keyboard.Type(Key.Right);
             Keyboard.PressAndRelease(Key.Enter, Key.LeftCtrl);
 
-            interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + code);
+            interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + code, SecondPrompt);
 
             Keyboard.PressAndRelease(Key.Escape);
 
@@ -427,8 +548,8 @@ namespace AnalysisTest {
         public void HistoryUpdateDef() {
             var interactive = Prepare();
 
-            string hiCode = "def f():\r\n" + SecondPrompt + "    print('hi')\r\n" + SecondPrompt + "    ";
-            string helloCode = "def f():\r\n" + SecondPrompt + "    print('hello')\r\n" + SecondPrompt + "    ";
+            string hiCode = "def f():\r\n" + SecondPrompt + "    print('hi')\r\n" + SecondPrompt;
+            string helloCode = "def f():\r\n" + SecondPrompt + "    print('hello')\r\n" + SecondPrompt;
             string helloCodeNotCommitted = "def f():\r\n" + SecondPrompt + "    print('hello')";
             string hiCodeNotCommitted = "def f():\r\n" + SecondPrompt + "    print('hi')";
             Keyboard.Type("def f():\r");
@@ -466,18 +587,30 @@ namespace AnalysisTest {
         public void HistoryAppendDef() {
             var interactive = Prepare();
 
-            string hiCode = "def f():\r\n" + SecondPrompt + "    print('hi')\r\n" + SecondPrompt + "    ";
-            string finalCode = hiCode + "print('hello')\r\n" + SecondPrompt + "    ";
             Keyboard.Type("def f():\r");
             Keyboard.Type("print('hi')\r\r");
-
-            interactive.WaitForText(ReplPrompt + hiCode, ReplPrompt);
+            
+            interactive.WaitForText(
+                ReplPrompt   + "def f():", 
+                SecondPrompt + "    print('hi')", 
+                SecondPrompt,
+                ReplPrompt
+            );
 
             Keyboard.Type(Key.Up);
             Keyboard.Type(Key.Enter);
             Keyboard.Type("print('hello')\r\r");
 
-            interactive.WaitForText(ReplPrompt + hiCode, ReplPrompt + finalCode, ReplPrompt);
+            interactive.WaitForText(
+                ReplPrompt   + "def f():", 
+                SecondPrompt + "    print('hi')", 
+                SecondPrompt,
+                ReplPrompt   + "def f():",
+                SecondPrompt + "    print('hi')",
+                SecondPrompt + "    print('hello')",
+                SecondPrompt,
+                ReplPrompt
+            );
         }
 
         /// <summary>
@@ -727,6 +860,101 @@ namespace AnalysisTest {
             interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void BackspaceSmartDedent() {
+            var interactive = Prepare();
+
+            Keyboard.Type("   ");
+            interactive.WaitForText(ReplPrompt + "   ");
+
+            // smart dedent shouldn't delete 3 spaces
+            Keyboard.Press(Key.Back);
+            interactive.WaitForText(ReplPrompt + "  ");
+
+            Keyboard.Type("  ");
+            interactive.WaitForText(ReplPrompt + "    ");
+
+            // smart dedent should delete all 4 spaces
+            Keyboard.Press(Key.Back);
+            interactive.WaitForText(ReplPrompt);
+        }
+
+        /// <summary>
+        /// Inserts code to REPL while input is accepted. 
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void InsertCode() {
+            var interactive = Prepare();
+
+            interactive.ReplWindow.InsertCode("1");
+            interactive.ReplWindow.InsertCode("+");
+            interactive.ReplWindow.InsertCode("2");
+            
+            interactive.WaitForText(
+                ReplPrompt + "1+2"
+            );
+
+            Keyboard.Type(Key.Left);
+            Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+
+            interactive.WaitForText(
+                ReplPrompt + "1+2"
+            );
+
+            interactive.ReplWindow.InsertCode("*");
+
+            interactive.WaitForText(
+                ReplPrompt + "1*2"
+            );
+        }
+
+        /// <summary>
+        /// Inserts code to REPL while submission execution is in progress. 
+        /// The inserted input should be appended to uncommitted input and show up when the execution is finished/aborted.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void InsertCodeWhileRunning() {
+            var interactive = Prepare();
+
+            Keyboard.Type("while True: pass\r\n");
+            interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
+
+            System.Threading.Thread.Sleep(50);
+            interactive.ReplWindow.InsertCode("1");
+            System.Threading.Thread.Sleep(50);
+            interactive.ReplWindow.InsertCode("+");
+            System.Threading.Thread.Sleep(50);
+            interactive.ReplWindow.InsertCode("1");
+            System.Threading.Thread.Sleep(50);
+
+            interactive.CancelExecution();
+
+            interactive.WaitForText(
+                ReplPrompt + "while True: pass",
+                SecondPrompt,
+                              "Traceback (most recent call last):",
+                              "  File \"<stdin>\", line 1, in <module>",
+                              "KeyboardInterrupt",
+                ReplPrompt + "1+1"
+            );
+
+            Keyboard.Type(Key.Enter);
+
+            interactive.WaitForText(
+                ReplPrompt + "while True: pass",
+                SecondPrompt,
+                              "Traceback (most recent call last):",
+                              "  File \"<stdin>\", line 1, in <module>",
+                              "KeyboardInterrupt",
+                ReplPrompt + "1+1",
+                              "2",
+                ReplPrompt
+            );
+        }
+
         /// <summary>
         /// Tests REPL command help
         /// </summary>
@@ -749,14 +977,79 @@ namespace AnalysisTest {
         public void CommandsLoadScript() {
             var interactive = Prepare();
 
-            string code = "$load " + Path.GetFullPath("TestScript.txt");
-            Keyboard.Type(code + "\r");
+            string command = "$load " + Path.GetFullPath("TestScript.txt");
+            Keyboard.Type(command + "\r");
 
-            interactive.WaitForTextStart(ReplPrompt + code, 
+            interactive.WaitForTextStart(
+                ReplPrompt + command, 
                 ReplPrompt + "print('hello world')",
-                "hello world",
-                ReplPrompt
+                             "hello world"
             );
+        }
+
+        /// <summary>
+        /// Tests $load command with file that includes multiple submissions.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CommandsLoadScriptMultipleSubmissions() {
+            var interactive = Prepare();
+            
+            var tempFile = Path.GetTempFileName();
+            try {
+                File.WriteAllText(tempFile, 
+@"def foo():
+    print 'hello'
+$wait 10
+%% blah
+$wait 20
+foo()
+");
+                string command = "$load " + tempFile;
+                Keyboard.Type(command + "\r");
+
+                interactive.WaitForTextStart(
+                    ReplPrompt   + command,
+                    ReplPrompt   + "def foo():",
+                    SecondPrompt + "    print 'hello'",
+                    ReplPrompt   + "$wait 10",
+                    ReplPrompt   + "$wait 20",
+                    ReplPrompt   + "foo()",
+                                   "hello"
+                );
+            } finally {
+                File.Delete(tempFile);
+            }
+        }
+
+        /// <summary>
+        /// Tests that ClearScreen doesn't cancel pending submissions queue.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CommandsLoadScriptMultipleSubmissionsWithClearScreen() {
+            var interactive = Prepare();
+
+            var tempFile = Path.GetTempFileName();
+            try {
+                File.WriteAllText(tempFile,
+@"def foo():
+    print 'hello'
+%% blah
+1+1
+$cls
+1+2
+");
+                string command = "$load " + tempFile;
+                Keyboard.Type(command + "\r");
+
+                interactive.WaitForTextStart(
+                    ReplPrompt + "1+2",
+                                 "3"
+                );
+            } finally {
+                File.Delete(tempFile);
+            }
         }
 
         /// <summary>
@@ -861,6 +1154,7 @@ namespace AnalysisTest {
             interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    x = 42", SecondPrompt + "    y = 100");
 
             Keyboard.Type(Key.Home);
+            Keyboard.Type(Key.Home);
             Keyboard.Type(Key.Up);
             Keyboard.Type(Key.Back);
 
@@ -926,6 +1220,7 @@ namespace AnalysisTest {
                     interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                     Keyboard.Type(Key.Home);
+                    Keyboard.Type(Key.Home);
                     Keyboard.Type(Key.Left);
                     Keyboard.PressAndRelease(Key.End, Key.LeftShift);
                     if (i == 1) {
@@ -934,7 +1229,7 @@ namespace AnalysisTest {
                         Keyboard.Type(Key.Delete);
                     }
 
-                    interactive.WaitForText(ReplPrompt + "def f():");
+                    interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt);
 
                     Keyboard.PressAndRelease(Key.Escape);
 
@@ -956,11 +1251,12 @@ namespace AnalysisTest {
                 interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                 Keyboard.Type(Key.Home);
+                Keyboard.Type(Key.Home);
                 Keyboard.Type(Key.Left);
                 Keyboard.PressAndRelease(Key.End, Key.LeftShift);
                 Keyboard.Type("pass");
 
-                interactive.WaitForText(ReplPrompt + "def f():pass");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "pass"); 
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -981,15 +1277,16 @@ namespace AnalysisTest {
                 interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                 Keyboard.Type(Key.Home);
+                Keyboard.Type(Key.Home);
                 Keyboard.Type(Key.Left);
                 Keyboard.PressAndRelease(Key.End, Key.LeftShift);
                 Keyboard.PressAndRelease(Key.X, Key.LeftCtrl);
 
-                interactive.WaitForText(ReplPrompt + "def f():");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt);
 
                 Keyboard.ControlV();
 
-                interactive.WaitForText(ReplPrompt + "def f():    print('hi')");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -1016,11 +1313,19 @@ namespace AnalysisTest {
                 interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
 
                 Keyboard.Type(Key.Home);
+                Keyboard.Type(Key.Home);
                 Keyboard.Type(Key.Left);
                 Keyboard.PressAndRelease(Key.End, Key.LeftShift);
                 Keyboard.ControlV();
 
-                interactive.WaitForText(ReplPrompt + "def f():pass");
+                // >>> def f():
+                // ...     print('hi')
+                //    ^^^^^^^^^^^^^^^^
+                // replacing selection including the prompt replaces the current line content:
+                //
+                // >>> def f():
+                // ... pass
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "pass");
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -1117,13 +1422,16 @@ namespace AnalysisTest {
             const string autoIndent = "    ";
             Keyboard.Type(inputCode);
             interactive.WaitForText(ReplPrompt + inputCode);
+
             Keyboard.Type("\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt);
+
             string printCode = "print('hello')";
             Keyboard.Type(printCode);
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + printCode);
 
             // go to end of 1st line
+            Keyboard.Type(Key.Home);
             Keyboard.Type(Key.Home);
             Keyboard.Type(Key.Up);
             Keyboard.Type(Key.End);
@@ -1146,11 +1454,12 @@ namespace AnalysisTest {
             const string autoIndent = "    ";
             Keyboard.Type(inputCode);
             interactive.WaitForText(ReplPrompt + inputCode);
+
             Keyboard.Type("\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt);
+
             string printCode = "print('hello')";
             Keyboard.Type(printCode);
-
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + printCode);
 
             Keyboard.Type(Key.Delete);
@@ -1171,17 +1480,15 @@ namespace AnalysisTest {
             Keyboard.Type(inputCode);
             interactive.WaitForText(ReplPrompt + inputCode);
             Keyboard.Type("\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt);
             const string b = "'b',";
             Keyboard.Type(b + "\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt);
             const string c = "'c')";
             Keyboard.Type(c + "\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt + autoIndent);
-            Keyboard.Type(Key.Back);    // auto-delete
-            Keyboard.Type(Key.Back);    // delete 1 space
-            Keyboard.Type(Key.Back);    // delete 1 space
-            Keyboard.Type(Key.Back);    // delete 1 space
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt);
+            Keyboard.Type(Key.Back);    // virtual space unindent 
+            Keyboard.Type(Key.Back);    // virtual space unindent 
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt);
         }
 
@@ -1198,15 +1505,15 @@ namespace AnalysisTest {
             Keyboard.Type(inputCode);
             interactive.WaitForText(ReplPrompt + inputCode);
             Keyboard.Type("\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt);
             const string b = "'b',";
             Keyboard.Type(b + "\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt);
             const string c = "'c')";
             Keyboard.Type(c + "\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt + autoIndent);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt);
             Keyboard.Type("\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt + autoIndent, "('a', 'b', 'c')", ReplPrompt);
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt, "('a', 'b', 'c')", ReplPrompt);
         }
 
         /// <summary>

@@ -31,6 +31,5 @@ namespace Microsoft.PythonTools {
         internal static bool IsPythonContent(ITextSnapshot buffer) {
             return buffer.ContentType.IsOfType(PythonCoreConstants.ContentType);
         }
-
     }
 }

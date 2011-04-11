@@ -272,8 +272,9 @@ namespace Microsoft.PythonTools.Repl {
                 // perform the input on a new thread so that we don't block additional commands (such as output) from being processed by us
                 // (this is called on the output thread)
                 ThreadPool.QueueUserWorkItem(x => {
-                    string input = UnfixNewLines(Window.ReadStandardInput());
-                    using (new SocketLock(this)) {                        
+                    string input = Window.ReadStandardInput();
+                    input = input != null ? UnfixNewLines(input) : "\n";
+                    using (new SocketLock(this)) {
                         Socket.Send(InputLineCommandBytes);
                         SendString(input);
                     }
@@ -702,7 +703,7 @@ namespace Microsoft.PythonTools.Repl {
             int newLines = 0;
             for (int i = text.Length - 1; i >= 0; i--) {
                 if (text[i] == '\n') {
-                    if (++newLines == 2) {
+                    if (++newLines == 1) {
                         return true;
                     }
                 } else if (Char.IsWhiteSpace(text[i])) {

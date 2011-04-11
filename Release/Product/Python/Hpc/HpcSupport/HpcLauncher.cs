@@ -457,7 +457,8 @@ namespace Microsoft.PythonTools.Hpc {
         private static readonly string[] _vsAssemblies = new string[] { 
             typeof(IDebugBinderDirect100).Assembly.Location,
             typeof(IDebugAddress).Assembly.Location,
-            typeof(VsColors).Assembly.Location
+            typeof(VsColors).Assembly.Location,
+            typeof(Microsoft.VisualStudio.OLE.Interop.FILETIME).Assembly.Location    // MODULE_INFO structure refers to a type in this...
         };
 
         /// <summary>

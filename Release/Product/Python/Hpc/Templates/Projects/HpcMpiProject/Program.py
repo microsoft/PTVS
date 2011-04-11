@@ -5,3 +5,5 @@ if comm.Get_rank() == 0:
     pass
 else:
     pass
+
+MPI.Finalize()

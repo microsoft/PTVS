@@ -15,55 +15,84 @@
 using System;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Editor.Core {
     public static class EditorExtensions {
+        public static bool CommentOrUncommentBlock(ITextView view, bool comment) {
+            SnapshotPoint start, end;
+            SnapshotPoint? mappedStart, mappedEnd;
+
+            if (view.Selection.IsActive) {
+                // comment every line in the selection
+                start = view.Selection.Start.Position;
+                end = view.Selection.End.Position;
+                mappedStart = MapPoint(view, start);
+                mappedEnd = MapPoint(view, end);
+            } else {
+                // comment the current line
+                start = end = view.Caret.Position.BufferPosition;
+                mappedStart = mappedEnd = MapPoint(view, start);
+            }
+
+            if (mappedStart != null && mappedEnd != null) {
+                if (comment) {
+                    CommentRegion(view, mappedStart.Value, mappedEnd.Value);
+                } else {
+                    UncommentRegion(view, mappedStart.Value, mappedEnd.Value);
+                }
+
+                // TODO: select multiple spans?
+                // Select the full region we just commented, do not select if in projection buffer 
+                // (the selection migth span non-language buffer regions)
+                if (PythonCoreConstants.IsPythonContent(view.TextBuffer)) {
+                    UpdateSelection(view, start, end);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        private static SnapshotPoint? MapPoint(ITextView view, SnapshotPoint point) {
+            return view.BufferGraph.MapDownToFirstMatch(
+               point,
+               PointTrackingMode.Positive,
+               PythonCoreConstants.IsPythonContent,
+               PositionAffinity.Successor
+            );
+        }
+
         /// <summary>
         /// Adds comment characters (#) to the start of each line.  If there is a selection the comment is applied
         /// to each selected line.  Otherwise the comment is applied to the current line.
         /// </summary>
         /// <param name="view"></param>
-        public static void CommentBlock(this ITextView view) {
-            if (view.Selection.IsActive) {
-                // comment every line in the selection
-                CommentRegion(view, view.Selection.Start.Position, view.Selection.End.Position);
-            } else {
-                // comment the current line
-                CommentRegion(view, view.Caret.Position.BufferPosition, view.Caret.Position.BufferPosition);
-            }
-        }
-
-        /// <summary>
-        /// Removes a comment character (#) from the start of each line.  If there is a selection the character is
-        /// removed from each selected line.  Otherwise the character is removed from the current line.  Uncommented
-        /// lines are ignored.
-        /// </summary>
-        /// <param name="view"></param>
-        public static void UncommentBlock(this ITextView view) {
-            if (view.Selection.IsActive) {
-                // uncomment every line in the selection
-                UncommentRegion(view, view.Selection.Start.Position, view.Selection.End.Position);
-            } else {
-                // uncomment the current line
-                UncommentRegion(view, view.Caret.Position.BufferPosition, view.Caret.Position.BufferPosition);
-            }
-
-        }
-
         private static void CommentRegion(ITextView view, SnapshotPoint start, SnapshotPoint end) {
-            using (var edit = view.TextBuffer.CreateEdit()) {
+            Debug.Assert(start.Snapshot == end.Snapshot);
+            var snapshot = start.Snapshot;
+
+            using (var edit = snapshot.TextBuffer.CreateEdit()) {
                 int minColumn = Int32.MaxValue;
                 // first pass, determine the position to place the comment
                 for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
-                    var curLine = view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(i);
+                    var curLine = snapshot.GetLineFromLineNumber(i);
                     var text = curLine.GetText();
 
-                    minColumn = Math.Min(GetMinimumColumn(text), minColumn);
+                    int firstNonWhitespace = IndexOfNonWhitespaceCharacter(text);
+                    if (firstNonWhitespace >= 0 && firstNonWhitespace < minColumn) {
+                        // ignore blank lines
+                        minColumn = firstNonWhitespace;
+                    }
                 }
 
                 // second pass, place the comment
                 for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
-                    var curLine = view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(i);
+                    var curLine = snapshot.GetLineFromLineNumber(i);
+                    if (curLine.Length == 0) {
+                        continue;
+                    }
+
                     if (curLine.Length < minColumn) {
                         // need extra white space
                         edit.Insert(curLine.Start.Position + curLine.Length, new String(' ', minColumn - curLine.Length) + "#");
@@ -74,41 +103,43 @@ namespace Microsoft.PythonTools.Editor.Core {
 
                 edit.Apply();
             }
-
-            // select the full region we just commented
-            UpdateSelection(view, start, end);
         }
 
-        private static int GetMinimumColumn(string text) {
+        private static int IndexOfNonWhitespaceCharacter(string text) {
             for (int j = 0; j < text.Length; j++) {
                 if (!Char.IsWhiteSpace(text[j])) {
                     return j;
                 }
             }
-            return Int32.MaxValue;
+            return -1;
         }
 
+        /// <summary>
+        /// Removes a comment character (#) from the start of each line.  If there is a selection the character is
+        /// removed from each selected line.  Otherwise the character is removed from the current line.  Uncommented
+        /// lines are ignored.
+        /// </summary>
         private static void UncommentRegion(ITextView view, SnapshotPoint start, SnapshotPoint end) {
-            using (var edit = view.TextBuffer.CreateEdit()) {
+            Debug.Assert(start.Snapshot == end.Snapshot);
+            var snapshot = start.Snapshot;
+
+            using (var edit = snapshot.TextBuffer.CreateEdit()) {
 
                 // first pass, determine the position to place the comment
                 for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
-                    var curLine = view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(i);
+                    var curLine = snapshot.GetLineFromLineNumber(i);
 
                     DeleteFirstCommentChar(edit, curLine);
                 }
 
                 edit.Apply();
-            }
-            
-            // select the full region we just uncommented
-
-            UpdateSelection(view, start, end);
+            }            
         }
 
         private static void UpdateSelection(ITextView view, SnapshotPoint start, SnapshotPoint end) {
             view.Selection.Select(
                 new SnapshotSpan(
+                    // translate to the new snapshot version:
                     start.GetContainingLine().Start.TranslateTo(view.TextBuffer.CurrentSnapshot, PointTrackingMode.Negative),
                     end.GetContainingLine().End.TranslateTo(view.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive)
                 ),

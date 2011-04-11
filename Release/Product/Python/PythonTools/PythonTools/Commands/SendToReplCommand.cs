@@ -33,14 +33,15 @@ namespace Microsoft.PythonTools.Commands {
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            
+            IReplWindow repl = (IReplWindow)window;
+
+            // TODO: enable multiple statements
 
             foreach (var span in activeView.Selection.SelectedSpans) {
-                var text = span.GetText();
-                ((IReplWindow)window).PasteText(text);
+                repl.InsertCode(span.GetText());
             }
-
-            ((IReplWindow)window).Focus();
+            
+            repl.Focus();
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

@@ -153,12 +153,20 @@ else: #bar
             window.Activate();
 
             Keyboard.Type(typedText);
-
+            
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            Assert.AreEqual(snapshot.GetText(), expectedText);
+            string actual = null;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+            Assert.AreEqual(actual, expectedText);
 
             window.Document.Close(vsSaveChanges.vsSaveChangesNo);
         }

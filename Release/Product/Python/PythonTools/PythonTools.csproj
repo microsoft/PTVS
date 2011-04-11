@@ -179,6 +179,7 @@
     <Compile Include="PythonTools\CommonUtils.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactory.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
+    <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\ImpersonationHelper.cs" />
     <Compile Include="PythonTools\Intellisense\XamlTextViewCreationListener.cs" />
     <Compile Include="PythonTools\IVsPython.cs" />

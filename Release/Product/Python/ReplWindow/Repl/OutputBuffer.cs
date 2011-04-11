@@ -19,7 +19,7 @@ using System.Text;
 using System.Windows.Threading;
 
 namespace Microsoft.VisualStudio.Repl {
-    class OutputBuffer : IDisposable {
+    internal sealed class OutputBuffer : IDisposable {
         private readonly DispatcherTimer _timer;
         private int _maxSize;
         private readonly object _lock;

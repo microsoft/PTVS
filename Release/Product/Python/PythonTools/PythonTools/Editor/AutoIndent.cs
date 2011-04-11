@@ -55,12 +55,10 @@ namespace Microsoft.PythonTools.Editor {
             return _groupingChars.IndexOf(c) >= 0;
         }
 
-        private static int CalculateIndentation(int lineLength, ITextSnapshotLine line, IWpfTextView view, IClassifier classifier) {
-            string baseline = line.GetText().Substring(0, lineLength);
-            int indentation = GetIndentation(baseline, view.Options.GetTabSize());
-            int tabSize = view.Options.GetIndentSize();
-            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, lineLength));
-
+        private static int CalculateIndentation(string baseline, ITextSnapshotLine line, IEditorOptions options, IClassifier classifier) {
+            int indentation = GetIndentation(baseline, options.GetTabSize());
+            int tabSize = options.GetIndentSize();
+            var tokens = classifier.GetClassificationSpans(line.Extent);
             if (tokens.Count > 0) {
                 if (!tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
                     int tokenIndex = tokens.Count - 1;
@@ -81,9 +79,6 @@ namespace Microsoft.PythonTools.Editor {
                             if (tokens != null) {
                                 var groupings = new Stack<ClassificationSpan>();
                                 foreach (var token in tokens) {
-                                    if (token.Span.Start.Position > view.Caret.Position.BufferPosition.Position) {
-                                        break;
-                                    }
                                     if (token.IsOpenGrouping()) {
                                         groupings.Push(token);
                                     } else if (groupings.Count > 0 && EndsGrouping(token)) {
@@ -134,130 +129,44 @@ namespace Microsoft.PythonTools.Editor {
             return aggregator.GetClassifier(window.TextView.TextBuffer);
         }
 
-        public static void HandleReturn(IWpfTextView view) {
-            var pt = view.BufferGraph.MapDownToFirstMatch(
-                new SnapshotPoint(view.TextBuffer.CurrentSnapshot, view.Caret.Position.BufferPosition),
-                PointTrackingMode.Positive,
-                PythonCoreConstants.IsPythonContent,
-                PositionAffinity.Successor
-            );
-
-            if (pt != null) {
-                var point = pt.Value;
-                
-                int indentation = GetTargetIndentation(view, point);
-                int existingWsChars;
-                int existingWhiteSpace = GetExistingWhiteSpaceRightOfTheCaret(view, point, out existingWsChars);
-
-                using (var edit = point.Snapshot.TextBuffer.CreateEdit()) {
-                    if (view.Selection.IsActive) {
-                        foreach (var span in view.Selection.SelectedSpans) {
-                            foreach (var mappedSpan in view.BufferGraph.MapDownToBuffer(
-                                span,
-                                SpanTrackingMode.EdgeExclusive,
-                                point.Snapshot.TextBuffer)) {
-                                edit.Delete(mappedSpan);
-                            }
-                        }
-                    }
-                    edit.Insert(point.Position, view.Options.GetNewLineCharacter());
-                    if (indentation != existingWhiteSpace) {
-                        if (indentation > existingWhiteSpace) {
-                            int spacesInserted = indentation - existingWhiteSpace;
-                            if (view.Options.IsConvertTabsToSpacesEnabled()) {
-                                edit.Insert(point.Position, new String(' ', spacesInserted));
-                            } else {
-                                edit.Insert(point.Position, new String('\t', spacesInserted / view.Options.GetTabSize()));
-                            }
-                        } else {
-                            // too much white space, delete the old white space
-                            edit.Delete(point.Position, existingWhiteSpace - indentation);
-                        }
-                    }
-
-                    point += existingWsChars;
-                    edit.Apply();
+        private static bool IsBlankLine(string lineText) {
+            foreach (char c in lineText) {
+                if (!Char.IsWhiteSpace(c)) {
+                    return false;
                 }
-
-                var caretDestPoint = view.BufferGraph.MapUpToBuffer(point, PointTrackingMode.Positive, PositionAffinity.Successor, view.TextBuffer);
-                if (caretDestPoint != null) {
-                    view.Caret.MoveTo(caretDestPoint.Value);
-                }
-                view.Caret.EnsureVisible();
             }
+            return true;
         }
 
-        private static int GetExistingWhiteSpaceRightOfTheCaret(IWpfTextView view, SnapshotPoint point, out int existingChars) {
-            var caretLine = point.GetContainingLine();
-            var firstNonWhiteSpaceChar = point;
-            int indentation = 0;
-            existingChars = 0;
-            int tabSize = view.Options.GetIndentSize();
-            for (var curPoint = point; curPoint < caretLine.End; curPoint += 1) {
-                if (!Char.IsWhiteSpace(curPoint.GetChar())) {
-                    firstNonWhiteSpaceChar = curPoint;
-                    break;
-                } else if (curPoint.GetChar() == '\t') {
-                    indentation += tabSize;
-                } else {
-                    indentation++;
+        private static void SkipPreceedingBlankLines(ITextSnapshotLine line, out string baselineText, out ITextSnapshotLine baseline) {
+            string text;
+            while (line.LineNumber > 0) {
+                line = line.Snapshot.GetLineFromLineNumber(line.LineNumber - 1);
+                text = line.GetText();
+                if (!IsBlankLine(text)) {
+                    baseline = line;
+                    baselineText = text;
+                    return;
                 }
-                existingChars++;
             }
+            baselineText = line.GetText();
+            baseline = line;
+        }
+
+        internal static int GetLineIndentation(ITextSnapshotLine line, IEditorOptions options) {
+            ITextSnapshotLine baseline;
+            string baselineText;
+            SkipPreceedingBlankLines(line, out baselineText, out baseline);
+
+            var classifier = line.Snapshot.TextBuffer.GetPythonClassifier();
+            int indentation = CalculateIndentation(baselineText, baseline, options, classifier);
+
+            // previous line is blank: don't re-indent instead just maintain the current indentation
+            if (baseline.LineNumber < line.LineNumber - 1) {
+                indentation = Math.Min(indentation, GetIndentation(line.GetText(), options.GetIndentSize()));
+            }
+
             return indentation;
-        }
-
-        /// <summary>
-        /// Gets the indentation level that we want to be at, in spaces.
-        /// </summary>
-        private static int GetTargetIndentation(IWpfTextView view, SnapshotPoint point) {
-            var caretLine = point.GetContainingLine();
-            int curLine = caretLine.LineNumber;
-            var snapshot = point.Snapshot;
-
-            int startLine = curLine;
-
-            // skip blank lines as far as calculating indentation goes...
-            bool hasNonWhiteSpace = false;
-            string lineText;
-            ITextSnapshotLine line;
-            int lineLength;
-            do {
-                line = snapshot.GetLineFromLineNumber(curLine);
-                if (curLine == startLine) {
-                    // if we're in the middle of a line only consider text to the left for white space detection
-                    lineLength = point.Position - caretLine.Start;
-                    lineText = line.GetText().Substring(0, point.Position - caretLine.Start);
-                } else {
-                    lineLength = line.Length;
-                    lineText = line.GetText();
-                }
-                foreach (char c in lineText) {
-                    if (!Char.IsWhiteSpace(c)) {
-                        hasNonWhiteSpace = true;
-                        break;
-                    }
-                }
-                if (!hasNonWhiteSpace) {
-                    curLine--;
-                }
-            } while (!hasNonWhiteSpace && curLine > 0);
-
-            var classifier = point.Snapshot.TextBuffer.GetPythonClassifier();
-            int indentation = CalculateIndentation(lineLength, line, view, classifier);
-            if (curLine != startLine) {
-                // enter on a blank line, don't re-indent instead just maintain the current indentation
-                indentation = Math.Min(indentation, GetIndentation(caretLine.GetText(), view.Options.GetIndentSize()));
-            }
-            return indentation;
-        }
-
-        private static string GetPreviousLine(IWpfTextView buffer) {
-            int lineno = buffer.Caret.Position.BufferPosition.GetContainingLine().LineNumber;
-            if (lineno < 1) {
-                return String.Empty;
-            }
-            return buffer.TextSnapshot.GetLineFromLineNumber(lineno - 1).GetText();
         }
     }
 }

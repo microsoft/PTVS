@@ -57,16 +57,21 @@ namespace Microsoft.VisualStudio.Repl {
 
             public IEnumerable<ITagSpan<ReplGlyphTag>>/*!*/ GetTags(NormalizedSnapshotSpanCollection/*!*/ spans) {
                 foreach (SnapshotSpan span in spans) {
-                    switch (_promptProvider.GetPromptForLine(span.Snapshot, span.Start.GetContainingLine().LineNumber)) {
-                        case ReplSpanKind.Prompt:
-                            yield return new TagSpan<ReplGlyphTag>(span, ReplGlyphTag.MainPrompt);
-                            break;
-                        case ReplSpanKind.SecondaryPrompt:
-                            yield return new TagSpan<ReplGlyphTag>(span, ReplGlyphTag.SecondaryPrompt);
-                            break;
-                        case ReplSpanKind.StandardInputPrompt:
-                            yield return new TagSpan<ReplGlyphTag>(span, ReplGlyphTag.InputPrompt);
-                            break;
+                    foreach (var prompt in _promptProvider.GetOverlappingPrompts(span)) {
+                        var tagSpan = prompt.Value;
+                        switch (prompt.Key) {
+                            case ReplSpanKind.Prompt:
+                                yield return new TagSpan<ReplGlyphTag>(tagSpan, ReplGlyphTag.MainPrompt);
+                                break;
+
+                            case ReplSpanKind.SecondaryPrompt:
+                                yield return new TagSpan<ReplGlyphTag>(tagSpan, ReplGlyphTag.SecondaryPrompt);
+                                break;
+
+                            case ReplSpanKind.StandardInputPrompt:
+                                yield return new TagSpan<ReplGlyphTag>(tagSpan, ReplGlyphTag.InputPrompt);
+                                break;
+                        }
                     }
                 }
             }

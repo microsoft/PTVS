@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Windows.Automation;
@@ -30,8 +31,12 @@ namespace AnalysisTest.UI {
             : base(null, element) {
             _title = title;
         }
-        
+
         public void WaitForText(params string[] text) {
+            WaitForText((IList<string>)text);
+        }
+
+        public void WaitForText(IList<string> text) {
             string expected = GetExpectedText(text);
 
             for (int i = 0; i < 100; i++) {
@@ -69,9 +74,9 @@ namespace AnalysisTest.UI {
             Assert.Fail(msg.ToString());
         }
 
-        private static string GetExpectedText(string[] text) {
+        private static string GetExpectedText(IList<string> text) {
             StringBuilder finalString = new StringBuilder();
-            for (int i = 0; i < text.Length; i++) {
+            for (int i = 0; i < text.Count; i++) {
                 if (i != 0) {
                     finalString.Append(Environment.NewLine);
                 }

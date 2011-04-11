@@ -13,9 +13,9 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.VisualStudio.Repl {
@@ -24,15 +24,44 @@ namespace Microsoft.VisualStudio.Repl {
         #region IReplCommand Members
 
         public void Execute(IReplWindow window, string arguments) {
+            List<string> submissions = new List<string>();
+            List<string> lines = new List<string>();
+
+            // TODO: commmand/comment parsing - in multi-line strings - check if we have a complete statement before splitting?
+
+            string commandPrefix = (string)window.GetOptionValue(ReplOptions.CommandPrefix);
+            const string commentPrefix = "%%";
+            string lineBreak = window.TextView.Options.GetNewLineCharacter();
+
             using (var stream = new StreamReader(arguments)) {
                 string line;
                 while ((line = stream.ReadLine()) != null) {
-                    if (!line.StartsWith("%%")) {
-                        window.PasteText(line);
+                    if (line.StartsWith(commentPrefix)) {
+                        continue;
+                    }
+
+                    if (line.StartsWith(commandPrefix)) {
+                        AddSubmission(submissions, lines, lineBreak);
+
+                        submissions.Add(line);
+                        lines.Clear();
+                    } else {
+                        lines.Add(line);
                     }
                 }
             }
-            window.PasteText(window.TextView.Options.GetNewLineCharacter());
+            AddSubmission(submissions, lines, lineBreak);
+
+            window.Submit(submissions);
+        }
+
+        private static void AddSubmission(List<string> submissions, List<string> lines, string lineBreak) {
+            string submission = String.Join(lineBreak, lines);
+
+            // skip empty submissions:
+            if (submission.Length > 0) {
+                submissions.Add(submission);
+            }
         }
 
         public string Description {

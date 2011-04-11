@@ -3,11 +3,14 @@ if ($args.Length -eq 0) {
 	exit 1
 }
 
-tf edit ..\..\..\Build\AssemblyVersion.cs
-if ($LASTEXITCODE -gt 0) {
-    # running outside of MS
-    attrib -r ..\..\..\Build\AssemblyVersion.cs
-    copy -force ..\..\..\Build\AssemblyVersion.cs ..\..\..\Build\AssemblyVersion.cs.bak
+$versionFiles = "..\..\..\Build\AssemblyVersion.cs", "..\Python\PythonTools\source.extension.vsixmanifest"
+foreach($versionedFile in $versionFiles) {
+    tf edit $versionedFile
+    if ($LASTEXITCODE -gt 0) {
+        # running outside of MS
+        attrib -r $versionedFile
+        copy -force $versionedFile $versionedFile.bak
+    }
 }
 
 $version = "0.8." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
@@ -83,9 +86,11 @@ copy -force -recurse ..\..\..\Binaries\x64\Release\*.exe $args\Release\Binaries\
 mkdir $args\Sources\Incubation
 xcopy /s ..\..\..\* $args\Sources
 
-tf undo /noprompt ..\..\..\Build\AssemblyVersion.cs
-if ($LASTEXITCODE -gt 0) {
-    copy -force ..\..\..\Build\AssemblyVersion.cs.bak ..\..\..\Build\AssemblyVersion.cs 
-    attrib +r ..\..\..\Build\AssemblyVersion.cs
-    del ..\..\..\Build\AssemblyVersion.cs.bak 
+foreach($versionedFile in $versionFiles) {
+    tf undo /noprompt $versionedFile
+    if ($LASTEXITCODE -gt 0) {
+        copy -force $versionedFile.bak $versionedFile
+        attrib +r $versionedFile
+        del $versionedFile.bak 
+    }
 }

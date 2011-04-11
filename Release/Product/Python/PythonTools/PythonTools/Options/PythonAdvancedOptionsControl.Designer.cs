@@ -106,7 +106,7 @@
             this._teeStdOut.Name = "_teeStdOut";
             this._teeStdOut.Size = new System.Drawing.Size(240, 17);
             this._teeStdOut.TabIndex = 10;
-            this._teeStdOut.Text = "Tee program output to &Debug Ouptut window";
+            this._teeStdOut.Text = "Tee program output to &Debug Output window";
             this._teeStdOut.UseVisualStyleBackColor = true;
             this._teeStdOut.CheckedChanged += new System.EventHandler(this._redirectOutputToVs_CheckedChanged);
             // 

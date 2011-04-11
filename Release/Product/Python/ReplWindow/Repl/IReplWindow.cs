@@ -12,16 +12,12 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows;
-
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.VisualStudio.Repl {
+
     /// <summary>
     /// An implementation of a Read Eval Print Loop Window for iteratively developing code.
     /// 
@@ -33,6 +29,13 @@ namespace Microsoft.VisualStudio.Repl {
         /// </summary>
         IWpfTextView TextView {
             get;
+        }
+
+        /// <summary>
+        /// Returns the current language buffer.
+        /// </summary>
+        ITextBuffer CurrentLanguageBuffer {
+            get; 
         }
 
         /// <summary>
@@ -65,10 +68,31 @@ namespace Microsoft.VisualStudio.Repl {
         void Cancel();
 
         /// <summary>
-        /// Pastes the specified text in as if the user had typed it.
+        /// Insert the specified text to the active code buffer at the current caret position.
         /// </summary>
-        /// <param name="text"></param>
-        void PasteText(string text);
+        /// <param name="text">Text to insert.</param>
+        /// <remarks>
+        /// Overwrites the current selection.
+        /// 
+        /// If the REPL is in the middle of code execution the text is inserted at the end of a pending input buffer.
+        /// When the REPL is ready for input the pending input is inserted into the active code input.
+        /// </remarks>
+        void InsertCode(string text);
+
+        /// <summary>
+        /// Submits a sequence of inputs one by one.
+        /// </summary>
+        /// <param name="inputs">
+        /// Code snippets or REPL commands to submit.
+        /// </param>
+        /// <remarks>
+        /// Enques given code snippets for submission at the earliest time the REPL is prepared to accept submissions.
+        /// Any submissions are postponed until execution of the current submission (if there is any) is finished or aborted.
+        /// 
+        /// The REPL processes the given inputs one by one creating a prompt, input span and possibly output span for each input.
+        /// This method may be reentered if any of the inputs evaluates to a command that invokes this method.
+        /// </remarks>
+        void Submit(IEnumerable<string> inputs);
 
         /// <summary>
         /// Resets the execution context clearing all variables.
@@ -101,7 +125,7 @@ namespace Microsoft.VisualStudio.Repl {
         /// <summary>
         /// Reads input from the REPL window.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The entered input or null if cancelled.</returns>
         string ReadStandardInput();
 
         /// <summary>
