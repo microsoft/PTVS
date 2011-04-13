@@ -35,9 +35,6 @@ namespace Microsoft.VisualStudio.Repl
     // a package.
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [Description("Visual Studio REPL Window")]
-    // This attribute is used to register the informations needed to show the this package
-    // in the Help/About dialog of Visual Studio.
-    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideKeyBindingTable(ReplWindow.TypeGuid, 200)]        // Resource ID: "Interactive Console"
     [ProvideToolWindow(typeof(ReplWindow), MultiInstances = true)]

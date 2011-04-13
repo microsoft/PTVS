@@ -121,10 +121,10 @@
     <value>Python Performance Session File</value>
   </data>
   <data name="110" xml:space="preserve">
-    <value>PythonProfiling</value>
+    <value>Microsoft Python Tools for Visual Studio - Profiling Support</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>Profiling support for Python projects</value>
+    <value>Profiling support for Python projects.</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">

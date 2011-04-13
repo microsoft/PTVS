@@ -1,15 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="81da0100-e6db-4783-91ea-c38c3fa1b81e">
-    <Name>PythonProfiling</Name>
+    <Name>Python Tools for Visual Studio, Profiling Support</Name>
     <Author>Microsoft</Author>
     <Version>1.0</Version>
-    <Description xml:space="preserve">Profiling support for Python projects</Description>
+    <Description xml:space="preserve">Provides support for profiling Python projects</Description>
     <Locale>1033</Locale>
-    <InstalledByMsi>false</InstalledByMsi>
+    <InstalledByMsi>true</InstalledByMsi>
     <SupportedProducts>
       <VisualStudio Version="10.0">
-        <Edition>Pro</Edition>
+        <Edition>Ultimate</Edition>
       </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />

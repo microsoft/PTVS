@@ -185,11 +185,11 @@ namespace Microsoft.PythonTools.Navigation {
         /// It is safe to call this method from any thread.
         /// </summary>
         protected void FileParsed(LibraryTask task, IScopeNode scope) {
-            var project = task.ModuleID.Hierarchy as IProject;
+            var project = task.ModuleID.Hierarchy.GetProject().GetCommonProject();
             
-            HierarchyNode fileNode = null;
-            if (project != null) {
-                fileNode = ((ProjectSmuggler)project.Project).Project.NodeFromItemId(task.ModuleID.ItemID);
+            HierarchyNode fileNode =fileNode = project.NodeFromItemId(task.ModuleID.ItemID);
+            if (fileNode == null) {
+                return;
             }
 
             LibraryNode module = CreateFileLibraryNode(

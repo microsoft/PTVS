@@ -64,7 +64,6 @@
         <Directory Id="APPLICATIONFOLDER" Name="[ApplicationFolderName]"  FileSource="$(var.TargetDir)">
           <Component Id="Comp_InstallDirItems" DiskId="1" Guid="F0C653EF-F90B-4C63-8AC6-7B1EC8F044A4">
               <File Id="File_License.html" Name="License.html" Source="$(var.PyToolsDir)\License.html" />
-              <File Id="File_Readme.html" Name="Readme.html" Source="$(var.PyToolsDir)\Readme.html"/>
               <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools' Type='string' Value='Readme' KeyPath='yes' />
               
               <RemoveFolder Id='Comp_InstallDirItems' On='uninstall'/>
@@ -99,19 +98,6 @@
         </Directory>
       </Directory>
 
-      <Directory Id="ProgramMenuFolder" Name="PMENU">
-        <!-- Shortcut to readme on start menu -->
-
-        <Directory Id="Dir_StartMenu" Name="$(var.ProductName)">
-          <Component Id="Comp_StartMenuItems" DiskId="1" Guid="6E28799A-BDE6-4713-BE45-FA935484CFBA">
-            <Shortcut Id="Shortcut_Readme" Directory="Dir_StartMenu" Name="Readme" Target="[#File_Readme.html]" />
-
-            <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools' Type='string' Value='Installed' KeyPath='yes' />
-            <RemoveFolder Id='Comp_StartMenuItems' On='uninstall'/>
-          </Component>
-        </Directory>
-      </Directory>
-
       <!-- Install the tools into the VS directory -->
       <Directory Id="EXTENSION_INSTALLPATH">
         <Merge Id="ReplWindow" Language="1033" SourceFile="$(var.TargetDir)ReplWindow.msm" DiskId="1" />
@@ -139,7 +125,6 @@
     
     <Feature Id="ProductFeature" Title="Python Tools for Visual Studio" Description="Python Tools for Visual Studio"
              Display="expand" Level="1"  >
-      <ComponentRef Id="Comp_StartMenuItems" Primary="yes" />
       <ComponentRef Id="Comp_InstallDirItems" Primary="yes" />
       <ComponentRef Id="Comp_PyProgRegistration" Primary="yes" />
       

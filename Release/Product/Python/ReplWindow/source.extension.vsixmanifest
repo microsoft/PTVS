@@ -6,7 +6,8 @@
     <Version>1.0</Version>
     <Description xml:space="preserve">Visual Studio Repl Window</Description>
     <Locale>1033</Locale>
-    <InstalledByMsi>false</InstalledByMsi>
+    <InstalledByMsi>true</InstalledByMsi>
+    <SystemComponent>true</SystemComponent>
     <SupportedProducts>
       <VisualStudio Version="10.0">
         <Edition>Ultimate</Edition>

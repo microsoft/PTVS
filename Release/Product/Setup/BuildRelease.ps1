@@ -9,7 +9,7 @@ foreach($versionedFile in $versionFiles) {
     if ($LASTEXITCODE -gt 0) {
         # running outside of MS
         attrib -r $versionedFile
-        copy -force $versionedFile $versionedFile.bak
+        copy -force $versionedFile ($versionedFile + ".bak")
     }
 }
 
@@ -89,8 +89,8 @@ xcopy /s ..\..\..\* $args\Sources
 foreach($versionedFile in $versionFiles) {
     tf undo /noprompt $versionedFile
     if ($LASTEXITCODE -gt 0) {
-        copy -force $versionedFile.bak $versionedFile
+        copy -force ($versionedFile + ".bak") $versionedFile
         attrib +r $versionedFile
-        del $versionedFile.bak 
+        del ($versionedFile + ".bak")
     }
 }
