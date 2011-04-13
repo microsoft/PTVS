@@ -481,6 +481,8 @@ namespace Microsoft.VisualStudio.Repl {
 
         #region IReplWindow
 
+        public event Action ReadyForInput;
+
         /// <summary>
         /// See IReplWindow
         /// </summary>
@@ -1555,6 +1557,11 @@ namespace Microsoft.VisualStudio.Repl {
                 // move to the end (it migth have been in virtual space):
                 Caret.MoveTo(GetLastLine().End);
                 Caret.EnsureVisible();
+
+                var ready = ReadyForInput;
+                if (ready != null) {
+                    ready();
+                }
 
                 return;
             }

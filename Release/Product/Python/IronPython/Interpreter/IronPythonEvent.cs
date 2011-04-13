@@ -24,6 +24,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         #region IPythonEvent Members
 
+        public override PythonMemberType MemberType {
+            get { return PythonMemberType.Event; }
+        }
+
         public IPythonType EventHandlerType {
             get { return Interpreter.GetTypeFromType(Value.Info.EventHandlerType); }
         }

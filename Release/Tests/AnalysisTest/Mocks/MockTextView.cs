@@ -15,10 +15,12 @@
 using System;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 
 namespace AnalysisTest.Mocks {
     class MockTextView : ITextView {
         private readonly ITextBuffer _buffer;
+        private readonly PropertyCollection _props = new PropertyCollection();
 
         public MockTextView(ITextBuffer buffer) {
             _buffer = buffer;
@@ -199,7 +201,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public Microsoft.VisualStudio.Utilities.PropertyCollection Properties {
-            get { throw new NotImplementedException(); }
+            get { return _props; }
         }
     }
 }

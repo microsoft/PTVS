@@ -1727,7 +1727,9 @@ namespace Microsoft.PythonTools.Project
 			{
 				if((VsCommands2K)cmd == VsCommands2K.SHOWALLFILES)
 				{
-					result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                    result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
+                    // When we implement this feature we should re-enable the option:
+                    // http://social.msdn.microsoft.com/Forums/en/vsx/thread/f348aaed-cdcc-4709-9118-c0fd8b9e154d
 					return VSConstants.S_OK;
 				}
 			}

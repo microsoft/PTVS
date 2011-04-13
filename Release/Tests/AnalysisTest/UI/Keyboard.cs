@@ -110,14 +110,22 @@ namespace AnalysisTest.UI {
                 // to go from the vKey key info into a System.Windows.Input.Key data structure. This work is
                 // necessary because Key doesn't distinguish between upper and lower case, so we have to wrap
                 // the key type inside a shift press/release if necessary.
-                int vKeyValue = NativeMethods.VkKeyScan(c);
-                bool keyIsShifted = (vKeyValue & NativeMethods.VKeyShiftMask) == NativeMethods.VKeyShiftMask;
-                Key key = KeyInterop.KeyFromVirtualKey(vKeyValue & NativeMethods.VKeyCharMask);
+                switch (c) {
+                    case '←': Type(Key.Left); break;
+                    case '→': Type(Key.Right); break;
+                    case '↑': Type(Key.Up); break;
+                    case '↓': Type(Key.Down); break;
+                    default:
+                        int vKeyValue = NativeMethods.VkKeyScan(c);
+                        bool keyIsShifted = (vKeyValue & NativeMethods.VKeyShiftMask) == NativeMethods.VKeyShiftMask;
+                        Key key = KeyInterop.KeyFromVirtualKey(vKeyValue & NativeMethods.VKeyCharMask);
 
-                if (keyIsShifted) {
-                    Type(key, new Key[] { Key.LeftShift });
-                } else {
-                    Type(key);
+                        if (keyIsShifted) {
+                            Type(key, new Key[] { Key.LeftShift });
+                        } else {
+                            Type(key);
+                        }
+                        break;
                 }
             }
         }

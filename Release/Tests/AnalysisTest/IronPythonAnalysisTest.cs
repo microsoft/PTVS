@@ -283,6 +283,14 @@ System.AppDomain.CurrentDomain.AssemblyLoad += f
         }
 
         [TestMethod]
+        public void TestEventMemberType() {
+            var text = @"from System import AppDomain";
+            var entry = ProcessText(text);
+            var mem = entry.GetMembers("AppDomain.", 1).Where(x =>x.Name == "AssemblyLoad").First();
+            Assert.AreEqual(mem.MemberType, PythonMemberType.Event);
+        }
+
+        [TestMethod]
         public void TestNegCallProperty() {
             // invalid code, this shouldn't crash us.
             var text = @"

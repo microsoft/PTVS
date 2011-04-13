@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             SingleDependency single = _data as SingleDependency;
             if (single != null) {
                 if (single.Key.Equals(fromModule)) {
-                    single = null;
+                    _data = null;
                 }
                 return;
             }

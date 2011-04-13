@@ -159,14 +159,7 @@ namespace Microsoft.PythonTools.Editor {
             SkipPreceedingBlankLines(line, out baselineText, out baseline);
 
             var classifier = line.Snapshot.TextBuffer.GetPythonClassifier();
-            int indentation = CalculateIndentation(baselineText, baseline, options, classifier);
-
-            // previous line is blank: don't re-indent instead just maintain the current indentation
-            if (baseline.LineNumber < line.LineNumber - 1) {
-                indentation = Math.Min(indentation, GetIndentation(line.GetText(), options.GetIndentSize()));
-            }
-
-            return indentation;
+            return CalculateIndentation(baselineText, baseline, options, classifier);
         }
     }
 }

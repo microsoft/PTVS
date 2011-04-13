@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -141,5 +142,10 @@ namespace Microsoft.VisualStudio.Repl {
         /// It is safe to call this method from any thread.
         /// </summary>
         object GetOptionValue(ReplOptions option);
+
+        /// <summary>
+        /// Event triggered when the REPL is ready to accept input.
+        /// </summary>
+        event Action ReadyForInput;
     }
 }

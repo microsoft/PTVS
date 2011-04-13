@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinModule : BuiltinNamespace<IPythonModule>, IReferenceableContainer {
+    internal class BuiltinModule : BuiltinNamespace<IPythonModule>, IReferenceableContainer, IModule {
         private readonly MemberReferences _references = new MemberReferences();
         private readonly IPythonModule _interpreterModule;
 
@@ -71,6 +71,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         internal IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
             return _type.GetMemberNames(moduleContext);
+        }
+
+        public IModule GetChildPackage(IModuleContext context, string name) {
+            var mem = _type.GetMember(context, name);
+            if (mem != null) {
+                return ProjectState.GetNamespaceFromObjects(mem) as IModule;
+            }
+            return null;
+        }
+
+        public IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext context) {
+            foreach (var name in _type.GetChildrenModules()) {
+                yield return new KeyValuePair<string, Namespace>(name, ProjectState.GetNamespaceFromObjects(_type.GetMember(context, name)));
+            }
         }
     }
 }

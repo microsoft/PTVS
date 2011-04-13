@@ -12,20 +12,12 @@
  *
  * ***************************************************************************/
 
-
 using System.Collections.Generic;
+using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.Interpreter {
-    /// <summary>
-    /// Represents a Python module which members can be imported from.
-    /// </summary>
-    public interface IPythonModule : IMemberContainer, IMember {
-        string Name {
-            get;
-        }
-
-        IEnumerable<string> GetChildrenModules();
-
-        void Imported(IModuleContext context);
+namespace Microsoft.PythonTools.Analysis.Values {
+    interface IModule {
+        IModule GetChildPackage(IModuleContext context, string name);
+        IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext context);
     }
 }

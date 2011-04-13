@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 scopes[scopes.Length - 1] = funcScope;
                 scope = funcScope;
 
-                if (!node.IsLambda) {
+                if (!node.IsLambda && node.Name != "<genexpr>") {
                     // lambdas don't have their names published                    
                     declScope.SetVariable(node, unit, node.Name, function.SelfSet);
                 }

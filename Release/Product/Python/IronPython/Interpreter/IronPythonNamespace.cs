@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.Scripting.Actions;
 
@@ -32,6 +33,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public void Imported(IModuleContext context) {
             ((IronPythonModuleContext)context).ShowClr = true;
+        }
+
+        public IEnumerable<string> GetChildrenModules() {
+            foreach (var name in _ns.GetMemberNames()) {
+                if (_ns[name] is NamespaceTracker) {
+                    yield return name;
+                }
+            }
         }
 
         #endregion

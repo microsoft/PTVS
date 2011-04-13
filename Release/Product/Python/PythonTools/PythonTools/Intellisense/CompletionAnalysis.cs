@@ -41,96 +41,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _textBuffer = textBuffer;
         }
 
-#if FALSE
-        /// <summary>
-        /// Gets a CompletionContext providing a list of possible members the user can dot through.
-        /// </summary>
-        public static CompletionContext GetMemberCompletionContext(ITextSnapshot snapshot, ITextBuffer buffer, ITrackingSpan span) {
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
-
-            var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-            var line = parser.Snapshot.GetLineFromPosition(loc.Start);
-            var lineStart = line.Start;
-
-            var textLen = loc.End - lineStart.Position;
-            if (textLen <= 0) {
-                // Ctrl-Space on an empty line, we just want to get global vars
-                return new NormalCompletionContext(String.Empty, loc.Start, parser.Snapshot, parser.Span, parser.Buffer, 0);
-            }
-
-            return TrySpecialCompletions(parser, loc) ??
-                   GetNormalCompletionContext(parser, loc);
-        }
-
-        /// <summary>
-        /// Gets a CompletionContext for the expression at the provided span.  If the span is in
-        /// part of an identifier then the expression is extended to complete the identifier.
-        /// </summary>
-        public static CompletionContext GetExpressionContext(ITextSnapshot snapshot, ITextBuffer buffer, ITrackingSpan span) {
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
-
-            var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-            var exprRange = parser.GetExpressionRange();
-            if (exprRange == null) {
-                return EmptyCompletionContext;
-            }
-
-            // extend right for any partial expression the user is hovering on, for example:
-            // "x.Baz" where the user is hovering over the B in baz we want the complete
-            // expression.
-            var text = exprRange.Value.GetText();
-            var endingLine = exprRange.Value.End.GetContainingLine();
-            var endText = snapshot.GetText(exprRange.Value.End.Position, endingLine.End.Position - exprRange.Value.End.Position);
-            for (int i = 0; i < endText.Length; i++) {
-                if (!Char.IsLetterOrDigit(endText[i]) && endText[i] != '_') {
-                    text += endText.Substring(0, i);
-                    break;
-                }
-            }
-
-            var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                exprRange.Value.Span,
-                SpanTrackingMode.EdgeExclusive
-            );
-
-            return new NormalCompletionContext(
-                text,
-                loc.Start,
-                parser.Snapshot,
-                applicableSpan,
-                parser.Buffer,
-                -1
-            );
-        }
-
-        public static CompletionContext GetSignatureContext(ITextSnapshot snapshot, ITextBuffer buffer, ITrackingSpan span) {
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
-
-            var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-
-            int paramIndex;
-            var exprRange = parser.GetExpressionRange(1, out paramIndex);
-            if (exprRange == null) {
-                return EmptyCompletionContext;
-            }
-            var text = exprRange.Value.GetText();
-
-            var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                exprRange.Value.Span,
-                SpanTrackingMode.EdgeExclusive
-            );
-
-            return new NormalCompletionContext(
-                text,
-                loc.Start,
-                parser.Snapshot,
-                applicableSpan,
-                parser.Buffer,
-                paramIndex
-            );
-        }
-
-#endif
         public ITextBuffer TextBuffer {
             get {
                 return _textBuffer;
@@ -148,81 +58,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _span;
             }
         }
-#if FALSE
-        public virtual int ParameterIndex {
-            get { return 0; }
-        }
-#endif
+
         public virtual CompletionSet GetCompletions(IGlyphService glyphService) {
             return null;
         }
 
-#if FALSE
-        public virtual ISignature[] GetSignatures() {
-            return new ISignature[0];
-        }
-
-        public virtual string GetQuickInfo() {
-            return null;
-        }
-
-        public virtual IEnumerable<VariableResult> GetVariableInfo() {
-            yield break;
-        }
-
-        private static CompletionContext GetNormalCompletionContext(ReverseExpressionParser parser, Span loc) {
-            var exprRange = parser.GetExpressionRange();
-            if (exprRange == null) {
-                return EmptyCompletionContext;
-            }
-            var text = exprRange.Value.GetText();
-
-            var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                exprRange.Value.Span,
-                SpanTrackingMode.EdgeExclusive
-            );
-
-            return new NormalCompletionContext(
-                text,
-                loc.Start,
-                parser.Snapshot,
-                applicableSpan,
-                parser.Buffer,
-                -1
-            );
-        }
-
-        private static CompletionContext TrySpecialCompletions(ReverseExpressionParser parser, Span loc) {
-            if (parser.Tokens.Count > 0) {
-                // Check for context-sensitive intellisense
-                var lastClass = parser.Tokens[parser.Tokens.Count - 1];
-
-                if (lastClass.ClassificationType == parser.Classifier.Provider.Comment) {
-                    // No completions in comments
-                    return EmptyCompletionContext;
-                } else if (lastClass.ClassificationType == parser.Classifier.Provider.StringLiteral) {
-                    // String completion
-                    return new StringLiteralCompletionContext(lastClass.Span.GetText(), loc.Start, parser.Span, parser.Buffer);
-                }
-
-                // Import completions
-                var first = parser.Tokens[0];
-                if (IsKeyword(first, "import")) {
-                    return ImportCompletionContext.Make(first, lastClass, loc, parser.Snapshot, parser.Span, parser.Buffer, IsSpaceCompletion(parser, loc));
-                } else if (IsKeyword(first, "from")) {
-                    return FromImportCompletionContext.Make(parser.Tokens, first, loc, parser.Snapshot, parser.Span, parser.Buffer, IsSpaceCompletion(parser, loc));
-                }
-                return null;
-            }
-
-            return EmptyCompletionContext;
-        }
-
-        private static bool IsSpaceCompletion(ReverseExpressionParser parser, Span loc) {
-            var keySpan = new SnapshotSpan(parser.Snapshot, loc.Start - 1, 1);
-            return (keySpan.GetText() == " ");
-        }
-#endif
         internal static bool IsKeyword(ClassificationSpan token, string keyword) {
             return token.ClassificationType.Classification == "keyword" && token.Span.GetText() == keyword;
         }
@@ -254,7 +94,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        public virtual Completion[] GetModules(IGlyphService glyphService, string text) {
+        public virtual Completion[] GetModules(IGlyphService glyphService, string text, bool includeMembers = false) {
             var analysis = GetAnalysisEntry();
             var path = text.Split('.');
             if (path.Length > 0) {
@@ -278,8 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
             } else {
                 if (analysis != null) {
-
-                    modules = analysis.ProjectState.GetModuleMembers(analysis.InterpreterContext, path);
+                    modules = analysis.ProjectState.GetModuleMembers(analysis.InterpreterContext, path, includeMembers);
                 }
             }
 

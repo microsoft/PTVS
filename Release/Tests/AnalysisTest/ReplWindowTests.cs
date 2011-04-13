@@ -1776,7 +1776,7 @@ $cls
             app.Element.SetFocus();
             interactive.Element.SetFocus();
             interactive.ClearScreen();
-            interactive.WaitForText(ReplPrompt);
+            interactive.WaitForReadyState();
             return interactive;
         }
 

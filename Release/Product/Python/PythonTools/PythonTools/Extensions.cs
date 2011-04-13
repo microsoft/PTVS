@@ -60,9 +60,20 @@ namespace Microsoft.PythonTools {
 
         internal static ITrackingSpan CreateTrackingSpan(this IIntellisenseSession session, ITextBuffer buffer) {
             var triggerPoint = session.GetTriggerPoint(buffer);
+            
             var position = session.GetTriggerPoint(buffer).GetPosition(buffer.CurrentSnapshot);
 
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
+        }
+
+        internal static ITrackingSpan CreateTrackingSpan(this IQuickInfoSession session, ITextBuffer buffer) {
+            var triggerPoint = session.GetTriggerPoint(buffer);
+            var position = session.GetTriggerPoint(buffer).GetPosition(buffer.CurrentSnapshot);
+            if (position == buffer.CurrentSnapshot.Length) {
+                return ((IIntellisenseSession)session).CreateTrackingSpan(buffer);
+            }
+
+            return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
         }
 
         internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {

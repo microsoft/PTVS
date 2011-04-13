@@ -241,6 +241,7 @@
     <Compile Include="Values\GeneratorInfo.cs" />
     <Compile Include="Values\GeneratorNextBoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\GeneratorSendBoundBuiltinMethodInfo.cs" />
+    <Compile Include="Values\IModule.cs" />
     <Compile Include="Values\InstanceInfo.cs" />
     <Compile Include="Values\IReferenceable.cs" />
     <Compile Include="Values\ListAppendBoundBuiltinMethodInfo.cs" />

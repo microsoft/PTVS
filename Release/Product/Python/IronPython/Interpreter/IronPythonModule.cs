@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Interpreter;
 
@@ -42,6 +43,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
             } else if (_name == "wpf") {
                 AddWpfReferences();
             }
+        }
+
+        public IEnumerable<string> GetChildrenModules() {
+            return new string[0];
         }
 
         private void AddWpfReferences() {

@@ -112,6 +112,22 @@ namespace Microsoft.PythonTools.Analysis {
             if (oldParent != null) {
                 // update us in our parent package
                 oldParent.AddChildPackage(_myScope, _unit);
+            } else if (_filePath != null) {
+                // we need to check and see if our parent is a package for the case where we're adding a new
+                // file but not re-analyzing our parent package.
+                string parentFilename;
+                if (Path.GetFileName(_filePath).Equals("__init__.py", StringComparison.OrdinalIgnoreCase)) {
+                    // subpackage
+                    parentFilename = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(_filePath)), "__init__.py");
+                } else {
+                    // just a module
+                    parentFilename = Path.Combine(Path.GetDirectoryName(_filePath), "__init__.py");
+                }
+
+                ModuleInfo parentPackage;
+                if (ProjectState.ModulesByFilename.TryGetValue(parentFilename, out parentPackage)) {
+                    parentPackage.AddChildPackage(_myScope, _unit);
+                }
             }
 
             var unit = _unit = new AnalysisUnit(_tree, new InterpreterScope[] { _myScope.Scope });

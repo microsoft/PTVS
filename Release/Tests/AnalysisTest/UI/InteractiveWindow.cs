@@ -14,9 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Threading;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Repl;
@@ -25,11 +28,46 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace AnalysisTest.UI {
     class InteractiveWindow : EditorWindow {
+        private sealed class ReplWindowInfo {
+            public readonly ManualResetEvent Idle = new ManualResetEvent(false);
+            public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
+
+            public void OnReadyForInput() {
+                ReadyForInput.Set();
+            }
+        }
+
+        private static ConditionalWeakTable<IReplWindow, ReplWindowInfo> _replWindows = new ConditionalWeakTable<IReplWindow, ReplWindowInfo>();
+
         private readonly string _title;
+        private readonly IReplWindow _replWindow;
+        private readonly ReplWindowInfo _replWindowInfo;
 
         public InteractiveWindow(string title, AutomationElement element)
             : base(null, element) {
             _title = title;
+
+            var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var replWindowProvider = compModel.GetService<IReplWindowProvider>();
+            _replWindow = GetReplWindow(replWindowProvider);
+
+            _replWindowInfo = _replWindows.GetValue(_replWindow, window => {
+                var info = new ReplWindowInfo();
+                window.ReadyForInput += new Action(info.OnReadyForInput);
+                return info;
+            });
+        }
+
+        public void WaitForReadyState() {
+            Assert.IsTrue(_replWindowInfo.ReadyForInput.WaitOne(500));
+        }
+
+        public void WaitForIdleState() {
+            Dispatcher dispatcher = ((FrameworkElement)ReplWindow.TextView).Dispatcher;
+
+            _replWindowInfo.Idle.Reset();
+            dispatcher.Invoke(new Action(() => _replWindowInfo.Idle.Set()), DispatcherPriority.ApplicationIdle);
+            _replWindowInfo.Idle.WaitOne();
         }
 
         public void WaitForText(params string[] text) {
@@ -38,14 +76,9 @@ namespace AnalysisTest.UI {
 
         public void WaitForText(IList<string> text) {
             string expected = GetExpectedText(text);
-
-            for (int i = 0; i < 100; i++) {
-                string curText = Text;
-
-                if (expected == Text) {
-                    return;
-                }
-                Thread.Sleep(100);
+            WaitForIdleState();
+            if (expected == Text) {
+                return;
             }
 
             FailWrongText(expected);
@@ -116,18 +149,20 @@ namespace AnalysisTest.UI {
         }
 
         public void ClearScreen() {
+            _replWindowInfo.ReadyForInput.Reset();
             VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.ClearScreen");
+            WaitForReadyState();
         }
 
         public void CancelExecution() {
+            _replWindowInfo.ReadyForInput.Reset();
             VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
+            WaitForReadyState();
         }
 
         public IReplWindow ReplWindow {
             get {
-                var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-                var replWindowProvider = compModel.GetService<IReplWindowProvider>();
-                return GetReplWindow(replWindowProvider);
+                return _replWindow;
             }
         }
 

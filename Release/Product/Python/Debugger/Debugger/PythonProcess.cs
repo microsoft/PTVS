@@ -95,11 +95,13 @@ namespace Microsoft.PythonTools.Debugger {
                 (((options & PythonDebugOptions.RedirectOutput) != 0) ? " --redirect-output " : "") +
                 args;
 
-            string[] envValues = env.Split('\0');
-            foreach (var curValue in envValues) {
-                string[] nameValue = curValue.Split(new[] { '=' }, 2);
-                if (nameValue.Length == 2 && !String.IsNullOrWhiteSpace(nameValue[0])) {
-                    processInfo.EnvironmentVariables[nameValue[0]] = nameValue[1];
+            if (env != null) {
+                string[] envValues = env.Split('\0');
+                foreach (var curValue in envValues) {
+                    string[] nameValue = curValue.Split(new[] { '=' }, 2);
+                    if (nameValue.Length == 2 && !String.IsNullOrWhiteSpace(nameValue[0])) {
+                        processInfo.EnvironmentVariables[nameValue[0]] = nameValue[1];
+                    }
                 }
             }
             

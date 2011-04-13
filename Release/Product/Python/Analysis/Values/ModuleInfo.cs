@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class ModuleInfo : Namespace, IReferenceableContainer {
+    internal class ModuleInfo : Namespace, IReferenceableContainer, IModule {
         private readonly string _name;
         private readonly ProjectEntry _projectEntry;
         private readonly Dictionary<Node, ISet<Namespace>> _sequences;  // sequences defined in the module
@@ -80,12 +80,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _packageModules[realName] = childPackage.WeakModule;
         }
 
-        public ModuleInfo GetChildPackage(string name) {
+        public IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext moduleContext) {
+            if (_packageModules != null) {
+                foreach (var keyValue in _packageModules) {
+                    var res = (ModuleInfo)keyValue.Value.Target;
+                    if (res != null) {
+                        yield return new KeyValuePair<string, Namespace>(keyValue.Key, res);
+                    }
+                }
+            }
+        }
+
+        public IModule GetChildPackage(IModuleContext moduleContext, string name) {
             WeakReference weakMod;
             if (_packageModules != null && _packageModules.TryGetValue(name, out weakMod)) {
                 var res = weakMod.Target;
                 if (res != null) {
-                    return (ModuleInfo)res;
+                    return (IModule)res;
                 }
 
                 _packageModules.Remove(name);

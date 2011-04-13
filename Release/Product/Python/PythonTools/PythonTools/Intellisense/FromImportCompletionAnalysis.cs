@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             string text = _namespace + "." + Text;
-            var completions = FromCompletions(glyphService, GetModules(glyphService, text));
+            var completions = FromCompletions(glyphService, GetModules(glyphService, text, includeMembers: true));
             var res = new PythonCompletionSet(Text, Text, Span, completions, new Completion[0]);
 
             var end = _stopwatch.ElapsedMilliseconds;

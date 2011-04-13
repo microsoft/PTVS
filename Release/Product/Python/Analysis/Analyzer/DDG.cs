@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
 
                 for (int i = 0; i < relativeName.Names.Count && curPackage != null; i++) {
-                    curPackage = curPackage.GetChildPackage(relativeName.Names[i]);
+                    curPackage = curPackage.GetChildPackage(GlobalScope.InterpreterContext, relativeName.Names[i]) as ModuleInfo;
                 }
 
                 userMod = curPackage;

@@ -51,8 +51,17 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<string, object> SerializeModule(ModuleInfo moduleInfo) {
             return new Dictionary<string, object>() {
                 { "members", GenerateMembers(moduleInfo) },
-                { "doc", moduleInfo.Documentation }
+                { "doc", moduleInfo.Documentation },
+                { "children", GenerateChildModules(moduleInfo) }
             };
+        }
+
+        private object[] GenerateChildModules(ModuleInfo moduleInfo) {
+            List<object> res = new List<object>();
+            foreach (var keyValue in moduleInfo.GetChildrenPackages(null)) {
+                res.Add(keyValue.Key);
+            }
+            return res.ToArray();
         }
 
         private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo) {

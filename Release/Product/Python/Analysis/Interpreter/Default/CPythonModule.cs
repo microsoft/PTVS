@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
         private Dictionary<string, IMember> _hiddenMembers;
         private string _docString;
+        private object[] _children;
         private bool _loaded;
         [ThreadStatic] private static int _loadDepth;
 
@@ -69,6 +70,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (data.TryGetValue("doc", out doc)) {
                 _docString = doc as string;
             }
+
+            object children;
+            if (data.TryGetValue("children", out children)) {
+                _children = children as object[];
+            }
         }
 
         private void LoadMembers(Dictionary<string, object> membersTable) {
@@ -101,6 +107,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
         
         #region IPythonModule Members
+
+        public IEnumerable<string> GetChildrenModules() {
+            if (_children != null) {
+                foreach (var child in _children) {
+                    yield return (string)child;
+                }
+            }
+        }
 
         public string Name {
             get { return _modName; }

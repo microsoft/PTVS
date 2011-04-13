@@ -100,6 +100,18 @@ namespace AnalysisTest.ProjectSystem {
         public void AutoIndent() {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\AutoIndent.sln");
 
+            // http://pytools.codeplex.com/workitem/116
+            AutoIndentTest(project, "def f():\rprint 'hi'\r\rdef inner(): pass←←←←←←←←←←←←←←←←←\r", @"def f():
+    print 'hi'
+
+    
+    def inner(): pass");
+
+            // http://pytools.codeplex.com/workitem/121
+            AutoIndentTest(project, "x = {'a': [1, 2, 3],\r\r'b':42}", @"x = {'a': [1, 2, 3],
+
+           'b':42}");
+
             AutoIndentTest(project, "if True:\rpass\r\r42\r\r", @"if True:
     pass
 

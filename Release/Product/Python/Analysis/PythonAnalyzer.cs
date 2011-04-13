@@ -182,71 +182,36 @@ namespace Microsoft.PythonTools.Analysis {
         /// ['System', 'Runtime']
         /// </summary>
         /// <returns></returns>
-        public MemberResult[] GetModuleMembers(IModuleContext moduleContext, string[] names) {
-            return GetModuleMembers(moduleContext, names, true);
-        }
-
-        /// <summary>
-        /// returns the MemberResults associated with modules in the specified
-        /// list of names.  The list of names is the path through the module, for example
-        /// ['System', 'Runtime']
-        /// </summary>
-        /// <returns></returns>
-        public MemberResult[] GetModuleMembers(IModuleContext moduleContext, string[] names, bool bottom) {
+        public MemberResult[] GetModuleMembers(IModuleContext moduleContext, string[] names, bool includeMembers = false) {
             IDictionary<string, ISet<Namespace>> d = null;
 
             ModuleReference moduleRef;
             if (Modules.TryGetValue(names[0], out moduleRef) && moduleRef.Module != null) {
-                var module = moduleRef.Module;
-                d = new Dictionary<string, ISet<Namespace>>();
+                var module = moduleRef.Module as IModule;
+                if (module != null) {
+                    for (int i = 1; i < names.Length && module != null; i++) {
+                        module = module.GetChildPackage(moduleContext, names[i]);
+                    }
 
-                var mod = module.SelfSet;
-                if (bottom) {
-                    for (int i = 1; i < names.Length; i++) {
-                        var next = names[i];
-                        // import Foo.Bar as Baz, we need to get Bar
-                        VariableDef def;
-                        ISet<Namespace> newMod = EmptySet<Namespace>.Instance;
-                        bool madeSet = false;
-                        foreach (var modItem in mod) {
-                            BuiltinModule builtinMod = modItem as BuiltinModule;
-                            if (builtinMod != null) {
-                                var mem = builtinMod._type.GetMember(moduleContext, next);
-                                if (mem != null) {
-                                    newMod = newMod.Union(GetNamespaceFromObjects(mem), ref madeSet);
-                                }
-                            } else {
-                                ModuleInfo userMod = modItem as ModuleInfo;
-                                if (userMod != null && userMod.Scope.Variables.TryGetValue(next, out def)) {
-                                    newMod = newMod.Union(def.Types, ref madeSet);
-                                }
+                    if (module != null) {
+                        List<MemberResult> result = new List<MemberResult>();
+                        if (includeMembers) {
+                            foreach (var keyValue in ((Namespace)module).GetAllMembers(moduleContext)) {
+                                result.Add(new MemberResult(keyValue.Key, keyValue.Value));
                             }
-                        }
-
-                        mod = newMod;
-                        if (mod.Count == 0) {
-                            break;
+                            return result.ToArray();
+                        } else {
+                            foreach (var child in module.GetChildrenPackages(moduleContext)) {
+                                result.Add(new MemberResult(child.Key, child.Key, new[] { child.Value }, PythonMemberType.Module));
+                            }
+                            return result.ToArray();
                         }
                     }
                 }
 
-                foreach (var modItem in mod) {
-                    Update(d, modItem.GetAllMembers(moduleContext));
-                }
             }
 
-            MemberResult[] result;
-            if (d != null) {
-                result = new MemberResult[d.Count];
-                int pos = 0;
-                foreach (var kvp in d) {
-                    result[pos++] = new MemberResult(kvp.Key, kvp.Value);
-                }
-            } else {
-                result = new MemberResult[0];
-            }
-
-            return result;
+            return new MemberResult[0];
         }
 
         public void SpecializeFunction(string moduleName, string name, Action<CallExpression> dlg) {
@@ -267,7 +232,7 @@ namespace Microsoft.PythonTools.Analysis {
                 dirName = path;
             }
 
-            while (dirName.Length != 0 && (dirName = Path.GetDirectoryName(dirName)).Length != 0 &&
+            while (dirName.Length != 0 && (dirName = Path.GetDirectoryName(dirName)).Length != 0 &&    
                 File.Exists(Path.Combine(dirName, "__init__.py"))) {
                 moduleName = Path.GetFileName(dirName) + "." + moduleName;
             }
