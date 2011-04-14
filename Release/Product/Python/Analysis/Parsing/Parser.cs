@@ -2817,13 +2817,17 @@ namespace Microsoft.PythonTools.Parsing {
                     bool first = false;
                     Expression e1 = ParseExpression();
                     if (MaybeEat(TokenKind.Colon)) { // dict literal
-                        if (setMembers != null) {
-                            ReportSyntaxError("invalid syntax");
-                        } else if (dictMembers == null) {
+                        if (setMembers == null && dictMembers == null) {
                             dictMembers = new List<SliceExpression>();
                             first = true;
                         }
                         Expression e2 = ParseExpression();
+
+                        if (setMembers != null) {
+                            if (!reportedError) {
+                                ReportSyntaxError(e1.StartIndex, e2.EndIndex, "invalid syntax");
+                            }
+                        }
 
                         if (PeekToken(Tokens.KeywordForToken)) {
                             if (!first || _langVersion < PythonLanguageVersion.V27) {
@@ -2835,14 +2839,18 @@ namespace Microsoft.PythonTools.Parsing {
 
                         SliceExpression se = new SliceExpression(e1, e2, null, false);
                         se.SetLoc(_globalParent, e1.StartIndex, e2.EndIndex);
-                        dictMembers.Add(se);
+                        if (dictMembers != null) {
+                            dictMembers.Add(se);
+                        }
                     } else { // set literal
                         if (_langVersion < PythonLanguageVersion.V27 && !reportedError) {
-                            ReportSyntaxError("invalid syntax");
+                            ReportSyntaxError(e1.StartIndex, e1.EndIndex, "invalid syntax, set literals require Python 2.7 or later.");
                             reportedError = true;
                         }
                         if (dictMembers != null) {
-                            ReportSyntaxError("invalid syntax");
+                            if (!reportedError) {
+                                ReportSyntaxError(e1.StartIndex, e1.EndIndex, "invalid syntax");
+                            }
                         } else if (setMembers == null) {
                             setMembers = new List<Expression>();
                             first = true;

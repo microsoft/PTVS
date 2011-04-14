@@ -1579,7 +1579,7 @@ namespace Microsoft.PythonTools.Parsing {
                         // level is constructed in exactly the same way (i.e. has the same mix of spaces
                         // and tabs etc.).
                         if (IndentationInconsistencySeverity != Severity.Ignore) {
-                            CheckIndent(sb);
+                            CheckIndent(sb, noAllocWhiteSpace);
                         }
 
                         // if there's a blank line then we don't want to mess w/ the
@@ -1604,13 +1604,23 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private void CheckIndent(StringBuilder sb) {
+        private void CheckIndent(StringBuilder sb, string noAllocWhiteSpace) {
             if (_state.Indent[_state.IndentLevel] > 0) {
                 StringBuilder previousIndent = _state.IndentFormat[_state.IndentLevel];
-                int checkLength = previousIndent.Length < sb.Length ? previousIndent.Length : sb.Length;
+                int checkLength;
+                if (sb == null) {
+                    checkLength = previousIndent.Length < noAllocWhiteSpace.Length ? previousIndent.Length : noAllocWhiteSpace.Length;
+                } else {
+                    checkLength = previousIndent.Length < sb.Length ? previousIndent.Length : sb.Length;
+                }
                 for (int i = 0; i < checkLength; i++) {
-                    if (sb[i] != previousIndent[i]) {
-
+                    bool neq;
+                    if (sb == null) {
+                        neq = noAllocWhiteSpace[i] != previousIndent[i];
+                    } else {
+                        neq = sb[i] != previousIndent[i];
+                    }
+                    if (neq) {
                         SourceLocation eoln_token_end = BufferTokenEnd;
 
                         // We've hit a difference in the way we're indenting, report it.

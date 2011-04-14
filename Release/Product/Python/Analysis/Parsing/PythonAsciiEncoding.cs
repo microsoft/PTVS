@@ -263,7 +263,7 @@ namespace Microsoft.PythonTools.Parsing {
     }
 
     [Serializable]
-    internal class BadSourceException : Exception {
+    public class BadSourceException : Exception {
         internal byte _badByte;
         public BadSourceException(byte b) {
             _badByte = b;

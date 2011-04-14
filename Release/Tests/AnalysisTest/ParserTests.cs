@@ -107,7 +107,9 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token '42'", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9)
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
+                new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
 
             ParseErrors("AllErrors.py",
@@ -176,7 +178,9 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token '42'", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9)
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
+                new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
 
             ParseErrors("AllErrors.py",
@@ -239,7 +243,9 @@ namespace AnalysisTest {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9)
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
+                new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
 
             ParseErrors("AllErrors.py",
@@ -302,7 +308,9 @@ namespace AnalysisTest {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9)
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
+                new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
             );
 
             foreach (var version in V3Versions) {
@@ -366,7 +374,9 @@ namespace AnalysisTest {
                     new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                     new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                     new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9)
+                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                    new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
+                    new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
                 );
             }
         }
@@ -1276,9 +1286,9 @@ namespace AnalysisTest {
 
             foreach (var version in V24_V26Versions) {
                 ParseErrors("SetComp.py", version,
-                    new ErrorInfo("invalid syntax", 5, 1, 6, 8, 1, 9),
-                    new ErrorInfo("invalid syntax", 27, 2, 6, 30, 2, 9),
-                    new ErrorInfo("invalid syntax", 57, 3, 6, 60, 3, 9)
+                    new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1, 1, 2, 4, 1, 5),
+                    new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 23, 2, 2, 26, 2, 5),
+                    new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 53, 3, 2, 56, 3, 5)
                 );
             }
         }
@@ -1297,8 +1307,8 @@ namespace AnalysisTest {
 
             foreach (var version in V24_V26Versions) {
                 ParseErrors("SetLiteral.py", version,
-                    new ErrorInfo("invalid syntax", 2, 1, 3, 3, 1, 4),
-                    new ErrorInfo("invalid syntax", 7, 2, 3, 8, 2, 4)
+                    new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1, 1, 2, 2, 1, 3),
+                    new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 6, 2, 2, 7, 2, 3)
                 );
             }
         }

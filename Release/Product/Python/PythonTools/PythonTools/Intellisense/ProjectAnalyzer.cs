@@ -550,6 +550,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (parser != null) {
                 try {
                     ast = parser.ParseFile();
+                } catch (BadSourceException) {
                 } catch (Exception e) {
                     Debug.Assert(false, String.Format("Failure in Python parser: {0}", e.ToString()));
                 }

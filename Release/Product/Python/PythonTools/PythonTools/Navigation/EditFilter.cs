@@ -587,45 +587,6 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case VSConstants.VSStd2KCmdID.BACKSPACE:
-                        // smart dedent
-                        if (PythonToolsPackage.Instance.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart &&
-                            _textView.Selection.IsEmpty) {
-
-                            int indentSize = _textView.Options.GetIndentSize();
-
-                            var langPoint = _textView.BufferGraph.MapDownToFirstMatch(
-                                new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, _textView.Caret.Position.BufferPosition),
-                                PointTrackingMode.Positive,
-                                PythonCoreConstants.IsPythonContent,
-                                PositionAffinity.Successor
-                            );
-
-                            if (langPoint == null) {
-                                break;
-                            }
-
-                            var containingLine = langPoint.Value.GetContainingLine();
-                            var curLineLine = containingLine.GetText();
-
-                            int lineOffset = langPoint.Value.Position - containingLine.Start.Position;
-                            if (lineOffset >= indentSize) {
-                                bool allSpaces = true;
-                                for (int i = lineOffset - 1; i >= lineOffset - indentSize; i--) {
-                                    if (curLineLine[i] != ' ') {
-                                        allSpaces = false;
-                                        break;
-                                    }
-                                }
-                            
-                                if (allSpaces) {
-                                    langPoint.Value.Snapshot.TextBuffer.Delete(new Span(langPoint.Value.Position - indentSize, indentSize));
-                                    return VSConstants.S_OK;
-                                }
-                            }
-                        }
-                        break;
-
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
                         var controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));

@@ -29,6 +29,9 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public SourceLocation IndexToLocation(int[] lineLocations, int index) {
+            if (lineLocations == null) {
+                return new SourceLocation(index, 1, 1);
+            }
             int match = Array.BinarySearch(lineLocations, index);
             if (match < 0) {
                 // If our index = -1, it means we're on the first line.
