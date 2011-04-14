@@ -75,6 +75,7 @@
     <Compile Include="PublishTest.cs" />
     <Compile Include="PythonPaths.cs" />
     <Compile Include="ReplWindowTests.cs" />
+    <Compile Include="TokenizerRoundTripTest.cs" />
     <Compile Include="UI\Button.cs" />
     <Compile Include="UI\ChooseLocationDialog.cs" />
     <Compile Include="UI\ComboBox.cs" />

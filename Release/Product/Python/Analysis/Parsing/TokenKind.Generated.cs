@@ -126,16 +126,27 @@ namespace Microsoft.PythonTools.Parsing {
     internal static class Tokens {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly Token EndOfFileToken = new SymbolToken(TokenKind.EndOfFile, "<eof>");
+        
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
-        public static readonly Token NewLineToken = new SymbolToken(TokenKind.NewLine, "<newline>");
+        public static readonly Token NewLineToken = new NewlineToken(TokenKind.NewLine, "\n", "<newline>");
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
-        public static readonly Token NLToken = new SymbolToken(TokenKind.NLToken, "<NL>");  // virtual token used for error reporting
+        public static readonly Token NewLineTokenCRLF = new NewlineToken(TokenKind.NewLine, "\r\n", "<newline>");
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
-        public static readonly Token IndentToken = new SymbolToken(TokenKind.Indent, "<indent>");
+        public static readonly Token NewLineTokenCR = new NewlineToken(TokenKind.NewLine, "\r", "<newline>");
+        
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly Token NLToken = new NewlineToken(TokenKind.NLToken, "\n", "<NL>");  // virtual token used for error reporting
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly Token NLTokenCRLF = new NewlineToken(TokenKind.NLToken, "\r\n", "<NL>");  // virtual token used for error reporting
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly Token NLTokenCR = new NewlineToken(TokenKind.NLToken, "\r", "<NL>");  // virtual token used for error reporting
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly Token IndentToken = new DentToken(TokenKind.Indent, "<indent>");
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Dedent")]
-        public static readonly Token DedentToken = new SymbolToken(TokenKind.Dedent, "<dedent>");
+        public static readonly Token DedentToken = new DentToken(TokenKind.Dedent, "<dedent>");
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly Token CommentToken = new SymbolToken(TokenKind.Comment, "<comment>");
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]

@@ -54,32 +54,6 @@ namespace Microsoft.PythonTools.Project
 
 	}
 
-    [ComVisible(true)]
-    public interface IProject {
-        object Project {
-            get;
-        }
-    }
-
-    /// <summary>
-    /// Smuggles our Project node across the COM boundary when we have an aggregate project.  This allows
-    /// us to get back to our project node because if we return ourselves directly we get wrapped in the
-    /// aggregate object again.
-    /// </summary>
-    [ComVisible(true)]
-    public class ProjectSmuggler {
-        private readonly ProjectNode _node;
-        public ProjectSmuggler(ProjectNode node) {
-            _node = node;
-        }
-
-        public ProjectNode Project {
-            get {
-                return _node;
-            }
-        }
-
-    }
 	/// <summary>
 	/// Defines the events that are internally defined for communication with other subsytems.
 	/// </summary>

@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
                     // Accessing outer scope variable which is being deleted?
                     if (variable != null) {
-                        if (variable.Deleted && variable.Scope != this && !variable.Scope.IsGlobal) {
+                        if (variable.Deleted && variable.Scope != this && !variable.Scope.IsGlobal && binder.LanguageVersion < PythonLanguageVersion.V32) {
 
                             // report syntax error
                             binder.ReportSyntaxError(

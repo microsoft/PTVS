@@ -125,6 +125,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private PythonAst _globalScope;
         internal ScopeStatement _currentScope;
         private readonly PythonAst _ast;
+        private readonly PythonLanguageVersion _langVersion;
         private List<ScopeStatement> _scopes = new List<ScopeStatement>();
         private List<int> _finallyCount = new List<int>();
 
@@ -138,22 +139,29 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         private readonly ErrorSink _errorSink;
 
-        private PythonNameBinder(PythonAst ast, ErrorSink context) {
+        private PythonNameBinder(PythonLanguageVersion langVersion, PythonAst ast, ErrorSink context) {
             _ast = ast;
             _define = new DefineBinder(this);
             _delete = new DeleteBinder(this);
             _parameter = new ParameterBinder(this);
             _errorSink = context;
+            _langVersion = langVersion;
         }
 
         #region Public surface
 
-        internal static void BindAst(PythonAst ast, ErrorSink context) {
-            PythonNameBinder binder = new PythonNameBinder(ast, context);
+        internal static void BindAst(PythonLanguageVersion langVersion, PythonAst ast, ErrorSink context) {
+            PythonNameBinder binder = new PythonNameBinder(langVersion, ast, context);
             binder.Bind(ast);
         }
 
         #endregion
+
+        public PythonLanguageVersion LanguageVersion {
+            get {
+                return _langVersion;
+            }
+        }
 
         private void Bind(PythonAst unboundAst) {
             _currentScope = _globalScope = unboundAst;

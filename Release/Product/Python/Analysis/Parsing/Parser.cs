@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Parsing {
             var lineLocs = _tokenizer.GetLineLocations();
             res.ParsingFinished(lineLocs, ret);
 
-            PythonNameBinder.BindAst(res, _errors);
+            PythonNameBinder.BindAst(_langVersion, res, _errors);
 
             return res;
         }

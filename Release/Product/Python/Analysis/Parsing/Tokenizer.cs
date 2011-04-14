@@ -53,16 +53,30 @@ namespace Microsoft.PythonTools.Parsing {
         private Dictionary<object, NameToken> _names;
         private static object _currentName = new object();
 
+        // precalcuated strings for space indentation strings so we usually don't allocate.
+        private static readonly string[] SpaceIndentation, TabIndentation;
+
         public Tokenizer(PythonLanguageVersion version, ErrorSink errorSink = null, bool verbatim = false) {
             errorSink = errorSink ?? ErrorSink.Null;
 
             _errors = errorSink;
-            _state = new State(null);
+            _state = new State(verbatim);
             _printFunction = false;
             _unicodeLiterals = false;
             _names = new Dictionary<object, NameToken>(128, new TokenEqualityComparer(this));
             _langVersion = version;
             _verbatim = verbatim;
+        }
+
+        static Tokenizer() {
+            SpaceIndentation = new String[80];
+            for (int i = 0; i < 80;  i++) {
+                SpaceIndentation[i] = new string(' ', i + 1);
+            }
+            TabIndentation = new String[10];
+            for (int i = 0; i < 10; i++) {
+                TabIndentation[i] = new string('\t', i + 1);
+            }
         }
 
         /// <summary>
@@ -165,9 +179,9 @@ namespace Microsoft.PythonTools.Parsing {
 
             if (state != null) {
                 if (!(state is State)) throw new ArgumentException("bad state provided");
-                _state = new State((State)state);
+                _state = new State((State)state, _verbatim);
             } else {
-                _state = new State(null);
+                _state = new State(_verbatim);
             }
 
             _reader = reader;
@@ -311,7 +325,30 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
+        /// <summary>
+        /// Return the white space proceeding the last fetched token. Throws an InvalidOperationException if
+        /// the tokenizer was not created in verbatim mode.
+        /// </summary>
+        public string PreceedingWhiteSpace {
+            get {
+                if (!_verbatim) {
+                    throw new InvalidOperationException("Tokenizer must be in verbatim mode to access white space");
+                }
+                return _state.CurWhiteSpace.ToString();
+            }
+        }
+
         public Token GetNextToken() {
+            if (_verbatim) {
+                _state.CurWhiteSpace.Clear();
+                if (_state.NextWhiteSpace.Length != 0) {
+                    // flip to the next white space if we have some...
+                    var tmp = _state.CurWhiteSpace;
+                    _state.CurWhiteSpace = _state.NextWhiteSpace;
+                    _state.NextWhiteSpace = tmp;
+                }
+            }
+
             Token result;
 
             if (_state.PendingDedents != 0) {
@@ -349,12 +386,15 @@ namespace Microsoft.PythonTools.Parsing {
                         return ReadEof();
                     case '\f':
                         // Ignore form feeds
+                        if (_verbatim) {
+                            _state.CurWhiteSpace.Append((char)ch);
+                        }
                         DiscardToken();
                         ch = NextChar();
                         break;
                     case ' ':
                     case '\t':
-                        ch = SkipWhiteSpace(at_beginning);
+                        ch = SkipWhiteSpace(ch, at_beginning);
                         break;
 
                     case '#':
@@ -365,7 +405,12 @@ namespace Microsoft.PythonTools.Parsing {
                         break;
 
                     case '\\':
-                        if (ReadEolnOpt(NextChar()) > 0) {
+                        NewLineKind nlKind;
+                        if ((nlKind = ReadEolnOpt(NextChar())) != NewLineKind.None) {
+                            if (_verbatim) {
+                                _state.CurWhiteSpace.Append('\\');
+                                _state.CurWhiteSpace.Append(nlKind.GetString());
+                            }
                             _newLineLocations.Add(CurrentIndex);
                             // discard token '\\<eoln>':
                             DiscardToken();
@@ -442,16 +487,23 @@ namespace Microsoft.PythonTools.Parsing {
                         return ReadNumber(ch);
 
                     default:
-
-                        if (ReadEolnOpt(ch) > 0) {
+                        if ((nlKind = ReadEolnOpt(ch)) > 0) {
                             _newLineLocations.Add(CurrentIndex);
                             // token marked by the callee:
-                            if (ReadNewline()) {
+                            if (ReadIndentationAfterNewLine(nlKind)) {
                                 if (_state.LastNewLine) {
-                                    return Tokens.NLToken;
+                                    switch (nlKind) {
+                                        case NewLineKind.CarriageReturn: return Tokens.NLTokenCR;
+                                        case NewLineKind.CarriageReturnLineFeed: return Tokens.NLTokenCRLF;
+                                        case NewLineKind.LineFeed: return Tokens.NLToken;
+                                    }
                                 } else {
                                     _state.LastNewLine = true;
-                                    return Tokens.NewLineToken;
+                                    switch (nlKind) {
+                                        case NewLineKind.CarriageReturn: return Tokens.NewLineTokenCR;
+                                        case NewLineKind.CarriageReturnLineFeed: return Tokens.NewLineTokenCRLF;
+                                        case NewLineKind.LineFeed: return Tokens.NewLineToken;
+                                    }
                                 }
                             }
 
@@ -476,9 +528,13 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private int SkipWhiteSpace(bool atBeginning) {
-            int ch;
-            do { ch = NextChar(); } while (ch == ' ' || ch == '\t');
+        private int SkipWhiteSpace(int ch, bool atBeginning) {
+            do {
+                if (_verbatim) {
+                    _state.CurWhiteSpace.Append((char)ch);
+                }
+                ch = NextChar(); 
+            } while (ch == ' ' || ch == '\t');
 
             BufferBack();
 
@@ -619,7 +675,7 @@ namespace Microsoft.PythonTools.Parsing {
             // are forced to grow our buffer.
 
             int end_add = 0;
-            int eol_size = 0;
+            NewLineKind nlKind;
 
             for (; ; ) {
                 int ch = NextChar();
@@ -656,9 +712,8 @@ namespace Microsoft.PythonTools.Parsing {
                     }
 
                 } else if (ch == '\\') {
-
                     ch = NextChar();
-
+                    
                     if (ch == EOF) {
                         BufferBack();
 
@@ -670,7 +725,7 @@ namespace Microsoft.PythonTools.Parsing {
                         _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
 
                         return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
-                    } else if ((eol_size = ReadEolnOpt(ch)) > 0) {
+                    } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
 
                         // skip \<eoln> unless followed by EOF:
                         if (Peek() == EOF) {
@@ -678,7 +733,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                             // incomplete string in the form "abc\
 
-                            string incompleteContents = GetTokenSubstring(startAdd, TokenLength - startAdd - end_add - 1 - eol_size);
+                            string incompleteContents = GetTokenSubstring(startAdd, TokenLength - startAdd - end_add - 1 - nlKind.GetSize());
 
                             _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
                             UnexpectedEndOfString(isTriple, true);
@@ -689,11 +744,11 @@ namespace Microsoft.PythonTools.Parsing {
                         BufferBack();
                     }
 
-                } else if ((eol_size = ReadEolnOpt(ch)) > 0) {
+                } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
                     _newLineLocations.Add(CurrentIndex);
                     if (!isTriple) {
                         // backup over the eoln:
-                        SeekRelative(-eol_size);
+                        SeekRelative(-nlKind.GetSize());
 
                         MarkTokenEnd();
                         UnexpectedEndOfString(isTriple, false);
@@ -723,12 +778,22 @@ namespace Microsoft.PythonTools.Parsing {
             if (makeUnicode) {
                 string contents = LiteralParser.ParseString(_buffer, start, length, isRaw, isUnicode || UnicodeLiterals, !_disableLineFeedLineSeparator);
                 if (isUnicode) {
+                    if (_verbatim) {
+                        return new VerbatimUnicodeStringToken(contents, GetTokenString());
+                    }
                     return new UnicodeStringToken(contents);
+                }
+
+                if (_verbatim) {
+                    return new VerbatimConstantValueToken(contents, GetTokenString());
                 }
                 return new ConstantValueToken(contents);
             } else {
                 var data = LiteralParser.ParseBytes(_buffer, start, length, isRaw, !_disableLineFeedLineSeparator);
                 if (data.Count == 0) {
+                    if (_verbatim) {
+                        return new VerbatimConstantValueToken(new AsciiString(new byte[0], ""), GetTokenString());
+                    }
                     return new ConstantValueToken(new AsciiString(new byte[0], ""));
                 }
 
@@ -737,6 +802,9 @@ namespace Microsoft.PythonTools.Parsing {
                     bytes[i] = (byte)data[i];
                 }
 
+                if (_verbatim) {
+                    return new VerbatimConstantValueToken(new AsciiString(bytes, new String(data.ToArray())), GetTokenString());
+                }
                 return new ConstantValueToken(new AsciiString(bytes, new String(data.ToArray())));
             }
         }
@@ -780,6 +848,10 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            string tokenStr = GetTokenString();
+                            return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
+                        }
                         return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
 
                     case 'l':
@@ -788,6 +860,11 @@ namespace Microsoft.PythonTools.Parsing {
                             MarkTokenEnd();
 
                             // TODO: parse in place
+                            if (_verbatim) {
+                                string tokenStr = GetTokenString();
+                                return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(tokenStr, b), tokenStr);
+                            }
+
                             return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenString(), b));
                         }
                         break;
@@ -807,11 +884,15 @@ namespace Microsoft.PythonTools.Parsing {
                         BufferBack();
                         MarkTokenEnd();
 
+                        string image = GetTokenString();
                         object val = ParseInteger(GetTokenString(), b);
                         if (b == 8 && _langVersion.Is3x() && (!(val is int) || !((int)val == 0))) {
                             ReportSyntaxError(BufferTokenSpan, "invalid token", ErrorCodes.SyntaxError);
                         }
 
+                        if (_verbatim) {
+                            return new VerbatimConstantValueToken(val, image);
+                        }
                         // TODO: parse in place
                         return new ConstantValueToken(val);
                 }
@@ -849,11 +930,17 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L':
                         MarkTokenEnd();
 
+                        if (_verbatim) {
+                            return new VerbatimConstantValueToken(useBigInt ? bigInt : (BigInteger)iVal, GetTokenString());
+                        }
                         return new ConstantValueToken(useBigInt ? bigInt : (BigInteger)iVal);
                     default:
                         BufferBack();
                         MarkTokenEnd();
 
+                        if (_verbatim) {
+                            return new VerbatimConstantValueToken(useBigInt ? (object)bigInt : (object)iVal, GetTokenString());
+                        }
                         return new ConstantValueToken(useBigInt ? (object)bigInt : (object)iVal);
                 }
             }
@@ -879,6 +966,9 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8), GetTokenString());
+                        }
                         return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8));
 
                     default:
@@ -886,6 +976,9 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8), GetTokenString());
+                        }
                         return new ConstantValueToken(ParseInteger(GetTokenSubstring(2), 8));
                 }
             }
@@ -925,6 +1018,9 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16), GetTokenString());
+                        }
                         return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16));
 
                     default:
@@ -932,6 +1028,12 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            return new VerbatimConstantValueToken(
+                                ParseInteger(GetTokenSubstring(2), 16),
+                                GetTokenString()
+                            );
+                        }
                         return new ConstantValueToken(ParseInteger(GetTokenSubstring(2), 16));
                 }
             }
@@ -963,6 +1065,10 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            string tokenStr = GetTokenString();
+                            return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
+                        }
                         return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
 
                     default:
@@ -970,6 +1076,10 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            string tokenStr = GetTokenString();
+                            return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
+                        }
                         return new ConstantValueToken(ParseFloat(GetTokenString()));
                 }
             }
@@ -1002,6 +1112,10 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            string tokenStr = GetTokenString();
+                            return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
+                        }
                         return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
 
                     default:
@@ -1009,6 +1123,10 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
+                        if (_verbatim) {
+                            string tokenStr = GetTokenString();
+                            return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
+                        }
                         return new ConstantValueToken(ParseFloat(GetTokenString()));
                 }
             }
@@ -1345,61 +1463,39 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        /// <summary>
-        /// Returns whether the 
-        /// </summary>
-        private bool ReadNewline() {
-            // Check whether we're currently scanning for inconsistent use of identation characters. If
-            // we are we'll switch to using a slower version of this method with the extra checks embedded.
-            if (IndentationInconsistencySeverity != Severity.Ignore)
-                return ReadNewlineWithChecks();
-
-            int spaces = 0;
-            while (true) {
-                int ch = NextChar();
-
-                switch (ch) {
-                    case ' ': spaces += 1; break;
-                    case '\t': spaces += 8 - (spaces % 8); break;
-                    case '\f': spaces = 0; break;
-
-                    case '#':
-                        if (_verbatim) {
-                            BufferBack();
-                            MarkTokenEnd();
-                            return true;
-                        } else {
-                            ch = ReadLine();
-                            break;
-                        }
-                    default:
-                        BufferBack();
-
-                        if (GroupingLevel > 0) {
-                            return false;
-                        }
-
-                        MarkTokenEnd();
-
-                        // if there's a blank line then we don't want to mess w/ the
-                        // indentation level - Python says that blank lines are ignored.
-                        // And if we're the last blank line in a file we don't want to
-                        // increase the new indentation level.
-                        if (ch == EOF) {
-                            if (spaces < _state.Indent[_state.IndentLevel]) {
-                                if (_kind == SourceCodeKind.InteractiveCode ||
-                                    _kind == SourceCodeKind.Statements) {
-                                    SetIndent(spaces, null);
-                                } else {
-                                    DoDedent(spaces, _state.Indent[_state.IndentLevel]);
-                                }
-                            }
-                        } else if (ch != '\n' && ch != '\r') {
-                            SetIndent(spaces, null);
-                        }
-
-                        return true;
+        private static void AppendSpace(ref string curWhiteSpace, ref StringBuilder constructedWhiteSpace, ref bool? isSpace) {
+            if (constructedWhiteSpace == null) {
+                if (isSpace == null) {
+                    isSpace = true;
+                    curWhiteSpace = SpaceIndentation[0];
+                } else if (isSpace.Value && SpaceIndentation.Length < curWhiteSpace.Length) {
+                    curWhiteSpace = SpaceIndentation[curWhiteSpace.Length];
+                } else {
+                    // we're mixed tabs/spaces or we have run out of space
+                    constructedWhiteSpace = new StringBuilder();
+                    constructedWhiteSpace.Append(curWhiteSpace);
+                    constructedWhiteSpace.Append(' ');
                 }
+            } else {
+                constructedWhiteSpace.Append(' ');
+            }
+        }
+
+        private static void AppendTab(ref string curWhiteSpace, ref StringBuilder constructedWhiteSpace, ref bool? isSpace) {
+            if (constructedWhiteSpace == null) {
+                if (isSpace == null) {
+                    isSpace = false;
+                    curWhiteSpace = TabIndentation[0];
+                } else if (!isSpace.Value && TabIndentation.Length < curWhiteSpace.Length) {
+                    curWhiteSpace = TabIndentation[curWhiteSpace.Length];
+                } else {
+                    // we're mixed tabs/spaces or we have run out of space
+                    constructedWhiteSpace = new StringBuilder();
+                    constructedWhiteSpace.Append(curWhiteSpace);
+                    constructedWhiteSpace.Append('\t');
+                }
+            } else {
+                constructedWhiteSpace.Append('\t');
             }
         }
 
@@ -1407,18 +1503,50 @@ namespace Microsoft.PythonTools.Parsing {
         // that checks are made to see that indentation is used consistently. This logic is in a
         // duplicate method to avoid inflicting the overhead of the extra logic when we're not making
         // the checks.
-        private bool ReadNewlineWithChecks() {
+        /// <summary>
+        /// Reads the white space after a new line until we get to the next level of indentation
+        /// or a otherwise hit a token which should be returned (any other token if we're in a grouping,
+        /// or a comment token if we're in verbatim mode).
+        /// 
+        /// Returns true if we should return the new line token which kicked this all off.  Returns false
+        /// if we should continue processing the current token.
+        /// </summary>
+        private bool ReadIndentationAfterNewLine(NewLineKind startingKind) {
             // Keep track of the indentation format for the current line
-            StringBuilder sb = new StringBuilder(80);
+            StringBuilder sb = null;                    // the white space we've encounted after the new line if it's mixed tabs/spaces or is an unreasonable size.
+            string noAllocWhiteSpace = String.Empty;    // the white space we've encountered after the newline assuming it's a reasonable sized run of all spaces or tabs
+            bool? isSpace = null;                       // the current mix of whitespace, null = nothing yet, true = space, false = tab
 
             int spaces = 0;
             while (true) {
                 int ch = NextChar();
 
                 switch (ch) {
-                    case ' ': spaces += 1; sb.Append(' '); break;
-                    case '\t': spaces += 8 - (spaces % 8); sb.Append('\t'); break;
-                    case '\f': spaces = 0; sb.Append('\f'); break;
+                    case ' ':
+                        if (_verbatim) {
+                            _state.NextWhiteSpace.Append((char)ch);
+                        }
+                        spaces += 1;
+                        AppendSpace(ref noAllocWhiteSpace, ref sb, ref isSpace);
+                        break;
+                    case '\t':
+                        if (_verbatim) {
+                            _state.NextWhiteSpace.Append((char)ch);
+                        }
+                        spaces += 8 - (spaces % 8);
+                        AppendTab(ref noAllocWhiteSpace, ref sb, ref isSpace);
+                        break;
+                    case '\f':
+                        if (_verbatim) {
+                            _state.NextWhiteSpace.Append((char)ch);
+                        }
+                        spaces = 0;
+                        if (sb == null) {
+                            sb = new StringBuilder();
+                            sb.Append(noAllocWhiteSpace);
+                        }
+                        sb.Append('\f'); 
+                        break;
 
                     case '#':
                         if (_verbatim) {
@@ -1429,18 +1557,18 @@ namespace Microsoft.PythonTools.Parsing {
                             ch = ReadLine();
                             break;
                         }
-
                     default:
-                        if (ReadEolnOpt(ch) > 0) {
-                            _newLineLocations.Add(CurrentIndex);
-                            spaces = 0;
-                            sb.Length = 0;
-                            break;
-                        }
-
                         BufferBack();
 
                         if (GroupingLevel > 0) {
+                            if (_verbatim) {
+                                // we're not producing a new line after all...  All of the white space
+                                // we collected goes to the current token, including the new line token
+                                // that we're not producing.
+                                _state.CurWhiteSpace.Append(startingKind.GetString());
+                                _state.CurWhiteSpace.Append(_state.NextWhiteSpace);
+                                _state.NextWhiteSpace.Clear();
+                            }
                             return false;
                         }
 
@@ -1450,7 +1578,9 @@ namespace Microsoft.PythonTools.Parsing {
                         // Check that any of this indentation that's in common with the current indent
                         // level is constructed in exactly the same way (i.e. has the same mix of spaces
                         // and tabs etc.).
-                        CheckIndent(sb);
+                        if (IndentationInconsistencySeverity != Severity.Ignore) {
+                            CheckIndent(sb);
+                        }
 
                         // if there's a blank line then we don't want to mess w/ the
                         // indentation level - Python says that blank lines are ignored.
@@ -1468,7 +1598,6 @@ namespace Microsoft.PythonTools.Parsing {
                         } else if (ch != '\n' && ch != '\r') {
                             SetIndent(spaces, sb);
                         }
-
 
                         return true;
                 }
@@ -1855,7 +1984,11 @@ namespace Microsoft.PythonTools.Parsing {
             // grouping state
             public int ParenLevel, BraceLevel, BracketLevel;
 
-            public State(State state) {
+            // white space tracking
+            public StringBuilder CurWhiteSpace;
+            public StringBuilder NextWhiteSpace;
+
+            public State(State state, bool verbatim) {
                 Indent = (int[])state.Indent.Clone();
                 LastNewLine = state.LastNewLine;
                 BracketLevel = state.BraceLevel;
@@ -1865,14 +1998,28 @@ namespace Microsoft.PythonTools.Parsing {
                 IndentLevel = state.IndentLevel;
                 IndentFormat = (state.IndentFormat != null) ? (StringBuilder[])state.IndentFormat.Clone() : null;
                 IncompleteString = state.IncompleteString;
+                if (verbatim) {
+                    CurWhiteSpace = new StringBuilder(state.CurWhiteSpace.ToString());
+                    NextWhiteSpace = new StringBuilder(state.NextWhiteSpace.ToString());                
+                } else {
+                    CurWhiteSpace = null;
+                    NextWhiteSpace = null;
+                }
             }
 
-            public State(object dummy) {
+            public State(bool verbatim) {
                 Indent = new int[MaxIndent]; // TODO
                 LastNewLine = false;
                 BracketLevel = ParenLevel = BraceLevel = PendingDedents = IndentLevel = 0;
                 IndentFormat = null;
                 IncompleteString = null;
+                if (verbatim) {
+                    CurWhiteSpace = new StringBuilder();
+                    NextWhiteSpace = new StringBuilder();
+                } else {
+                    CurWhiteSpace = null;
+                    NextWhiteSpace = null;
+                }
             }
 
             public override bool Equals(object obj) {
@@ -2062,20 +2209,21 @@ namespace Microsoft.PythonTools.Parsing {
             CheckInvariants();
         }
 
-        private int ReadEolnOpt(int current) {
-            if (current == '\n') return 1;
-
-            if (current == '\r' && _multiEolns) {
-
-                if (Peek() == '\n') {
-                    SeekRelative(+1);
-                    return 2;
-                }
-
-                return 1;
+        
+        private NewLineKind ReadEolnOpt(int current) {
+            if (current == '\n') {
+                return NewLineKind.LineFeed;
             }
 
-            return 0;
+            if (current == '\r' && _multiEolns) {
+                if (Peek() == '\n') {
+                    SeekRelative(+1);
+                    return NewLineKind.CarriageReturnLineFeed;
+                }
+                return NewLineKind.CarriageReturn;
+            }
+
+            return NewLineKind.None;
         }
 
         private bool IsEoln(int current) {
@@ -2130,5 +2278,32 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         #endregion
+    }
+
+    enum NewLineKind {
+        None,
+        LineFeed,
+        CarriageReturn,
+        CarriageReturnLineFeed
+    }
+
+    static class NewLineKindExtensions {
+        public static int GetSize(this NewLineKind kind) {
+            switch (kind) {
+                case NewLineKind.LineFeed: return 1;
+                case NewLineKind.CarriageReturnLineFeed: return 2;
+                case NewLineKind.CarriageReturn: return 2;
+            }
+            return 0;
+        }
+
+        public static string GetString(this NewLineKind kind) {
+            switch (kind) {
+                case NewLineKind.CarriageReturn: return "\r"; 
+                case NewLineKind.CarriageReturnLineFeed: return "\r\n"; 
+                case NewLineKind.LineFeed: return "\n"; 
+            }
+            throw new InvalidOperationException();
+        }
     }
 }

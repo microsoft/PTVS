@@ -58,6 +58,19 @@ namespace Microsoft.PythonTools.Parsing {
             return base.ToString() + "(" + _kind + ")";
         }
 
+        /// <summary>
+        /// Returns the exact text of the token if it's available.  The text does not
+        /// include any leading white space.
+        /// </summary>
+        public virtual String VerbatimImage {
+            get {
+                return Image;
+            }
+        }
+
+        /// <summary>
+        /// Returns a user friendly display of the token.
+        /// </summary>
         public abstract String Image {
             get;
         }
@@ -128,9 +141,39 @@ namespace Microsoft.PythonTools.Parsing {
         }
     }
 
-    sealed class UnicodeStringToken : ConstantValueToken {
+    internal class VerbatimConstantValueToken : ConstantValueToken {
+        private readonly string _verbatim;
+
+        public VerbatimConstantValueToken(object value, string verbatim)
+            : base(value) {
+            _verbatim = verbatim;
+        }
+
+        public override string VerbatimImage {
+            get {
+                return _verbatim;
+            }
+        }
+    }
+
+    class UnicodeStringToken : ConstantValueToken {
         public UnicodeStringToken(object value)
             : base(value) {
+        }
+    }
+
+    sealed class VerbatimUnicodeStringToken : UnicodeStringToken {
+        private readonly string _verbatim;
+        
+        public VerbatimUnicodeStringToken(object value, string verbatim)
+            : base(value) {
+                _verbatim = verbatim;
+        }
+
+        public override string VerbatimImage {
+            get {
+                return _verbatim;
+            }
         }
     }
 
@@ -219,6 +262,34 @@ namespace Microsoft.PythonTools.Parsing {
 
         public override String Image {
             get { return _image; }
+        }
+    }
+
+    internal class NewlineToken : SymbolToken {
+        private readonly string _verbatimImage;
+
+        public NewlineToken(TokenKind kind, string verbatimImage, string image)
+            : base(kind, image) {
+            _verbatimImage = verbatimImage;
+        }
+
+        public override string VerbatimImage {
+            get {
+                return _verbatimImage;
+            }
+        }
+    }
+
+    internal class DentToken : SymbolToken {
+        public DentToken(TokenKind kind, String image)
+            : base(kind, image) {
+        }
+
+        public override string VerbatimImage {
+            get {
+                // indents are accounted for in whitespace
+                return "";
+            }
         }
     }
 }

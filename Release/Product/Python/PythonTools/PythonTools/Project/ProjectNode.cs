@@ -58,8 +58,7 @@ namespace Microsoft.PythonTools.Project
         IProjectEventsListener,
         IProjectEventsCallback,
         IProjectEventsProvider,
-        IVsProjectSpecialFiles,
-        IProject
+        IVsProjectSpecialFiles
     {
         #region nested types
 
@@ -4629,14 +4628,6 @@ namespace Microsoft.PythonTools.Project
         #region IProjectEventsCallback Members
 
         public virtual void BeforeClose() {
-        }
-
-        #endregion
-
-        #region IProject Members
-
-        public object Project {
-            get { return new ProjectSmuggler(this); }
         }
 
         #endregion

@@ -29,25 +29,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _parent = value; }
         }
 
-        internal void SetLoc(PythonAst globalParent, int start, int end) {
-            _span = new IndexSpan(start, end > start ? end - start : start);
-            _parent = globalParent;
-        }
-
-        internal void SetLoc(PythonAst globalParent, IndexSpan span) {
-            _span = span;
-            _parent = globalParent;
-        }
-
-        internal IndexSpan IndexSpan {
-            get {
-                return _span;
-            }
-            set {
-                _span = value;
-            }
-        }
-
         public int EndIndex {
             get {
                 return _span.End;
@@ -74,16 +55,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        #endregion
-
-        #region Base Class Overrides
-
-        public override string ToString() {
-            return GetType().Name;
-        }
-
-        #endregion
-
         public SourceLocation Start {
             get {
                 return GlobalParent.IndexToLocation(StartIndex);
@@ -102,7 +73,28 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        #endregion
+        
         #region Internal APIs
+
+        internal void SetLoc(PythonAst globalParent, int start, int end) {
+            _span = new IndexSpan(start, end > start ? end - start : start);
+            _parent = globalParent;
+        }
+
+        internal void SetLoc(PythonAst globalParent, IndexSpan span) {
+            _span = span;
+            _parent = globalParent;
+        }
+
+        internal IndexSpan IndexSpan {
+            get {
+                return _span;
+            }
+            set {
+                _span = value;
+            }
+        }
 
         internal PythonAst GlobalParent {
             get {
