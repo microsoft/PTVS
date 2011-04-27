@@ -28,6 +28,11 @@ namespace Microsoft.PythonTools.Project {
         void LoadSettings();
 
         /// <summary>
+        /// Called when a setting has changed which the launcher may want to update to.
+        /// </summary>
+        void ReloadSetting(string settingName);
+
+        /// <summary>
         /// Provides a notification that the launcher options have been altered but not saved or
         /// are now committed to disk.
         /// </summary>

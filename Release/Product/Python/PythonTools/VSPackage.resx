@@ -163,4 +163,10 @@
   <data name="118" xml:space="preserve">
     <value>Advanced</value>
   </data>
+  <data name="3004" xml:space="preserve">
+    <value>Python source file</value>
+  </data>
+  <data name="3005" xml:space="preserve">
+    <value>Python windows source file</value>
+  </data>
 </root>

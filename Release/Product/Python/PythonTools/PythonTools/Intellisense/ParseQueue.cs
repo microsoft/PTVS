@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        void OptionsPage_IndentationInconsistencyChanged(object sender, EventArgs e) {
+        private void OptionsPage_IndentationInconsistencyChanged(object sender, EventArgs e) {
             _indentationInconsistencySeverity = PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity;
         }
 
@@ -155,6 +155,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 buffer.Properties.RemoveProperty(typeof(BufferParser));
             }
             PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged -= OptionsPage_IndentationInconsistencyChanged;
+        }
+
+        public ITextView TextView {
+            get {
+                return _textView;
+            }
         }
 
         public ITextBuffer[] Buffers {

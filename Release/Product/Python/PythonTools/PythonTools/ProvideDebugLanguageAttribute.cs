@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools {
         }
 
         public override void Register(RegistrationContext context) {
-            var langSvcKey = context.CreateKey("Langauges\\Language Services\\" + _languageName + "\\Debugger Languages\\" + _guid);
+            var langSvcKey = context.CreateKey("Languages\\Language Services\\" + _languageName + "\\Debugger Languages\\" + _guid);
             langSvcKey.SetValue("", _languageName);
 
             var eeKey = context.CreateKey("AD7Metrics\\ExpressionEvaluator\\" + _guid + "\\{994B45C4-E6E9-11D2-903F-00C04FA302A1}\\Engine");

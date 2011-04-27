@@ -37,10 +37,6 @@ namespace Microsoft.PythonTools.Project {
                     result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                     return VSConstants.S_OK;
                 }
-                else if ((VsCommands2K)cmd == VsCommands2K.EXCLUDEFROMPROJECT) {
-                    result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                    return VSConstants.S_OK;
-                }
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
@@ -53,13 +49,6 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
-        }
-
-        /// <summary>
-        /// Dynamic project don't support excluding files from a project.
-        /// </summary>        
-        protected override int ExcludeFromProject() {
-            return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
         /// <summary>

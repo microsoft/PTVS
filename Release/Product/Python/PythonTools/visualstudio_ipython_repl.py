@@ -191,7 +191,6 @@ class IPythonBackend(ReplBackend):
 
 #
 if __name__ == '__main__':
-    print 'starting'
     km = VsKernelManager()
     km.start_kernel()
     km.start_channels()

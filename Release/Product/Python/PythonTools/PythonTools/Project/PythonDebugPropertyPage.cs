@@ -31,6 +31,20 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public override CommonProjectNode Project {
+            get {
+                return base.Project;
+            }
+            set {
+                base.Project = value;
+                if (value != null) {
+                    ((PythonProjectNode)value).DebugPropertyPage = this;
+                } else {
+                    ((PythonProjectNode)value).DebugPropertyPage = null;
+                }
+            }
+        }
+
         public override string Name {
             get { return "Debug"; }
         }

@@ -59,6 +59,11 @@ namespace Microsoft.VisualStudio.Repl {
         void ClearScreen();
 
         /// <summary>
+        /// Clears the input history.
+        /// </summary>
+        void ClearHistory();
+
+        /// <summary>
         /// Focuses the window.
         /// </summary>
         void Focus();

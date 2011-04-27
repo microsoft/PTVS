@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        public virtual Completion[] GetModules(IGlyphService glyphService, string text, bool includeMembers = false) {
+        public Completion[] GetModules(IGlyphService glyphService, string text, bool includeMembers = false) {
             var analysis = GetAnalysisEntry();
             var path = text.Split('.');
             if (path.Length > 0) {

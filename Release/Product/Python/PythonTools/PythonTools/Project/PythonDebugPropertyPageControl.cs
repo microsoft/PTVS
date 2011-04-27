@@ -91,6 +91,10 @@ namespace Microsoft.PythonTools.Project {
             _launchers[_launchModeCombo.SelectedIndex].LauncherOptions.SaveSettings();
         }
 
+        public void ReloadSetting(string settingName) {
+            _launchers[_launchModeCombo.SelectedIndex].LauncherOptions.ReloadSetting(settingName);
+        }
+
         class LauncherInfo {
             public readonly Control OptionsControl;
             public readonly IPythonLauncherProvider Launcher;

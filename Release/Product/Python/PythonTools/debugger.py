@@ -984,6 +984,10 @@ class _DebuggerOutput(object):
         for line in lines:
             self.write(line)
     
+    @property
+    def encoding(self):
+        return 'utf8'
+
     def write(self, value):
         if not DETACHED:
             send_lock.acquire()

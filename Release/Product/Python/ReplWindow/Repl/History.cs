@@ -22,6 +22,7 @@ namespace Microsoft.VisualStudio.Repl {
         private int _pos;
         private bool _live;
         private readonly List<HistoryEntry> _history;
+        private string _uncommitedInput;
 
         internal History()
             : this(50) {
@@ -34,12 +35,23 @@ namespace Microsoft.VisualStudio.Repl {
             _history = new List<HistoryEntry>();
         }
 
+        internal void Clear() {
+            _pos = -1;
+            _live = false;
+            _history.Clear();
+        }
+
         internal int MaxLength {
             get { return _maxLength; }
         }
 
         internal int Length {
             get { return _history.Count; }
+        }
+
+        internal string UncommittedInput {
+            get { return _uncommitedInput; }
+            set { _uncommitedInput = value; }
         }
 
         internal IEnumerable<HistoryEntry> Items {
@@ -90,7 +102,7 @@ namespace Microsoft.VisualStudio.Repl {
             return _history[pos].Text;
         }
 
-        internal string GetNextText() {
+        private string MoveToNext() {
             _live = true;
             if (Length <= 0 || _pos < 0 || _pos == Length - 1) {
                 return null;
@@ -99,7 +111,7 @@ namespace Microsoft.VisualStudio.Repl {
             return GetHistoryText(_pos);
         }
 
-        internal string GetPreviousText() {
+        private string MoveToPrevious() {
             bool wasLive = _live;
             _live = true;
             if (Length == 0 || (Length > 1 && _pos == 0)) {
@@ -116,30 +128,22 @@ namespace Microsoft.VisualStudio.Repl {
             return GetHistoryText(_pos);
         }
 
-        static bool IsMatch(string x, string y) {
-            return x.StartsWith(y, StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        private string FindMatch(string mask, Func<string> moveFn) {
+        private string Get(Func<string> moveFn) {
             var startPos = _pos;
-            while (true) {
-                string next = moveFn();
-                if (next == null) {
-                    _pos = startPos;
-                    return null;
-                }
-                if (IsMatch(next, mask)) {
-                    return next;
-                }
+            string next = moveFn();
+            if (next == null) {
+                _pos = startPos;
+                return null;
             }
+            return next;
         }
 
-        internal string FindNext(string mask) {
-            return FindMatch(mask, GetNextText);
+        internal string GetNext() {
+            return Get(MoveToNext);
         }
 
-        internal string FindPrevious(string mask) {
-            return FindMatch(mask, GetPreviousText);
+        internal string GetPrevious() {
+            return Get(MoveToPrevious);
         }
 
         internal class HistoryEntry {

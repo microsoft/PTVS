@@ -181,6 +181,7 @@
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\ImpersonationHelper.cs" />
+    <Compile Include="PythonTools\Intellisense\DecoratorCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\XamlTextViewCreationListener.cs" />
     <Compile Include="PythonTools\IVsPython.cs" />
     <Compile Include="PythonTools\Navigation\AssignmentScopeNode.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="PythonTools\Project\IPythonLauncherOptions.cs" />
     <Compile Include="PythonTools\Project\IPythonLauncherProvider.cs" />
     <Compile Include="PythonTools\Project\IPythonProject.cs" />
+    <Compile Include="PythonTools\Project\MsBuildProjectElement.cs" />
     <Compile Include="PythonTools\Project\Output.cs" />
     <Compile Include="PythonTools\Project\OutputGroup.cs" />
     <Compile Include="PythonTools\Project\PublishFailedException.cs" />
@@ -229,6 +231,7 @@
     <Compile Include="PythonTools\Project\StartWithErrorsDialog.Designer.cs">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Project\VirtualProjectElement.cs" />
     <Compile Include="PythonTools\ProvidePythonExecutionModeAttribute.cs" />
     <Compile Include="PythonTools\Editor\AutoIndent.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisPriority.cs" />
@@ -306,8 +309,8 @@
     <Compile Include="PythonTools\Project\CommonSearchPathNode.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathNodeProperties.cs" />
     <Compile Include="PythonTools\Project\DefaultPythonLauncher.cs" />
-    <Compile Include="PythonTools\Project\ConfigProvider.cs" />
     <Compile Include="PythonTools\Project\CurrentWorkingDirectoryNode.cs" />
+    <Compile Include="PythonTools\Project\ConfigProvider.cs" />
     <Compile Include="PythonTools\Project\DataObject.cs" />
     <Compile Include="PythonTools\Project\DependentFileNode.cs" />
     <Compile Include="PythonTools\Project\DesignPropertyDescriptor.cs" />

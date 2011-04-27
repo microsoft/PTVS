@@ -124,6 +124,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (!_incSearch.IsActive) {
                 switch (ch) {
+                    case '@':
                     case '.':
                     case ' ':
                         if (PythonToolsPackage.Instance.LangPrefs.AutoListMembers) {

@@ -486,7 +486,7 @@ namespace Microsoft.PythonTools.Project
             Utilities.ArgumentNotNull("root", root);
 
 			this.projectMgr = root;
-			this.itemNode = new ProjectElement(this.projectMgr, null, true);
+			this.itemNode = new VirtualProjectElement(this.projectMgr);
 			this.hierarchyId = this.projectMgr.ItemIdMap.Add(this);
 			this.oleServiceProvider.AddService(typeof(IVsHierarchy), root, false);
 		}

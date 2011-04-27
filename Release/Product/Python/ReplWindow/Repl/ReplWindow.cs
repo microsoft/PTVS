@@ -510,6 +510,14 @@ namespace Microsoft.VisualStudio.Repl {
             }
         }
 
+        public void ClearHistory() {
+            if (!CheckAccess()) {
+                Dispatcher.Invoke(new Action(ClearHistory));
+                return;
+            }
+            _history.Clear();
+        }
+
         /// <summary>
         /// See IReplWindow
         /// </summary>
@@ -814,14 +822,6 @@ namespace Microsoft.VisualStudio.Repl {
             });
         }
 
-        public void HistoryPrevious() {
-            var found = _history.FindPrevious("");
-            if (found != null) {
-                StoreUncommittedInput();
-                SetActiveCode(found);
-            }
-        }
-
         /// <summary>
         /// Scrolls down through history or moves the caret through the text view.
         /// </summary>
@@ -837,13 +837,34 @@ namespace Microsoft.VisualStudio.Repl {
             });
         }
 
+        public void HistoryPrevious() {
+            var previous = _history.GetPrevious();
+            if (previous != null) {
+                StoreUncommittedInputForHistory();
+                SetActiveCode(previous);
+            }
+        }
+
         public void HistoryNext() {
-            var found = _history.FindNext("");
-            if (found != null) {
-                StoreUncommittedInput();
-                SetActiveCode(found);
+            var next = _history.GetNext();
+            if (next != null) {
+                StoreUncommittedInputForHistory();
+                SetActiveCode(next);
             } else {
-                RestoreUncommittedInput();
+                string code = _history.UncommittedInput;
+                _history.UncommittedInput = null;
+                if (!String.IsNullOrEmpty(code)) {
+                    SetActiveCode(code);
+                }
+            }
+        }
+
+        private void StoreUncommittedInputForHistory() {
+            if (_history.UncommittedInput == null) {
+                string activeCode = GetActiveCode();
+                if (activeCode.Length > 0) {
+                    _history.UncommittedInput = activeCode;
+                }
             }
         }
 
@@ -1966,6 +1987,7 @@ namespace Microsoft.VisualStudio.Repl {
                 
                 TextView.Selection.Clear();
 
+                _history.UncommittedInput = null;
                 if (text.Length > 0) {
                     _history.Add(text.TrimEnd(_whitespaceChars));
                 }
@@ -2082,10 +2104,10 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         internal void SetCurrentScope(string newItem) {
-            StoreUncommittedInput();
+            string activeCode = GetActiveCode();
             WriteLine(String.Format("Current scope changed to {0}", newItem));
             ((IMultipleScopeEvaluator)_evaluator).SetScope(newItem);
-            RestoreUncommittedInput();
+            SetActiveCode(activeCode);
         }
 
         private void UpdateScopeList(object sender, EventArgs e) {

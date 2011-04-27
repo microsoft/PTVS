@@ -65,6 +65,10 @@ namespace Microsoft.PythonTools.Hpc {
             _propGrid.SelectedObject = _options;
         }
 
+        public void ReloadSetting(string settingName) {
+
+        }
+
         public event EventHandler<DirtyChangedEventArgs> DirtyChanged;
 
         public Control Control {

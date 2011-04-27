@@ -707,7 +707,7 @@ namespace AnalysisTest {
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void HistoryUncommittedInput() {
+        public void HistoryUncommittedInput1() {
             var interactive = Prepare();
 
             const string code1 = "x = 42", code2 = "y = 100";
@@ -729,6 +729,33 @@ namespace AnalysisTest {
 
             Keyboard.Type(Key.Escape);
             interactive.WaitForText(ReplPrompt + code1, ReplPrompt);
+        }
+
+        /// <summary>
+        /// Test that we don't restore on submit an uncomitted input saved for history.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void HistoryUncommittedInput2() {
+            var interactive = Prepare();
+
+            Keyboard.Type("1\r");
+            interactive.WaitForText(ReplPrompt + "1", "1", ReplPrompt);
+
+            Keyboard.Type("2\r");
+            interactive.WaitForText(ReplPrompt + "1", "1", ReplPrompt + "2", "2", ReplPrompt);
+
+            Keyboard.Type("3\r");
+            interactive.WaitForText(ReplPrompt + "1", "1", ReplPrompt + "2", "2", ReplPrompt + "3", "3", ReplPrompt);
+
+            Keyboard.Type("blah");
+            interactive.WaitForText(ReplPrompt + "1", "1", ReplPrompt + "2", "2", ReplPrompt + "3", "3", ReplPrompt + "blah");
+
+            Keyboard.Type(Key.Up);
+            interactive.WaitForText(ReplPrompt + "1", "1", ReplPrompt + "2", "2", ReplPrompt + "3", "3", ReplPrompt + "3");
+
+            Keyboard.Type(Key.Enter);
+            interactive.WaitForText(ReplPrompt + "1", "1", ReplPrompt + "2", "2", ReplPrompt + "3", "3", ReplPrompt + "3", "3", ReplPrompt);
         }
         
         /// <summary>
@@ -1776,6 +1803,7 @@ $cls
             app.Element.SetFocus();
             interactive.Element.SetFocus();
             interactive.ClearScreen();
+            interactive.ReplWindow.ClearHistory();
             interactive.WaitForReadyState();
             return interactive;
         }

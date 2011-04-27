@@ -1574,8 +1574,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="propertyValue">Value of property</param>
         public virtual void SetProjectProperty(string propertyName, string propertyValue)
         {
-            if (propertyName == null)
-                throw new ArgumentNullException("propertyName", "Cannot set a null project property");
+            Utilities.ArgumentNotNull("propertyName", propertyName);
 
             string oldValue = null;
             ProjectPropertyInstance oldProp = GetMsBuildProperty(propertyName, true);
@@ -1647,7 +1646,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="item">msbuild item</param>
         /// <returns>FileNode added</returns>
-        public abstract FileNode CreateFileNode(ProjectElement item);
+        public abstract FileNode CreateFileNode(MsBuildProjectElement item);
 
         /// <summary>
         /// Create a file node based on a string.
@@ -1661,7 +1660,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="item">msbuild item</param>
         /// <returns>dependent file node</returns>
-        public virtual DependentFileNode CreateDependentFileNode(ProjectElement item)
+        public virtual DependentFileNode CreateDependentFileNode(MsBuildProjectElement item)
         {
             return new DependentFileNode(this, item);
         }
@@ -1673,7 +1672,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>Dependent node added</returns>
         public virtual DependentFileNode CreateDependentFileNode(string file)
         {
-            ProjectElement item = this.AddFileToMsBuild(file);
+            var item = AddFileToMsBuild(file);
             return this.CreateDependentFileNode(item);
         }
 
@@ -1782,7 +1781,7 @@ namespace Microsoft.PythonTools.Project
                 {
                     if (String.Compare(folder.EvaluatedInclude.TrimEnd('\\'), path.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase) == 0)
                     {
-                        item = new ProjectElement(this, folder, false);
+                        item = new MsBuildProjectElement(this, folder);
                         break;
                     }
                 }
@@ -2268,9 +2267,9 @@ namespace Microsoft.PythonTools.Project
         /// <returns>A Projectelement describing the newly added file.</returns>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ToMs")]
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
-        protected virtual ProjectElement AddFileToMsBuild(string file)
+        protected virtual MsBuildProjectElement AddFileToMsBuild(string file)
         {
-            ProjectElement newItem;
+            MsBuildProjectElement newItem;
 
             string itemPath = PackageUtilities.MakeRelativeIfRooted(file, this.BaseURI);
             Debug.Assert(!Path.IsPathRooted(itemPath), "Cannot add item with full path.");
@@ -2690,9 +2689,9 @@ namespace Microsoft.PythonTools.Project
         /// <param name="itemType">MSBuild item type</param>
         /// <returns>new project element</returns>
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
-        public ProjectElement CreateMsBuildFileItem(string file, string itemType)
+        public MsBuildProjectElement CreateMsBuildFileItem(string file, string itemType)
         {
-            return new ProjectElement(this, file, itemType);
+            return new MsBuildProjectElement(this, file, itemType);
         }
 
         /// <summary>
@@ -2700,9 +2699,9 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="item">MSBuild item instance</param>
         /// <returns>wrapping project element</returns>
-        public ProjectElement GetProjectElement(MSBuild.ProjectItem item)
+        public MsBuildProjectElement GetProjectElement(MSBuild.ProjectItem item)
         {
-            return new ProjectElement(this, item, false);
+            return new MsBuildProjectElement(this, item);
         }
 
         /// <summary>
@@ -4352,7 +4351,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>Added node</returns>
         private HierarchyNode AddDependentFileNodeToNode(MSBuild.ProjectItem item, HierarchyNode parentNode)
         {
-            FileNode node = this.CreateDependentFileNode(new ProjectElement(this, item, false));
+            FileNode node = this.CreateDependentFileNode(new MsBuildProjectElement(this, item));
             parentNode.AddChild(node);
 
             // Make sure to set the HasNameRelation flag on the dependent node if it is related to the parent by name
@@ -4372,7 +4371,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>Added node</returns>
         private HierarchyNode AddFileNodeToNode(MSBuild.ProjectItem item, HierarchyNode parentNode)
         {
-            FileNode node = this.CreateFileNode(new ProjectElement(this, item, false));
+            FileNode node = this.CreateFileNode(new MsBuildProjectElement(this, item));
             parentNode.AddChild(node);
             return node;
         }

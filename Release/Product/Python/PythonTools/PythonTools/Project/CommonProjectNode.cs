@@ -79,11 +79,11 @@ namespace Microsoft.PythonTools.Project {
         public abstract Type GetProjectFactoryType();
         public abstract Type GetEditorFactoryType();
         public abstract string GetProjectName();
-        
-        public virtual CommonFileNode CreateCodeFileNode(ProjectElement item) {
+
+        public virtual CommonFileNode CreateCodeFileNode(MsBuildProjectElement item) {
             return new CommonFileNode(this, item);
         }
-        public virtual CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
+        public virtual CommonFileNode CreateNonCodeFileNode(MsBuildProjectElement item) {
             return new CommonNonCodeFileNode(this, item);
         }
         public abstract string GetFormatList();
@@ -342,7 +342,10 @@ namespace Microsoft.PythonTools.Project {
             _searchPathContainer = new CommonSearchPathContainerNode(this);
             this.AddChild(_searchPathContainer);
             base.Reload();
-            RefreshHierarchy();
+
+            RefreshCurrentWorkingDirectory();
+            RefreshSearchPaths();
+
             OnProjectPropertyChanged += new EventHandler<ProjectPropertyChangedArgs>(CommonProjectNode_OnProjectPropertyChanged);
 
             // track file creation/deletes and update our glyphs when files start/stop existing for files in the project.
@@ -459,7 +462,7 @@ namespace Microsoft.PythonTools.Project {
         /// Create a file node based on an msbuild item.
         /// </summary>
         /// <param name="item">The msbuild item to be analyzed</param>        
-        public override FileNode CreateFileNode(ProjectElement item) {
+        public override FileNode CreateFileNode(MsBuildProjectElement item) {
             Utilities.ArgumentNotNull("item", item);
 
             CommonFileNode newNode;
@@ -508,8 +511,8 @@ namespace Microsoft.PythonTools.Project {
                     prjItem = BuildProject.AddItem("Content", path)[0];
                 }
             }
-            ProjectElement prjElem = new ProjectElement(this, prjItem, false);
-            return CreateFileNode(prjElem);
+
+            return CreateFileNode(new MsBuildProjectElement(this, prjItem));
         }
 
         protected Microsoft.Build.Evaluation.ProjectItem GetExistingItem(string absFileName) {
@@ -525,7 +528,7 @@ namespace Microsoft.PythonTools.Project {
 
         public ProjectElement MakeProjectElement(string type, string path) {
             var item = BuildProject.AddItem(type, path)[0];
-            return new ProjectElement(this, item, false);
+            return new MsBuildProjectElement(this, item);
         }
         
         public override int IsDirty(out int isDirty) {
@@ -545,7 +548,7 @@ namespace Microsoft.PythonTools.Project {
             SetProjectFileDirty(true);
         }
 
-        public override DependentFileNode CreateDependentFileNode(ProjectElement item) {
+        public override DependentFileNode CreateDependentFileNode(MsBuildProjectElement item) {
             DependentFileNode node = base.CreateDependentFileNode(item);
             if (null != node) {
                 string include = item.GetMetadata(ProjectFileConstants.Include);
@@ -581,16 +584,11 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public abstract IProjectLauncher/*!*/ GetLauncher();
 
-        /// <summary>
-        /// Main method for refreshing project hierarchy. It's called on project loading
-        /// and each time the project property is changing.
-        /// </summary>
-        protected void RefreshHierarchy() {
+        private void RefreshCurrentWorkingDirectory() {
             try {
                 _isRefreshing = true;
                 string projHome = GetProjectHomeDir();
                 string workDir = GetWorkingDirectory();
-                IList<string> searchPath = ParseSearchPath();
 
                 //Refresh CWD node
                 bool needCWD = !CommonUtils.AreTheSameDirectories(projHome, workDir);
@@ -610,6 +608,18 @@ namespace Microsoft.PythonTools.Project {
                         cwdNode.Remove(false);
                     }
                 }
+            } finally {
+                _isRefreshing = false;
+            }
+        }
+
+        private void RefreshSearchPaths() {
+            try {
+                _isRefreshing = true;
+
+                string projHome = GetProjectHomeDir();
+                string workDir = GetWorkingDirectory();
+                IList<string> searchPath = ParseSearchPath();
 
                 //Refresh regular search path nodes
 
@@ -642,15 +652,13 @@ namespace Microsoft.PythonTools.Project {
                         }
                     }
                 }
+                
                 //Refresh nodes and remove non-updated ones
                 for (int i = 0; i < searchPathNodes.Count; i++) {
                     if (!updatedNodes[i]) {
                         searchPathNodes[i].Remove();
                     }
                 }
-                // TODO: Port, fix me
-                //_searchPathContainer.UpdateSortOrder();
-                _searchPathContainer.OnInvalidateItems(this);
             } finally {
                 _isRefreshing = false;
             }
@@ -705,11 +713,16 @@ namespace Microsoft.PythonTools.Project {
         /// Whenever project property has changed - refresh project hierarachy.
         /// </summary>
         private void CommonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
-            if (e.PropertyName == CommonConstants.StartupFile) {
-                // just update the old and new items...
-                RefreshStartupFile(this, MakeAbsolutePath(e.OldValue), MakeAbsolutePath(e.NewValue));
-            } else {
-                RefreshHierarchy();
+            switch (e.PropertyName) {
+                case CommonConstants.StartupFile:
+                    RefreshStartupFile(this, MakeAbsolutePath(e.OldValue), MakeAbsolutePath(e.NewValue));
+                    break;
+                case CommonConstants.WorkingDirectory:
+                    RefreshCurrentWorkingDirectory();
+                    break;
+                case CommonConstants.SearchPath:
+                    RefreshSearchPaths();
+                    break;
             }
         }
 

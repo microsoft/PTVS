@@ -149,6 +149,10 @@ namespace AnalysisTest {
                 get { throw new NotImplementedException(); }
             }
 
+            public void ClearHistory() {
+                throw new NotImplementedException();
+            }
+
             public void ClearScreen() {
                 throw new NotImplementedException();
             }

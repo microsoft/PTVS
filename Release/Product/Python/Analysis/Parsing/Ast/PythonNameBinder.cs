@@ -708,10 +708,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override bool Walk(NameExpression node) {
             node.Parent = _currentScope;
+            if (node.Name != null) {
 #if NAME_BINDING
-            node.Reference = 
+                node.Reference = 
 #endif
-            Reference(node.Name);
+                Reference(node.Name);
+            }
             return true;
         }
 

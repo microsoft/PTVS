@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Project {
     public class CurrentWorkingDirectoryNode : BaseSearchPathNode {
         
         public CurrentWorkingDirectoryNode(CommonProjectNode project, string path)
-            : base(project, path, project.MakeProjectElement("WorkingDirectory", path)) { }
+            : base(project, path, new VirtualProjectElement(project)) { }
 
         public override string Caption {
             get {

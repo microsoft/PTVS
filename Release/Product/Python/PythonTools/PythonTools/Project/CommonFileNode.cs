@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Project {
         private OAVSProjectItem _vsProjectItem;
         private CommonProjectNode _project;
 
-        public CommonFileNode(CommonProjectNode root, ProjectElement e)
+        public CommonFileNode(CommonProjectNode root, MsBuildProjectElement e)
             : base(root, e) {
             _project = root;
         }
@@ -239,7 +239,6 @@ namespace Microsoft.PythonTools.Project {
         protected override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (guidCmdGroup == Microsoft.VisualStudio.Shell.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
-                    case VsCommands2K.EXCLUDEFROMPROJECT:
                     case VsCommands2K.RUNCUSTOMTOOL:
                         result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
@@ -265,13 +264,6 @@ namespace Microsoft.PythonTools.Project {
                 return VSConstants.S_OK;
             }
             return base.QueryStatusOnNode(guidCmdGroup, cmd, pCmdText, ref result);
-        }
-
-        /// <summary>
-        /// Dynamic project don't support excluding files from a project.
-        /// </summary>        
-        protected override int ExcludeFromProject() {
-            return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
         /// <summary>

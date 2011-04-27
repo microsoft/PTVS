@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// SearchPathContainer Node cannot be excluded.
+        /// SearchPathContainer Node cannot be excluded, it needs to be removed.
         /// </summary>
         protected override int ExcludeFromProject() {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;

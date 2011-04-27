@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
@@ -424,15 +425,21 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
 
                             // update squiggles for the buffer
-                            var buffer = snapshot.TextBuffer;
+                            var buffer = snapshot.TextBuffer;      
+                            
                             SimpleTagger<ErrorTag> squiggles = _errorProvider.GetErrorTagger(snapshot.TextBuffer);
-                            squiggles.RemoveTagSpans(x => true);
-
                             TaskProvider provider = GetTaskListProviderForProject(bufferParser._currentProjEntry);
 
-                            AddWarnings(snapshot, errorSink, squiggles, provider);
+                            // SimpleTagger says it's thread safe (http://msdn.microsoft.com/en-us/library/dd885186.aspx), but it's buggy...  
+                            // Post the removing of squiggles to the UI thread so that we don't crash when we're racing with 
+                            // updates to the buffer.  http://pytools.codeplex.com/workitem/142
+                            ((UIElement)bufferParser.TextView).Dispatcher.Invoke((Action)(() => {
+                                squiggles.RemoveTagSpans(x => true);
 
-                            AddErrors(snapshot, errorSink, squiggles, provider);
+                                AddWarnings(snapshot, errorSink, squiggles, provider);
+
+                                AddErrors(snapshot, errorSink, squiggles, provider);
+                            }), new object[0]);
 
                             UpdateErrorList(errorSink, buffer.GetFilePath(), provider);
                         }
@@ -682,6 +689,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (lastClass.ClassificationType == parser.Classifier.Provider.StringLiteral) {
                     // String completion
                     return new StringLiteralCompletionList(lastClass.Span.GetText(), loc.Start, parser.Span, parser.Buffer);
+                } else if (lastClass.ClassificationType == parser.Classifier.Provider.Operator &&
+                    lastClass.Span.GetText() == "@") {
+
+                    return new DecoratorCompletionAnalysis(lastClass.Span.GetText(), loc.Start, parser.Span, parser.Buffer);
                 }
 
                 // Import completions

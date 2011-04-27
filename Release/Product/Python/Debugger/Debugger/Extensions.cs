@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Debugger {
             if (socket.Receive(cmd_buffer) == 4) {
                 return BitConverter.ToInt32(cmd_buffer, 0);
             }
-            throw new InvalidOperationException();
+            throw new SocketException();
         }
 
         /// <summary>

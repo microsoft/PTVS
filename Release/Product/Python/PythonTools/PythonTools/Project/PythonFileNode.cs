@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Analysis;
 namespace Microsoft.PythonTools.Project {
 
     public class PythonFileNode : CommonFileNode {
-        internal PythonFileNode(CommonProjectNode root, ProjectElement e)
+        internal PythonFileNode(CommonProjectNode root, MsBuildProjectElement e)
             : base(root, e) { }
 
         public override string Caption {

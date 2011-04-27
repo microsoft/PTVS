@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Project
 		/// </summary>
 		/// <param name="root">Root of the hierarchy</param>
 		/// <param name="e">Associated project element</param>
-		public DependentFileNode(ProjectNode root, ProjectElement element)
+        public DependentFileNode(ProjectNode root, MsBuildProjectElement element)
 			: base(root, element)
 		{
 			this.HasParentNodeNameRelation = false;

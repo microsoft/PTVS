@@ -35,15 +35,17 @@ namespace Microsoft.PythonTools.Project {
         private ProjectAnalyzer _analyzer;
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
         private bool _defaultInterpreter;
+        private PythonDebugPropertyPage _debugPropPage;
+
         public PythonProjectNode(CommonProjectPackage package)
             : base(package, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
         }
 
-        public override CommonFileNode CreateCodeFileNode(ProjectElement item) {
+        public override CommonFileNode CreateCodeFileNode(MsBuildProjectElement item) {
             return new PythonFileNode(this, item);
         }
 
-        public override CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
+        public override CommonFileNode CreateNonCodeFileNode(MsBuildProjectElement item) {
             return new PythonNonCodeFileNode(this, item);
         }
 
@@ -104,13 +106,45 @@ namespace Microsoft.PythonTools.Project {
             base.Reload();
         }
 
-        void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {            
-            if (e.PropertyName == CommonConstants.StartupFile) {
-                if (this.PropertyPage != null && this.PropertyPage.Control != null) {
-                    var ctrl = (PythonGeneralyPropertyPageControl)this.PropertyPage.Control;
-                    ctrl.StartupFile = e.NewValue;
+        private void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {            
+            switch (e.PropertyName) {
+                case CommonConstants.StartupFile:
+                    var genProp = GeneralPropertyPageControl;
+                    if (genProp != null) {
+                        genProp.StartupFile = e.NewValue;
+                    }
+                    break;
+                case CommonConstants.WorkingDirectory:
+                    genProp = GeneralPropertyPageControl;
+                    if (genProp != null) {
+                        genProp.WorkingDirectory = e.NewValue;
+                    }
+                    break;
+            }
+
+            var debugProp = DebugPropertyPage;
+            if (debugProp != null) {
+                ((PythonDebugPropertyPageControl)debugProp.Control).ReloadSetting(e.PropertyName);
+            }
+        }
+
+        private PythonGeneralyPropertyPageControl GeneralPropertyPageControl {
+            get {
+                if (PropertyPage != null && PropertyPage.Control != null) {
+                    return (PythonGeneralyPropertyPageControl)PropertyPage.Control;
                 }
-            }            
+
+                return null;
+            }
+        }
+
+        internal PythonDebugPropertyPage DebugPropertyPage {
+            get {
+                return _debugPropPage;
+            }
+            set {
+                _debugPropPage = value;
+            }
         }
 
         protected override internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
@@ -296,7 +330,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         string IPythonProject.GetProperty(string name) {
-            return GetProjectProperty(name, false);
+            return GetProjectProperty(name, true);
         }
 
         void IPythonProject.SetProperty(string name, string value) {

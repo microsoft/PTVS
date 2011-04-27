@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="root">Root of the hierarchy</param>
         /// <param name="e">Associated project element</param>
-        public FileNode(ProjectNode root, ProjectElement element)
+        public FileNode(ProjectNode root, MsBuildProjectElement element)
             : base(root, element)
         {
             if(this.ProjectMgr.NodeHasDesigner(this.ItemNode.GetMetadata(ProjectFileConstants.Include)))
@@ -316,6 +316,16 @@ namespace Microsoft.PythonTools.Project
             {
                 File.SetAttributes(path, FileAttributes.Normal); // make sure it's not readonly.
                 File.Delete(path);
+            }
+        }
+
+        [System.ComponentModel.BrowsableAttribute(false)]
+        internal new MsBuildProjectElement ItemNode {
+            get {
+                return (MsBuildProjectElement)base.ItemNode;
+            }
+            set {
+                base.ItemNode = value;
             }
         }
 
@@ -707,7 +717,7 @@ namespace Microsoft.PythonTools.Project
 
             // Assign existing msbuild item to the new childnode
             childAdded.ItemNode = this.ItemNode;
-            childAdded.ItemNode.Item.ItemType = this.ItemNode.ItemName;
+            childAdded.ItemNode.Item.ItemType = this.ItemNode.ItemTypeName;
             childAdded.ItemNode.Item.Xml.Include = newInclude;
             if(!string.IsNullOrEmpty(dependentOf))
                 childAdded.ItemNode.SetMetadata(ProjectFileConstants.DependentUpon, dependentOf);

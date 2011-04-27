@@ -49,6 +49,14 @@ namespace Microsoft.IronPythonTools.Debugger {
             _loadingSettings = false;
         }
 
+        public void ReloadSetting(string settingName) {
+            switch (settingName) {
+                case CommonConstants.SearchPath:
+                    SearchPaths = _properties.GetProperty(CommonConstants.SearchPath);
+                    break;
+            }
+        }
+
         public event EventHandler<DirtyChangedEventArgs> DirtyChanged;
 
         Control IPythonLauncherOptions.Control {

@@ -333,10 +333,10 @@ namespace Microsoft.PythonTools.Project
         [TypeConverter(typeof(BuildActionTypeConverter))]
         public BuildType BuildAction {
             get {
-                return BuildType.FromString(this.Node.ItemNode.Item.ItemType);
+                return BuildType.FromString(this.Node.ItemNode.ItemTypeName);
             }
             set {
-                this.Node.ItemNode.Item.ItemType = value.ToString();
+                this.Node.ItemNode.ItemTypeName = value.ToString();
             }
         }
 
@@ -347,7 +347,7 @@ namespace Microsoft.PythonTools.Project
             get {
                 var publish = this.Node.ItemNode.GetMetadata("Publish");
                 if (String.IsNullOrEmpty(publish)) {
-                    if (this.Node.ItemNode.Item.ItemType == "Compile") {
+                    if (this.Node.ItemNode.ItemTypeName == "Compile") {
                         return true;
                     }
                     return false;
