@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Parsing {
                 _indentationInconsistencySeverity = value;
 
                 if (value != Severity.Ignore && _state.IndentFormat == null) {
-                    _state.IndentFormat = new StringBuilder[MaxIndent];
+                    _state.IndentFormat = new string[MaxIndent];
                 }
             }
         }
@@ -608,7 +608,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
                 // and then go ahead and imply the dedents.
-                SetIndent(0, null);
+                SetIndent(0, null, null);
                 _state.PendingDedents--;
                 return Tokens.DedentToken;
             }
@@ -1468,7 +1468,7 @@ namespace Microsoft.PythonTools.Parsing {
                 if (isSpace == null) {
                     isSpace = true;
                     curWhiteSpace = SpaceIndentation[0];
-                } else if (isSpace.Value && SpaceIndentation.Length < curWhiteSpace.Length) {
+                } else if (isSpace.Value && curWhiteSpace.Length < SpaceIndentation.Length) {
                     curWhiteSpace = SpaceIndentation[curWhiteSpace.Length];
                 } else {
                     // we're mixed tabs/spaces or we have run out of space
@@ -1486,7 +1486,7 @@ namespace Microsoft.PythonTools.Parsing {
                 if (isSpace == null) {
                     isSpace = false;
                     curWhiteSpace = TabIndentation[0];
-                } else if (!isSpace.Value && TabIndentation.Length < curWhiteSpace.Length) {
+                } else if (!isSpace.Value && curWhiteSpace.Length < TabIndentation.Length) {
                     curWhiteSpace = TabIndentation[curWhiteSpace.Length];
                 } else {
                     // we're mixed tabs/spaces or we have run out of space
@@ -1590,13 +1590,13 @@ namespace Microsoft.PythonTools.Parsing {
                             if (spaces < _state.Indent[_state.IndentLevel]) {
                                 if (_kind == SourceCodeKind.InteractiveCode ||
                                     _kind == SourceCodeKind.Statements) {
-                                    SetIndent(spaces, sb);
+                                    SetIndent(spaces, sb, noAllocWhiteSpace);
                                 } else {
                                     DoDedent(spaces, _state.Indent[_state.IndentLevel]);
                                 }
                             }
                         } else if (ch != '\n' && ch != '\r') {
-                            SetIndent(spaces, sb);
+                            SetIndent(spaces, sb, noAllocWhiteSpace);
                         }
 
                         return true;
@@ -1604,9 +1604,18 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
+        private static int PreviousIndentLength(object previousIndent) {
+            string prevStr = previousIndent as string;
+            if(prevStr != null) {
+                return prevStr.Length;
+            }
+
+            return ((StringBuilder)previousIndent).Length;
+        }
+
         private void CheckIndent(StringBuilder sb, string noAllocWhiteSpace) {
             if (_state.Indent[_state.IndentLevel] > 0) {
-                StringBuilder previousIndent = _state.IndentFormat[_state.IndentLevel];
+                var previousIndent = _state.IndentFormat[_state.IndentLevel];
                 int checkLength;
                 if (sb == null) {
                     checkLength = previousIndent.Length < noAllocWhiteSpace.Length ? previousIndent.Length : noAllocWhiteSpace.Length;
@@ -1635,14 +1644,19 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private void SetIndent(int spaces, StringBuilder chars) {
+        private void SetIndent(int spaces, StringBuilder chars, string noAllocWhiteSpace) {
             int current = _state.Indent[_state.IndentLevel];
             if (spaces == current) {
                 return;
             } else if (spaces > current) {
                 _state.Indent[++_state.IndentLevel] = spaces;
-                if (_state.IndentFormat != null)
-                    _state.IndentFormat[_state.IndentLevel] = chars;
+                if (_state.IndentFormat != null) {
+                    if (chars != null) {
+                        _state.IndentFormat[_state.IndentLevel] = chars.ToString();
+                    } else {
+                        _state.IndentFormat[_state.IndentLevel] = noAllocWhiteSpace;
+                    }
+                }
                 _state.PendingDedents = -1;
                 return;
             } else {
@@ -1989,7 +2003,7 @@ namespace Microsoft.PythonTools.Parsing {
             public IncompleteString IncompleteString;
 
             // Indentation state used only when we're reporting on inconsistent identation format.
-            public StringBuilder[] IndentFormat;
+            public string[] IndentFormat;
 
             // grouping state
             public int ParenLevel, BraceLevel, BracketLevel;
@@ -2006,7 +2020,7 @@ namespace Microsoft.PythonTools.Parsing {
                 BraceLevel = state.BraceLevel;
                 PendingDedents = state.PendingDedents;
                 IndentLevel = state.IndentLevel;
-                IndentFormat = (state.IndentFormat != null) ? (StringBuilder[])state.IndentFormat.Clone() : null;
+                IndentFormat = (state.IndentFormat != null) ? (string[])state.IndentFormat.Clone() : null;
                 IncompleteString = state.IncompleteString;
                 if (verbatim) {
                     CurWhiteSpace = new StringBuilder(state.CurWhiteSpace.ToString());

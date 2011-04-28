@@ -108,6 +108,22 @@ def get_thread_from_id(id):
 def should_send_frame(frame):
     return  frame is not None and frame.f_code is not get_code(debug) and frame.f_code is not get_code(new_thread_wrapper)
 
+class ExceptionBreakInfo(object):
+    def __init__(self):
+        self.break_always = False
+        self.break_on = set()
+    
+    def ShouldBreak(self, name):
+        return self.break_always or name in self.break_on
+    
+    def AddBreakingException(self, name):    
+        if sys.version >= '3.0' and name.startswith('exceptions.'):
+            name = 'builtins' + name[10:]
+        
+        self.break_on.add(name)
+
+BREAK_ON = ExceptionBreakInfo()
+
 class Thread(object):
     def __init__(self, id = None):
         if id is not None:
@@ -238,7 +254,11 @@ class Thread(object):
         
     def handle_exception(self, frame, arg):
         if frame.f_code.co_filename != __file__:
-            self.block(lambda: report_exception(frame, arg, self.id))
+            exc_type = arg[0]
+            exc_name = exc_type.__module__ + '.' + exc_type.__name__
+
+            if BREAK_ON.ShouldBreak(exc_name):
+                self.block(lambda: report_exception(frame, arg, self.id))
 
         return self.trace_func
         
@@ -547,6 +567,7 @@ class DebuggerLoop(object):
             cmd('setl') : self.command_set_lineno,
             cmd('detc') : self.command_detach,
             cmd('clst') : self.command_clear_stepping,
+            cmd('sexi') : self.command_set_exception_info,
         }
 
     def loop(self):
@@ -652,6 +673,14 @@ class DebuggerLoop(object):
         thread.unblock()
         THREADS_LOCK.release()
     
+    def command_set_exception_info(self):
+        BREAK_ON.break_always = bool(read_int(self.conn))
+        BREAK_ON.break_on.clear()
+
+        break_on_count = read_int(self.conn)
+        for i in xrange(break_on_count):
+            BREAK_ON.AddBreakingException(read_string(self.conn))        
+
     def command_clear_stepping(self):
         tid = read_int(self.conn)
 

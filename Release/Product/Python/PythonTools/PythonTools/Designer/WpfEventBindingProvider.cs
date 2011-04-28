@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Designer {
 
             if (analysis != null) {
                 // TODO: Wait for up to date analysis
-                var suiteStmt = analysis.Tree.Body as SuiteStatement;                
+                var suiteStmt = analysis.WaitForCurrentTree().Body as SuiteStatement;                
                 foreach (var stmt in suiteStmt.Statements) {
                     var classDef = stmt as ClassDefinition;
                     // TODO: Make sure this is the right class

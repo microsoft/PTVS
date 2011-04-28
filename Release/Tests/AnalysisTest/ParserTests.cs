@@ -39,6 +39,25 @@ namespace AnalysisTest {
         internal static readonly PythonLanguageVersion[] V3Versions = new[] { PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32 };
 
         #region Test Cases
+
+        [TestMethod]
+        public void MixedWhiteSpace() {
+            // mixed, but in different blocks, which is ok
+            ParseErrors("MixedWhitespace1.py", PythonLanguageVersion.V27, Severity.Error);
+
+            // mixed in the same block, tabs first
+            ParseErrors("MixedWhitespace2.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 293, 13, 32, 302, 14, 9));
+
+            // mixed in same block, spaces first
+            ParseErrors("MixedWhitespace3.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 285, 13, 24, 287, 14, 2));
+
+            // mixed on same line, spaces first
+            ParseErrors("MixedWhitespace4.py", PythonLanguageVersion.V27, Severity.Error);
+
+            // mixed on same line, tabs first
+            ParseErrors("MixedWhitespace5.py", PythonLanguageVersion.V27, Severity.Error);
+        }
+
         [TestMethod]
         public void Errors() {
             ParseErrors("AllErrors.py",
@@ -1973,8 +1992,12 @@ namespace AnalysisTest {
         }
 
         private void ParseErrors(string filename, PythonLanguageVersion version, params ErrorInfo[] errors) {
+            ParseErrors(filename, version, Severity.Ignore, errors);
+        }
+
+        private void ParseErrors(string filename, PythonLanguageVersion version, Severity indentationInconsistencySeverity, params ErrorInfo[] errors) {
             var sink = new CollectingErrorSink();
-            ParseFile(filename, sink, version);
+            ParseFile(filename, sink, version, indentationInconsistencySeverity);
 
             StringBuilder foundErrors = new StringBuilder();
             for (int i = 0; i < sink.Errors.Count; i++) {
@@ -2016,8 +2039,8 @@ namespace AnalysisTest {
             }
         }
 
-        private static PythonAst ParseFile(string filename, ErrorSink errorSink, PythonLanguageVersion version) {
-            var parser = Parser.CreateParser(new StreamReader(Path.GetFullPath(Path.Combine("Python.VS.TestData\\Grammar", filename))), errorSink, version);
+        private static PythonAst ParseFile(string filename, ErrorSink errorSink, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
+            var parser = Parser.CreateParser(new StreamReader(Path.GetFullPath(Path.Combine("Python.VS.TestData\\Grammar", filename))), errorSink, version, indentationInconsistencySeverity);
             var ast = parser.ParseFile();
             return ast;
         }

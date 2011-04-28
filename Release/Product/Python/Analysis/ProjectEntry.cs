@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -36,8 +37,13 @@ namespace Microsoft.PythonTools.Analysis {
         private Stack<InterpreterScope> _scopeTree;
         private ModuleAnalysis _currentAnalysis;
         private AnalysisUnit _unit;
-        private int _version;
+        private int _analysisVersion;        
         private Dictionary<object, object> _properties = new Dictionary<object, object>();
+        private ManualResetEventSlim _curWaiter;
+        private int _updatesPending, _waiters;
+
+        // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
+        private static ManualResetEventSlim _sharedWaitEvent = new ManualResetEventSlim(false);
 
         internal ProjectEntry(PythonAnalyzer state, string moduleName, string filePath, IAnalysisCookie cookie) {
             _projectState = state;
@@ -51,10 +57,25 @@ namespace Microsoft.PythonTools.Analysis {
         public event EventHandler<EventArgs> OnNewParseTree;
         public event EventHandler<EventArgs> OnNewAnalysis;
 
-        public void UpdateTree(PythonAst newAst, IAnalysisCookie newCookie) {
+        public void UpdateTree(PythonAst newAst, IAnalysisCookie newCookie) {            
             lock (this) {
+                if (_updatesPending > 0) {
+                    _updatesPending--;
+                }
+                if (newAst == null) {
+                    // there was an error in parsing, just let the waiter go...
+                    if (_curWaiter != null) {
+                        _curWaiter.Set();
+                    }
+                    return;
+                }
+
                 _tree = newAst;
                 _cookie = newCookie;
+                
+                if (_curWaiter != null) {
+                    _curWaiter.Set();
+                }
             }
 
             var newParse = OnNewParseTree;
@@ -70,13 +91,50 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public void BeginParsingTree() {
+            lock (this) {
+                _updatesPending++;
+            }
+        }
+
+        public PythonAst WaitForCurrentTree(int timeout = -1) {
+            lock (this) {
+                if (_updatesPending == 0) {
+                    return Tree;
+                }
+
+                _waiters++;
+                if (_curWaiter == null) {
+                    _curWaiter = Interlocked.Exchange(ref _sharedWaitEvent, null);
+                    if (_curWaiter == null) {
+                        _curWaiter = new ManualResetEventSlim(false);
+                    } else {
+                        _curWaiter.Reset();
+                    }
+                }
+            }
+
+            bool gotNewTree = _curWaiter.Wait(timeout);
+
+            lock (this) {
+                _waiters--;
+                if (_waiters == 0 && 
+                    Interlocked.CompareExchange(ref _sharedWaitEvent, _curWaiter, null) != null) {
+                    _curWaiter.Dispose();
+                }
+                _curWaiter = null;
+            }
+
+            return gotNewTree ? _tree : null;
+        }
+
         public void Analyze() {
             Analyze(false);
         }
 
         public void Analyze(bool enqueueOnly) {
             lock (this) {
-                _version++;
+                _analysisVersion++;
 
                 Parse(enqueueOnly);
             }
@@ -87,9 +145,9 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public int Version {
+        public int AnalysisVersion {
             get {
-                return _version;
+                return _analysisVersion;
             }
         }
 
@@ -235,6 +293,9 @@ namespace Microsoft.PythonTools.Analysis {
 
     }
 
+    /// <summary>
+    /// Represents a unit of work which can be analyzed.
+    /// </summary>
     public interface IAnalyzable {
         void Analyze();
     }
@@ -244,12 +305,26 @@ namespace Microsoft.PythonTools.Analysis {
     /// for more functionality.  See also IPythonProjectEntry and IXamlProjectEntry.
     /// </summary>
     public interface IProjectEntry : IAnalyzable {
+        /// <summary>
+        /// Returns true if the project entry has been parsed and analyzed.
+        /// </summary>
         bool IsAnalyzed { get; }
-        int Version {
+
+        /// <summary>
+        /// Returns the current analysis version of the project entry.
+        /// </summary>
+        int AnalysisVersion {
             get;
         }
 
+        /// <summary>
+        /// Returns the project entries file path.
+        /// </summary>
         string FilePath { get; }
+
+        /// <summary>
+        /// Gets the specified line of text from the project entry.
+        /// </summary>
         string GetLine(int lineNo);
 
         /// <summary>
@@ -297,6 +372,9 @@ namespace Microsoft.PythonTools.Analysis {
     }
 
     public interface IPythonProjectEntry : IGroupableAnalysisProjectEntry, IProjectEntry {
+        /// <summary>
+        /// Returns the last parsed AST.
+        /// </summary>
         PythonAst Tree {
             get;
         }
@@ -308,8 +386,22 @@ namespace Microsoft.PythonTools.Analysis {
         event EventHandler<EventArgs> OnNewParseTree;
         event EventHandler<EventArgs> OnNewAnalysis;
 
+        /// <summary>
+        /// Informs thhe project entry that a new tree will soon be available and will be provided by
+        /// a call to UpdateTree.  Calling this method will cause WaitForCurrentTree to block until
+        /// UpdateTree has been called.
+        /// 
+        /// Calls to BeginParsingTree should be balanced with calls to UpdateTree.
+        /// </summary>
+        void BeginParsingTree();
+
         void UpdateTree(PythonAst ast, IAnalysisCookie fileCookie);
         void GetTreeAndCookie(out PythonAst ast, out IAnalysisCookie cookie);
 
+        /// <summary>
+        /// Returns the current tree if no parsing is currently pending, otherwise waits for the 
+        /// current parse to finish and returns the up-to-date tree.
+        /// </summary>
+        PythonAst WaitForCurrentTree(int timeout = -1);
     }
 }

@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal FunctionInfo(AnalysisUnit unit)
             : base(unit) {
             _returnValue = new VariableDef();
-            _declVersion = unit.ProjectEntry.Version;
+            _declVersion = unit.ProjectEntry.AnalysisVersion;
         }
 
         public ProjectEntry ProjectEntry {

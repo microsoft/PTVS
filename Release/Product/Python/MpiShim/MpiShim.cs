@@ -25,7 +25,7 @@ using Microsoft.Win32.SafeHandles;
 namespace Microsoft.PythonTools.MpiShim {
     class MpiShim {
         public static int Main(string[] args) {
-            if (args.Length < 6) {
+            if (args.Length < 7) {
                 Help();
                 return -1;
             }
@@ -50,7 +50,9 @@ namespace Microsoft.PythonTools.MpiShim {
 
             string curDir = args[3];
             string projectDir = args[4];
-            string exe = args[5];
+            string options = args[5];
+            string exe = args[6];
+            
             if (!File.Exists(exe)) {
                 Console.WriteLine("{0} does not exist, please install the Python interpreter or update the project debug settings to point at the correct interpreter.", exe);
             }
@@ -100,8 +102,9 @@ namespace Microsoft.PythonTools.MpiShim {
                     writer.WriteLine(exe);
                     writer.WriteLine(curDir);
                     writer.WriteLine(projectDir);
-                    writer.WriteLine(String.Join(" ", args, 6, args.Length - 6));
+                    writer.WriteLine(String.Join(" ", args, 7, args.Length - 7));
                     writer.WriteLine(launchId + "@" + Environment.MachineName);
+                    writer.WriteLine(options);
                     writer.Flush();
 
                     var reader = new StreamReader(secureStream);
@@ -133,7 +136,7 @@ namespace Microsoft.PythonTools.MpiShim {
         }
 
         private static void Help() {
-            Console.WriteLine("{0}: <port number> <auth guid> <ip address> <command and args> <target command> <command line>", typeof(MpiShim).Assembly.GetName().Name);
+            Console.WriteLine("{0}: <port number> <auth guid> <ip address> <cur dir> <project dir> <debugger options> <exe> <command line...>", typeof(MpiShim).Assembly.GetName().Name);
         }
     }
 }

@@ -75,6 +75,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         /// <summary>
         /// Creates a new ProjectEntry for the collection of buffers.
+        /// 
+        /// _openFiles must be locked when calling this function.
         /// </summary>
         private void ReAnalyzeTextBuffers(BufferParser bufferParser) {
             ITextBuffer[] buffers = bufferParser.Buffers;
@@ -197,6 +199,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (item != null) {
+                IPythonProjectEntry pyEntry = item as IPythonProjectEntry;
+                if (pyEntry != null) {
+                    pyEntry.BeginParsingTree();
+                }
                 _queue.EnqueueFile(item, path);
             }
 
@@ -361,21 +367,20 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void ParseFile(IProjectEntry projectEntry, string filename, FileStream content, Severity indentationSeverity) {
-            IProjectEntry analysis;
+            IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
-            if (PythonProjectNode.IsPythonFile(filename)) {
+
+            if ((pyEntry = projectEntry as IPythonProjectEntry) != null) {
                 PythonAst ast;
                 CollectingErrorSink errorSink;
                 ParsePythonCode(content, indentationSeverity, out ast, out errorSink);
 
                 if (ast != null) {
-                    IPythonProjectEntry pyAnalysis;
-                    if (_projectFiles.TryGetValue(filename, out analysis) &&
-                        (pyAnalysis = analysis as IPythonProjectEntry) != null) {
-
-                        pyAnalysis.UpdateTree(ast, new FileCookie(filename));
-                        _analysisQueue.Enqueue(analysis, AnalysisPriority.Normal);
-                    }
+                    pyEntry.UpdateTree(ast, new FileCookie(filename));
+                    _analysisQueue.Enqueue(pyEntry, AnalysisPriority.Normal);
+                } else {
+                    // notify that we failed to update the existing analysis
+                    pyEntry.UpdateTree(null, null);
                 }
 
                 TaskProvider provider = GetTaskListProviderForProject(projectEntry);
@@ -390,20 +395,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     UpdateErrorList(errorSink, projectEntry.FilePath, provider);
                 }
-
-            } else if (_projectFiles.TryGetValue(filename, out analysis) && (externalEntry = (analysis as IExternalProjectEntry)) != null) {
+            } else if ((externalEntry = projectEntry as IExternalProjectEntry) != null) {
                 externalEntry.ParseContent(new StreamReader(content), new FileCookie(filename));
-                _analysisQueue.Enqueue(analysis, AnalysisPriority.Normal);
+                _analysisQueue.Enqueue(projectEntry, AnalysisPriority.Normal);
             }
         }
 
         public void ParseBuffers(BufferParser bufferParser, Severity indentationSeverity, params ITextSnapshot[] snapshots) {
-            IProjectEntry analysis;
-            lock (_openFiles) {
-                if (!_openFiles.TryGetValue(bufferParser, out analysis)) {
-                    return;
-                }
-            }
+            IProjectEntry analysis = bufferParser._currentProjEntry;
 
             IPythonProjectEntry pyProjEntry = analysis as IPythonProjectEntry;
             List<PythonAst> asts = new List<PythonAst>();
@@ -433,7 +432,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             // SimpleTagger says it's thread safe (http://msdn.microsoft.com/en-us/library/dd885186.aspx), but it's buggy...  
                             // Post the removing of squiggles to the UI thread so that we don't crash when we're racing with 
                             // updates to the buffer.  http://pytools.codeplex.com/workitem/142
-                            ((UIElement)bufferParser.TextView).Dispatcher.Invoke((Action)(() => {
+                            ((UIElement)bufferParser.TextView).Dispatcher.BeginInvoke((Action)(() => {
                                 squiggles.RemoveTagSpans(x => true);
 
                                 AddWarnings(snapshot, errorSink, squiggles, provider);
@@ -454,26 +453,31 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if ((!hasErrors && asts.Count > 0) || asts.Count > 1) {
-                // only update the AST when we're error free, this way we don't remove
-                // a useful analysis with an incomplete and useless analysis.
-                // If we have more than one AST we're in the REPL - we'll update the
-                // AST in that case as errors won't go away.
+            if (pyProjEntry != null) {
+                if ((!hasErrors && asts.Count > 0) || asts.Count > 1) {
+                    // only update the AST when we're error free, this way we don't remove
+                    // a useful analysis with an incomplete and useless analysis.
+                    // If we have more than one AST we're in the REPL - we'll update the
+                    // AST in that case as errors won't go away.
 
-                PythonAst finalAst;
-                if (asts.Count == 1) {
-                    finalAst = asts[0];
-                } else {
-                    // multiple ASTs, merge them together
-                    List<Statement> bodies = new List<Statement>();
-                    foreach (var ast in asts) {
-                        bodies.Add(ast.Body);
+                    PythonAst finalAst;
+                    if (asts.Count == 1) {
+                        finalAst = asts[0];
+                    } else {
+                        // multiple ASTs, merge them together
+                        List<Statement> bodies = new List<Statement>();
+                        foreach (var ast in asts) {
+                            bodies.Add(ast.Body);
+                        }
+                        finalAst = new PythonAst(new SuiteStatement(bodies.ToArray()), new int[0]);
                     }
-                    finalAst = new PythonAst(new SuiteStatement(bodies.ToArray()), new int[0]);
-                }
 
-                pyProjEntry.UpdateTree(finalAst, new SnapshotCookie(snapshots[0])); // SnapshotCookie is ot entirely right, we should merge the snapshots
-                _analysisQueue.Enqueue(analysis, AnalysisPriority.High);
+                    pyProjEntry.UpdateTree(finalAst, new SnapshotCookie(snapshots[0])); // SnapshotCookie is ot entirely right, we should merge the snapshots
+                    _analysisQueue.Enqueue(analysis, AnalysisPriority.High);
+                } else {
+                    // indicate that we are done parsing.
+                    pyProjEntry.UpdateTree(null, null);
+                }
             }
         }
 

@@ -223,6 +223,16 @@ namespace Microsoft.PythonTools.Debugger {
                 return _langVersion;
             }
         }
+
+        public void SetExceptionInfo(bool breakAlways, ICollection<string> breakOn) {
+            _socket.Send(SetExceptionInfoCommandBytes);
+            _socket.Send(BitConverter.GetBytes(breakAlways ? 1 : 0));
+            _socket.Send(BitConverter.GetBytes(breakOn.Count));
+            foreach (var name in breakOn) {
+                SendString(_socket, name);
+            }
+        }
+
         #endregion
 
         #region Debuggee Communcation
@@ -710,6 +720,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] SetLineNumberCommand = MakeCommand("setl");
         private static byte[] GetChildrenCommandBytes = MakeCommand("chld");
         private static byte[] DetachCommandBytes = MakeCommand("detc");
+        private static byte[] SetExceptionInfoCommandBytes = MakeCommand("sexi");
 
         private static byte[] MakeCommand(string command) {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };

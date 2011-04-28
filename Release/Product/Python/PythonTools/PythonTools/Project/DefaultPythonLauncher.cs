@@ -241,9 +241,9 @@ namespace Microsoft.PythonTools.Project {
                 } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
                     command += " & if errorlevel 1 pause";
                 }
-
+                
                 command += "\"";
-                startInfo = new ProcessStartInfo("cmd.exe", command);
+                startInfo = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"), command);
             } else {
                 startInfo = new ProcessStartInfo(interpreter, command);
             }

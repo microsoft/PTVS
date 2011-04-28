@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 
                 var curSnapshot = buffer.CurrentSnapshot;
                 var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+                bufferParser.EnqueingEntry();
                 EnqueWorker(() => {
                     _parser.ParseBuffers(bufferParser, severity, curSnapshot);
                 });
@@ -90,7 +91,13 @@ namespace Microsoft.PythonTools.Intellisense {
                         // file being copied, try again...
                         Thread.Sleep(100);
                     }
-                } 
+                }
+
+                IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
+                if (pyEntry != null) {
+                    // failed to parse, keep the UpdateTree calls balanced
+                    pyEntry.UpdateTree(null, null);
+                }
             });
         }
 
@@ -132,7 +139,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public BufferParser(ITextView textView, IProjectEntry initialProjectEntry, ProjectAnalyzer parser, IList<ITextBuffer> buffers) {
             _parser = parser;
-            _timer = new Timer(ReparseWorker, null, Timeout.Infinite, Timeout.Infinite);
+            _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = buffers;
             _currentProjEntry = initialProjectEntry;
             if (PythonToolsPackage.Instance != null) {
@@ -199,7 +206,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
                 buffer.Properties.AddProperty(typeof(ProjectAnalyzer), replEvaluator.ReplAnalyzer);
             }
-            buffer.ChangedLowPriority += BufferChangedLowPriority;
+            buffer.ChangedHighPriority += BufferChangedLowPriority;
             buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
         }
 
@@ -209,10 +216,17 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal void ReparseTimer(object unused) {
+            EnqueingEntry();
+
+            ReparseWorker(unused);
+        }
+
         internal void ReparseWorker(object unused) {
             ITextSnapshot[] snapshots;
             lock (this) {
                 if (_parsing) {
+                    NotReparsing();
                     return;
                 }
 
@@ -228,12 +242,38 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (this) {
                 _parsing = false;
                 if (_requeue) {
+                    EnqueingEntry();
                     ThreadPool.QueueUserWorkItem(ReparseWorker);
                 }
                 _requeue = false;
             }
         }
 
+        /// <summary>
+        /// Called when we decide we need to re-parse a buffer but before we start the buffer.
+        /// </summary>
+        internal void EnqueingEntry() {
+            lock (this) {
+                IPythonProjectEntry pyEntry = _currentProjEntry as IPythonProjectEntry;
+                if (pyEntry != null) {
+                    pyEntry.BeginParsingTree();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Called when we race and are not actually re-parsing a buffer, balances the calls
+        /// of BeginParsingTree when we aren't parsing.
+        /// </summary>
+        private void NotReparsing() {
+            lock (this) {
+                IPythonProjectEntry pyEntry = _currentProjEntry as IPythonProjectEntry;
+                if (pyEntry != null) {
+                    pyEntry.UpdateTree(null, null);
+                }
+            }
+        }
+        
         internal void BufferChangedLowPriority(object sender, TextContentChangedEventArgs e) {
             lock (this) {
                 // only immediately re-parse on line changes after we've seen a text change.                   
@@ -254,6 +294,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void Requeue() {
+            EnqueingEntry();
             ThreadPool.QueueUserWorkItem(ReparseWorker);
             _timer.Change(Timeout.Infinite, Timeout.Infinite);
         }

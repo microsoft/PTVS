@@ -132,11 +132,12 @@ namespace Microsoft.PythonTools.Hpc {
                 string projectDir = reader.ReadLine();
                 string args = reader.ReadLine();
                 string machineName = reader.ReadLine();
+                string options = reader.ReadLine();
 
                 uint pid = 0;
                 string errorText = "";
                 var res = _pumpForm.BeginInvoke((Action)(() => {
-                    pid = LaunchDebugger(exe, curDir, projectDir, args, machineName, out errorText);
+                    pid = LaunchDebugger(exe, curDir, projectDir, args, machineName, options, out errorText);
                 }));
                 res.AsyncWaitHandle.WaitOne();
 
@@ -180,7 +181,7 @@ namespace Microsoft.PythonTools.Hpc {
             }
         }
 
-        private static uint LaunchDebugger(string exe, string curDir, string projectDir, string args, string machineName, out string error) {
+        private static uint LaunchDebugger(string exe, string curDir, string projectDir, string args, string machineName, string options, out string error) {
             var debugger = (IVsDebugger2)HpcSupportPackage.GetGlobalService(typeof(SVsShellDebugger));
             VsDebugTargetInfo2 debugInfo = new VsDebugTargetInfo2();
 
@@ -194,7 +195,10 @@ namespace Microsoft.PythonTools.Hpc {
             debugInfo.bstrExe = exe;
             debugInfo.bstrCurDir = curDir;
             debugInfo.bstrArg = args;
-            debugInfo.bstrOptions = AD7Engine.DirMappingSetting + "=" + projectDir + "|" + curDir + ";" + AD7Engine.RedirectOutputSetting + "=True";
+            debugInfo.bstrOptions = AD7Engine.DirMappingSetting + "=" + projectDir + "|" + curDir;
+            if (!String.IsNullOrWhiteSpace(options)) {
+                debugInfo.bstrOptions += ";" + options;
+            }
             debugInfo.pDebugEngines = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(Guid)));
 
             if (debugInfo.pDebugEngines == IntPtr.Zero) {
@@ -267,7 +271,7 @@ namespace Microsoft.PythonTools.Hpc {
                 if (!TryGetDeploymentDir(out deploymentDir)) {
                     return VSConstants.S_OK;
                 }
-            }
+            }            
 
             string exe, arguments;
             if (!TryBuildCommandLine(debug, clusterEnv, filename, workingDir, out exe, out arguments) || 
@@ -276,10 +280,14 @@ namespace Microsoft.PythonTools.Hpc {
             }
 
             if (clusterEnv.HeadNode == "localhost") {
-                // run locally
-                var startInfo = new ProcessStartInfo(exe, arguments);
-                
-                var proc = LaunchRedirectedToVsOutputWindow(startInfo, false);
+                // run locally               
+                if (debug) {
+                    var startInfo = new ProcessStartInfo(exe, arguments);
+
+                    LaunchRedirectedToVsOutputWindow(startInfo, false);
+                } else {
+                    Process.Start(exe, arguments);
+                }
             } else {
                 EnsureGeneralPane();
 
@@ -566,11 +574,35 @@ namespace Microsoft.PythonTools.Hpc {
                     GetLocalIPv4Address(schedulerNode) + " " +
                     "\"" + FixDir(workingDir) + "\" " +
                     "\"" + FixDir(_project.ProjectDirectory) + "\" " +
+                    "\"" + GetDebugOptions(environment) + "\" " +
                     tmpArgs;
             } else {
                 arguments += tmpArgs;
             }
             return true;
+        }
+
+        private static string GetDebugOptions(ClusterEnvironment clusterEnv) {
+            string options = "";
+
+            if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
+                options = AD7Engine.RedirectOutputSetting + "=True";
+            }
+            if (clusterEnv.HeadNode == "localhost") { // don't wait on the cluster, there's no one to press enter.
+                if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    if (!String.IsNullOrEmpty(options)) {
+                        options += ";";
+                    }
+                    options += AD7Engine.WaitOnAbnormalExitSetting + "=True";
+                }
+                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                    if (!String.IsNullOrEmpty(options)) {
+                        options += ";";
+                    }
+                    options += AD7Engine.WaitOnNormalExitSetting + "=True";
+                }
+            }
+            return options;
         }
 
         private bool TryGetMpiExecCommand(string schedulerNode, out string mpiExecCommand) {

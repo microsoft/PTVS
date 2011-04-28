@@ -281,6 +281,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         int IDebugEngine2.RemoveAllSetExceptions(ref Guid guidType) {
             _breakOnException.Clear();
             _defaultBreakOnException = false;
+
+            _process.SetExceptionInfo(_defaultBreakOnException, _breakOnException);
             return VSConstants.S_OK;
         }
 
@@ -295,6 +297,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 }
             }
 
+            _process.SetExceptionInfo(_defaultBreakOnException, _breakOnException);
             return VSConstants.S_OK;
         }
 
@@ -308,6 +311,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     }
                 }
             }
+
+            _process.SetExceptionInfo(_defaultBreakOnException, _breakOnException);
             return VSConstants.S_OK;
         }
 
@@ -842,35 +847,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private void OnExceptionRaised(object sender, ExceptionRaisedEventArgs e) {
-            if (ShouldBreak(e)) {
-                // Exception events are sent when an exception occurs in the debuggee that the debugger was not expecting.
-                Send(
-                    new AD7DebugExceptionEvent(e.Exception.TypeName + Environment.NewLine + e.Exception.Description),
-                    AD7DebugExceptionEvent.IID,
-                    _threads[e.Thread]
-                );
-            } else {
-                e.Thread.Resume();
-            }
-        }
-
-        private bool ShouldBreak(ExceptionRaisedEventArgs e) {
-            if(_defaultBreakOnException) {
-                return true;
-            }
-
-            if (_breakOnException.Contains(e.Exception.TypeName)) {
-                return true;
-            }
-
-            if (_process.LanguageVersion.Is3x() && e.Exception.TypeName.StartsWith("builtins.")) {
-                string mappedName = "exceptions." + e.Exception.TypeName.Substring("builtins.".Length);
-                if (_breakOnException.Contains(mappedName)) {
-                    return true;
-                }
-            }
-
-            return false;
+            // Exception events are sent when an exception occurs in the debuggee that the debugger was not expecting.
+            Send(
+                new AD7DebugExceptionEvent(e.Exception.TypeName + Environment.NewLine + e.Exception.Description),
+                AD7DebugExceptionEvent.IID,
+                _threads[e.Thread]
+            );
         }
 
         private void OnBreakpointHit(object sender, BreakpointHitEventArgs e) {

@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _instanceInfo = new InstanceInfo(this);
             _bases = new List<ISet<Namespace>>();
             _scope = new ClassScope(this, unit.Ast);
-            _declVersion = unit.ProjectEntry.Version;
+            _declVersion = unit.ProjectEntry.AnalysisVersion;
         }
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {

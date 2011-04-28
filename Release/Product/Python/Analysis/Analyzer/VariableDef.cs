@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public void ClearOldValues(IProjectEntry fromModule) {
             TStorageType deps;
             if (_dependencies.TryGetValue(fromModule, out deps)) {
-                if (deps.Version != fromModule.Version) {
+                if (deps.Version != fromModule.AnalysisVersion) {
                     _dependencies.Remove(fromModule);
                 }
             }
@@ -31,8 +31,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         protected TStorageType GetDependentItems(IProjectEntry module) {
             TStorageType result;
-            if (!_dependencies.TryGetValue(module, out result) || result.Version != module.Version) {
-                _dependencies[module] = result = NewDefinition(module.Version);
+            if (!_dependencies.TryGetValue(module, out result) || result.Version != module.AnalysisVersion) {
+                _dependencies[module] = result = NewDefinition(module.AnalysisVersion);
             }
             return result;
         }
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             foreach (var value in newTypes) {
                 var declaringModule = value.DeclaringModule;
-                if (declaringModule == null || declaringModule.Version == value.DeclaringVersion) {
+                if (declaringModule == null || declaringModule.AnalysisVersion == value.DeclaringVersion) {
                     var dependencies = GetDependentItems(declaringModule ?? unit.ProjectEntry);
 
                     if (dependencies.Types.Add(value, unit.ProjectState)) {

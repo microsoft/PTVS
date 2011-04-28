@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public string FilePath { get { return _filename; } }
 
-        public int Version {
+        public int AnalysisVersion {
             get {
                 return _version;
             }

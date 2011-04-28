@@ -80,10 +80,6 @@ namespace AnalysisTest {
             process.BreakpointHit += (sender, args) => {
                 brkHit.Set();
             };
-            process.ExceptionRaised += (sender, args) => {
-                // some versions of Python raise exceptions during startup
-                args.Thread.Resume();
-            };
 
             process.Start();
 
@@ -185,9 +181,6 @@ namespace AnalysisTest {
             process.StepComplete += (sender, args) => {
                 stepDone.Set();
             };
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
 
             process.Start();
 
@@ -252,9 +245,6 @@ namespace AnalysisTest {
                 loaded.Set();
                 thread = newthread;
             });
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
 
             process.Start();
             AssertWaited(loaded);
@@ -294,9 +284,6 @@ namespace AnalysisTest {
                 loaded.Set();
                 thread = newthread;
             });
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
 
             process.Start();
             AssertWaited(loaded);
@@ -386,9 +373,6 @@ namespace AnalysisTest {
             process.BreakpointHit += (sender, args) => {
                 brkHit.Set();
             };
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
 
             process.Start();
 
@@ -458,10 +442,6 @@ namespace AnalysisTest {
             AutoResetEvent brkHit = new AutoResetEvent(false);
             process.BreakpointHit += (sender, args) => {
                 brkHit.Set();
-            };
-            process.ExceptionRaised += (sender, args) => {
-                // some versions of Python raise exceptions
-                args.Thread.Resume();
             };
 
             process.Start();
@@ -607,10 +587,6 @@ namespace AnalysisTest {
                 processEvent.Set();
             };
 
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
-
             process.Start();
 
             for (int curStep = 0; curStep < kinds.Length; curStep++) {
@@ -699,9 +675,6 @@ namespace AnalysisTest {
                 bindFailed = true;
                 Assert.AreEqual(args.Breakpoint, breakPoint);
             };
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
 
             process.Start();
 
@@ -774,10 +747,6 @@ namespace AnalysisTest {
                 process.Continue();
             };
 
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
-
             process.Start();
 
             process.WaitForExit();
@@ -847,11 +816,12 @@ namespace AnalysisTest {
         }
 
         private void TestException(PythonDebugger debugger, string filename, bool resumeProcess, params ExceptionInfo[] exceptions) {
-            var process = DebugProcess(debugger, filename);
             bool loaded = false;
-            process.ProcessLoaded += (sender, args) => {
+            var process = DebugProcess(debugger, filename, (processObj, threadObj) => {
                 loaded = true;
-            };
+                processObj.SetExceptionInfo(true, new string[0]);
+            });
+
             int curException = 0;
             process.ExceptionRaised += (sender, args) => {
                 // V30 raises an exception as the process shuts down.
@@ -903,9 +873,6 @@ namespace AnalysisTest {
             process.ModuleLoaded += (sender, args) => {
                 receivedFilenames.Add(args.Module.Filename);
             };
-            process.ExceptionRaised += (sender, args) => {
-                args.Thread.Resume();
-            };
 
             process.Start();
             process.WaitForExit();
@@ -951,9 +918,6 @@ namespace AnalysisTest {
             };
             process.ProcessExited += (sender, args) => {
                 Assert.AreEqual(args.ExitCode, expectedExitCode);
-            };
-            process.ExceptionRaised += (sender, args) => {
-                process.Resume();
             };
 
             process.Start();

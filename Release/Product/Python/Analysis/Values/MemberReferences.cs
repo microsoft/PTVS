@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class ReferenceDict : Dictionary<IProjectEntry, ReferenceList> {
         public ReferenceList GetReferences(ProjectEntry project) {
             ReferenceList builtinRef;
-            if (!TryGetValue(project, out builtinRef) || builtinRef.Version != project.Version) {
+            if (!TryGetValue(project, out builtinRef) || builtinRef.Version != project.AnalysisVersion) {
                 this[project] = builtinRef = new ReferenceList(project);
             }
             return builtinRef;
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public ISet<SimpleSrcLocation> References;
 
         public ReferenceList(IProjectEntry project) {
-            Version = project.Version;
+            Version = project.AnalysisVersion;
             Project = project;
             References = new HashSet<SimpleSrcLocation>();
         }
