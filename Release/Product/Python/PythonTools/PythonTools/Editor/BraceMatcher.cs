@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Editor {
     /// <summary>
     /// Provides highlighting of matching braces in a text view.
     /// </summary>
-    public class BraceMatcher {
+    class BraceMatcher {
         private readonly ITextView _textView;
         private readonly IComponentModel _compModel;
         private ITextBuffer _markedBuffer;
@@ -206,18 +206,6 @@ namespace Microsoft.PythonTools.Editor {
                 case '}': return BraceKind.Bracket;
                 default: throw new InvalidOperationException();
             }
-        }
-
-        private static bool IsOpenSpan(IList<VisualStudio.Text.Classification.ClassificationSpan> spans, int i) {
-            return spans[i].ClassificationType == PythonClassifierProvider.Instance.GroupingClassification &&
-                spans[i].Span.Length == 1 &&
-                (spans[i].Span.GetText() == "{" || spans[i].Span.GetText() == "[" || spans[i].Span.GetText() == "(");
-        }
-
-        private static bool IsCloseSpan(IList<VisualStudio.Text.Classification.ClassificationSpan> spans, int i) {
-            return spans[i].ClassificationType == PythonClassifierProvider.Instance.GroupingClassification &&
-                spans[i].Span.Length == 1 &&
-                (spans[i].Span.GetText() == "}" || spans[i].Span.GetText() == "]" || spans[i].Span.GetText() == ")");
         }
     }
 }

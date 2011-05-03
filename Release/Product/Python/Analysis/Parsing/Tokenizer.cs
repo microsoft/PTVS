@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// </remarks>
         /// <param name="characterCount">Tokens are read until at least given amount of characters is read or the stream ends.</param>
         /// <returns>A enumeration of tokens.</returns>
-        public IEnumerable<TokenInfo> ReadTokens(int characterCount) {
+        public List<TokenInfo> ReadTokens(int characterCount) {
             List<TokenInfo> tokens = new List<TokenInfo>();
 
             int start = CurrentPosition.Index;
@@ -407,13 +407,17 @@ namespace Microsoft.PythonTools.Parsing {
                     case '\\':
                         NewLineKind nlKind;
                         if ((nlKind = ReadEolnOpt(NextChar())) != NewLineKind.None) {
-                            if (_verbatim) {
-                                _state.CurWhiteSpace.Append('\\');
-                                _state.CurWhiteSpace.Append(nlKind.GetString());
-                            }
                             _newLineLocations.Add(CurrentIndex);
-                            // discard token '\\<eoln>':
-                            DiscardToken();
+
+                            if (_verbatim) {
+                                // report the explicit line join
+                                MarkTokenEnd();
+
+                                return new ExplicitLineJoinToken(TokenKind.ExplicitLineJoin, "\\" + nlKind.GetString(), "<explicit line join>");
+                            } else {
+                                // discard token '\\<eoln>':
+                                DiscardToken();
+                            }
 
                             ch = NextChar();
                             if (ch == -1) {

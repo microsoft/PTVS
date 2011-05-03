@@ -37,7 +37,12 @@ namespace AnalysisTest.Mocks {
         }
 
         public SnapshotPoint EndIncludingLineBreak {
-            get { throw new NotImplementedException(); }
+            get {
+                if (_hasLineBreak) {
+                    return new SnapshotPoint(_snapshot, _startPos + _text.Length + 2);
+                }
+                return End;
+            }
         }
 
         public SnapshotSpan Extent {

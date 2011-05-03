@@ -85,9 +85,12 @@ namespace AnalysisTest.Mocks {
             int lineNo = 0;
             int curPos = 0;
             while (curPos < position) {
-                curPos = text.IndexOf('\r', curPos);
+                curPos = text.IndexOf('\n', curPos);
                 if (curPos == -1 || curPos >= position) {
-                    return GetLineFromLineNumber(lineNo);
+                    var res = GetLineFromLineNumber(lineNo);
+                    Debug.Assert(position >= res.Start);
+                    Debug.Assert(position <= res.EndIncludingLineBreak);
+                    return res;
                 }
                 curPos += 2; // skip newline
                 lineNo++;

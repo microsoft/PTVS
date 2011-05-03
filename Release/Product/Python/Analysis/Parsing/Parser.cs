@@ -795,7 +795,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             bool ateParen = MaybeEat(TokenKind.LeftParenthesis);
 
-            string[] names;
+            string/*!*/[] names;
             string[] asNames;
             bool fromFuture = false;
 
@@ -804,10 +804,10 @@ namespace Microsoft.PythonTools.Parsing {
                     ReportSyntaxError(start, GetEnd(), "import * only allowed at module level");
                 }
 
-                names = (string[])FromImportStatement.Star;
+                names = FromImportStatement.Star;
                 asNames = null;
             } else {
-                List<string> l = new List<string>();
+                List<string/*!*/> l = new List<string>();
                 List<string> las = new List<string>();
 
                 if (MaybeEat(TokenKind.LeftParenthesis)) {
@@ -869,18 +869,18 @@ namespace Microsoft.PythonTools.Parsing {
                 Eat(TokenKind.RightParenthesis);
             }
 
-            FromImportStatement ret = new FromImportStatement(dname, (string[])names, asNames, fromFuture, AbsoluteImports);
+            FromImportStatement ret = new FromImportStatement(dname, names, asNames, fromFuture, AbsoluteImports);
             ret.SetLoc(_globalParent, start, GetEnd());
             return ret;
         }
 
         // import_as_name (',' import_as_name)*
-        private void ParseAsNameList(List<string> l, List<string> las) {
-            l.Add(ReadName());
+        private void ParseAsNameList(List<string/*!*/> l, List<string> las) {
+            l.Add(ReadName() ?? "");
             las.Add(MaybeParseAsName());
             while (MaybeEat(TokenKind.Comma)) {
                 if (PeekToken(TokenKind.RightParenthesis)) return;  // the list is allowed to end with a ,
-                l.Add(ReadName());
+                l.Add(ReadName() ?? "");
                 las.Add(MaybeParseAsName());
             }
         }

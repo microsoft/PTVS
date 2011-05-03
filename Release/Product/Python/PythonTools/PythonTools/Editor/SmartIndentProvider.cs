@@ -28,15 +28,15 @@ namespace Microsoft.PythonTools.Editor {
     public sealed class SmartIndentProvider : ISmartIndentProvider {
 
         private sealed class Indent : ISmartIndent {
-            private readonly IEditorOptions _options;
+            private readonly ITextView _textView;
 
-            public Indent(IEditorOptions options) {
-                _options = options;
+            public Indent(ITextView view) {
+                _textView = view;
             }
 
             public int? GetDesiredIndentation(ITextSnapshotLine line) {
                 if (PythonToolsPackage.Instance.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart) {
-                    return AutoIndent.GetLineIndentation(line, _options);
+                    return AutoIndent.GetLineIndentation(line, _textView);
                 } else {
                     return null;
                 }
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         public ISmartIndent CreateSmartIndent(ITextView textView) {
-            return new Indent(textView.Options);
+            return new Indent(textView);
         }
     }
 }

@@ -25,10 +25,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 #endif
 
         public NameExpression(string name) {
-            _name = name;
+            _name = name ?? "";
         }
 
-        public string Name {
+        public string/*!*/ Name {
             get { return _name; }
         }
 

@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <summary>
         /// Position of the parameter: 0-based index
         /// </summary>
-        private readonly string _name;
+        private readonly string/*!*/ _name;
         internal readonly ParameterKind _kind;
         internal Expression _defaultValue, _annotation;
 #if NAME_BINDING
@@ -33,14 +33,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public Parameter(string name, ParameterKind kind) {
-            _name = name;
+            _name = name ?? "";
             _kind = kind;
         }
 
         /// <summary>
         /// Parameter name
         /// </summary>
-        public string Name {
+        public string/*!*/ Name {
             get { return _name; }
         }
 

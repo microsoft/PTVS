@@ -17,7 +17,7 @@ using System.Collections.Generic;
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ClassDefinition : ScopeStatement {
         private int _headerIndex;
-        private readonly string _name;
+        private readonly string/*!*/ _name;
         private Statement _body;
         private readonly Expression[] _bases;
         private readonly Dictionary<string, Expression> _kwArgs;
@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private PythonVariable _modNameVariable;    // Variable for the module's __name__
 
         public ClassDefinition(string name, Expression[] bases, Statement body, Dictionary<string, Expression> kwArgs) {           
-            _name = name;
+            _name = name ?? "";
             _bases = bases;
             _body = body;
             _kwArgs = kwArgs;
@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _headerIndex = value; }
         }
 
-        public override string Name {
+        public override string/*!*/ Name {
             get { return _name; }
         }
 

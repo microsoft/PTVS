@@ -204,19 +204,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _finallyCount.RemoveAt(_finallyCount.Count - 1);
         }
 
-        internal PythonReference Reference(string name) {
+        internal PythonReference Reference(string/*!*/ name) {
             return _currentScope.Reference(name);
         }
 
-        internal PythonVariable DefineName(string name) {
+        internal PythonVariable DefineName(string/*!*/ name) {
             return _currentScope.EnsureVariable(name);
         }
 
-        internal PythonVariable DefineParameter(string name) {
+        internal PythonVariable DefineParameter(string/*!*/ name) {
             return _currentScope.DefineParameter(name);
         }
 
-        internal PythonVariable DefineDeleted(string name) {
+        internal PythonVariable DefineDeleted(string/*!*/ name) {
             PythonVariable variable = _currentScope.EnsureVariable(name);
             variable.Deleted = true;
             return variable;
@@ -543,10 +543,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 PythonVariable[] variables = new PythonVariable[node.Names.Count];
                 node.Root.Parent = _currentScope;
                 for (int i = 0; i < node.Names.Count; i++) {
-                    string name = node.AsNames[i] != null ? node.AsNames[i] : node.Names[i];
-                    if (name != null) {
-                        variables[i] = DefineName(name);
-                    }
+                    variables[i] = DefineName(node.AsNames[i] ?? node.Names[i]);
                 }
                 node.Variables = variables;
             } else {
@@ -707,13 +704,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(NameExpression node) {
-            node.Parent = _currentScope;
-            if (node.Name != null) {
+            node.Parent = _currentScope;            
 #if NAME_BINDING
-                node.Reference = 
+            node.Reference = 
 #endif
-                Reference(node.Name);
-            }
+            Reference(node.Name);
+            
             return true;
         }
 

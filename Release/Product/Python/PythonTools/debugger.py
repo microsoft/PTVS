@@ -733,7 +733,7 @@ class DebuggerLoop(object):
         if thread is not None:
             cur_frame = thread.cur_frame
             for i in xrange(fid):
-                cur_frame = cur_frame.f_next
+                cur_frame = cur_frame.f_back
 
             thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate)
     

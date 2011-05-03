@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public ProjectAnalyzer(IPythonInterpreter interpreter, IPythonInterpreterFactory factory, IErrorProviderFactory errorProvider, PythonProjectNode project = null) {
-            _errorProvider = errorProvider;            
+            _errorProvider = errorProvider;
 
             _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
@@ -151,8 +151,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         buffer.GetFilePath(),
                         analysisCookie
                     );
-                    
-                }else if(buffer.ContentType.IsOfType("XAML")) {
+
+                } else if (buffer.ContentType.IsOfType("XAML")) {
                     entry = _analysisState.AddXamlFile(buffer.GetFilePath());
                 } else {
                     return null;
@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 _projectFiles[path] = entry;
 
-                if (ImplicitProject && 
+                if (ImplicitProject &&
                     !Path.GetFullPath(path).StartsWith(Path.GetDirectoryName(_interpreterFactory.Configuration.InterpreterPath), StringComparison.OrdinalIgnoreCase)) { // don't analyze std lib
                     // TODO: We're doing this on the UI thread and when we end up w/ a lot to queue here we hang for a while...
                     // But this adds files to the analyzer so it's not as simple as queueing this onto another thread.
@@ -227,10 +227,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var loc = parser.Span.GetSpan(parser.Snapshot.Version);
             var exprRange = parser.GetExpressionRange(forCompletion);
-            
+
             if (exprRange == null) {
                 return ExpressionAnalysis.Empty;
-            }            
+            }
 
             string text = exprRange.Value.GetText();
 
@@ -263,8 +263,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
-            var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-            var line = parser.Snapshot.GetLineFromPosition(loc.Start);
+            var loc = span.GetSpan(snapshot.Version);
+            var line = snapshot.GetLineFromPosition(loc.Start);
             var lineStart = line.Start;
 
             var textLen = loc.End - lineStart.Position;
@@ -273,7 +273,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return new NormalCompletionAnalysis(String.Empty, loc.Start, parser.Snapshot, parser.Span, parser.Buffer, 0);
             }
 
-            return TrySpecialCompletions(parser, loc) ??
+            return TrySpecialCompletions(snapshot, span) ??
                    GetNormalCompletionContext(parser, loc, intersectMembers, hideAdvancedMembers);
         }
 
@@ -424,21 +424,24 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
 
                             // update squiggles for the buffer
-                            var buffer = snapshot.TextBuffer;      
-                            
+                            var buffer = snapshot.TextBuffer;
+
                             SimpleTagger<ErrorTag> squiggles = _errorProvider.GetErrorTagger(snapshot.TextBuffer);
                             TaskProvider provider = GetTaskListProviderForProject(bufferParser._currentProjEntry);
 
                             // SimpleTagger says it's thread safe (http://msdn.microsoft.com/en-us/library/dd885186.aspx), but it's buggy...  
                             // Post the removing of squiggles to the UI thread so that we don't crash when we're racing with 
                             // updates to the buffer.  http://pytools.codeplex.com/workitem/142
-                            ((UIElement)bufferParser.TextView).Dispatcher.BeginInvoke((Action)(() => {
-                                squiggles.RemoveTagSpans(x => true);
+                            var uiTextView = bufferParser.TextView as UIElement;
+                            if (uiTextView != null) {   // not a UI element in completion context tests w/ mocks.
+                                uiTextView.Dispatcher.BeginInvoke((Action)(() => {
+                                    squiggles.RemoveTagSpans(x => true);
 
-                                AddWarnings(snapshot, errorSink, squiggles, provider);
+                                    AddWarnings(snapshot, errorSink, squiggles, provider);
 
-                                AddErrors(snapshot, errorSink, squiggles, provider);
-                            }), new object[0]);
+                                    AddErrors(snapshot, errorSink, squiggles, provider);
+                                }), new object[0]);
+                            }
 
                             UpdateErrorList(errorSink, buffer.GetFilePath(), provider);
                         }
@@ -483,7 +486,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static void AddErrors(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, TaskProvider provider) {
             foreach (ErrorResult error in errorSink.Errors) {
-                var span = error.Span;                
+                var span = error.Span;
                 var tspan = CreateSpan(snapshot, span);
                 squiggles.CreateTagSpan(tspan, new ErrorTag(PredefinedErrorTypeNames.SyntaxError, error.Message));
                 if (provider != null) {
@@ -682,29 +685,33 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis TrySpecialCompletions(ReverseExpressionParser parser, Span loc) {
-            if (parser.Tokens.Count > 0) {
+        private static CompletionAnalysis TrySpecialCompletions(ITextSnapshot snapshot, ITrackingSpan span) {
+            var snapSpan = span.GetSpan(snapshot);
+            var buffer = snapshot.TextBuffer;
+            var classifier = (PythonClassifier)buffer.Properties.GetProperty(typeof(PythonClassifier));
+            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(snapSpan.Start.GetContainingLine().Start, snapSpan.End));
+            if (tokens.Count > 0) {
                 // Check for context-sensitive intellisense
-                var lastClass = parser.Tokens[parser.Tokens.Count - 1];
+                var lastClass = tokens[tokens.Count - 1];
 
-                if (lastClass.ClassificationType == parser.Classifier.Provider.Comment) {
+                if (lastClass.ClassificationType == classifier.Provider.Comment) {
                     // No completions in comments
                     return CompletionAnalysis.EmptyCompletionContext;
-                } else if (lastClass.ClassificationType == parser.Classifier.Provider.StringLiteral) {
+                } else if (lastClass.ClassificationType == classifier.Provider.StringLiteral) {
                     // String completion
-                    return new StringLiteralCompletionList(lastClass.Span.GetText(), loc.Start, parser.Span, parser.Buffer);
-                } else if (lastClass.ClassificationType == parser.Classifier.Provider.Operator &&
+                    return new StringLiteralCompletionList(lastClass.Span.GetText(), snapSpan.Start, span, buffer);
+                } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
                     lastClass.Span.GetText() == "@") {
 
-                    return new DecoratorCompletionAnalysis(lastClass.Span.GetText(), loc.Start, parser.Span, parser.Buffer);
+                    return new DecoratorCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer);
                 }
 
                 // Import completions
-                var first = parser.Tokens[0];
+                var first = tokens[0];
                 if (CompletionAnalysis.IsKeyword(first, "import")) {
-                    return ImportCompletionAnalysis.Make(first, lastClass, loc, parser.Snapshot, parser.Span, parser.Buffer, IsSpaceCompletion(parser, loc));
+                    return ImportCompletionAnalysis.Make(first, lastClass, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan));
                 } else if (CompletionAnalysis.IsKeyword(first, "from")) {
-                    return FromImportCompletionAnalysis.Make(parser.Tokens, first, loc, parser.Snapshot, parser.Span, parser.Buffer, IsSpaceCompletion(parser, loc));
+                    return FromImportCompletionAnalysis.Make(tokens, first, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan));
                 }
                 return null;
             }
@@ -717,7 +724,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (exprRange == null) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
-            if (IsSpaceCompletion(parser, loc)) {
+            if (IsSpaceCompletion(parser.Snapshot, loc)) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
 
@@ -740,8 +747,8 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        private static bool IsSpaceCompletion(ReverseExpressionParser parser, Span loc) {
-            var keySpan = new SnapshotSpan(parser.Snapshot, loc.Start - 1, 1);
+        private static bool IsSpaceCompletion(ITextSnapshot snapshot, Span loc) {
+            var keySpan = new SnapshotSpan(snapshot, loc.Start - 1, 1);
             return (keySpan.GetText() == " ");
         }
 

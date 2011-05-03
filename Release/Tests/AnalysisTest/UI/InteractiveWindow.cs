@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
+using System.Diagnostics;
 
 namespace AnalysisTest.UI {
     class InteractiveWindow : EditorWindow {
@@ -33,6 +34,7 @@ namespace AnalysisTest.UI {
             public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
 
             public void OnReadyForInput() {
+                Debug.WriteLine("Ready for input");
                 ReadyForInput.Set();
             }
         }
@@ -75,10 +77,14 @@ namespace AnalysisTest.UI {
         }
 
         public void WaitForText(IList<string> text) {
-            string expected = GetExpectedText(text);
-            WaitForIdleState();
-            if (expected == Text) {
-                return;
+            string expected = null;
+            for (int i = 0; i < 100; i++) {
+                WaitForIdleState();
+                expected = GetExpectedText(text);
+                if (expected == Text) {
+                    return;
+                }
+                Thread.Sleep(100);
             }
 
             FailWrongText(expected);
@@ -149,12 +155,14 @@ namespace AnalysisTest.UI {
         }
 
         public void ClearScreen() {
+            Debug.WriteLine("REPL Clearing screen");
             _replWindowInfo.ReadyForInput.Reset();
             VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.ClearScreen");
             WaitForReadyState();
         }
 
         public void CancelExecution() {
+            Debug.WriteLine("REPL Cancelling Execution");
             _replWindowInfo.ReadyForInput.Reset();
             VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
             WaitForReadyState();
@@ -184,6 +192,7 @@ namespace AnalysisTest.UI {
         }
 
         public void Reset() {
+            Debug.WriteLine("REPL resetting");
             ReplWindow.Reset();
         }
 

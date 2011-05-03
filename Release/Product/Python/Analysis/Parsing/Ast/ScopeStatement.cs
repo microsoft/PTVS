@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _locals = value; }
         }
 
-        public virtual string Name {
+        public virtual string/*!*/ Name {
             get {
                 return "<unknown>";
             }
@@ -322,7 +322,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _variables[variable.Name] = variable;
         }
 
-        internal PythonReference Reference(string name) {
+        internal PythonReference Reference(string/*!*/ name) {
             if (_references == null) {
                 _references = new Dictionary<string, PythonReference>(StringComparer.Ordinal);
             }
@@ -345,7 +345,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return variable;
         }
 
-        internal PythonVariable/*!*/ EnsureVariable(string name) {
+        internal PythonVariable/*!*/ EnsureVariable(string/*!*/ name) {
             PythonVariable variable;
             if (!TryGetVariable(name, out variable)) {
                 return CreateVariable(name, VariableKind.Local);

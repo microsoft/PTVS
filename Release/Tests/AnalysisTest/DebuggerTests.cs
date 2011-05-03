@@ -61,6 +61,28 @@ namespace AnalysisTest {
             ChildTest(EnumChildrenTestName, lastLine, "u1", null);
         }
 
+        [TestMethod]
+        public void EnumChildrenTestPrevFrame() {
+            const int breakLine = 2;
+
+            if (Version.Version.Is3x()) {
+                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, new ChildInfo("[0]", "frozenset({2, 3, 4})"));
+            } else {
+                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, new ChildInfo("[0]", "frozenset([2, 3, 4])"));
+            }
+            if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
+                // IronPython unicode repr differs
+                // 3.x: http://pytools.codeplex.com/workitem/76
+                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
+            }
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, new ChildInfo("[42]", "100", "0x64"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, new ChildInfo("['abc']", "'foo'"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "i", 1, null);
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
+        }
+
         public virtual string EnumChildrenTestName {
             get {
                 return "EnumChildTest.py";
@@ -68,6 +90,10 @@ namespace AnalysisTest {
         }
 
         private void ChildTest(string filename, int lineNo, string text, params ChildInfo[] children) {
+            ChildTest(filename, lineNo, text, 0, children);
+        }
+
+        private void ChildTest(string filename, int lineNo, string text, int frame, params ChildInfo[] children) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             var process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
@@ -89,7 +115,7 @@ namespace AnalysisTest {
 
             AutoResetEvent evalComplete = new AutoResetEvent(false);
             PythonEvaluationResult evalRes = null;
-            frames[0].ExecuteText(text, (completion) => {
+            frames[frame].ExecuteText(text, (completion) => {
                 evalRes = completion;
                 evalComplete.Set();
             });
@@ -120,7 +146,7 @@ namespace AnalysisTest {
                                 Assert.AreEqual(childrenReceived[j].Expression, text + "." + children[i].ChildText);
                             }
 
-                            Assert.AreEqual(childrenReceived[j].Frame, frames[0]);
+                            Assert.AreEqual(childrenReceived[j].Frame, frames[frame]);
                             childrenReceived.RemoveAt(j);
                             break;
                         }

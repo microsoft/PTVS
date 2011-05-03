@@ -280,6 +280,21 @@ namespace Microsoft.PythonTools.Parsing {
         }
     }
 
+    internal class ExplicitLineJoinToken : SymbolToken {
+        private readonly string _verbatimImage;
+
+        public ExplicitLineJoinToken(TokenKind kind, string verbatimImage, string image)
+            : base(kind, image) {
+            _verbatimImage = verbatimImage;
+        }
+
+        public override string VerbatimImage {
+            get {
+                return _verbatimImage;
+            }
+        }
+    }
+
     internal class DentToken : SymbolToken {
         public DentToken(TokenKind kind, String image)
             : base(kind, image) {

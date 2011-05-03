@@ -189,7 +189,7 @@ e): ");
             buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
             var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0));
-            Assert.AreEqual(context.Text, expectedExpression);            
+            Assert.AreEqual(expectedExpression, context.Text);            
         }
 
         private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex) {

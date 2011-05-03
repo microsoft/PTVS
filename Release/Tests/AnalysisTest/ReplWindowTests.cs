@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -757,7 +758,7 @@ namespace AnalysisTest {
             Keyboard.Type(Key.Enter);
             interactive.WaitForText(ReplPrompt + "1", "1", ReplPrompt + "2", "2", ReplPrompt + "3", "3", ReplPrompt + "3", "3", ReplPrompt);
         }
-        
+
         /// <summary>
         /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
         /// scroll back through both function definitions
@@ -828,26 +829,28 @@ namespace AnalysisTest {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SyntaxHighlightingRaiseException() {
-            var interactive = Prepare();
+            GetInteractiveOptions().ExecutionMode = "Standard";
+            var interactive = Prepare(true);
+            try {
+                const string code = "raise Exception()";
+                Keyboard.Type(code + "\r");
 
-            const string code = "raise Exception()";
-            Keyboard.Type(code + "\r");
+                interactive.WaitForText(ReplPrompt + code, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "Exception", ReplPrompt);
 
-            interactive.WaitForText(ReplPrompt + code, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "Exception", ReplPrompt);
+                var snapshot = interactive.ReplWindow.TextView.TextBuffer.CurrentSnapshot;
+                var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
+                var classifications = interactive.Classifier.GetClassificationSpans(span);
 
-            var snapshot = interactive.ReplWindow.TextView.TextBuffer.CurrentSnapshot;
-            var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
-            var classifications = interactive.Classifier.GetClassificationSpans(span);
+                Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
+                Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
+                Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python grouping");
 
-            Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
-            Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
-            Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python grouping");
-            Assert.AreEqual(classifications[3].ClassificationType.Classification, "Python grouping");
-
-            Assert.AreEqual(classifications[0].Span.GetText(), "raise");
-            Assert.AreEqual(classifications[1].Span.GetText(), "Exception");
-            Assert.AreEqual(classifications[2].Span.GetText(), "(");
-            Assert.AreEqual(classifications[3].Span.GetText(), ")");
+                Assert.AreEqual(classifications[0].Span.GetText(), "raise");
+                Assert.AreEqual(classifications[1].Span.GetText(), "Exception");
+                Assert.AreEqual(classifications[2].Span.GetText(), "()");
+            } finally {
+                interactive.Reset();
+            }            
         }
 
         /// <summary>
@@ -880,7 +883,7 @@ namespace AnalysisTest {
         }
 
         /// <summary>
-        /// Tests entering an unknown repl commmand
+        /// Tests backspacing pass the prompt to the previous line
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
@@ -891,7 +894,7 @@ namespace AnalysisTest {
 
             interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
 
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 9; i++) {
                 Keyboard.Type(Key.Back);
             }
 
@@ -927,9 +930,9 @@ namespace AnalysisTest {
             Keyboard.Type("  ");
             interactive.WaitForText(ReplPrompt + "    ");
 
-            // smart dedent should delete all 4 spaces
+            // spaces aren't in virtual space, we shuld delete only one
             Keyboard.Press(Key.Back);
-            interactive.WaitForText(ReplPrompt);
+            interactive.WaitForText(ReplPrompt + "   ");
         }
 
         /// <summary>
@@ -1539,9 +1542,8 @@ $cls
             const string c = "'c')";
             Keyboard.Type(c + "\r");
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt);
-            Keyboard.Type(Key.Back);    // virtual space unindent 
-            Keyboard.Type(Key.Back);    // virtual space unindent 
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt);
+            Keyboard.Type(Key.Back);    // remove prompt, we should be indented at same level as the print statement
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c);
         }
 
         /// <summary>

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows;
 using AnalysisTest.UI;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
@@ -23,6 +24,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
+using System.Diagnostics;
 
 namespace AnalysisTest.ProjectSystem {
     [TestClass]
@@ -110,7 +112,7 @@ namespace AnalysisTest.ProjectSystem {
             // http://pytools.codeplex.com/workitem/121
             AutoIndentTest(project, "x = {'a': [1, 2, 3],\r\r'b':42}", @"x = {'a': [1, 2, 3],
 
-           'b':42}");
+     'b':42}");
 
             AutoIndentTest(project, "if True:\rpass\r\r42\r\r", @"if True:
     pass
@@ -155,10 +157,92 @@ else: #bar
 42
 
 ");
+            // http://pytools.codeplex.com/workitem/127
+            AutoIndentTest(project, "print ('%s, %s' %\r(1, 2))", @"print ('%s, %s' %
+       (1, 2))");
+
+            // http://pytools.codeplex.com/workitem/125
+            AutoIndentTest(project, "def f():\rx = (\r7)\rp", @"def f():
+    x = (
+         7)
+    p");
+
+            AutoIndentTest(project, "def f():\rassert False, \\\r'A message'\rp", @"def f():
+    assert False, \
+        'A message'
+    p");
+
+            // other tests...
+            AutoIndentTest(project, "1 +\\\r2 +\\\r3 +\\\r4 + 5\r", @"1 +\
+    2 +\
+    3 +\
+    4 + 5
+");
+
+
+            AutoIndentTest(project, "x = {42 :\r42}\rp", @"x = {42 :
+     42}
+p");
+
+            AutoIndentTest(project, "def f():\rreturn (42,\r100)\r\rp", @"def f():
+    return (42,
+            100)
+
+p");
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AutoIndentExisting() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AutoIndent.sln");
+
+            // http://pytools.codeplex.com/workitem/138
+            AutoIndentExistingTest(project, "Decorator.py", 4, 4, @"class C:
+    def f(self):
+        pass
+
+    
+    @property
+    def bar(self):
+        pass");
+        }
+
+        /// <summary>
+        /// Single auto indent test
+        /// </summary>
+        /// <param name="project">containting project</param>
+        /// <param name="filename">filename in the project</param>
+        /// <param name="line">zero-based line</param>
+        /// <param name="column">zero based column</param>
+        /// <param name="expectedText"></param>
+        private static void AutoIndentExistingTest(Project project, string filename, int line, int column, string expectedText) {
+            var item = project.ProjectItems.Item(filename);
+            var window = item.Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+            var textLine = doc.TextView.TextViewLines[line];
+
+            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                doc.TextView.Caret.MoveTo(textLine.Start + column);
+            }));
+
+            Keyboard.Type("\r");
+
+            string actual = null;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+            Assert.AreEqual(actual, expectedText);
         }
 
         private static void AutoIndentTest(Project project, string typedText, string expectedText) {
-
             var item = project.ProjectItems.Item("Program.py");
             var window = item.Open();
             window.Activate();
@@ -180,6 +264,88 @@ else: #bar
             Assert.AreEqual(actual, expectedText);
 
             window.Document.Close(vsSaveChanges.vsSaveChangesNo);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TypingTest() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\EditorTests.sln");
+
+            // http://pytools.codeplex.com/workitem/139
+            TypingTest(project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
+def f(): pass
+", () => {
+     Keyboard.Type("\r");
+     Keyboard.Type("↑");
+     Keyboard.Type("@@");
+     System.Threading.Thread.Sleep(5000);
+     Keyboard.Backspace();
+     Keyboard.Type("classmethod");
+     System.Threading.Thread.Sleep(5000);
+ });
+
+            // http://pytools.codeplex.com/workitem/151
+            TypingTest(project, "DecoratorInClass.py", 1, 4, @"class C:
+    @classmethod
+    def f(self):
+        pass
+", () => {
+     Keyboard.Type("@");
+     System.Threading.Thread.Sleep(5000);
+     Keyboard.Type("classmethod");
+     System.Threading.Thread.Sleep(5000);
+ });
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CompletionTests() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\EditorTests.sln");
+
+            TypingTest(project, "BackslashCompletion.py", 2, 0, @"x = 42
+x\
+.conjugate", () => {
+     Keyboard.Type(".con\t");     
+ });
+        }
+
+        /// <summary>
+        /// Single auto indent test
+        /// </summary>
+        /// <param name="project">containting project</param>
+        /// <param name="filename">filename in the project</param>
+        /// <param name="line">zero-based line</param>
+        /// <param name="column">zero based column</param>
+        /// <param name="expectedText"></param>
+        private static void TypingTest(Project project, string filename, int line, int column, string expectedText, Action typing) {
+            var item = project.ProjectItems.Item(filename);
+            var window = item.Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+            var textLine = doc.TextView.TextViewLines[line];
+
+            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                try {
+                    doc.TextView.Caret.MoveTo(textLine.Start + column);
+                } catch(Exception e) {
+                    Debug.Fail("Bad position for moving caret");
+                }
+            }));
+
+            typing();
+
+            string actual = null;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+            Assert.AreEqual(actual, expectedText);
         }
 
         #endregion

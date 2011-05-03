@@ -90,6 +90,10 @@ namespace AnalysisTest.UI {
             }
         }
 
+        public static void Backspace() {
+            Type(Key.Back);
+        }
+
         /// <summary>
         /// Performs a press-and-release operation for the specified key, which is effectively equivallent to typing.
         /// </summary>

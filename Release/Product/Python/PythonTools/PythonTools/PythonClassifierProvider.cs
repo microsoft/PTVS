@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools {
     /// which it is applicable to.
     /// </summary>
     [Export(typeof(IClassifierProvider)), ContentType(PythonCoreConstants.ContentType)]
-    internal class PythonClassifierProvider : IPythonClassifierProvider {
+    internal class PythonClassifierProvider : IClassifierProvider {
         private Dictionary<TokenCategory, IClassificationType> _categoryMap;
         private IClassificationType _comment;
         private IClassificationType _stringLiteral;
@@ -41,12 +41,10 @@ namespace Microsoft.PythonTools {
         private IClassificationType _dotClassification;
         private IClassificationType _commaClassification;
         private readonly IContentType _type;
-        public static PythonClassifierProvider Instance;
 
         [ImportingConstructor]
         public PythonClassifierProvider(IContentTypeRegistryService contentTypeRegistryService) {
             _type = contentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
-            Instance = this;
         }
 
         /// <summary>
@@ -56,7 +54,7 @@ namespace Microsoft.PythonTools {
         [Import]
         public IClassificationTypeRegistryService _classificationRegistry = null; // Set via MEF
 
-        #region DLR Classification Type Definitions
+        #region Python Classification Type Definitions
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.Grouping)]
@@ -87,11 +85,11 @@ namespace Microsoft.PythonTools {
                 _categoryMap = FillCategoryMap(_classificationRegistry);
             }
 
-            IPythonClassifier res;
-            if (!buffer.Properties.TryGetProperty<IPythonClassifier>(typeof(IPythonClassifier), out res) &&
+            PythonClassifier res;
+            if (!buffer.Properties.TryGetProperty<PythonClassifier>(typeof(PythonClassifier), out res) &&
                 buffer.ContentType.IsOfType(ContentType.TypeName)) {
                 res = new PythonClassifier(this, buffer);
-                buffer.Properties.AddProperty(typeof(IPythonClassifier), res);
+                buffer.Properties.AddProperty(typeof(PythonClassifier), res);
             }
 
             return res;

@@ -121,6 +121,7 @@ namespace Microsoft.PythonTools.Parsing {
         #endregion
 
         NLToken,
+        ExplicitLineJoin
     }
 
     internal static class Tokens {

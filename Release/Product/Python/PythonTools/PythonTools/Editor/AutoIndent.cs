@@ -13,7 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
@@ -23,8 +23,6 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Editor {
     internal static class AutoIndent {
-        private static string _groupingChars = ",([{";
-
         private static int GetIndentation(string line, int tabSize) {
             int res = 0;
             for (int i = 0; i < line.Length; i++) {
@@ -51,55 +49,132 @@ namespace Microsoft.PythonTools.Editor {
             return token.ClassificationType.IsOfType("CloseGroupingClassification");
         }
 
-        private static bool IsGroupingChar(char c) {
-            return _groupingChars.IndexOf(c) >= 0;
-        }
-
         private static int CalculateIndentation(string baseline, ITextSnapshotLine line, IEditorOptions options, IClassifier classifier) {
             int indentation = GetIndentation(baseline, options.GetTabSize());
             int tabSize = options.GetIndentSize();
             var tokens = classifier.GetClassificationSpans(line.Extent);
-            if (tokens.Count > 0) {
-                if (!tokens[tokens.Count - 1].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
-                    int tokenIndex = tokens.Count - 1;
+            if (tokens.Count > 0 && !IsUnterminatedStringToken(tokens[tokens.Count - 1])) {
+                int tokenIndex = tokens.Count - 1;
 
-                    while(tokenIndex >= 0 &&
-                        (tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment) ||
-                        tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.WhiteSpace))) {
-                        tokenIndex--;
-                    }
-
-                    if(tokenIndex >= 0) {
-                        string sline = tokens[tokenIndex].Span.GetText();
-                    
-                        var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
-                        if (lastChar == ':') {
-                            indentation += tabSize;
-                        } else if (IsGroupingChar(lastChar)) {
-                            if (tokens != null) {
-                                var groupings = new Stack<ClassificationSpan>();
-                                foreach (var token in tokens) {
-                                    if (token.IsOpenGrouping()) {
-                                        groupings.Push(token);
-                                    } else if (groupings.Count > 0 && EndsGrouping(token)) {
-                                        groupings.Pop();
-                                    }
-                                }
-                                if (groupings.Count > 0) {
-                                    indentation = groupings.Peek().Span.End.Position - line.Extent.Start.Position;
-                                }
-                            }
-                        } else if (indentation >= tabSize) {
-                            if (tokens.Count > 0 && 
-                                tokens[0].ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && 
-                                ShouldDedentAfterKeyword(tokens[0].Span.GetText())) {
-                                indentation -= tabSize;
-                            }
-                        }
-                    }
+                while(tokenIndex >= 0 &&
+                    (tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment) ||
+                    tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.WhiteSpace))) {
+                    tokenIndex--;
                 }
+
+                if (tokenIndex < 0) {
+                    return indentation;
+                }
+
+                if (ReverseExpressionParser.IsExplicitLineJoin(tokens[tokenIndex])) {
+                    // explicit line continuation, we indent 1 level for the continued line unless
+                    // we're already indented because of multiple line continuation characters.
+
+                    indentation = GetIndentation(line.GetText(), options.GetTabSize());
+                    var joinedLine = tokens[tokenIndex].Span.Start.GetContainingLine();
+                    if (joinedLine.LineNumber > 0) {
+                        var prevLineSpans = classifier.GetClassificationSpans(tokens[tokenIndex].Span.Snapshot.GetLineFromLineNumber(joinedLine.LineNumber - 1).Extent);
+                        if (prevLineSpans.Count == 0 || !ReverseExpressionParser.IsExplicitLineJoin(prevLineSpans[prevLineSpans.Count - 1])) {
+                            indentation += tabSize;
+                        }
+                    } else {
+                        indentation += tabSize;
+                    }
+
+                    return indentation;
+                }
+
+                string sline = tokens[tokenIndex].Span.GetText();
+                var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
+                        
+                // use the expression parser to figure out if we're in a grouping...
+                var revParser = new ReverseExpressionParser(
+                        line.Snapshot,
+                        line.Snapshot.TextBuffer,
+                        line.Snapshot.CreateTrackingSpan(
+                            tokens[tokenIndex].Span.Span,
+                            SpanTrackingMode.EdgePositive
+                        )
+                    );
+
+                int paramIndex;
+                SnapshotPoint? sigStart;
+                var exprRangeNoImplicitOpen = revParser.GetExpressionRange(0, out paramIndex, out sigStart, false);
+                var exprRangeImplicitOpen = revParser.GetExpressionRange(1, out paramIndex, out sigStart, false);
+
+                if (exprRangeImplicitOpen != null && 
+                    (exprRangeNoImplicitOpen == null || exprRangeImplicitOpen.Value.Span != exprRangeNoImplicitOpen.Value.Span) &&
+                    IsOpenGrouping(exprRangeImplicitOpen.Value)) {
+                    // we are in an open grouping, indent to the open grouping chars level + 1
+                    return exprRangeImplicitOpen.Value.Start - exprRangeImplicitOpen.Value.Start.GetContainingLine().Start + 1;
+                } else if (exprRangeImplicitOpen != null && IsProceededByKeywordWhichCausesDedent(classifier, exprRangeImplicitOpen.Value)) {
+                    // return, break, continue, raise, etc... w/ an expression after it, dedent to the level of the line that contains the return, etc...
+                    indentation = GetIndentation(exprRangeImplicitOpen.Value.Start.GetContainingLine().GetText(), options.GetTabSize()) - tabSize;
+                } else if (indentation >= tabSize && ShouldDedentAfterKeyword(tokens[0])) {
+                    // return, break, continue, raise, etc... no code generally executes after these, do a dedent.
+                    indentation -= tabSize;
+                } else if (exprRangeImplicitOpen != null && exprRangeNoImplicitOpen != null) {
+                    // we have both a valid expression starting in a grouping and not starting in a grouping,
+                    // we dedent to the same level as the line with the starting open paren.  An example of this:
+                    // assert False, \
+                    //      42
+                    //
+                    // Where exprRangeOpen parses back to the False where exprRangeNoOpen parses back to just the
+                    // 42 because there are no implied groupings.  But we want to use the indentation level from
+                    // the open one.
+                    var line2 = exprRangeImplicitOpen.Value.Start.GetContainingLine();
+                    var tokens2 = classifier.GetClassificationSpans(line2.Extent);
+                    indentation = GetIndentation(line2.GetText(), options.GetTabSize());
+                } else if (exprRangeNoImplicitOpen != null) {
+                    var line2 = exprRangeNoImplicitOpen.Value.Start.GetContainingLine();
+                    var tokens2 = classifier.GetClassificationSpans(line2.Extent);
+                    indentation = GetIndentation(line2.GetText(), options.GetTabSize());
+                } else if (lastChar == ':') {
+                    // not in an expression context, we have a function or class def which we should indent afterwards
+                    indentation += tabSize;
+                } 
             }
+
             return indentation;
+        }
+
+        private static bool IsProceededByKeywordWhichCausesDedent(IClassifier classifier, SnapshotSpan prevExpression) {
+            bool dedentAfterKw = false;
+            
+            // find the token immediately before the expression and check if it's a return
+            int start = prevExpression.Start.Position - 1;
+            while (start > 0) {
+                var prevSpans = classifier.GetClassificationSpans(new SnapshotSpan(prevExpression.Snapshot, Span.FromBounds(start, start + 1)));
+                if (prevSpans.Count > 0) {
+                    if (ShouldDedentAfterKeyword(prevSpans[0])) {
+                        dedentAfterKw = true;
+                    }
+                    break;
+                }
+                start--;
+            }
+            
+            return dedentAfterKw;
+        }
+
+        private static bool IsOpenGrouping(SnapshotSpan exprRangeOpen) {
+            string text = exprRangeOpen.GetText();
+            return text.StartsWith("(") || text.StartsWith("[") || text.StartsWith("{");
+        }
+
+        private static bool IsUnterminatedStringToken(ClassificationSpan lastToken) {
+            if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+                var text = lastToken.Span.GetText();
+                if (text.EndsWith("\"") || text.EndsWith("'")) {
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        private static bool ShouldDedentAfterKeyword(ClassificationSpan span) {
+            return span.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && ShouldDedentAfterKeyword(span.Span.GetText());
         }
 
         private static bool ShouldDedentAfterKeyword(string keyword) {
@@ -113,15 +188,6 @@ namespace Microsoft.PythonTools.Editor {
                 return spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String);
             }
             return false;
-        }
-
-        private static bool IsExtendedLine(string line) {
-            var sline = line.Trim();
-            if (sline.Length == 0) {
-                return false;
-            }
-            var lastChar = sline[sline.Length - 1];
-            return IsGroupingChar(lastChar) || lastChar == '\\';
         }
 
         internal static IClassifier GetClassifier(IReplWindow window) {
@@ -153,7 +219,9 @@ namespace Microsoft.PythonTools.Editor {
             baseline = line;
         }
 
-        internal static int GetLineIndentation(ITextSnapshotLine line, IEditorOptions options) {
+        internal static int GetLineIndentation(ITextSnapshotLine line, ITextView textView) {
+            var options = textView.Options;
+
             ITextSnapshotLine baseline;
             string baselineText;
             SkipPreceedingBlankLines(line, out baselineText, out baseline);

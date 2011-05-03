@@ -22,7 +22,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="Program.py" />
-    <None Include="Decorator.py" />
+    <None Include="DecoratorInClass.py" />
+    <None Include="DecoratorOnFunction.py" />
+    <None Include="BackslashCompletion.py" />
   </ItemGroup>
 </Project>

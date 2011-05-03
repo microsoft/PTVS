@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools {
     /// <summary>
     /// Provides classification based upon the DLR TokenCategory enum.
     /// </summary>
-    internal class PythonClassifier : IPythonClassifier {
+    internal class PythonClassifier : IClassifier {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools {
             return res;
         }
 
-        public IPythonClassifierProvider Provider {
+        public PythonClassifierProvider Provider {
             get {
                 return _provider;
             }
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools {
             _tokenCache.Clear();
             _buffer.Changed -= BufferChanged;
             _buffer.ContentTypeChanged -= BufferContentTypeChanged;
-            _buffer.Properties.RemoveProperty(typeof(IPythonClassifier));
+            _buffer.Properties.RemoveProperty(typeof(PythonClassifier));
         }
 
         private void BufferChanged(object sender, TextContentChangedEventArgs e) {
@@ -259,9 +259,9 @@ namespace Microsoft.PythonTools {
     }
 
     internal static class ClassifierExtensions {
-        public static IPythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
-            IPythonClassifier res;
-            if (buffer.Properties.TryGetProperty<IPythonClassifier>(typeof(IPythonClassifier), out res)) {
+        public static PythonClassifier GetPythonClassifier(this ITextBuffer buffer) {
+            PythonClassifier res;
+            if (buffer.Properties.TryGetProperty<PythonClassifier>(typeof(PythonClassifier), out res)) {
                 return res;
             }
             return null;

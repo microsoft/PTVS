@@ -366,8 +366,6 @@
     <Compile Include="PythonTools\Editor\LanguagePreferences.cs" />
     <Compile Include="PythonTools\Editor\ReplWindowCreationListener.cs" />
     <Compile Include="PythonTools\Extensions.cs" />
-    <Compile Include="PythonTools\IPythonClassifier.cs" />
-    <Compile Include="PythonTools\IPythonClassifierProvider.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSourceProvider.cs" />

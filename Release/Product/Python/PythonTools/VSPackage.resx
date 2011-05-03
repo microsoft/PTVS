@@ -121,7 +121,7 @@
     <value>Microsoft Python Tools for Visual Studio</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>Python Tools for Visual Studio provides intellisense, project support, project and item templates, as well as a REPL window for IronPython development.</value>
+    <value>Python Tools for Visual Studio provides intellisense, project support, project and item templates, as well as a REPL window for Python development.</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">

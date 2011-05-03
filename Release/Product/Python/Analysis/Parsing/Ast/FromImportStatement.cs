@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         private PythonVariable[] _variables;
 
-        public static IList<string> Star {
+        internal static string/*!*/[]/*!*/ Star {
             get { return FromImportStatement._star; }
         }
 
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _fromFuture; }
         }
 
-        public IList<string> Names {
+        public IList<string/*!*/> Names {
             get { return _names; }
         }
 
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _variables = value; }
         }
 
-        public FromImportStatement(ModuleName root, string[] names, string[] asNames, bool fromFuture, bool forceAbsolute) {
+        public FromImportStatement(ModuleName root, string/*!*/[] names, string[] asNames, bool fromFuture, bool forceAbsolute) {
             _root = root;
             _names = names;
             _asNames = asNames;

@@ -20,7 +20,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class FunctionDefinition : ScopeStatement {
         protected Statement _body;
-        private readonly string _name;
+        private readonly string/*!*/ _name;
         private readonly Parameter[] _parameters;
         private Expression _returnAnnotation;
         private IList<Expression> _decorators;
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _headerIndex = value; }
         }
 
-        public override string Name {
+        public override string/*!*/ Name {
             get { return _name; }
         }
 

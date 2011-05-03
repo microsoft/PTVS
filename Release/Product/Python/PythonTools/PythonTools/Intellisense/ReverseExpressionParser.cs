@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -29,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITrackingSpan _span;
         private IList<ClassificationSpan> _tokens;
         private ITextSnapshotLine _curLine;
-        private IPythonClassifier _classifier;
+        private PythonClassifier _classifier;
 
         public ReverseExpressionParser(ITextSnapshot snapshot, ITextBuffer buffer, ITrackingSpan span) {
             _snapshot = snapshot;
@@ -47,7 +46,31 @@ namespace Microsoft.PythonTools.Intellisense {
             int dummy;
             SnapshotPoint? dummyPoint;
             return GetExpressionRange(0, out dummy, out dummyPoint, forCompletion);
+        }        
+
+        private static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(ReverseExpressionParser parser, SnapshotPoint startPoint) {
+            var startLine = startPoint.GetContainingLine();
+            int curLine = startLine.LineNumber;
+            var tokens = parser.Classifier.GetClassificationSpans(new SnapshotSpan(startLine.Start, startPoint));
+
+            for (; ; ) {
+                for (int i = tokens.Count - 1; i >= 0; i--) {
+                    yield return tokens[i];
+                }
+
+                // indicate the line break
+                yield return null;
+
+                curLine--;
+                if (curLine >= 0) {
+                    var prevLine = startPoint.Snapshot.GetLineFromLineNumber(curLine);
+                    tokens = parser.Classifier.GetClassificationSpans(prevLine.Extent);
+                } else {
+                    break;
+                }
+            }
         }
+
 
         /// <summary>
         /// Gets the range of the expression to the left of our starting span.  
@@ -57,98 +80,108 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <returns></returns>
         public SnapshotSpan? GetExpressionRange(int nesting, out int paramIndex, out SnapshotPoint? sigStart, bool forCompletion = true) {
             SnapshotSpan? start = null;
-            var endText = String.Empty;
             paramIndex = 0;
             sigStart = null;
-            bool nestingChanged = false;
+            bool nestingChanged = false, lastTokenWasCommaOrOperator = true;
 
             ClassificationSpan lastToken = null;
             // Walks backwards over all the lines
-            if (Tokens.Count > 0) {
-                lastToken = Tokens[Tokens.Count - 1];
-                if (!forCompletion && Tokens.Count > 1 && ShouldSkipAsLastToken(lastToken)) {
+            var enumerator = ReverseClassificationSpanEnumerator(this, _span.GetSpan(_snapshot).End);
+            if (enumerator.MoveNext()) {
+                lastToken = enumerator.Current;
+                if (!forCompletion && ShouldSkipAsLastToken(lastToken) && enumerator.MoveNext()) {
                     // skip trailing new line if the user is hovering at the end of the line
-                    lastToken = Tokens[Tokens.Count - 2];
+                    lastToken = enumerator.Current;
                 }
 
                 int currentParamAtLastColon = -1;   // used to track the current param index at this last colon, before we hit a lambda.
-                while (true) {
-                    // Walk backwards over the tokens in the current line
-                    for (int t = Tokens.Count - 1; t >= 0; t--) {
-                        var token = Tokens[t];
-                        var text = token.Span.GetText();
+                // Walk backwards over the tokens in the current line
+                do {
+                    var token = enumerator.Current;
+                    
+                    if (token == null) {
+                        // new line
+                        if (nesting != 0 || (enumerator.MoveNext() && IsExplicitLineJoin(enumerator.Current))) {
+                            // we're in a grouping, or the previous token is an explicit line join, we'll keep going.
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
 
-                        if (token.ClassificationType == Classifier.Provider.Keyword ||
-                            (token.ClassificationType == Classifier.Provider.Operator &&
-                            text != "[" && text != "]" && text != "}" && text != "{")) {
-                            if (token.ClassificationType == Classifier.Provider.Keyword && text == "lambda") {
-                                if (currentParamAtLastColon != -1) {
-                                    paramIndex = currentParamAtLastColon;
-                                    currentParamAtLastColon = -1;
-                                } else {
-                                    // fabcd(lambda a, b, c[PARAMINFO]
-                                    // We have to be the 1st param.
-                                    paramIndex = 0;
-                                }
-                            } else {
-                                if (text == ":") {
-                                    currentParamAtLastColon = paramIndex;                                    
-                                }
-                                if (nesting == 0) {
-                                    if (start == null) {
-                                        // hovering directly over a keyword, don't provide a tooltip
-                                        return null;
-                                    } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
-                                        return null;
-                                    }
-                                    break;
-                                }
-                            }
-                        } else if (token.IsOpenGrouping()) {
-                            if (nesting != 0) {
-                                nesting--;
-                                nestingChanged = true;
-                                if (nesting == 0 && sigStart == null) {
-                                    sigStart = token.Span.Start;
-                                }
-                            } else {
-                                if (start == null) {
-                                    // hovering directly over an open paren, don't provide a tooltip
-                                    return null;
-                                }
-                                break;
-                            }
-                        } else if (token.IsCloseGrouping()) {
-                            nesting++;
+                    var text = token.Span.GetText();
+                    if (token.IsOpenGrouping()) {
+                        if (nesting != 0) {
+                            nesting--;
                             nestingChanged = true;
-                        } else if (token.ClassificationType == Classifier.Provider.CommaClassification) {
+                            if (nesting == 0 && sigStart == null) {
+                                sigStart = token.Span.Start;
+                            }
+                        } else {
+                            if (start == null) {
+                                // hovering directly over an open paren, don't provide a tooltip
+                                return null;
+                            }
+                            break;
+                        }
+                        lastTokenWasCommaOrOperator = true;
+                    } else if (token.IsCloseGrouping()) {
+                        nesting++;
+                        nestingChanged = true;
+                    } else if (token.ClassificationType == Classifier.Provider.Keyword ||
+                               token.ClassificationType == Classifier.Provider.Operator) {
+                        if (token.ClassificationType == Classifier.Provider.Keyword && text == "lambda") {
+                            if (currentParamAtLastColon != -1) {
+                                paramIndex = currentParamAtLastColon;
+                                currentParamAtLastColon = -1;
+                            } else {
+                                // fabcd(lambda a, b, c[PARAMINFO]
+                                // We have to be the 1st param.
+                                paramIndex = 0;
+                            }
+                        } else {
+                            if (text == ":") {
+                                currentParamAtLastColon = paramIndex;
+                            }
                             if (nesting == 0) {
                                 if (start == null) {
+                                    // hovering directly over a keyword, don't provide a tooltip
+                                    return null;
+                                } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
                                     return null;
                                 }
                                 break;
-                            } else if (nesting == 1 && sigStart == null) {
-                                paramIndex++;
+                            } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
+                                (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
+                                    if (start == null) {
+                                        return null;
+                                    }
+                                break;
                             }
-                        } else if (token.ClassificationType == Classifier.Provider.Comment) {
-                            return null;
+                            lastTokenWasCommaOrOperator = true;
                         }
-
-                        start = token.Span;
-                    }
-
-                    if (nesting == 0 || CurrentLine.LineNumber == 0) {
+                    } else if (token.ClassificationType == Classifier.Provider.DotClassification) {
+                        lastTokenWasCommaOrOperator = true;
+                    } else if (token.ClassificationType == Classifier.Provider.CommaClassification) {
+                        lastTokenWasCommaOrOperator = true;
+                        if (nesting == 0) {
+                            if (start == null) {
+                                return null;
+                            }
+                            break;
+                        } else if (nesting == 1 && sigStart == null) {
+                            paramIndex++;
+                        }
+                    } else if (token.ClassificationType == Classifier.Provider.Comment) {
+                        return null;
+                    } else if (!lastTokenWasCommaOrOperator) {
                         break;
+                    } else {
+                        lastTokenWasCommaOrOperator = false;
                     }
 
-                    // We're in a nested paren context, continue to the next line
-                    // to capture the entire expression
-                    endText = CurrentLine.GetText() + endText;
-                    CurrentLine = Snapshot.GetLineFromLineNumber(CurrentLine.LineNumber - 1);
-
-                    var classSpan = new SnapshotSpan(Snapshot, CurrentLine.Start, CurrentLine.Length);
-                    Tokens = Classifier.GetClassificationSpans(classSpan);
-                }
+                    start = token.Span;
+                } while (enumerator.MoveNext());
             }
 
             if (start.HasValue && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0) {
@@ -156,7 +189,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     Snapshot,
                     new Span(
                         start.Value.Start.Position,
-                        //_span.GetEndPoint(_snapshot).Position - start.Value.Start.Position
                         lastToken.Span.End.Position - start.Value.Start.Position
                     )
                 );
@@ -165,18 +197,35 @@ namespace Microsoft.PythonTools.Intellisense {
             return _span.GetSpan(_snapshot);
         }
 
+        private static bool IsAssignmentOperator(string text) {
+            return text == "=" || text == "+=" || text == "-=" || text == "/=" || text == "%=" || text == "^=" || text == "*=" || text == "//=" || text == "&=" || text == "|=" || text == ">>=" || text == "<<=" || text == "**=";
+        }
+
+        private static bool IsStmtKeyword(string text) {
+            return text == "assert" || text == "print" || text == "break" || text == "del" || text == "except" || text == "finally" || text == "for" || text == "global" || text == "nonlocal" || text == "pass" || text == "raise" || text == "return" || text == "try" || text == "while" || text == "with";
+        }
+
+        internal static bool IsExplicitLineJoin(ClassificationSpan cur) {
+            if (cur != null && cur.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Operator)) {
+                var text = cur.Span.GetText();
+                return text == "\\\r\n" || text == "\\\r" || text == "\n";
+            }
+            return false;
+        }
+
         /// <summary>
         /// Returns true if we should skip this token when it's the last token that the user hovers over.  Currently true
         /// for new lines and dot classifications.  
         /// </summary>
         private bool ShouldSkipAsLastToken(ClassificationSpan lastToken) {
-            return (lastToken.ClassificationType.Classification == PredefinedClassificationTypeNames.WhiteSpace &&
+            return lastToken == null || (
+                (lastToken.ClassificationType.Classification == PredefinedClassificationTypeNames.WhiteSpace &&
                     (lastToken.Span.GetText() == "\r\n" || lastToken.Span.GetText() == "\n" || lastToken.Span.GetText() == "\r")) ||
-                    (lastToken.ClassificationType == Classifier.Provider.DotClassification);
+                    (lastToken.ClassificationType == Classifier.Provider.DotClassification));
         }
 
-        public IPythonClassifier Classifier {
-            get { return _classifier ?? (_classifier = (IPythonClassifier)_buffer.Properties.GetProperty(typeof(IPythonClassifier))); }
+        public PythonClassifier Classifier {
+            get { return _classifier ?? (_classifier = (PythonClassifier)_buffer.Properties.GetProperty(typeof(PythonClassifier))); }
         }
 
         public ITextSnapshot Snapshot {

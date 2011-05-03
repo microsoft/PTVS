@@ -18,14 +18,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     /// referred to in a scope (global, class, or function).  
     /// </summary>
     class PythonReference {
-        private readonly string _name;
+        private readonly string/*!*/ _name;
         private PythonVariable _variable;
 
-        public PythonReference(string name) {
+        public PythonReference(string/*!*/ name) {
             _name = name;
         }
 
-        public string Name {
+        public string/*!*/ Name {
             get { return _name; }
         }
 

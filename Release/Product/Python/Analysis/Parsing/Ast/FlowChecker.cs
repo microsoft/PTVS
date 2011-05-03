@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return true;
         }
         
-        public override bool Walk(Parameter node) {
+        public override bool Walk(Parameter/*!*/ node) {
             _fc.Define(node.Name);
             return true;
         }
@@ -207,15 +207,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public void Define(string name) {
+        public void Define(string/*!*/ name) {
             PythonVariable binding;
-            if (name != null && _variables.TryGetValue(name, out binding)) {
+            if (_variables.TryGetValue(name, out binding)) {
                 SetAssigned(binding, true);
                 SetInitialized(binding, true);
             }
         }
 
-        public void Delete(string name) {
+        public void Delete(string/*!*/ name) {
             PythonVariable binding;
             if (_variables.TryGetValue(name, out binding)) {
                 SetAssigned(binding, false);
@@ -388,7 +388,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override bool Walk(FromImportStatement node) {
             if (node.Names != FromImportStatement.Star) {
                 for (int i = 0; i < node.Names.Count; i++) {
-                    Define(node.AsNames[i] != null ? node.AsNames[i] : node.Names[i]);
+                    Define(node.AsNames[i] ?? node.Names[i]);
                 }
             }
             return true;
@@ -457,7 +457,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // ImportStmt
         public override bool Walk(ImportStatement node) {
             for (int i = 0; i < node.Names.Count; i++) {
-                Define(node.AsNames[i] !=  null ? node.AsNames[i] : node.Names[i].Names[0]);
+                Define(node.AsNames[i] ?? node.Names[i].Names[0]);
             }
             return true;
         }
