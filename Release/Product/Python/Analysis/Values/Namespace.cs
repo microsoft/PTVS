@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public virtual void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
         }
 
-        public virtual ISet<Namespace> GetDescriptor(Namespace instance, AnalysisUnit unit) {
+        public virtual ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
             return SelfSet;
         }
 

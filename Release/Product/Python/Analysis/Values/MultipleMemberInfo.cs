@@ -75,11 +75,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetAllMembers(moduleContext);
         }
 
-        public override ISet<Namespace> GetDescriptor(Namespace instance, AnalysisUnit unit) {
+        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.GetDescriptor(instance, unit), ref madeSet);
+                res.Union(member.GetDescriptor(node, instance, context, unit), ref madeSet);
             }
             return res;
         }

@@ -185,43 +185,47 @@ namespace Microsoft.PythonTools.Navigation {
         /// It is safe to call this method from any thread.
         /// </summary>
         protected void FileParsed(LibraryTask task, IScopeNode scope) {
-            var project = task.ModuleID.Hierarchy.GetProject().GetCommonProject();
-            
-            HierarchyNode fileNode =fileNode = project.NodeFromItemId(task.ModuleID.ItemID);
-            if (fileNode == null) {
-                return;
-            }
+            try {
+                var project = task.ModuleID.Hierarchy.GetProject().GetCommonProject();
 
-            LibraryNode module = CreateFileLibraryNode(
-                fileNode,
-                System.IO.Path.GetFileName(task.FileName),
-                task.FileName,
-                LibraryNodeType.PhysicalContainer
-            );
+                HierarchyNode fileNode = fileNode = project.NodeFromItemId(task.ModuleID.ItemID);
+                if (fileNode == null) {
+                    return;
+                }
 
-            // TODO: Creating the module tree should be done lazily as needed
-            // Currently we replace the entire tree and rely upon the libraries
-            // update count to invalidate the whole thing.  We could do this
-            // finer grained and only update the changed nodes.  But then we
-            // need to make sure we're not mutating lists which are handed out.
-            
-            CreateModuleTree(module, module, scope, task.FileName + ":", task.ModuleID);
+                LibraryNode module = CreateFileLibraryNode(
+                    fileNode,
+                    System.IO.Path.GetFileName(task.FileName),
+                    task.FileName,
+                    LibraryNodeType.PhysicalContainer
+                );
 
-            if (null != task.ModuleID) {
-                LibraryNode previousItem = null;
-                lock (_files) {
-                    if (_files.TryGetValue(task.ModuleID, out previousItem)) {
-                        _files.Remove(task.ModuleID);
+                // TODO: Creating the module tree should be done lazily as needed
+                // Currently we replace the entire tree and rely upon the libraries
+                // update count to invalidate the whole thing.  We could do this
+                // finer grained and only update the changed nodes.  But then we
+                // need to make sure we're not mutating lists which are handed out.
+
+                CreateModuleTree(module, module, scope, task.FileName + ":", task.ModuleID);
+
+                if (null != task.ModuleID) {
+                    LibraryNode previousItem = null;
+                    lock (_files) {
+                        if (_files.TryGetValue(task.ModuleID, out previousItem)) {
+                            _files.Remove(task.ModuleID);
+                        }
+                    }
+                    _library.RemoveNode(previousItem);
+                }
+                _library.AddNode(module);
+                if (null != task.ModuleID) {
+                    lock (_files) {
+                        _files.Add(task.ModuleID, module);
                     }
                 }
-                _library.RemoveNode(previousItem);
+            } catch (COMException) {
+                // we're shutting down and can't get the project
             }
-            _library.AddNode(module);
-            if (null != task.ModuleID) {
-                lock (_files) {
-                    _files.Add(task.ModuleID, module);
-                }
-            }            
         }
 
         private void CreateModuleTree(LibraryNode root, LibraryNode current, IScopeNode scope, string namePrefix, ModuleId moduleId) {

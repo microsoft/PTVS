@@ -129,6 +129,8 @@ namespace Microsoft.PythonTools.Editor {
                     var line2 = exprRangeNoImplicitOpen.Value.Start.GetContainingLine();
                     var tokens2 = classifier.GetClassificationSpans(line2.Extent);
                     indentation = GetIndentation(line2.GetText(), options.GetTabSize());
+                } else if (sigStart != null) {
+                    return sigStart.Value - sigStart.Value.GetContainingLine().Start + 1;
                 } else if (lastChar == ':') {
                     // not in an expression context, we have a function or class def which we should indent afterwards
                     indentation += tabSize;

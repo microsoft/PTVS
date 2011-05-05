@@ -91,11 +91,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Lowest;
-            try {
-                new PyLibAnalyzer(dirs, indir, version).AnalyzeStdLib(outdir);
-            } catch (Exception e) {
-                Console.WriteLine("Error while saving analysis: {0}", e.ToString());
-                return -3;
+            using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.Read))) {
+                try {
+                    new PyLibAnalyzer(dirs, indir, version).AnalyzeStdLib(writer, outdir);
+                } catch (Exception e) {
+                    Console.WriteLine("Error while saving analysis: {0}", e.ToString());
+                    Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
+                    return -3;
+                }
             }
 
             return 0;
@@ -110,14 +113,30 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /indir   [input dir]        - specify input directory for baseline analysis");
         }
 
-        private void AnalyzeStdLib(string outdir) {
-            var allFiles = new List<List<string>>();
+        private void AnalyzeStdLib(StreamWriter writer, string outdir) {
+            
+            var fileGroups = new List<List<string>>();
+            HashSet<string> pthDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> allFileSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var dir in _dirs) {
-                CollectFiles(dir, allFiles);
+                CollectFiles(pthDirs, dir, fileGroups, allFileSet);
             }
 
-            foreach (var files in allFiles) {
+            HashSet<string> allPthDirs = new HashSet<string>();
+            while (pthDirs.Count > 0) {
+                allPthDirs.UnionWith(pthDirs);
+
+                pthDirs.Clear();
+                foreach (var dir in pthDirs) {
+                    CollectFiles(pthDirs, dir, fileGroups, allFileSet);
+                }
+
+                pthDirs.ExceptWith(allPthDirs);
+            }
+
+            foreach (var files in fileGroups) {
                 if (files.Count > 0) {
+                    Log(writer, "GROUP START \"" + Path.GetDirectoryName(files[0]) + "\"");
                     Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
                     var projectState = new PythonAnalyzer(new CPythonInterpreter(new TypeDatabase(_indir, _version.Is3x())), _version);
                     var modules = new List<IPythonProjectEntry>();
@@ -133,8 +152,11 @@ namespace Microsoft.PythonTools.Analysis {
                         try {
                             var sourceUnit = new FileStream(files[i], FileMode.Open, FileAccess.Read, FileShare.Read);
 
+                            Log(writer, "PARSE START: \"" + modules[i].FilePath + "\"");
                             ast = Parser.CreateParser(sourceUnit, Microsoft.PythonTools.Parsing.ErrorSink.Null, PythonLanguageVersion.V27).ParseFile();
-                        } catch (Exception) {
+                            Log(writer, "PARSE END: \"" + modules[i].FilePath + "\"");
+                        } catch (Exception ex) {
+                            Log(writer, "PARSE ERROR: \"" + modules[i].FilePath + "\" \"" + ex.ToString().Replace("\r\n", " -- ") + "\"");
                         }
                         nodes.Add(ast);
                     }
@@ -150,7 +172,9 @@ namespace Microsoft.PythonTools.Analysis {
                     for (int i = 0; i < modules.Count; i++) {
                         var ast = nodes[i];
                         if (ast != null) {
+                            Log(writer, "ANALYSIS START: \"" + modules[i].FilePath + "\"");
                             modules[i].Analyze(true);
+                            Log(writer, "ANALYSIS END: \"" + modules[i].FilePath + "\"");
                         }
                     }
 
@@ -158,12 +182,24 @@ namespace Microsoft.PythonTools.Analysis {
                         modules[0].AnalysisGroup.AnalyzeQueuedEntries();
                     }
 
+                    Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0]) + "\"");
                     new SaveAnalysis().Save(projectState, outdir);
+                    Log(writer, "GROUP END \"" + Path.GetDirectoryName(files[0]) + "\"");
                 }
             }
         }
 
-        private static void CollectFiles(string dir, List<List<string>> files) {
+        private static void Log(StreamWriter writer, string contents) {
+            writer.WriteLine(
+                "\"{0}\" {1}",
+                DateTime.Now.ToString("yyyy/MM/dd h:mm:ss.fff tt"),
+                contents
+            );
+            writer.Flush();
+        }
+
+
+        private static void CollectFiles(HashSet<string> pthDirs, string dir, List<List<string>> files, HashSet<string> allFiles) {
             List<string> libFiles = new List<string>();
             files.Add(libFiles);
 
@@ -173,29 +209,45 @@ namespace Microsoft.PythonTools.Analysis {
                     foreach (var sitePackageDir in Directory.GetDirectories(subdir)) {
                         var list = new List<string>();
                         files.Add(list);
-                        CollectFilesWorker(sitePackageDir, list);
+                        CollectFilesWorker(sitePackageDir, list, allFiles);
                     }
                 } else {
-                    CollectFilesWorker(subdir, libFiles);
+                    CollectFilesWorker(subdir, libFiles, allFiles);
                 }
             }
 
             foreach(var file in Directory.GetFiles(dir)) {
                 if (IsPythonFile(file)) {
                     libFiles.Add(file);
+                } else if (IsPthFile(file)) {
+                    string[] lines = File.ReadAllLines(file);
+                    foreach (var line in lines) {
+                        if (line.IndexOfAny(_invalidPathChars) == -1) {
+                            string pthDir = line;
+                            if (!Path.IsPathRooted(line)) {
+                                pthDir = Path.Combine(dir, line);
+                            }
+
+                            if (Directory.Exists(pthDir)) {
+                                pthDirs.Add(pthDir);
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        private static void CollectFilesWorker(string dir, List<string> files) {
+        private static char[] _invalidPathChars = Path.GetInvalidPathChars();
+
+        private static void CollectFilesWorker(string dir, List<string> files, HashSet<string> allFiles) {
             foreach (string file in Directory.GetFiles(dir)) {
-                if (IsPythonFile(file)) { 
+                if (IsPythonFile(file) && !allFiles.Contains(file)) { 
                     files.Add(file);
                 }
             }
 
             foreach (string nestedDir in Directory.GetDirectories(dir)) {
-                CollectFilesWorker(nestedDir, files);
+                CollectFilesWorker(nestedDir, files, allFiles);
             }
         }
         
@@ -203,6 +255,10 @@ namespace Microsoft.PythonTools.Analysis {
             string filename = Path.GetFileName(file);
             return filename.Length > 0 && (Char.IsLetter(filename[0]) || filename[0] == '_') && // distros include things like '1col.py' in tests which aren't valid module names, ignore those.
                 file.EndsWith(".py", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".pyw", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsPthFile(string file) {
+            return String.Compare(Path.GetExtension(file), ".pth", StringComparison.OrdinalIgnoreCase) == 0;
         }
     }
 }

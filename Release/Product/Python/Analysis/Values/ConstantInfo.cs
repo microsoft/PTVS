@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class ConstantInfo : BuiltinInstanceInfo {
@@ -54,8 +55,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _builtinInfo.AugmentAssign(node, unit, value);
         }
 
-        public override ISet<Namespace> GetDescriptor(Namespace instance, AnalysisUnit unit) {
-            return _builtinInfo.GetDescriptor(instance, unit);
+        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+            return _builtinInfo.GetDescriptor(node, instance, context, unit);
         }
 
         public override ISet<Namespace> GetMember(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, string name) {

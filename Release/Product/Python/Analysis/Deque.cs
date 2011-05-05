@@ -17,7 +17,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis {
-    public class Deque<T> : IEnumerable, ICollection {
+    class Deque<T> : IEnumerable, ICollection {
         private T[] _data;
         private int _head, _tail;
         private int _itemCnt, _version;

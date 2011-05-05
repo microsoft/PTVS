@@ -175,6 +175,102 @@ class D(object):
         }
 
         [TestMethod]
+        public void TestPrivateMembers() {
+            string code = @"
+class C:
+    def __init__(self):
+        self._C__X = 'abc'	# Completions here should only ever show __X
+        self.__X = 42
+
+class D(C):
+    def __init__(self):        
+        print(self)		# self. here shouldn't have __X or _C__X (could be controlled by Text Editor->Python->general->Hide advanced members to show _C__X)
+";
+            var entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "_C__X")), "__X", "__init__");
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "print")), "_C__X", "__init__");
+
+            code = @"
+class C(object):
+    def __init__(self):
+        self.f(_C__A = 42)		# sig help should be _C__A
+    
+    def f(self, __A):
+        pass
+
+
+class D(C):
+    def __init__(self):
+        marker
+        self.f(_C__A=42)		# sig help should be _C__A
+";
+            entry = ProcessText(code);
+
+            AssertEquals(
+                entry.GetSignatures("self.f", GetLineNumber(code, "self.f")).First().Parameters.Select(x => x.Name),
+                "_C__A"
+            );
+            AssertEquals(
+                entry.GetSignatures("self.f", GetLineNumber(code, "marker")).First().Parameters.Select(x => x.Name),
+                "_C__A"
+            );
+
+            code = @"
+class C(object):
+    def __init__(self):
+        self.__f(_C__A = 42)		# member should be __f
+
+    def __f(self, __A):
+        pass
+
+
+class D(C):
+    def __init__(self):
+        marker
+        self._C__f(_C__A=42)		# member should be _C__f
+
+";
+
+            entry = ProcessText(code);
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "self.__f")), GetUnion(_objectMembers, "__f", "__init__"));
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "marker")), GetUnion(_objectMembers, "_C__f", "__init__"));
+
+            code = @"
+class C(object):
+    __FOO = 42
+
+    def f(self):
+        abc = C.__FOO  # Completion should work here
+
+
+xyz = C._C__FOO  # Advanced members completion should work here
+";
+            entry = ProcessText(code);
+            AssertContainsExactly(entry.GetMembersFromName("C", GetLineNumber(code, "abc = ")), GetUnion(_objectMembers, "__FOO", "f"));
+            AssertContainsExactly(entry.GetMembersFromName("C", GetLineNumber(code, "xyz = ")), GetUnion(_objectMembers, "_C__FOO", "f"));
+
+        }
+
+        [TestMethod]
+        public void TestBaseInstanceVariable() {
+            var code = @"
+class C:
+    def __init__(self):
+        self.abc = 42
+
+
+class D(C):
+    def __init__(self):        
+        self.foo = self.abc
+";
+
+            var entry = ProcessText(code);
+            AssertContainsExactly(entry.GetMembers("self.foo", GetLineNumber(code, "self.foo")).Select(x => x.Name), _intMembers);
+            AssertContains(entry.GetMembers("self", GetLineNumber(code, "self.foo")).Select(x => x.Name), "abc");
+        }
+
+        [TestMethod]
         public void TestGenerator() {
             var entry = ProcessText(@"
 def f():
@@ -984,8 +1080,8 @@ class cls(cls):
 ");
 
             entry.GetMembersFromName("cls", 1);
-            AssertContainsExactly(entry.GetMembers("cls().abc.", 1).Select(member => member.Name), _intMembers);
-            AssertContainsExactly(entry.GetMembers("cls.abc.", 1).Select(member => member.Name), _intMembers);
+            AssertContainsExactly(entry.GetMembers("cls().abc", 1).Select(member => member.Name), _intMembers);
+            AssertContainsExactly(entry.GetMembers("cls.abc", 1).Select(member => member.Name), _intMembers);
         }
 
         [TestMethod]
@@ -1000,7 +1096,7 @@ abc = cls()
 foo = abc.f()
 ");
             
-            AssertContainsExactly(entry.GetMembers("foo.", 1).Select(member => member.Name), _intMembers);
+            AssertContainsExactly(entry.GetMembers("foo", 1).Select(member => member.Name), _intMembers);
             var sigs = entry.GetSignatures("cls().f", 0).ToArray();
             Assert.AreEqual(1, sigs.Length);
             Assert.AreEqual("help", sigs[0].Documentation);
@@ -1680,6 +1776,56 @@ a = x().ClassMethod()
 ";
             var entry = ProcessText(text);
             AssertContainsExactly(entry.GetTypesFromName("a", GetLineNumber(text, "a =")), TypeType);
+
+            var exprs = new[] { "x.ClassMethod", "x().ClassMethod" };
+            foreach (var expr in exprs) {
+                var sigs = entry.GetSignatures(expr, GetLineNumber(text, "a = ")).ToArray();
+                Assert.AreEqual(1, sigs.Length);
+                Assert.AreEqual(sigs[0].Parameters.Length, 0); // cls is implicitly implied
+            }
+        }
+
+        [TestMethod]
+        public void TestUserDescriptor() {
+            var text = @"
+class mydesc(object):
+    def __get__(self, inst, ctx):
+        return 42
+
+class C(object):
+    x = mydesc()
+
+foo = C.x
+bar = C().x
+";
+            var entry = ProcessText(text);
+            var mems = entry.GetMembers("C().x", GetLineNumber(text, "bar ="));
+            AssertContainsExactly(mems.Select(m => m.Name), _intMembers);
+
+            mems = entry.GetMembers("C.x", GetLineNumber(text, "bar ="));
+            AssertContainsExactly(mems.Select(m => m.Name), _intMembers);
+
+            AssertContainsExactly(entry.GetTypesFromName("foo", GetLineNumber(text, "foo = ")), IntType);
+            AssertContainsExactly(entry.GetTypesFromName("bar", GetLineNumber(text, "bar = ")), IntType);
+
+            AssertContainsExactly(entry.GetTypesFromName("ctx", GetLineNumber(text, "return 42")), TypeType);
+            AssertContainsExactly(entry.GetTypesFromName("inst", GetLineNumber(text, "return 42")), NoneType);
+
+            text = @"
+class mydesc(object):
+    def __get__(self, inst, ctx):
+        return 42
+
+class C(object):
+    x = mydesc()
+    def instfunc(self):
+        pass
+
+bar = C().x
+";
+
+            entry = ProcessText(text);
+            AssertContains(entry.GetMembers("inst", GetLineNumber(text, "return 42")).Select(m => m.Name), "instfunc");
         }
 
         [TestMethod]
@@ -1693,7 +1839,7 @@ class x(object):
 ";
             var entry = ProcessText(text);
             AssertContains(entry.GetMembersFromName("self", GetLineNumber(text, "pass")), "x");
-            AssertContainsExactly(entry.GetMembers("self.x.", GetLineNumber(text, "pass")).Select(m => m.Name), _strMembers);
+            AssertContainsExactly(entry.GetMembers("self.x", GetLineNumber(text, "pass")).Select(m => m.Name), _strMembers);
         }
 
         class EmptyAnalysisCookie : IAnalysisCookie {
@@ -1913,7 +2059,7 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertContains(GetCompletionDocumentation(entry, "f.", "func_name", 0).First(), "-> str", " = value");
+            AssertContains(GetCompletionDocumentation(entry, "f", "func_name", 0).First(), "-> str", " = value");
             AssertContains(GetCompletionDocumentation(entry, "", "int", 0).First(), "integer");
             AssertContains(GetCompletionDocumentation(entry, "", "min", 0).First(), "min(");
         }
@@ -1947,9 +2093,9 @@ def g():
             var entry = ProcessText(text);
 
 
-            Assert.AreEqual(GetMember(entry, "f.", "func_name", 0).First().MemberType, PythonMemberType.Property);
-            Assert.AreEqual(GetMember(entry, "list.", "append", 0).First().MemberType, PythonMemberType.Method);
-            Assert.AreEqual(GetMember(entry, "y.", "append", 0).First().MemberType, PythonMemberType.Method);
+            Assert.AreEqual(GetMember(entry, "f", "func_name", 0).First().MemberType, PythonMemberType.Property);
+            Assert.AreEqual(GetMember(entry, "list", "append", 0).First().MemberType, PythonMemberType.Method);
+            Assert.AreEqual(GetMember(entry, "y", "append", 0).First().MemberType, PythonMemberType.Method);
             Assert.AreEqual(GetMember(entry, "", "int", 0).First().MemberType, PythonMemberType.Class);
             Assert.AreEqual(GetMember(entry, "", "min", 0).First().MemberType, PythonMemberType.Function);
             Assert.AreEqual(GetMember(entry, "", "sys", 0).First().MemberType, PythonMemberType.Module);
@@ -2000,7 +2146,7 @@ pass
 ";
 
             var entry = ProcessText(text);
-            var members = entry.GetMembers("Derived().", GetLineNumber(text, "pass")).ToArray();
+            var members = entry.GetMembers("Derived()", GetLineNumber(text, "pass")).ToArray();
             var map = members.First(x => x.Name == "map");
 
             Assert.AreEqual(map.MemberType, PythonMemberType.Field);
@@ -2026,7 +2172,7 @@ f(1)
 ";
 
             var entry = ProcessText(text);
-            var members = entry.GetMembers("C().", GetLineNumber(text, "f(1")).ToArray();
+            var members = entry.GetMembers("C()", GetLineNumber(text, "f(1")).ToArray();
             AssertContainsExactly(members.Where(mem => !mem.Name.StartsWith("__")).Select(x => x.Name), "x", "y");
         }
 
@@ -2288,5 +2434,15 @@ mod1.f(42)
         }
 
         #endregion
+    }
+
+    static class ModuleAnalysisExtensions {
+        /// <summary>
+        /// TODO: This method should go away, it's only being used for tests, and the tests should be using GetMembersFromExpression
+        /// which may need to be cleaned up.
+        /// </summary>
+        public static IEnumerable<string> GetMembersFromName(this ModuleAnalysis analysis, string name, int lineNumber) {
+            return analysis.GetMembers(name, lineNumber).Select(m => m.Name);
+        }
     }
 }

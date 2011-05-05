@@ -160,11 +160,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <summary>
         /// Performs a __get__ on the object.
         /// </summary>
-        public static ISet<Namespace> GetDescriptor(this ISet<Namespace> self, Namespace instance, AnalysisUnit unit) {
+        public static ISet<Namespace> GetDescriptor(this ISet<Namespace> self, Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
             ISet<Namespace> res = null;
             bool madeSet = false;
             foreach (var ns in self) {
-                ISet<Namespace> got = ns.GetDescriptor(instance, unit);
+                ISet<Namespace> got = ns.GetDescriptor(node, instance, context, unit);
                 if (res == null) {
                     res = got;
                     continue;

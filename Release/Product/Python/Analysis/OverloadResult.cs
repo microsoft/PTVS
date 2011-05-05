@@ -19,7 +19,7 @@ using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
-    public class OverloadResult : IOverloadResult {
+    class OverloadResult : IOverloadResult {
         private readonly ParameterResult[] _parameters;
         private readonly string _name;
 
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
-    public class SimpleOverloadResult : OverloadResult {
+    class SimpleOverloadResult : OverloadResult {
         private readonly string _documentation;
         public SimpleOverloadResult(ParameterResult[] parameters, string name, string documentation)
             : base(parameters, name) {
@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
-    public class BuiltinFunctionOverloadResult : OverloadResult {
+    class BuiltinFunctionOverloadResult : OverloadResult {
         private readonly IPythonFunctionOverload _overload;
         private ParameterResult[] _parameters;
         private readonly ParameterResult[] _extraParameters;

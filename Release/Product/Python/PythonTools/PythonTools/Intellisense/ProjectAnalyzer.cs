@@ -434,13 +434,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             // updates to the buffer.  http://pytools.codeplex.com/workitem/142
                             var uiTextView = bufferParser.TextView as UIElement;
                             if (uiTextView != null) {   // not a UI element in completion context tests w/ mocks.
-                                uiTextView.Dispatcher.BeginInvoke((Action)(() => {
-                                    squiggles.RemoveTagSpans(x => true);
-
-                                    AddWarnings(snapshot, errorSink, squiggles, provider);
-
-                                    AddErrors(snapshot, errorSink, squiggles, provider);
-                                }), new object[0]);
+                                uiTextView.Dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, provider).DoUpdate);
                             }
 
                             UpdateErrorList(errorSink, buffer.GetFilePath(), provider);
@@ -481,6 +475,28 @@ namespace Microsoft.PythonTools.Intellisense {
                     // indicate that we are done parsing.
                     pyProjEntry.UpdateTree(null, null);
                 }
+            }
+        }
+
+        class SquiggleUpdater {
+            private CollectingErrorSink _errorSink;
+            private ITextSnapshot _snapshot;
+            private SimpleTagger<ErrorTag> _squiggles;
+            private TaskProvider _provider;
+            
+            public SquiggleUpdater(CollectingErrorSink errorSink, ITextSnapshot snapshot, SimpleTagger<ErrorTag> squiggles, TaskProvider provider) {
+                _errorSink = errorSink;
+                _snapshot = snapshot;
+                _squiggles = squiggles;
+                _provider = provider;
+            }
+
+            public void DoUpdate() {
+                _squiggles.RemoveTagSpans(x => true);
+
+                AddWarnings(_snapshot, _errorSink, _squiggles, _provider);
+
+                AddErrors(_snapshot, _errorSink, _squiggles, _provider);
             }
         }
 
@@ -574,14 +590,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static ITrackingSpan CreateSpan(ITextSnapshot snapshot, SourceSpan span) {
-            var tspan = snapshot.CreateTrackingSpan(
-                new Span(
-                    span.Start.Index,
-                    Math.Min(span.End.Index - span.Start.Index, Math.Max(snapshot.Length - span.Start.Index, 0))
-                ),
-                SpanTrackingMode.EdgeInclusive
+            Debug.Assert(span.Start.Index >= 0);
+            var newSpan = new Span(
+                span.Start.Index,
+                Math.Min(span.End.Index - span.Start.Index, Math.Max(snapshot.Length - span.Start.Index, 0))
             );
-            return tspan;
+            Debug.Assert(newSpan.End <= snapshot.Length);
+            return snapshot.CreateTrackingSpan(newSpan, SpanTrackingMode.EdgeInclusive);
         }
 
         #region Implementation Details

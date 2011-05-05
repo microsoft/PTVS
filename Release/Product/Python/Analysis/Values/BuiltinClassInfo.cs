@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly MemberReferences _referencedMembers = new MemberReferences();
         private ReferenceDict _references;
 
-        private static string[] EmptyStrings = new string[0];
+        internal static string[] EmptyStrings = new string[0];
 
         public BuiltinClassInfo(IPythonType classObj, PythonAnalyzer projectState)
             : base(classObj, projectState) {

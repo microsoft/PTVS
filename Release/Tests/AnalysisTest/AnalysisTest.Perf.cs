@@ -102,41 +102,41 @@ import System
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            foreach (var varRef in entry.GetMembers("System.", 1)) {
+            foreach (var varRef in entry.GetMembers("System", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Collections.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Collections", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Collections.Generic.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Collections.Generic", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.CodeDom.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.CodeDom", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Configuration.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Configuration", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.ComponentModel.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.ComponentModel", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Deployment.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Deployment", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Diagnostics.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Diagnostics", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Dynamic.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Dynamic", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Globalization.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Globalization", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Linq.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Linq", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Management.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Management", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Media.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Media", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Net.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Net", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Runtime.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Runtime", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Security.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Security", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Text.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Text", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Threading.", 1)) {
+            foreach (var varRef in entry.GetMembers("System.Threading", 1)) {
             }
 
             sw.Stop();
@@ -154,8 +154,8 @@ import System
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            foreach (var varRef in entry.GetMembers("System.", 1)) {
-                foreach (var innerRef in entry.GetMembers("System." + varRef.Name + ".", 1)) {
+            foreach (var varRef in entry.GetMembers("System", 1)) {
+                foreach (var innerRef in entry.GetMembers("System" + varRef.Name, 1)) {
                 }
             }
             sw.Stop();

@@ -71,7 +71,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME) != 0) {
                 string funcName = _stackFrame.FunctionName;
                 if (funcName == "<module>") {
-                    funcName = Path.GetFileNameWithoutExtension(_stackFrame.FileName) + " module";
+                    if (_stackFrame.FileName.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+                        funcName = Path.GetFileNameWithoutExtension(_stackFrame.FileName) + " module";
+                    } else if (_stackFrame.FileName.EndsWith("<string>")) {
+                        funcName = "<exec or eval>";
+                    } else {
+                        funcName = _stackFrame.FileName + " unknown code";
+                    }
                 } else {
                     funcName = funcName + " in " + Path.GetFileNameWithoutExtension(_stackFrame.FileName);
                 }
@@ -86,7 +92,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             // The debugger is requesting the name of the module for this stack frame.
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_MODULE) != 0) {
-                frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(this._stackFrame.FileName);
+                if (_stackFrame.FileName.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+                    frameInfo.m_bstrModule = Path.GetFileNameWithoutExtension(this._stackFrame.FileName);
+                } else if (_stackFrame.FileName.EndsWith("<string>")) {
+                    frameInfo.m_bstrModule = "<exec/eval>";
+                } else {
+                    frameInfo.m_bstrModule = "<unknown>";
+                }
                 frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_MODULE;
             }
 

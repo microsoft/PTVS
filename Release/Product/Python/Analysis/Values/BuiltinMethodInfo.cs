@@ -49,7 +49,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _returnTypes;
         }
 
-        public override ISet<Namespace> GetDescriptor(Namespace instance, Interpreter.AnalysisUnit unit) {
+        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
+            if (instance == unit.ProjectState._noneInst) {
+                return base.GetDescriptor(node, instance, context, unit);
+            }
+
             if (_boundMethod == null) {
                 _boundMethod = new BoundBuiltinMethodInfo(this);
             }

@@ -51,6 +51,7 @@ namespace Microsoft.PythonTools.Editor {
                 _preferences.IndentStyle = pLangPrefs[0].IndentStyle;
                 _preferences.fAutoListMembers = pLangPrefs[0].fAutoListMembers;
                 _preferences.fAutoListParams = pLangPrefs[0].fAutoListParams;
+                _preferences.fHideAdvancedAutoListMembers = pLangPrefs[0].fHideAdvancedAutoListMembers;
                 if (_preferences.fDropdownBar != (_preferences.fDropdownBar = pLangPrefs[0].fDropdownBar)) {
                     CodeWindowManager.ToggleNavigationBar(_preferences.fDropdownBar != 0);                    
                 }

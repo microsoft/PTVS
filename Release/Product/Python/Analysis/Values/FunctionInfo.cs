@@ -207,8 +207,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> GetDescriptor(Namespace instance, AnalysisUnit unit) {
-            if (instance == null || IsStatic) {
+        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+            if ((instance == unit.ProjectState._noneInst && !IsClassMethod) || IsStatic) {
                 return SelfSet;
             }
             if (IsProperty) {
@@ -222,7 +222,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             ISet<Namespace> result;
             if (!_methods.TryGetValue(instance, out result) || result == null) {
-                _methods[instance] = result = new BoundMethodInfo(this, instance).SelfSet;
+                if (IsClassMethod) {
+                    _methods[instance] = result = new BoundMethodInfo(this, context).SelfSet;
+                } else {
+                    _methods[instance] = result = new BoundMethodInfo(this, instance).SelfSet;
+                }
             }
             return result;
         }

@@ -86,11 +86,19 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return new TypeDatabase(GetBaselineDatabasePath());
         }
 
-        private string GetConfiguredDatabasePath() {
+        private string GetCompletionDatabaseDirPath() {
             return Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                String.Format("Python Tools\\CompletionDB\\{0}\\{1}", Id, Configuration.Version)
+                "Python Tools\\CompletionDB"
             );
+        }
+
+        private string GetConfiguredDatabasePath() {
+            return Path.Combine(GetCompletionDatabaseDirPath(), String.Format("{0}\\{1}", Id, Configuration.Version));
+        }
+
+        private string GetLogFilename() {
+            return Path.Combine(GetCompletionDatabaseDirPath(), "AnalysisLog.txt");
         }
         
         internal static string GetBaselineDatabasePath() {
@@ -127,6 +135,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             var proc = new Process();
             proc.StartInfo = psi;
             try {
+                LogEvent("START_SCRAPE");
+
                 proc.Start();
                 proc.WaitForExit();
             } catch (Win32Exception ex) {
@@ -135,7 +145,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     EventLog.CreateEventSource(EventViewerSource, EventViewerLog);
 
                 EventLog.WriteEntry(EventViewerSource, "Failed to start analysis " + ex.ToString(), EventLogEntryType.Error);
+                LogEvent("FAIL_SCRAPE " + ex.ToString().Replace("\r\n", " -- "));
                 return false;
+            }
+
+            if (proc.ExitCode != 0) {
+                LogEvent("FAIL_SCRAPE " + proc.ExitCode);
             }
 
             if (proc.ExitCode == 0 && (options & GenerateDatabaseOptions.StdLibDatabase) != 0) {
@@ -148,20 +163,24 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         psi.Arguments = "/dir " + "\"" + Path.Combine(Path.GetDirectoryName(Configuration.InterpreterPath), "Lib") + "\"" +
                             " /version V" + this.Configuration.Version.ToString().Replace(".", "") +
                             " /outdir " + "\"" + outPath + "\"" +
-                            " /indir " + "\"" + outPath + "\"";
+                            " /indir " + "\"" + outPath + "\"";                            
 
                         proc = new Process();
                         proc.StartInfo = psi;
 
                         try {
+                            LogEvent("START_STDLIB");
                             proc.Start();
                             proc.WaitForExit();
-                            
+
                             if (proc.ExitCode == 0) {
+                                LogEvent("DONE (STDLIB)");
                                 lock (_interpreters) {
                                     _typeDb = new TypeDatabase(outPath, Is3x);
                                     OnNewDatabaseAvailable();
                                 }
+                            } else {
+                                LogEvent("FAIL_STDLIB " + proc.ExitCode);
                             }
                         } catch (Win32Exception ex) {
                             // failed to start the process           
@@ -169,6 +188,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                                 EventLog.CreateEventSource(EventViewerSource, EventViewerLog);
 
                             EventLog.WriteEntry(EventViewerSource, "Failed to start 2nd analysis " + ex.ToString(), EventLogEntryType.Error);
+                            LogEvent("FAIL_STDLIB " + ex.ToString().Replace("\r\n", " -- "));
                         }
 
                         databaseGenerationCompleted();
@@ -177,6 +197,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 t.Start();
                 return true;
             } else if (proc.ExitCode == 0) {
+                LogEvent("DONE (SCRAPE)");
                 databaseGenerationCompleted();
                 lock (_interpreters) {
                     _typeDb = new TypeDatabase(outPath, Is3x);
@@ -185,6 +206,28 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
             }
             return false;
+        }
+
+        private void LogEvent(string contents) {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    File.AppendAllText(
+                        GetLogFilename(),
+                        String.Format(
+                            "\"{0}\" \"{1}\" \"{2}\" \"{3}\"{4}",
+                            DateTime.Now.ToString("yyyy/MM/dd h:mm:ss.fff tt"),
+                            Configuration.InterpreterPath,
+                            GetConfiguredDatabasePath(),
+                            contents,
+                            Environment.NewLine
+                        )
+                    );
+                    return;
+                } catch (IOException) {
+                    // racing with someone else generating?
+                    Thread.Sleep(25);
+                }
+            }
         }
 
         private bool Is3x {

@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        public class UnpicklerObject {
+        class UnpicklerObject {
             private static readonly object _mark = new object();
             private FileInput _file;
             private List<object> _stack;

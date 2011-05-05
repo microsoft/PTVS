@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
-            return GetMemberNoReferences(node, unit, name);
+            return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
         }
 
         public ISet<Namespace> GetMemberNoReferences(Node node, AnalysisUnit unit, string name) {

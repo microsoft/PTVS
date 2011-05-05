@@ -40,14 +40,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _returnTypes;
         }
 
-        public override ISet<Namespace> GetDescriptor(Namespace instance, Interpreter.AnalysisUnit unit) {
-            if (_function.IsStatic) {
-                return base.GetDescriptor(instance, unit);
+        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
+            if (_function.IsStatic || instance == unit.ProjectState._noneInst) {
+                return base.GetDescriptor(node, instance, context, unit);
             } else if (_method == null) {
                 _method = new BuiltinMethodInfo(_function, PythonMemberType.Method, ProjectState);
             }
 
-            return _method.GetDescriptor(instance, unit);
+            return _method.GetDescriptor(node, instance, context, unit);
         }
 
         public IPythonFunction Function {

@@ -36,6 +36,24 @@ namespace Microsoft.PythonTools.Intellisense {
             _hideAdvancedMembers = hideAdvancedMembers;
         }
 
+        private string FixupCompletionText(string exprText) {
+            if (exprText.EndsWith(".")) {
+                exprText = exprText.Substring(0, exprText.Length - 1);
+                if (exprText.Length == 0) {
+                    // don't return all available members on empty dot.
+                    return null;
+                }
+            } else {
+                int cut = exprText.LastIndexOfAny(new[] { '.', ']', ')' });
+                if (cut != -1) {
+                    exprText = exprText.Substring(0, cut);
+                } else {
+                    exprText = String.Empty;
+                }
+            }
+            return exprText;
+        }
+
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
@@ -49,30 +67,27 @@ namespace Microsoft.PythonTools.Intellisense {
              }
 
             var analysis = GetAnalysisEntry();
-            if (analysis != null) {
+            string fixedText = FixupCompletionText(Text);
+            if (analysis != null && fixedText != null) {
                 members = analysis.GetMembers(
-                    Text, 
-                    _snapshot.GetLineNumberFromPosition(_pos) + 1, 
-                    _intersectMembers).ToArray();
+                    fixedText, 
+                    _snapshot.GetLineNumberFromPosition(_pos) + 1,
+                    MemberOptions
+                ).ToArray();
             } else {
                 members = new MemberResult[0];
             }
 
             if (dlrEval != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(Text)) {
-                string text = Text;
-                if (Text.EndsWith(".")) {
-                    text = Text.Substring(0, Text.Length - 1);
-                }
-
                 if (members.Length == 0) {
-                    members = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), text);
+                    members = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
                     if (members == null) {
                         members = new MemberResult[0];
                     }
                 } else {
                     // prefer analysis members over live members but merge the two together.
                     Dictionary<string, MemberResult> memberDict = new Dictionary<string, MemberResult>();
-                    var replMembers = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), text);
+                    var replMembers = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
                     if (replMembers != null) {
                         foreach (var member in replMembers) {
                             memberDict[member.Name] = member;
@@ -112,6 +127,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return result;
+        }
+
+        private GetMemberOptions MemberOptions {
+            get {
+                return (_intersectMembers ? GetMemberOptions.IntersectMultipleResults : GetMemberOptions.None) |
+                        (_hideAdvancedMembers ? GetMemberOptions.HideAdvancedMembers : GetMemberOptions.None);
+            }
         }
 
         private IEnumerable<Completion> TransformMembers(IGlyphService glyphService, MemberResult[] members) {

@@ -19,7 +19,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
-    /// Represents a class implemented in Python
+    /// Represents an instance of a class implemented in Python
     /// </summary>
     internal class InstanceInfo : Namespace, IReferenceableContainer {
         private readonly ClassInfo _classInfo;
@@ -37,6 +37,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var key = kvp.Key;
 
                     MergeTypes(res, key, types);
+                }
+            }
+
+            // check and see if it's defined in a base class instance as well...
+            foreach (var b in _classInfo.Bases) {
+                foreach (var ns in b) {
+                    if (ns.Push()) {
+                        try {
+                            ClassInfo baseClass = ns as ClassInfo;
+                            if (baseClass != null &&
+                                baseClass.Instance._instanceAttrs != null) {
+                                foreach (var kvp in baseClass.Instance._instanceAttrs) {
+                                    MergeTypes(res, kvp.Key, kvp.Value.Types);
+                                }
+                            }
+                        } finally {
+                            ns.Pop();
+                        }
+                    }
                 }
             }
 
@@ -87,12 +106,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             
             // then check class members
-            var classMem = _classInfo.GetMemberNoReferences(node, unit, name).GetDescriptor(this, unit);
+            var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
             if (classMem.Count > 0) {
-                // TODO: Check if it's a data descriptor...
-                return classMem;
+                var desc = classMem.GetDescriptor(node, this, _classInfo, unit);
+                if (desc.Count > 0) {
+                    // TODO: Check if it's a data descriptor...
+                    return desc;
+                }
+            } else {
+                // if the class gets a value later we need to be re-analyzed
+                _classInfo.Scope.CreateVariable(node, unit, name, false).AddDependency(unit);
             }
-
+           
             // ok, it most be an instance member...
             if (_instanceAttrs == null) {
                 _instanceAttrs = new Dictionary<string, VariableDef>();
@@ -104,7 +129,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
             def.AddReference(node, unit);
             def.AddDependency(unit);
 
+            // check and see if it's defined in a base class instance as well...
             var res = def.Types;
+            bool madeSet = true;
+            foreach (var b in _classInfo.Bases) {
+                foreach (var ns in b) {
+                    if (ns.Push()) {
+                        try {
+                            ClassInfo baseClass = ns as ClassInfo;
+                            if (baseClass != null &&
+                                baseClass.Instance._instanceAttrs != null &&
+                                baseClass.Instance._instanceAttrs.TryGetValue(name, out def)) {
+                                res = res.Union(def.Types, ref madeSet);
+                            }
+                        } finally {
+                            ns.Pop();
+                        }
+                    }
+                }
+            }
+            
             if (res.Count == 0) {
                 // and if that doesn't exist fall back to __getattr__
                 var getAttr = _classInfo.GetMemberNoReferences(node, unit, "__getattr__");
@@ -118,6 +162,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return getattrRes;
             }
             return res;
+        }
+
+        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+            var get = _classInfo.GetMemberNoReferences(node, unit, "__get__").GetDescriptor(node, this, _classInfo, unit);
+            return get.Call(node, unit, new[] { instance, context }, BuiltinClassInfo.EmptyStrings);
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {

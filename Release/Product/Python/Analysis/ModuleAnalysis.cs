@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -33,6 +34,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly AnalysisUnit _unit;
         private readonly InterpreterScope[] _scopes;
         private readonly Stack<InterpreterScope> _scopeTree;
+        private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
 
         internal ModuleAnalysis(AnalysisUnit unit, Stack<InterpreterScope> tree) {
             _unit = unit;
@@ -159,36 +161,24 @@ namespace Microsoft.PythonTools.Analysis {
 
         /// <summary>
         /// Evaluates a given expression and returns a list of members which exist in the expression.
+        /// 
+        /// If the expression is an empty string returns all available members at that location.
         /// </summary>
-        public IEnumerable<MemberResult> GetMembers(string exprText, int lineNumber, bool intersectMultipleResults = true) {
-            if (exprText.EndsWith(".")) {
-                exprText = exprText.Substring(0, exprText.Length - 1);
-                if (exprText.Length == 0) {
-                    // don't return all available members on empty dot.
-                    return new MemberResult[0];
-                }
-            } else {
-                int cut = exprText.LastIndexOfAny(new[] { '.', ']', ')' });
-                if (cut != -1) {
-                    exprText = exprText.Substring(0, cut);
-                } else {
-                    exprText = String.Empty;
-                }
-            }
-
+        public IEnumerable<MemberResult> GetMembers(string exprText, int lineNumber, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             if (exprText.Length == 0) {
                 return GetAllAvailableMembers(lineNumber);
-            } else {
-                var expr = GetExpressionFromText(exprText);
-                if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
-                    // no completions on integer ., the user is typing a float
-                    return new MemberResult[0];
-                }
-                var lookup = GetVariablesForExpression(expr, lineNumber);
-                return GetMemberResults(lookup, intersectMultipleResults);
             }
-        }
 
+            var expr = GetExpressionFromText(exprText);
+            if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
+                // no completions on integer ., the user is typing a float
+                return new MemberResult[0];
+            }
+
+            var scopes = FindScopes(lineNumber).ToArray();
+            var lookup = new ExpressionEvaluator(_unit.CopyForEval(), scopes).Evaluate(expr);
+            return GetMemberResults(lookup, scopes, options);
+        }
 
         /// <summary>
         /// Gets information about the available signatures for the given expression.
@@ -227,7 +217,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Gets the available names at the given location.  This includes built-in variables, global variables, and locals.
         /// </summary>
         /// <param name="lineNumber">The line number where the available mebmers should be looked up.</param>
-        public IEnumerable<MemberResult> GetAllAvailableMembers(int lineNumber) {
+        public IEnumerable<MemberResult> GetAllAvailableMembers(int lineNumber, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             var result = new Dictionary<string, List<Namespace>>();
 
             // collect builtins
@@ -236,12 +226,13 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // collect variables from user defined scopes
-            foreach (var scope in FindScopes(lineNumber)) {
+            var scopes = FindScopes(lineNumber);
+            foreach (var scope in scopes) {
                 foreach (var kvp in scope.Variables) {
                     result[kvp.Key] = new List<Namespace>(kvp.Value.Types);
                 }
             }
-            return MemberDictToResultList(result);
+            return MemberDictToResultList(GetPrivatePrefix(scopes), options, result);
         }
 
         #endregion
@@ -289,15 +280,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// TODO: This method should go away, it's only being used for tests, and the tests should be using GetMembersFromExpression
-        /// which may need to be cleaned up.
-        /// </summary>
-        internal IEnumerable<string> GetMembersFromName(string name, int lineNumber) {
-            var lookup = GetVariablesForExpression(GetExpressionFromText(name), lineNumber);
-            return GetMemberResults(lookup).Select(m => m.Name);
-        }
-
-        /// <summary>
         /// Gets the top-level scope for the module.
         /// </summary>
         internal ModuleInfo GlobalScope {
@@ -329,7 +311,7 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _scopes; }
         }
 
-        internal IEnumerable<MemberResult> GetMemberResults(IEnumerable<Namespace> vars, bool intersectMultipleResults = true) {
+        internal IEnumerable<MemberResult> GetMemberResults(IEnumerable<Namespace> vars, InterpreterScope[] scopes, GetMemberOptions options) {
             IList<Namespace> namespaces = new List<Namespace>();
             foreach (var ns in vars) {
                 if (ns != null) {
@@ -344,7 +326,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return new MemberResult[0];
                 }
 
-                return SingleMemberResult(newMembers);
+                return SingleMemberResult(GetPrivatePrefix(scopes), options, newMembers);
             }
 
             Dictionary<string, List<Namespace>> memberDict = null;
@@ -373,7 +355,7 @@ namespace Microsoft.PythonTools.Analysis {
                     HashSet<string> toRemove;
                     IEnumerable<string> adding;
 
-                    if (intersectMultipleResults) {
+                    if (options.Intersect()) {
                         adding = new HashSet<string>(newMembers.Keys);
                         // Find the things only in memberSet that we need to remove from memberDict
                         // toRemove = (memberSet ^ adding) & memberSet
@@ -413,7 +395,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (memberDict == null) {
                 return new MemberResult[0];
             }
-            return MemberDictToResultList(memberDict);
+            return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict);
         }
 
         private Expression GetExpressionFromText(string exprText) {
@@ -424,12 +406,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         private ISet<Namespace> GetVariablesForExpression(Expression expr, int lineNumber) {
             return new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray()).Evaluate(expr);
-        }
-
-        private static IEnumerable<MemberResult> SingleMemberResult(IDictionary<string, ISet<Namespace>> memberDict) {
-            foreach (var kvp in memberDict) {
-                yield return new MemberResult(kvp.Key, kvp.Value);
-            }
         }
 
         private Expression GetExpression(Statement statement) {
@@ -475,10 +451,44 @@ namespace Microsoft.PythonTools.Analysis {
             return chain;
         }
 
-        private static IEnumerable<MemberResult> MemberDictToResultList(Dictionary<string, List<Namespace>> memberDict) {
+        private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<Namespace>> memberDict) {
             foreach (var kvp in memberDict) {
-                yield return new MemberResult(kvp.Key, kvp.Value);
+                string name = GetMemberName(privatePrefix, options, kvp.Key);
+                if (name != null) {
+                    yield return new MemberResult(name, kvp.Value);
+                }
             }
         }
+
+        private static IEnumerable<MemberResult> SingleMemberResult(string privatePrefix, GetMemberOptions options, IDictionary<string, ISet<Namespace>> memberDict) {
+            foreach (var kvp in memberDict) {
+                string name = GetMemberName(privatePrefix, options, kvp.Key);
+                if (name != null) {
+                    yield return new MemberResult(name, kvp.Value);
+                }
+            }
+        }
+
+        private static string GetMemberName(string privatePrefix, GetMemberOptions options, string name) {
+            if (privatePrefix != null && name.StartsWith(privatePrefix) && !name.EndsWith("__")) {
+                // private prefix inside of the class, filter out the prefix.
+                return name.Substring(privatePrefix.Length - 2);
+            } else if (!_otherPrivateRegex.IsMatch(name) || !options.HideAdvanced()) {
+                return name;
+            }
+            return null;
+        }
+
+        private static string GetPrivatePrefix(IList<InterpreterScope> scopes) {
+            string classScopePrefix = null;
+            for (int scope = scopes.Count - 1; scope >= 0; scope--) {
+                if (scopes[scope] is ClassScope) {
+                    classScopePrefix = "_" + scopes[scope].Name + "__";
+                    break;
+                }
+            }
+            return classScopePrefix;
+        }
+
     }
 }

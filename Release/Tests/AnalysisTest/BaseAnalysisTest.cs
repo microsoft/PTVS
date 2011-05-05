@@ -31,7 +31,7 @@ namespace AnalysisTest {
     /// </summary>
     public class BaseAnalysisTest {
         public IPythonInterpreter Interpreter;
-        public IPythonType PyObjectType, IntType, StringType, FloatType, TypeType, ListType, TupleType, BoolType, FunctionType, ComplexType, GeneratorType;
+        public IPythonType PyObjectType, IntType, StringType, FloatType, TypeType, ListType, TupleType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType;
         public string[] _objectMembers, _functionMembers;
         public string[] _strMembers;
         public string[] _listMembers, _intMembers;
@@ -53,6 +53,7 @@ namespace AnalysisTest {
             BoolType = Interpreter.GetBuiltinType(BuiltinTypeId.Bool);
             FunctionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             GeneratorType = Interpreter.GetBuiltinType(BuiltinTypeId.Generator);
+            NoneType = Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
 
             _objectMembers = PyObjectType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
             _strMembers = StringType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
@@ -94,6 +95,14 @@ namespace AnalysisTest {
             }
 
             Assert.Fail(String.Format("{0} does not contain {1}", MakeText(source), value));
+        }
+
+        public void AssertEquals<T>(IEnumerable<T> source, params T[] value) {
+            var items = source.ToArray();
+            Assert.AreEqual(value.Length, items.Length);
+            for (int i = 0; i < value.Length; i++) {
+                Assert.AreEqual(items[i], value[i]);
+            }
         }
 
         public void AssertDoesntContain<T>(IEnumerable<T> source, T value) {

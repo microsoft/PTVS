@@ -189,6 +189,16 @@ p");
             100)
 
 p");
+
+            AutoIndentTest(project, "print ('a',\r'b',\r'c')\rp", @"print ('a',
+       'b',
+       'c')
+p");
+
+            AutoIndentTest(project, "foooo ('a',\r'b',\r'c')\rp", @"foooo ('a',
+       'b',
+       'c')
+p");
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -261,7 +271,7 @@ p");
                 }
                 System.Threading.Thread.Sleep(100);
             }
-            Assert.AreEqual(actual, expectedText);
+            Assert.AreEqual(expectedText, actual);
 
             window.Document.Close(vsSaveChanges.vsSaveChangesNo);
         }

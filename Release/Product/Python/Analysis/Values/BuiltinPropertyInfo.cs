@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class BuiltinPropertyInfo : BuiltinNamespace<IPythonType> {
@@ -30,7 +31,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override ISet<Namespace> GetDescriptor(Namespace instance, Interpreter.AnalysisUnit unit) {
+        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
+            if (instance == unit.ProjectState._noneInst) {
+                return base.GetDescriptor(node, instance, context, unit);
+            }
+
             return ((BuiltinClassInfo)ProjectState.GetNamespaceFromObjects(_value.Type)).Instance.SelfSet;
         }
 

@@ -29,6 +29,15 @@ namespace Microsoft.PythonTools.Intellisense {
         private IList<ClassificationSpan> _tokens;
         private ITextSnapshotLine _curLine;
         private PythonClassifier _classifier;
+        private static readonly string[] _assignOperators = new[] {
+            "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**="
+        };
+        private static readonly string[] _stmtKeywords = new[] {
+            "assert", "print" , "break" ,  "del" ,  "except" ,  "finally" ,  "for" ,  "global" ,  
+            "nonlocal" ,  "pass" ,  "raise" ,  "return" ,  "try" ,  "while" ,  "with" ,  "class" ,  
+            "def"
+        };
+
 
         public ReverseExpressionParser(ITextSnapshot snapshot, ITextBuffer buffer, ITrackingSpan span) {
             _snapshot = snapshot;
@@ -198,11 +207,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static bool IsAssignmentOperator(string text) {
-            return text == "=" || text == "+=" || text == "-=" || text == "/=" || text == "%=" || text == "^=" || text == "*=" || text == "//=" || text == "&=" || text == "|=" || text == ">>=" || text == "<<=" || text == "**=";
+            return ((IList<string>)_assignOperators).Contains(text);
         }
 
         private static bool IsStmtKeyword(string text) {
-            return text == "assert" || text == "print" || text == "break" || text == "del" || text == "except" || text == "finally" || text == "for" || text == "global" || text == "nonlocal" || text == "pass" || text == "raise" || text == "return" || text == "try" || text == "while" || text == "with";
+            return ((IList<string>)_stmtKeywords).Contains(text);
         }
 
         internal static bool IsExplicitLineJoin(ClassificationSpan cur) {

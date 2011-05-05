@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _klass.AddMemberReference(node, unit, name);
-                return res.GetDescriptor(this, unit);
+                return res.GetDescriptor(node, this, _klass, unit);
             }
             return res;
         }

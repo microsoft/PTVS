@@ -257,7 +257,7 @@ mod = asm.DefineDynamicModule()
 mod.
 ";
             var entry = ProcessText(text);
-            var tooltips = entry.GetMembers("mod.", GetLineNumber(text, "mod ="))
+            var tooltips = entry.GetMembers("mod", GetLineNumber(text, "mod ="))
                 .Where(m => m.Name == "CreateGlobalFunctions")
                 .Select(m => m.Documentation)
                 .ToArray();
@@ -286,7 +286,7 @@ System.AppDomain.CurrentDomain.AssemblyLoad += f
         public void TestEventMemberType() {
             var text = @"from System import AppDomain";
             var entry = ProcessText(text);
-            var mem = entry.GetMembers("AppDomain.", 1).Where(x =>x.Name == "AssemblyLoad").First();
+            var mem = entry.GetMembers("AppDomain", 1).Where(x =>x.Name == "AssemblyLoad").First();
             Assert.AreEqual(mem.MemberType, PythonMemberType.Event);
         }
 
