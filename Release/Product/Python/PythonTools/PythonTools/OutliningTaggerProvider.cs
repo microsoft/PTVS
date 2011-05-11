@@ -198,8 +198,8 @@ namespace Microsoft.PythonTools {
                                 if (span != null) {
                                     TagSpan tagSpan = null;
                                     try {
-                                        var ifStmtStart = funcDef.GetStart(ast);
-                                        var ifStmtEnd = funcDef.GetEnd(ast);
+                                        var ifStmtStart = ifStmt.GetStart(ast);
+                                        var ifStmtEnd = ifStmt.GetEnd(ast);
                                         var testLen = ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1;
                                         if (ifStmtStart.IsValid && ifStmtEnd.IsValid) {
                                             int length = ifStmtEnd.Index - ifStmtStart.Index - testLen;
