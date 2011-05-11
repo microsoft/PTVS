@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {    
     public class RaiseStatement : Statement {
         private readonly Expression _type, _value, _traceback, _cause;
@@ -56,6 +58,30 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("raise");
+            if (ExceptType != null) {
+                ExceptType.AppendCodeString(res, ast);
+            }
+            if (this.IsAltForm(ast)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append("from");
+                Cause.AppendCodeString(res, ast);
+            } else {
+                if (_value != null) {
+                    res.Append(this.GetSecondWhiteSpace(ast));
+                    res.Append(',');
+                    _value.AppendCodeString(res, ast);
+                    if (_traceback != null) {
+                        res.Append(this.GetThirdWhiteSpace(ast));
+                        res.Append(',');
+                        _traceback.AppendCodeString(res, ast);
+                    }
+                }
+            }
         }
     }
 }

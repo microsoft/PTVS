@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public void AddReference(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                AddReference(new SimpleSrcLocation(node.Span), unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
+                AddReference(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)), unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
             }
         }
 
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public void AddAssignment(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                AddAssignment(new SimpleSrcLocation(node.Span), unit.DeclaringModule.ProjectEntry);
+                AddAssignment(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)), unit.DeclaringModule.ProjectEntry);
             }
         }
 

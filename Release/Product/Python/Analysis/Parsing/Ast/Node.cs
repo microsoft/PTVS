@@ -13,21 +13,16 @@
  * ***************************************************************************/
 
 using System.Diagnostics;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public abstract class Node {
-        private ScopeStatement _parent;
         private IndexSpan _span;
 
-        protected Node() {
+        internal Node() {
         }
 
         #region Public API
-
-        public ScopeStatement Parent {
-            get { return _parent; }
-            set { _parent = value; }
-        }
 
         public int EndIndex {
             get {
@@ -55,36 +50,39 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public SourceLocation Start {
-            get {
-                return GlobalParent.IndexToLocation(StartIndex);
-            }
+        public string ToCodeString(PythonAst ast) {
+            StringBuilder res = new StringBuilder();
+            AppendCodeString(res, ast);
+            return res.ToString();
         }
 
-        public SourceLocation End {
-            get {
-                return GlobalParent.IndexToLocation(EndIndex);
-            }
+        public SourceLocation GetStart(PythonAst parent) {
+            return parent.IndexToLocation(StartIndex);            
         }
 
-        public SourceSpan Span {
-            get {
-                return new SourceSpan(Start, End);
-            }
+        public SourceLocation GetEnd(PythonAst parent)  {            
+            return parent.IndexToLocation(EndIndex);
+        }
+
+        public SourceSpan GetSpan(PythonAst parent) {
+            return new SourceSpan(GetStart(parent), GetEnd(parent));
         }
 
         #endregion
         
         #region Internal APIs
 
-        internal void SetLoc(PythonAst globalParent, int start, int end) {
+        /// <summary>
+        /// Appends the code representation of the node to the string builder.
+        /// </summary>
+        internal abstract void AppendCodeString(StringBuilder res, PythonAst ast);
+
+        internal void SetLoc(int start, int end) {
             _span = new IndexSpan(start, end > start ? end - start : start);
-            _parent = globalParent;
         }
 
-        internal void SetLoc(PythonAst globalParent, IndexSpan span) {
+        internal void SetLoc(IndexSpan span) {
             _span = span;
-            _parent = globalParent;
         }
 
         internal IndexSpan IndexSpan {
@@ -93,17 +91,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             set {
                 _span = value;
-            }
-        }
-
-        internal PythonAst GlobalParent {
-            get {
-                Node cur = this;
-                while (!(cur is PythonAst)) {
-                    Debug.Assert(cur != null);
-                    cur = cur.Parent;
-                }
-                return (PythonAst)cur;
             }
         }
 

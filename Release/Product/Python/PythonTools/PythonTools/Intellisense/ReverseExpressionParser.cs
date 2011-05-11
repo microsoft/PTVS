@@ -104,6 +104,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 int currentParamAtLastColon = -1;   // used to track the current param index at this last colon, before we hit a lambda.
+                SnapshotSpan? startAtLastToken = null;
                 // Walk backwards over the tokens in the current line
                 do {
                     var token = enumerator.Current;
@@ -150,6 +151,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                         } else {
                             if (text == ":") {
+                                startAtLastToken = start;
                                 currentParamAtLastColon = paramIndex;
                             }
                             if (nesting == 0) {
@@ -166,6 +168,15 @@ namespace Microsoft.PythonTools.Intellisense {
                                         return null;
                                     }
                                 break;
+                            } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
+                                // if and else can be used in an expression context or a statement context
+                                if (currentParamAtLastColon != -1) {
+                                    start = startAtLastToken;
+                                    if (start == null) {
+                                        return null;
+                                    }
+                                    break;
+                                }
                             }
                             lastTokenWasCommaOrOperator = true;
                         }

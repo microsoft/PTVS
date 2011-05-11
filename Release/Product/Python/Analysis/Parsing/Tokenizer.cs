@@ -32,7 +32,6 @@ namespace Microsoft.PythonTools.Parsing {
     public sealed partial class Tokenizer {
         private readonly PythonLanguageVersion _langVersion;
         private State _state;
-        private readonly bool _verbatim = false;
         private bool _disableLineFeedLineSeparator = false;
         private SourceCodeKind _kind = SourceCodeKind.AutoDetect;
         private ErrorSink _errors;
@@ -45,6 +44,7 @@ namespace Microsoft.PythonTools.Parsing {
         private bool _multiEolns;
         private int _position, _end, _tokenEnd, _start, _tokenStartIndex, _tokenEndIndex;
         private bool _bufferResized;
+        private readonly TokenizerOptions _options;
 
         private const int EOF = -1;
         private const int MaxIndent = 80;
@@ -56,16 +56,16 @@ namespace Microsoft.PythonTools.Parsing {
         // precalcuated strings for space indentation strings so we usually don't allocate.
         private static readonly string[] SpaceIndentation, TabIndentation;
 
-        public Tokenizer(PythonLanguageVersion version, ErrorSink errorSink = null, bool verbatim = false) {
+        public Tokenizer(PythonLanguageVersion version, ErrorSink errorSink = null, TokenizerOptions options = TokenizerOptions.None) {
             errorSink = errorSink ?? ErrorSink.Null;
 
             _errors = errorSink;
-            _state = new State(verbatim);
+            _state = new State(options);
             _printFunction = false;
             _unicodeLiterals = false;
             _names = new Dictionary<object, NameToken>(128, new TokenEqualityComparer(this));
             _langVersion = version;
-            _verbatim = verbatim;
+            _options = options;
         }
 
         static Tokenizer() {
@@ -76,6 +76,12 @@ namespace Microsoft.PythonTools.Parsing {
             TabIndentation = new String[10];
             for (int i = 0; i < 10; i++) {
                 TabIndentation[i] = new string('\t', i + 1);
+            }
+        }
+
+        public bool Verbatim {
+            get {
+                return (_options & TokenizerOptions.Verbatim) != 0;
             }
         }
 
@@ -179,9 +185,9 @@ namespace Microsoft.PythonTools.Parsing {
 
             if (state != null) {
                 if (!(state is State)) throw new ArgumentException("bad state provided");
-                _state = new State((State)state, _verbatim);
+                _state = new State((State)state, Verbatim);
             } else {
-                _state = new State(_verbatim);
+                _state = new State(_options);
             }
 
             _reader = reader;
@@ -326,20 +332,20 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         /// <summary>
-        /// Return the white space proceeding the last fetched token. Throws an InvalidOperationException if
+        /// Return the white space proceeding the last fetched token. Returns an empty string if
         /// the tokenizer was not created in verbatim mode.
         /// </summary>
         public string PreceedingWhiteSpace {
             get {
-                if (!_verbatim) {
-                    throw new InvalidOperationException("Tokenizer must be in verbatim mode to access white space");
+                if (!Verbatim) {
+                    return "";
                 }
                 return _state.CurWhiteSpace.ToString();
             }
         }
 
         public Token GetNextToken() {
-            if (_verbatim) {
+            if (Verbatim) {
                 _state.CurWhiteSpace.Clear();
                 if (_state.NextWhiteSpace.Length != 0) {
                     // flip to the next white space if we have some...
@@ -386,7 +392,7 @@ namespace Microsoft.PythonTools.Parsing {
                         return ReadEof();
                     case '\f':
                         // Ignore form feeds
-                        if (_verbatim) {
+                        if (Verbatim) {
                             _state.CurWhiteSpace.Append((char)ch);
                         }
                         DiscardToken();
@@ -398,10 +404,18 @@ namespace Microsoft.PythonTools.Parsing {
                         break;
 
                     case '#':
-                        if (_verbatim)
-                            return ReadSingleLineComment();
-
-                        ch = SkipSingleLineComment();
+                        if ((_options & (TokenizerOptions.VerbatimCommentsAndLineJoins | TokenizerOptions.Verbatim)) != 0) {
+                            var commentRes = ReadSingleLineComment(out ch);
+                            if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) == 0) {
+                                _state.CurWhiteSpace.Append(commentRes.VerbatimImage);
+                                DiscardToken();
+                                SeekRelative(+1);
+                            } else {
+                                return commentRes;
+                            }
+                        } else {
+                            ch = SkipSingleLineComment();
+                        }
                         break;
 
                     case '\\':
@@ -409,14 +423,18 @@ namespace Microsoft.PythonTools.Parsing {
                         if ((nlKind = ReadEolnOpt(NextChar())) != NewLineKind.None) {
                             _newLineLocations.Add(CurrentIndex);
 
-                            if (_verbatim) {
+                            if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) != 0) {
                                 // report the explicit line join
                                 MarkTokenEnd();
 
                                 return new ExplicitLineJoinToken(TokenKind.ExplicitLineJoin, "\\" + nlKind.GetString(), "<explicit line join>");
                             } else {
-                                // discard token '\\<eoln>':
                                 DiscardToken();
+                                // discard token '\\<eoln>':
+                                if (_state.CurWhiteSpace != null) {
+                                    _state.CurWhiteSpace.Append('\\');
+                                    _state.CurWhiteSpace.Append(nlKind.GetString());
+                                }
                             }
 
                             ch = NextChar();
@@ -534,7 +552,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private int SkipWhiteSpace(int ch, bool atBeginning) {
             do {
-                if (_verbatim) {
+                if (Verbatim) {
                     _state.CurWhiteSpace.Append((char)ch);
                 }
                 ch = NextChar(); 
@@ -564,9 +582,9 @@ namespace Microsoft.PythonTools.Parsing {
             return ch;
         }
 
-        private Token ReadSingleLineComment() {
+        private Token ReadSingleLineComment(out int ch) {
             // do single-line comment:
-            ReadLine();
+            ch = ReadLine();
             MarkTokenEnd();
 
             return new CommentToken(GetTokenString());
@@ -608,7 +626,7 @@ namespace Microsoft.PythonTools.Parsing {
                 // a new line.
                 if (!_state.LastNewLine) {
                     _state.LastNewLine = true;
-                    return Tokens.NewLineToken;
+                    return Tokens.ImpliedNewLineToken;
                 }
 
                 // and then go ahead and imply the dedents.
@@ -782,20 +800,20 @@ namespace Microsoft.PythonTools.Parsing {
             if (makeUnicode) {
                 string contents = LiteralParser.ParseString(_buffer, start, length, isRaw, isUnicode || UnicodeLiterals, !_disableLineFeedLineSeparator);
                 if (isUnicode) {
-                    if (_verbatim) {
+                    if (Verbatim) {
                         return new VerbatimUnicodeStringToken(contents, GetTokenString());
                     }
                     return new UnicodeStringToken(contents);
                 }
 
-                if (_verbatim) {
+                if (Verbatim) {
                     return new VerbatimConstantValueToken(contents, GetTokenString());
                 }
                 return new ConstantValueToken(contents);
             } else {
                 var data = LiteralParser.ParseBytes(_buffer, start, length, isRaw, !_disableLineFeedLineSeparator);
                 if (data.Count == 0) {
-                    if (_verbatim) {
+                    if (Verbatim) {
                         return new VerbatimConstantValueToken(new AsciiString(new byte[0], ""), GetTokenString());
                     }
                     return new ConstantValueToken(new AsciiString(new byte[0], ""));
@@ -806,7 +824,7 @@ namespace Microsoft.PythonTools.Parsing {
                     bytes[i] = (byte)data[i];
                 }
 
-                if (_verbatim) {
+                if (Verbatim) {
                     return new VerbatimConstantValueToken(new AsciiString(bytes, new String(data.ToArray())), GetTokenString());
                 }
                 return new ConstantValueToken(new AsciiString(bytes, new String(data.ToArray())));
@@ -852,7 +870,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             string tokenStr = GetTokenString();
                             return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
                         }
@@ -864,7 +882,7 @@ namespace Microsoft.PythonTools.Parsing {
                             MarkTokenEnd();
 
                             // TODO: parse in place
-                            if (_verbatim) {
+                            if (Verbatim) {
                                 string tokenStr = GetTokenString();
                                 return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(tokenStr, b), tokenStr);
                             }
@@ -894,7 +912,7 @@ namespace Microsoft.PythonTools.Parsing {
                             ReportSyntaxError(BufferTokenSpan, "invalid token", ErrorCodes.SyntaxError);
                         }
 
-                        if (_verbatim) {
+                        if (Verbatim) {
                             return new VerbatimConstantValueToken(val, image);
                         }
                         // TODO: parse in place
@@ -934,7 +952,7 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L':
                         MarkTokenEnd();
 
-                        if (_verbatim) {
+                        if (Verbatim) {
                             return new VerbatimConstantValueToken(useBigInt ? bigInt : (BigInteger)iVal, GetTokenString());
                         }
                         return new ConstantValueToken(useBigInt ? bigInt : (BigInteger)iVal);
@@ -942,7 +960,7 @@ namespace Microsoft.PythonTools.Parsing {
                         BufferBack();
                         MarkTokenEnd();
 
-                        if (_verbatim) {
+                        if (Verbatim) {
                             return new VerbatimConstantValueToken(useBigInt ? (object)bigInt : (object)iVal, GetTokenString());
                         }
                         return new ConstantValueToken(useBigInt ? (object)bigInt : (object)iVal);
@@ -970,7 +988,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8), GetTokenString());
                         }
                         return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8));
@@ -980,7 +998,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 2), 8), GetTokenString());
                         }
                         return new ConstantValueToken(ParseInteger(GetTokenSubstring(2), 8));
@@ -1022,7 +1040,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16), GetTokenString());
                         }
                         return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16));
@@ -1032,7 +1050,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             return new VerbatimConstantValueToken(
                                 ParseInteger(GetTokenSubstring(2), 16),
                                 GetTokenString()
@@ -1069,7 +1087,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             string tokenStr = GetTokenString();
                             return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
                         }
@@ -1080,7 +1098,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             string tokenStr = GetTokenString();
                             return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
                         }
@@ -1116,7 +1134,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             string tokenStr = GetTokenString();
                             return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
                         }
@@ -1127,7 +1145,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
 
                         // TODO: parse in place
-                        if (_verbatim) {
+                        if (Verbatim) {
                             string tokenStr = GetTokenString();
                             return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
                         }
@@ -1527,21 +1545,21 @@ namespace Microsoft.PythonTools.Parsing {
 
                 switch (ch) {
                     case ' ':
-                        if (_verbatim) {
+                        if (Verbatim) {
                             _state.NextWhiteSpace.Append((char)ch);
                         }
                         spaces += 1;
                         AppendSpace(ref noAllocWhiteSpace, ref sb, ref isSpace);
                         break;
                     case '\t':
-                        if (_verbatim) {
+                        if (Verbatim) {
                             _state.NextWhiteSpace.Append((char)ch);
                         }
                         spaces += 8 - (spaces % 8);
                         AppendTab(ref noAllocWhiteSpace, ref sb, ref isSpace);
                         break;
                     case '\f':
-                        if (_verbatim) {
+                        if (Verbatim) {
                             _state.NextWhiteSpace.Append((char)ch);
                         }
                         spaces = 0;
@@ -1553,19 +1571,29 @@ namespace Microsoft.PythonTools.Parsing {
                         break;
 
                     case '#':
-                        if (_verbatim) {
+
+                        if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) != 0) {
                             BufferBack();
                             MarkTokenEnd();
                             return true;
+                        } else if ((_options & TokenizerOptions.Verbatim) != 0) {
+                            BufferBack();
+                            DiscardToken();
+
+                            var commentRes = ReadSingleLineComment(out ch);                            
+                            _state.NextWhiteSpace.Append(commentRes.VerbatimImage);
+                            DiscardToken();
+                            //SeekRelative(+1);
                         } else {
                             ch = ReadLine();
                             break;
                         }
+                        break;
                     default:
                         BufferBack();
 
                         if (GroupingLevel > 0) {
-                            if (_verbatim) {
+                            if (Verbatim) {
                                 // we're not producing a new line after all...  All of the white space
                                 // we collected goes to the current token, including the new line token
                                 // that we're not producing.
@@ -2035,13 +2063,13 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
 
-            public State(bool verbatim) {
+            public State(TokenizerOptions options) {
                 Indent = new int[MaxIndent]; // TODO
                 LastNewLine = false;
                 BracketLevel = ParenLevel = BraceLevel = PendingDedents = IndentLevel = 0;
                 IndentFormat = null;
                 IncompleteString = null;
-                if (verbatim) {
+                if ((options & TokenizerOptions.Verbatim) != 0) {
                     CurWhiteSpace = new StringBuilder();
                     NextWhiteSpace = new StringBuilder();
                 } else {

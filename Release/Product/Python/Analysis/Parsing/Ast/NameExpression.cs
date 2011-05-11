@@ -15,6 +15,7 @@
 using System;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class NameExpression : Expression {
@@ -60,6 +61,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (walker.Walk(this)) {
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetVerbatimImage(ast) ?? _name);
         }
     }
 }

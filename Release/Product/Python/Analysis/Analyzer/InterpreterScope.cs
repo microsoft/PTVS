@@ -36,26 +36,21 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// Gets the line number that this scope starts at.
         /// </summary>
-        public int Start {
-            get {
-                if (_node == null) {
-                    return 1;
-                }
-                return _node.Start.Line;
+        public int GetStart(PythonAst ast) {
+            if (_node == null) {
+                return 1;
             }
-
+            return _node.GetStart(ast).Line;
         }
 
         /// <summary>
         /// Gets the line number that this scoep ends at.
         /// </summary>
-        public int Stop {
-            get {
-                if (_node == null) {
-                    return int.MaxValue;
-                }
-                return _node.End.Line;
+        public int GetStop(PythonAst ast) {
+            if (_node == null) {
+                return int.MaxValue;
             }
+            return _node.GetEnd(ast).Line;
         }
 
         public virtual IEnumerable<AnalysisVariable> GetVariablesForDef(string name, VariableDef def) {

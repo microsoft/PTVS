@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class WhileStatement : Statement {
         // Marks the end of the condition of the while loop
@@ -38,8 +40,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _else; }
         }
 
-        public void SetLoc(PythonAst globalParent, int start, int header, int end) {
-            SetLoc(globalParent, start, end);
+        public void SetLoc(int start, int header, int end) {
+            SetLoc(start, end);
             _indexHeader = header;
         }
 
@@ -56,6 +58,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("while");
+            _test.AppendCodeString(res, ast);
+            _body.AppendCodeString(res, ast);
+            if (_else != null) {
+                res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
+                res.Append("else");
+                _else.AppendCodeString(res, ast);
+            }
         }
     }
 }

@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ListExpression : SequenceExpression {
@@ -35,6 +37,43 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            AppendItems(res, ast, "[", "]", this, Items);
+        }
+
+        internal static void AppendItems<T>(StringBuilder res, PythonAst ast, string start, string end, Node node, IList<T> items) where T : Expression {
+            AppendItems(res, ast, start, end, node, items.Count, (i, sb) => items[i].AppendCodeString(sb, ast));
+        }
+
+        internal static void AppendItems(StringBuilder res, PythonAst ast, string start, string end, Node node, int itemCount, Action<int, StringBuilder> appendItem) {
+            if (!String.IsNullOrEmpty(start)) {
+                res.Append(node.GetProceedingWhiteSpace(ast));
+                res.Append(start);
+            }
+            var listWhiteSpace = node.GetListWhiteSpace(ast);
+            for (int i = 0; i < itemCount; i++) {
+                if (i > 0) {
+                    if (listWhiteSpace != null) {
+                        res.Append(listWhiteSpace[i - 1]);
+                    }
+                    res.Append(",");
+                }
+
+                appendItem(i, res);
+            }
+
+            if (listWhiteSpace != null && listWhiteSpace.Length == itemCount && itemCount != 0) {
+                // trailing comma
+                res.Append(listWhiteSpace[listWhiteSpace.Length - 1]);
+                res.Append(",");
+            }
+
+            if (!String.IsNullOrEmpty(end)) {
+                res.Append(node.GetSecondWhiteSpace(ast));
+                res.Append(end);
+            }
         }
     }
 }

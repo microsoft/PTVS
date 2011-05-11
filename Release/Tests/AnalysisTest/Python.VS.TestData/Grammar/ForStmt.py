@@ -12,3 +12,7 @@ for foo in bar:
 
 for foo in bar:
     continue
+
+for [[foo], [bar]] in baz: pass
+
+for ((foo), (bar)) in baz: pass

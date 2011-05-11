@@ -58,7 +58,10 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="GetMemberOptions.cs" />
     <Compile Include="Parsing\AsciiString.cs" />
+    <Compile Include="Parsing\Ast\NodeAttributes.cs" />
+    <Compile Include="Parsing\ParserOptions.cs" />
     <Compile Include="Parsing\PythonAsciiEncoding.cs" />
+    <Compile Include="Parsing\TokenizerOptions.cs" />
     <Compile Include="SetOfOne.cs" />
     <Compile Include="Deque.cs" />
     <Compile Include="FileCookie.cs" />

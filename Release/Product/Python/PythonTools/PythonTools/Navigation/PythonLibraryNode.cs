@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Navigation {
                         description.AddDescriptionText3(", ", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
                     }
 
-                    string baseStr = FormatExpression(baseClass);
+                    string baseStr = FormatExpression(baseClass.Expression);
                     if (baseStr != null) {
                         description.AddDescriptionText3(baseStr, VSOBDESCRIPTIONSECTION.OBDS_TYPE, null);
                     }

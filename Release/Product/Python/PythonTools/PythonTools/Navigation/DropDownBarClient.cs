@@ -448,12 +448,12 @@ namespace Microsoft.PythonTools.Navigation {
                 get {
                     ClassDefinition klass = Body as ClassDefinition;
                     if (klass != null) {
-                        return klass.Start;
+                        return klass.GetStart(klass.GlobalParent);
                     }
 
                     FunctionDefinition func = Body as FunctionDefinition;
                     if (func != null) {
-                        return func.Start;
+                        return func.GetStart(func.GlobalParent);
                     }
 
                     return SourceLocation.None;
@@ -468,12 +468,12 @@ namespace Microsoft.PythonTools.Navigation {
                 get {
                     ClassDefinition klass = Body as ClassDefinition;
                     if (klass != null) {
-                        return klass.End;
+                        return klass.GetEnd(klass.GlobalParent);
                     }
 
                     FunctionDefinition func = Body as FunctionDefinition;
                     if (func != null) {
-                        return func.End;
+                        return func.GetEnd(func.GlobalParent);
                     }
 
                     return SourceLocation.None;

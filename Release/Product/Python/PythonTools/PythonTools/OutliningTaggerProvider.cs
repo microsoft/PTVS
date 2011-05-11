@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools {
                     if (ast != null && 
                         snapCookie != null && 
                         snapCookie.Snapshot.TextBuffer == spans[0].Snapshot.TextBuffer) {   // buffer could have changed if file was closed and re-opened
-                        return ProcessSuite(spans, ast.Body as SuiteStatement, snapCookie.Snapshot, true);
+                        return ProcessSuite(spans, ast, ast.Body as SuiteStatement, snapCookie.Snapshot, true);
                     }
                 }
 
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            private IEnumerable<ITagSpan<IOutliningRegionTag>> ProcessSuite(NormalizedSnapshotSpanCollection spans, SuiteStatement suite, ITextSnapshot snapshot, bool isTopLevel) {
+            private IEnumerable<ITagSpan<IOutliningRegionTag>> ProcessSuite(NormalizedSnapshotSpanCollection spans, PythonAst ast, SuiteStatement suite, ITextSnapshot snapshot, bool isTopLevel) {
                 if (suite != null) {
                     // TODO: Binary search the statements?  The perf of this seems fine for the time being
                     // w/ a 5000+ line file though.                    
@@ -129,12 +129,14 @@ namespace Microsoft.PythonTools {
 
                             TagSpan tagSpan = null;
                             try {
-                                int nameLen = funcDef.Header.Index - funcDef.Start.Index + 1;
-                                if (funcDef.Start.IsValid && funcDef.End.IsValid) {
-                                    int length = funcDef.End.Index - funcDef.Start.Index - nameLen;
-                                    if (length >= 0 && length < snapshot.Length - (funcDef.Start.Index + nameLen)) {
+                                var funcDefStart = funcDef.GetStart(ast);
+                                var funcDefEnd = funcDef.GetEnd(ast);
+                                int nameLen = funcDef.HeaderIndex - funcDef.StartIndex + 1;
+                                if (funcDefStart.IsValid && funcDefEnd.IsValid) {
+                                    int length = funcDefEnd.Index - funcDefStart.Index - nameLen;
+                                    if (length >= 0 && length < snapshot.Length - (funcDefStart.Index + nameLen)) {
                                         var funcSpan = GetFinalSpan(snapshot,
-                                            funcDef.Start.Index + nameLen,
+                                            funcDefStart.Index + nameLen,
                                             length);
 
                                         tagSpan = new TagSpan(
@@ -159,11 +161,13 @@ namespace Microsoft.PythonTools {
                             if (span != null) {
                                 TagSpan tagSpan = null;
                                 try {
-                                    int nameLen = classDef.Header.Index - classDef.Start.Index + 1;
-                                    if (classDef.Start.IsValid && classDef.End.IsValid) {
+                                    var classDefStart = funcDef.GetStart(ast);
+                                    var classDefEnd = funcDef.GetEnd(ast);
+                                    int nameLen = classDef.HeaderIndex - classDef.StartIndex + 1;
+                                    if (classDefStart.IsValid && classDefEnd.IsValid) {
                                         var classSpan = GetFinalSpan(snapshot,
-                                            classDef.Start.Index + nameLen,
-                                            classDef.End.Index - classDef.Start.Index - nameLen
+                                            classDefStart.Index + nameLen,
+                                            classDefEnd.Index - classDefStart.Index - nameLen
                                         );
 
                                         tagSpan = new TagSpan(
@@ -182,7 +186,7 @@ namespace Microsoft.PythonTools {
                             }
 
                             // recurse into the class definition and outline it's members
-                            foreach (var v in ProcessSuite(spans, classDef.Body as SuiteStatement, snapshot, false)) {
+                            foreach (var v in ProcessSuite(spans, ast, classDef.Body as SuiteStatement, snapshot, false)) {
                                 yield return v;
                             }
                         }
@@ -194,12 +198,14 @@ namespace Microsoft.PythonTools {
                                 if (span != null) {
                                     TagSpan tagSpan = null;
                                     try {
-                                        var testLen = ifStmt.Tests[0].Header.Index - ifStmt.Start.Index + 1;
-                                        if (ifStmt.Start.IsValid && ifStmt.End.IsValid) {
-                                            int length = ifStmt.End.Index - ifStmt.Start.Index - testLen;
+                                        var ifStmtStart = funcDef.GetStart(ast);
+                                        var ifStmtEnd = funcDef.GetEnd(ast);
+                                        var testLen = ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1;
+                                        if (ifStmtStart.IsValid && ifStmtEnd.IsValid) {
+                                            int length = ifStmtEnd.Index - ifStmtStart.Index - testLen;
                                             if (length > 0) {
                                                 var ifSpan = GetFinalSpan(snapshot,
-                                                    ifStmt.Start.Index + testLen,
+                                                    ifStmtStart.Index + testLen,
                                                     length
                                                 );
 
@@ -243,7 +249,7 @@ namespace Microsoft.PythonTools {
                 }
 
                 for (int i = 0; i < spans.Count; i++) {
-                    if (spans[i].IntersectsWith(new Span(statement.Start.Index, statement.End.Index))) {
+                    if (spans[i].IntersectsWith(Span.FromBounds(statement.StartIndex, statement.EndIndex))) {
                         return spans[i];
                     }
                 }

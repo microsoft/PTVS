@@ -45,6 +45,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="CompletionContextTests.cs" />
+    <Compile Include="ParserRoundTripTest.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebuggerTests.cs" />
     <Compile Include="DeserializationTests.cs" />
@@ -366,6 +367,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\Grammar\AllErrors.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\Grammar\ImportStmtIllegal.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\Grammar\MixedWhitespace3.py">

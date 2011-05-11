@@ -49,7 +49,8 @@ namespace Microsoft.PythonTools.Designer {
             // build the new method handler
             var view = _pythonFileNode.GetTextView();
             var textBuffer = _pythonFileNode.GetTextBuffer();
-            var classDef = GetClassForEvents();
+            PythonAst ast;
+            var classDef = GetClassForEvents(out ast);
             if (classDef != null) {
                 int end = classDef.Body.EndIndex;
                 
@@ -57,7 +58,7 @@ namespace Microsoft.PythonTools.Designer {
                     var text = BuildMethod(
                         eventDescription,
                         methodName,
-                        new string(' ', classDef.Body.Start.Column - 1),
+                        new string(' ', classDef.Body.GetStart(ast).Column - 1),
                         view.Options.IsConvertTabsToSpacesEnabled() ?
                             view.Options.GetIndentSize() :
                             -1);
@@ -73,11 +74,18 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         private ClassDefinition GetClassForEvents() {
+            PythonAst ast;
+            return GetClassForEvents(out ast);
+        }
+
+        private ClassDefinition GetClassForEvents(out PythonAst ast) {
+            ast = null;
             var analysis = _pythonFileNode.GetAnalysis() as IPythonProjectEntry;
 
             if (analysis != null) {
                 // TODO: Wait for up to date analysis
-                var suiteStmt = analysis.WaitForCurrentTree().Body as SuiteStatement;                
+                ast = analysis.WaitForCurrentTree();
+                var suiteStmt = ast.Body as SuiteStatement;                
                 foreach (var stmt in suiteStmt.Statements) {
                     var classDef = stmt as ClassDefinition;
                     // TODO: Make sure this is the right class

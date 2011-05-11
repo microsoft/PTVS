@@ -18,9 +18,6 @@ namespace AnalysisTest {
         //
         [TestMethod]
         public void SimpleTest() {
-            //string filename = "C:\\Python26\\Lib\\abc.py";
-            //PythonLanguageVersion version = PythonLanguageVersion.V26;
-
             var versions = new[] { 
                 new { Path = "C:\\Python24\\Lib", Version = PythonLanguageVersion.V24 },
                 new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
@@ -32,30 +29,32 @@ namespace AnalysisTest {
                 new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 } 
             };
 
-            foreach (var version in versions) {
-                Console.WriteLine("Testing version {0} {1}", version.Version, version.Path);
-                int ran = 0, succeeded = 0;
-                foreach (var file in Directory.GetFiles(version.Path)) {
-                    try {
-                        if (file.EndsWith(".py")) {
-                            ran++;
-                            TestOneFile(file, version.Version);
-                            succeeded++;
+            foreach (var optionSet in new[] { TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins, TokenizerOptions.Verbatim }) {
+                foreach (var version in versions) {
+                    Console.WriteLine("Testing version {0} {1} w/ Option Set {2}", version.Version, version.Path, optionSet);
+                    int ran = 0, succeeded = 0;
+                    foreach (var file in Directory.GetFiles(version.Path)) {
+                        try {
+                            if (file.EndsWith(".py")) {
+                                ran++;
+                                TestOneFile(file, version.Version, optionSet);
+                                succeeded++;
+                            }
+                        } catch (Exception e) {
+                            Console.WriteLine(e);
+                            Console.WriteLine("Failed: {0}", file);
                         }
-                    } catch (Exception e) {
-                        Console.WriteLine(e);
-                        Console.WriteLine("Failed: {0}", file);
                     }
-                }
 
-                Assert.AreEqual(ran, succeeded);
+                    Assert.AreEqual(ran, succeeded);
+                }
             }
         }
 
-        private static void TestOneFile(string filename, PythonLanguageVersion version) {
+        private static void TestOneFile(string filename, PythonLanguageVersion version, TokenizerOptions optionSet) {
             StringBuilder output = new StringBuilder();
-
-            var tokenizer = new Tokenizer(version, verbatim: true);
+            
+            var tokenizer = new Tokenizer(version, options: optionSet);
             var originalText = File.ReadAllText(filename);
             tokenizer.Initialize(new StringReader(originalText));
             Token token;
@@ -91,7 +90,8 @@ namespace AnalysisTest {
             }
 
             Assert.AreEqual(originalText.Length, output.Length);
-        }        
+        }
+            
     }
 
     static class StringBuilderExtensions {

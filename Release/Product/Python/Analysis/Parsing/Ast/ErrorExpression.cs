@@ -13,10 +13,16 @@
  * ***************************************************************************/
 
 using System;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ErrorExpression : Expression {
         public ErrorExpression() {
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            // TODO: need to preserve and return erroring tokens
+            res.Append("<error>");
         }
 
         public override void Walk(PythonWalker walker) {

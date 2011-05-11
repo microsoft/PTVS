@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class TupleExpression : SequenceExpression {
         private bool _expandable;
@@ -42,6 +44,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public bool IsExpandable {
             get {
                 return _expandable;
+            }
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            if (this.IsAltForm(ast)) {
+                ListExpression.AppendItems(res, ast, "", "", this, Items);
+            } else {
+                ListExpression.AppendItems(res, ast, "(", ")", this, Items);
             }
         }
     }

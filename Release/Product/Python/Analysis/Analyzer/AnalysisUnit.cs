@@ -240,7 +240,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             newScope.Bases.Clear();
             // Process base classes
-            foreach (var baseClass in Ast.Bases) {
+            foreach (var baseClassArg in Ast.Bases) {
+                if (baseClassArg.Name != null) {
+                    // TODO: support namaed args to user defined meta classes and metaclass arg.
+                    continue;
+                }
+                var baseClass = baseClassArg.Expression;
+
                 baseClass.Walk(ddg);
                 var bases = ddg._eval.Evaluate(baseClass);
                 newScope.Bases.Add(bases);

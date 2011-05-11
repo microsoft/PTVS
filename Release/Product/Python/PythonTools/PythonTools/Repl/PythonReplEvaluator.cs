@@ -726,7 +726,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            var parser = Parser.CreateParser(new StringReader(text), ErrorSink.Null, _interpreter.GetLanguageVersion());
+            var parser = Parser.CreateParser(new StringReader(text), _interpreter.GetLanguageVersion());
             ParseResult result;
             parser.ParseInteractiveCode(out result);
             if (!(result == ParseResult.Empty || result == ParseResult.Complete || result == ParseResult.Invalid)) {

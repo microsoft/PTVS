@@ -331,41 +331,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private static ISet<Namespace> EvaluateGenerator(ExpressionEvaluator ee, Node node) {
             GeneratorExpression gen = (GeneratorExpression)node;
-            var funcBody = gen.Function.Body;
-            
-            // evaluate the body of the generator
-            while (funcBody != null) {
-                ForStatement forStmt = funcBody as ForStatement;
-                if (forStmt != null) {
-                    ee.Evaluate(forStmt.List);
-                    funcBody = forStmt.Body;
-                    continue;
-                }
 
-                IfStatement ifStmt = funcBody as IfStatement;
-                if (ifStmt != null) {
-                    ee.Evaluate(ifStmt.Tests[0].Test);
-                    funcBody = ifStmt.Tests[0].Body;
-                    continue;
-                }
-
-                ExpressionStatement exprStmt = funcBody as ExpressionStatement;
-                if (exprStmt != null) {
-                    YieldExpression yieldExpr = exprStmt.Expression as YieldExpression;
-                    if (yieldExpr != null) {
-                        ee.Evaluate(yieldExpr.Expression);
-                        break;
+            for (int i = 0; i < gen.Iterators.Count; i++) {
+                ComprehensionFor compFor = gen.Iterators[i] as ComprehensionFor;
+                if (compFor != null) {
+                    foreach (var listType in ee.Evaluate(compFor.List)) {
+                        ee.AssignTo(node, compFor.Left, listType.GetEnumeratorTypes(node, ee._unit));
                     }
                 }
-
-                break;
             }
 
-            ee.Evaluate(gen.Iterable);
 
-            return ee.GlobalScope.GetOrMakeNodeVariable(
-               node,
-               (x) => new GeneratorInfo(new FunctionInfo(ee._unit)).SelfSet);
+            var res = (GeneratorInfo)ee.GlobalScope.GetOrMakeNodeVariable(
+                node,
+                (x) => new GeneratorInfo(new FunctionInfo(ee._unit)));
+
+            res.AddYield(ee.Evaluate(gen.Item));
+
+            return res.SelfSet;
         }
 
         internal void AssignTo(Node assignStmt, Expression left, ISet<Namespace> values) {

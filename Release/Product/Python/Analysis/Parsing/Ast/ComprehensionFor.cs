@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ComprehensionFor : ComprehensionIterator {
         private readonly Expression _lhs, _list;
@@ -38,6 +40,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("for");
+            _lhs.AppendCodeString(res, ast);
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append("in");
+            _list.AppendCodeString(res, ast);                
         }
     }
 }

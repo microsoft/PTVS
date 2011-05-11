@@ -127,7 +127,10 @@ namespace Microsoft.PythonTools.Parsing {
     internal static class Tokens {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly Token EndOfFileToken = new SymbolToken(TokenKind.EndOfFile, "<eof>");
-        
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
+        public static readonly Token ImpliedNewLineToken = new NewlineToken(TokenKind.NewLine, "", "<newline>");
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]
         public static readonly Token NewLineToken = new NewlineToken(TokenKind.NewLine, "\n", "<newline>");
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2104:DoNotDeclareReadOnlyMutableReferenceTypes")]

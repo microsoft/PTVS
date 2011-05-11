@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -46,6 +47,33 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (walker.Walk(this)) {
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("import");
+
+            var itemWhiteSpace = this.GetListWhiteSpace(ast);
+            var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
+            for (int i = 0, asIndex = 0; i < _names.Length; i++) {
+                if (i > 0 && itemWhiteSpace != null) {
+                    res.Append(itemWhiteSpace[i - 1]);
+                    res.Append(',');
+                }
+
+                _names[i].AppendCodeString(res, ast);
+                if (AsNames[i] != null) {
+                    if (asNameWhiteSpace != null) {
+                        res.Append(asNameWhiteSpace[asIndex++]);
+                    }
+                    res.Append("as");
+                    if (asNameWhiteSpace != null) {
+                        res.Append(asNameWhiteSpace[asIndex++]);
+                    }
+                    res.Append(_asNames[i]);
+                }
+            }
+
         }
     }
 }

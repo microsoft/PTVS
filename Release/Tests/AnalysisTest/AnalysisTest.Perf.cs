@@ -222,7 +222,7 @@ import System
                 try {
                     var sourceUnit = sourceUnits[i];
 
-                    ast = Parser.CreateParser(sourceUnit, Microsoft.PythonTools.Parsing.ErrorSink.Null, PythonLanguageVersion.V27).ParseFile();
+                    ast = Parser.CreateParser(sourceUnit, PythonLanguageVersion.V27).ParseFile();
                 } catch (Exception) {
                 }
                 nodes.Add(ast);

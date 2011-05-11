@@ -112,9 +112,28 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
                 new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
                 new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
+                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
+                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
+                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
+                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
+                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
+                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
+                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
+                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
+                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
+                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
@@ -183,9 +202,28 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
                 new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
                 new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
+                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
+                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
+                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
+                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
+                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
+                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
+                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
+                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
+                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
+                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
@@ -253,9 +291,28 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
                 new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
                 new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
+                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
+                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
+                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
+                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
+                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
+                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
+                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
+                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
+                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
+                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
@@ -318,9 +375,28 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
                 new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
                 new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
-                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
+                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
+                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
+                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
+                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
+                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
+                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
+                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
+                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
+                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
+                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
+                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
+                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
+                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
+                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
+                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
@@ -790,11 +866,13 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("ForStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckForStmt(Foo, Bar, Pass),
-                        CheckForStmt(CheckTupleExpr(Foo, Bar), Baz, Pass),
+                        CheckForStmt(Foo, Bar, CheckSuite(Pass)),
+                        CheckForStmt(CheckTupleExpr(Foo, Bar), Baz, CheckSuite(Pass)),
                         CheckForStmt(Foo, Bar, CheckSuite(Pass), CheckSuite(Pass)),
                         CheckForStmt(Foo, Bar, CheckSuite(Break)),
-                        CheckForStmt(Foo, Bar, CheckSuite(Continue))
+                        CheckForStmt(Foo, Bar, CheckSuite(Continue)),
+                        CheckForStmt(CheckListExpr(CheckListExpr(Foo), CheckListExpr(Bar)), Baz, CheckSuite(Pass)),
+                        CheckForStmt(CheckTupleExpr(CheckParenExpr(Foo), CheckParenExpr(Bar)), Baz, CheckSuite(Pass))
                     )
                 );
             }
@@ -806,10 +884,10 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("WithStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckWithStmt(Foo, Pass),
-                        CheckWithStmt(Foo, Bar, Pass),
-                        CheckWithStmt(Foo, CheckWithStmt(Bar, Pass)),
-                        CheckWithStmt(Foo, Bar, CheckWithStmt(Baz, Quox, Pass))
+                        CheckWithStmt(Foo, CheckSuite(Pass)),
+                        CheckWithStmt(Foo, Bar, CheckSuite(Pass)),
+                        CheckWithStmt(new[] { Foo, Bar }, CheckSuite(Pass)),
+                        CheckWithStmt(new[] { Foo, Baz }, new[] { Bar, Quox }, CheckSuite(Pass))
                     )
                 );
             }
@@ -952,6 +1030,16 @@ namespace AnalysisTest {
                     )
                 );
             }
+
+            foreach (var version in AllVersions) {
+                ParseErrors("ImportStmtIllegal.py", version,
+                    new ErrorInfo("unexpected token '('", 17, 1, 18, 18, 1, 19),
+                    new ErrorInfo("unexpected token '('", 17, 1, 18, 18, 1, 19),
+                    new ErrorInfo("unexpected token '('", 17, 1, 18, 18, 1, 19),
+                    new ErrorInfo("unexpected token ')'", 24, 1, 25, 25, 1, 26),
+                    new ErrorInfo("unexpected token ')'", 25, 1, 26, 26, 1, 27)
+                );
+            }
         }
 
         [TestMethod]
@@ -1029,7 +1117,6 @@ namespace AnalysisTest {
                     new ErrorInfo("unexpected token '1'", 228, 19, 15, 229, 19, 16),
                     new ErrorInfo("unexpected token '<newline>'", 229, 19, 16, 235, 20, 5),
                     new ErrorInfo("unexpected token '<dedent>'", 229, 19, 16, 235, 20, 5),
-                    new ErrorInfo("unexpected end of file", 244, 21, 1, 244, 21, 1),
                     new ErrorInfo("unexpected end of file", 244, 21, 1, 244, 21, 1)
                 );
             }
@@ -1188,7 +1275,9 @@ namespace AnalysisTest {
                         CheckPrintStmt(new[] { One, Two }, trailingComma: true),
                         CheckPrintStmt(new[] { One, Two }, Foo),
                         CheckPrintStmt(new[] { One, Two }, Foo, trailingComma: true),
-                        CheckPrintStmt(new Action<Expression>[0], Foo)
+                        CheckPrintStmt(new Action<Expression>[0], Foo),
+                        CheckPrintStmt(new[] { CheckBinaryExpression(One, PythonOperator.Equal, Two) }),
+                        CheckPrintStmt(new[] { CheckLambda(new Action<Parameter>[0], One) })
                     )
                 );
             }
@@ -1202,7 +1291,12 @@ namespace AnalysisTest {
                     new ErrorInfo("invalid syntax", 32, 4, 7, 33, 4, 8),
                     new ErrorInfo("unexpected token ','", 33, 4, 8, 34, 4, 9),
                     new ErrorInfo("invalid syntax", 44, 5, 7, 45, 5, 8),
-                    new ErrorInfo("unexpected token ','", 45, 5, 8, 46, 5, 9)
+                    new ErrorInfo("unexpected token ','", 45, 5, 8, 46, 5, 9),
+                    new ErrorInfo("invalid syntax", 110, 9, 7, 111, 9, 8),
+                    new ErrorInfo("unexpected token '=='", 112, 9, 9, 114, 9, 11),
+                    new ErrorInfo("unexpected token 'lambda'", 124, 10, 7, 130, 10, 13),
+                    new ErrorInfo("unexpected token ':'", 130, 10, 13, 131, 10, 14),
+                    new ErrorInfo("unexpected token '1'", 132, 10, 15, 133, 10, 16)
                 );
             }
         }
@@ -1259,10 +1353,10 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("GenComp.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckGeneratorComp(Bar, CheckForStmt(Foo, IgnoreExpr(), CheckYieldStmt(Foo)))),
-                        CheckExprStmt(CheckGeneratorComp(Bar, CheckForStmt(Foo, IgnoreExpr(), CheckIfStmt(IfTests(IfTest(Baz, CheckYieldStmt(Foo))))))),
-                        CheckExprStmt(CheckGeneratorComp(Bar, CheckForStmt(Foo, IgnoreExpr(), CheckForStmt(Baz, Quox, CheckYieldStmt(Foo))))),
-                        CheckCallStmt(Baz, PositionalArg(CheckGeneratorComp(Bar, CheckForStmt(Foo, IgnoreExpr(), CheckYieldStmt(Foo)))))
+                        CheckExprStmt(CheckGeneratorComp(Foo, CompFor(Foo, Bar))),
+                        CheckExprStmt(CheckGeneratorComp(Foo, CompFor(Foo, Bar), CompIf(Baz))),
+                        CheckExprStmt(CheckGeneratorComp(Foo, CompFor(Foo, Bar), CompFor(Baz, Quox))),
+                        CheckCallStmt(Baz, PositionalArg(CheckGeneratorComp(Foo, CompFor(Foo, Bar))))
                     )                    
                 );
             }
@@ -1419,7 +1513,7 @@ namespace AnalysisTest {
                             "f",
                             NoParameters,
                             CheckSuite(
-                                CheckFromImport("sys", new[] { "abc", null })
+                                CheckFromImport("sys", new[] { "abc", "" })
                             )
                         )
                     )
@@ -1454,10 +1548,10 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("DecoratorsClassDef.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckClassDef("C", Pass, decorators: new[] { Foo }),
-                        CheckClassDef("C", Pass, decorators: new[] { CheckMemberExpr(Foo, "bar") }),
-                        CheckClassDef("C", Pass, decorators: new[] { CheckCallExpression(Foo, PositionalArg(Bar)) }),
-                        CheckClassDef("C", Pass, decorators: new[] { Foo, Bar })
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { Foo }),
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { CheckMemberExpr(Foo, "bar") }),
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { CheckCallExpression(Foo, PositionalArg(Bar)) }),
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { Foo, Bar })
                     )
                 );
             }
@@ -1572,7 +1666,7 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("FuncDefV2.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new[] { CheckParameter("a"), CheckSublistParameter("b", "c"), CheckParameter("d") }, Pass)
+                        CheckFuncDef("f", new[] { CheckParameter("a"), CheckSublistParameter("b", "c"), CheckParameter("d") }, CheckSuite(Pass))
                     )
                 );
             }
@@ -1590,20 +1684,20 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("FuncDefV3.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List), CheckParameter("x", ParameterKind.KeywordOnly) }, Pass),
-                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List), CheckParameter("x", ParameterKind.KeywordOnly, defaultValue: One) }, Pass),
+                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List), CheckParameter("x", ParameterKind.KeywordOnly) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List), CheckParameter("x", ParameterKind.KeywordOnly, defaultValue: One) }, CheckSuite(Pass)),
 
-                        CheckFuncDef("f", new[] { CheckParameter("a", annotation: One) }, Pass),
-                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List, annotation: One) }, Pass),
-                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.Dictionary, annotation: One) }, Pass),
-                        CheckFuncDef("f", new[] { CheckParameter("a", annotation: Zero), CheckParameter("b", ParameterKind.List, annotation: One), CheckParameter("c", ParameterKind.Dictionary, annotation: Two) }, Pass),
+                        CheckFuncDef("f", new[] { CheckParameter("a", annotation: One) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.List, annotation: One) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.Dictionary, annotation: One) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a", annotation: Zero), CheckParameter("b", ParameterKind.List, annotation: One), CheckParameter("c", ParameterKind.Dictionary, annotation: Two) }, CheckSuite(Pass)),
 
-                        CheckFuncDef("f", NoParameters, Pass, returnAnnotation: One),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), returnAnnotation: One),
 
-                        CheckFuncDef("f", new[] { CheckParameter("a", annotation: One) }, Pass, returnAnnotation: One),
+                        CheckFuncDef("f", new[] { CheckParameter("a", annotation: One) }, CheckSuite(Pass), returnAnnotation: One),
 
-                        CheckFuncDef("f", new[] { CheckParameter("a", defaultValue: Two, annotation: One) }, Pass),
-                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.KeywordOnly) }, Pass)
+                        CheckFuncDef("f", new[] { CheckParameter("a", defaultValue: Two, annotation: One) }, CheckSuite(Pass)),
+                        CheckFuncDef("f", new[] { CheckParameter("a", ParameterKind.KeywordOnly) }, CheckSuite(Pass))
 
                     )
                 );
@@ -1654,9 +1748,9 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("ClassDef.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckClassDef("C", Pass),
-                        CheckClassDef("C", Pass, new[] { CheckNameExpr("object") }),
-                        CheckClassDef("C", Pass, new[] { CheckNameExpr("list"), CheckNameExpr("object") })
+                        CheckClassDef("C", CheckSuite(Pass)),
+                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("object") }),
+                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("list"), CheckArg("object") })
                     )
                 );
             }
@@ -1668,9 +1762,9 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("ClassDef3x.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckClassDef("C", Pass, kwArgs: new Dictionary<string, Action<Expression>>() { { "metaclass", One } }),
-                        CheckClassDef("C", Pass, new[] { CheckNameExpr("object") }, kwArgs: new Dictionary<string, Action<Expression>>() { { "metaclass", One } }),
-                        CheckClassDef("C", Pass, new[] { CheckNameExpr("list"), CheckNameExpr("object") }, kwArgs: new Dictionary<string, Action<Expression>>() { { "foo", One } })
+                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckNamedArg("metaclass", One) }),
+                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("object"), CheckNamedArg("metaclass", One) }),
+                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("list"), CheckArg("object"), CheckNamedArg("foo", One) })
                     )
                 );
             }
@@ -1765,6 +1859,7 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("AssignStmtV3.py", ErrorSink.Null, version),
                     CheckSuite(
+                        CheckAssignment( CheckTupleExpr(CheckStarExpr(Foo), Bar, Baz), CheckTupleExpr(One, Two, Three, Four)),
                         CheckAssignment( CheckTupleExpr(Foo, CheckStarExpr(Bar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
                         CheckAssignment( CheckListExpr(Foo, CheckStarExpr(Bar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
                         CheckAssignment( CheckListExpr(CheckStarExpr(Foo), Bar, Baz), CheckTupleExpr(One, Two, Three, Four) )
@@ -1774,9 +1869,10 @@ namespace AnalysisTest {
 
             foreach (var version in V2Versions) {
                 ParseErrors("AssignStmtV3.py", version,
-                    new ErrorInfo("invalid syntax", 6, 1, 7, 9, 1, 10),
-                    new ErrorInfo("invalid syntax", 36, 2, 8, 39, 2, 11),
-                    new ErrorInfo("invalid syntax", 62, 3, 3, 65, 3, 6)
+                    new ErrorInfo("invalid syntax", 1, 1, 2, 4, 1, 5),
+                    new ErrorInfo("invalid syntax", 35, 2, 7, 38, 2, 10),
+                    new ErrorInfo("invalid syntax", 65, 3, 8, 68, 3, 11),
+                    new ErrorInfo("invalid syntax", 91, 4, 3, 94, 4, 6)
                 );
             }
         }
@@ -1810,7 +1906,7 @@ namespace AnalysisTest {
                         CheckAssignment(CheckCallExpression(Foo), One),
                         CheckAssignment(None, One),
                         CheckAssignment(Two, One),
-                        CheckAssignment(CheckGeneratorComp(Bar, CheckForStmt(Foo, IgnoreExpr(), CheckYieldStmt(Foo))), One),
+                        CheckAssignment(CheckGeneratorComp(Foo, CompFor(Foo, Bar)), One),
                         CheckAssignment(CheckTupleExpr(Foo, Bar), PythonOperator.Add, One),
                         CheckFuncDef("f", NoParameters, 
                             CheckSuite(    
@@ -1932,7 +2028,7 @@ namespace AnalysisTest {
             }
         }
 
-        [TestMethod]
+        [TestMethod,  Priority(2)]
         public void StdLib() {
             var versions = new[] { 
                 new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 },
@@ -1963,7 +2059,7 @@ namespace AnalysisTest {
                     if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
                         continue;
                     }
-                    using (var parser = Parser.CreateParser(new StreamReader(file), errorSink, curVersion.Version)) {
+                    using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
                         var ast = parser.ParseFile();
                     }
 
@@ -1973,7 +2069,17 @@ namespace AnalysisTest {
                     }
                 }
 
-                Assert.AreEqual(0, errors.Count, String.Join(",", errors.Keys));
+                if (errors.Count != 0) {
+                    StringBuilder errorList = new StringBuilder();
+                    foreach (var keyValue in errors) {
+                        errorList.Append(keyValue.Key + " :" + Environment.NewLine);
+                        foreach (var error in keyValue.Value.Errors) {
+                            errorList.AppendFormat("     {0} {1}{2}", error.Span, error.Message, Environment.NewLine);
+                        }
+
+                    }
+                    Assert.AreEqual(0, errors.Count, errorList.ToString());
+                }
             }
         }
 
@@ -2040,7 +2146,7 @@ namespace AnalysisTest {
         }
 
         private static PythonAst ParseFile(string filename, ErrorSink errorSink, PythonLanguageVersion version, Severity indentationInconsistencySeverity = Severity.Ignore) {
-            var parser = Parser.CreateParser(new StreamReader(Path.GetFullPath(Path.Combine("Python.VS.TestData\\Grammar", filename))), errorSink, version, indentationInconsistencySeverity);
+            var parser = Parser.CreateParser(new StreamReader(Path.GetFullPath(Path.Combine("Python.VS.TestData\\Grammar", filename))), version, new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationInconsistencySeverity });
             var ast = parser.ParseFile();
             return ast;
         }
@@ -2377,7 +2483,7 @@ namespace AnalysisTest {
             }
         }
 
-        private static Action<Statement> CheckClassDef(string name, Action<Statement> body, Action<Expression>[] bases = null, Action<Expression>[] decorators = null, Dictionary<string, Action<Expression>> kwArgs = null) {
+        private static Action<Statement> CheckClassDef(string name, Action<Statement> body, Action<Arg>[] bases = null, Action<Expression>[] decorators = null) {
             return stmt => {
                 Assert.AreEqual(typeof(ClassDefinition), stmt.GetType());
                 var classDef = (ClassDefinition)stmt;
@@ -2395,16 +2501,6 @@ namespace AnalysisTest {
                     Assert.AreEqual(0, classDef.Bases.Count);
                 }
 
-                if (kwArgs != null) {
-                    Assert.AreEqual(kwArgs.Count, classDef.KeywordArgs.Count);
-                    foreach (var keyValue in kwArgs) {
-                        Assert.IsTrue(classDef.KeywordArgs.ContainsKey(keyValue.Key));
-
-                        keyValue.Value(classDef.KeywordArgs[keyValue.Key]);
-                    }
-                } else {
-                    Assert.AreEqual(null, classDef.KeywordArgs);
-                }
                 body(classDef.Body);
 
                 CheckDecorators(decorators, classDef.Decorators);
@@ -2557,6 +2653,24 @@ namespace AnalysisTest {
                 target(member.Target);
             };
         }
+
+        private static Action<Arg> CheckArg(string name) {
+            return expr => {
+                Assert.AreEqual(null, expr.Name);
+                Assert.AreEqual(typeof(NameExpression), expr.Expression.GetType());
+                var nameExpr = (NameExpression)expr.Expression;
+                Assert.AreEqual(nameExpr.Name, name);
+            };
+        }
+
+
+        private static Action<Arg> CheckNamedArg(string argName, Action<Expression> value) {
+            return expr => {
+                Assert.AreEqual(argName, expr.Name);
+                value(expr.Expression);
+            };
+        }
+
 
         private static Action<Expression> CheckNameExpr(string name) {
             return expr => {
@@ -2721,16 +2835,27 @@ namespace AnalysisTest {
         }
 
         private Action<Statement> CheckWithStmt(Action<Expression> expr, Action<Expression> target, Action<Statement> body) {
+            return CheckWithStmt(new[] { expr }, new[] { target }, body);
+        }
+
+        private Action<Statement> CheckWithStmt(Action<Expression>[] expr, Action<Statement> body) {
+            return CheckWithStmt(expr, new Action<Expression>[expr.Length], body);
+        }
+
+        private Action<Statement> CheckWithStmt(Action<Expression>[] expr, Action<Expression>[] target, Action<Statement> body) {
             return stmt => {
                 Assert.AreEqual(typeof(WithStatement), stmt.GetType());
                 var with = (WithStatement)stmt;
 
-                expr(with.ContextManager);
+                Assert.AreEqual(expr.Length, with.Items.Count);
+                for (int i = 0; i < with.Items.Count; i++) {
+                    expr[i](with.Items[i].ContextManager);
 
-                if (target != null) {
-                    target(with.Variable);
-                } else {
-                    Assert.AreEqual(null, with.Variable);
+                    if (target[i] != null) {
+                        target[i](with.Items[i].Variable);
+                    } else {
+                        Assert.AreEqual(null, with.Items[0].Variable);
+                    }
                 }
 
                 body(with.Body);
@@ -2851,14 +2976,17 @@ namespace AnalysisTest {
             };
         }
 
-        private Action<Expression> CheckGeneratorComp(Action<Expression> item, Action<Statement> body) {
+        private Action<Expression> CheckGeneratorComp(Action<Expression> item, params Action<ComprehensionIterator>[] iterators) {
             return expr => {
                 Assert.AreEqual(typeof(GeneratorExpression), expr.GetType());
-                var genComp = (GeneratorExpression)expr;
-                
-                item(genComp.Iterable);
+                var listComp = (GeneratorExpression)expr;
 
-                body(genComp.Function.Body);
+                Assert.AreEqual(iterators.Length, listComp.Iterators.Count);
+
+                item(listComp.Item);
+                for (int i = 0; i < iterators.Length; i++) {
+                    iterators[i](listComp.Iterators[i]);
+                }
             };
         }
 

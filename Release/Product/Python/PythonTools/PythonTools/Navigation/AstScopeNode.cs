@@ -44,20 +44,20 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public SourceLocation Start {
-            get { return _ast.Start; }
+            get { return _ast.GetStart(_ast); }
         }
 
         public SourceLocation End {
-            get { return _ast.End; }
+            get { return _ast.GetEnd(_ast); }
         }
 
         public IEnumerable<IScopeNode> NestedScopes {
             get {
-                return EnumerateBody(_ast.Body);
+                return EnumerateBody(_ast, _ast.Body);
             }
         }
 
-        internal static IEnumerable<IScopeNode> EnumerateBody(Statement body, bool includeAssignments = true) {
+        internal static IEnumerable<IScopeNode> EnumerateBody(PythonAst ast, Statement body, bool includeAssignments = true) {
             SuiteStatement suite = body as SuiteStatement;
             if (suite != null) {
                 foreach (Statement stmt in suite.Statements) {
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Navigation {
                         foreach (var target in assign.Left) {
                             NameExpression name = target as NameExpression;
                             if (name != null) {
-                                yield return new AssignmentScopeNode(assign, name);
+                                yield return new AssignmentScopeNode(ast, assign, name);
                             }
                         }
                     }

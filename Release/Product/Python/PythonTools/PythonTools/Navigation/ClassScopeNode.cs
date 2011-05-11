@@ -47,16 +47,16 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public SourceLocation Start {
-            get { return _klass.Start; }
+            get { return _klass.GetStart(_klass.GlobalParent); }
         }
 
         public SourceLocation End {
-            get { return _klass.End; }
+            get { return _klass.GetEnd(_klass.GlobalParent); }
         }
 
         public IEnumerable<IScopeNode> NestedScopes {
             get {
-                return AstScopeNode.EnumerateBody(_klass.Body);
+                return AstScopeNode.EnumerateBody(_klass.GlobalParent, _klass.Body);
             }
         }
 

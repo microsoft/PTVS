@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -74,6 +75,43 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 _right.Walk(walker);
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            Expression left = _left;
+            Expression right = _right;
+            string op1, op2;
+
+            if (Operator == PythonOperator.NotIn) {
+                op1 = "not";
+                op2 = "in";
+            } else if (Operator == PythonOperator.IsNot) {
+                op1 = "is";
+                op2 = "not";
+            } else if ((op1 = this.GetVerbatimImage(ast)) != null) {
+                // operator image differs from the operator enum, for example <> is always NotEqual which is !=
+                // so we store the verbatim image and use it here.
+                op2 = null;
+            } else {
+                op1 = Operator.ToCodeString();
+                op2 = null;
+            }
+            BinaryToCodeString(res, ast, this, _left, _right, op1, op2);
+        }
+
+        internal static void BinaryToCodeString(StringBuilder res, PythonAst ast, Expression node, Expression left, Expression right, string op1, string op2 = null) {
+            left.AppendCodeString(res, ast);
+            res.Append(node.GetProceedingWhiteSpace(ast));
+
+            if (op2 == null) {
+                res.Append(op1);
+                right.AppendCodeString(res, ast);
+            } else {
+                res.Append(op1);
+                res.Append(node.GetSecondWhiteSpace(ast));
+                res.Append(op2);
+                right.AppendCodeString(res, ast);
+            }
         }
     }
 }

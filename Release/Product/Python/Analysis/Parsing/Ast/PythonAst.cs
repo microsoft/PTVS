@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -20,41 +22,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     /// Top-level ast for all Python code.  Holds onto the body and the line mapping information.
     /// </summary>
     public sealed class PythonAst : ScopeStatement {
-        private Statement _body;
-        internal int[] _lineLocations;
-
-        /// <summary>
-        /// Creates a new PythonAst without a body.  ParsingFinished should be called afterwards to set
-        /// the body.
-        /// </summary>
-        internal PythonAst() {
-        }
+        private readonly Statement _body;
+        internal readonly int[] _lineLocations;
+        private readonly Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();
 
         public PythonAst(Statement body, int[] lineLocations) {
-            ParsingFinished(lineLocations, body);
-        }
-
-        /// <summary>
-        /// Called when parsing is complete, the body is built, the line mapping and language features are known.
-        /// 
-        /// This is used in conjunction with the constructor which does not take a body.  It enables creating
-        /// the outer most PythonAst first so that nodes can always have a global parent.  This lets an un-bound
-        /// tree to still provide it's line information immediately after parsing.  When we set the location
-        /// of each node during construction we also set the global parent.  When we name bind the global 
-        /// parent gets replaced with the real parent ScopeStatement.
-        /// </summary>
-        /// <param name="lineLocations">a mapping of where each line begins</param>
-        /// <param name="body">The body of code</param>
-        /// <param name="languageFeatures">The language features which were set during parsing.</param>
-        internal void ParsingFinished(int[] lineLocations, Statement body) {
-            if (_body != null) {
-                throw new InvalidOperationException("cannot set body twice");
+            if (body == null) {
+                throw new ArgumentNullException("body");
             }
-
             _body = body;
             _lineLocations = lineLocations;
         }
-
+        
         public override string Name {
             get {
                 return "<module>";
@@ -63,15 +42,31 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_body != null) {
-                    _body.Walk(walker);
-                }
+                _body.Walk(walker);
             }
             walker.PostWalk(this);
         }
 
         public Statement Body {
             get { return _body; }
+        }
+
+        internal bool TryGetAttribute(Node node, object key, out object value) {
+            Dictionary<object, object> nodeAttrs;
+            if (_attributes.TryGetValue(node, out nodeAttrs)) {
+                return nodeAttrs.TryGetValue(key, out value);
+            } else {
+                value = null;
+            }
+            return false;
+        }
+
+        internal void SetAttribute(Node node, object key, object value) {
+            Dictionary<object, object> nodeAttrs;
+            if (!_attributes.TryGetValue(node, out nodeAttrs)) {
+                nodeAttrs = _attributes[node] = new Dictionary<object, object>();
+            }
+            nodeAttrs[key] = value;
         }
 
         internal SourceLocation IndexToLocation(int index) {
@@ -157,6 +152,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         #endregion
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            _body.AppendCodeString(res, ast);
+            res.Append(this.GetExtraVerbatimText(ast));
+        }
     }
 }
 

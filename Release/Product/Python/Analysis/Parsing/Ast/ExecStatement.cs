@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     
     public class ExecStatement : Statement {
@@ -52,6 +54,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("exec");
+            _code.AppendCodeString(res, ast);
+            if (_globals != null) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append("in");
+                _globals.AppendCodeString(res, ast);
+                if (_locals != null) {
+                    res.Append(this.GetThirdWhiteSpace(ast));
+                    res.Append(',');
+                    _locals.AppendCodeString(res, ast);
+                }
+            }
         }
     }
 }

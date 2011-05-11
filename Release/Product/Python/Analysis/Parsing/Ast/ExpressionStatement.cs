@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     
     public class ExpressionStatement : Statement {
@@ -46,6 +48,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
                 return null;
             }
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            _expression.AppendCodeString(res, ast);
         }
     }
 }

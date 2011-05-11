@@ -12,20 +12,28 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
-    public class Arg : Node {
-        private readonly string _name;
+    public sealed class Arg : Node {
+        private readonly Expression _name;
         private readonly Expression _expression;
 
         public Arg(Expression expression) : this(null, expression) { }
 
-        public Arg(string name, Expression expression) {
+        public Arg(Expression name, Expression expression) {
             _name = name;
             _expression = expression;
         }
 
         public string Name {
-            get { return _name; }
+            get {
+                var nameExpr = _name as NameExpression;
+                if (nameExpr != null) {
+                    return nameExpr.Name;
+                }
+                return null;
+            }
         }
 
         public Expression Expression {
@@ -43,6 +51,23 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            if (_name != null) {
+                if (Name == "*" || Name == "**") {
+                    _name.AppendCodeString(res, ast);
+                    _expression.AppendCodeString(res, ast);
+                } else {
+                    // keyword arg
+                    _name.AppendCodeString(res, ast);
+                    res.Append(this.GetProceedingWhiteSpace(ast));
+                    res.Append('=');
+                    _expression.AppendCodeString(res, ast);
+                }
+            } else {
+                _expression.AppendCodeString(res, ast);
+            }
         }
     }
 }

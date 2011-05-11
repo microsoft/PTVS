@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class IfStatementTest : Node {
         private int _headerIndex;
@@ -49,8 +51,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        public SourceLocation Header {
-            get { return GlobalParent.IndexToLocation(_headerIndex); }
+        public SourceLocation GetHeader(PythonAst ast) {
+            return ast.IndexToLocation(_headerIndex);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            _test.AppendCodeString(res, ast);
+            _body.AppendCodeString(res, ast);
         }
     }
 }

@@ -209,7 +209,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             var asNames = node.AsNames ?? node.Names;
-            var impInfo = new ImportInfo(node.Root.MakeString(), node.Span);
+            var impInfo = new ImportInfo(node.Root.MakeString(), node.GetSpan(_unit.Ast.GlobalParent));
             GlobalScope.Imports[node] = impInfo;
 
             int len = Math.Min(node.Names.Count, asNames.Count);
@@ -347,7 +347,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         public override bool Walk(ImportStatement node) {
-            var iinfo = new ImportInfo("", node.Span);
+            var x = _unit.ProjectEntry.Tree;
+            var iinfo = new ImportInfo("", node.GetSpan(_unit.Ast.GlobalParent));
             GlobalScope.Imports[node] = iinfo;
             int len = Math.Min(node.Names.Count, node.AsNames.Count);
             for (int i = 0; i < len; i++) {
@@ -411,10 +412,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         public override bool Walk(WithStatement node) {
-            var ctxMgr = _eval.Evaluate(node.ContextManager);
-            if (node.Variable != null) {
-                _eval.AssignTo(node, node.Variable, ctxMgr);
+            foreach (var item in node.Items) {
+                var ctxMgr = _eval.Evaluate(item.ContextManager);
+                if (item.Variable != null) {
+                    _eval.AssignTo(node, item.Variable, ctxMgr);
+                }
             }
+            
             return true;
         }
 

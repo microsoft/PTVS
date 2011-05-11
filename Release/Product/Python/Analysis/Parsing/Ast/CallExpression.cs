@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -79,6 +80,32 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            _target.AppendCodeString(res, ast);
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            var listWhiteSpace = this.GetListWhiteSpace(ast);
+            res.Append('(');
+            for (int i = 0; i < _args.Length; i++) {
+                if (i > 0) {
+                    if (listWhiteSpace != null) {
+                        res.Append(listWhiteSpace[i - 1]);
+                    }
+                    res.Append(',');
+                }
+
+                _args[i].AppendCodeString(res, ast);
+            }
+            
+            if (listWhiteSpace != null && listWhiteSpace.Length == _args.Length && _args.Length != 0) {
+                // trailing comma
+                res.Append(listWhiteSpace[listWhiteSpace.Length - 1]);
+                res.Append(",");
+            }
+
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append(')');            
         }
     }
 }

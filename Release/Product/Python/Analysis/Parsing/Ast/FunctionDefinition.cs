@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
@@ -218,6 +219,60 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public SourceLocation Header {
             get { return GlobalParent.IndexToLocation(_headerIndex); }
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
+            if (Decorators != null) {
+                
+                for (int i = 0, curWhiteSpace = 0; i < Decorators.Count; i++) {
+                    if (decorateWhiteSpace != null) {
+                        res.Append(decorateWhiteSpace[curWhiteSpace++]);
+                    }
+                    res.Append('@');
+                    Decorators[i].AppendCodeString(res, ast);
+                    if (decorateWhiteSpace != null) {
+                        res.Append(decorateWhiteSpace[curWhiteSpace++]);
+                    } else {
+                        res.Append(Environment.NewLine);
+                    }
+                }
+            }
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("def");
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append(this.GetVerbatimImage(ast) ?? Name);
+            res.Append(this.GetThirdWhiteSpace(ast));
+            res.Append('(');
+            var commaWhiteSpace = this.GetListWhiteSpace(ast);
+            ParamsToString(res, ast, commaWhiteSpace);
+
+            res.Append(this.GetFourthWhiteSpace(ast));
+            res.Append(')');
+            if (ReturnAnnotation != null) {
+                res.Append(this.GetFifthWhiteSpace(ast));
+                res.Append("->");
+                _returnAnnotation.AppendCodeString(res, ast);
+            }
+            Body.AppendCodeString(res, ast);
+        }
+
+        internal void ParamsToString(StringBuilder res, PythonAst ast, string[] commaWhiteSpace) {
+            for (int i = 0; i < Parameters.Count; i++) {
+                if (i > 0) {
+                    if (commaWhiteSpace != null) {
+                        res.Append(commaWhiteSpace[i - 1]);
+                    }
+                    res.Append(',');
+                }
+                Parameters[i].AppendCodeString(res, ast);
+            }
+
+            if (commaWhiteSpace != null && commaWhiteSpace.Length == Parameters.Count && Parameters.Count != 0) {
+                // trailing comma
+                res.Append(commaWhiteSpace[commaWhiteSpace.Length - 1]);
+                res.Append(",");
+            }
         }
     }
 }

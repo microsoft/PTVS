@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ReturnStatement : Statement {
         private readonly Expression _expression;
@@ -31,6 +33,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("return");
+            if (_expression != null) {
+                _expression.AppendCodeString(res, ast);
+            }
         }
     }
 }

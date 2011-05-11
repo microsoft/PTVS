@@ -12,9 +12,12 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ComprehensionIf : ComprehensionIterator {
         private readonly Expression _test;
+        private int _headerIndex;
 
         public ComprehensionIf(Expression test) {
             _test = test;
@@ -32,5 +35,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             walker.PostWalk(this);
         }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("if");
+            _test.AppendCodeString(res,ast);
+        }
+
+        public int HeaderIndex { get { return _headerIndex; } set { _headerIndex = value; } }
     }
 }

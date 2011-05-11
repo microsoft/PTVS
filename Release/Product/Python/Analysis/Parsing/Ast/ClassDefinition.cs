@@ -13,14 +13,14 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ClassDefinition : ScopeStatement {
         private int _headerIndex;
         private readonly string/*!*/ _name;
         private Statement _body;
-        private readonly Expression[] _bases;
-        private readonly Dictionary<string, Expression> _kwArgs;
+        private readonly Arg[] _bases;
         private IList<Expression> _decorators;
 
         private PythonVariable _variable;           // Variable corresponding to the class name
@@ -28,11 +28,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private PythonVariable _docVariable;        // Variable for the __doc__ attribute
         private PythonVariable _modNameVariable;    // Variable for the module's __name__
 
-        public ClassDefinition(string name, Expression[] bases, Statement body, Dictionary<string, Expression> kwArgs) {           
+        public ClassDefinition(string name, Arg[] bases, Statement body) {           
             _name = name ?? "";
             _bases = bases;
             _body = body;
-            _kwArgs = kwArgs;
         }
 
         public int HeaderIndex {
@@ -44,13 +43,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _name; }
         }
 
-        public Dictionary<string, Expression> KeywordArgs {
-            get {
-                return _kwArgs;
-            }
-        }
-
-        public IList<Expression> Bases {
+        public IList<Arg> Bases {
             get { return _bases; }
         }
 
@@ -143,7 +136,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     }
                 }
                 if (_bases != null) {
-                    foreach (Expression b in _bases) {
+                    foreach (var b in _bases) {
                         b.Walk(walker);
                     }
                 }
@@ -156,6 +149,35 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public SourceLocation Header {
             get { return GlobalParent.IndexToLocation(_headerIndex); }
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("class");
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append(Name);
+
+            if (!this.IsAltForm(ast)) {
+                res.Append(this.GetThirdWhiteSpace(ast));
+                res.Append('(');
+            }
+
+            ListExpression.AppendItems(
+                res,
+                ast,
+                "",
+                "",
+                this,
+                this.Bases.Count,
+                (i, sb) => this.Bases[i].AppendCodeString(sb, ast)
+            );
+            
+            if (!this.IsAltForm(ast)) {
+                res.Append(this.GetFourthWhiteSpace(ast));
+                res.Append(')');
+            }
+
+            _body.AppendCodeString(res, ast);
         }
     }
 }

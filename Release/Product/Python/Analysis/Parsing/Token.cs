@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
     }
 
-    internal class VerbatimConstantValueToken : ConstantValueToken {
+    internal sealed class VerbatimConstantValueToken : ConstantValueToken {
         private readonly string _verbatim;
 
         public VerbatimConstantValueToken(object value, string verbatim)
@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
     }
 
-    internal class OperatorToken : Token {
+    internal sealed class OperatorToken : Token {
         private readonly int _precedence;
         private readonly string _image;
 

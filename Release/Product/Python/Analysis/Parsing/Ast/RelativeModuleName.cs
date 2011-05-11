@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class RelativeModuleName : ModuleName {
         private readonly int _dotCount;
@@ -29,6 +31,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get {
                 return _dotCount;
             }
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            var whitespace = this.GetListWhiteSpace(ast);
+            for (int i = 0; i < _dotCount; i++) {
+                if (whitespace != null) {
+                    res.Append(whitespace[i]);
+                }
+                res.Append('.');
+            }
+            base.AppendCodeString(res, ast);
         }
     }
 }

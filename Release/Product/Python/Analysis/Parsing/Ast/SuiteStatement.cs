@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -47,5 +48,42 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            // SuiteStatement comes in 3 forms:
+            //  1. The body of a if/else/while/for/etc... where there's an opening colon
+            //  2. A set of semi-colon separated items
+            //  3. A top-level group of statements in a top-level PythonAst node.
+            var itemWhiteSpace = this.GetListWhiteSpace(ast);
+            var colonWhiteSpace = this.GetProceedingWhiteSpaceDefaultNull(ast);
+            if (itemWhiteSpace != null) {
+                // form 2, semi-colon seperated list.
+                for (int i = 0; i < _statements.Length; i++) {
+                    if (i > 0) {
+                        res.Append(itemWhiteSpace[i - 1]);
+                        res.Append(';');
+                    }
+                    _statements[i].AppendCodeString(res, ast);
+                }
+                if (itemWhiteSpace != null && itemWhiteSpace.Length == _statements.Length && _statements.Length != 0) {
+                    // trailing semi-colon
+                    res.Append(itemWhiteSpace[itemWhiteSpace.Length - 1]);
+                    res.Append(";");
+                }
+            } else if (colonWhiteSpace != null) {
+                res.Append(colonWhiteSpace);
+                res.Append(':');
+                var secondWhiteSpace = this.GetSecondWhiteSpaceDefaultNull(ast);
+                if (secondWhiteSpace != null) {
+                    res.Append(secondWhiteSpace);
+                }
+                foreach (var statement in _statements) {
+                    statement.AppendCodeString(res, ast);
+                }
+            } else {
+                foreach (var statement in _statements) {
+                    statement.AppendCodeString(res, ast);
+                }
+            }
+        }
     }
 }

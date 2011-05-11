@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools {
             var langVersion = _buffer.GetAnalyzer().InterpreterFactory.GetLanguageVersion();
             Tokenizer res;
             if (!_tokenizers.TryGetValue(langVersion, out res)) {
-                _tokenizers[langVersion] = res = new Tokenizer(langVersion, verbatim: true);
+                _tokenizers[langVersion] = res = new Tokenizer(langVersion, options: TokenizerOptions.Verbatim);
             }
             return res;
         }

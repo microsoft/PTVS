@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class OrExpression : Expression {
         private readonly Expression _left, _right;
@@ -47,6 +49,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            BinaryExpression.BinaryToCodeString(res, ast, this, _left, _right, "or");
         }
     }
 }

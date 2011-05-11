@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -31,6 +32,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (walker.Walk(this)) {
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            var namesWhiteSpace = this.GetNamesWhiteSpace(ast);
+
+            if (namesWhiteSpace != null) {
+                ListExpression.AppendItems(res, ast, "nonlocal", "", this, Names.Count, (i, sb) => { sb.Append(namesWhiteSpace[i]); sb.Append(Names[i]); });
+            } else {
+                ListExpression.AppendItems(res, ast, "nonlocal", "", this, Names.Count, (i, sb) => sb.Append(Names[i]));
+            }
+
         }
     }
 }

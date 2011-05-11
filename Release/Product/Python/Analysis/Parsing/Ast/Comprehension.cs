@@ -12,7 +12,9 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public abstract class ComprehensionIterator : Node {
@@ -23,6 +25,24 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public abstract override string NodeName { get; }
 
         public abstract override void Walk(PythonWalker walker);
+
+        internal void AppendCodeString(StringBuilder res, PythonAst ast, string start, string end, Expression item) {
+            if (!String.IsNullOrEmpty(start)) {
+                res.Append(this.GetProceedingWhiteSpace(ast));
+                res.Append(start);
+            }
+
+            item.AppendCodeString(res, ast);
+
+            for (int i = 0; i < Iterators.Count; i++) {
+                Iterators[i].AppendCodeString(res, ast);
+            }
+
+            if (!String.IsNullOrEmpty(end)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(end);
+            }
+        }
     }
 
     public sealed class ListComprehension : Comprehension {
@@ -60,6 +80,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            AppendCodeString(res, ast, "[", "]", _item);
         }
     }
 
@@ -99,24 +123,27 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             walker.PostWalk(this);
         }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            AppendCodeString(res, ast, "{", "}", _item);
+        }
     }
 
     public sealed class DictionaryComprehension : Comprehension {
         private readonly ComprehensionIterator[] _iterators;
-        private readonly Expression _key, _value;
+        private readonly SliceExpression _value;
 
-        public DictionaryComprehension(Expression key, Expression value, ComprehensionIterator[] iterators) {
-            _key = key;
+        public DictionaryComprehension(SliceExpression value, ComprehensionIterator[] iterators) {
             _value = value;
             _iterators = iterators;
         }
 
         public Expression Key {
-            get { return _key; }
+            get { return _value.SliceStart; }
         }
 
         public Expression Value {
-            get { return _value; }
+            get { return _value.SliceStop; }
         }
 
         public override IList<ComprehensionIterator> Iterators {
@@ -131,12 +158,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_key != null) {
-                    _key.Walk(walker);
-                }
                 if (_value != null) {
                     _value.Walk(walker);
                 }
+
                 if (_iterators != null) {
                     foreach (ComprehensionIterator ci in _iterators) {
                         ci.Walk(walker);
@@ -144,6 +169,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            AppendCodeString(res, ast, "{", "}", _value);
         }
     }
 }

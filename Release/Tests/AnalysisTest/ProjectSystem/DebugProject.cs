@@ -514,6 +514,7 @@ namespace AnalysisTest.ProjectSystem {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\InconsistentIndentation.sln");
             var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
 
+            System.Threading.Thread.Sleep(5000);
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
             const int expectedItems = 1;

@@ -70,7 +70,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(Parameter node) {
-            node.Parent = _binder._currentScope;
 #if NAME_BINDING
             node.PythonVariable = 
 #endif
@@ -82,19 +81,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             node.PythonVariable = 
 #endif
             _binder.DefineParameter(node.Name);
-            node.Parent = _binder._currentScope;
             // we walk the node by hand to avoid walking the default values.
             WalkTuple(node.Tuple);
             return false;
         }
 
         private void WalkTuple(TupleExpression tuple) {
-            tuple.Parent = _binder._currentScope;
             foreach (Expression innerNode in tuple.Items) {
                 NameExpression name = innerNode as NameExpression;
                 if (name != null) {
                     _binder.DefineName(name.Name);
-                    name.Parent = _binder._currentScope;
 #if NAME_BINDING
                     name.Reference = 
 #endif
@@ -105,7 +101,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
         public override bool Walk(TupleExpression node) {
-            node.Parent = _binder._currentScope;
             return true;
         }
     }
@@ -234,7 +229,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // AssignmentStatement
         public override bool Walk(AssignmentStatement node) {
-            node.Parent = _currentScope;
             foreach (Expression e in node.Left) {
                 e.Walk(_define);
             }
@@ -242,7 +236,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(AugmentedAssignStatement node) {
-            node.Parent = _currentScope;
             node.Left.Walk(_define);
             return true;
         }
@@ -261,7 +254,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             if (node.Bases != null) {
                 // Base references are in the outer context
-                foreach (Expression b in node.Bases) b.Walk(this);
+                foreach (var b in node.Bases) b.Expression.Walk(this);
             }
 
             // process the decorators in the outer context
@@ -294,8 +287,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // DelStatement
         public override bool Walk(DelStatement node) {
-            node.Parent = _currentScope;
-
             foreach (Expression e in node.Expressions) {
                 e.Walk(_delete);
             }
@@ -304,7 +295,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // ExecStatement
         public override bool Walk(ExecStatement node) {
-            node.Parent = _currentScope;
             if (node.Locals == null && node.Globals == null) {
                 Debug.Assert(_currentScope != null);
                 _currentScope.ContainsUnqualifiedExec = true;
@@ -322,145 +312,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public override bool Walk(ExpressionStatement node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(BinaryExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(AndExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(CallExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ConditionalExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(IndexExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ListComprehension node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(SetComprehension node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(DictionaryComprehension node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ComprehensionIf node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-        
-        public override bool Walk(MemberExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(TupleExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ListExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(DictionaryExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(YieldExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(UnaryExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(SliceExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override void PostWalk(ConditionalExpression node) {
-            node.Parent = _currentScope;
-            base.PostWalk(node);
-        }
-
-        public override bool Walk(BackQuoteExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ConstantExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(GeneratorExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(OrExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(LambdaExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ParenthesisExpression node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(EmptyStatement node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(RaiseStatement node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-
-        public override bool Walk(SuiteStatement node) {
-            node.Parent = _currentScope;
-            return base.Walk(node);
-        }
-        
         // ForEachStatement
         public override bool Walk(ForStatement node) {
-            node.Parent = _currentScope;
-
             // we only push the loop for the body of the loop
             // so we need to walk the for statement ourselves
             node.Left.Walk(_define);
@@ -484,8 +337,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(WhileStatement node) {
-            node.Parent = _currentScope;
-
             // we only push the loop for the body of the loop
             // so we need to walk the while statement ourselves
             if (node.Test != null) {
@@ -503,20 +354,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return false;
         }
 
-        public override bool Walk(BreakStatement node) {
-            node.Parent = _currentScope;
-            
-            return base.Walk(node);
-        }
-
-        public override bool Walk(ContinueStatement node) {
-            node.Parent = _currentScope;
-            
-            return base.Walk(node);
-        }
-
         public override bool Walk(ReturnStatement node) {
-            node.Parent = _currentScope;
             FunctionDefinition funcDef = _currentScope as FunctionDefinition;
             if (funcDef != null) {
                 funcDef._hasReturn = true;
@@ -526,22 +364,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // WithStatement
         public override bool Walk(WithStatement node) {
-            node.Parent = _currentScope;
             _currentScope.ContainsExceptionHandling = true;
 
-            if (node.Variable != null) {
-                node.Variable.Walk(_define);
+            for (int i = 0; i < node.Items.Count; i++) {
+                if (node.Items[i].Variable != null) {
+                    node.Items[i].Variable.Walk(_define);
+                }
             }
             return true;
         }
 
         // FromImportStatement
         public override bool Walk(FromImportStatement node) {
-            node.Parent = _currentScope;
-
             if (node.Names != FromImportStatement.Star) {
                 PythonVariable[] variables = new PythonVariable[node.Names.Count];
-                node.Root.Parent = _currentScope;
                 for (int i = 0; i < node.Names.Count; i++) {
                     variables[i] = DefineName(node.AsNames[i] ?? node.Names[i]);
                 }
@@ -597,8 +433,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // GlobalStatement
         public override bool Walk(GlobalStatement node) {
-            node.Parent = _currentScope;
-
             foreach (string n in node.Names) {
                 PythonVariable conflict;
                 // Check current scope for conflicting variable
@@ -654,8 +488,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(NonlocalStatement node) {
-            node.Parent = _currentScope;
-
             foreach (string n in node.Names) {
                 PythonVariable conflict;
                 // Check current scope for conflicting variable
@@ -704,7 +536,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(NameExpression node) {
-            node.Parent = _currentScope;            
 #if NAME_BINDING
             node.Reference = 
 #endif
@@ -714,17 +545,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(PrintStatement node) {
-            node.Parent = _currentScope;
             return base.Walk(node);
         }
 
         public override bool Walk(IfStatement node) {
-            node.Parent = _currentScope;
             return base.Walk(node);
         }
 
         public override bool Walk(AssertStatement node) {
-            node.Parent = _currentScope;
             return base.Walk(node);
         }        
 
@@ -744,15 +572,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // ImportStatement
         public override bool Walk(ImportStatement node) {
-            node.Parent = _currentScope;
-
             PythonVariable[] variables = new PythonVariable[node.Names.Count];
             for (int i = 0; i < node.Names.Count; i++) {
                 string name = node.AsNames[i] != null ? node.AsNames[i] : node.Names[i].Names[0];
                 if (name != null) {
                     variables[i] = DefineName(name);
                 }
-                node.Names[i].Parent = _currentScope;
             }
             node.Variables = variables;
             return true;
@@ -761,7 +586,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // TryStatement
         public override bool Walk(TryStatement node) {
             // we manually walk the TryStatement so we can track finally blocks.
-            node.Parent = _currentScope;
             _currentScope.ContainsExceptionHandling = true;
 
             node.Body.Walk(this);
@@ -771,7 +595,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     if (tsh.Target != null) {
                         tsh.Target.Walk(_define);
                     }
-                    tsh.Parent = _currentScope;
                     tsh.Walk(this);
                 }
             }
@@ -791,7 +614,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // ListComprehensionFor
         public override bool Walk(ComprehensionFor node) {
-            node.Parent = _currentScope;
             node.Left.Walk(_define);
             return true;
         }

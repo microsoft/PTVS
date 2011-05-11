@@ -199,6 +199,24 @@ p");
        'b',
        'c')
 p");
+
+            // http://pytools.codeplex.com/workitem/157
+            AutoIndentTest(project, "def a():\rif b():\rif c():\rd()\rp", @"def a():
+    if b():
+        if c():
+            d()
+            p");
+
+            AutoIndentTest(project, "a_list = [1, 2, 3]\rdef func():\rpass", @"a_list = [1, 2, 3]
+def func():
+    pass");
+
+            AutoIndentTest(project, "class A:\rdef funcA(self, a):\rreturn a\r\rdef funcB(self):\rpass", @"class A:
+    def funcA(self, a):
+        return a
+
+    def funcB(self):
+        pass");
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

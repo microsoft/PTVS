@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class StarredExpression : Expression {
         private readonly Expression _expr;
@@ -38,6 +40,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override string CheckAugmentedAssign() {
             return "invalid syntax";
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append('*');
+            _expr.AppendCodeString(res, ast);
         }
     }
 }

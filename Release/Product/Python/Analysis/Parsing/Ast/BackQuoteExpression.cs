@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class BackQuoteExpression : Expression {
@@ -33,6 +34,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append('`');
+            _expression.AppendCodeString(res, ast);
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append('`');
         }
     }
 }

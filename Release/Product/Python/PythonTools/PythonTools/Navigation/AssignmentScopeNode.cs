@@ -19,11 +19,13 @@ namespace Microsoft.PythonTools.Navigation {
     class AssignmentScopeNode : IScopeNode {
         private readonly AssignmentStatement _assign;
         private readonly NameExpression _name;
+        private readonly PythonAst _ast;
         private static readonly IScopeNode[] EmptyScopeNodes = new IScopeNode[0];
 
-        public AssignmentScopeNode(AssignmentStatement assign, NameExpression name) {
+        public AssignmentScopeNode(PythonAst ast, AssignmentStatement assign, NameExpression name) {
             _assign = assign;
             _name = name;
+            _ast = ast;
         }
 
         #region IScopeNode Members
@@ -43,11 +45,11 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public Parsing.SourceLocation Start {
-            get { return _name.Start; }
+            get { return _name.GetStart(_ast); }
         }
 
         public Parsing.SourceLocation End {
-            get { return _name.End; }
+            get { return _name.GetEnd(_ast); }
         }
 
         public IEnumerable<IScopeNode> NestedScopes {

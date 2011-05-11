@@ -47,15 +47,15 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public SourceLocation Start {
-            get { return _func.Start; }
+            get { return _func.GetStart(_func.GlobalParent); }
         }
 
         public SourceLocation End {
-            get { return _func.End; }
+            get { return _func.GetEnd(_func.GlobalParent); }
         }
 
         public IEnumerable<IScopeNode> NestedScopes {
-            get { return AstScopeNode.EnumerateBody(_func.Body, false); }
+            get { return AstScopeNode.EnumerateBody(_func.GlobalParent, _func.Body, false); }
         }
 
         #endregion

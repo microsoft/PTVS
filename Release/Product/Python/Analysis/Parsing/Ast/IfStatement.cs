@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class IfStatement : Statement {
@@ -44,6 +45,28 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            var itemWhiteSpace = this.GetListWhiteSpace(ast);
+            for (int i = 0; i < _tests.Length; i++) {
+                if (itemWhiteSpace != null) {
+                    res.Append(itemWhiteSpace[i]);
+                }
+
+                if (i == 0) {
+                    res.Append("if");
+                } else {
+                    res.Append("elif");
+                }
+                _tests[i].AppendCodeString(res, ast);
+            }
+
+            if (_else != null) {
+                res.Append(this.GetProceedingWhiteSpace(ast));
+                res.Append("else");
+                _else.AppendCodeString(res, ast);
+            }
         }
     }
 }

@@ -34,8 +34,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private List<string> _cellVars;                                 // variables accessed from nested scopes
         private List<string> _nonLocalVars;                             // variables declared as nonlocal within this scope
         private Dictionary<string, PythonReference> _references;        // names of all variables referenced, null after binding completes
+        private ScopeStatement _parent;
 
         internal const string NameForExec = "module: <exec>";
+
+        public ScopeStatement Parent {
+            get { return _parent; }
+            set { _parent = value; }
+        }
 
         internal bool ContainsImportStar {
             get { return _importStar; }
@@ -120,6 +126,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal virtual int ArgCount {
             get {
                 return 0;
+            }
+        }
+
+        public PythonAst GlobalParent {
+            get {
+                ScopeStatement cur = this;
+                while (!(cur is PythonAst)) {
+                    Debug.Assert(cur != null);
+                    cur = cur.Parent;
+                }
+                return (PythonAst)cur;
             }
         }
 

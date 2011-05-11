@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class SliceExpression : Expression {
         private readonly Expression _sliceStart;
@@ -61,6 +63,24 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            if (_sliceStart != null) {
+                _sliceStart.AppendCodeString(res, ast);
+            }
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(':');
+            if (_sliceStop != null) {
+                _sliceStop.AppendCodeString(res, ast);
+            }
+            if (_stepProvided) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(':');
+                if (_sliceStep != null) {
+                    _sliceStep.AppendCodeString(res, ast);
+                }
+            }
         }
     }
 }

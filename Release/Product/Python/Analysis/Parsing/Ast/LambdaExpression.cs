@@ -12,7 +12,8 @@
  *
  * ***************************************************************************/
 
-using System;
+using System.Diagnostics;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class LambdaExpression : Expression {
@@ -33,6 +34,23 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("lambda");
+            var commaWhiteSpace = this.GetListWhiteSpace(ast);
+
+            _function.ParamsToString(res, ast, commaWhiteSpace);
+
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append(":");
+            if (_function.Body is ReturnStatement) {
+                ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast);
+            } else {
+                Debug.Assert(_function.Body is ExpressionStatement);
+                ((ExpressionStatement)_function.Body).Expression.AppendCodeString(res, ast);
+            }
         }
     }
 }

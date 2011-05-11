@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (!_references.TryGetValue(name, out refs)) {
                     _references[name] = refs = new ReferenceDict();
                 }
-                refs.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.Span));
+                refs.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)));
             }
         }
 

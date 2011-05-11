@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class SublistParameter : Parameter {
         private readonly TupleExpression _tuple;
@@ -35,6 +37,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append('(');
+            Tuple.AppendCodeString(res, ast);
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append(')');
         }
     }
 }

@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
 
     // New in Pep342 for Python 2.5. Yield is an expression with a return value.
@@ -44,6 +46,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override string NodeName {
             get {
                 return "yield expression";
+            }
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("yield");
+            if (!this.IsAltForm(ast)) {
+                _expression.AppendCodeString(res, ast);
             }
         }
     }

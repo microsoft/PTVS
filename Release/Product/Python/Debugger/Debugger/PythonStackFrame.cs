@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         public bool TryParseText(string text, out string errorMsg) {
             CollectingErrorSink errorSink = new CollectingErrorSink();
-            Parser parser = Parser.CreateParser(new StringReader(text), errorSink, _thread.Process.LanguageVersion);
+            Parser parser = Parser.CreateParser(new StringReader(text), _thread.Process.LanguageVersion, new ParserOptions() { ErrorSink = errorSink });
             var ast = parser.ParseSingleStatement();
             if (errorSink.Errors.Count > 0) {
                 StringBuilder msg = new StringBuilder();

@@ -12,7 +12,8 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
+using System;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     /// <summary>
@@ -28,10 +29,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 #if NAME_BINDING
         private PythonVariable _variable;
 #endif
-        public Parameter(string name)
-            : this(name, ParameterKind.Normal) {
-        }
-
         public Parameter(string name, ParameterKind kind) {
             _name = name ?? "";
             _kind = kind;
@@ -96,6 +93,60 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            switch (Kind) {
+                case ParameterKind.Dictionary:
+                    res.Append(this.GetProceedingWhiteSpace(ast));
+                    res.Append("**");
+                    res.Append(this.GetSecondWhiteSpace(ast));
+                    res.Append(_name);
+                    AppendAnnotation(res, ast);
+                    break;
+                case ParameterKind.List:
+                    res.Append(this.GetProceedingWhiteSpace(ast));
+                    res.Append('*');
+                    res.Append(this.GetSecondWhiteSpace(ast));
+                    res.Append(_name);
+                    AppendAnnotation(res, ast);
+                    break;
+                case ParameterKind.Normal:
+                    if (this.IsAltForm(ast)) {
+                        res.Append(this.GetProceedingWhiteSpace(ast));
+                        res.Append('(');
+                        res.Append(this.GetThirdWhiteSpace(ast));
+                        res.Append(_name);
+                        res.Append(this.GetSecondWhiteSpace(ast));
+                        res.Append(')');
+                    } else {
+                        res.Append(this.GetProceedingWhiteSpace(ast));
+                        res.Append(_name);
+                        AppendAnnotation(res, ast);
+                    }
+                    break;
+                case ParameterKind.KeywordOnly:
+                    res.Append(this.GetExtraVerbatimText(ast));
+                    res.Append(this.GetProceedingWhiteSpace(ast));
+                    res.Append(_name);
+                    AppendAnnotation(res, ast);
+                    break;
+                default: throw new InvalidOperationException();
+            }
+
+            if (_defaultValue != null) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append('=');
+                _defaultValue.AppendCodeString(res, ast);
+            }
+        }
+
+        private void AppendAnnotation(StringBuilder res, PythonAst ast) {
+            if (_annotation != null) {
+                res.Append(this.GetThirdWhiteSpace(ast));
+                res.Append(':');
+                _annotation.AppendCodeString(res, ast);
+            }
         }
     }
 

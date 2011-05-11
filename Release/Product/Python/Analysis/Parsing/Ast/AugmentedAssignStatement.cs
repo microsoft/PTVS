@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Diagnostics;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class AugmentedAssignStatement : Statement {
@@ -48,6 +49,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            _left.AppendCodeString(res, ast);
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(_op.ToCodeString());
+            res.Append('=');            
+            _right.AppendCodeString(res, ast);
         }
     }
 }

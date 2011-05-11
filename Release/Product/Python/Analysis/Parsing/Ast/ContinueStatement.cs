@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class ContinueStatement : Statement {        
@@ -22,6 +24,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (walker.Walk(this)) {
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("continue");
         }
     }
 }

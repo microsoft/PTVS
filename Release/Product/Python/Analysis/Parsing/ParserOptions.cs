@@ -1,4 +1,4 @@
-/* ****************************************************************************
+﻿/* ****************************************************************************
  *
  * Copyright (c) Microsoft Corporation. 
  *
@@ -12,23 +12,15 @@
  *
  * ***************************************************************************/
 
-using System.Text;
-
-namespace Microsoft.PythonTools.Parsing.Ast {
-
-    public class EmptyStatement : Statement {
-        public EmptyStatement() {
+namespace Microsoft.PythonTools.Parsing {
+    public sealed class ParserOptions {
+        internal static ParserOptions Default = new ParserOptions();
+        public ParserOptions() {
+            ErrorSink = ErrorSink.Null;
         }
 
-        public override void Walk(PythonWalker walker) {
-            if (walker.Walk(this)) {
-            }
-            walker.PostWalk(this);
-        }
-
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
-            res.Append("pass");
-        }
+        public ErrorSink ErrorSink { set; get; }
+        public Severity IndentationInconsistencySeverity { set; get; }
+        public bool Verbatim { get; set; }
     }
 }

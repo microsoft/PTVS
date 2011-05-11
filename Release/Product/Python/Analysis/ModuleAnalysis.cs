@@ -72,7 +72,8 @@ namespace Microsoft.PythonTools.Analysis {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
             if (locatedDef != null) {
-                yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, locatedDef.Node.Start.Line, locatedDef.Node.Start.Column));
+                var start = locatedDef.Node.GetStart(_unit.Ast.GlobalParent);
+                yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, start.Line, start.Column));
             }
 
             foreach (var reference in referenceable.Definitions) {
@@ -152,7 +153,8 @@ namespace Microsoft.PythonTools.Analysis {
             // if we're on the 1st line of a function include our class def as well
             if (i == scopes.Count - 2 && scopes[scopes.Count - 1] is FunctionScope) {
                 var funcScope = (FunctionScope)scopes[scopes.Count - 1];
-                if (lineNo == funcScope.Function.FunctionDefinition.Start.Line) {
+                var def = funcScope.Function.FunctionDefinition;
+                if (lineNo == def.GetStart(def.GlobalParent).Line) {
                     return true;
                 }
             }
@@ -189,7 +191,7 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 
                 var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray());
-                using (var parser = Parser.CreateParser(new StringReader(exprText), ErrorSink.Null, _unit.ProjectState.LanguageVersion)) {
+                using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
                     var expr = GetExpression(parser.ParseTopExpression().Body);
                     if (expr is ListExpression ||
                         expr is TupleExpression ||
@@ -399,7 +401,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private Expression GetExpressionFromText(string exprText) {
-            using (var parser = Parser.CreateParser(new StringReader(exprText), ErrorSink.Null, _unit.ProjectState.LanguageVersion)) {
+            using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
                 return GetExpression(parser.ParseTopExpression().Body);
             }
         }
@@ -437,15 +439,17 @@ namespace Microsoft.PythonTools.Analysis {
                 //     pass
                 // def g():  # starts on 3, ends on 4
                 //     pass
-                int lastStart = curScope.Start;
+                var parent = _unit.Ast.GlobalParent;
+                int lastStart = curScope.GetStart(parent);
                 for (int i = curScope.Children.Count - 1; i >= 0; i--) {
                     var scope = curScope.Children[i];
-                    if (scope.Start <= lineNumber && (scope.Stop >= lineNumber || lineNumber < lastStart)) {
+                    var curStart = scope.GetStart(parent);
+                    if (curStart <= lineNumber && (scope.GetStop(parent) >= lineNumber || lineNumber < lastStart)) {
                         curScope = scope;
                         chain.Add(curScope);
                         break;
                     }
-                    lastStart = scope.Start;
+                    lastStart = curStart;
                 }
             }
             return chain;

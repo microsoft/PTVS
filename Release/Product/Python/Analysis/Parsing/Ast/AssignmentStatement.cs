@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class AssignmentStatement : Statement {
@@ -44,6 +45,24 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 _right.Walk(walker);
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            var lhs = this.GetListWhiteSpace(ast);
+            for (int i = 0; i < Left.Count; i++) {
+                if (lhs != null && i != 0) {
+                    res.Append(lhs[i - 1]);
+                    res.Append("=");
+                }
+                Left[i].AppendCodeString(res, ast);
+            }
+            if (lhs != null) {
+                res.Append(lhs[lhs.Length - 1]);
+            }
+            res.Append("=");
+
+            Right.AppendCodeString(res, ast);
+
         }
     }
 }

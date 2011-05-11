@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ConditionalExpression : Expression {
@@ -57,6 +58,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            _trueExpr.AppendCodeString(res, ast);
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("if");
+            _testExpr.AppendCodeString(res, ast);
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append("else");
+            _falseExpr.AppendCodeString(res, ast);
         }
     }
 }

@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_references == null) {
                     _references = new ReferenceDict();
                 }
-                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.Span));
+                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)));
             }
         }
 

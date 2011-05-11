@@ -252,10 +252,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override LocationInfo Location {
             get {
+                var start = FunctionDefinition.GetStart(FunctionDefinition.GlobalParent);
                 return new LocationInfo(
                     ProjectEntry,
-                    FunctionDefinition.Start.Line, 
-                    FunctionDefinition.Start.Column);
+                    start.Line,
+                    start.Column);
             }
         }
 
@@ -478,7 +479,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_references == null) {
                     _references = new ReferenceDict();
                 }
-                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.Span));
+                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)));
             }
         }
 

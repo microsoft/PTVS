@@ -334,8 +334,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             } else {
                 // analyze the class definition itself (it is visited while analyzing parent scope):
                 Define(node.Name);
-                foreach (Expression e in node.Bases) {
-                    e.Walk(this);
+                foreach (var e in node.Bases) {
+                    e.Expression.Walk(this);
                 }
                 return false;
             }
@@ -466,14 +466,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // WithStmt
         public override bool Walk(WithStatement node) {
-            // Walk the expression
-            node.ContextManager.Walk(this);
             BitArray save = _bits;
             _bits = new BitArray(_bits);
 
-            // Define the Rhs
-            if (node.Variable != null)
-                node.Variable.Walk(_fdef);
+            // Walk the expression
+            for (int i = 0; i < node.Items.Count; i++) {
+                node.Items[i].ContextManager.Walk(this);
+                
+                // Define the Rhs
+                if (node.Items[i].Variable != null) {
+                    node.Items[i].Variable.Walk(_fdef);
+                }
+            }
 
             // Flow the body
             node.Body.Walk(this);

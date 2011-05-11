@@ -12,7 +12,7 @@
  *
  * ***************************************************************************/
 
-using System.Diagnostics;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 
@@ -38,6 +38,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get {
                 return "unary operator";
             }
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(_op.ToCodeString());
+            _expression.AppendCodeString(res, ast);
         }
 
         public override void Walk(PythonWalker walker) {

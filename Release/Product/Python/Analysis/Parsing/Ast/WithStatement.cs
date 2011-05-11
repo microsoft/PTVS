@@ -12,29 +12,29 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Collections.Generic;
+using System.Text;
+
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class WithStatement : Statement {
         private int _headerIndex;
-        private readonly Expression _contextManager;
-        private readonly Expression _var;
+        private readonly WithItem[] _items;
         private Statement _body;
 
-        public WithStatement(Expression contextManager, Expression var, Statement body) {
-            _contextManager = contextManager;
-            _var = var;
+        public WithStatement(WithItem[] items, Statement body) {
+            _items = items;
             _body = body;
+        }
+
+        public IList<WithItem> Items {
+            get {
+                return _items;
+            }
         }
 
         public int HeaderIndex {
             set { _headerIndex = value; }
-        }
-
-        public Expression Variable {
-            get { return _var; }
-        }
-
-        public Expression ContextManager {
-            get { return _contextManager; }
         }
 
         public Statement Body {
@@ -43,17 +43,80 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_contextManager != null) {
-                    _contextManager.Walk(walker);
+                foreach (var item in _items) {
+                    item.Walk(walker);
                 }
-                if (_var != null) {
-                    _var.Walk(walker);
-                }
+
                 if (_body != null) {
                     _body.Walk(walker);
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("with");
+            var itemWhiteSpace = this.GetListWhiteSpace(ast);
+            int whiteSpaceIndex = 0;
+            for (int i = 0; i < _items.Length; i++) {
+                var item = _items[i];
+                if (i != 0) {
+                    if (itemWhiteSpace != null) {
+                        res.Append(itemWhiteSpace[whiteSpaceIndex++]);
+                    }
+                    res.Append(',');
+                }
+
+                item.ContextManager.AppendCodeString(res, ast);
+                if (item.Variable != null) {
+                    if (itemWhiteSpace != null) {
+                        res.Append(itemWhiteSpace[whiteSpaceIndex++]);
+                    } else {
+                        res.Append(' ');
+                    }
+                    res.Append("as");
+                    item.Variable.AppendCodeString(res, ast);
+                }
+            }
+            
+            _body.AppendCodeString(res, ast);
+        }
+    }
+
+    public sealed class WithItem : Node {
+        private readonly Expression _contextManager;
+        private readonly Expression _variable;
+
+        public WithItem(Expression contextManager, Expression variable) {
+            _contextManager = contextManager;
+            _variable = variable;
+        }
+
+        public Expression ContextManager {
+            get {
+                return _contextManager;
+            }
+        }
+
+        public Expression Variable {
+            get {
+                return _variable;
+            }
+        }
+
+        public override void Walk(PythonWalker walker) {
+            if (ContextManager != null) {
+                ContextManager.Walk(walker);
+            }
+            if (Variable != null) {
+                Variable.Walk(walker);
+            }
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            // WithStatement expands us 
+            throw new InvalidOperationException();
         }
     }
 }

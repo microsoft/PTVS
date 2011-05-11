@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ConstantExpression : Expression {
@@ -48,5 +49,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetExtraVerbatimText(ast) ?? (this.GetProceedingWhiteSpace(ast) + (_value == null ? "None" : _value.ToString())));
+        }
     }
 }

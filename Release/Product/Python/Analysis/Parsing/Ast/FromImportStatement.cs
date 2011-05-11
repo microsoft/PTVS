@@ -13,7 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     
@@ -64,6 +64,56 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (walker.Walk(this)) {
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("from");
+            Root.AppendCodeString(res, ast);
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append("import");
+            if (!this.IsAltForm(ast)) {
+                res.Append(this.GetThirdWhiteSpace(ast));
+                res.Append('(');
+            }
+
+            var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
+            int asIndex = 0;
+            for (int i = 0; i < _names.Length; i++) {
+                if (i > 0) {
+                    if (asNameWhiteSpace != null) {
+                        res.Append(asNameWhiteSpace[asIndex++]);
+                    }
+                    res.Append(',');
+                }
+                
+                if (asNameWhiteSpace != null) {
+                    res.Append(asNameWhiteSpace[asIndex++]);
+                }
+
+                res.Append(_names[i]);
+                if (AsNames != null && AsNames[i] != null) {
+                    if (asNameWhiteSpace != null) {
+                        res.Append(asNameWhiteSpace[asIndex++]);
+                    }
+                    res.Append("as");
+                    if (asNameWhiteSpace != null) {
+                        res.Append(asNameWhiteSpace[asIndex++]);
+                    }
+                    res.Append(_asNames[i]);
+                }
+            }
+
+            if (asIndex < asNameWhiteSpace.Length) {
+                // trailing comma
+                res.Append(asNameWhiteSpace[asNameWhiteSpace.Length - 1]);
+                res.Append(",");
+            }
+
+            if (!this.IsAltForm(ast)) {
+                res.Append(this.GetFourthWhiteSpace(ast));
+                res.Append(')');
+            }
         }
     }
 }

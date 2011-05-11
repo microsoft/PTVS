@@ -45,5 +45,21 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             walker.PostWalk(this);
         }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            var whitespace = this.GetNamesWhiteSpace(ast);
+            for (int i = 0, whitespaceIndex = 0; i < _names.Length; i++) {
+                if (whitespace != null) {
+                    res.Append(whitespace[whitespaceIndex++]);
+                }
+                if (i != 0) {
+                    res.Append('.');
+                    if (whitespaceIndex != null) {
+                        res.Append(whitespace[whitespaceIndex++]);
+                    }
+                }
+                res.Append(_names[i]);
+            }
+        }
     }
 }

@@ -81,8 +81,7 @@ namespace AnalysisTest {
         }
 
         public static void Prepare(IPythonProjectEntry entry, TextReader sourceUnit, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            CollectingErrorSink errorSink = new CollectingErrorSink();
-            using (var parser = Parser.CreateParser(sourceUnit, errorSink, version)) {
+            using (var parser = Parser.CreateParser(sourceUnit, version)) {
                 entry.UpdateTree(parser.ParseFile(), null);
             }
         }

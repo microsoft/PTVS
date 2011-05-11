@@ -562,7 +562,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ast = null;
             errorSink = new CollectingErrorSink();
 
-            using (var parser = Parser.CreateParser(content, errorSink, _interpreterFactory.GetLanguageVersion(), indentationSeverity)) {
+            using (var parser = Parser.CreateParser(content, _interpreterFactory.GetLanguageVersion(), new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationSeverity })) {
                 ast = ParseOneFile(ast, parser);
             }
         }
@@ -571,7 +571,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ast = null;
             errorSink = new CollectingErrorSink();
 
-            using (var parser = Parser.CreateParser(content, errorSink, _interpreterFactory.GetLanguageVersion(), indentationSeverity)) {
+            using (var parser = Parser.CreateParser(content, _interpreterFactory.GetLanguageVersion(), new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationSeverity })) {
                 ast = ParseOneFile(ast, parser);
             }
         }
@@ -678,7 +678,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case ReplIntellisenseMode.AlwaysEvaluate: return true;
                     case ReplIntellisenseMode.NeverEvaluate: return false;
                     case ReplIntellisenseMode.DontEvaluateCalls:
-                        var parser = Parser.CreateParser(new StringReader(source), ErrorSink.Null, _interpreterFactory.GetLanguageVersion());
+                        var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion());
 
                         var stmt = parser.ParseSingleStatement();
                         var exprWalker = new ExprWalker();

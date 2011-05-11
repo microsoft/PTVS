@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class IndexExpression : Expression {
@@ -56,6 +57,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get {
                 return _index is SliceExpression;
             }
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            Target.AppendCodeString(res, ast);
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append('[');
+            _index.AppendCodeString(res, ast);
+            res.Append(this.GetSecondWhiteSpace(ast));
+            res.Append(']');
         }
     }
 }

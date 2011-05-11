@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class PrintStatement : Statement {
@@ -50,6 +51,21 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append("print");
+            if (_dest != null) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(">>");
+                _dest.AppendCodeString(res, ast);
+                if (_expressions.Length > 0) {
+                    res.Append(this.GetThirdWhiteSpace(ast));
+                    res.Append(',');
+                }
+            }
+            ListExpression.AppendItems(res, ast, "", "", this, Expressions);
         }
     }
 }

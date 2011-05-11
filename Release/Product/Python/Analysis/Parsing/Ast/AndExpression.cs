@@ -12,7 +12,7 @@
  *
  * ***************************************************************************/
 
-using System;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class AndExpression : Expression {
@@ -50,5 +50,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             walker.PostWalk(this);
         }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            BinaryExpression.BinaryToCodeString(res, ast, this, _left, _right, "and");
+        }
+
     }
 }
