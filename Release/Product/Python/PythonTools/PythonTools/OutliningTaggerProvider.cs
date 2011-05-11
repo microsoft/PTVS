@@ -161,8 +161,8 @@ namespace Microsoft.PythonTools {
                             if (span != null) {
                                 TagSpan tagSpan = null;
                                 try {
-                                    var classDefStart = funcDef.GetStart(ast);
-                                    var classDefEnd = funcDef.GetEnd(ast);
+                                    var classDefStart = classDef.GetStart(ast);
+                                    var classDefEnd = classDef.GetEnd(ast);
                                     int nameLen = classDef.HeaderIndex - classDef.StartIndex + 1;
                                     if (classDefStart.IsValid && classDefEnd.IsValid) {
                                         var classSpan = GetFinalSpan(snapshot,
