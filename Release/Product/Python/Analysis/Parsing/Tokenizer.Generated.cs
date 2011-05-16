@@ -115,19 +115,25 @@ namespace Microsoft.PythonTools.Parsing {
                     _state.ParenLevel++;
                     return Tokens.LeftParenthesisToken;
                 case ')':
-                    _state.ParenLevel--;
+                    if (_state.ParenLevel != 0) {
+                        _state.ParenLevel--;
+                    }
                     return Tokens.RightParenthesisToken;
                 case '[':
                     _state.BracketLevel++;
                     return Tokens.LeftBracketToken;
                 case ']':
-                    _state.BracketLevel--;
+                    if (_state.BracketLevel != 0) {
+                        _state.BracketLevel--;
+                    }
                     return Tokens.RightBracketToken;
                 case '{':
                     _state.BraceLevel++;
                     return Tokens.LeftBraceToken;
                 case '}':
-                    _state.BraceLevel--;
+                    if (_state.BraceLevel != 0) {
+                        _state.BraceLevel--;
+                    }
                     return Tokens.RightBraceToken;
                 case ',':
                     return Tokens.CommaToken;

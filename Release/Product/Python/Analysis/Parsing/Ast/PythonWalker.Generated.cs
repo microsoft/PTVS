@@ -266,6 +266,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public virtual bool Walk(TryStatementHandler node) { return true; }
         public virtual void PostWalk(TryStatementHandler node) { }
 
+        // ErrorStatement
+        public virtual bool Walk(ErrorStatement node) { return true; }
+        public virtual void PostWalk(ErrorStatement node) { }
+
+        // DecoratorStatement
+        public virtual bool Walk(DecoratorStatement node) { return true; }
+        public virtual void PostWalk(DecoratorStatement node) { }
+
         // *** END GENERATED CODE ***
 
         #endregion
@@ -520,6 +528,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // TryStatementHandler
         public override bool Walk(TryStatementHandler node) { return false; }
         public override void PostWalk(TryStatementHandler node) { }
+
+        // ErrorStatement
+        public override bool Walk(ErrorStatement node) { return false; }
+        public override void PostWalk(ErrorStatement node) { }
+
+        // DecoratorStatement
+        public override bool Walk(DecoratorStatement node) { return false; }
+        public override void PostWalk(DecoratorStatement node) { }
 
         // *** END GENERATED CODE ***
 

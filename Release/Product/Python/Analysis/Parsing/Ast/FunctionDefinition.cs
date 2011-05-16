@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private readonly string/*!*/ _name;
         private readonly Parameter[] _parameters;
         private Expression _returnAnnotation;
-        private IList<Expression> _decorators;
+        private DecoratorStatement _decorators;
         private bool _generator;                        // The function is a generator
         private bool _isLambda;
 
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _name; }
         }
 
-        public IList<Expression> Decorators {
+        public DecoratorStatement Decorators {
             get { return _decorators; }
             internal set { _decorators = value; }
         }
@@ -206,9 +206,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     }
                 }
                 if (_decorators != null) {
-                    foreach (Expression decorator in _decorators) {
-                        decorator.Walk(walker);
-                    }
+                    _decorators.Walk(walker);
                 }
                 if (_body != null) {
                     _body.Walk(walker);
@@ -224,37 +222,39 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
             var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
             if (Decorators != null) {
-                
-                for (int i = 0, curWhiteSpace = 0; i < Decorators.Count; i++) {
-                    if (decorateWhiteSpace != null) {
-                        res.Append(decorateWhiteSpace[curWhiteSpace++]);
-                    }
-                    res.Append('@');
-                    Decorators[i].AppendCodeString(res, ast);
-                    if (decorateWhiteSpace != null) {
-                        res.Append(decorateWhiteSpace[curWhiteSpace++]);
-                    } else {
-                        res.Append(Environment.NewLine);
-                    }
-                }
+                Decorators.AppendCodeString(res, ast);
             }
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("def");
-            res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append(this.GetVerbatimImage(ast) ?? Name);
-            res.Append(this.GetThirdWhiteSpace(ast));
-            res.Append('(');
-            var commaWhiteSpace = this.GetListWhiteSpace(ast);
-            ParamsToString(res, ast, commaWhiteSpace);
+            var name = this.GetVerbatimImage(ast) ?? Name;
+            if (!String.IsNullOrEmpty(name)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(name);
+                if (!this.IsIncompleteNode(ast)) {
+                    res.Append(this.GetThirdWhiteSpace(ast));
+                    res.Append('(');
+                    var commaWhiteSpace = this.GetListWhiteSpace(ast);
+                    ParamsToString(res, ast, commaWhiteSpace);
 
-            res.Append(this.GetFourthWhiteSpace(ast));
-            res.Append(')');
-            if (ReturnAnnotation != null) {
-                res.Append(this.GetFifthWhiteSpace(ast));
-                res.Append("->");
-                _returnAnnotation.AppendCodeString(res, ast);
+                    string namedOnly = this.GetExtraVerbatimText(ast);
+                    if (namedOnly != null) {
+                        res.Append(namedOnly);
+                    }
+
+                    if (!this.IsMissingCloseGrouping(ast)) {
+                        res.Append(this.GetFourthWhiteSpace(ast));
+                        res.Append(')');
+                    }
+                    if (ReturnAnnotation != null) {
+                        res.Append(this.GetFifthWhiteSpace(ast));
+                        res.Append("->");
+                        _returnAnnotation.AppendCodeString(res, ast);
+                    }
+                    if (Body != null) {
+                        Body.AppendCodeString(res, ast);
+                    }
+                }
             }
-            Body.AppendCodeString(res, ast);
         }
 
         internal void ParamsToString(StringBuilder res, PythonAst ast, string[] commaWhiteSpace) {

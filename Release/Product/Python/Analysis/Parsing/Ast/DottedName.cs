@@ -48,17 +48,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
             var whitespace = this.GetNamesWhiteSpace(ast);
+            var verbatimNames = this.GetVerbatimNames(ast);
             for (int i = 0, whitespaceIndex = 0; i < _names.Length; i++) {
                 if (whitespace != null) {
                     res.Append(whitespace[whitespaceIndex++]);
                 }
                 if (i != 0) {
                     res.Append('.');
-                    if (whitespaceIndex != null) {
+                    if (whitespace != null) {
                         res.Append(whitespace[whitespaceIndex++]);
                     }
                 }
-                res.Append(_names[i]);
+                res.Append(verbatimNames != null ? (verbatimNames[i] ?? _names[i]) : _names[i]);
             }
         }
     }

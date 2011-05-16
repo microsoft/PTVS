@@ -73,7 +73,6 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -107,45 +106,20 @@ namespace AnalysisTest {
                 new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
                 new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
                 new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ')'", 1047, 111, 13, 1048, 111, 14),
-                new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
-                new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
-                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
-                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
-                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
-                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
-                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
-                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
-                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
-                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
-                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
-                new ErrorInfo("unexpected token 'abc'", 1404, 147, 8, 1409, 147, 13),
+                new ErrorInfo("invalid syntax", 1404, 147, 8, 1409, 147, 13),
                 new ErrorInfo("unexpected token 'b'", 1417, 148, 7, 1418, 148, 8),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1436, 150, 2, 1441, 150, 7),
-                new ErrorInfo("unexpected token '42'", 1442, 150, 8, 1444, 150, 10),
+                new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -163,7 +137,6 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -197,45 +170,20 @@ namespace AnalysisTest {
                 new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
                 new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
                 new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ')'", 1047, 111, 13, 1048, 111, 14),
-                new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
-                new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
-                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
-                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
-                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
-                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
-                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
-                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
-                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
-                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
-                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
-                new ErrorInfo("unexpected token 'abc'", 1404, 147, 8, 1409, 147, 13),
+                new ErrorInfo("invalid syntax", 1404, 147, 8, 1409, 147, 13),
                 new ErrorInfo("unexpected token 'b'", 1417, 148, 7, 1418, 148, 8),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1436, 150, 2, 1441, 150, 7),
-                new ErrorInfo("unexpected token '42'", 1442, 150, 8, 1444, 150, 10),
+                new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -253,7 +201,6 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -286,40 +233,16 @@ namespace AnalysisTest {
                 new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
                 new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
                 new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ')'", 1047, 111, 13, 1048, 111, 14),
-                new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
-                new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
-                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
-                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
-                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
-                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
-                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
-                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
-                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
-                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
-                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -337,7 +260,6 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -370,40 +292,16 @@ namespace AnalysisTest {
                 new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
                 new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
                 new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ','", 1045, 111, 11, 1046, 111, 12),
-                new ErrorInfo("unexpected token ')'", 1047, 111, 13, 1048, 111, 14),
-                new ErrorInfo("unexpected token ':'", 1048, 111, 14, 1049, 111, 15),
-                new ErrorInfo("unexpected indent", 1055, 112, 5, 1059, 112, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1061, 113, 1, 1063, 114, 1),
-                new ErrorInfo("unexpected token 'def'", 1063, 114, 1, 1066, 114, 4),
-                new ErrorInfo("unexpected token ':'", 1082, 114, 20, 1083, 114, 21),
-                new ErrorInfo("unexpected indent", 1089, 115, 5, 1093, 115, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1095, 116, 1, 1097, 117, 1),
-                new ErrorInfo("unexpected token 'def'", 1097, 117, 1, 1100, 117, 4),
-                new ErrorInfo("unexpected token ':'", 1117, 117, 21, 1118, 117, 22),
-                new ErrorInfo("unexpected indent", 1124, 118, 5, 1128, 118, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1130, 119, 1, 1132, 120, 1),
-                new ErrorInfo("unexpected token 'def'", 1132, 120, 1, 1135, 120, 4),
-                new ErrorInfo("unexpected token ':'", 1147, 120, 16, 1148, 120, 17),
-                new ErrorInfo("unexpected indent", 1154, 121, 5, 1158, 121, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1160, 122, 1, 1162, 123, 1),
-                new ErrorInfo("unexpected token 'def'", 1162, 123, 1, 1165, 123, 4),
-                new ErrorInfo("unexpected token ':'", 1185, 123, 24, 1186, 123, 25),
-                new ErrorInfo("unexpected indent", 1192, 124, 5, 1196, 124, 9),
-                new ErrorInfo("unexpected token '<NL>'", 1198, 125, 1, 1200, 126, 1),
-                new ErrorInfo("unexpected token '<NL>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '<dedent>'", 1200, 126, 1, 1202, 127, 1),
-                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
+                new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
             );
@@ -422,8 +320,7 @@ namespace AnalysisTest {
                     new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                     new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                     new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 223, 17, 17),
-                    new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
                     new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                     new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                     new ErrorInfo("'continue' not supported inside 'finally' clause", 374, 34, 9, 382, 34, 17),
@@ -453,23 +350,23 @@ namespace AnalysisTest {
                     new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
                     new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
                     new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1048, 111, 14),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1078, 114, 16),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1077, 114, 15),
                     new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1113, 117, 17),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1112, 117, 16),
                     new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                     new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1181, 123, 20),
-                    new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
                     new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
                     new ErrorInfo("cannot mix bytes and nonbytes literals", 1404, 147, 8, 1409, 147, 13),
                     new ErrorInfo("cannot mix bytes and nonbytes literals", 1417, 148, 7, 1423, 148, 13),
                     new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                    new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                    new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                     new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                     new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                     new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
-                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                     new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                     new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
                 );
@@ -628,9 +525,8 @@ namespace AnalysisTest {
                 ParseErrors("Keywords25.py",
                     version,
                     new ErrorInfo("unexpected token '='", 5, 1, 6, 6, 1, 7),
-                    new ErrorInfo("unexpected token '='", 5, 1, 6, 6, 1, 7),
-                    new ErrorInfo("unexpected token '='", 5, 1, 6, 6, 1, 7),
-                    new ErrorInfo("unexpected token '1'", 7, 1, 8, 8, 1, 9),
+                    new ErrorInfo("invalid syntax", 7, 1, 8, 8, 1, 9),
+                    new ErrorInfo("unexpected token '<newline>'", 8, 1, 9, 10, 2, 1),
                     new ErrorInfo("unexpected token 'as'", 10, 2, 1, 12, 2, 3),
                     new ErrorInfo("can't assign to ErrorExpression", 10, 2, 1, 12, 2, 3)
                 );
@@ -730,7 +626,8 @@ namespace AnalysisTest {
             
             foreach (var version in V3Versions) {
                 ParseErrors("BinaryOperatorsV2.py", version, new[] { 
-                    new ErrorInfo("unexpected token '>'", 3, 1, 4, 4, 1, 5)
+                    new ErrorInfo("unexpected token '>'", 3, 1, 4, 4, 1, 5),
+                    new ErrorInfo("invalid syntax", 5, 1, 6, 6, 1, 7)
                 });
             }
         }
@@ -951,6 +848,18 @@ namespace AnalysisTest {
                         CheckDelStmt(CheckTupleExpr(Foo, Bar)),
                         CheckDelStmt(CheckListExpr(Foo, Bar)),
                         CheckDelStmt(CheckParenExpr(Foo))
+                    )
+                );
+            }
+        }
+
+        [TestMethod]
+        public void IndexExpr() {
+            foreach (var version in AllVersions) {
+                CheckAst(
+                    ParseFile("IndexExpr.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckExprStmt(CheckIndexExpression(Foo, CheckConstant(.2)))
                     )
                 );
             }
@@ -1287,16 +1196,12 @@ namespace AnalysisTest {
                     "PrintStmt.py", version,
                     new ErrorInfo("invalid syntax", 13, 2, 7, 14, 2, 8),
                     new ErrorInfo("invalid syntax", 22, 3, 7, 23, 3, 8),
-                    new ErrorInfo("unexpected token ','", 23, 3, 8, 24, 3, 9),
                     new ErrorInfo("invalid syntax", 32, 4, 7, 33, 4, 8),
-                    new ErrorInfo("unexpected token ','", 33, 4, 8, 34, 4, 9),
                     new ErrorInfo("invalid syntax", 44, 5, 7, 45, 5, 8),
-                    new ErrorInfo("unexpected token ','", 45, 5, 8, 46, 5, 9),
                     new ErrorInfo("invalid syntax", 110, 9, 7, 111, 9, 8),
-                    new ErrorInfo("unexpected token '=='", 112, 9, 9, 114, 9, 11),
                     new ErrorInfo("unexpected token 'lambda'", 124, 10, 7, 130, 10, 13),
                     new ErrorInfo("unexpected token ':'", 130, 10, 13, 131, 10, 14),
-                    new ErrorInfo("unexpected token '1'", 132, 10, 15, 133, 10, 16)
+                    new ErrorInfo("invalid syntax", 132, 10, 15, 133, 10, 16)
                 );
             }
         }
@@ -1573,6 +1478,7 @@ namespace AnalysisTest {
                 CheckAst(
                     ParseFile("DecoratorsIllegal.py", ErrorSink.Null, version),
                     CheckSuite(
+                        CheckErrorStmt(),
                         CheckAssignment(Foo, One)
                     )
                 );
@@ -1673,7 +1579,7 @@ namespace AnalysisTest {
 
             foreach (var version in V3Versions) {
                 ParseErrors("FuncDefV2.py", version,
-                    new ErrorInfo("sublist parameters are not supported in 3.x", 9, 1, 10, 15, 1, 16)
+                    new ErrorInfo("sublist parameters are not supported in 3.x",  9, 1, 10, 14, 1, 15)
                 );
             }
         }
@@ -1715,14 +1621,16 @@ namespace AnalysisTest {
                     new ErrorInfo("invalid syntax, parameter annotations require 3.x", 127, 7, 22, 129, 7, 24),
                     new ErrorInfo("unexpected token '-'", 151, 9, 9, 152, 9, 10),
                     new ErrorInfo("unexpected token '>'", 152, 9, 10, 153, 9, 11),
+                    new ErrorInfo("invalid syntax", 154, 9, 12, 155, 9, 13),
                     new ErrorInfo("unexpected token ':'", 155, 9, 13, 156, 9, 14),
                     new ErrorInfo("invalid syntax, parameter annotations require 3.x", 172, 11, 8, 175, 11, 11),
                     new ErrorInfo("unexpected token '-'", 177, 11, 13, 178, 11, 14),
                     new ErrorInfo("unexpected token '>'", 178, 11, 14, 179, 11, 15),
+                    new ErrorInfo("invalid syntax", 180, 11, 16, 181, 11, 17),
                     new ErrorInfo("unexpected token ':'", 181, 11, 17, 182, 11, 18),
                     new ErrorInfo("invalid syntax, parameter annotations require 3.x", 198, 13, 8, 201, 13, 11),
                     new ErrorInfo("unexpected token ','", 223, 15, 8, 224, 15, 9),
-                    new ErrorInfo("unexpected token ','", 223, 15, 8, 224, 15, 9),
+                    new ErrorInfo("unexpected token 'a'", 225, 15, 10, 226, 15, 11),
                     new ErrorInfo("unexpected token 'a'", 225, 15, 10, 226, 15, 11),
                     new ErrorInfo("unexpected token ')'", 226, 15, 11, 227, 15, 12),
                     new ErrorInfo("unexpected token ':'", 227, 15, 12, 228, 15, 13)
@@ -1734,7 +1642,6 @@ namespace AnalysisTest {
         public void FuncDefV3Illegal() {
             foreach (var version in V3Versions) {
                 ParseErrors("FuncDefV3Illegal.py", version,
-                    new ErrorInfo("unexpected token ')'", 7, 1, 8, 8, 1, 9),
                     new ErrorInfo("unexpected token ')'", 7, 1, 8, 8, 1, 9),
                     new ErrorInfo("unexpected token ':'", 8, 1, 9, 9, 1, 10),
                     new ErrorInfo("named arguments must follow bare *", 22, 2, 7, 26, 2, 11)
@@ -1750,7 +1657,18 @@ namespace AnalysisTest {
                     CheckSuite(
                         CheckClassDef("C", CheckSuite(Pass)),
                         CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("object") }),
-                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("list"), CheckArg("object") })
+                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("list"), CheckArg("object") }),
+                        CheckClassDef("C", 
+                            CheckSuite(
+                                CheckClassDef("_C__D", 
+                                    CheckSuite(
+                                        CheckClassDef("_D__E", 
+                                            CheckSuite(Pass)
+                                        )
+                                    )
+                                )
+                            )
+                        )
                     )
                 );
             }
@@ -1773,22 +1691,19 @@ namespace AnalysisTest {
                 ParseErrors("ClassDef3x.py", version,
                     new ErrorInfo("unexpected token '='", 17, 1, 18, 18, 1, 19),
                     new ErrorInfo("unexpected token '='", 17, 1, 18, 18, 1, 19),
-                    new ErrorInfo("unexpected token '='", 17, 1, 18, 18, 1, 19),
-                    new ErrorInfo("unexpected token '1'", 18, 1, 19, 19, 1, 20),
                     new ErrorInfo("unexpected token ')'", 19, 1, 20, 20, 1, 21),
                     new ErrorInfo("unexpected token ':'", 20, 1, 21, 21, 1, 22),
+                    new ErrorInfo("unexpected token 'pass'", 22, 1, 23, 26, 1, 27),
                     new ErrorInfo("unexpected token '='", 53, 2, 26, 54, 2, 27),
                     new ErrorInfo("unexpected token '='", 53, 2, 26, 54, 2, 27),
-                    new ErrorInfo("unexpected token '='", 53, 2, 26, 54, 2, 27),
-                    new ErrorInfo("unexpected token '1'", 54, 2, 27, 55, 2, 28),
                     new ErrorInfo("unexpected token ')'", 55, 2, 28, 56, 2, 29),
                     new ErrorInfo("unexpected token ':'", 56, 2, 29, 57, 2, 30),
+                    new ErrorInfo("unexpected token 'pass'", 58, 2, 31, 62, 2, 35),
                     new ErrorInfo("unexpected token '='", 89, 3, 26, 90, 3, 27),
                     new ErrorInfo("unexpected token '='", 89, 3, 26, 90, 3, 27),
-                    new ErrorInfo("unexpected token '='", 89, 3, 26, 90, 3, 27),
-                    new ErrorInfo("unexpected token '1'", 90, 3, 27, 91, 3, 28),
                     new ErrorInfo("unexpected token ')'", 91, 3, 28, 92, 3, 29),
-                    new ErrorInfo("unexpected token ':'", 92, 3, 29, 93, 3, 30)
+                    new ErrorInfo("unexpected token ':'", 92, 3, 29, 93, 3, 30),
+                    new ErrorInfo("unexpected token 'pass'", 94, 3, 31, 98, 3, 35)
                 );
             }
         }
@@ -1847,9 +1762,9 @@ namespace AnalysisTest {
 
             ParseErrors("AssignStmt25.py", PythonLanguageVersion.V24,
                 new ErrorInfo("unexpected token 'yield'", 20, 2, 11, 25, 2, 16),
-                new ErrorInfo("unexpected token 'yield'", 20, 2, 11, 25, 2, 16),
+                new ErrorInfo("invalid syntax", 26, 2, 17, 27, 2, 18),
                 new ErrorInfo("unexpected token 'yield'", 40, 3, 12, 45, 3, 17),
-                new ErrorInfo("unexpected token 'yield'", 40, 3, 12, 45, 3, 17)
+                new ErrorInfo("invalid syntax", 46, 3, 18, 47, 3, 19)
             );
         }
         
@@ -1974,11 +1889,9 @@ namespace AnalysisTest {
             foreach (var version in V2Versions) {
                 ParseErrors("Ellipsis.py", version,
                     new ErrorInfo("unexpected token '.'", 4, 1, 5, 5, 1, 6),
-                    new ErrorInfo("syntax error", 5, 1, 6, 6, 1, 7),
                     new ErrorInfo("syntax error", 6, 1, 7, 7, 1, 8),
                     new ErrorInfo("syntax error", 7, 1, 8, 8, 1, 9),
                     new ErrorInfo("unexpected token '.'", 14, 2, 5, 15, 2, 6),
-                    new ErrorInfo("syntax error", 15, 2, 6, 16, 2, 7),
                     new ErrorInfo("syntax error", 16, 2, 7, 17, 2, 8),
                     new ErrorInfo("syntax error", 17, 2, 8, 19, 3, 1)
                 );
@@ -2472,11 +2385,11 @@ namespace AnalysisTest {
             };
         }
 
-        private static void CheckDecorators(Action<Expression>[] decorators, IList<Expression> foundDecorators) {
+        private static void CheckDecorators(Action<Expression>[] decorators, DecoratorStatement foundDecorators) {
             if (decorators != null) {
-                Assert.AreEqual(decorators.Length, foundDecorators.Count);
+                Assert.AreEqual(decorators.Length, foundDecorators.Decorators.Count);
                 for (int i = 0; i < decorators.Length; i++) {
-                    decorators[i](foundDecorators[i]);
+                    decorators[i](foundDecorators.Decorators[i]);
                 }
             } else {
                 Assert.AreEqual(null, foundDecorators);
@@ -2777,6 +2690,12 @@ namespace AnalysisTest {
                     lhs[i](assign.Left[i]);
                 }
                 rhs(assign.Right);
+            };
+        }
+
+        private static Action<Statement> CheckErrorStmt() {
+            return expr => {
+                Assert.AreEqual(typeof(ErrorStatement), expr.GetType());
             };
         }
 

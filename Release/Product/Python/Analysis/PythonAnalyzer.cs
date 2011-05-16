@@ -183,8 +183,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <returns></returns>
         public MemberResult[] GetModuleMembers(IModuleContext moduleContext, string[] names, bool includeMembers = false) {
-            IDictionary<string, ISet<Namespace>> d = null;
-
             ModuleReference moduleRef;
             if (Modules.TryGetValue(names[0], out moduleRef) && moduleRef.Module != null) {
                 var module = moduleRef.Module as IModule;

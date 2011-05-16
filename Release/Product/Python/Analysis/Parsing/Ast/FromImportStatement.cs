@@ -27,6 +27,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         private PythonVariable[] _variables;
 
+        public FromImportStatement(ModuleName root, string/*!*/[] names, string[] asNames, bool fromFuture, bool forceAbsolute) {
+            _root = root;
+            _names = names;
+            _asNames = asNames;
+            _fromFuture = fromFuture;
+            _forceAbsolute = forceAbsolute;
+        }
+
         internal static string/*!*/[]/*!*/ Star {
             get { return FromImportStatement._star; }
         }
@@ -52,14 +60,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _variables = value; }
         }
 
-        public FromImportStatement(ModuleName root, string/*!*/[] names, string[] asNames, bool fromFuture, bool forceAbsolute) {
-            _root = root;
-            _names = names;
-            _asNames = asNames;
-            _fromFuture = fromFuture;
-            _forceAbsolute = forceAbsolute;
-        }
-
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
             }
@@ -70,49 +70,60 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("from");
             Root.AppendCodeString(res, ast);
-            res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append("import");
-            if (!this.IsAltForm(ast)) {
-                res.Append(this.GetThirdWhiteSpace(ast));
-                res.Append('(');
-            }
 
-            var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
-            int asIndex = 0;
-            for (int i = 0; i < _names.Length; i++) {
-                if (i > 0) {
+            if (!this.IsIncompleteNode(ast)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append("import");
+                if (!this.IsAltForm(ast)) {
+                    res.Append(this.GetThirdWhiteSpace(ast));
+                    res.Append('(');
+                }
+
+                var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
+                var verbatimNames = this.GetVerbatimNames(ast);
+                int asIndex = 0;
+                for (int i = 0, verbatimIndex = 0; i < _names.Length; i++) {
+                    if (i > 0) {
+                        if (asNameWhiteSpace != null) {
+                            res.Append(asNameWhiteSpace[asIndex++]);
+                        }
+                        res.Append(',');
+                    }
+
                     if (asNameWhiteSpace != null) {
                         res.Append(asNameWhiteSpace[asIndex++]);
                     }
-                    res.Append(',');
-                }
-                
-                if (asNameWhiteSpace != null) {
-                    res.Append(asNameWhiteSpace[asIndex++]);
-                }
 
-                res.Append(_names[i]);
-                if (AsNames != null && AsNames[i] != null) {
-                    if (asNameWhiteSpace != null) {
-                        res.Append(asNameWhiteSpace[asIndex++]);
+                    res.Append(verbatimNames != null ? (verbatimNames[verbatimIndex++] ?? _names[i]) : _names[i]);
+                    if (AsNames != null && AsNames[i] != null) {
+                        if (asNameWhiteSpace != null) {
+                            res.Append(asNameWhiteSpace[asIndex++]);
+                        }
+                        res.Append("as");
+                        string asName = verbatimNames != null ? (verbatimNames[verbatimIndex++] ?? _asNames[i]) : _asNames[i];
+                        if (asName.Length != 0) {
+                            if (asNameWhiteSpace != null) {
+                                res.Append(asNameWhiteSpace[asIndex++]);
+                            }
+                            res.Append(asName);
+                        } else {
+                            asIndex++;
+                        }
+                    } else {
+                        verbatimIndex++;
                     }
-                    res.Append("as");
-                    if (asNameWhiteSpace != null) {
-                        res.Append(asNameWhiteSpace[asIndex++]);
-                    }
-                    res.Append(_asNames[i]);
                 }
-            }
 
-            if (asIndex < asNameWhiteSpace.Length) {
-                // trailing comma
-                res.Append(asNameWhiteSpace[asNameWhiteSpace.Length - 1]);
-                res.Append(",");
-            }
+                if (asIndex < asNameWhiteSpace.Length) {
+                    // trailing comma
+                    res.Append(asNameWhiteSpace[asNameWhiteSpace.Length - 1]);
+                    res.Append(",");
+                }
 
-            if (!this.IsAltForm(ast)) {
-                res.Append(this.GetFourthWhiteSpace(ast));
-                res.Append(')');
+                if (!this.IsAltForm(ast) && !this.IsMissingCloseGrouping(ast)) {
+                    res.Append(this.GetFourthWhiteSpace(ast));
+                    res.Append(')');
+                }
             }
         }
     }

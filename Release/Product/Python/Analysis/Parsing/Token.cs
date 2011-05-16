@@ -78,10 +78,12 @@ namespace Microsoft.PythonTools.Parsing {
 
     internal class ErrorToken : Token {
         private readonly String _message;
+        private readonly string _verbatim;
 
-        public ErrorToken(String message)
+        public ErrorToken(String message, string verbatim)
             : base(TokenKind.Error) {
             _message = message;
+            _verbatim = verbatim;
         }
 
         public String Message {
@@ -95,13 +97,19 @@ namespace Microsoft.PythonTools.Parsing {
         public override object Value {
             get { return _message; }
         }
+
+        public override string VerbatimImage {
+            get {
+                return _verbatim;
+            }
+        }
     }
 
     internal class IncompleteStringErrorToken : ErrorToken {
         private readonly string _value;
 
         public IncompleteStringErrorToken(string message, string value)
-            : base(message) {
+            : base(message, value) {
             _value = value;
         }
 
@@ -265,25 +273,10 @@ namespace Microsoft.PythonTools.Parsing {
         }
     }
 
-    internal class NewlineToken : SymbolToken {
+    internal class VerbatimToken : SymbolToken {
         private readonly string _verbatimImage;
 
-        public NewlineToken(TokenKind kind, string verbatimImage, string image)
-            : base(kind, image) {
-            _verbatimImage = verbatimImage;
-        }
-
-        public override string VerbatimImage {
-            get {
-                return _verbatimImage;
-            }
-        }
-    }
-
-    internal class ExplicitLineJoinToken : SymbolToken {
-        private readonly string _verbatimImage;
-
-        public ExplicitLineJoinToken(TokenKind kind, string verbatimImage, string image)
+        public VerbatimToken(TokenKind kind, string verbatimImage, string image)
             : base(kind, image) {
             _verbatimImage = verbatimImage;
         }

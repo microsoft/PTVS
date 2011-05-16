@@ -58,6 +58,9 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="GetMemberOptions.cs" />
     <Compile Include="Parsing\AsciiString.cs" />
+    <Compile Include="Parsing\Ast\DecoratorStatement.cs" />
+    <Compile Include="Parsing\Ast\ErrorStatement.cs" />
+    <Compile Include="Parsing\Ast\ErrorParameter.cs" />
     <Compile Include="Parsing\Ast\NodeAttributes.cs" />
     <Compile Include="Parsing\ParserOptions.cs" />
     <Compile Include="Parsing\PythonAsciiEncoding.cs" />

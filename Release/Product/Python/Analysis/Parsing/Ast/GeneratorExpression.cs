@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (this.IsAltForm(ast)) {
                 this.AppendCodeString(res, ast, "", "", _item);
             } else {
-                this.AppendCodeString(res, ast, "(", ")", _item);
+                this.AppendCodeString(res, ast, "(", this.IsMissingCloseGrouping(ast) ? "" : ")", _item);
             }
         }
     }

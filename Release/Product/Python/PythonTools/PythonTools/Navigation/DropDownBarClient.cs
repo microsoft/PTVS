@@ -420,8 +420,8 @@ namespace Microsoft.PythonTools.Navigation {
 
             private static ImageListKind GetImageListKind(FunctionDefinition funcDef) {
                 ImageListKind imageKind = ImageListKind.Method;
-                if (funcDef.Decorators != null && funcDef.Decorators.Count == 1) {
-                    foreach (var decorator in funcDef.Decorators) {
+                if (funcDef.Decorators != null && funcDef.Decorators.Decorators.Count == 1) {
+                    foreach (var decorator in funcDef.Decorators.Decorators) {
                         NameExpression nameExpr = decorator as NameExpression;
                         if (nameExpr != null) {
                             if (nameExpr.Name == "property") {

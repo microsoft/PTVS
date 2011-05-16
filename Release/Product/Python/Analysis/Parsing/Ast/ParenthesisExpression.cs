@@ -49,8 +49,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append('(');
             _expression.AppendCodeString(res, ast);
-            res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append(')');
+            if (!this.IsMissingCloseGrouping(ast)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(')');
+            }
         }
     }
 }

@@ -54,6 +54,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append("yield");
             if (!this.IsAltForm(ast)) {
                 _expression.AppendCodeString(res, ast);
+                var itemWhiteSpace = this.GetListWhiteSpace(ast);
+                if (itemWhiteSpace != null) {
+                    res.Append(",");
+                    res.Append(itemWhiteSpace[0]);
+                }
             }
         }
     }

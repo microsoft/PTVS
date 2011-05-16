@@ -71,6 +71,23 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// </summary>
         public static readonly object IsAltFormValue = new object();
 
+        /// <summary>
+        /// Provides an array of strings which are used for verbatim names when multiple names are
+        /// involved (e.g. del, global, import, etc...)
+        /// </summary>
+        public static readonly object VerbatimNames = new object();
+
+        /// <summary>
+        /// The node is missing a closing grouping (close paren, close brace, close bracket).
+        /// </summary>
+        public static readonly object ErrorMissingCloseGrouping = new object();
+
+        /// <summary>
+        /// The node is incomplete.  Where the node ends is on a node-by-node basis but it's
+        /// well defined for each individual node.
+        /// </summary>
+        public static readonly object ErrorIncompleteNode = new object();
+
 
         public static string GetProceedingWhiteSpace(this Node node, PythonAst ast) {
             return GetWhiteSpace(node, ast, NodeAttributes.PreceedingWhiteSpace);
@@ -126,6 +143,24 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        public static bool IsMissingCloseGrouping(this Node node, PythonAst ast) {
+            object dummy;
+            if (ast.TryGetAttribute(node, NodeAttributes.ErrorMissingCloseGrouping, out dummy)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        public static bool IsIncompleteNode(this Node node, PythonAst ast) {
+            object dummy;
+            if (ast.TryGetAttribute(node, NodeAttributes.ErrorIncompleteNode, out dummy)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
         public static string[] GetListWhiteSpace(this Node node, PythonAst ast) {
             object whitespace;
             if (ast.TryGetAttribute(node, NodeAttributes.ListWhiteSpace, out whitespace)) {
@@ -139,6 +174,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             object whitespace;
             if (ast.TryGetAttribute(node, NodeAttributes.NamesWhiteSpace, out whitespace)) {
                 return (string[])whitespace;
+            } else {
+                return null;
+            }
+        }
+
+        public static string[] GetVerbatimNames(this Node node, PythonAst ast) {
+            object names;
+            if (ast.TryGetAttribute(node, NodeAttributes.VerbatimNames, out names)) {
+                return (string[])names;
             } else {
                 return null;
             }

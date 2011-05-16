@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var function = new FunctionInfo(unit);
 
                 if (node.Decorators != null) {
-                    foreach (var d in node.Decorators) {
+                    foreach (var d in node.Decorators.Decorators) {
                         NameExpression ne = d as NameExpression;
                         if (ne != null) {
                             if (ne.Name == "property") {

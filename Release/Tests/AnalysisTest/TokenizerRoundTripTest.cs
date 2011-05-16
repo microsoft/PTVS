@@ -51,43 +51,69 @@ namespace AnalysisTest {
             }
         }
 
+        [TestMethod]
+        public void BinaryTest() {
+            var filename = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.System), "kernel32.dll");
+            TestOneFile(filename, PythonLanguageVersion.V27, TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
+            TestOneFile(filename, PythonLanguageVersion.V27, TokenizerOptions.Verbatim);
+        }
+
+        [TestMethod]
+        public void TestErrors() {
+            TestOneString(PythonLanguageVersion.V27, TokenizerOptions.Verbatim, "http://xkcd.com/353/\")");
+            TestOneString(PythonLanguageVersion.V27, TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins, "http://xkcd.com/353/\")");
+            TestOneString(PythonLanguageVersion.V27, TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins, "lambda, U+039B");
+            TestOneString(PythonLanguageVersion.V27, TokenizerOptions.Verbatim, "lambda, U+039B");
+        }
+
         private static void TestOneFile(string filename, PythonLanguageVersion version, TokenizerOptions optionSet) {
-            StringBuilder output = new StringBuilder();
-            
-            var tokenizer = new Tokenizer(version, options: optionSet);
             var originalText = File.ReadAllText(filename);
+
+            TestOneString(version, optionSet, originalText);
+        }
+
+        private static void TestOneString(PythonLanguageVersion version, TokenizerOptions optionSet, string originalText) {
+            StringBuilder output = new StringBuilder();
+
+            var tokenizer = new Tokenizer(version, options: optionSet);
             tokenizer.Initialize(new StringReader(originalText));
             Token token;
+            int prevOffset = 0;
+
             while ((token = tokenizer.GetNextToken()) != Tokens.EndOfFileToken) {
                 output.Append(tokenizer.PreceedingWhiteSpace);
                 output.Append(token.VerbatimImage);
-            }
 
-            const int contextSize = 50;
-            for (int i = 0; i < originalText.Length && i < output.Length; i++) {
-                if (originalText[i] != output[i]) {
-                    // output some context
-                    StringBuilder x = new StringBuilder();
-                    StringBuilder y = new StringBuilder();
-                    StringBuilder z = new StringBuilder();
-                    for (int j = Math.Max(0, i - contextSize); j < Math.Min(Math.Min(originalText.Length, output.Length), i + contextSize); j++) {
-                        x.AppendRepr(originalText[j]);
-                        y.AppendRepr(output[j]);
-                        if (j == i) {
-                            z.Append("^");
-                        } else {
-                            z.Append(" ");
+                const int contextSize = 50;
+                for (int i = prevOffset; i < originalText.Length && i < output.Length; i++) {
+                    if (originalText[i] != output[i]) {
+                        // output some context
+                        StringBuilder x = new StringBuilder();
+                        StringBuilder y = new StringBuilder();
+                        StringBuilder z = new StringBuilder();
+                        for (int j = Math.Max(0, i - contextSize); j < Math.Min(Math.Min(originalText.Length, output.Length), i + contextSize); j++) {
+                            x.AppendRepr(originalText[j]);
+                            y.AppendRepr(output[j]);
+                            if (j == i) {
+                                z.Append("^");
+                            } else {
+                                z.Append(" ");
+                            }
                         }
+
+                        Console.WriteLine("Mismatch context at {0}:", i);
+                        Console.WriteLine("Original: {0}", x.ToString());
+                        Console.WriteLine("New     : {0}", y.ToString());
+                        Console.WriteLine("Differs : {0}", z.ToString());
+                        Console.WriteLine("Token   : {0}", token);
+
+                        Assert.AreEqual(originalText[i], output[i], String.Format("Characters differ at {0}, got {1}, expected {2}", i, output[i], originalText[i]));
                     }
-
-                    Console.WriteLine("Mismatch context at {0}:", i);
-                    Console.WriteLine("Original: {0}", x.ToString());
-                    Console.WriteLine("New     : {0}", y.ToString());
-                    Console.WriteLine("Differs : {0}", z.ToString());
-
-                    Assert.AreEqual(originalText[i], output[i], String.Format("Characters differ at {0}, got {1}, expected {2}", i, output[i], originalText[i]));
                 }
+
+                prevOffset = output.Length;
             }
+            output.Append(tokenizer.PreceedingWhiteSpace);
 
             Assert.AreEqual(originalText.Length, output.Length);
         }
@@ -102,6 +128,7 @@ namespace AnalysisTest {
                 case '\r': self.Append("¬"); break;
                 case '\n': self.Append("‼"); break;
                 case '\f': self.Append("╢"); break;
+                case (char)0: self.Append(' '); break;
                 default:
                     self.Append(ch); break;
             }

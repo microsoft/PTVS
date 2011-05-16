@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (this.IsAltForm(ast)) {
                 ListExpression.AppendItems(res, ast, "", "", this, Items);
             } else {
-                ListExpression.AppendItems(res, ast, "(", ")", this, Items);
+                ListExpression.AppendItems(res, ast, "(", this.IsMissingCloseGrouping(ast) ? "" : ")", this, Items);
             }
         }
     }

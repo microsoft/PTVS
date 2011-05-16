@@ -55,7 +55,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
             var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
-            for (int i = 0, asIndex = 0; i < _names.Length; i++) {
+            var verbatimNames = this.GetVerbatimNames(ast);
+            for (int i = 0, asIndex = 0; i < _names.Length; i++) {                
                 if (i > 0 && itemWhiteSpace != null) {
                     res.Append(itemWhiteSpace[i - 1]);
                     res.Append(',');
@@ -67,10 +68,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(asNameWhiteSpace[asIndex++]);
                     }
                     res.Append("as");
-                    if (asNameWhiteSpace != null) {
-                        res.Append(asNameWhiteSpace[asIndex++]);
+                    if (AsNames[i].Length != 0) {
+                        if (asNameWhiteSpace != null) {
+                            res.Append(asNameWhiteSpace[asIndex++]);
+                        }
+
+                        res.Append(verbatimNames != null ? (verbatimNames[i] ?? _asNames[i]) : _asNames[i]);
                     }
-                    res.Append(_asNames[i]);
                 }
             }
 

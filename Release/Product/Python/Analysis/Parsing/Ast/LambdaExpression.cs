@@ -42,14 +42,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             var commaWhiteSpace = this.GetListWhiteSpace(ast);
 
             _function.ParamsToString(res, ast, commaWhiteSpace);
-
-            res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append(":");
-            if (_function.Body is ReturnStatement) {
-                ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast);
-            } else {
-                Debug.Assert(_function.Body is ExpressionStatement);
-                ((ExpressionStatement)_function.Body).Expression.AppendCodeString(res, ast);
+            string namedOnlyText = this.GetExtraVerbatimText(ast);
+            if (namedOnlyText != null) {
+                res.Append(namedOnlyText);
+            }
+            if (!this.IsIncompleteNode(ast)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(":");
+                if (_function.Body is ReturnStatement) {
+                    ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast);
+                } else {
+                    Debug.Assert(_function.Body is ExpressionStatement);
+                    ((ExpressionStatement)_function.Body).Expression.AppendCodeString(res, ast);
+                }
             }
         }
     }

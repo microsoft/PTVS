@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private readonly string/*!*/ _name;
         private Statement _body;
         private readonly Arg[] _bases;
-        private IList<Expression> _decorators;
+        private DecoratorStatement _decorators;
 
         private PythonVariable _variable;           // Variable corresponding to the class name
         private PythonVariable _modVariable;        // Variable for the the __module__ (module name)
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _body; }
         }
 
-        public IList<Expression> Decorators {
+        public DecoratorStatement Decorators {
             get {
                 return _decorators;
             }
@@ -131,9 +131,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_decorators != null) {
-                    foreach (Expression decorator in _decorators) {
-                        decorator.Walk(walker);
-                    }
+                    _decorators.Walk(walker);
                 }
                 if (_bases != null) {
                     foreach (var b in _bases) {
@@ -152,10 +150,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            if (Decorators != null) {
+                Decorators.AppendCodeString(res, ast);
+            }
+
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("class");
             res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append(Name);
+            res.Append(this.GetVerbatimImage(ast) ?? Name);
 
             if (!this.IsAltForm(ast)) {
                 res.Append(this.GetThirdWhiteSpace(ast));
@@ -172,7 +174,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 (i, sb) => this.Bases[i].AppendCodeString(sb, ast)
             );
             
-            if (!this.IsAltForm(ast)) {
+            if (!this.IsAltForm(ast) && !this.IsMissingCloseGrouping(ast)) {
                 res.Append(this.GetFourthWhiteSpace(ast));
                 res.Append(')');
             }

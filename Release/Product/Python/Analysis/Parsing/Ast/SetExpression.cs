@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            ListExpression.AppendItems(res, ast, "{", "}", this, Items);
+            ListExpression.AppendItems(res, ast, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", this, Items);
         }
     }
 }

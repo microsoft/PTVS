@@ -35,11 +35,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
             var namesWhiteSpace = this.GetNamesWhiteSpace(ast);
+            var verbatimNames = this.GetVerbatimNames(ast);
 
             if (namesWhiteSpace != null) {
-                ListExpression.AppendItems(res, ast, "global", "", this, Names.Count, (i, sb) => { sb.Append(namesWhiteSpace[i]); sb.Append(Names[i]); });
+                ListExpression.AppendItems(res, ast, "global", "", this, Names.Count, (i, sb) => { 
+                    sb.Append(namesWhiteSpace[i]);
+                    sb.Append(verbatimNames != null ? (verbatimNames[i] ?? Names[i]) : Names[i]); 
+                });
             } else {
-                ListExpression.AppendItems(res, ast, "global", "", this, Names.Count, (i, sb) => sb.Append(Names[i]));
+                ListExpression.AppendItems(res, ast, "global", "", this, Names.Count, (i, sb) => sb.Append(verbatimNames != null ? (verbatimNames[i] ?? Names[i]) : Names[i]));
             }
         }
     }

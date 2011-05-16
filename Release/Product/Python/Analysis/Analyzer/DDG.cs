@@ -131,8 +131,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         public override bool Walk(ForStatement node) {
-            foreach (var listType in _eval.Evaluate(node.List).ToArray()) {
-                _eval.AssignTo(node, node.Left, listType.GetEnumeratorTypes(node, _unit));
+            if (node.List != null) {
+                foreach (var listType in _eval.Evaluate(node.List).ToArray()) {
+                    _eval.AssignTo(node, node.Left, listType.GetEnumeratorTypes(node, _unit));
+                }
             }
 
             if (node.Body != null) {
@@ -284,15 +286,17 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         internal void ProcessFunctionDecorators(FunctionDefinition funcdef, FunctionInfo newScope) {
             if (funcdef.Decorators != null) {
-                foreach (var d in funcdef.Decorators) {
-                    var decorator = _eval.Evaluate(d);
+                foreach (var d in funcdef.Decorators.Decorators) {
+                    if (d != null) {
+                        var decorator = _eval.Evaluate(d);
 
-                    if (decorator.Contains(ProjectState._propertyObj)) {
-                        newScope.IsProperty = true;
-                    } else if (decorator.Contains(ProjectState._staticmethodObj)) {
-                        newScope.IsStatic = true;
-                    } else if (decorator.Contains(ProjectState._classmethodObj)) {
-                        newScope.IsClassMethod = true;
+                        if (decorator.Contains(ProjectState._propertyObj)) {
+                            newScope.IsProperty = true;
+                        } else if (decorator.Contains(ProjectState._staticmethodObj)) {
+                            newScope.IsStatic = true;
+                        } else if (decorator.Contains(ProjectState._classmethodObj)) {
+                            newScope.IsClassMethod = true;
+                        }
                     }
                 }
             }

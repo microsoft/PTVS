@@ -73,14 +73,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("for");
             _left.AppendCodeString(res, ast);
-            res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append("in");
-            _list.AppendCodeString(res, ast);
-            _body.AppendCodeString(res, ast);   // colon is handled by suite statements...
-            if (_else != null) {
-                res.Append(this.GetThirdWhiteSpace(ast));
-                res.Append("else");
-                _else.AppendCodeString(res, ast);
+            if (!this.IsIncompleteNode(ast)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append("in");
+                _list.AppendCodeString(res, ast);
+                _body.AppendCodeString(res, ast);   // colon is handled by suite statements...
+                if (_else != null) {
+                    res.Append(this.GetThirdWhiteSpace(ast));
+                    res.Append("else");
+                    _else.AppendCodeString(res, ast);
+                }
             }
         }
     }

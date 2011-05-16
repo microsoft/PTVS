@@ -66,8 +66,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append("if");
             _testExpr.AppendCodeString(res, ast);
             res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append("else");
-            _falseExpr.AppendCodeString(res, ast);
+            if (!this.IsIncompleteNode(ast)) {
+                res.Append("else");
+                _falseExpr.AppendCodeString(res, ast);
+            }
         }
     }
 }

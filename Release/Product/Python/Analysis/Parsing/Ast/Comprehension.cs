@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendCodeString(res, ast, "[", "]", _item);
+            AppendCodeString(res, ast, "[", this.IsMissingCloseGrouping(ast) ? "" : "]", _item);
         }
     }
 
@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendCodeString(res, ast, "{", "}", _item);
+            AppendCodeString(res, ast, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", _item);
         }
     }
 
@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendCodeString(res, ast, "{", "}", _value);
+            AppendCodeString(res, ast, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", _value);
         }
     }
 }

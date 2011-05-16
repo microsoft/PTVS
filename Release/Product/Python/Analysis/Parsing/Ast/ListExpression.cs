@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendItems(res, ast, "[", "]", this, Items);
+            AppendItems(res, ast, "[", this.IsMissingCloseGrouping(ast) ? "" : "]", this, Items);
         }
 
         internal static void AppendItems<T>(StringBuilder res, PythonAst ast, string start, string end, Node node, IList<T> items) where T : Expression {

@@ -96,19 +96,23 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+            string kwOnlyText = this.GetExtraVerbatimText(ast);
+            if (kwOnlyText != null) {
+                res.Append(kwOnlyText);
+            }
             switch (Kind) {
                 case ParameterKind.Dictionary:
                     res.Append(this.GetProceedingWhiteSpace(ast));
                     res.Append("**");
                     res.Append(this.GetSecondWhiteSpace(ast));
-                    res.Append(_name);
+                    res.Append(this.GetVerbatimImage(ast) ?? _name);
                     AppendAnnotation(res, ast);
                     break;
                 case ParameterKind.List:
                     res.Append(this.GetProceedingWhiteSpace(ast));
                     res.Append('*');
                     res.Append(this.GetSecondWhiteSpace(ast));
-                    res.Append(_name);
+                    res.Append(this.GetVerbatimImage(ast) ?? _name);
                     AppendAnnotation(res, ast);
                     break;
                 case ParameterKind.Normal:
@@ -116,19 +120,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(this.GetProceedingWhiteSpace(ast));
                         res.Append('(');
                         res.Append(this.GetThirdWhiteSpace(ast));
-                        res.Append(_name);
+                        res.Append(this.GetVerbatimImage(ast) ?? _name);
                         res.Append(this.GetSecondWhiteSpace(ast));
                         res.Append(')');
                     } else {
                         res.Append(this.GetProceedingWhiteSpace(ast));
-                        res.Append(_name);
+                        res.Append(this.GetVerbatimImage(ast) ?? _name);
                         AppendAnnotation(res, ast);
                     }
                     break;
                 case ParameterKind.KeywordOnly:
-                    res.Append(this.GetExtraVerbatimText(ast));
                     res.Append(this.GetProceedingWhiteSpace(ast));
-                    res.Append(_name);
+                    res.Append(this.GetVerbatimImage(ast) ?? _name);
                     AppendAnnotation(res, ast);
                     break;
                 default: throw new InvalidOperationException();

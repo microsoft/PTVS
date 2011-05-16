@@ -427,7 +427,7 @@ namespace Microsoft.PythonTools.Parsing {
                                 // report the explicit line join
                                 MarkTokenEnd();
 
-                                return new ExplicitLineJoinToken(TokenKind.ExplicitLineJoin, "\\" + nlKind.GetString(), "<explicit line join>");
+                                return new VerbatimToken(TokenKind.ExplicitLineJoin, "\\" + nlKind.GetString(), "<explicit line join>");
                             } else {
                                 DiscardToken();
                                 // discard token '\\<eoln>':
@@ -621,7 +621,7 @@ namespace Microsoft.PythonTools.Parsing {
         private Token ReadEof() {
             MarkTokenEnd();
 
-            if (/*!_dontImplyDedent && */_state.IndentLevel > 0) {
+            if (/*!_dontImplyDedent && */_state.IndentLevel > 0 && GroupingLevel == 0) {
                 // before we imply dedents we need to make sure the last thing we returned was
                 // a new line.
                 if (!_state.LastNewLine) {
@@ -638,8 +638,7 @@ namespace Microsoft.PythonTools.Parsing {
             return Tokens.EndOfFileToken;
         }
 
-        public static string AddSlashes(string str) {
-            // TODO: optimize
+        private static string AddSlashes(string str) {
             StringBuilder result = new StringBuilder(str.Length);
             for (int i = 0; i < str.Length; i++) {
                 switch (str[i]) {
@@ -658,7 +657,8 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private static ErrorToken BadChar(int ch) {
-            return new ErrorToken(AddSlashes(((char)ch).ToString()));
+            Debug.Assert(new string((char)ch, 1)[0] == ch);
+            return new ErrorToken(AddSlashes(((char)ch).ToString()), new string((char)ch, 1));
         }
 
         private static bool IsNameStart(int ch) {
@@ -717,7 +717,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
 
                     UnexpectedEndOfString(isTriple, isTriple);
-                    string incompleteContents = GetTokenSubstring(startAdd, TokenLength - startAdd - end_add);
+                    string incompleteContents = GetTokenString();
 
                     _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
                     return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
@@ -742,7 +742,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
                         UnexpectedEndOfString(isTriple, isTriple);
 
-                        string incompleteContents = GetTokenSubstring(startAdd, TokenLength - startAdd - end_add - 1);
+                        string incompleteContents = GetTokenString();
 
                         _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
 
@@ -755,7 +755,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                             // incomplete string in the form "abc\
 
-                            string incompleteContents = GetTokenSubstring(startAdd, TokenLength - startAdd - end_add - 1 - nlKind.GetSize());
+                            string incompleteContents = GetTokenString();
 
                             _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
                             UnexpectedEndOfString(isTriple, true);
@@ -770,12 +770,11 @@ namespace Microsoft.PythonTools.Parsing {
                     _newLineLocations.Add(CurrentIndex);
                     if (!isTriple) {
                         // backup over the eoln:
-                        SeekRelative(-nlKind.GetSize());
-
+                        
                         MarkTokenEnd();
                         UnexpectedEndOfString(isTriple, false);
 
-                        string incompleteContents = GetTokenSubstring(startAdd, TokenLength - startAdd - end_add);
+                        string incompleteContents = GetTokenString();
 
                         return new IncompleteStringErrorToken((quote == '"') ? "NEWLINE in double-quoted string" : "NEWLINE in single-quoted string", incompleteContents);
                     }
@@ -880,14 +879,17 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L':
                         if (_langVersion.Is2x()) {
                             MarkTokenEnd();
+                            string tokenStr = GetTokenString();
+                            try {
+                                // TODO: parse in place
+                                if (Verbatim) {
+                                    return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(tokenStr, b), tokenStr);
+                                }
 
-                            // TODO: parse in place
-                            if (Verbatim) {
-                                string tokenStr = GetTokenString();
-                                return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(tokenStr, b), tokenStr);
+                                return new ConstantValueToken(LiteralParser.ParseBigInteger(tokenStr, b));
+                            } catch (ArgumentException e) {
+                                return new ErrorToken(e.Message, tokenStr);
                             }
-
-                            return new ConstantValueToken(LiteralParser.ParseBigInteger(GetTokenString(), b));
                         }
                         break;
                     case '0':
@@ -1716,8 +1718,8 @@ namespace Microsoft.PythonTools.Parsing {
                 return LiteralParser.ParseInteger(s, radix);
             } catch (ArgumentException e) {
                 ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                return null;
             }
-            return 0;
         }
 
         private object ParseFloat(string s) {

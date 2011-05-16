@@ -259,8 +259,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             // process the decorators in the outer context
             if (node.Decorators != null) {
-                foreach (Expression dec in node.Decorators) {
-                    dec.Walk(this);
+                foreach (Expression dec in node.Decorators.Decorators) {
+                    if (dec != null) {
+                        dec.Walk(this);
+                    }
                 }
             }
             
@@ -408,8 +410,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             // process the decorators in the outer context
             if (node.Decorators != null) {
-                foreach (Expression dec in node.Decorators) {
-                    dec.Walk(this);
+                foreach (Expression dec in node.Decorators.Decorators) {
+                    if (dec != null) {
+                        dec.Walk(this);
+                    }
                 }
             }
 
@@ -434,6 +438,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // GlobalStatement
         public override bool Walk(GlobalStatement node) {
             foreach (string n in node.Names) {
+                if (n == null) {
+                    continue;
+                }
                 PythonVariable conflict;
                 // Check current scope for conflicting variable
                 bool assignedGlobal = false;
@@ -574,7 +581,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override bool Walk(ImportStatement node) {
             PythonVariable[] variables = new PythonVariable[node.Names.Count];
             for (int i = 0; i < node.Names.Count; i++) {
-                string name = node.AsNames[i] != null ? node.AsNames[i] : node.Names[i].Names[0];
+                string name;
+                if(node.AsNames[i] != null) {
+                    name = node.AsNames[i] ;
+                } else if (node.Names[i].Names.Count > 0) {
+                    name = node.Names[i].Names[0];
+                } else {
+                    name = null;
+                }
                 if (name != null) {
                     variables[i] = DefineName(name);
                 }

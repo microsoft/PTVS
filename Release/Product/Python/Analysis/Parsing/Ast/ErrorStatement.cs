@@ -12,41 +12,31 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
+using System;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
+    public class ErrorStatement : Statement {
+        private readonly Statement[] _preceeding;
 
-    public class DictionaryExpression : Expression {
-        private readonly SliceExpression[] _items;
-
-        public DictionaryExpression(params SliceExpression[] items) {
-            _items = items;
+        public ErrorStatement(Statement[] preceeding) {
+            _preceeding = preceeding;
         }
 
-        public IList<SliceExpression> Items {
-            get { return _items; }
-        }
-
-        public override string NodeName {
-            get {
-                return "dictionary display";
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+            foreach(var preceeding in _preceeding) {
+                preceeding.AppendCodeString(res, ast);
             }
+            res.Append(this.GetVerbatimImage(ast) ?? "<error stmt>");
         }
 
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
-                if (_items != null) {
-                    foreach (SliceExpression s in _items) {
-                        s.Walk(walker);
-                    }
+                foreach (var preceeding in _preceeding) {
+                    preceeding.Walk(walker);
                 }
             }
             walker.PostWalk(this);
-        }
-
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            ListExpression.AppendItems(res,ast, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", this, Items);
         }
     }
 }

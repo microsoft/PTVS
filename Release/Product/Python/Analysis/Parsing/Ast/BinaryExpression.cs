@@ -84,7 +84,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             if (Operator == PythonOperator.NotIn) {
                 op1 = "not";
-                op2 = "in";
+                if (!this.IsIncompleteNode(ast)) {
+                    op2 = "in";
+                } else {
+                    op2 = null;
+                }
             } else if (Operator == PythonOperator.IsNot) {
                 op1 = "is";
                 op2 = "not";

@@ -354,7 +354,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // ForStmt
         public override bool Walk(ForStatement node) {
             // Walk the expression
-            node.List.Walk(this);
+            if (node.List != null) {
+                node.List.Walk(this);
+            }
 
             BitArray opte = new BitArray(_bits);
             BitArray exit = new BitArray(_bits.Length, true);
@@ -362,8 +364,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             // Define the lhs
             node.Left.Walk(_fdef);
-            // Walk the body
-            node.Body.Walk(this);
+            if (node.Body != null) {
+                // Walk the body
+                node.Body.Walk(this);
+            }
 
             PopLoop();
 
@@ -457,7 +461,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // ImportStmt
         public override bool Walk(ImportStatement node) {
             for (int i = 0; i < node.Names.Count; i++) {
-                Define(node.AsNames[i] ?? node.Names[i].Names[0]);
+                if (node.AsNames[i] != null) {
+                    Define(node.AsNames[i]);
+                } else if (node.Names[i].Names.Count > 0) {
+                    Define(node.Names[i].Names[0]);
+                }
             }
             return true;
         }

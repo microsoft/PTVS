@@ -357,7 +357,7 @@ x\
             ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
                 try {
                     doc.TextView.Caret.MoveTo(textLine.Start + column);
-                } catch(Exception e) {
+                } catch(Exception) {
                     Debug.Fail("Bad position for moving caret");
                 }
             }));

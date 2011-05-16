@@ -104,8 +104,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(",");
             }
 
-            res.Append(this.GetSecondWhiteSpace(ast));
-            res.Append(')');            
+            if (!this.IsMissingCloseGrouping(ast)) {
+                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(')');
+            }
         }
     }
 }

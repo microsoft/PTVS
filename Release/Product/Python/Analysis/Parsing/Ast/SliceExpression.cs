@@ -69,16 +69,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (_sliceStart != null) {
                 _sliceStart.AppendCodeString(res, ast);
             }
-            res.Append(this.GetProceedingWhiteSpace(ast));
-            res.Append(':');
-            if (_sliceStop != null) {
-                _sliceStop.AppendCodeString(res, ast);
-            }
-            if (_stepProvided) {
-                res.Append(this.GetSecondWhiteSpace(ast));
+            if (!this.IsIncompleteNode(ast)) {
+                res.Append(this.GetProceedingWhiteSpace(ast));
                 res.Append(':');
-                if (_sliceStep != null) {
-                    _sliceStep.AppendCodeString(res, ast);
+                if (_sliceStop != null) {
+                    _sliceStop.AppendCodeString(res, ast);
+                }
+                if (_stepProvided) {
+                    res.Append(this.GetSecondWhiteSpace(ast));
+                    res.Append(':');
+                    if (_sliceStep != null) {
+                        _sliceStep.AppendCodeString(res, ast);
+                    }
                 }
             }
         }
