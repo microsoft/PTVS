@@ -112,6 +112,12 @@
             <Component Id="cmpF2FFD4C8F8F3A803EFF2ACC027975136" Directory="dir8A804F37A06868229FBCA080587FD3F2" Guid="{5D696F4F-0141-4CC9-A3EB-DAB200E4E3AB}">
                 <File Id="filF3356809E63779C8D279862E6C856094" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ConsoleAppProject\ConsoleApp.zip" />
             </Component>
+            <Component Id="cmpE0B39F7BE20943E1B7941CB9174D5D5A" Directory="dirCE1E9645E1374D358540CE76B38DABB4" Guid="{E9604582-07C9-4CF4-B333-DC8554CC7F8B}">
+                <File Id="filFE41C48AD4554B90AB1BAD5F554A6A8D" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ImportProject\ImportConApp.pyproj" />
+            </Component>
+            <Component Id="cmp2AAF88C03D5F49F29AF8AFD617B7E223" Directory="dirCE1E9645E1374D358540CE76B38DABB4" Guid="{8826AF26-D4FC-415B-89EA-19CCFE09EC13}">
+                <File Id="filD56FD6E607A249B78B508CB8FE88E979" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ImportProject\ImportWinApp.pyproj" />
+            </Component>
             <Component Id="cmp5E1CEDE43A189A6AACBB60829AD63E1D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6BF9570B-B452-4D37-AC11-7376E0D43881}">
                 <File Id="filF929E14C8F0D95906776F9E4446FE9C8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\array.idb" />
             </Component>
@@ -315,6 +321,11 @@
     <Fragment>
         <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
             <Directory Id="dirD5195BC5D1C101171FEF8AD9B89AA866" Name="EmptyPackage" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dirCE1E9645E1374D358540CE76B38DABB4" Name="ImportProject" />
         </DirectoryRef>
     </Fragment>
 </Wix>

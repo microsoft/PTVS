@@ -163,6 +163,9 @@
   <data name="118" xml:space="preserve">
     <value>Advanced</value>
   </data>
+  <data name="111" xml:space="preserve">
+    <value>Python Project</value>
+  </data>
   <data name="3004" xml:space="preserve">
     <value>Python source file</value>
   </data>
