@@ -88,6 +88,21 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// </summary>
         public static readonly object ErrorIncompleteNode = new object();
 
+        public static readonly object VariableReference = new object();
+
+        public static readonly object Variable = new object();
+       
+        public static void AddVariableReference(this Node node, PythonAst ast, bool bindNames, object reference) {
+            if (bindNames) {
+                ast.SetAttribute(node, VariableReference, reference);
+            }
+        }
+
+        public static void AddVariable(this Parameter node, PythonAst ast, bool bindNames, PythonVariable variable) {
+            if (bindNames) {
+                ast.SetAttribute(node, Variable, variable);
+            }
+        }
 
         public static string GetProceedingWhiteSpace(this Node node, PythonAst ast) {
             return GetWhiteSpace(node, ast, NodeAttributes.PreceedingWhiteSpace);
@@ -118,8 +133,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return GetWhiteSpace(node, ast, NodeAttributes.ThirdPreceedingWhiteSpace);
         }
 
+        public static string GetThirdWhiteSpaceDefaultNull(this Node node, PythonAst ast) {
+            return GetWhiteSpace(node, ast, NodeAttributes.ThirdPreceedingWhiteSpace, null);
+        }
+
         public static string GetFourthWhiteSpace(this Node node, PythonAst ast) {
             return GetWhiteSpace(node, ast, NodeAttributes.FourthPreceedingWhiteSpace);
+        }
+
+        public static string GetFourthWhiteSpaceDefaultNull(this Node node, PythonAst ast) {
+            return GetWhiteSpace(node, ast, NodeAttributes.FourthPreceedingWhiteSpace, null);
         }
 
         public static string GetFifthWhiteSpace(this Node node, PythonAst ast) {

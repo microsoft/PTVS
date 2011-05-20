@@ -54,5 +54,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
             BinaryExpression.BinaryToCodeString(res, ast, this, _left, _right, "or");
         }
+
+        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+            return _left.GetLeadingWhiteSpace(ast);
+        }
     }
 }

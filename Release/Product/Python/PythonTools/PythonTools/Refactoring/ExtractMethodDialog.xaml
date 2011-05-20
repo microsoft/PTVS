@@ -1,0 +1,59 @@
+﻿<Window x:Class="Microsoft.PythonTools.Refactoring.ExtractMethodDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             x:ClassModifier="internal"
+             Width="640" Height="350" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Title="Extract method..." MinWidth="240" MinHeight="130">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="32"/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Column="0" Grid.Row="0">
+            <DockPanel DockPanel.Dock="Top">
+                <Label Content="Method _Name:" Height="28" HorizontalAlignment="Left" Margin="0,0,0,0" Name="_newNameLabel" VerticalAlignment="Top" Width="97" DockPanel.Dock="Left" />
+                <TextBox Height="23" Name="_newName" DockPanel.Dock="Right" Text="new_method" TextChanged="NewNameTextChanged" HorizontalAlignment="Stretch" Margin="4,2,4,2"/>
+            </DockPanel>
+            <DockPanel DockPanel.Dock="Top">
+                <Label Content="Extract _To:" Height="28" HorizontalAlignment="Left" Margin="0,0,0,0" Name="_targetScopeLabel" VerticalAlignment="Top" Width="97" DockPanel.Dock="Left" />
+                <ComboBox Height="23" Margin="4,2,4,2" Name="_targetScope" DockPanel.Dock="Right" SelectionChanged="_targetScope_SelectionChanged" HorizontalAlignment="Stretch" />
+            </DockPanel>
+        </DockPanel>
+        <Grid HorizontalAlignment="Stretch" Grid.Column="0" Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="3"/>
+                <RowDefinition Height="100"/>
+            </Grid.RowDefinitions>
+            <DockPanel DockPanel.Dock="Top" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Row="0">
+                <Label Content="Preview:" Height="28" HorizontalAlignment="Left" Margin="0,0,0,0" Name="_previewLabel" VerticalAlignment="Top" Width="97" DockPanel.Dock="Top" />
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" VerticalAlignment="Stretch" Margin="4,4,4,4">
+                    <TextBox VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Name="_previewText"  >Preview Text Here</TextBox>
+                </ScrollViewer>
+            </DockPanel>
+            <GridSplitter Grid.Row="1" ResizeDirection="Rows" HorizontalAlignment="Stretch" />
+            <DockPanel HorizontalAlignment="Stretch" Height="100" Grid.Column="0" Grid.Row="2">
+                <Label Content="Closure _Variables:" Height="28" HorizontalAlignment="Left" Margin="0,0,0,0" Name="_parameters" VerticalAlignment="Top" Width="200" DockPanel.Dock="Top" />
+                <ScrollViewer Name="_parameterScroller" DockPanel.Dock="Top" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="4,4,4,4">
+                    <StackPanel Name="_closureVariables" Orientation="Vertical">
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
+        <DockPanel HorizontalAlignment="Right" Margin="1,1,1,1" DockPanel.Dock="Bottom" Height="32" VerticalAlignment="Bottom" MinHeight="28" Grid.Column="0" Grid.Row="2">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Bottom">
+                <Button Name="_ok" DockPanel.Dock="Right" Width="75" IsDefault="True" Margin="4,4,4,4" Click="OkClick">OK</Button>
+                <Button Name="_cancel" DockPanel.Dock="Right" Width="75" IsCancel="True" Margin="4,4,8,4" Click="CancelClick">Cancel</Button>
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

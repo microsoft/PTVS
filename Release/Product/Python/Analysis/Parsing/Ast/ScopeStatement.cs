@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private List<string> _globalVars;                               // global variables accessed from this scope
         private List<string> _cellVars;                                 // variables accessed from nested scopes
         private List<string> _nonLocalVars;                             // variables declared as nonlocal within this scope
-        private Dictionary<string, PythonReference> _references;        // names of all variables referenced, null after binding completes
+        private Dictionary<string, List<PythonReference>> _references;        // names of all variables referenced, null after binding completes
         private ScopeStatement _parent;
 
         internal const string NameForExec = "module: <exec>";
@@ -41,6 +41,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public ScopeStatement Parent {
             get { return _parent; }
             set { _parent = value; }
+        }
+
+        public abstract Statement Body {
+            get;
         }
 
         internal bool ContainsImportStar {
@@ -111,6 +115,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal Dictionary<string, PythonVariable> Variables {
             get { return _variables; }
+        }
+
+        /// <summary>
+        /// Gets the variables for this scope.
+        /// </summary>
+        public ICollection<PythonVariable> ScopeVariables {
+            get {
+                if (_variables != null) {
+                    return _variables.Values;
+                }
+                return null;
+            }
         }
 
         internal virtual bool IsGlobal {
@@ -231,26 +247,28 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return false;
         }
 
-        internal abstract PythonVariable BindReference(PythonNameBinder binder, PythonReference reference);
+        internal abstract PythonVariable BindReference(PythonNameBinder binder, string name);
 
         internal virtual void Bind(PythonNameBinder binder) {
             if (_references != null) {
-                foreach (var reference in _references.Values) {
-                    PythonVariable variable;
-                    reference.PythonVariable = variable = BindReference(binder, reference);
+                foreach (var refList in _references.Values) {
+                    foreach (var reference in refList) {
+                        PythonVariable variable;
+                        reference.Variable = variable = BindReference(binder, reference.Name);
 
-                    // Accessing outer scope variable which is being deleted?
-                    if (variable != null) {
-                        if (variable.Deleted && variable.Scope != this && !variable.Scope.IsGlobal && binder.LanguageVersion < PythonLanguageVersion.V32) {
+                        // Accessing outer scope variable which is being deleted?
+                        if (variable != null) {
+                            if (variable.Deleted && variable.Scope != this && !variable.Scope.IsGlobal && binder.LanguageVersion < PythonLanguageVersion.V32) {
 
-                            // report syntax error
-                            binder.ReportSyntaxError(
-                                String.Format(
-                                    System.Globalization.CultureInfo.InvariantCulture,
-                                    "can not delete variable '{0}' referenced in nested scope",
-                                    reference.Name
-                                    ),
-                                this);
+                                // report syntax error
+                                binder.ReportSyntaxError(
+                                    String.Format(
+                                        System.Globalization.CultureInfo.InvariantCulture,
+                                        "can not delete variable '{0}' referenced in nested scope",
+                                        reference.Name
+                                        ),
+                                    this);
+                            }
                         }
                     }
                 }
@@ -341,18 +359,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal PythonReference Reference(string/*!*/ name) {
             if (_references == null) {
-                _references = new Dictionary<string, PythonReference>(StringComparer.Ordinal);
+                _references = new Dictionary<string, List<PythonReference>>(StringComparer.Ordinal);
             }
-            PythonReference reference;
-            if (!_references.TryGetValue(name, out reference)) {
-                _references[name] = reference = new PythonReference(name);
+            List<PythonReference> references;
+            if (!_references.TryGetValue(name, out references)) {
+                _references[name] = references = new List<PythonReference>();
             }
+            var reference = new PythonReference(name);
+            references.Add(reference);
             return reference;
         }
 
         internal bool IsReferenced(string name) {
-            PythonReference reference;
-            return _references != null && _references.TryGetValue(name, out reference);
+            return _references != null && _references.ContainsKey(name);
         }
 
         internal PythonVariable/*!*/ CreateVariable(string name, VariableKind kind) {

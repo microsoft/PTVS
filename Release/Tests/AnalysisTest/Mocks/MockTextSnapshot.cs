@@ -19,10 +19,12 @@ using Microsoft.VisualStudio.Text;
 
 namespace AnalysisTest.Mocks {
     class MockTextSnapshot : ITextSnapshot {
+        private readonly string _text;
         private readonly MockTextBuffer _buffer;
 
-        public MockTextSnapshot(MockTextBuffer mockTextBuffer) {
-            _buffer = mockTextBuffer;
+        public MockTextSnapshot(MockTextBuffer buffer, string text) {
+            _text = text;
+            _buffer = buffer;
         }
 
         public Microsoft.VisualStudio.Utilities.IContentType ContentType {
@@ -30,7 +32,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count) {
-            _buffer._text.CopyTo(sourceIndex, destination, destinationIndex, count);
+            _text.CopyTo(sourceIndex, destination, destinationIndex, count);
         }
 
         public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
@@ -58,11 +60,11 @@ namespace AnalysisTest.Mocks {
         }
 
         private string[] GetLines() {
-            return _buffer._text.Split(new[] { "\r\n" }, StringSplitOptions.None);
+            return _text.Split(new[] { "\r\n" }, StringSplitOptions.None);
         }
 
         public ITextSnapshotLine GetLineFromLineNumber(int lineNumber) {
-            var text = _buffer._text;
+            var text = _text;
             for (int curLine = 0, curPosition = 0; ; curLine++) {
                 int endOfLine = text.IndexOf('\r', curPosition);
                 if (curLine == lineNumber) {
@@ -81,7 +83,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITextSnapshotLine GetLineFromPosition(int position) {
-            var text = _buffer._text;
+            var text = _text;
             int lineNo = 0;
             int curPos = 0;
             while (curPos < position) {
@@ -104,7 +106,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public string GetText() {
-            return _buffer._text;
+            return _text;
         }
 
         public string GetText(int startIndex, int length) {
@@ -116,7 +118,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public int Length {
-            get { return _buffer._text.Length; }
+            get { return _text.Length; }
         }
 
         public int LineCount {
@@ -148,7 +150,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public char this[int position] {
-            get { return _buffer._text[position]; }
+            get { return _text[position]; }
         }
     }
 }

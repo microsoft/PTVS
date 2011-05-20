@@ -30,9 +30,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _forceAbsolute = forceAbsolute;
         }
 
-        internal PythonVariable[] Variables {
+        public PythonVariable[] Variables {
             get { return _variables; }
             set { _variables = value; }
+        }
+
+        public PythonReference[] GetReferences(PythonAst ast) {
+            return GetVariableReferences(this, ast);
         }
 
         public IList<DottedName> Names {

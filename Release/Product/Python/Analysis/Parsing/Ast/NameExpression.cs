@@ -20,10 +20,6 @@ using System.Text;
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class NameExpression : Expression {
         private readonly string _name;
-#if NAME_BINDING
-        private PythonReference _reference;
-        private bool _assigned;                  // definitely assigned
-#endif
 
         public NameExpression(string name) {
             _name = name ?? "";
@@ -32,18 +28,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public string/*!*/ Name {
             get { return _name; }
         }
-
-#if NAME_BINDING
-        internal PythonReference Reference {
-            get { return _reference; }
-            set { _reference = value; }
-        }
-
-        internal bool Assigned {
-            get { return _assigned; }
-            set { _assigned = value; }
-        }
-#endif
 
         public override string ToString() {
             return base.ToString() + ":" + _name;
@@ -63,8 +47,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
+        public PythonReference GetVariableReference(PythonAst ast) {
+            return GetVariableReference(this, ast);
+        }
+
+        public void AddPreceedingWhiteSpace(PythonAst ast, string whiteSpace) {
+            ast.SetAttribute(this, NodeAttributes.PreceedingWhiteSpace, whiteSpace);
+        }
+
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetProceedingWhiteSpaceDefaultNull(ast));
             res.Append(this.GetVerbatimImage(ast) ?? _name);
         }
     }

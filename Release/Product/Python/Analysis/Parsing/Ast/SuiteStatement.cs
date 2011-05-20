@@ -48,6 +48,45 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        /// <summary>
+        /// Returns a new SuiteStatement which is composed of a subset of the statements in this suite statement.
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        public SuiteStatement CloneSubset(PythonAst ast, int start, int end) {
+            Statement[] statements = new Statement[end - start + 1];
+            for (int i = start; i <= end; i++) {
+                statements[i - start] = Statements[i];
+            }
+
+
+            var res = new SuiteStatement(statements);
+
+            // propagate white space so we stay mostly the same...
+            var itemWhiteSpace = this.GetListWhiteSpace(ast);
+            var colonWhiteSpace = this.GetProceedingWhiteSpaceDefaultNull(ast);
+            if (colonWhiteSpace != null) {
+                ast.SetAttribute(res, NodeAttributes.PreceedingWhiteSpace, "");
+                ast.SetAttribute(res, NodeAttributes.SecondPreceedingWhiteSpace, this.GetSecondWhiteSpace(ast));
+            } else if (itemWhiteSpace != null) {
+                ast.SetAttribute(res, NodeAttributes.ListWhiteSpace, new string[0]);
+
+            }
+            if (this.IsAltForm(ast)) {
+                ast.SetAttribute(res, NodeAttributes.IsAltFormValue, NodeAttributes.IsAltFormValue);
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// True if this is a suite statement which is used as the top-level suite for
+        /// a class / function definition
+        /// </summary>
+        public bool IsFunctionOrClassSuite(PythonAst ast) {
+            return !this.IsAltForm(ast) && this.GetListWhiteSpace(ast) == null;
+        }
+
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
             // SuiteStatement comes in 3 forms:
             //  1. The body of a if/else/while/for/etc... where there's an opening colon
@@ -55,11 +94,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             //  3. A top-level group of statements in a top-level PythonAst node.
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
             var colonWhiteSpace = this.GetProceedingWhiteSpaceDefaultNull(ast);
-            if (itemWhiteSpace != null) {
+            if (this.IsAltForm(ast)) {
+                // suite statement in top-level PythonAst, we have no colons or other delimiters
+                foreach (var statement in _statements) {
+                    statement.AppendCodeString(res, ast);
+                }
+            } else if (itemWhiteSpace != null) {
                 // form 2, semi-colon seperated list.
                 for (int i = 0; i < _statements.Length; i++) {
                     if (i > 0) {
-                        res.Append(itemWhiteSpace[i - 1]);
+                        if (i - 1 < itemWhiteSpace.Length) {
+                            res.Append(itemWhiteSpace[i - 1]);
+                        }
                         res.Append(';');
                     }
                     _statements[i].AppendCodeString(res, ast);
@@ -69,21 +115,28 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     res.Append(itemWhiteSpace[itemWhiteSpace.Length - 1]);
                     res.Append(";");
                 }
-            } else if (colonWhiteSpace != null) {
-                res.Append(colonWhiteSpace);
+            } else {
+                // 3rd form, suite statement as the body of a class/function, we include the colon.
+                if (colonWhiteSpace != null) {
+                    res.Append(colonWhiteSpace);
+                }
                 res.Append(':');
+
                 var secondWhiteSpace = this.GetSecondWhiteSpaceDefaultNull(ast);
                 if (secondWhiteSpace != null) {
                     res.Append(secondWhiteSpace);
+                } else {
+                    res.Append("\r\n");
                 }
-                foreach (var statement in _statements) {
-                    statement.AppendCodeString(res, ast);
-                }
-            } else {
+
                 foreach (var statement in _statements) {
                     statement.AppendCodeString(res, ast);
                 }
             }
+        }
+
+        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+            return _statements[0].GetLeadingWhiteSpace(ast);
         }
     }
 }

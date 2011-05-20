@@ -283,7 +283,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     /// <summary>
     /// PythonWalkerNonRecursive class - The Python AST Walker (default result is false)
     /// </summary>
-    internal class PythonWalkerNonRecursive : PythonWalker {
+    public class PythonWalkerNonRecursive : PythonWalker {
         #region Generated Python AST Walker Nonrecursive
 
         // *** BEGIN GENERATED CODE ***

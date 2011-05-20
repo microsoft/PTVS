@@ -14,10 +14,10 @@
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     /// <summary>
-    /// Represents a reference to a name.  A PythonReference is created for each name
-    /// referred to in a scope (global, class, or function).  
+    /// Represents a reference to a name.  A PythonReference is created for each locatio
+    /// where a name is referred to in a scope (global, class, or function).  
     /// </summary>
-    class PythonReference {
+    public class PythonReference {
         private readonly string/*!*/ _name;
         private PythonVariable _variable;
 
@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _name; }
         }
 
-        internal PythonVariable PythonVariable {
+        public PythonVariable Variable {
             get { return _variable; }
             set { _variable = value; }
         }

@@ -84,5 +84,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
         }
+
+
+        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+            if (_sliceStart != null) {
+                return _sliceStart.GetLeadingWhiteSpace(ast);
+            }
+            return this.GetProceedingWhiteSpace(ast);
+        }
+
     }
 }

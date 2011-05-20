@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        public Statement Body {
+        public override Statement Body {
             get { return _body; }
         }
 
@@ -98,8 +98,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override void FinishBind(PythonNameBinder binder) {
         }
 
-        internal override PythonVariable BindReference(PythonNameBinder binder, PythonReference reference) {
-            return EnsureVariable(reference.Name);
+        internal override PythonVariable BindReference(PythonNameBinder binder, string name) {
+            return EnsureVariable(name);
         }
 
         internal override bool TryBindOuter(ScopeStatement from, string name, bool allowGlobals, out PythonVariable variable) {

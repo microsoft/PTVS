@@ -22,5 +22,12 @@ namespace Microsoft.PythonTools.Parsing {
         public ErrorSink ErrorSink { set; get; }
         public Severity IndentationInconsistencySeverity { set; get; }
         public bool Verbatim { get; set; }
+
+        /// <summary>
+        /// True if references to variables should be bound in the AST.  The root node must be
+        /// held onto to access the references via GetReference/GetReferences APIs on various 
+        /// nodes which reference variables.
+        /// </summary>
+        public bool BindReferences { get; set; }
     }
 }

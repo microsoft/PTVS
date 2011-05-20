@@ -255,5 +255,21 @@ namespace Microsoft.PythonTools {
                 span.Span.Length == 1 &&
                 (span.Span.GetText() == "}" || span.Span.GetText() == "]" || span.Span.GetText() == ")");
         }
+
+        internal static T Pop<T>(this List<T> list) {
+            if (list.Count == 0) {
+                throw new InvalidOperationException();
+            }
+            var res = list[list.Count - 1];
+            list.RemoveAt(list.Count - 1);
+            return res;
+        }
+
+        internal static T Peek<T>(this List<T> list) {
+            if (list.Count == 0) {
+                throw new InvalidOperationException();
+            }
+            return list[list.Count - 1];
+        }  
     }
 }

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
@@ -35,11 +36,26 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
+        public void RoundTripRemoveValueWhiteSpace(PythonAst ast) {
+            ast.SetAttribute(this, NodeAttributes.IsAltFormValue, NodeAttributes.IsAltFormValue);
+        }
+
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("return");
             if (_expression != null) {
+                int len = res.Length;
                 _expression.AppendCodeString(res, ast);
+                if (this.IsAltForm(ast)) {
+                    for (int i = len; i < res.Length; i++) {
+                        if (!Char.IsWhiteSpace(res[i])) {
+                            if (i - len > 1) {
+                                res.Remove(len + 1, i - len - 1);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         }
     }

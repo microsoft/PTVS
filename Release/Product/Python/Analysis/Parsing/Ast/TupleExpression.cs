@@ -47,6 +47,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        /// <summary>
+        /// Marks this tuple expression as having no parenthesis for the purposes of round tripping.
+        /// </summary>
+        public void RoundTripHasNoParenthesis(PythonAst ast) {
+            ast.SetAttribute(this, NodeAttributes.IsAltFormValue, NodeAttributes.IsAltFormValue);
+        }
+
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
             if (this.IsAltForm(ast)) {
                 ListExpression.AppendItems(res, ast, "", "", this, Items);

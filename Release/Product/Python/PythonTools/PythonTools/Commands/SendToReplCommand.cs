@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Commands {
             foreach (var span in activeView.Selection.SelectedSpans) {
                 repl.InsertCode(span.GetText());
             }
-            
+
             repl.Focus();
         }
 

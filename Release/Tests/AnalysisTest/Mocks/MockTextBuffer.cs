@@ -19,11 +19,12 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace AnalysisTest.Mocks {
     class MockTextBuffer : ITextBuffer {
-        internal readonly string _text;
+        internal MockTextSnapshot _snapshot;
+        private MockTextEdit _edit;
         private PropertyCollection _properties;
 
         public MockTextBuffer(string content) {
-            _text = content;
+            _snapshot = new MockTextSnapshot(this, content);
         }
 
         public void ChangeContentType(Microsoft.VisualStudio.Utilities.IContentType newContentType, object editTag) {
@@ -55,7 +56,11 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITextEdit CreateEdit() {
-            throw new NotImplementedException();
+            if (EditInProgress) {
+                throw new InvalidOperationException();
+            }
+            _edit = new MockTextEdit(CurrentSnapshot);
+            return _edit;
         }
 
         public ITextEdit CreateEdit(EditOptions options, int? reiteratedVersionNumber, object editTag) {
@@ -67,7 +72,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITextSnapshot CurrentSnapshot {
-            get { return new MockTextSnapshot(this); }
+            get { return _snapshot; }
         }
 
         public ITextSnapshot Delete(Span deleteSpan) {
@@ -75,7 +80,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public bool EditInProgress {
-            get { throw new NotImplementedException(); }
+            get { return _edit != null; }
         }
 
         public NormalizedSpanCollection GetReadOnlyExtents(Span span) {

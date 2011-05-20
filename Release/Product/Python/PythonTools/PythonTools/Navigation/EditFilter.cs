@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -633,6 +634,9 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
+                    case VSConstants.VSStd2KCmdID.EXTRACTMETHOD:
+                        new MethodExtractor(_textView).ExtractMethod(ExtractMethodUserInput.Instance);
+                        return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 foreach (var command in PythonToolsPackage.Commands.Keys) {
@@ -645,36 +649,6 @@ namespace Microsoft.PythonTools.Language {
             }
 
             return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-        }
-
-        internal static string RemoveReplPrompts(string newline) {
-            if (PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts) {
-                string text = Clipboard.GetText();
-                if (text != null) {
-                    string[] lines = text.Replace("\r\n", "\n").Split('\n');
-
-                    bool allPrompts = true;
-                    foreach (var line in lines) {
-                        if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
-                            if (!String.IsNullOrWhiteSpace(line)) {
-                                allPrompts = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (allPrompts) {
-                        for (int i = 0; i < lines.Length; i++) {
-                            if (!String.IsNullOrWhiteSpace(lines[i])) {
-                                lines[i] = lines[i].Substring(4);
-                            }
-                        }
-
-                        return String.Join(newline, lines);
-                    }
-                }
-            }
-            return null;
         }
 
         /// <summary>
@@ -733,6 +707,20 @@ namespace Microsoft.PythonTools.Language {
                         case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
+                        case VSConstants.VSStd2KCmdID.EXTRACTMETHOD:
+                            var activeView = CommonPackage.GetActiveTextView();
+
+                            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                                if (_textView.Selection.IsEmpty || _textView.Selection.Mode == TextSelectionMode.Box) {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
+                                } else {
+                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                                }
+                            } else {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                            }
+
+                            return VSConstants.S_OK;
                     }
                 }
             }
@@ -740,5 +728,35 @@ namespace Microsoft.PythonTools.Language {
         }
 
         #endregion
+
+        internal static string RemoveReplPrompts(string newline) {
+            if (PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts) {
+                string text = Clipboard.GetText();
+                if (text != null) {
+                    string[] lines = text.Replace("\r\n", "\n").Split('\n');
+
+                    bool allPrompts = true;
+                    foreach (var line in lines) {
+                        if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
+                            if (!String.IsNullOrWhiteSpace(line)) {
+                                allPrompts = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (allPrompts) {
+                        for (int i = 0; i < lines.Length; i++) {
+                            if (!String.IsNullOrWhiteSpace(lines[i])) {
+                                lines[i] = lines[i].Substring(4);
+                            }
+                        }
+
+                        return String.Join(newline, lines);
+                    }
+                }
+            }
+            return null;
+        }
     }
 }

@@ -70,17 +70,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(Parameter node) {
-#if NAME_BINDING
-            node.PythonVariable = 
-#endif
-            _binder.DefineParameter(node.Name);
+            node.AddVariable(_binder._globalScope, _binder._bindRefs, _binder.DefineParameter(node.Name));
             return false;
         }
         public override bool Walk(SublistParameter node) {
-#if NAME_BINDING
-            node.PythonVariable = 
-#endif
-            _binder.DefineParameter(node.Name);
+            node.AddVariable(_binder._globalScope, _binder._bindRefs, _binder.DefineParameter(node.Name));
             // we walk the node by hand to avoid walking the default values.
             WalkTuple(node.Tuple);
             return false;
@@ -91,10 +85,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 NameExpression name = innerNode as NameExpression;
                 if (name != null) {
                     _binder.DefineName(name.Name);
-#if NAME_BINDING
-                    name.Reference = 
-#endif
-                    _binder.Reference(name.Name);
+                    name.AddVariableReference(_binder._globalScope, _binder._bindRefs, _binder.Reference(name.Name));
                 } else if (innerNode is TupleExpression) {                    
                     WalkTuple((TupleExpression)innerNode);
                 }
@@ -117,12 +108,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     }
 
     class PythonNameBinder : PythonWalker {
-        private PythonAst _globalScope;
+        internal PythonAst _globalScope;
         internal ScopeStatement _currentScope;
         private readonly PythonAst _ast;
         private readonly PythonLanguageVersion _langVersion;
         private List<ScopeStatement> _scopes = new List<ScopeStatement>();
         private List<int> _finallyCount = new List<int>();
+        internal readonly bool _bindRefs;
 
         #region Recursive binders
 
@@ -134,19 +126,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         private readonly ErrorSink _errorSink;
 
-        private PythonNameBinder(PythonLanguageVersion langVersion, PythonAst ast, ErrorSink context) {
+        private PythonNameBinder(PythonLanguageVersion langVersion, PythonAst ast, ErrorSink context, bool bindReferences) {
             _ast = ast;
             _define = new DefineBinder(this);
             _delete = new DeleteBinder(this);
             _parameter = new ParameterBinder(this);
             _errorSink = context;
             _langVersion = langVersion;
+            _bindRefs = bindReferences;
         }
 
         #region Public surface
 
-        internal static void BindAst(PythonLanguageVersion langVersion, PythonAst ast, ErrorSink context) {
-            PythonNameBinder binder = new PythonNameBinder(langVersion, ast, context);
+        internal static void BindAst(PythonLanguageVersion langVersion, PythonAst ast, ErrorSink context, bool bindReferences) {
+            PythonNameBinder binder = new PythonNameBinder(langVersion, ast, context, bindReferences);
             binder.Bind(ast);
         }
 
@@ -180,11 +173,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             // Finish the globals
             unboundAst.FinishBind(this);
-
-            // Run flow checker
-            foreach (ScopeStatement scope in _scopes) {
-                FlowChecker.Check(scope);
-            }
         }
 
         private void PushScope(ScopeStatement node) {
@@ -249,7 +237,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // ClassDefinition
         public override bool Walk(ClassDefinition node) {
             if (node.Name != null) {
-                node.PythonVariable = DefineName(node.Name);
+                node.Variable = DefineName(node.Name);
+                node.AddVariableReference(_globalScope, _bindRefs, Reference(node.Name));
             }
 
             if (node.Bases != null) {
@@ -380,10 +369,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override bool Walk(FromImportStatement node) {
             if (node.Names != FromImportStatement.Star) {
                 PythonVariable[] variables = new PythonVariable[node.Names.Count];
+                PythonReference[] references = null;
+                if (_bindRefs) {
+                    references = new PythonReference[node.Names.Count];
+                }
                 for (int i = 0; i < node.Names.Count; i++) {
                     variables[i] = DefineName(node.AsNames[i] ?? node.Names[i]);
+                    if (references != null) {
+                        references[i] = Reference(variables[i].Name);
+                    }
                 }
                 node.Variables = variables;
+                node.AddVariableReference(_ast, _bindRefs, references);
             } else {
                 Debug.Assert(_currentScope != null);
                 _currentScope.ContainsImportStar = true;
@@ -399,7 +396,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             
             // Name is defined in the enclosing context
             if (!node.IsLambda && !node.IsGenerator) {
-                node.PythonVariable = DefineName(node.Name);
+                node.Variable = DefineName(node.Name);
+                node.AddVariableReference(_globalScope, _bindRefs, Reference(node.Name));
             }
             
             // process the default arg values in the outer context
@@ -543,11 +541,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override bool Walk(NameExpression node) {
-#if NAME_BINDING
-            node.Reference = 
-#endif
-            Reference(node.Name);
-            
+            node.AddVariableReference(_globalScope, _bindRefs, Reference(node.Name));
             return true;
         }
 
@@ -580,6 +574,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         // ImportStatement
         public override bool Walk(ImportStatement node) {
             PythonVariable[] variables = new PythonVariable[node.Names.Count];
+            PythonReference[] references = null;
+            if (_bindRefs) {
+                references = new PythonReference[variables.Length];
+            }
             for (int i = 0; i < node.Names.Count; i++) {
                 string name;
                 if(node.AsNames[i] != null) {
@@ -591,9 +589,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
                 if (name != null) {
                     variables[i] = DefineName(name);
+                    if (references != null) {
+                        references[i] = Reference(name);
+                    }
                 }
             }
             node.Variables = variables;
+            node.AddVariableReference(_ast, _bindRefs, references);
             return true;
         }
 

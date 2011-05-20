@@ -15,6 +15,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.PythonTools.Parsing.Ast;
 
 /*
  * The data flow.
@@ -84,83 +85,48 @@ using System.Diagnostics;
  *  00 .. may not be initialized
  */
 
-namespace Microsoft.PythonTools.Parsing.Ast {
-    class FlowDefiner : PythonWalkerNonRecursive {
-        private readonly FlowChecker _fc;
-
-        public FlowDefiner(FlowChecker fc) {
-            _fc = fc;
-        }
-
-        public override bool Walk(NameExpression node) {
-            _fc.Define(node.Name);
-            return false;
-        }
-
-        public override bool Walk(MemberExpression node) {
-            node.Walk(_fc);
-            return false;
-        }
-
-        public override bool Walk(IndexExpression node) {
-            node.Walk(_fc);
-            return false;
-        }
-        
-        public override bool Walk(ParenthesisExpression node) {
-            return true;
-        }
-
-        public override bool Walk(TupleExpression node) {
-            return true;
-        }
-
-        public override bool Walk(ListExpression node) {
-            return true;
-        }
-        
-        public override bool Walk(Parameter/*!*/ node) {
-            _fc.Define(node.Name);
-            return true;
-        }
-
-        public override bool Walk(SublistParameter node) {
-            return true;
-        }
-    }
-
-    class FlowDeleter : PythonWalkerNonRecursive {
-        private readonly FlowChecker _fc;
-
-        public FlowDeleter(FlowChecker fc) {
-            _fc = fc;
-        }
- 
-        public override bool Walk(NameExpression node) {
-            _fc.Delete(node.Name);
-            return false;
-        }
-    }
-
+namespace Microsoft.PythonTools.Refactoring {
     class FlowChecker : PythonWalker {
         private BitArray _bits;
         private Stack<BitArray> _loops;
         private Dictionary<string, PythonVariable> _variables;
+        private Dictionary<PythonVariable, int> _variableIndices;
+        private HashSet<PythonVariable> _readBeforeInitialized = new HashSet<PythonVariable>();
 
         private readonly ScopeStatement _scope;
         private readonly FlowDefiner _fdef;
         private readonly FlowDeleter _fdel;
 
-        private FlowChecker(ScopeStatement scope) {
-            _variables = scope.Variables;
+        public FlowChecker(ScopeStatement scope) {
+            var scopeVars = scope.ScopeVariables;
+
+            _variables = new Dictionary<string, PythonVariable>(scopeVars.Count);
+            foreach (var scopeVar in scopeVars) {
+                _variables[scopeVar.Name] = scopeVar;
+            }
+
             _bits = new BitArray(_variables.Count * 2);
             int index = 0;
+            _variableIndices = new Dictionary<PythonVariable, int>(_variables.Count);
             foreach (var binding in _variables) {
-                binding.Value.Index = index++;
+                _variableIndices[binding.Value] = index++;
             }
             _scope = scope;
             _fdef = new FlowDefiner(this);
             _fdel = new FlowDeleter(this);
+        }
+
+        public static void Check(ScopeStatement scope) {
+            if (scope.ScopeVariables != null) {
+                FlowChecker fc = new FlowChecker(scope);
+                scope.Walk(fc);
+            }
+        }
+
+        public HashSet<PythonVariable> ReadBeforeInitializedVariables {
+            get {
+                return _readBeforeInitialized;
+            }
         }
 
         [Conditional("DEBUG")]
@@ -173,38 +139,37 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             foreach (var binding in _variables) {
                 if (comma) sb.Append(", ");
                 else comma = true;
-                int index = 2 * binding.Value.Index;
+                int index = 2 * _variableIndices[binding.Value];
                 sb.AppendFormat("{0}:{1}{2}",
                     binding.Key,
                     bits.Get(index) ? "*" : "-",
                     bits.Get(index + 1) ? "-" : "*");
-                if (binding.Value.ReadBeforeInitialized)
+                if (ReadBeforeInitialized(binding.Value)) {
                     sb.Append("#");
+                }
             }
             sb.Append('}');
             Debug.WriteLine(sb.ToString());
         }
 
+        private bool ReadBeforeInitialized(PythonVariable variable) {
+            return _readBeforeInitialized.Contains(variable);
+        }
+
         private void SetAssigned(PythonVariable/*!*/ variable, bool value) {
-            _bits.Set(variable.Index * 2, value);
+            _bits.Set(_variableIndices[variable] * 2, value);
         }
 
         private void SetInitialized(PythonVariable/*!*/ variable, bool value) {
-            _bits.Set(variable.Index * 2 + 1, value);
+            _bits.Set(_variableIndices[variable] * 2 + 1, value);
         }
+
         private bool IsAssigned(PythonVariable/*!*/ variable) {
-            return _bits.Get(variable.Index * 2);
+            return _bits.Get(_variableIndices[variable] * 2);
         }
 
         private bool IsInitialized(PythonVariable/*!*/ variable) {
-            return _bits.Get(variable.Index * 2 + 1);
-        }
-
-        public static void Check(ScopeStatement scope) {
-            if (scope.Variables != null) {
-                FlowChecker fc = new FlowChecker(scope);
-                scope.Walk(fc);
-            }
+            return _bits.Get(_variableIndices[variable] * 2 + 1);
         }
 
         public void Define(string/*!*/ name) {
@@ -290,11 +255,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override bool Walk(NameExpression node) {
             PythonVariable binding;
             if (_variables.TryGetValue(node.Name, out binding)) {
-#if NAME_BINDING
-                node.Assigned = IsAssigned(binding);
-#endif
+                //node.Assigned = IsAssigned(binding);
                 if (!IsInitialized(binding)) {
-                    binding.ReadBeforeInitialized = true;
+                    _readBeforeInitialized.Add(binding);
                 }
             }
             return true;
@@ -390,7 +353,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // FromImportStmt
         public override bool Walk(FromImportStatement node) {
-            if (node.Names != FromImportStatement.Star) {
+            if (node.Names.Count != 1 || node.Names[0] != "*") {
                 for (int i = 0; i < node.Names.Count; i++) {
                     Define(node.AsNames[i] ?? node.Names[i]);
                 }
@@ -413,7 +376,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     if (p.DefaultValue != null) {
                         p.DefaultValue.Walk(this);
                     }
-                } 
+                }
                 return false;
             }
         }
@@ -480,7 +443,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             // Walk the expression
             for (int i = 0; i < node.Items.Count; i++) {
                 node.Items[i].ContextManager.Walk(this);
-                
+
                 // Define the Rhs
                 if (node.Items[i].Variable != null) {
                     node.Items[i].Variable.Walk(_fdef);
@@ -569,5 +532,62 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         #endregion
+
+        class FlowDefiner : PythonWalkerNonRecursive {
+            private readonly FlowChecker _fc;
+
+            public FlowDefiner(FlowChecker fc) {
+                _fc = fc;
+            }
+
+            public override bool Walk(NameExpression node) {
+                _fc.Define(node.Name);
+                return false;
+            }
+
+            public override bool Walk(MemberExpression node) {
+                node.Walk(_fc);
+                return false;
+            }
+
+            public override bool Walk(IndexExpression node) {
+                node.Walk(_fc);
+                return false;
+            }
+
+            public override bool Walk(ParenthesisExpression node) {
+                return true;
+            }
+
+            public override bool Walk(TupleExpression node) {
+                return true;
+            }
+
+            public override bool Walk(ListExpression node) {
+                return true;
+            }
+
+            public override bool Walk(Parameter/*!*/ node) {
+                _fc.Define(node.Name);
+                return true;
+            }
+
+            public override bool Walk(SublistParameter node) {
+                return true;
+            }
+        }
+
+        class FlowDeleter : PythonWalkerNonRecursive {
+            private readonly FlowChecker _fc;
+
+            public FlowDeleter(FlowChecker fc) {
+                _fc = fc;
+            }
+
+            public override bool Walk(NameExpression node) {
+                _fc.Delete(node.Name);
+                return false;
+            }
+        }
     }
 }

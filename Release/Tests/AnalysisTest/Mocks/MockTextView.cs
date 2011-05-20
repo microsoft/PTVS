@@ -21,9 +21,11 @@ namespace AnalysisTest.Mocks {
     class MockTextView : ITextView {
         private readonly ITextBuffer _buffer;
         private readonly PropertyCollection _props = new PropertyCollection();
+        private readonly MockTextSelection _selection;
 
         public MockTextView(ITextBuffer buffer) {
             _buffer = buffer;
+            _selection = new MockTextSelection(this);
         }
 
         public Microsoft.VisualStudio.Text.Projection.IBufferGraph BufferGraph {
@@ -104,7 +106,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public IEditorOptions Options {
-            get { throw new NotImplementedException(); }
+            get { return new MockTextOptions(); }
         }
 
         public Microsoft.VisualStudio.Text.ITrackingSpan ProvisionalTextHighlight {
@@ -125,7 +127,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITextSelection Selection {
-            get { throw new NotImplementedException(); }
+            get { return _selection; }
         }
 
         public ITextBuffer TextBuffer {

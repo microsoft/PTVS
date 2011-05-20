@@ -55,9 +55,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _asNames; }
         }
 
-        internal PythonVariable[] Variables {
+        /// <summary>
+        /// Gets the variables associated with each imported name.
+        /// </summary>
+        public PythonVariable[] Variables {
             get { return _variables; }
             set { _variables = value; }
+        }
+
+        public PythonReference[] GetReferences(PythonAst ast) {
+            return GetVariableReferences(this, ast);
         }
 
         public override void Walk(PythonWalker walker) {

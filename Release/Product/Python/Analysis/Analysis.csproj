@@ -154,7 +154,6 @@
     <Compile Include="Parsing\Ast\ExecStatement.cs" />
     <Compile Include="Parsing\Ast\Expression.cs" />
     <Compile Include="Parsing\Ast\ExpressionStatement.cs" />
-    <Compile Include="Parsing\Ast\FlowChecker.cs" />
     <Compile Include="Parsing\Ast\ForStatement.cs" />
     <Compile Include="Parsing\Ast\FromImportStatement.cs" />
     <Compile Include="Parsing\Ast\FunctionDefinition.cs" />

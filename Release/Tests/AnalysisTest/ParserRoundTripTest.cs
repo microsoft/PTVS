@@ -597,7 +597,8 @@ def f(): pass");
         public void TestStatements() {
             // TODO: Vary all of these tests by putting the test case in a function def
             // TODO: Vary all of these tests by adding trailing comments                        
-            
+            TestOneString(PythonLanguageVersion.V27, "def _process_result(self, (i");
+
             // Empty Statement
             TestOneString(PythonLanguageVersion.V27, "pass");
             

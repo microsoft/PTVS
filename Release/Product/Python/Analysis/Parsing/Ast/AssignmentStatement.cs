@@ -64,5 +64,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             Right.AppendCodeString(res, ast);
 
         }
+
+
+        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+            if (_left.Length > 0 && _left[0] != null) {
+                return _left[0].GetLeadingWhiteSpace(ast);
+            }
+
+            return null;
+        }
+
     }
 }

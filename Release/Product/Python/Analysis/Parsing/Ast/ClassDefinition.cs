@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _bases; }
         }
 
-        public Statement Body {
+        public override Statement Body {
             get { return _body; }
         }
 
@@ -60,9 +60,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal PythonVariable PythonVariable {
+        /// <summary>
+        /// Gets the variable that this class definition was assigned to.
+        /// </summary>
+        public PythonVariable Variable {
             get { return _variable; }
             set { _variable = value; }
+        }
+
+        /// <summary>
+        /// Gets the variable reference for the specific assignment to the variable for this class definition.
+        /// </summary>
+        public PythonReference GetVariableReference(PythonAst ast) {
+            return GetVariableReference(this, ast);
         }
 
         internal PythonVariable ModVariable {
@@ -99,17 +109,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return true;
         }
 
-        internal override PythonVariable BindReference(PythonNameBinder binder, PythonReference reference) {
+        internal override PythonVariable BindReference(PythonNameBinder binder, string name) {
             PythonVariable variable;
 
             // Python semantics: The variables bound local in the class
             // scope are accessed by name - the dictionary behavior of classes
-            if (TryGetVariable(reference.Name, out variable)) {
+            if (TryGetVariable(name, out variable)) {
                 // TODO: This results in doing a dictionary lookup to get/set the local,
                 // when it should probably be an uninitialized check / global lookup for gets
                 // and a direct set
                 if (variable.Kind == VariableKind.Global) {
-                    AddReferencedGlobal(reference.Name);
+                    AddReferencedGlobal(name);
                 } else if (variable.Kind == VariableKind.Local) {
                     return null;
                 }
@@ -120,7 +130,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             // Try to bind in outer scopes, if we have an unqualified exec we need to leave the
             // variables as free for the same reason that locals are accessed by name.
             for (ScopeStatement parent = Parent; parent != null; parent = parent.Parent) {
-                if (parent.TryBindOuter(this, reference.Name, true, out variable)) {
+                if (parent.TryBindOuter(this, name, true, out variable)) {
                     return variable;
                 }
             }

@@ -45,6 +45,10 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="CompletionContextTests.cs" />
+    <Compile Include="ExtractMethodTests.cs" />
+    <Compile Include="Mocks\MockTextEdit.cs" />
+    <Compile Include="Mocks\MockTextOptions.cs" />
+    <Compile Include="Mocks\MockTextSelection.cs" />
     <Compile Include="ParserRoundTripTest.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebuggerTests.cs" />

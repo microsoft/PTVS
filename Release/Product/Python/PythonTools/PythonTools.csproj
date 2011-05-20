@@ -355,6 +355,18 @@
     <Compile Include="PythonTools\Project\VisualStudio.Project.cs" />
     <Compile Include="PythonTools\Project\VsCommands.cs" />
     <Compile Include="PythonTools\Project\VSShellUtilities.cs" />
+    <Compile Include="PythonTools\Refactoring\AssignmentWalker.cs" />
+    <Compile Include="PythonTools\Refactoring\ExtractedMethodCreator.cs" />
+    <Compile Include="PythonTools\Refactoring\ExtractMethodDialog.xaml.cs">
+      <DependentUpon>ExtractMethodDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Refactoring\ExtractMethodRequest.cs" />
+    <Compile Include="PythonTools\Refactoring\ExtractMethodResult.cs" />
+    <Compile Include="PythonTools\Refactoring\ExtractMethodUserInput.cs" />
+    <Compile Include="PythonTools\Refactoring\FlowChecker.cs" />
+    <Compile Include="PythonTools\Refactoring\IExtractMethodInput.cs" />
+    <Compile Include="PythonTools\Refactoring\MethodExtractor.cs" />
+    <Compile Include="PythonTools\Refactoring\SelectionTarget.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
     <Compile Include="PythonTools\ProvideDebugLanguageAttribute.cs" />
     <Compile Include="PythonTools\Designer\WpfEventBindingProvider.cs" />
@@ -832,7 +844,12 @@
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Page Include="PythonTools\Refactoring\ExtractMethodDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
   <PropertyGroup>
     <!--
     To specify a different registry root to register your package, uncomment the TargetRegistryRoot

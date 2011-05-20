@@ -62,5 +62,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(verbatimNames != null ? (verbatimNames[i] ?? _names[i]) : _names[i]);
             }
         }
+
+
+        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+            var whitespace = this.GetNamesWhiteSpace(ast);
+            if (whitespace != null && whitespace.Length > 0) {
+                return whitespace[0];
+            }
+            return null;
+        }
+
     }
 }

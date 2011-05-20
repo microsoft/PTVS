@@ -26,12 +26,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private readonly string/*!*/ _name;
         internal readonly ParameterKind _kind;
         internal Expression _defaultValue, _annotation;
-#if NAME_BINDING
-        private PythonVariable _variable;
-#endif
+
         public Parameter(string name, ParameterKind kind) {
             _name = name ?? "";
             _kind = kind;
+        }
+
+        public override string NodeName {
+            get {
+                return "parameter name";
+            }
         }
 
         /// <summary>
@@ -79,13 +83,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-#if NAME_BINDING
-        internal PythonVariable PythonVariable {
-            get { return _variable; }
-            set { _variable = value; }
-        }
-#endif
-
         public override void Walk(PythonWalker walker) {
             if (walker.Walk(this)) {
                 if (_defaultValue != null) {
@@ -93,6 +90,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             }
             walker.PostWalk(this);
+        }
+
+        public PythonVariable GetVariable(PythonAst ast) {
+            object reference;
+            if (ast.TryGetAttribute(this, NodeAttributes.Variable, out reference)) {
+                return (PythonVariable)reference;
+            }
+            return null;
+        }
+
+        public void AddPreceedingWhiteSpace(PythonAst ast, string whiteSpace) {
+            ast.SetAttribute(this, NodeAttributes.PreceedingWhiteSpace, whiteSpace);
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
@@ -121,10 +130,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append('(');
                         res.Append(this.GetThirdWhiteSpace(ast));
                         res.Append(this.GetVerbatimImage(ast) ?? _name);
-                        res.Append(this.GetSecondWhiteSpace(ast));
-                        res.Append(')');
+                        if (!this.IsMissingCloseGrouping(ast)) {
+                            res.Append(this.GetSecondWhiteSpace(ast));
+                            res.Append(')');
+                        }
                     } else {
-                        res.Append(this.GetProceedingWhiteSpace(ast));
+                        res.Append(this.GetProceedingWhiteSpaceDefaultNull(ast));
                         res.Append(this.GetVerbatimImage(ast) ?? _name);
                         AppendAnnotation(res, ast);
                     }

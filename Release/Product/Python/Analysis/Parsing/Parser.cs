@@ -19,7 +19,6 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Numerics;
 using System.Text;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Parsing {
@@ -50,12 +49,13 @@ namespace Microsoft.PythonTools.Parsing {
         private TextReader _sourceReader;
         private int _errorCode;
         private readonly bool _verbatim;                            // true if we're in verbatim mode and the ASTs can be turned back into source code, preserving white space / comments
+        private readonly bool _bindReferences;                      // true if we should bind the references in the ASTs
         private string _tokenWhiteSpace, _lookaheadWhiteSpace;      // the whitespace for the current and lookahead tokens as provided from the parser
         private Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();  // attributes for each node, currently just round tripping information
 
         #region Construction
 
-        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim) {
+        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim, bool bindRefs) {
             Contract.Assert(tokenizer != null);
             Contract.Assert(errorSink != null);
 
@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Parsing {
             _errors = errorSink;
             _langVersion = langVersion;
             _verbatim = verbatim;
+            _bindReferences = bindRefs;
 
             Reset(FutureOptions.None);
         }
@@ -85,7 +86,13 @@ namespace Microsoft.PythonTools.Parsing {
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
             tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;
 
-            Parser result = new Parser(tokenizer, options.ErrorSink ?? ErrorSink.Null, version, parserOptions != null ? parserOptions.Verbatim : false);
+            Parser result = new Parser(tokenizer, 
+                options.ErrorSink ?? ErrorSink.Null, 
+                version, 
+                options.Verbatim,
+                options.BindReferences
+            );
+
             result._sourceReader = reader;
             return result;
         }
@@ -173,6 +180,9 @@ namespace Microsoft.PythonTools.Parsing {
 
         private PythonAst CreateAst(Statement ret) {
             var ast = new PythonAst(ret, _tokenizer.GetLineLocations());
+            if (_token.Token != null) {
+                ast.SetLoc(0, GetEnd());
+            }
             if (_verbatim) {
                 AddExtraVerbatimText(ast, _lookaheadWhiteSpace);
             }
@@ -181,7 +191,7 @@ namespace Microsoft.PythonTools.Parsing {
                     ast.SetAttribute(keyValue.Key, nodeAttr.Key, nodeAttr.Value);
                 }
             }
-            PythonNameBinder.BindAst(_langVersion, ast, _errors);
+            PythonNameBinder.BindAst(_langVersion, ast, _errors, _bindReferences);
 
             return ast;
         }
@@ -1668,7 +1678,7 @@ namespace Microsoft.PythonTools.Parsing {
             FunctionDefinition ret2 = PopFunction();
             System.Diagnostics.Debug.Assert(ret == ret2);
 
-            ret.Body = body;
+            ret.SetBody(body);
             ret.HeaderIndex = rEnd;
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, defWhitespace);
@@ -1893,13 +1903,19 @@ namespace Microsoft.PythonTools.Parsing {
                         if (_verbatim) {
                             AddPreceedingWhiteSpace(tret, parenWhiteSpace);
                             AddSecondPreceedingWhiteSpace(tret, closeParenWhiteSpace);
+                            if (!ateRightParen) {
+                                AddErrorMissingCloseGrouping(parameter);
+                            }
                         }
                     } else if ((nameRet = ret as NameExpression) != null) {
                         parameter = new Parameter(nameRet.Name, kind);
                         if (_verbatim) {
                             AddThirdPreceedingWhiteSpace(parameter,  (string) _attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
+                            AddIsAltForm(parameter);
+                            if (!ateRightParen) {
+                                AddErrorMissingCloseGrouping(parameter);
+                            }
                         }
-                        AddIsAltForm(parameter);
                     } else {
                         Debug.Assert(ret is ErrorExpression);
                         ReportSyntaxError(_lookahead);
@@ -2082,7 +2098,7 @@ namespace Microsoft.PythonTools.Parsing {
             FunctionDefinition func2 = PopFunction();
             System.Diagnostics.Debug.Assert(func == func2);
 
-            func.Body = body;
+            func.SetBody(body);
             func.EndIndex = GetEnd();
 
             LambdaExpression ret = new LambdaExpression(func);
@@ -2537,7 +2553,8 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     return ErrorStmt(_verbatim ? (colonWhiteSpace + ':' + suiteStartWhiteSpace) : null);
                 } else if (_verbatim) {
-                    suiteStartWhiteSpace += _tokenWhiteSpace + _token.Token.VerbatimImage;
+                    // indent white space belongs to the statement we're about to parse
+                    _lookaheadWhiteSpace = _tokenWhiteSpace + _token.Token.VerbatimImage +_lookaheadWhiteSpace;
                 }
 
                 string trailingWhiteSpace = null;
@@ -2565,6 +2582,7 @@ namespace Microsoft.PythonTools.Parsing {
                 //  simple_stmt NEWLINE
                 //  ParseSimpleStmt takes care of the NEWLINE
                 ret = new SuiteStatement(new[] { ParseSimpleStmt() });
+                AddSecondPreceedingWhiteSpace(ret, "");
             }
 
             ret.SetLoc(ret.Statements[0].StartIndex, ret.Statements[ret.Statements.Count - 1].EndIndex);
@@ -4262,6 +4280,7 @@ namespace Microsoft.PythonTools.Parsing {
             Statement[] stmts = l.ToArray();
 
             SuiteStatement ret = new SuiteStatement(stmts);
+            AddIsAltForm(ret);
             if (_token.Token != null) {
                 ret.SetLoc(0, GetEnd());
             }

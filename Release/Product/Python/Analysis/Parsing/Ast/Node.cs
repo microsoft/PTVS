@@ -68,9 +68,38 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return new SourceSpan(GetStart(parent), GetEnd(parent));
         }
 
+        public static void CopyLeadingWhiteSpace(PythonAst parentNode, Node fromNode, Node toNode) {
+            parentNode.SetAttribute(toNode, NodeAttributes.PreceedingWhiteSpace, fromNode.GetIndentationLevel(parentNode));
+        }
+
+        public static void CopyTrailingNewLine(PythonAst parentNode, Node fromNode, Node toNode) {
+            parentNode.SetAttribute(toNode, NodeAttributes.TrailingNewLine, fromNode.GetTrailingNewLine(parentNode));
+        }
+
+        public string GetIndentationLevel(PythonAst parentNode) {
+            var leading = GetLeadingWhiteSpace(parentNode);
+            // we only want the trailing leading space for the current line...
+            for (int i = leading.Length - 1; i >= 0; i--) {
+                if (leading[i] == '\r' || leading[i] == '\n') {
+                    leading = leading.Substring(i + 1);
+                    break;
+                }
+            }
+            return leading;
+        }
+
         #endregion
         
         #region Internal APIs
+
+        /// <summary>
+        /// Gets the leading white space for the node.  Usually this is just the leading mark space marked for this node,
+        /// but some nodes will have their leading white space captures in a child node and those nodes will extract
+        /// the white space appropriately.
+        /// </summary>
+        internal virtual string GetLeadingWhiteSpace(PythonAst ast) {
+            return this.GetProceedingWhiteSpaceDefaultNull(ast) ?? "";
+        }
 
         /// <summary>
         /// Appends the code representation of the node to the string builder.
@@ -96,6 +125,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal virtual string GetDocumentation(Statement/*!*/ stmt) {
             return stmt.Documentation;
+        }
+
+        internal static PythonReference GetVariableReference(Node node, PythonAst ast) {
+            object reference;
+            if (ast.TryGetAttribute(node, NodeAttributes.VariableReference, out reference)) {
+                return (PythonReference)reference;
+            }
+            return null;
+        }
+
+        internal static PythonReference[] GetVariableReferences(Node node, PythonAst ast) {
+            object reference;
+            if (ast.TryGetAttribute(node, NodeAttributes.VariableReference, out reference)) {
+                return (PythonReference[])reference;
+            }
+            return null;
         }
 
         #endregion

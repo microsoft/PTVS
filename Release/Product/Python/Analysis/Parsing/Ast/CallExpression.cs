@@ -109,5 +109,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(')');
             }
         }
+
+        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+            return _target.GetLeadingWhiteSpace(ast);
+        }
     }
 }

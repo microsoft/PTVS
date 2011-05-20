@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         
-        public FunctionDefinition(string name, Parameter[] parameters, Statement body) {
+        public FunctionDefinition(string name, Parameter[] parameters, Statement body, DecoratorStatement decorators = null) {
             if (name == null) {
                 _name = "<lambda$" + Interlocked.Increment(ref _lambdaId) + ">";
                 _isLambda = true;
@@ -50,6 +50,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             _parameters = parameters;
             _body = body;
+            _decorators = decorators;
         }
 
         public bool IsLambda {
@@ -73,9 +74,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _returnAnnotation = value; }
         }
 
-        public Statement Body {
+        public override Statement Body {
             get { return _body; }
-            set { _body = value; }
+        }
+
+        internal void SetBody(Statement body) {
+            _body = body;
         }
 
         public int HeaderIndex {
@@ -97,9 +101,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             set { _generator = value; }
         }
 
-        internal PythonVariable PythonVariable {
+        /// <summary>
+        /// Gets the variable that this function is assigned to.
+        /// </summary>
+        public PythonVariable Variable {
             get { return _variable; }
             set { _variable = value; }
+        }
+
+        /// <summary>
+        /// Gets the variable reference for the specific assignment to the variable for this function definition.
+        /// </summary>
+        public PythonReference GetVariableReference(PythonAst ast) {
+            return GetVariableReference(this, ast);
         }
 
         internal override bool ExposesLocalVariable(PythonVariable variable) {
@@ -128,20 +142,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return false;
         }
 
-        internal override PythonVariable BindReference(PythonNameBinder binder, PythonReference reference) {
+        internal override PythonVariable BindReference(PythonNameBinder binder, string name) {
             PythonVariable variable;
 
             // First try variables local to this scope
-            if (TryGetVariable(reference.Name, out variable)) {
+            if (TryGetVariable(name, out variable)) {
                 if (variable.Kind == VariableKind.Global) {
-                    AddReferencedGlobal(reference.Name);
+                    AddReferencedGlobal(name);
                 }
                 return variable;
             }
 
             // Try to bind in outer scopes
             for (ScopeStatement parent = Parent; parent != null; parent = parent.Parent) {
-                if (parent.TryBindOuter(this, reference.Name, true, out variable)) {
+                if (parent.TryBindOuter(this, name, true, out variable)) {
                     return variable;
                 }
             }
@@ -224,14 +238,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (Decorators != null) {
                 Decorators.AppendCodeString(res, ast);
             }
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetProceedingWhiteSpaceDefaultNull(ast));
             res.Append("def");
             var name = this.GetVerbatimImage(ast) ?? Name;
             if (!String.IsNullOrEmpty(name)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append(name);
                 if (!this.IsIncompleteNode(ast)) {
-                    res.Append(this.GetThirdWhiteSpace(ast));
+                    res.Append(this.GetThirdWhiteSpaceDefaultNull(ast));
                     res.Append('(');
                     var commaWhiteSpace = this.GetListWhiteSpace(ast);
                     ParamsToString(res, ast, commaWhiteSpace);
@@ -242,7 +256,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     }
 
                     if (!this.IsMissingCloseGrouping(ast)) {
-                        res.Append(this.GetFourthWhiteSpace(ast));
+                        res.Append(this.GetFourthWhiteSpaceDefaultNull(ast));
                         res.Append(')');
                     }
                     if (ReturnAnnotation != null) {
