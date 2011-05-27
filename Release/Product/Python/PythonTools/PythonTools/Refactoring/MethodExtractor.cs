@@ -309,7 +309,7 @@ namespace Microsoft.PythonTools.Refactoring {
             public override bool Walk(TryStatement node) {
                 node.Body.Walk(this);
 
-                if (node.Handlers.Count > 0) {
+                if (node.Handlers != null && node.Handlers.Count > 0) {
                     // treat any exceptions from the body as handled, any exceptions
                     // from the handlers/else are not handled.
                     _raises = false;
@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             public override bool Walk(FromImportStatement node) {
-                if (node.Names.Count == 1 && node.Names[0] == "*") {
+                if (node.Names.Count == 1 && node.Names[0].Name == "*") {
                     ContainsImportStar = true;
                 }
                 return base.Walk(node);
@@ -622,11 +622,11 @@ namespace Microsoft.PythonTools.Refactoring {
                 ClassDefinition classDef;
                 if ((funcDef = node as FunctionDefinition) != null) {
                     if (funcDef.Decorators != null) {
-                        return funcDef.Decorators.Decorators[0].StartIndex;
+                        return funcDef.Decorators.StartIndex;
                     }
                 } else if ((classDef = node as ClassDefinition) != null) {
                     if (classDef.Decorators != null) {
-                        return classDef.Decorators.Decorators[0].StartIndex;
+                        return classDef.Decorators.StartIndex;
                     }
                 }
                 return node.StartIndex;

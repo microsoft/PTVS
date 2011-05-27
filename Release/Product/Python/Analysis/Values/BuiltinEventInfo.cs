@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             base.AugmentAssign(node, unit, value);
             var args = GetEventInvokeArgs(ProjectState);
             foreach (var r in value) {
-                r.Call(node, unit, args, new string[0]);
+                r.Call(node, unit, args, ExpressionEvaluator.EmptyNames);
             }
         }
 

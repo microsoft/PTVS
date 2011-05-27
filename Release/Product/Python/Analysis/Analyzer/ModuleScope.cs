@@ -27,17 +27,5 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public override string Name {
             get { return Module.Name; }
         }
-
-        public override IEnumerable<AnalysisVariable> GetVariablesForDef(string name, VariableDef def) {
-            foreach (var type in def.Types) {
-                if (type.Location != null) {
-                    yield return new AnalysisVariable(VariableType.Definition, type.Location);
-                }
-
-                foreach (var reference in type.References) {
-                    yield return new AnalysisVariable(VariableType.Reference, reference);
-                }
-            }
-        }
     }
 }

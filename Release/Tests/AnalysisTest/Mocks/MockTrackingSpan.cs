@@ -47,7 +47,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITextBuffer TextBuffer {
-            get { throw new NotImplementedException(); }
+            get { return _snapshot.TextBuffer; }
         }
 
         public TrackingFidelityMode TrackingFidelity {

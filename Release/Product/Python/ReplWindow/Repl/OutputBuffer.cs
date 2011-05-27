@@ -210,15 +210,15 @@ namespace Microsoft.VisualStudio.Repl {
         public void Flush() {
             // if we're rapidly outputting grow the output buffer.
             long curTime = _stopwatch.ElapsedMilliseconds;
-            if ((curTime - _lastFlush) < 1000) {
-                if (_maxSize < (1024 * 1024)) {
+            if (curTime - _lastFlush < 1000) {
+                if (_maxSize < 1024 * 1024) {
                     _maxSize *= 2;
                 }
             }
             _lastFlush = _stopwatch.ElapsedMilliseconds;
 
             OutputEntry[] entries;
-            lock (_lock) {                
+            lock (_lock) {
                 entries = _outputEntries.ToArray();
 
                 _outputEntries.Clear();

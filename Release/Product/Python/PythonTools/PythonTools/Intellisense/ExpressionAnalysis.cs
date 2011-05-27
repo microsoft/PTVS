@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -74,6 +75,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 return new IAnalysisValue[0];
             }
+        }
+
+        public Expression GetEvaluatedExpression() {
+            return _analysis.GetExpressionFromText(_expr);
         }
     }
 }

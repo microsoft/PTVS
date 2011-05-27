@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// Performs a call operation propagating the argument types into any user defined functions
         /// or classes and returns the set of types which result from the call.
         /// </summary>
-        public static ISet<Namespace> Call(this ISet<Namespace> self, Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public static ISet<Namespace> Call(this ISet<Namespace> self, Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var ns in self) {

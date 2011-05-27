@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <param name="unit">The analysis unit performing the analysis</param>
         /// <param name="args">The arguments being passed to the function</param>
         /// <param name="keywordArgNames">Keyword argument names, * and ** are included in here for splatting calls</param>
-        public virtual ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public virtual ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             return EmptySet<Namespace>.Instance;
         }
 
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             bool madeSet = false;
             foreach (var ns in item) {
                 // FIXME: new string[0]
-                result = result.Union(ns.Call(node, unit, new[] { index }, new string[0]), ref madeSet);
+                result = result.Union(ns.Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames), ref madeSet);
             }
             return result;
         }

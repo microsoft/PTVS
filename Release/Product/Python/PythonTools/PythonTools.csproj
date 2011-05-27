@@ -186,6 +186,9 @@
     <Compile Include="PythonTools\IVsPython.cs" />
     <Compile Include="PythonTools\Navigation\AssignmentScopeNode.cs" />
     <Compile Include="PythonTools\Navigation\PythonFileLibraryNode.cs" />
+    <Compile Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml.cs">
+      <DependentUpon>WaitForCompleteAnalysisDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Project\DefaultLauncherProvider.cs" />
     <Compile Include="PythonTools\Project\DefaultPythonLauncherOptions.cs">
       <SubType>UserControl</SubType>
@@ -356,6 +359,14 @@
     <Compile Include="PythonTools\Project\VsCommands.cs" />
     <Compile Include="PythonTools\Project\VSShellUtilities.cs" />
     <Compile Include="PythonTools\Refactoring\AssignmentWalker.cs" />
+    <Compile Include="PythonTools\Refactoring\FilePreviewItem.cs" />
+    <Compile Include="PythonTools\Refactoring\IPreviewItem.cs" />
+    <Compile Include="PythonTools\Refactoring\LocationPreviewItem.cs" />
+    <Compile Include="PythonTools\Refactoring\PreviewChangesEngine.cs" />
+    <Compile Include="PythonTools\Refactoring\PreviewList.cs" />
+    <Compile Include="PythonTools\Refactoring\RenameVariableRequest.cs" />
+    <Compile Include="PythonTools\Refactoring\RenameVariableUserInput.cs" />
+    <Compile Include="PythonTools\Refactoring\IRenameVariableInput.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractedMethodCreator.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodDialog.xaml.cs">
       <DependentUpon>ExtractMethodDialog.xaml</DependentUpon>
@@ -366,7 +377,11 @@
     <Compile Include="PythonTools\Refactoring\FlowChecker.cs" />
     <Compile Include="PythonTools\Refactoring\IExtractMethodInput.cs" />
     <Compile Include="PythonTools\Refactoring\MethodExtractor.cs" />
+    <Compile Include="PythonTools\Refactoring\RenameVariableDialog.xaml.cs">
+      <DependentUpon>RenameVariableDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Refactoring\SelectionTarget.cs" />
+    <Compile Include="PythonTools\Refactoring\VariableRenamer.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
     <Compile Include="PythonTools\ProvideDebugLanguageAttribute.cs" />
     <Compile Include="PythonTools\Designer\WpfEventBindingProvider.cs" />
@@ -845,7 +860,15 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PythonTools\Refactoring\ExtractMethodDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Refactoring\RenameVariableDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

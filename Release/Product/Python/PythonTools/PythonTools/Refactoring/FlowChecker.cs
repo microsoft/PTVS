@@ -353,9 +353,9 @@ namespace Microsoft.PythonTools.Refactoring {
 
         // FromImportStmt
         public override bool Walk(FromImportStatement node) {
-            if (node.Names.Count != 1 || node.Names[0] != "*") {
+            if (node.Names.Count != 1 || node.Names[0].Name != "*") {
                 for (int i = 0; i < node.Names.Count; i++) {
-                    Define(node.AsNames[i] ?? node.Names[i]);
+                    Define(node.AsNames[i] != null ? node.AsNames[i].Name : node.Names[i].Name);
                 }
             }
             return true;
@@ -425,9 +425,9 @@ namespace Microsoft.PythonTools.Refactoring {
         public override bool Walk(ImportStatement node) {
             for (int i = 0; i < node.Names.Count; i++) {
                 if (node.AsNames[i] != null) {
-                    Define(node.AsNames[i]);
+                    Define(node.AsNames[i].Name);
                 } else if (node.Names[i].Names.Count > 0) {
-                    Define(node.Names[i].Names[0]);
+                    Define(node.Names[i].Names[0].Name);
                 }
             }
             return true;

@@ -31,18 +31,5 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public override string Name {
             get { return Function.FunctionDefinition.Name;  }
         }
-
-        public VariableDef DefineVariable(Parameter node, AnalysisUnit unit) {
-            return Variables[node.Name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, node);
-        }
-
-        public override IEnumerable<AnalysisVariable> GetVariablesForDef(string name, VariableDef def) {
-            // if this is a parameter or a local indicate any values which we know are assigned to it.
-            foreach (var type in def.Types) {
-                if (type.Location != null) {
-                    yield return new AnalysisVariable(VariableType.Value, type.Location);
-                }
-            }
-        }
     }
 }

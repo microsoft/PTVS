@@ -24,6 +24,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private readonly AnalysisUnit _unit;
         private readonly InterpreterScope[] _currentScopes;
 
+        internal static NameExpression[] EmptyNames = new NameExpression[0];
+
         /// <summary>
         /// Creates a new ExpressionEvaluator that will evaluate in the context of the top-level module.
         /// </summary>
@@ -78,22 +80,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             return ProjectState.BuiltinModule.GetMember(node, _unit, name);
-        }
-
-        /// <summary>
-        /// Returns the variable definition for the given name.
-        /// </summary>
-        public VariableDef LookupVariableByName(string name, Node node, bool addReference = true) {
-            for (int i = Scopes.Length - 1; i >= 0; i--) {
-                if (i == Scopes.Length - 1 || Scopes[i].VisibleToChildren) {
-                    var value = Scopes[i].GetVariable(node, _unit, name, addReference);
-                    if (value != null) {
-                        return value;
-                    }
-                }
-            }
-
-            return null;
         }
 
         #endregion
@@ -273,18 +259,18 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
 
-        private static string[] GetNamedArguments(IList<Arg> args) {
-            string[] res = null;
+        private static NameExpression[] GetNamedArguments(IList<Arg> args) {
+            NameExpression[] res = null;
             for (int i = 0; i < args.Count; i++) {
                 if (args[i].Name != null) {
                     if (res == null) {
-                        res = new string[args.Count - i];
+                        res = new NameExpression[args.Count - i];
                     }
 
-                    res[i - (args.Count - res.Length)] = args[i].Name;
+                    res[i - (args.Count - res.Length)] = (NameExpression)args[i].NameExpression;
                 }
             }
-            return res ?? new string[0];
+            return res ?? EmptyNames;
         }
 
         private static ISet<Namespace> EvaluateUnary(ExpressionEvaluator ee, Node node) {            
@@ -354,17 +340,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         internal void AssignTo(Node assignStmt, Expression left, ISet<Namespace> values) {
             if (left is NameExpression) {
                 var l = (NameExpression)left;
-                var vars = LookupVariableByName(l.Name, l, false);
-                if (vars == null) {
-                    vars = Scopes[Scopes.Length - 1].CreateVariable(left, _unit, l.Name, false);
-                }
-
+                var vars = Scopes[Scopes.Length - 1].CreateVariable(l, _unit, l.Name, false);
+                    
                 vars.AddAssignment(left, _unit);
                 vars.AddTypes(l, _unit, values);
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
                 foreach (var obj in Evaluate(l.Target)) {
-                    obj.SetMember(assignStmt, _unit, l.Name, values);
+                    obj.SetMember(l, _unit, l.Name, values);
                 }
             } else if (left is IndexExpression) {
                 var l = (IndexExpression)left;

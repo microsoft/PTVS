@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Repl;
 
@@ -20,11 +21,12 @@ namespace Microsoft.PythonTools.Repl {
     class SwitchModuleCommand : IReplCommand {
         #region IReplCommand Members
 
-        public void Execute(IReplWindow window, string arguments) {
+        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
             var remoteEval = window.Evaluator as PythonReplEvaluator;
             if(remoteEval != null) {
                 remoteEval.SetScope(arguments);
             }
+            return false;
         }
 
         public string Description {

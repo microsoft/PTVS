@@ -863,6 +863,7 @@ namespace AnalysisTest {
 
             const string code = "$unknown";
             Keyboard.Type(code + "\r");
+            interactive.WaitForReadyState();
 
             interactive.WaitForText(ReplPrompt + code, "Unknown command 'unknown', use \"$help\" for help", ReplPrompt);
         }
@@ -878,6 +879,7 @@ namespace AnalysisTest {
 
             const string code = "$$ foo bar baz";
             Keyboard.Type(code + "\r");
+            interactive.WaitForReadyState();
 
             interactive.WaitForText(ReplPrompt + code, ReplPrompt);
         }
@@ -1448,6 +1450,68 @@ $cls
         }
 
         /// <summary>
+        /// Replacing a snippet including a single line break with another snippet that also includes a single line break (line delta is zero).
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectionBuffers_ZeroLineDeltaChange() {
+            var interactive = Prepare();
+            ManualResetEvent signal = new ManualResetEvent(false);
+
+            interactive.DispatchAndWait(signal, () => {
+                var buffer = interactive.ReplWindow.CurrentLanguageBuffer;
+                buffer.Replace(new Span(0, 0), "def f():\r\n    pass");
+                VerifyProjectionSpans((ReplWindow)interactive.ReplWindow);
+
+                var snapshot = buffer.CurrentSnapshot;
+
+                var spanToReplace = new Span("def f():".Length, "\r\n    ".Length);
+                Assert.AreEqual("\r\n    ", snapshot.GetText(spanToReplace));
+
+                using (var edit = buffer.CreateEdit(EditOptions.None, null, null)) {
+                    edit.Replace(spanToReplace.Start, spanToReplace.Length, "\r\n");
+                    edit.Apply();
+                }
+
+                VerifyProjectionSpans((ReplWindow)interactive.ReplWindow);
+            });
+        }
+
+        /// <summary>
+        /// Verifies that current langauge buffer is projected as:
+        /// {Prompt1}{Language Span}\r\n
+        /// {Prompt2}{Language Span}\r\n
+        /// {Prompt2}{Language Span}
+        /// </summary>
+        private static void VerifyProjectionSpans(ReplWindow repl) {
+            var projectionSpans = repl.ProjectionSpans;
+            var projectionBuffer = repl.TextBuffer;
+            var snapshot = repl.CurrentLanguageBuffer.CurrentSnapshot;
+
+            int firstLangSpan = projectionSpans.Count - snapshot.LineCount * 2 + 1;
+            int projectionLine = projectionBuffer.CurrentSnapshot.LineCount - snapshot.LineCount;
+            for (int i = firstLangSpan; i < projectionSpans.Count; i += 2, projectionLine++) {
+
+                // prompt:
+                if (i == firstLangSpan) {
+                    Assert.IsTrue(projectionSpans[i - 1].Kind == ReplSpanKind.Prompt);
+                } else {
+                    Assert.IsTrue(projectionSpans[i - 1].Kind == ReplSpanKind.SecondaryPrompt);
+                }
+
+                // language span:
+                Assert.IsTrue(projectionSpans[i].Kind == ReplSpanKind.Language);
+                var trackingSpan = projectionSpans[i].TrackingSpan;
+                Assert.IsNotNull(trackingSpan);
+
+                var text = trackingSpan.GetText(snapshot);
+                var lineBreak = projectionBuffer.CurrentSnapshot.GetLineFromLineNumber(projectionLine).GetLineBreakText();
+                Assert.IsTrue(text.EndsWith(lineBreak));
+                Assert.IsTrue(text.IndexOf("\n") == -1 || text.IndexOf("\n") >= text.Length - lineBreak.Length);
+            }
+        }
+
+        /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -1800,8 +1864,9 @@ $cls
             var interactive = app.GetInteractiveWindow(InterpreterDescription);
             if (reset) {
                 interactive.Reset();
-                System.Threading.Thread.Sleep(1000);
             }
+
+            interactive.WaitForIdleState();
             app.Element.SetFocus();
             interactive.Element.SetFocus();
             interactive.ClearScreen();

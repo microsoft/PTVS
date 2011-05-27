@@ -421,7 +421,7 @@ namespace Microsoft.PythonTools.Repl {
                 using (new SocketUnlock(this)) {
                     // DONE command
                     if (_completion != null) {
-                        _completion(new ExecutionResult(false));
+                        _completion(ExecutionResult.Failure);
                     }
                 }
             }
@@ -430,7 +430,7 @@ namespace Microsoft.PythonTools.Repl {
                 using (new SocketUnlock(this)) {
                     // DONE command
                     if (_completion != null) {
-                        _completion(new ExecutionResult(true));
+                        _completion(ExecutionResult.Success);
                     }
                 }
             }

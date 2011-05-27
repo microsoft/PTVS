@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             return _method.ReturnTypes;
         }
 

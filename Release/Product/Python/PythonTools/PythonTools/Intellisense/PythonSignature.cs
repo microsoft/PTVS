@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    internal class PythonSignature : ISignature {
+    internal class PythonSignature : ISignature, IOverloadResult {
         private readonly ITrackingSpan _span;
         private readonly string _content;
         private readonly ReadOnlyCollection<IParameter> _parameters;
@@ -111,5 +111,17 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
+
+        string IOverloadResult.Name {
+            get { return _overload.Name; }
+        }
+
+        string IOverloadResult.Documentation {
+            get { return _overload.Documentation; }
+        }
+
+        ParameterResult[] IOverloadResult.Parameters {
+            get { return _overload.Parameters; }
+        }
     }
 }

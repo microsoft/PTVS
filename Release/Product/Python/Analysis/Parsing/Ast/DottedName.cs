@@ -18,23 +18,23 @@ using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class DottedName : Node {
-        private readonly string[] _names;
+        private readonly NameExpression[] _names;
 
-        public DottedName(string[] names) {
+        public DottedName(NameExpression[] names) {
             _names = names;
         }
 
-        public IList<string> Names {
+        public IList<NameExpression> Names {
             get { return _names; }
         }
 
         public virtual string MakeString() {
             if (_names.Length == 0) return String.Empty;
 
-            StringBuilder ret = new StringBuilder(_names[0]);
+            StringBuilder ret = new StringBuilder(_names[0].Name);
             for (int i = 1; i < _names.Length; i++) {
                 ret.Append('.');
-                ret.Append(_names[i]);
+                ret.Append(_names[i].Name);
             }
             return ret.ToString();
         }
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
             var whitespace = this.GetNamesWhiteSpace(ast);
-            var verbatimNames = this.GetVerbatimNames(ast);
+            
             for (int i = 0, whitespaceIndex = 0; i < _names.Length; i++) {
                 if (whitespace != null) {
                     res.Append(whitespace[whitespaceIndex++]);
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(whitespace[whitespaceIndex++]);
                     }
                 }
-                res.Append(verbatimNames != null ? (verbatimNames[i] ?? _names[i]) : _names[i]);
+                _names[i].AppendCodeString(res, ast);
             }
         }
 

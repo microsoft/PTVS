@@ -36,6 +36,7 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
@@ -144,15 +145,39 @@ namespace Microsoft.PythonTools {
         }
 
         internal static void NavigateTo(string filename, Guid docViewGuidType, int line, int col) {
-            IVsTextManager textMgr = (IVsTextManager)Instance.GetService(typeof(SVsTextManager));
+            IVsTextView viewAdapter;
+            IVsWindowFrame pWindowFrame;
+            OpenDocument(filename, out viewAdapter, out pWindowFrame);
+            
+            ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
+
+            // Set the cursor at the beginning of the declaration.
+            ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
+            // Make sure that the text is visible.
+            viewAdapter.CenterLines(line, 1);
+        }
+
+        internal static ITextBuffer GetBufferForDocument(string filename) {
+            IVsTextView viewAdapter;
+            IVsWindowFrame frame;
+            OpenDocument(filename, out viewAdapter, out frame);
+
+            IVsTextLines lines;
+            ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out lines));
+            
             var model = Instance.GetService(typeof(SComponentModel)) as IComponentModel;
             var adapter = model.GetService<IVsEditorAdaptersFactoryService>();
 
-            IVsTextView viewAdapter;
+            return adapter.GetDocumentBuffer(lines);            
+        }
+
+        private static void OpenDocument(string filename, out IVsTextView viewAdapter, out IVsWindowFrame pWindowFrame) {
+            IVsTextManager textMgr = (IVsTextManager)Instance.GetService(typeof(SVsTextManager));
+
             IVsUIShellOpenDocument uiShellOpenDocument = Instance.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
             IVsUIHierarchy hierarchy;
             uint itemid;
-            IVsWindowFrame pWindowFrame;
+
 
             VsShellUtilities.OpenDocument(
                 Instance,
@@ -162,13 +187,6 @@ namespace Microsoft.PythonTools {
                 out itemid,
                 out pWindowFrame,
                 out viewAdapter);
-
-            ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
-
-            // Set the cursor at the beginning of the declaration.
-            ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
-            // Make sure that the text is visible.
-            viewAdapter.CenterLines(line, 1);
         }
 
         protected override object GetAutomationObject(string name) {

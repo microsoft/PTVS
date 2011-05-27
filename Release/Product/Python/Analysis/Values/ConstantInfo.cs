@@ -39,19 +39,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _builtinInfo = ((BuiltinClassInfo)projectState.GetNamespaceFromObjects(value.Type)).Instance;
         }
 
-        public override ISet<Namespace> BinaryOperation(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
             return _builtinInfo.BinaryOperation(node, unit, operation, rhs);
         }
 
-        public override ISet<Namespace> UnaryOperation(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, PythonOperator operation) {
+        public override ISet<Namespace> UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
             return _builtinInfo.UnaryOperation(node, unit, operation);
         }
 
-        public override ISet<Namespace> Call(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             return _builtinInfo.Call(node, unit, args, keywordArgNames);
         }
 
-        public override void AugmentAssign(Microsoft.PythonTools.Parsing.Ast.AugmentedAssignStatement node, AnalysisUnit unit, ISet<Namespace> value) {
+        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, ISet<Namespace> value) {
             _builtinInfo.AugmentAssign(node, unit, value);
         }
 
@@ -59,19 +59,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _builtinInfo.GetDescriptor(node, instance, context, unit);
         }
 
-        public override ISet<Namespace> GetMember(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, string name) {
+        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             return _builtinInfo.GetMember(node, unit, name);
         }
 
-        public override void SetMember(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
             _builtinInfo.SetMember(node, unit, name, value);
         }
 
-        public override ISet<Namespace> GetIndex(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, ISet<Namespace> index) {
+        public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
             return base.GetIndex(node, unit, index);
         }
 
-        public override void SetIndex(Microsoft.PythonTools.Parsing.Ast.Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
+        public override void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
             _builtinInfo.SetIndex(node, unit, index, value);
         }
 

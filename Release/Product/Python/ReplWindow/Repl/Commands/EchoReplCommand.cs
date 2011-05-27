@@ -26,13 +26,14 @@ namespace Microsoft.VisualStudio.Repl {
     class EchoReplCommand : IReplCommand {
         #region IReplCommand Members
 
-        public void Execute(IReplWindow window, string arguments) {
-            arguments = arguments .ToLowerInvariant();
+        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
+            arguments = arguments.ToLowerInvariant();
             if (arguments == "on") {
                 window.SetOptionValue(ReplOptions.ShowOutput, true);
             } else {
                 window.SetOptionValue(ReplOptions.ShowOutput, false);
             }
+            return false;
         }
 
         public string Description {

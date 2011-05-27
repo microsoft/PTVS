@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
@@ -51,6 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Dictionary<Type, Command> _commands = new Dictionary<Type, Command>();
         private readonly IVsErrorList _errorList;
         private readonly PythonProjectNode _project;
+        private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
 
         public ProjectAnalyzer(IPythonInterpreterFactory factory, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, errorProvider) {
@@ -342,6 +344,28 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
+            if (_queue.IsParsing || _analysisQueue.IsAnalyzing) {
+                while (_queue.IsParsing || _analysisQueue.IsAnalyzing) {
+                    _queueActivityEvent.WaitOne(1000);
+
+                    int itemsLeft = _queue.ParsePending + _analysisQueue.AnalysisPending;
+
+                    if (!itemsLeftUpdated(itemsLeft)) {
+                        break;
+                    }
+                }
+            } else {
+                itemsLeftUpdated(0);
+            }
+        }
+
+        public AutoResetEvent QueueActivityEvent {
+            get {
+                return _queueActivityEvent;
+            }
+        }
+
         public bool ImplicitProject {
             get {
                 return _project == null;
@@ -562,7 +586,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ast = null;
             errorSink = new CollectingErrorSink();
 
-            using (var parser = Parser.CreateParser(content, _interpreterFactory.GetLanguageVersion(), new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationSeverity })) {
+            using (var parser = Parser.CreateParser(content, _interpreterFactory.GetLanguageVersion(), new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationSeverity, BindReferences = true })) {
                 ast = ParseOneFile(ast, parser);
             }
         }
@@ -571,7 +595,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ast = null;
             errorSink = new CollectingErrorSink();
 
-            using (var parser = Parser.CreateParser(content, _interpreterFactory.GetLanguageVersion(), new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationSeverity })) {
+            using (var parser = Parser.CreateParser(content, _interpreterFactory.GetLanguageVersion(), new ParserOptions() { ErrorSink = errorSink, IndentationInconsistencySeverity = indentationSeverity, BindReferences = true })) {
                 ast = ParseOneFile(ast, parser);
             }
         }

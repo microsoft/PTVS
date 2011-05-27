@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 decorators = new DecoratorStatement(new[] { new NameExpression("classmethod") });
             }
 
-            var res = new FunctionDefinition(info.Name, parameters.ToArray(), body, decorators);
+            var res = new FunctionDefinition(new NameExpression(info.Name), parameters.ToArray(), body, decorators);
 
             StringBuilder newCall = new StringBuilder();
 

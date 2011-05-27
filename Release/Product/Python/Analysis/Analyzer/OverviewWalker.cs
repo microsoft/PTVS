@@ -52,11 +52,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 outerUnit.Scopes.CopyTo(scopes, 0);
 
                 var unit = new ClassAnalysisUnit(node, scopes);
-                var klass = new ClassInfo(unit);
+                var klass = new ClassInfo(unit, node);
                 var classScope = scope = klass.Scope;
 
                 var declScope = outerUnit.Scopes[outerUnit.Scopes.Length - 1];
-                declScope.SetVariable(node, unit, node.Name, klass.SelfSet);
+                var classVar = declScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
+                classVar.AddTypes(node.NameExpression, unit, klass.SelfSet);
 
                 declScope.Children.Add(classScope);
                 scopes[scopes.Length - 1] = classScope;
@@ -76,6 +77,31 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override bool Walk(FunctionDefinition node) {
             return WalkMember(AddFunction(node, _curUnit));
+        }
+
+        public override bool Walk(GlobalStatement node) {
+            foreach (var name in node.Names) {
+                if (name.Name != null) {
+                    // set the variable in the local scope to be the real variable in the global scope
+                    _scopes[_scopes.Count - 1].Variables[name.Name] = _scopes[0].CreateVariable(node, _curUnit, name.Name, false);
+                }
+            }
+            return false;
+        }
+
+        public override bool Walk(NonlocalStatement node) {
+            foreach (var name in node.Names) {
+                if (name.Name != null) {
+                    var reference = name.GetVariableReference(_entry.Tree);
+                    var declScope = reference.Variable.Scope;
+                    foreach (var scope in _scopes) {
+                        if (scope.Node == declScope || (declScope is PythonAst && scope == null)) {
+                            _scopes[_scopes.Count - 1].Variables[name.Name] = scope.CreateVariable(node, _curUnit, name.Name, false);
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         internal static FunctionInfo AddFunction(FunctionDefinition node, AnalysisUnit outerUnit) {
@@ -114,14 +140,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 scope = funcScope;
 
                 if (!node.IsLambda && node.Name != "<genexpr>") {
-                    // lambdas don't have their names published                    
-                    declScope.SetVariable(node, unit, node.Name, function.SelfSet);
+                    // lambdas don't have their names published        
+                    var funcVar = declScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
+                    funcVar.AddTypes(node.NameExpression, unit, function.SelfSet);
                 }
 
                 var newParams = new VariableDef[node.Parameters.Count];
                 int index = 0;
                 foreach (var param in node.Parameters) {
-                    newParams[index++] = funcScope.DefineVariable(param, unit);
+                    newParams[index++] = funcScope.AddLocatedVariable(param.Name, param, unit);
                 }
                 function.SetParameters(newParams);
                 unit.Enqueue();

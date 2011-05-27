@@ -6,6 +6,25 @@
              mc:Ignorable="d" 
              x:ClassModifier="internal"
              Width="640" Height="350" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Title="Extract method..." MinWidth="240" MinHeight="130">
+
+    <Window.Resources>
+        <Style TargetType='{x:Type ToolTip}'>
+
+            <Setter Property='Placement' Value='Mouse'/>
+            <Setter Property='VerticalOffset' Value='-55'/>
+            <Setter Property='Template'>
+                <Setter.Value>
+                    <ControlTemplate TargetType='{x:Type ToolTip}'>
+                        <Grid>
+                            <Rectangle Fill="Beige" Stroke="#FF000000" StrokeThickness="1" RadiusX="5" RadiusY="5" Margin="0,0,0,10"/>
+                            <ContentPresenter Margin='4,4,4,14'/>
+                            <Path Clip="M-5.5227271,4.0290776 L89.970606,4.0290776 L89.970606,14.529078 L-5.5227271,14.529078 z" Fill="#FFFFFFFF" Stretch="Fill" StrokeEndLineCap="Flat" StrokeLineJoin="Round" StrokeMiterLimit="0" Stroke="#FF000000" StrokeThickness="1" HorizontalAlignment="Left" Margin="6.12629377841949,0,0,0.592573191324899" VerticalAlignment="Bottom" Width="16.024208009243" Height="14.4365043640137" Data="M7.169073,17.488649 L7.1262943,29.684093 21.150503,17.247589"/>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -18,7 +37,13 @@
         <DockPanel Grid.Column="0" Grid.Row="0">
             <DockPanel DockPanel.Dock="Top">
                 <Label Content="Method _Name:" Height="28" HorizontalAlignment="Left" Margin="0,0,0,0" Name="_newNameLabel" VerticalAlignment="Top" Width="97" DockPanel.Dock="Left" />
-                <TextBox Height="23" Name="_newName" DockPanel.Dock="Right" Text="new_method" TextChanged="NewNameTextChanged" HorizontalAlignment="Stretch" Margin="4,2,4,2"/>
+                <TextBox Height="23" Name="_newName" DockPanel.Dock="Right" Text="new_method" HorizontalAlignment="Stretch" Margin="4,2,4,2" TextChanged="MethodNameTextChanged">
+                    <TextBox.ToolTip>
+                        <ToolTip Visibility="Hidden" Placement="Relative" PlacementRectangle="10, 35, 0, 0">
+                            The method name is invalid
+                        </ToolTip>
+                    </TextBox.ToolTip>
+                </TextBox>
             </DockPanel>
             <DockPanel DockPanel.Dock="Top">
                 <Label Content="Extract _To:" Height="28" HorizontalAlignment="Left" Margin="0,0,0,0" Name="_targetScopeLabel" VerticalAlignment="Top" Width="97" DockPanel.Dock="Left" />

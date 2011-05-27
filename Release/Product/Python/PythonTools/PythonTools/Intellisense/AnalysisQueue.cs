@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Library.Intellisense {
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
         private volatile bool _unload;
         private bool _isAnalyzing;
+        private int _analysisPending;
 
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
@@ -62,6 +63,9 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                 // see if we have the item in the queue anywhere...
                 for (int i = 0; i < _queue.Length; i++) {
                     if (_queue[i].Remove(item)) {
+                        Interlocked.Decrement(ref _analysisPending);
+                        _analyzer.QueueActivityEvent.Set();
+
                         AnalysisPriority oldPri = (AnalysisPriority)i;
 
                         if (oldPri > priority) {
@@ -76,6 +80,8 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                 }
 
                 // enqueue the work item
+                Interlocked.Increment(ref _analysisPending);
+                _analyzer.QueueActivityEvent.Set();
                 if (priority == AnalysisPriority.High) {
                     // always try and process high pri items immediately
                     _queue[iPri].Insert(0, item);
@@ -99,6 +105,12 @@ namespace Microsoft.PythonTools.Library.Intellisense {
             }
         }
 
+        public int AnalysisPending {
+            get {
+                return _analysisPending;
+            }
+        }
+
         #region IDisposable Members
 
         void IDisposable.Dispose() {
@@ -112,6 +124,8 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                 if (_queue[i].Count > 0) {
                     var res = _queue[i][0];
                     _queue[i].RemoveAt(0);
+                    Interlocked.Decrement(ref _analysisPending);
+                    _analyzer.QueueActivityEvent.Set();
                     priority = (AnalysisPriority)i;
                     return res;
                 }
@@ -143,6 +157,7 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                     }
                     _isAnalyzing = false;
                 } else {
+                    _isAnalyzing = false;
                     _event.WaitOne();
                 }
             }

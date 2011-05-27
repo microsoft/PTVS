@@ -159,6 +159,398 @@ namespace AnalysisTest {
 ");
         }
 
+        /// <summary>
+        /// Test cases which make sure we have the right ranges for each statement when doing extract method
+        /// and that we don't mess up the code before/after the statement.
+        /// </summary>
+        [TestMethod]
+        public void StatementTests() {
+
+            SuccessTest("assert False",
+@"x = 1
+
+assert False
+
+x = 2",
+@"x = 1
+
+def g():
+    assert False
+
+g()
+
+x = 2");
+
+
+            SuccessTest("x += 2",
+@"x = 1
+
+x += 2
+
+x = 2",
+@"x = 1
+
+def g():
+    x += 2
+
+g()
+
+x = 2");
+
+            SuccessTest("x = 100",
+@"x = 1
+
+x = 100
+
+x = 2",
+@"x = 1
+
+def g():
+    x = 100
+
+g()
+
+x = 2");
+
+            SuccessTest("class C: pass",
+@"x = 1
+
+class C: pass
+
+x = 2",
+@"x = 1
+
+def g():
+    class C: pass
+
+g()
+
+x = 2");
+
+            SuccessTest("del foo",
+@"x = 1
+
+del foo
+
+x = 2",
+@"x = 1
+
+def g():
+    del foo
+
+g()
+
+x = 2");
+
+            SuccessTest("pass",
+@"x = 1
+
+pass
+
+x = 2",
+@"x = 1
+
+def g():
+    pass
+
+g()
+
+x = 2");
+
+            SuccessTest("def f(): pass",
+@"x = 1
+
+def f(): pass
+
+x = 2",
+@"x = 1
+
+def g():
+    def f(): pass
+
+g()
+
+x = 2");
+
+
+            SuccessTest("for .. pass",
+@"x = 1
+
+for i in xrange(100):
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    for i in xrange(100):
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("if True: .. pass",
+@"x = 1
+
+if True:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    if True:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("if True: .. pass",
+@"x = 1
+
+if True:
+    42
+else:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    if True:
+        42
+    else:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("if True: .. pass",
+@"x = 1
+
+if True:
+    42
+elif False:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    if True:
+        42
+    elif False:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("import sys",
+@"x = 1
+
+import sys
+
+x = 2",
+@"x = 1
+
+def g():
+    import sys
+
+g()
+
+x = 2");
+
+            SuccessTest("print 42",
+@"x = 1
+
+print 42
+
+x = 2",
+@"x = 1
+
+def g():
+    print 42
+
+g()
+
+x = 2");
+
+
+            SuccessTest("raise Exception()",
+@"x = 1
+
+raise Exception()
+
+x = 2",
+@"x = 1
+
+def g():
+    raise Exception()
+
+g()
+
+x = 2");
+
+            SuccessTest("return 100",
+@"x = 1
+
+return 100
+
+x = 2",
+@"x = 1
+
+def g():
+    return 100
+
+return g()
+
+x = 2");
+
+            SuccessTest("try: .. pass",
+@"x = 1
+
+try:
+    42
+except:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    try:
+        42
+    except:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("try: .. pass",
+@"x = 1
+
+try:
+    42
+finally:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    try:
+        42
+    finally:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("try: .. pass",
+@"x = 1
+
+try:
+    42
+except:
+    100
+else:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    try:
+        42
+    except:
+        100
+    else:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("while .. pass",
+@"x = 1
+
+while True:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    while True:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("while .. pass",
+@"x = 1
+
+while True:
+    42
+else:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    while True:
+        42
+    else:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("with .. pass",
+@"x = 1
+
+with abc:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    with abc:
+        pass
+
+g()
+
+x = 2");
+
+            SuccessTest("with .. pass",
+@"x = 1
+
+with abc as foo:
+    pass
+
+x = 2",
+@"x = 1
+
+def g():
+    with abc as foo:
+        pass
+
+g()
+
+x = 2");
+
+        }
+
         [TestMethod]
         public void ClassTests() {
             SuccessTest("print(self.abc)",

@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.Repl {
     class LoadReplCommand : IReplCommand {
         #region IReplCommand Members
 
-        public void Execute(IReplWindow window, string arguments) {
+        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
             List<string> submissions = new List<string>();
             List<string> lines = new List<string>();
 
@@ -53,6 +53,7 @@ namespace Microsoft.VisualStudio.Repl {
             AddSubmission(submissions, lines, lineBreak);
 
             window.Submit(submissions);
+            return false;
         }
 
         private static void AddSubmission(List<string> submissions, List<string> lines, string lineBreak) {

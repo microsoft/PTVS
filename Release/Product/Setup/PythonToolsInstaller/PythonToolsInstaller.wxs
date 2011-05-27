@@ -124,7 +124,7 @@
     <!-- Features to install -->
     
     <Feature Id="ProductFeature" Title="Python Tools for Visual Studio" Description="Python Tools for Visual Studio"
-             Display="expand" Level="1"  >
+             Display="expand" Level="1" AllowAdvertise="no" Absent="disallow"  >
       <ComponentRef Id="Comp_InstallDirItems" Primary="yes" />
       <ComponentRef Id="Comp_PyProgRegistration" Primary="yes" />
       
@@ -132,17 +132,17 @@
       <MergeRef Id="ReplWindow"/>
       <MergeRef Id="PythonProfiler"/>
       
-      <Feature Id="Feature_WinHpc" Absent="disallow" AllowAdvertise="yes" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
+      <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
         <Condition Level="2">NOT HPC_CLIENT_INSTALLED</Condition>
         <MergeRef Id="PythonHpc"/>
       </Feature>
       
-      <Feature Id="Feature_IronPython" Absent="disallow" AllowAdvertise="yes" Level="1" Title="IronPython support" Description="IronPython support">
+      <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
         <Condition Level="2">NOT IPY_INSTALLED</Condition>
         <MergeRef Id="IronPythonInterpreter"/>
       </Feature>
       
-      <Feature Id="Feature_VsPyFile" AllowAdvertise="yes" Level="1" Title="Register .py context menu." Description="Adds a Edit with Visual Studio context menu for .py files">
+      <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register .py context menu." Description="Adds a Edit with Visual Studio context menu for .py files">
         <ComponentRef Id="Comp_PyFileRegistration" />
         <Feature Id="Feature_PyFileExist" AllowAdvertise="no" Level="0" Title="Register .py with Visual Studio if not already registered">
           <Condition Level="1">NOT PYTHONFILETYPENODEFAULT</Condition>

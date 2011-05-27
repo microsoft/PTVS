@@ -19,12 +19,12 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     abstract class InterpreterScope {
         private readonly Namespace _ns;
-        private readonly Node _node;
+        private readonly ScopeStatement _node;
         public readonly List<InterpreterScope> Children = new List<InterpreterScope>();
         private Dictionary<string, VariableDef> _variables = new Dictionary<string, VariableDef>();
         private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
 
-        public InterpreterScope(Namespace ns, Node ast) {
+        public InterpreterScope(Namespace ns, ScopeStatement ast) {
             _ns = ns;
             _node = ast;
         }
@@ -53,12 +53,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return _node.GetEnd(ast).Line;
         }
 
-        public virtual IEnumerable<AnalysisVariable> GetVariablesForDef(string name, VariableDef def) {
-            return new AnalysisVariable[0];
-        }
-
         public abstract string Name {
             get;
+        }
+
+        public ScopeStatement Node {
+            get {
+                return _node;
+            }
+        }
+
+        public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit) {
+            VariableDef value;
+            if (!Variables.TryGetValue(name, out value)) {
+                return Variables[name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location);
+            } else if (!(value is LocatedVariableDef)) {
+                return Variables[name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value);                
+            }
+            return value;
         }
 
         public void SetVariable(Node node, AnalysisUnit unit, string name, IEnumerable<Namespace> value, bool addRef = true) {

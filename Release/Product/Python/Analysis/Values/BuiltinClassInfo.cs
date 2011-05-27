@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             // TODO: More Type propagation
             IAdvancedPythonType advType = _type as IAdvancedPythonType;
             if (advType != null) {
@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         propagating[i] = unit.ProjectState.GetInstance(types[i]).SelfSet;
                     }
                     foreach (var arg in args) {
-                        arg.Call(node, unit, propagating, EmptyStrings);
+                        arg.Call(node, unit, propagating, ExpressionEvaluator.EmptyNames);
                     }
                 }
             }

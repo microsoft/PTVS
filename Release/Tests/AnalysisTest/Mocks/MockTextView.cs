@@ -15,6 +15,7 @@
 using System;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.Utilities;
 
 namespace AnalysisTest.Mocks {
@@ -22,18 +23,21 @@ namespace AnalysisTest.Mocks {
         private readonly ITextBuffer _buffer;
         private readonly PropertyCollection _props = new PropertyCollection();
         private readonly MockTextSelection _selection;
+        private readonly MockTextCaret _caret = new MockTextCaret();
+        private readonly MockBufferGraph _bufferGraph;
 
         public MockTextView(ITextBuffer buffer) {
             _buffer = buffer;
             _selection = new MockTextSelection(this);
+            _bufferGraph = new MockBufferGraph();
         }
 
-        public Microsoft.VisualStudio.Text.Projection.IBufferGraph BufferGraph {
-            get { throw new NotImplementedException(); }
+        public IBufferGraph BufferGraph {
+            get { return _bufferGraph; }
         }
 
         public ITextCaret Caret {
-            get { throw new NotImplementedException(); }
+            get { return _caret;  }
         }
 
         public void Close() {

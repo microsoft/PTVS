@@ -1,16 +1,24 @@
-﻿using System;
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Refactoring {
@@ -20,6 +28,7 @@ namespace Microsoft.PythonTools.Refactoring {
     internal partial class ExtractMethodDialog {
         private readonly ExtractedMethodCreator _previewer;
         private readonly List<ScopeStatement> _targetScopes = new List<ScopeStatement>();
+        internal static readonly Regex _validNameRegex = new Regex("^[a-z_][a-z0-9_]*$");
 
         public ExtractMethodDialog(ExtractedMethodCreator previewer) {
             _previewer = previewer;
@@ -125,6 +134,24 @@ namespace Microsoft.PythonTools.Refactoring {
         private void CancelClick(object sender, RoutedEventArgs e) {
             this.DialogResult = false;
             Close();
+        }
+
+        private void MethodNameTextChanged(object sender, TextChangedEventArgs e) {
+            if (_ok != null) {
+                var toolTip = (ToolTip)_newName.ToolTip;
+                if (!_validNameRegex.IsMatch(_newName.Text)) {
+                    toolTip.Visibility = System.Windows.Visibility.Visible;
+                    toolTip.IsOpen = true;
+                    toolTip.IsEnabled = true;
+                    //toolTip.Placement = System.Windows.Controls.Primitives.PlacementMode.Relative;
+                    toolTip.PlacementTarget = _newName;
+                    //toolTip.PlacementRectangle = new Rect(10, 35, 0, 0);
+                    _ok.IsEnabled = false;
+                } else {
+                    toolTip.IsOpen = false;
+                    _ok.IsEnabled = true;
+                }
+            }
         }
 
     }

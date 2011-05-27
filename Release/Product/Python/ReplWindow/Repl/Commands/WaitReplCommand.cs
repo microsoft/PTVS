@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.Repl {
     class WaitReplCommand : IReplCommand {
         #region IReplCommand Members
 
-        public void Execute(IReplWindow window, string arguments) {
+        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
             var delay = new TimeSpan(0, 0, 0, 0, int.Parse(arguments));
             var start = DateTime.UtcNow;
             while ((start + delay) > DateTime.UtcNow) {
@@ -38,6 +38,7 @@ namespace Microsoft.VisualStudio.Repl {
                     );
                 Dispatcher.PushFrame(frame);
             }
+            return false;
         }
 
         public string Description {

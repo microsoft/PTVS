@@ -19,12 +19,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class ImportStatement : Statement {
         private readonly ModuleName[] _names;
-        private readonly string[] _asNames;
+        private readonly NameExpression[] _asNames;
         private readonly bool _forceAbsolute;
 
         private PythonVariable[] _variables;
 
-        public ImportStatement(ModuleName[] names, string[] asNames, bool forceAbsolute) {
+        public ImportStatement(ModuleName[] names, NameExpression[] asNames, bool forceAbsolute) {
             _names = names;
             _asNames = asNames;
             _forceAbsolute = forceAbsolute;
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _names; }
         }
 
-        public IList<string> AsNames {
+        public IList<NameExpression> AsNames {
             get { return _asNames; }
         }
 
@@ -59,8 +59,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
             var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
-            var verbatimNames = this.GetVerbatimNames(ast);
-            for (int i = 0, asIndex = 0; i < _names.Length; i++) {                
+            for (int i = 0, asIndex = 0; i < _names.Length; i++) {
                 if (i > 0 && itemWhiteSpace != null) {
                     res.Append(itemWhiteSpace[i - 1]);
                     res.Append(',');
@@ -72,16 +71,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(asNameWhiteSpace[asIndex++]);
                     }
                     res.Append("as");
-                    if (AsNames[i].Length != 0) {
+
+                    if (_asNames[i].Name.Length != 0) {
                         if (asNameWhiteSpace != null) {
                             res.Append(asNameWhiteSpace[asIndex++]);
                         }
 
-                        res.Append(verbatimNames != null ? (verbatimNames[i] ?? _asNames[i]) : _asNames[i]);
+                        _asNames[i].AppendCodeString(res, ast);
                     }
                 }
             }
-
         }
     }
 }

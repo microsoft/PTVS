@@ -153,24 +153,25 @@ class D(object):
             mod1.Analyze();
             mod2.Analyze();
 
-            VerifyReferences(mod1.Analysis.GetVariables("SomeMethod", GetLineNumber(text1, "SomeMethod")), 
-                new VariableLocation(5, 5, VariableType.Definition), new VariableLocation(5, 9, VariableType.Reference));
+
+            VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariables("SomeMethod", GetLineNumber(text1, "SomeMethod"))), 
+                new VariableLocation(5, 9, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
 
             // mutate 1st file
             text1 = text1.Substring(0, text1.IndexOf("    def")) + Environment.NewLine + text1.Substring(text1.IndexOf("    def"));
             Prepare(mod1, GetSourceUnit(text1, "mod1"));
             mod1.Analyze();
-            
-            VerifyReferences(mod1.Analysis.GetVariables("SomeMethod", GetLineNumber(text1, "SomeMethod")),
-                new VariableLocation(6, 5, VariableType.Definition), new VariableLocation(5, 9, VariableType.Reference));
+
+            VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariables("SomeMethod", GetLineNumber(text1, "SomeMethod"))),
+                new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
 
             // mutate 2nd file
             text2 = Environment.NewLine + text2;
             Prepare(mod2, GetSourceUnit(text2, "mod1"));
             mod2.Analyze();
 
-            VerifyReferences(mod1.Analysis.GetVariables("SomeMethod", GetLineNumber(text1, "SomeMethod")),
-                new VariableLocation(6, 5, VariableType.Definition), new VariableLocation(6, 9, VariableType.Reference));
+            VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariables("SomeMethod", GetLineNumber(text1, "SomeMethod"))),
+                new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(6, 20, VariableType.Reference));
 
         }
 
@@ -327,7 +328,7 @@ def f(abc):
 
 
             var vars = entry.GetVariables("f", GetLineNumber(text, "[f(x"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(2, 1, VariableType.Definition), new VariableLocation(5, 2, VariableType.Reference));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(2, 5, VariableType.Definition), new VariableLocation(5, 2, VariableType.Reference));
         }
 
         [TestMethod]
@@ -351,7 +352,7 @@ def f(abc):
 
 
             var vars = entry.GetVariables("f", GetLineNumber(text, "(f(x"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(2, 1, VariableType.Definition), new VariableLocation(5, 2, VariableType.Reference));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(2, 5, VariableType.Definition), new VariableLocation(5, 2, VariableType.Reference));
         }
 
 
@@ -677,7 +678,7 @@ class C(object):
 
 ";
             var entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(5, 9, VariableType.Definition), new VariableLocation(6, 13, VariableType.Reference), new VariableLocation(7, 15, VariableType.Reference));
+            VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(5, 14, VariableType.Definition), new VariableLocation(6, 18, VariableType.Reference), new VariableLocation(7, 20, VariableType.Reference));
             VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "foo")), new VariableLocation(4, 24, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
 
             text = @"
@@ -691,9 +692,9 @@ class D(object):
 D(42)";
             entry = ProcessText(text);
 
-            VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(5, 9, VariableType.Definition), new VariableLocation(6, 13, VariableType.Reference), new VariableLocation(7, 15, VariableType.Reference));
+            VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(5, 14, VariableType.Definition), new VariableLocation(6, 18, VariableType.Reference), new VariableLocation(7, 20, VariableType.Reference));
             VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "foo")), new VariableLocation(4, 24, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
-            VerifyReferences(entry.GetVariables("D", GetLineNumber(text, "D(42)")), new VariableLocation(9, 1, VariableType.Reference), new VariableLocation(3, 1, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("D", GetLineNumber(text, "D(42)"))), new VariableLocation(9, 1, VariableType.Reference), new VariableLocation(3, 7, VariableType.Definition));
 
             // function definitions
             text = @"
@@ -701,7 +702,7 @@ def f(): pass
 
 x = f()";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("f", GetLineNumber(text, "x =")), new VariableLocation(4, 5, VariableType.Reference), new VariableLocation(2, 1, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "x ="))), new VariableLocation(4, 5, VariableType.Reference), new VariableLocation(2, 5, VariableType.Definition));
 
             
 
@@ -710,7 +711,7 @@ def f(): pass
 
 x = f";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("f", GetLineNumber(text, "x =")), new VariableLocation(4, 5, VariableType.Reference), new VariableLocation(2, 1, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "x ="))), new VariableLocation(4, 5, VariableType.Reference), new VariableLocation(2, 5, VariableType.Definition));
 
             // class variables
             text = @"
@@ -731,7 +732,7 @@ class D(object): pass
 a = D
 ";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("D", GetLineNumber(text, "a =")), new VariableLocation(4, 5, VariableType.Reference), new VariableLocation(2, 1, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("D", GetLineNumber(text, "a ="))), new VariableLocation(4, 5, VariableType.Reference), new VariableLocation(2, 7, VariableType.Definition));
 
             // method definition
             text = @"
@@ -741,8 +742,8 @@ class D(object):
 a = D().f()
 ";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("D().f", GetLineNumber(text, "a =")), 
-                new VariableLocation(5, 5, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("D().f", GetLineNumber(text, "a ="))), 
+                new VariableLocation(5, 9, VariableType.Reference), new VariableLocation(3, 9, VariableType.Definition));
 
             // globals
             text = @"
@@ -830,8 +831,8 @@ def f(abc):
                 new VariableLocation(16, 14, VariableType.Reference),
 
                 new VariableLocation(18, 5, VariableType.Reference), 
-                new VariableLocation(19, 5, VariableType.Reference), 
-                new VariableLocation(20, 5, VariableType.Reference),
+                new VariableLocation(19, 21, VariableType.Reference), 
+                new VariableLocation(20, 28, VariableType.Reference),
 
                 new VariableLocation(22, 8, VariableType.Reference),
                 new VariableLocation(23, 10, VariableType.Reference),
@@ -2217,6 +2218,7 @@ pass
             }
         }
 
+#if FALSE
         [TestMethod]
         public void SaveStdLib() {
             // only run this once...
@@ -2233,6 +2235,7 @@ pass
                 var newPs = new PythonAnalyzer(new CPythonInterpreter(new TypeDatabase(tmpFolder)), PythonLanguageVersion.V27);
             }
         }
+#endif
 
 
         [TestMethod]
@@ -2251,14 +2254,14 @@ class Derived(Base):
 
             var entry = ProcessText(text);
 
-            var vars = entry.GetVariables("foo", GetLineNumber(text, "'x'"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 5, VariableType.Definition), new VariableLocation(6, 5, VariableType.Definition), new VariableLocation(4, 9, VariableType.Reference));
+            var vars = entry.GetVariables("self.foo", GetLineNumber(text, "'x'"));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
 
-            vars = entry.GetVariables("foo", GetLineNumber(text, "foo(self): pass"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 5, VariableType.Definition), new VariableLocation(6, 5, VariableType.Definition), new VariableLocation(4, 9, VariableType.Reference));
+            vars = entry.GetVariables("self.foo", GetLineNumber(text, "foo(self): pass"));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
 
             vars = entry.GetVariables("self.foo", GetLineNumber(text, "self.foo"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 5, VariableType.Definition), new VariableLocation(6, 5, VariableType.Definition), new VariableLocation(4, 9, VariableType.Reference));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
         }
         
         /// <summary>
@@ -2336,7 +2339,9 @@ mod1.f(42)
         private IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
             Dictionary<LocationInfo, IAnalysisVariable> res = new Dictionary<LocationInfo,IAnalysisVariable>();
             foreach (var v in vars) {
-                res[v.Location] = v;
+                if (!res.ContainsKey(v.Location) || res[v.Location].Type == VariableType.Value) {
+                    res[v.Location] = v;
+                }
             }
 
             return res.Values;

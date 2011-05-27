@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {            
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             if (unit != null) {
                 AddCall(node, keywordArgNames, unit, args);
             }
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return ReturnValue.Types;
         }
 
-        private void AddCall(Node node, string[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args) {
+        private void AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args) {
             ReturnValue.AddDependency(unit);
 
             if (ParameterTypes != null) {
@@ -92,12 +92,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private bool PropagateCall(Node node, string[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args, bool added) {
+        private bool PropagateCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args, bool added) {
             for (int i = 0; i < args.Length; i++) {
                 int kwIndex = i - (args.Length - keywordArgNames.Length);
                 if (kwIndex >= 0) {
-                    string curArg = keywordArgNames[kwIndex];
-                    switch (curArg) {
+                    var curArg = keywordArgNames[kwIndex];
+                    switch (curArg.Name) {
                         case "*":
                             int lastPos = args.Length - keywordArgNames.Length;
                             foreach (var type in args[i]) {
@@ -122,7 +122,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         default:
                             for (int j = 0; j < ParameterTypes.Length; j++) {
                                 string paramName = GetParameterName(j);
-                                if (paramName == curArg) {
+                                if (paramName == curArg.Name) {
+                                    ParameterTypes[j].AddReference(curArg, unit);
                                     if (ParameterTypes[j].AddTypes(FunctionDefinition.Parameters[j], unit, args[i])) {
                                         added = true;
                                         break;
@@ -252,7 +253,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override LocationInfo Location {
             get {
-                var start = FunctionDefinition.GetStart(FunctionDefinition.GlobalParent);
+                var start = FunctionDefinition.NameExpression.GetStart(FunctionDefinition.GlobalParent);
                 return new LocationInfo(
                     ProjectEntry,
                     start.Line,
@@ -265,7 +266,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var parameters = new ParameterResult[FunctionDefinition.Parameters.Count];
                 for (int i = 0; i < FunctionDefinition.Parameters.Count; i++) {
                     var curParam = FunctionDefinition.Parameters[i];
-                    var newParam = MakeParameterResult(ProjectState, curParam);
+
+                    var newParam = MakeParameterResult(ProjectState, curParam, ProjectEntry.Analysis.ToVariables(ParameterTypes[i]));
                     parameters[i] = newParam;
                 }
 
@@ -275,7 +277,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal static ParameterResult MakeParameterResult(PythonAnalyzer state, Parameter curParam) {
+        
+
+        internal static ParameterResult MakeParameterResult(PythonAnalyzer state, Parameter curParam, IEnumerable<IAnalysisVariable> variables = null) {
             string name = curParam.Name;
             if (curParam.IsDictionary) {
                 name = "**" + name;
@@ -325,7 +329,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            var newParam = new ParameterResult(name);
+            var newParam = new ParameterResult(name, String.Empty, "object", false, variables);
             return newParam;
         }
 

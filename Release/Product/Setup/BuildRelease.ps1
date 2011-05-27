@@ -1,6 +1,39 @@
-if ($args.Length -eq 0) {
-	echo "Must provide out dir"
-	exit 1
+param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch)
+
+if (-not $outdir)
+{
+    Write-Error "Must provide valid output directory: '$outdir'"
+    exit 1
+}
+
+if (-not $noclean)
+{
+    if (Test-Path $outdir) 
+    { 
+        rmdir -Recurse -Force $outdir
+        if (-not $?)
+        {
+            Write-Error "Could not clean output directory: $outdir"
+            exit 1
+        }
+    }
+    mkdir $outdir
+    if (-not $?)
+    {
+        Write-Error "Could not make output directory: $outdir"
+        exit 1
+    }
+}
+
+if ($uninstall)
+{
+    $guidregexp = "<\?define InstallerGuid=(.*)\?>"
+    foreach ($line in ( Get-Content .\PythonToolsInstaller\PythonToolsInstallerVars.wxi ))
+    {
+        if ($line -match $guidregexp) { $guid = $matches[1] ; break }
+    }
+    "Got product guid: $guid"
+    start -wait msiexec "/uninstall","{$guid}","/passive"
 }
 
 $versionFiles = "..\..\..\Build\AssemblyVersion.cs", "..\Python\PythonTools\source.extension.vsixmanifest"
@@ -13,78 +46,84 @@ foreach($versionedFile in $versionFiles) {
     }
 }
 
+$asmverfile = dir ..\..\..\Build\AssemblyVersion.cs
 $version = "0.8." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
-$text = [System.IO.File]::ReadAllText((Resolve-Path ..\..\..\Build\AssemblyVersion.cs))
-$text = $text.Replace("0.7.4100.000", $version)
+(Get-Content $asmverfile) | %{ $_ -replace "0.7.4100.000", $version } | Set-Content $asmverfile
 
-[System.IO.File]::WriteAllText((Resolve-Path ..\..\..\Build\AssemblyVersion.cs), $text)
+Get-Content $asmverfile
 
-msbuild .\dirs.proj /m /p:Configuration=Release /p:WixVersion=$version
-if ($LASTEXITCODE -gt 0) {
-	echo Build failed
-	exit 3
+foreach ($config in ("Release","Debug"))
+{
+    msbuild .\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version
+    if ($LASTEXITCODE -gt 0) {
+    	Write-Error "Build failed: $config"
+    	exit 3
+    }
+
+    if (-not $skiptests)
+    {
+        msbuild ..\..\Tests\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version
+        if ($LASTEXITCODE -gt 0)
+        {
+            Write-Error "Test build failed: $config"
+            exit 4
+        }
+    }
 }
 
-msbuild .\dirs.proj /p:Configuration=Debug /p:WixVersion=$version
-if ($LASTEXITCODE -gt 0) {
-	echo "Build failed"
-	exit 4
-}
+mkdir $outdir\Debug
+copy -force ..\..\..\Binaries\Win32\Debug\PythonToolsInstaller.msi $outdir\Debug\PythonToolsInstaller.msi
+copy -force PythonToolsInstaller\SnInternal.reg $outdir\Debug\EnableSkipVerification.reg
+copy -force PythonToolsInstaller\SnInternal64.reg $outdir\Debug\EnableSkipVerificationX64.reg
+copy -force PythonToolsInstaller\SnInternalRemove.reg $outdir\Debug\DisableSkipVerification.reg
+copy -force PythonToolsInstaller\SnInternal64Remove.reg $outdir\Debug\DisableSkipVerificationX64.reg
+
+mkdir $outdir\Debug\Symbols
+copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.pdb $outdir\Debug\Symbols\
+
+mkdir $outdir\Debug\Symbols\x64
+copy -force -recurse ..\..\..\Binaries\x64\Debug\*.pdb $outdir\Debug\Symbols\x64
+
+mkdir $outdir\Debug\Binaries
+copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.dll $outdir\Debug\Binaries\
+copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.exe $outdir\Debug\Binaries\
+
+mkdir $outdir\Debug\Binaries\x64
+mkdir $outdir\Debug\Binaries\ReplWindow
+copy -force -recurse ..\..\..\Binaries\x64\Debug\*.dll $outdir\Debug\Binaries\x64
+copy -force -recurse ..\..\..\Binaries\x64\Debug\*.exe $outdir\Debug\Binaries\x64
+copy -force -recurse ..\..\..\Binaries\x64\Debug\*.pkgdef $outdir\Debug\Binaries\x64
+copy -force -recurse ..\Python\ReplWindow\obj\Win32\Debug\extension.vsixmanifest $outdir\Debug\Binaries\ReplWindow
+
+mkdir $outdir\Release
+copy -force ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $outdir\Release\PythonToolsInstaller.msi
+copy -force PythonToolsInstaller\SnInternal.reg $outdir\Release\EnableSkipVerification.reg
+copy -force PythonToolsInstaller\SnInternal64.reg $outdir\Release\EnableSkipVerificationX64.reg
+copy -force PythonToolsInstaller\SnInternalRemove.reg $outdir\Release\DisableSkipVerification.reg
+copy -force PythonToolsInstaller\SnInternal64Remove.reg $outdir\Release\DisableSkipVerificationX64.reg
+
+mkdir $outdir\Release\Symbols
+copy -force -recurse ..\..\..\Binaries\Win32\Release\*.pdb $outdir\Release\Symbols\
+
+mkdir $outdir\Release\Symbols\x64
+copy -force -recurse ..\..\..\Binaries\x64\Release\*.pdb $outdir\Release\Symbols\x64
+
+mkdir $outdir\Release\Binaries
+mkdir $outdir\Release\Binaries\ReplWindow
+copy -force -recurse ..\..\..\Binaries\Win32\Release\*.dll $outdir\Release\Binaries\
+copy -force -recurse ..\..\..\Binaries\Win32\Release\*.exe $outdir\Release\Binaries\
+copy -force -recurse ..\..\..\Binaries\Win32\Release\*.pkgdef $outdir\Release\Binaries\
+copy -force -recurse ..\Python\ReplWindow\obj\Win32\Release\extension.vsixmanifest $outdir\Release\Binaries\ReplWindow
+
+mkdir $outdir\Release\Binaries\x64
+copy -force -recurse ..\..\..\Binaries\x64\Release\*.dll $outdir\Release\Binaries\x64
+copy -force -recurse ..\..\..\Binaries\x64\Release\*.exe $outdir\Release\Binaries\x64
 
 
-mkdir $args\Debug
-copy -force ..\..\..\Binaries\Win32\Debug\PythonToolsInstaller.msi $args\Debug\PythonToolsInstaller.msi
-copy -force PythonToolsInstaller\SnInternal.reg $args\Debug\EnableSkipVerification.reg
-copy -force PythonToolsInstaller\SnInternal64.reg $args\Debug\EnableSkipVerificationX64.reg
-copy -force PythonToolsInstaller\SnInternalRemove.reg $args\Debug\DisableSkipVerification.reg
-copy -force PythonToolsInstaller\SnInternal64Remove.reg $args\Debug\DisableSkipVerificationX64.reg
+if ($scorch) { tfpt scorch /noprompt }
 
-mkdir $args\Debug\Symbols
-copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.pdb $args\Debug\Symbols\
-
-mkdir $args\Debug\Symbols\x64
-copy -force -recurse ..\..\..\Binaries\x64\Debug\*.pdb $args\Debug\Symbols\x64
-
-mkdir $args\Debug\Binaries
-copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.dll $args\Debug\Binaries\
-copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.exe $args\Debug\Binaries\
-
-mkdir $args\Debug\Binaries\x64
-mkdir $args\Debug\Binaries\ReplWindow
-copy -force -recurse ..\..\..\Binaries\x64\Debug\*.dll $args\Debug\Binaries\x64
-copy -force -recurse ..\..\..\Binaries\x64\Debug\*.exe $args\Debug\Binaries\x64
-copy -force -recurse ..\..\..\Binaries\x64\Debug\*.pkgdef $args\Debug\Binaries\x64
-copy -force -recurse ..\Python\ReplWindow\obj\Win32\Debug\extension.vsixmanifest $args\Debug\Binaries\ReplWindow
-
-mkdir $args\Release
-copy -force ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $args\Release\PythonToolsInstaller.msi
-copy -force PythonToolsInstaller\SnInternal.reg $args\Release\EnableSkipVerification.reg
-copy -force PythonToolsInstaller\SnInternal64.reg $args\Release\EnableSkipVerificationX64.reg
-copy -force PythonToolsInstaller\SnInternalRemove.reg $args\Release\DisableSkipVerification.reg
-copy -force PythonToolsInstaller\SnInternal64Remove.reg $args\Release\DisableSkipVerificationX64.reg
-
-mkdir $args\Release\Symbols
-copy -force -recurse ..\..\..\Binaries\Win32\Release\*.pdb $args\Release\Symbols\
-
-mkdir $args\Release\Symbols\x64
-copy -force -recurse ..\..\..\Binaries\x64\Release\*.pdb $args\Release\Symbols\x64
-
-mkdir $args\Release\Binaries
-mkdir $args\Release\Binaries\ReplWindow
-copy -force -recurse ..\..\..\Binaries\Win32\Release\*.dll $args\Release\Binaries\
-copy -force -recurse ..\..\..\Binaries\Win32\Release\*.exe $args\Release\Binaries\
-copy -force -recurse ..\..\..\Binaries\Win32\Release\*.pkgdef $args\Release\Binaries\
-copy -force -recurse ..\Python\ReplWindow\obj\Win32\Release\extension.vsixmanifest $args\Release\Binaries\ReplWindow
-
-mkdir $args\Release\Binaries\x64
-copy -force -recurse ..\..\..\Binaries\x64\Release\*.dll $args\Release\Binaries\x64
-copy -force -recurse ..\..\..\Binaries\x64\Release\*.exe $args\Release\Binaries\x64
-
-
-#tfpt scorch /noprompt
-
-mkdir $args\Sources\Incubation
-xcopy /s ..\..\..\* $args\Sources
+if (-not (Test-path $outdir\Sources\Incubation)) { mkdir $outdir\Sources\Incubation }
+robocopy /s ..\..\.. $outdir\Sources /xd TestResults
 
 foreach($versionedFile in $versionFiles) {
     tf undo /noprompt $versionedFile
@@ -93,4 +132,9 @@ foreach($versionedFile in $versionFiles) {
         attrib +r $versionedFile
         del ($versionedFile + ".bak")
     }
+}
+
+if ($reinstall -eq "Debug" -or $reinstall -eq "Release")
+{
+    start -wait msiexec "/package","$outdir\$reinstall\PythonToolsInstaller.msi","/passive"
 }

@@ -18,13 +18,13 @@ using System.Text;
 namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class NonlocalStatement : Statement {
-        private readonly string[] _names;
+        private readonly NameExpression[] _names;
 
-        public NonlocalStatement(string[] names) {
+        public NonlocalStatement(NameExpression[] names) {
             _names = names;
         }
 
-        public IList<string> Names {
+        public IList<NameExpression> Names {
             get { return _names; }
         }
 
@@ -36,17 +36,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
             var namesWhiteSpace = this.GetNamesWhiteSpace(ast);
-            var verbatimNames = this.GetVerbatimNames(ast);
 
             if (namesWhiteSpace != null) {
                 ListExpression.AppendItems(res, ast, "nonlocal", "", this, Names.Count, (i, sb) => {
                     sb.Append(namesWhiteSpace[i]);
-                    sb.Append(verbatimNames != null ? (verbatimNames[i] ?? Names[i]) : Names[i]); 
+                    Names[i].AppendCodeString(res, ast);
                 });
             } else {
-                ListExpression.AppendItems(res, ast, "nonlocal", "", this, Names.Count, (i, sb) => sb.Append(verbatimNames != null ? (verbatimNames[i] ?? Names[i]) : Names[i]));
+                ListExpression.AppendItems(res, ast, "nonlocal", "", this, Names.Count, (i, sb) => Names[i].AppendCodeString(sb, ast));
             }
-
         }
     }
 }

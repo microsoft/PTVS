@@ -46,6 +46,9 @@
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="CompletionContextTests.cs" />
     <Compile Include="ExtractMethodTests.cs" />
+    <Compile Include="Mocks\MockBufferGraph.cs" />
+    <Compile Include="Mocks\MockMappingPoint.cs" />
+    <Compile Include="Mocks\MockTextCaret.cs" />
     <Compile Include="Mocks\MockTextEdit.cs" />
     <Compile Include="Mocks\MockTextOptions.cs" />
     <Compile Include="Mocks\MockTextSelection.cs" />
@@ -79,6 +82,7 @@
     <Compile Include="ProjectSystem\EditorTests.cs" />
     <Compile Include="PublishTest.cs" />
     <Compile Include="PythonPaths.cs" />
+    <Compile Include="RefactorRenameTests.cs" />
     <Compile Include="ReplWindowTests.cs" />
     <Compile Include="TokenizerRoundTripTest.cs" />
     <Compile Include="UI\Button.cs" />

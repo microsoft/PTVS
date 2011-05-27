@@ -367,14 +367,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // FromImportStatement
         public override bool Walk(FromImportStatement node) {
-            if (node.Names != FromImportStatement.Star) {
+            if (node.Names.Count != 1 || node.Names[0].Name !="*") {
                 PythonVariable[] variables = new PythonVariable[node.Names.Count];
                 PythonReference[] references = null;
                 if (_bindRefs) {
                     references = new PythonReference[node.Names.Count];
                 }
                 for (int i = 0; i < node.Names.Count; i++) {
-                    variables[i] = DefineName(node.AsNames[i] ?? node.Names[i]);
+                    variables[i] = DefineName(node.AsNames[i] != null ? node.AsNames[i].Name : node.Names[i].Name);
                     if (references != null) {
                         references[i] = Reference(variables[i].Name);
                     }
@@ -435,10 +435,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // GlobalStatement
         public override bool Walk(GlobalStatement node) {
-            foreach (string n in node.Names) {
+            foreach (NameExpression nameNode in node.Names) {
+                string n = nameNode.Name;
                 if (n == null) {
                     continue;
                 }
+
                 PythonVariable conflict;
                 // Check current scope for conflicting variable
                 bool assignedGlobal = false;
@@ -488,12 +490,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     // no previously definied variables, add it to the current scope
                     _currentScope.AddVariable(variable);
                 }
+                
+                nameNode.AddVariableReference(_globalScope, _bindRefs, Reference(n));
             }
             return true;
         }
 
         public override bool Walk(NonlocalStatement node) {
-            foreach (string n in node.Names) {
+            foreach (NameExpression nameNode in node.Names) {
+                string n = nameNode.Name;
+                if (n == null) {
+                    continue;
+                }
+
                 PythonVariable conflict;
                 // Check current scope for conflicting variable
                 bool assignedLocal = false;
@@ -535,7 +544,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     node);
                 }
 
+
+                if (conflict == null) {
+                    // no previously definied variables, add it to the current scope
+                    _currentScope.CreateVariable(n, VariableKind.Nonlocal);
+                }
                 _currentScope.AddNonLocalVariable(n);
+                nameNode.AddVariableReference(_globalScope, _bindRefs, Reference(n));
             }
             return true;
         }
@@ -581,9 +596,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             for (int i = 0; i < node.Names.Count; i++) {
                 string name;
                 if(node.AsNames[i] != null) {
-                    name = node.AsNames[i] ;
+                    name = node.AsNames[i].Name;
                 } else if (node.Names[i].Names.Count > 0) {
-                    name = node.Names[i].Names[0];
+                    name = node.Names[i].Names[0].Name;
                 } else {
                     name = null;
                 }

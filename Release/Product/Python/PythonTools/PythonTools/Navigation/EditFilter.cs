@@ -14,8 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows;
+using System.Windows.Interop;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
@@ -27,7 +27,6 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Operations;
@@ -62,15 +61,6 @@ namespace Microsoft.PythonTools.Language {
             ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
         }
 
-        private SnapshotPoint? GetCaretPosition() {
-            return _textView.BufferGraph.MapDownToFirstMatch(
-               new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, _textView.Caret.Position.BufferPosition),
-               PointTrackingMode.Positive,
-               PythonCoreConstants.IsPythonContent,
-               PositionAffinity.Successor
-            );
-        }
-
         /// <summary>
         /// Implements Goto Definition.  Called when the user selects Goto Definition from the 
         /// context menu or hits the hotkey associated with Goto Definition.
@@ -82,7 +72,7 @@ namespace Microsoft.PythonTools.Language {
         private int GotoDefinition() {
             UpdateStatusForIncompleteAnalysis();
 
-            var analysis = GetExpressionAnalysis();
+            var analysis = _textView.GetExpressionAnalysis();
 
             Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
             GetDefsRefsAndValues(analysis, out definitions, out references, out values);
@@ -130,7 +120,7 @@ namespace Microsoft.PythonTools.Language {
         private int FindAllReferences() {
             UpdateStatusForIncompleteAnalysis();
 
-            var analysis = GetExpressionAnalysis();
+            var analysis = _textView.GetExpressionAnalysis();
 
             var locations = GetFindRefLocations(analysis);
 
@@ -201,42 +191,7 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-        private ExpressionAnalysis GetExpressionAnalysis() {
-            var caretPoint = GetCaretPosition();
-            Debug.Assert(caretPoint != null);
-            var snapshot = caretPoint.Value.Snapshot;
-            var caretPos = caretPoint.Value.Position;
-
-            // foo(
-            //    ^
-            //    +---  Caret here
-            //
-            // We want to lookup foo, not foo(
-            //
-            ITrackingSpan span;
-            if (caretPos != snapshot.Length) {
-                string curChar = snapshot.GetText(caretPos, 1);
-                if (!IsIdentifierChar(curChar[0]) && caretPos > 0) {
-                    string prevChar = snapshot.GetText(caretPos - 1, 1);
-                    if (IsIdentifierChar(prevChar[0])) {
-                        caretPos--;
-                    }
-                }
-                span = snapshot.CreateTrackingSpan(
-                    caretPos,
-                    1,
-                    SpanTrackingMode.EdgeInclusive
-                );
-            } else {
-                span = snapshot.CreateTrackingSpan(
-                    caretPos,
-                    0,
-                    SpanTrackingMode.EdgeInclusive
-                );
-            }
-
-            return snapshot.AnalyzeExpression(span, false);
-        }
+        
 
         internal class LocationCategory : SimpleObjectList<SymbolList>, IVsNavInfo, ICustomSearchListProvider {
             private readonly string _name;
@@ -553,10 +508,6 @@ namespace Microsoft.PythonTools.Language {
             #endregion
         }
 
-        private static bool IsIdentifierChar(char curChar) {
-            return Char.IsLetterOrDigit(curChar) || curChar == '_';
-        }
-
         private void UpdateStatusForIncompleteAnalysis() {
             var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
             var analyzer = _textView.GetAnalyzer();
@@ -637,6 +588,29 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd2KCmdID.EXTRACTMETHOD:
                         new MethodExtractor(_textView).ExtractMethod(ExtractMethodUserInput.Instance);
                         return VSConstants.S_OK;
+                    case VSConstants.VSStd2KCmdID.RENAME:
+                        var analyzer = _textView.GetAnalyzer();
+                        if (analyzer.IsAnalyzing) {
+                            var dialog = new WaitForCompleteAnalysisDialog(analyzer);
+                            var shell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
+                            IntPtr owner;
+                            if (ErrorHandler.Succeeded(shell.GetDialogOwnerHwnd(out owner))) {
+                                WindowInteropHelper helper = new WindowInteropHelper(dialog);
+                                helper.Owner = owner;
+                            }
+
+                            var res = dialog.ShowDialog();
+                            if (res != true) {
+                                // user cancelled dialog before analysis completed...
+                                break;
+                            }
+                        }
+
+                        new VariableRenamer(_textView).RenameVariable(
+                            RenameVariableUserInput.Instance, 
+                            (IVsPreviewChangesService)PythonToolsPackage.GetGlobalService(typeof(SVsPreviewChangesService))
+                        );
+                        break;
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 foreach (var command in PythonToolsPackage.Commands.Keys) {
@@ -720,6 +694,14 @@ namespace Microsoft.PythonTools.Language {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
                             }
 
+                            return VSConstants.S_OK;
+                        case VSConstants.VSStd2KCmdID.RENAME:
+                            activeView = CommonPackage.GetActiveTextView();
+                            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            } else {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                            }
                             return VSConstants.S_OK;
                     }
                 }

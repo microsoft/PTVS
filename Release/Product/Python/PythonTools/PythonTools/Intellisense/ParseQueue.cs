@@ -103,6 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void EnqueWorker(Action parser) {
             Interlocked.Increment(ref _analysisPending);
+            _parser.QueueActivityEvent.Set();
 
             ThreadPool.QueueUserWorkItem(
                 dummy => {
@@ -110,6 +111,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         parser();
                     } finally {
                         Interlocked.Decrement(ref _analysisPending);
+                        _parser.QueueActivityEvent.Set();
                     }
                 }
             );
@@ -122,6 +124,12 @@ namespace Microsoft.PythonTools.Intellisense {
         public bool IsParsing {
             get {
                 return _analysisPending > 0;
+            }
+        }
+
+        public int ParsePending {
+            get {
+                return _analysisPending;
             }
         }
     }
@@ -161,7 +169,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 buffer.ChangedLowPriority -= BufferChangedLowPriority;
                 buffer.Properties.RemoveProperty(typeof(BufferParser));
             }
-            PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged -= OptionsPage_IndentationInconsistencyChanged;
+            if (PythonToolsPackage.Instance != null) {
+                PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged -= OptionsPage_IndentationInconsistencyChanged;
+            }
         }
 
         public ITextView TextView {

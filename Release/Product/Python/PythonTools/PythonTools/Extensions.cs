@@ -146,6 +146,61 @@ namespace Microsoft.PythonTools {
             return textView.TextBuffer.GetAnalyzer();
         }
 
+        internal static SnapshotPoint? GetCaretPosition(this ITextView view) {
+            return view.BufferGraph.MapDownToFirstMatch(
+               new SnapshotPoint(view.TextBuffer.CurrentSnapshot, view.Caret.Position.BufferPosition),
+               PointTrackingMode.Positive,
+               PythonCoreConstants.IsPythonContent,
+               PositionAffinity.Successor
+            );
+        }
+
+        internal static ExpressionAnalysis GetExpressionAnalysis(this ITextView view) {
+            ITrackingSpan span = GetCaretSpan(view);
+            return view.TextBuffer.CurrentSnapshot.AnalyzeExpression(span, false);
+        }
+
+        internal static ITrackingSpan GetCaretSpan(this ITextView view) {
+            var caretPoint = view.GetCaretPosition();
+            Debug.Assert(caretPoint != null);
+            var snapshot = caretPoint.Value.Snapshot;
+            var caretPos = caretPoint.Value.Position;
+
+            // foo(
+            //    ^
+            //    +---  Caret here
+            //
+            // We want to lookup foo, not foo(
+            //
+            ITrackingSpan span;
+            if (caretPos != snapshot.Length) {
+                string curChar = snapshot.GetText(caretPos, 1);
+                if (!IsIdentifierChar(curChar[0]) && caretPos > 0) {
+                    string prevChar = snapshot.GetText(caretPos - 1, 1);
+                    if (IsIdentifierChar(prevChar[0])) {
+                        caretPos--;
+                    }
+                }
+                span = snapshot.CreateTrackingSpan(
+                    caretPos,
+                    1,
+                    SpanTrackingMode.EdgeInclusive
+                );
+            } else {
+                span = snapshot.CreateTrackingSpan(
+                    caretPos,
+                    0,
+                    SpanTrackingMode.EdgeInclusive
+                );
+            }
+
+            return span;
+        }
+
+        private static bool IsIdentifierChar(char curChar) {
+            return Char.IsLetterOrDigit(curChar) || curChar == '_';
+        }
+
         /// <summary>
         /// Reads a string from the socket which is encoded as:
         ///     U, byte count, bytes 
@@ -201,7 +256,7 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            // exists for tests where we don't run in VS.
+            // exists for tests where we don't run in VS and for the existing changes preview
             ProjectAnalyzer analyzer;
             if (buffer.Properties.TryGetProperty<ProjectAnalyzer>(typeof(ProjectAnalyzer), out analyzer)) {
                 return analyzer;

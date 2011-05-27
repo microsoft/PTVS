@@ -30,8 +30,9 @@ namespace Microsoft.VisualStudio.Repl {
     class CancelExecutionCommand : IReplCommand {
         #region IReplCommand Members
 
-        public void Execute(IReplWindow window, string arguments) {
+        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
             window.AbortCommand();
+            return false;
         }
 
         public string Description {

@@ -18,7 +18,7 @@ using System.Text;
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ClassDefinition : ScopeStatement {
         private int _headerIndex;
-        private readonly string/*!*/ _name;
+        private readonly NameExpression/*!*/ _name;
         private Statement _body;
         private readonly Arg[] _bases;
         private DecoratorStatement _decorators;
@@ -28,8 +28,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private PythonVariable _docVariable;        // Variable for the __doc__ attribute
         private PythonVariable _modNameVariable;    // Variable for the module's __name__
 
-        public ClassDefinition(string name, Arg[] bases, Statement body) {           
-            _name = name ?? "";
+        public ClassDefinition(NameExpression/*!*/ name, Arg[] bases, Statement body) {           
+            _name = name;
             _bases = bases;
             _body = body;
         }
@@ -40,6 +40,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override string/*!*/ Name {
+            get { return _name.Name ?? ""; }
+        }
+
+        public NameExpression/*!*/ NameExpression {
             get { return _name; }
         }
 

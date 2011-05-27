@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     sealed class ClassScope : InterpreterScope {
-        public ClassScope(ClassInfo classInfo, Node ast)
+        public ClassScope(ClassInfo classInfo, ClassDefinition ast)
             : base(classInfo, ast) {
         }
 
@@ -36,10 +36,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             get {
                 return false;
             }
-        }
-
-        public override IEnumerable<AnalysisVariable> GetVariablesForDef(string name, VariableDef def) {
-            return ModuleAnalysis.ReferencablesToVariables(this.Class.GetDefinitions(name));
         }
     }
 }

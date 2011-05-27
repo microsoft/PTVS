@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.Repl {
         private readonly ITrackingPoint _start, _end;
         private readonly ITextBuffer _buffer;
 
-        public CustomTrackingSpan(ITextSnapshot snapshot, Span span, PointTrackingMode startTrackingMode = PointTrackingMode.Negative, PointTrackingMode endTrackingMode = PointTrackingMode.Positive) {
+        public CustomTrackingSpan(ITextSnapshot snapshot, Span span, PointTrackingMode startTrackingMode, PointTrackingMode endTrackingMode) {
             _buffer = snapshot.TextBuffer;
             _start = snapshot.CreateTrackingPoint(span.Start, startTrackingMode);
             _end = snapshot.CreateTrackingPoint(span.End, endTrackingMode);

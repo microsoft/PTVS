@@ -29,8 +29,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public bool IsStatic {
-            get { 
-                return (Value.Info.GetGetMethod() ?? Value.Info.GetSetMethod()).IsStatic; 
+            get {
+                var method = Value.Info.GetGetMethod() ?? Value.Info.GetSetMethod();
+                if (method != null) {
+                    return method.IsStatic;
+                }
+                return false;
             }
         }
 

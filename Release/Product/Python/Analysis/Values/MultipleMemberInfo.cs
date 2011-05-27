@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {

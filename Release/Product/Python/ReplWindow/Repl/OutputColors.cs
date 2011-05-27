@@ -13,16 +13,15 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.VisualStudio.Repl {
-    class OutputColors {
-        public readonly int Start;
-        public readonly int Length;
+    internal sealed class ColoredSpan {
+        public readonly Span Span;
         public readonly ConsoleColor Color;
 
-        public OutputColors(int start, int length, ConsoleColor color) {
-            Start = start;
-            Length = length;
+        public ColoredSpan(Span span, ConsoleColor color) {
+            Span = span;
             Color = color;
         }
     }

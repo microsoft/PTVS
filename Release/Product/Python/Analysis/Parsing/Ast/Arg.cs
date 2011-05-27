@@ -36,6 +36,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        public Expression NameExpression {
+            get {
+                return _name;
+            }
+        }
+
         public Expression Expression {
             get { return _expression; }
         } 

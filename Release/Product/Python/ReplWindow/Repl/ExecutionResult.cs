@@ -15,18 +15,21 @@
 
 namespace Microsoft.VisualStudio.Repl {
     /// <summary>
-    /// Provides the result of execution code to the REPL.  
+    /// The result of command execution.  
     /// </summary>
-    public class ExecutionResult {
-        private readonly bool _success;
+    public struct ExecutionResult {
+        public static readonly ExecutionResult Success = new ExecutionResult(true);
+        public static readonly ExecutionResult Failure = new ExecutionResult(false);
 
-        public ExecutionResult(bool success) {
-            _success = success;
+        private readonly bool _successful;
+
+        public ExecutionResult(bool isSuccessful) {
+            _successful = isSuccessful;
         }
 
-        public bool Success {
+        public bool IsSuccessful {
             get {
-                return _success;
+                return _successful;
             }
         }
     }

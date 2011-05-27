@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _list = list;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {            
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {            
             return _list.UnionType;
         }
     }

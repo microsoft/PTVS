@@ -20,23 +20,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     public class FromImportStatement : Statement {
         private static readonly string[] _star = new[] { "*" };
         private readonly ModuleName _root;
-        private readonly string[] _names;
-        private readonly string[] _asNames;
+        private readonly NameExpression[] _names;
+        private readonly NameExpression[] _asNames;
         private readonly bool _fromFuture;
         private readonly bool _forceAbsolute;
 
         private PythonVariable[] _variables;
 
-        public FromImportStatement(ModuleName root, string/*!*/[] names, string[] asNames, bool fromFuture, bool forceAbsolute) {
+        public FromImportStatement(ModuleName root, NameExpression/*!*/[] names, NameExpression[] asNames, bool fromFuture, bool forceAbsolute) {
             _root = root;
             _names = names;
             _asNames = asNames;
             _fromFuture = fromFuture;
             _forceAbsolute = forceAbsolute;
-        }
-
-        internal static string/*!*/[]/*!*/ Star {
-            get { return FromImportStatement._star; }
         }
 
         public DottedName Root {
@@ -47,11 +43,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _fromFuture; }
         }
 
-        public IList<string/*!*/> Names {
+        public IList<NameExpression/*!*/> Names {
             get { return _names; }
         }
 
-        public IList<string> AsNames {
+        public IList<NameExpression> AsNames {
             get { return _asNames; }
         }
 
@@ -101,18 +97,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(asNameWhiteSpace[asIndex++]);
                     }
 
-                    res.Append(verbatimNames != null ? (verbatimNames[verbatimIndex++] ?? _names[i]) : _names[i]);
+                    _names[i].AppendCodeString(res, ast);
                     if (AsNames != null && AsNames[i] != null) {
                         if (asNameWhiteSpace != null) {
                             res.Append(asNameWhiteSpace[asIndex++]);
                         }
                         res.Append("as");
-                        string asName = verbatimNames != null ? (verbatimNames[verbatimIndex++] ?? _asNames[i]) : _asNames[i];
-                        if (asName.Length != 0) {
+                        if (_asNames[i].Name.Length != 0) {
                             if (asNameWhiteSpace != null) {
                                 res.Append(asNameWhiteSpace[asIndex++]);
                             }
-                            res.Append(asName);
+                            _asNames[i].AppendCodeString(res, ast);
                         } else {
                             asIndex++;
                         }

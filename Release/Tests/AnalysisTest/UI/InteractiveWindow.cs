@@ -65,11 +65,19 @@ namespace AnalysisTest.UI {
         }
 
         public void WaitForIdleState() {
-            Dispatcher dispatcher = ((FrameworkElement)ReplWindow.TextView).Dispatcher;
+            DispatchAndWait(_replWindowInfo.Idle, () => { }, DispatcherPriority.ApplicationIdle);
+        }
 
-            _replWindowInfo.Idle.Reset();
-            dispatcher.Invoke(new Action(() => _replWindowInfo.Idle.Set()), DispatcherPriority.ApplicationIdle);
-            _replWindowInfo.Idle.WaitOne();
+        public void DispatchAndWait(EventWaitHandle waitHandle, Action action, DispatcherPriority priority = DispatcherPriority.Normal) {
+            Dispatcher dispatcher = ((FrameworkElement)ReplWindow.TextView).Dispatcher;
+            waitHandle.Reset();
+
+            dispatcher.Invoke(new Action(() => { 
+                action();
+                waitHandle.Set(); 
+            }), priority);
+
+            Assert.IsTrue(waitHandle.WaitOne(500));
         }
 
         public void WaitForText(params string[] text) {

@@ -57,10 +57,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return GetExpressionRange(0, out dummy, out dummyPoint, forCompletion);
         }        
 
-        private static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(ReverseExpressionParser parser, SnapshotPoint startPoint) {
+        internal static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
             var startLine = startPoint.GetContainingLine();
             int curLine = startLine.LineNumber;
-            var tokens = parser.Classifier.GetClassificationSpans(new SnapshotSpan(startLine.Start, startPoint));
+            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(startLine.Start, startPoint));
 
             for (; ; ) {
                 for (int i = tokens.Count - 1; i >= 0; i--) {
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 curLine--;
                 if (curLine >= 0) {
                     var prevLine = startPoint.Snapshot.GetLineFromLineNumber(curLine);
-                    tokens = parser.Classifier.GetClassificationSpans(prevLine.Extent);
+                    tokens = classifier.GetClassificationSpans(prevLine.Extent);
                 } else {
                     break;
                 }
@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             ClassificationSpan lastToken = null;
             // Walks backwards over all the lines
-            var enumerator = ReverseClassificationSpanEnumerator(this, _span.GetSpan(_snapshot).End);
+            var enumerator = ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
             if (enumerator.MoveNext()) {
                 lastToken = enumerator.Current;
                 if (!forCompletion && ShouldSkipAsLastToken(lastToken) && enumerator.MoveNext()) {

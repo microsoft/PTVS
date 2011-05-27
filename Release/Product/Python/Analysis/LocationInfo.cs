@@ -13,11 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo> {
         private readonly int _line, _column;
         private readonly IProjectEntry _entry;
+
+        private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
 
         internal LocationInfo(IProjectEntry entry, int line, int column) {
             _entry = entry;
@@ -63,6 +66,28 @@ namespace Microsoft.PythonTools.Analysis {
             // apart you still see both refs, but when they're together you only see 1.
             return Line == other.Line &&
                 ProjectEntry == other.ProjectEntry;
+        }
+
+        /// <summary>
+        /// Provides an IEqualityComparer that compares line, column and project entries.  By
+        /// default locations are equaitable based upon only line/project entry.
+        /// </summary>
+        public static IEqualityComparer<LocationInfo> FullComparer {
+            get{
+                return _fullComparer;
+            }
+        }
+
+        sealed class FullLocationComparer : IEqualityComparer<LocationInfo> {
+            public bool Equals(LocationInfo x, LocationInfo y) {
+                return x.Line == y.Line &&
+                    x.Column == y.Column &&
+                    x.ProjectEntry == y.ProjectEntry;
+            }
+
+            public int GetHashCode(LocationInfo obj) {
+                return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.ProjectEntry.GetHashCode();
+            }
         }
     }
 }

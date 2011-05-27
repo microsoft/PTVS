@@ -68,12 +68,29 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private IEnumerable<IAnalysisVariable> ToVariables(IReferenceable referenceable) {
+        internal IEnumerable<AnalysisVariable> ReferencablesToVariables(IEnumerable<IReferenceable> defs) {
+            foreach (var def in defs) {
+                foreach (var res in ToVariables(def)) {
+                    yield return res;
+                }
+            }
+        }
+
+        internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
             if (locatedDef != null) {
                 var start = locatedDef.Node.GetStart(_unit.Ast.GlobalParent);
                 yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, start.Line, start.Column));
+            }
+
+            VariableDef def = referenceable as VariableDef;
+            if (def != null) {
+                foreach (var type in def.Types) {
+                    if (type.Location != null) {
+                        yield return new AnalysisVariable(VariableType.Value, type.Location);
+                    }
+                }
             }
 
             foreach (var reference in referenceable.Definitions) {
@@ -103,10 +120,8 @@ namespace Microsoft.PythonTools.Analysis {
                         foreach (var res in ToVariables(def)) {
                             yield return res;
                         }
-
-                        foreach (var extraVar in scopes[i].GetVariablesForDef(name.Name, def)) {
-                            yield return extraVar;
-                        }
+                        
+                        yield break;
                     }
                 }
 
@@ -129,18 +144,6 @@ namespace Microsoft.PythonTools.Analysis {
                             yield return variable;
                         }
                     }
-                }
-            }
-        }
-
-        internal static IEnumerable<AnalysisVariable> ReferencablesToVariables(IEnumerable<IReferenceable> defs) {
-            foreach (var def in defs) {
-                foreach (var reference in def.Definitions) {
-                    yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(reference.Key, reference.Value.Line, reference.Value.Column));
-                }
-
-                foreach (var reference in def.References) {
-                    yield return new AnalysisVariable(VariableType.Reference, new LocationInfo(reference.Key, reference.Value.Line, reference.Value.Column));
                 }
             }
         }
@@ -400,7 +403,7 @@ namespace Microsoft.PythonTools.Analysis {
             return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict);
         }
 
-        private Expression GetExpressionFromText(string exprText) {
+        public Expression GetExpressionFromText(string exprText) {
             using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
                 return GetExpression(parser.ParseTopExpression().Body);
             }

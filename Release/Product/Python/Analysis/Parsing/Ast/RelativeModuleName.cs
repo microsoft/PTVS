@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     public class RelativeModuleName : ModuleName {
         private readonly int _dotCount;
 
-        public RelativeModuleName(string[] names, int dotCount)
+        public RelativeModuleName(NameExpression[] names, int dotCount)
             : base(names) {
             _dotCount = dotCount;
         }

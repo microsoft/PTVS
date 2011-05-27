@@ -12,19 +12,20 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel.Composition;
 using System.Reflection;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(IReplCommand))]
     class ClearScreenReplCommand : IReplCommand {
         #region IReplCommand Members
 
-        public void Execute(IReplWindow window, string arguments) {
+        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
             window.ClearScreen();
+            return false;
         }
 
         public string Description {

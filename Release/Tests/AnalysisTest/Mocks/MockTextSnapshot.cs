@@ -48,7 +48,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode) {
-            throw new NotImplementedException();
+            return new MockTrackingSpan(this, start, length);
         }
 
         public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {

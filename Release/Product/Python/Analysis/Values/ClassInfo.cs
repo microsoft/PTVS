@@ -27,15 +27,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private ReferenceDict _references;
         private VariableDef<ClassInfo> _subclasses;
 
-        internal ClassInfo(AnalysisUnit unit)
+        internal ClassInfo(AnalysisUnit unit, ClassDefinition klass)
             : base(unit) {
             _instanceInfo = new InstanceInfo(this);
             _bases = new List<ISet<Namespace>>();
-            _scope = new ClassScope(this, unit.Ast);
+            _scope = new ClassScope(this, klass);
             _declVersion = unit.ProjectEntry.AnalysisVersion;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             if (unit != null) {
                 AddCall(node, keywordArgNames, unit, args);
             }
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _instanceInfo.SelfSet;
         }
 
-        private void AddCall(Node node, string[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] argumentVars) {
+        private void AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] argumentVars) {
             var init = GetMember(node, unit, "__init__");
             var initArgs = Utils.Concat(_instanceInfo.SelfSet, argumentVars);
 
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override LocationInfo Location {
             get {
-                var start = ClassDefinition.GetStart(ClassDefinition.GlobalParent);
+                var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
                 return new LocationInfo(DeclaringModule, start.Line, start.Column);
             }
         }

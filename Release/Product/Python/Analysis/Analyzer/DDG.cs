@@ -25,13 +25,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         internal AnalysisUnit _unit;
         internal ExpressionEvaluator _eval;
 
-        public void Analyze(Deque<AnalysisUnit>queue) {
+        public void Analyze(Deque<AnalysisUnit> queue) {
             while (queue.Count > 0) {
                 _unit = queue.PopLeft();
                 _unit.IsInQueue = false;
 
-                 _eval = new ExpressionEvaluator(_unit);
-                 _unit.Analyze(this);
+                _eval = new ExpressionEvaluator(_unit);
+                _unit.Analyze(this);
             }
         }
 
@@ -109,11 +109,30 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return false;
         }
 
+        public override bool Walk(GlobalStatement node) {
+            foreach (var name in node.Names) {
+                GlobalScope.Scope.GetVariable(name, _unit, name.Name);
+            }
+            return false;
+        }
+
+        public override bool Walk(NonlocalStatement node) {
+            foreach (var name in node.Names) {
+                for (int i = Scopes.Length - 2; i >= 0; i--) {
+                    var var = Scopes[i].GetVariable(name, _unit, name.Name);
+                    if (var != null) {
+                        break;
+                    }
+                }
+            }
+            return false;
+        }
+
         public override bool Walk(ClassDefinition node) {
             return false;
         }
 
-        
+
 
         public AnalysisUnit PushScope(AnalysisUnit unit) {
             var oldUnit = _unit;
@@ -147,11 +166,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return false;
         }
 
-        private void WalkFromImportWorker(FromImportStatement node, Namespace userMod, string impName, string newName) {
+        private void WalkFromImportWorker(NameExpression node, Namespace userMod, string impName, string newName) {
             var saveName = (newName == null) ? impName : newName;
-            GlobalScope.Imports[node].Types.Add(new[] { impName, newName });
+            //GlobalScope.Imports[node].Types.Add(new[] { impName, newName });
 
-            // TODO: Better node would be the name node but we don't have a name node (they're just strings in the AST w/ no position info)
             var variable = Scopes[Scopes.Length - 1].CreateVariable(node, _unit, saveName);
 
             ISet<Namespace> newTypes = EmptySet<Namespace>.Instance;
@@ -190,7 +208,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
 
                 for (int i = 0; i < relativeName.Names.Count && curPackage != null; i++) {
-                    curPackage = curPackage.GetChildPackage(GlobalScope.InterpreterContext, relativeName.Names[i]) as ModuleInfo;
+                    curPackage = curPackage.GetChildPackage(GlobalScope.InterpreterContext, relativeName.Names[i].Name) as ModuleInfo;
                 }
 
                 userMod = curPackage;
@@ -212,12 +230,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             var asNames = node.AsNames ?? node.Names;
             var impInfo = new ImportInfo(node.Root.MakeString(), node.GetSpan(_unit.Ast.GlobalParent));
-            GlobalScope.Imports[node] = impInfo;
+            //GlobalScope.Imports[node] = impInfo;
 
             int len = Math.Min(node.Names.Count, asNames.Count);
             for (int i = 0; i < len; i++) {
-                var impName = node.Names[i];
-                var newName = asNames[i];
+                var nameNode = asNames[i] ?? node.Names[i];
+                var impName = node.Names[i].Name;
+                var newName = asNames[i] != null ? asNames[i].Name : null;
 
                 if (impName == null) {
                     // incomplete import statement
@@ -226,11 +245,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     // Handle "import *"
                     if (userMod != null) {
                         foreach (var varName in GetModuleKeys(userMod)) {
-                            WalkFromImportWorker(node, userMod, varName, null);
+                            WalkFromImportWorker(nameNode, userMod, varName, null);
                         }
                     }
                 } else {
-                    WalkFromImportWorker(node, userMod, impName, newName);
+                    WalkFromImportWorker(nameNode, userMod, impName, newName);
                 }
             }
 
@@ -300,7 +319,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     }
                 }
             }
-            
+
             if (newScope.IsClassMethod) {
                 if (newScope.ParameterTypes.Length > 0) {
                     newScope.ParameterTypes[0].AddTypes(funcdef.Parameters[0], _unit, ProjectState._typeObj.SelfSet);
@@ -313,7 +332,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 for (int i = Scopes.Length - 1; i >= 0; i--) {
                     if (Scopes[i] is ClassScope) {
                         selfInst = ((ClassScope)Scopes[i]).Class.Instance;
-                        break; 
+                        break;
                     }
                 }
                 if (selfInst != null && newScope.ParameterTypes.Length > 0) {
@@ -353,25 +372,26 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public override bool Walk(ImportStatement node) {
             var x = _unit.ProjectEntry.Tree;
             var iinfo = new ImportInfo("", node.GetSpan(_unit.Ast.GlobalParent));
-            GlobalScope.Imports[node] = iinfo;
+            //GlobalScope.Imports[node] = iinfo;
             int len = Math.Min(node.Names.Count, node.AsNames.Count);
             for (int i = 0; i < len; i++) {
                 var impNode = node.Names[i];
-                var newName = node.AsNames[i];
+                var newName = node.AsNames[i] != null ? node.AsNames[i].Name : null;
+                var nameNode = node.AsNames[i] != null ? node.AsNames[i] : node.Names[i].Names[0];
                 var strImpName = impNode.MakeString();
                 iinfo.Types.Add(new[] { strImpName, newName });
-                                
+
                 var saveName = (String.IsNullOrEmpty(newName)) ? strImpName : newName;
                 ModuleReference modRef;
 
-                var def = Scopes[Scopes.Length - 1].CreateVariable(impNode, _unit, saveName);
+                var def = Scopes[Scopes.Length - 1].CreateVariable(nameNode, _unit, saveName);
                 if (!ProjectState.Modules.TryGetValue(strImpName, out modRef)) {
                     var builtinModule = ProjectState.ImportBuiltinModule(strImpName, impNode.Names.Count > 1 && !String.IsNullOrEmpty(newName));
 
                     if (builtinModule != null) {
                         builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
 
-                        def.AddTypes(impNode, _unit, builtinModule.SelfSet);
+                        def.AddTypes(nameNode, _unit, builtinModule.SelfSet);
                         continue;
                     }
                 }
@@ -380,7 +400,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     if (modRef.Module != null) {
                         ModuleInfo mi = modRef.Module as ModuleInfo;
                         if (mi != null) {
-                            mi.ModuleDefinition.AddDependency(_unit);                            
+                            mi.ModuleDefinition.AddDependency(_unit);
                         }
 
                         BuiltinModule builtinModule = modRef.Module as BuiltinModule;
@@ -388,9 +408,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                             builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
                         }
 
-                        def.AddTypes(impNode, _unit, modRef.Module.SelfSet);
+                        def.AddTypes(nameNode, _unit, modRef.Module.SelfSet);
                         continue;
-                    }                    
+                    }
                 } else {
                     ProjectState.Modules[strImpName] = modRef = new ModuleReference();
                 }
@@ -422,7 +442,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     _eval.AssignTo(node, item.Variable, ctxMgr);
                 }
             }
-            
+
             return true;
         }
 
@@ -449,10 +469,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private void DeleteExpression(Expression expr) {
             NameExpression name = expr as NameExpression;
             if (name != null) {
-                var variable = _eval.LookupVariableByName(name.Name, expr);
-                if (variable != null) {
-                    variable.AddReference(name, _unit);
-                }
+                var var = Scopes[Scopes.Length - 1].CreateVariable(name, _unit, name.Name);
+
+                return;
             }
 
             IndexExpression index = expr as IndexExpression;
@@ -462,6 +481,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 foreach (var value in values) {
                     value.DeleteIndex(index, _unit, indexValues);
                 }
+                return;
             }
 
             MemberExpression member = expr as MemberExpression;
@@ -470,11 +490,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 foreach (var value in values) {
                     value.DeleteMember(member, _unit, member.Name);
                 }
+                return;
             }
 
             ParenthesisExpression paren = expr as ParenthesisExpression;
             if (paren != null) {
                 DeleteExpression(paren.Expression);
+                return;
             }
 
             SequenceExpression seq = expr as SequenceExpression;
@@ -482,6 +504,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 foreach (var item in seq.Items) {
                     DeleteExpression(item);
                 }
+                return;
             }
         }
 

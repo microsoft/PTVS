@@ -141,6 +141,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CommonConstants.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="Repl\OutputBuffer.cs" />
@@ -215,9 +216,7 @@
     <Resource Include="Resources\ReplToolBarImages.bmp" />
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
     <RegisterOutputPackage>true</RegisterOutputPackage>

@@ -39,60 +39,36 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
-            List<OutputColors> colors;
-            if (_buffer.Properties.TryGetProperty(ColorKey, out colors)) {
-                List<ClassificationSpan> res = new List<ClassificationSpan>();
-                int startIndex = colors.BinarySearch(
-                    new OutputColors(span.Start, span.Length, ConsoleColor.White),
-                    MyComparer.Instance
-                );
-                if (startIndex < 0) {
-                    startIndex = ~startIndex;
-                }
-
-                for (int i = startIndex; i < colors.Count && ((colors[i].Start + colors[i].Length) >= span.Start); i++) {
-                    if (span.IntersectsWith(new Span(colors[i].Start, colors[i].Length))) {
-                        IClassificationType type;
-                        if (_provider._classTypes.TryGetValue(colors[i].Color, out type)) {
-                            SnapshotPoint start, end;
-
-                            if (colors[i].Start < span.Start.Position) {
-                                start = span.Start;
-                            } else {
-                                start = new SnapshotPoint(span.Snapshot, colors[i].Start);
-                            }
-
-                            int endPos = colors[i].Start + colors[i].Length;
-                            if (span.End < endPos) {
-                                end = span.End;
-                            } else {
-                                end = new SnapshotPoint(span.Snapshot, endPos);
-                            }
-
-                            res.Add(
-                                new ClassificationSpan(
-                                    new SnapshotSpan(start, end),
-                                    type
-                                )
-                            );
-                        }
-                    }
-                }
-                return res;
+            List<ColoredSpan> coloredSpans;
+            if (!_buffer.Properties.TryGetProperty(ColorKey, out coloredSpans)) {
+                return new ClassificationSpan[0];
             }
-            return new ClassificationSpan[0];
+
+            List<ClassificationSpan> classifications = new List<ClassificationSpan>();
+
+            int startIndex = coloredSpans.BinarySearch(new ColoredSpan(span, ConsoleColor.White), SpanStartComparer.Instance);
+            if (startIndex < 0) {
+                startIndex = ~startIndex - 1;
+            }
+
+            int spanEnd = span.End.Position;
+            for (int i = startIndex; i < coloredSpans.Count && coloredSpans[i].Span.Start < spanEnd; i++) {
+                IClassificationType type;
+                if (_provider._classTypes.TryGetValue(coloredSpans[i].Color, out type)) {
+                    var overlap = span.Overlap(coloredSpans[i].Span).Value;
+                    classifications.Add(new ClassificationSpan(overlap, type));
+                }
+            }
+
+            return classifications;
         }
 
-        class MyComparer : IComparer<OutputColors> {
-            internal static MyComparer Instance = new MyComparer();
+        private sealed class SpanStartComparer : IComparer<ColoredSpan> {
+            internal static SpanStartComparer Instance = new SpanStartComparer();
 
-            #region IComparer<OutputColors> Members
-
-            public int Compare(OutputColors x, OutputColors y) {
-                return x.Start - y.Start;
+            public int Compare(ColoredSpan x, ColoredSpan y) {
+                return x.Span.Start - y.Span.Start;
             }
-
-            #endregion
         }
 
         #endregion

@@ -24,11 +24,14 @@ namespace Microsoft.VisualStudio.Repl {
     /// This interface is a MEF contract and can be implemented and exported to add commands to the REPL window.
     /// </summary>
     public interface IReplCommand {
+
         /// <summary>
-        /// Runs the specified command with the given arguments.  The command may interact
-        /// with the window using the provided interface.
+        /// Asynchronously executes the command with specified arguments and calls back the given completion when finished.
         /// </summary>
-        void Execute(IReplWindow window, string arguments);
+        /// <param name="window">The interactive window.</param>
+        /// <param name="completion">Callback to invoke on completion. Do not invoke the callback if this method returns false.</param>
+        /// <returns>False if completed synchronously (completion won't be invoked).</returns>
+        bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion);
 
         /// <summary>
         /// Gets a description of the REPL command which is displayed when the user asks for help.

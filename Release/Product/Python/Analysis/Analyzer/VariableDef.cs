@@ -14,11 +14,12 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     abstract class DependentData<TStorageType>  where TStorageType : DependencyInfo {
-        protected SingleDict<IProjectEntry, TStorageType> _dependencies;
+        internal SingleDict<IProjectEntry, TStorageType> _dependencies;
 
         public void ClearOldValues(IProjectEntry fromModule) {
             TStorageType deps;
@@ -140,8 +141,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public void AddReference(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                AddReference(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)), unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
+                // TODO: This could be improved.  We could avoid eagerly going from index spans -> full location spans by holding onto
+                // the node and parent and lazily translating.
+                SourceSpan span = GetSpan(node, unit);
+                AddReference(new SimpleSrcLocation(span), unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
             }
+        }
+
+        private static SourceSpan GetSpan(Node node, AnalysisUnit unit) {
+            MemberExpression me = node as MemberExpression;
+            SourceSpan span;
+            if (me != null) {
+                span = me.GetNameSpan(unit.Ast.GlobalParent);
+            } else {
+                span = node.GetSpan(unit.Ast.GlobalParent);
+            }
+            return span;
         }
 
         public TypedDependencyInfo<T> AddReference(SimpleSrcLocation location, IProjectEntry module) {
@@ -157,7 +172,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public void AddAssignment(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                AddAssignment(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)), unit.DeclaringModule.ProjectEntry);
+                AddAssignment(new SimpleSrcLocation(GetSpan(node, unit)), unit.DeclaringModule.ProjectEntry);
             }
         }
 
@@ -203,6 +218,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public LocatedVariableDef(IProjectEntry entry, Node location) {
             _entry = entry;
             _location = location;
+        }
+
+        public LocatedVariableDef(IProjectEntry entry, Node location, VariableDef copy) {
+            _entry = entry;
+            _location = location;
+            _dependencies = copy._dependencies;
         }
 
         public IProjectEntry Entry {

@@ -19,12 +19,14 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace AnalysisTest.Mocks {
     class MockTextBuffer : ITextBuffer {
+        private readonly string _filename;
         internal MockTextSnapshot _snapshot;
         private MockTextEdit _edit;
         private PropertyCollection _properties;
 
-        public MockTextBuffer(string content) {
+        public MockTextBuffer(string content, string filename = "C:\\foo.py") {
             _snapshot = new MockTextSnapshot(this, content);
+            _filename = filename;
         }
 
         public void ChangeContentType(Microsoft.VisualStudio.Utilities.IContentType newContentType, object editTag) {
@@ -108,7 +110,11 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITextSnapshot Replace(Span replaceSpan, string replaceWith) {
-            throw new NotImplementedException();
+            var oldText = _snapshot.GetText();
+            string newText = oldText.Remove(replaceSpan.Start, replaceSpan.Length);
+            newText  = newText .Insert(replaceSpan.Start, replaceWith);
+            _snapshot = new MockTextSnapshot(this, newText);
+            return _snapshot;
         }
 
         public void TakeThreadOwnership() {
@@ -140,7 +146,7 @@ namespace AnalysisTest.Mocks {
         private void InitProperties() {
             _classProvider.GetClassifier(this);
 
-            _properties.AddProperty(typeof(ITextDocument), new MockTextDocument("C:\\foo.py"));
+            _properties.AddProperty(typeof(ITextDocument), new MockTextDocument(_filename));
         }
 
         internal void AddProperty(object key, object value) {

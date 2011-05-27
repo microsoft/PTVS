@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     // TODO: We should really do a get descriptor / call here
                     // FIXME: new string[0]
-                    getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, ProjectState._stringType.Instance.SelfSet }, new string[0]));
+                    getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, ProjectState._stringType.Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                 }
                 if (getattrRes.Count > 0) {
                     return getattrRes;
@@ -156,7 +156,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     foreach (var getAttrFunc in getAttr) {
                         // TODO: We should really do a get descriptor / call here
                         //FIXME: new string[0]
-                        getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, _classInfo._analysisUnit.ProjectState._stringType.Instance.SelfSet }, new string[0]));
+                        getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, _classInfo._analysisUnit.ProjectState._stringType.Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                     }
                 }
                 return getattrRes;
@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
             var get = _classInfo.GetMemberNoReferences(node, unit, "__get__").GetDescriptor(node, this, _classInfo, unit);
-            return get.Call(node, unit, new[] { instance, context }, BuiltinClassInfo.EmptyStrings);
+            return get.Call(node, unit, new[] { instance, context }, ExpressionEvaluator.EmptyNames);
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
@@ -193,6 +193,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             instMember.AddReference(node, unit);
+
+            _classInfo.GetMember(node, unit, name);
         }
 
         public override ProjectEntry DeclaringModule {

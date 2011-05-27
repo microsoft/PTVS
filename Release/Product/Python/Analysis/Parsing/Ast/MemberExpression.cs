@@ -15,13 +15,28 @@
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
-    public class MemberExpression : Expression {
+    public sealed class MemberExpression : Expression {
         private readonly Expression _target;
         private readonly string _name;
+        private int _nameHeader;
 
         public MemberExpression(Expression target, string name) {
             _target = target;
             _name = name;
+        }
+
+        public void SetLoc(int start, int name, int end) {
+            SetLoc(start, end);
+            _nameHeader = name;
+        }
+
+        /// <summary>
+        /// Returns the index which is the start of the name.
+        /// </summary>
+        public int NameHeader {
+            get {
+                return _nameHeader;
+            }
         }
 
         public Expression Target {
@@ -55,16 +70,23 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
             _target.AppendCodeString(res, ast);
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetProceedingWhiteSpaceDefaultNull(ast));
             res.Append('.');
             if (!this.IsIncompleteNode(ast)) {
-                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
                 res.Append(this.GetVerbatimImage(ast) ?? _name);
             }
         }
 
         internal override string GetLeadingWhiteSpace(PythonAst ast) {
             return _target.GetLeadingWhiteSpace(ast);
+        }
+
+        /// <summary>
+        /// Returns the span of the name component of the expression
+        /// </summary>
+        public SourceSpan GetNameSpan(PythonAst parent) {
+            return new SourceSpan(parent.IndexToLocation(_nameHeader), GetEnd(parent));
         }
     }
 }

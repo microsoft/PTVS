@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class FunctionDefinition : ScopeStatement {
         protected Statement _body;
-        private readonly string/*!*/ _name;
+        private readonly NameExpression/*!*/ _name;
         private readonly Parameter[] _parameters;
         private Expression _returnAnnotation;
         private DecoratorStatement _decorators;
@@ -35,14 +35,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         private static int _lambdaId;
 
-        public FunctionDefinition(string name, Parameter[] parameters)
+        public FunctionDefinition(NameExpression name, Parameter[] parameters)
             : this(name, parameters, (Statement)null) {            
         }
-
         
-        public FunctionDefinition(string name, Parameter[] parameters, Statement body, DecoratorStatement decorators = null) {
+        public FunctionDefinition(NameExpression name, Parameter[] parameters, Statement body, DecoratorStatement decorators = null) {
             if (name == null) {
-                _name = "<lambda$" + Interlocked.Increment(ref _lambdaId) + ">";
+                _name = new NameExpression("<lambda$" + Interlocked.Increment(ref _lambdaId) + ">");
                 _isLambda = true;
             } else {
                 _name = name;
@@ -88,6 +87,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public override string/*!*/ Name {
+            get { return _name.Name ?? ""; }
+        }
+
+        public NameExpression NameExpression {
             get { return _name; }
         }
 
@@ -146,7 +149,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             PythonVariable variable;
 
             // First try variables local to this scope
-            if (TryGetVariable(name, out variable)) {
+            if (TryGetVariable(name, out variable) && variable.Kind != VariableKind.Nonlocal) {
                 if (variable.Kind == VariableKind.Global) {
                     AddReferencedGlobal(name);
                 }

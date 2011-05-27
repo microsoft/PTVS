@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _call = call;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, string[] keywordArgNames) {
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             return _call((CallExpression)node, unit, args) ?? base.Call(node, unit, args, keywordArgNames);
         }
     }

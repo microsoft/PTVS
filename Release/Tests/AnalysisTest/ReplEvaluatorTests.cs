@@ -88,7 +88,7 @@ namespace AnalysisTest {
 
             bool completed = false;
             evaluator.ExecuteText(code, (result) => {
-                Assert.AreEqual(result.Success, success);
+                Assert.AreEqual(result, success);
 
                 if (output.Length == 0) {
                     Assert.IsTrue(expectedOutput.Length == 0);
