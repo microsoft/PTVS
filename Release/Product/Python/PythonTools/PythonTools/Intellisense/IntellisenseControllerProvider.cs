@@ -14,8 +14,11 @@
 
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
@@ -39,8 +42,11 @@ namespace Microsoft.PythonTools.Intellisense {
         internal IIncrementalSearchFactoryService _IncrementalSearch = null; // Set via MEF
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
-            // Only use the analyzer if the view is actually file backed. If it is the REPL window
-            // we don't use this.
+            IntellisenseController controller;
+            if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
+                controller = new IntellisenseController(this, textView);
+            }
+
             var analyzer = textView.GetAnalyzer();
             if (analyzer != null) {
                 var buffer = subjectBuffers[0];
@@ -51,12 +57,24 @@ namespace Microsoft.PythonTools.Intellisense {
                 for (int i = 1; i < subjectBuffers.Count; i++) {
                     entry.BufferParser.AddBuffer(subjectBuffers[i]);
                 }
-                return new IntellisenseController(this, subjectBuffers, textView, entry.BufferParser);
+                controller.SetBufferParser(entry.BufferParser);
             }
-
-            return null;
+            return controller;
         }
 
+        internal static IntellisenseController GetOrCreateController(IComponentModel model, ITextView textView) {
+            IntellisenseController controller;
+            if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
+                var intellisenseControllerProvider = (
+                   from export in model.DefaultExportProvider.GetExports<IIntellisenseControllerProvider, IContentTypeMetadata>()
+                   from exportedContentType in export.Metadata.ContentTypes
+                   where exportedContentType == PythonCoreConstants.ContentType
+                   select export.Value
+                ).First();
+                controller = new IntellisenseController((IntellisenseControllerProvider)intellisenseControllerProvider, textView);
+            }
+            return controller;
+        }
     }
 
     /// <summary>

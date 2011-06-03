@@ -429,7 +429,7 @@ namespace AnalysisTest.ProjectSystem {
             
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 2;
+            const int expectedItems = 5;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
         }
@@ -445,7 +445,7 @@ namespace AnalysisTest.ProjectSystem {
 
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 2;
+            const int expectedItems = 5;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
 
@@ -466,7 +466,7 @@ namespace AnalysisTest.ProjectSystem {
 
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 2;
+            const int expectedItems = 5;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
 
@@ -494,7 +494,7 @@ namespace AnalysisTest.ProjectSystem {
 
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 2;
+            const int expectedItems = 5;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
 

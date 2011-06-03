@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 
+using System.Threading.Tasks;
+
 namespace Microsoft.VisualStudio.Repl {
     /// <summary>
     /// The result of command execution.  
@@ -20,7 +22,9 @@ namespace Microsoft.VisualStudio.Repl {
     public struct ExecutionResult {
         public static readonly ExecutionResult Success = new ExecutionResult(true);
         public static readonly ExecutionResult Failure = new ExecutionResult(false);
-
+        public static readonly Task<ExecutionResult> Succeeded;
+        public static readonly Task<ExecutionResult> Failed;
+ 
         private readonly bool _successful;
 
         public ExecutionResult(bool isSuccessful) {
@@ -31,6 +35,16 @@ namespace Microsoft.VisualStudio.Repl {
             get {
                 return _successful;
             }
+        }
+
+        static ExecutionResult() {
+            var taskSource = new TaskCompletionSource<ExecutionResult>();
+            taskSource.SetResult(Success);
+            Succeeded = taskSource.Task;
+
+            taskSource = new TaskCompletionSource<ExecutionResult>();
+            taskSource.SetResult(Failure);
+            Failed = taskSource.Task;
         }
     }
 }

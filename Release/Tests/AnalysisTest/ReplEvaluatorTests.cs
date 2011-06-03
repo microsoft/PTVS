@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -31,7 +33,7 @@ namespace AnalysisTest {
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow();
-                evaluator.Start(window);                
+                evaluator.Initialize(window);
 
                 TestOutput(window, evaluator, "print 'hello'", true, "hello");
                 TestOutput(window, evaluator, "42", true, "42");
@@ -50,7 +52,7 @@ namespace AnalysisTest {
         public void TestAbort() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow();
-                evaluator.Start(window);
+                evaluator.Initialize(window);
 
                 TestOutput(window, evaluator, "while True: pass\n", false, (completed) => {
                     Thread.Sleep(200);
@@ -74,8 +76,18 @@ namespace AnalysisTest {
             }
         }
 
+        private static string FindPythonInterpreterDir(string version) {
+            return (from path in Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator)
+                    let exePath = Path.Combine(path, "python.exe")
+                    where File.Exists(exePath) && path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).EndsWith(version, StringComparison.OrdinalIgnoreCase)
+                    select path).FirstOrDefault() ?? @"C:\Python" + version;
+        }
+
         private static PythonReplEvaluator MakeEvaluator() {
-            return new PythonReplEvaluator(new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", "C:\\Python26\\python.exe", "C:\\Python26\\pythonw.exe", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86), null);
+            string pythonDir = FindPythonInterpreterDir("26");
+            string pythonExe = Path.Combine(pythonDir, "python.exe");
+            string pythonWinExe = Path.Combine(pythonDir, "pythonw.exe");
+            return new PythonReplEvaluator(new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", pythonExe, pythonWinExe, "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86), null);
         }
 
         private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
@@ -87,8 +99,8 @@ namespace AnalysisTest {
             output.Clear();
 
             bool completed = false;
-            evaluator.ExecuteText(code, (result) => {
-                Assert.AreEqual(result, success);
+            var task = evaluator.ExecuteText(code).ContinueWith(completedTask => {
+                Assert.AreEqual(completedTask.Result.IsSuccessful, success);
 
                 if (output.Length == 0) {
                     Assert.IsTrue(expectedOutput.Length == 0);
@@ -117,9 +129,7 @@ namespace AnalysisTest {
                 afterExecute(completed);
             }
 
-            for (int i = 0; i < 30 && !completed; i++) {
-                Thread.Sleep(100);
-            }
+            task.Wait(3000);
 
             if (!completed) {
                 Assert.Fail("command didn't complete in 3 seconds");

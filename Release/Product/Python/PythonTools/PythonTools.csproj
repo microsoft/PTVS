@@ -382,6 +382,7 @@
     </Compile>
     <Compile Include="PythonTools\Refactoring\SelectionTarget.cs" />
     <Compile Include="PythonTools\Refactoring\VariableRenamer.cs" />
+    <Compile Include="PythonTools\Repl\LoadReplCommand.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
     <Compile Include="PythonTools\ProvideDebugLanguageAttribute.cs" />
     <Compile Include="PythonTools\Designer\WpfEventBindingProvider.cs" />

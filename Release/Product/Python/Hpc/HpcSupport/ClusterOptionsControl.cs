@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Hpc {
             _options.InterpreterArguments = _project.GetProperty(ClusterOptions.AppArgumentsSetting);
             _options.PythonInterpreter = _project.GetProperty(ClusterOptions.AppCommandSetting);
             _options.PublishBeforeRun = _project.PublishBeforeRun();
-            _options.RunEnvironment = new ClusterEnvironment(_project.GetProperty(ClusterOptions.RunEnvironmentSetting));
+            _options.LoadRunEnvironment(new ClusterEnvironment(_project.GetProperty(ClusterOptions.RunEnvironmentSetting)));
             _options.WorkingDir = _project.GetProperty(ClusterOptions.WorkingDirSetting);
             _options.MpiExecPath = _project.GetProperty(ClusterOptions.MpiExecPathSetting);
             _options.DeploymentDirectory = _project.GetProperty(ClusterOptions.DeploymentDirSetting);

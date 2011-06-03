@@ -28,12 +28,11 @@ using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Intellisense {
 
-    class IntellisenseController : IIntellisenseController, IOleCommandTarget {
+    internal sealed class IntellisenseController : IIntellisenseController, IOleCommandTarget {
         private readonly ITextView _textView;
-        private readonly IList<ITextBuffer> _subjectBuffers;
         private readonly IntellisenseControllerProvider _provider;
         private readonly IIncrementalSearch _incSearch;
-        private readonly BufferParser _bufferParser;
+        private BufferParser _bufferParser;
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
         private IQuickInfoSession _quickInfoSession;
@@ -43,19 +42,17 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Attaches events for invoking Statement completion 
         /// </summary>
-        /// <param name="subjectBuffers"></param>
-        /// <param name="textView"></param>
-        /// <param name="completionBrokerMap"></param>
-        public IntellisenseController(IntellisenseControllerProvider provider, IList<ITextBuffer> subjectBuffers, ITextView textView, BufferParser bufferParser) {
-            _subjectBuffers = subjectBuffers;
+        public IntellisenseController(IntellisenseControllerProvider provider, ITextView textView) {
             _textView = textView;
             _provider = provider;
             _editOps = provider._EditOperationsFactory.GetEditorOperations(textView);
             _incSearch = provider._IncrementalSearch.GetIncrementalSearch(textView);
             _textView.MouseHover += new EventHandler<MouseHoverEventArgs>(TextViewMouseHover);
-            _bufferParser = bufferParser;
             textView.Properties.AddProperty(typeof(IntellisenseController), this);  // added so our key processors can get back to us
-            AttachKeyboardFilter();
+        }
+
+        internal void SetBufferParser(BufferParser bufferParser) {
+            _bufferParser = bufferParser;
         }
 
         private void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
@@ -73,12 +70,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
             _bufferParser.AddBuffer(subjectBuffer);
-            _subjectBuffers.Add(subjectBuffer);
         }
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             _bufferParser.RemoveBuffer(subjectBuffer);
-            _subjectBuffers.Remove(subjectBuffer);
         }
 
         /// <summary>
@@ -168,7 +163,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     return false;
                 }
 
-                SnapshotPoint? caretPoint = GetCaretPoint();
+                SnapshotPoint? caretPoint = _textView.BufferGraph.MapDownToFirstMatch(
+                    _textView.Caret.Position.BufferPosition,
+                    PointTrackingMode.Positive,
+                    PythonCoreConstants.IsPythonContent,
+                    PositionAffinity.Predecessor
+                );
 
                 if (caretPoint != null && caretPoint.Value.Position != 0) {
                     var deleting = caretPoint.Value.Snapshot[caretPoint.Value.Position - 1];
@@ -288,7 +288,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     _activeSession.CompletionSets[0].Completions.Count == 1) {
                     _activeSession.Commit();
                 } else {
-                    AttachKeyboardFilter();
                     _activeSession.Dismissed += new EventHandler(OnCompletionSessionDismissedOrCommitted);
                     _activeSession.Committed += new EventHandler(OnCompletionSessionDismissedOrCommitted);
                 }
@@ -303,7 +302,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _sigHelpSession = SignatureBroker.TriggerSignatureHelp(_textView);
 
             if (_sigHelpSession != null) {
-                AttachKeyboardFilter();
                 _sigHelpSession.Dismissed += new EventHandler(OnSignatureSessionDismissed);
 
                 ISignature sig;
@@ -329,13 +327,6 @@ namespace Microsoft.PythonTools.Intellisense {
             // We've just been told that our active session was dismissed.  We should remove all references to it.
             _sigHelpSession.Dismissed -= OnSignatureSessionDismissed;
             _sigHelpSession = null;
-        }
-
-        private SnapshotPoint? GetCaretPoint() {
-            return _textView.Caret.Position.Point.GetPoint(
-                textBuffer => _subjectBuffers.Contains(textBuffer),
-                PositionAffinity.Predecessor
-            );
         }
 
         private void DeleteSelectedSpans() {

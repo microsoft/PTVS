@@ -778,7 +778,7 @@ namespace Microsoft.PythonTools.Debugger {
         // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
         internal static string GetPythonToolsInstallPath() {
             string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "PyDebugAttach.dll"))) {
+            if (File.Exists(Path.Combine(path, "Microsoft.PythonTools.Debugger.dll"))) {
                 return path;
             }
 
@@ -787,7 +787,7 @@ namespace Microsoft.PythonTools.Debugger {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
                     var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\1.0");
-                    if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
+                    if (File.Exists(Path.Combine(toolsPath, "Microsoft.PythonTools.Debugger.dll"))) {
                         return toolsPath;
                     }
                 }

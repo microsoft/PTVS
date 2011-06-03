@@ -1598,7 +1598,7 @@ namespace Microsoft.PythonTools.Project
                     throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
 
-                this.buildProject.SetProperty(propertyName, propertyValue);
+                var newProp = this.buildProject.SetProperty(propertyName, propertyValue);                
                 RaiseProjectPropertyChanged(propertyName, oldValue, propertyValue);
 
                 // property cache will need to be updated

@@ -13,9 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.Repl {
     /// <summary>
@@ -29,9 +27,8 @@ namespace Microsoft.VisualStudio.Repl {
         /// Asynchronously executes the command with specified arguments and calls back the given completion when finished.
         /// </summary>
         /// <param name="window">The interactive window.</param>
-        /// <param name="completion">Callback to invoke on completion. Do not invoke the callback if this method returns false.</param>
-        /// <returns>False if completed synchronously (completion won't be invoked).</returns>
-        bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion);
+        /// <returns>The task that completes the execution.</returns>
+        Task<ExecutionResult> Execute(IReplWindow window, string arguments);
 
         /// <summary>
         /// Gets a description of the REPL command which is displayed when the user asks for help.

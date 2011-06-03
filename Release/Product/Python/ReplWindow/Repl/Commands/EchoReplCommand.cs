@@ -12,28 +12,22 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Repl;
 using System.ComponentModel.Composition;
-using System.IO;
-using System.Windows.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(IReplCommand))]
     class EchoReplCommand : IReplCommand {
         #region IReplCommand Members
 
-        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
+        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
             arguments = arguments.ToLowerInvariant();
             if (arguments == "on") {
                 window.SetOptionValue(ReplOptions.ShowOutput, true);
             } else {
                 window.SetOptionValue(ReplOptions.ShowOutput, false);
             }
-            return false;
+            return ExecutionResult.Succeeded;
         }
 
         public string Description {

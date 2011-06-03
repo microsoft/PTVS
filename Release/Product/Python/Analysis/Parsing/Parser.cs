@@ -2532,7 +2532,10 @@ namespace Microsoft.PythonTools.Parsing {
 
                     l.Add(s);
                     if (MaybeEat(TokenKind.Dedent)) {
-                        trailingWhiteSpace = _tokenWhiteSpace;
+                        // dedent white space belongs to the statement which follows the suite
+                        if (_verbatim) {
+                            _lookaheadWhiteSpace = _tokenWhiteSpace + _lookaheadWhiteSpace;
+                        }
                         break;
                     }
                     if (PeekToken().Kind == TokenKind.EndOfFile) {

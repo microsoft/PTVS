@@ -151,8 +151,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override bool Walk(ForStatement node) {
             if (node.List != null) {
-                foreach (var listType in _eval.Evaluate(node.List).ToArray()) {
-                    _eval.AssignTo(node, node.Left, listType.GetEnumeratorTypes(node, _unit));
+                var assignedTypes = _eval.Evaluate(node.List).ToArray();
+                if (assignedTypes.Length > 0) {
+                    foreach (var listType in assignedTypes) {
+                        _eval.AssignTo(node, node.Left, listType.GetEnumeratorTypes(node, _unit));
+                    }
+                } else {
+                    _eval.AssignTo(node, node.Left, EmptySet<Namespace>.Instance);
                 }
             }
 

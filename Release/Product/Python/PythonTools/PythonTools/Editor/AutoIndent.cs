@@ -107,9 +107,9 @@ namespace Microsoft.PythonTools.Editor {
                     IsOpenGrouping(exprRangeImplicitOpen.Value)) {
                     // we are in an open grouping, indent to the open grouping chars level + 1
                     return exprRangeImplicitOpen.Value.Start - exprRangeImplicitOpen.Value.Start.GetContainingLine().Start + 1;
-                } else if (exprRangeImplicitOpen != null && IsProceededByKeywordWhichCausesDedent(classifier, exprRangeImplicitOpen.Value)) {
+                } else if (exprRangeNoImplicitOpen != null && IsProceededByKeywordWhichCausesDedent(classifier, exprRangeNoImplicitOpen.Value)) {
                     // return, break, continue, raise, etc... w/ an expression after it, dedent to the level of the line that contains the return, etc...
-                    indentation = GetIndentation(exprRangeImplicitOpen.Value.Start.GetContainingLine().GetText(), options.GetTabSize()) - tabSize;
+                    indentation = GetIndentation(exprRangeNoImplicitOpen.Value.Start.GetContainingLine().GetText(), options.GetTabSize()) - tabSize;
                 } else if (indentation >= tabSize && ShouldDedentAfterKeyword(tokens[0])) {
                     // return, break, continue, raise, etc... no code generally executes after these, do a dedent.
                     indentation -= tabSize;

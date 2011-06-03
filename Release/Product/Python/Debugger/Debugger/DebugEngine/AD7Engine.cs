@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // The core of the engine is implemented by PythonProcess - we wrap and expose that to VS.
         private PythonProcess _process;
-
+        
         // mapping between PythonProcess threads and AD7Threads
         private Dictionary<PythonThread, AD7Thread> _threads = new Dictionary<PythonThread, AD7Thread>();
         private Dictionary<PythonModule, AD7Module> _modules = new Dictionary<PythonModule, AD7Module>();
@@ -93,6 +93,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public AD7Engine() {            
             _breakpointManager = new BreakpointManager(this);
             Debug.WriteLine("Python Engine Created " + GetHashCode());
+        }
+
+        ~AD7Engine() {
+            Debug.WriteLine("Python Engine Finalized " + GetHashCode());
+            if (!_attached && _process != null) {
+                // we launched the process, go ahead and kill it now that
+                // VS has released us
+                _process.Terminate();
+            }
         }
 
         internal PythonProcess Process {
@@ -265,6 +274,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Informs a DE that the program specified has been atypically terminated and that the DE should 
         // clean up all references to the program and send a program destroy event.
         int IDebugEngine2.DestroyProgram(IDebugProgram2 pProgram) {
+            Debug.WriteLine("PythonEngine DestroyProgram");
             // Tell the SDM that the engine knows that the program is exiting, and that the
             // engine will send a program destroy. We do this because the Win32 debug api will always
             // tell us that the process exited, and otherwise we have a race condition.
@@ -341,6 +351,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Determines if a process can be terminated.
         int IDebugEngineLaunch2.CanTerminateProcess(IDebugProcess2 process) {
+            Debug.WriteLine("PythonEngine CanTerminateProcess");
+
             AssertMainThread();
             Debug.Assert(_events != null);
             Debug.Assert(_process != null);
@@ -369,7 +381,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
             process = null;
-
+            
             _events = ad7Callback;
 
             PythonLanguageVersion version = DefaultVersion;
@@ -495,6 +507,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // This function is used to terminate a process that the engine launched
         // The debugger will call IDebugEngineLaunch2::CanTerminateProcess before calling this method.
         int IDebugEngineLaunch2.TerminateProcess(IDebugProcess2 process) {
+            Debug.WriteLine("PythonEngine TerminateProcess");
+
             AssertMainThread();
             Debug.Assert(_events != null);
             Debug.Assert(_process != null);
@@ -524,6 +538,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // The debugger calls CauseBreak when the user clicks on the pause button in VS. The debugger should respond by entering
         // breakmode. 
         public int CauseBreak() {
+            Debug.WriteLine("PythonEngine CauseBreak");
             AssertMainThread();
 
             _process.Break();
@@ -535,6 +550,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // but have stepping state remain. An example is when a tracepoint is executed, 
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread) {
+            Debug.WriteLine("PythonEngine Continue");
             AssertMainThread();
 
             AD7Thread thread = (AD7Thread)pThread;
@@ -548,6 +564,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Detach is called when debugging is stopped and the process was attached to (as opposed to launched)
         // or when one of the Detach commands are executed in the UI.
         public int Detach() {
+            Debug.WriteLine("PythonEngine Detach");
             AssertMainThread();
 
             _breakpointManager.ClearBoundBreakpoints();
@@ -671,13 +688,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             switch (sk) {
                 case enum_STEPKIND.STEP_INTO: thread.StepInto(); break;
                 case enum_STEPKIND.STEP_OUT: thread.StepOut(); break;
-                case enum_STEPKIND.STEP_OVER: thread.StepOver(); break;
+                case enum_STEPKIND.STEP_OVER: thread.StepOver(); break; 
             }
             return VSConstants.S_OK;
         }
 
         // Terminates the program.
         public int Terminate() {
+            Debug.WriteLine("PythonEngine Terminate");
             // Because we implement IDebugEngineLaunch2 we will terminate
             // the process in IDebugEngineLaunch2.TerminateProcess
             return VSConstants.S_OK;

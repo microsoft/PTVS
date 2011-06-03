@@ -13,12 +13,8 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Repl;
 using System.ComponentModel.Composition;
-using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace Microsoft.VisualStudio.Repl {
@@ -26,7 +22,7 @@ namespace Microsoft.VisualStudio.Repl {
     class WaitReplCommand : IReplCommand {
         #region IReplCommand Members
 
-        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
+        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
             var delay = new TimeSpan(0, 0, 0, 0, int.Parse(arguments));
             var start = DateTime.UtcNow;
             while ((start + delay) > DateTime.UtcNow) {
@@ -38,7 +34,7 @@ namespace Microsoft.VisualStudio.Repl {
                     );
                 Dispatcher.PushFrame(frame);
             }
-            return false;
+            return ExecutionResult.Succeeded;
         }
 
         public string Description {

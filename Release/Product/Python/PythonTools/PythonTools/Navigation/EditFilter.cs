@@ -49,16 +49,20 @@ namespace Microsoft.PythonTools.Language {
     /// </summary>
     internal sealed class EditFilter : IOleCommandTarget {
         private readonly ITextView _textView;
-        private readonly IOleCommandTarget _next;
         private readonly IEditorOperations _editorOps;
+        private IOleCommandTarget _next;
 
-        public EditFilter(ITextView textView, IVsTextView vsTextView, IEditorOperations editorOps) {
+        public EditFilter(ITextView textView, IEditorOperations editorOps) {
             _textView = textView;
             _editorOps = editorOps;
 
             BraceMatcher.WatchBraceHighlights(textView, PythonToolsPackage.ComponentModel);
+        }
 
-            ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
+        internal void AttachKeyboardFilter(IVsTextView vsTextView) {
+            if (_next == null) {
+                ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
+            }
         }
 
         /// <summary>

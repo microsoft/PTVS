@@ -13,9 +13,12 @@
  * ***************************************************************************/
 
 using System.ComponentModel.Composition;
+using System.Linq;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
@@ -36,10 +39,16 @@ namespace Microsoft.PythonTools.Editor {
         #region IReplWindowCreationListener Members
 
         public void ReplWindowCreated(IReplWindow window) {
-            var textViewAdapter = _adapterFact.GetViewAdapter(window.TextView);
-            window.TextView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
+            var model = PythonToolsPackage.ComponentModel;
+            var textView = window.TextView;
+            var vsTextView = _adapterFact.GetViewAdapter(textView);
+            textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
 
-            new EditFilter(window.TextView, textViewAdapter, _editorOpsFactory.GetEditorOperations(window.TextView));
+            var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView));
+            var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);
+
+            editFilter.AttachKeyboardFilter(vsTextView);
+            intellisenseController.AttachKeyboardFilter();
         }
 
         #endregion

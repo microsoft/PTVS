@@ -164,10 +164,10 @@ namespace Microsoft.PythonTools.Intellisense {
                                 break;
                             } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
                                 (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
-                                    if (start == null) {
+                                    if (start == null || (nestingChanged && nesting != 0)) {
                                         return null;
                                     }
-                                break;
+                                    break;
                             } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
                                 // if and else can be used in an expression context or a statement context
                                 if (currentParamAtLastColon != -1) {

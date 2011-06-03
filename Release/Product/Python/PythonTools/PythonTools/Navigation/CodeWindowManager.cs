@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Linq;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Language;
@@ -20,6 +21,9 @@ using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Navigation {
     class CodeWindowManager : IVsCodeWindowManager {
@@ -32,11 +36,15 @@ namespace Microsoft.PythonTools.Navigation {
             _window = codeWindow;
             _textView = textView;
 
-            var compModel = PythonToolsPackage.ComponentModel;
-            var adaptFact = compModel.GetService<IVsEditorAdaptersFactoryService>();
+            var model = PythonToolsPackage.ComponentModel;
+            var adaptersFactory = model.GetService<IVsEditorAdaptersFactoryService>();
+            IEditorOperationsFactoryService factory = model.GetService<IEditorOperationsFactoryService>();
 
-            IEditorOperationsFactoryService factory = compModel.GetService<IEditorOperationsFactoryService>();
-            new EditFilter(textView, adaptFact.GetViewAdapter(textView), factory.GetEditorOperations(textView));
+            EditFilter editFilter = new EditFilter(textView, factory.GetEditorOperations(textView));
+            IntellisenseController intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);
+
+            editFilter.AttachKeyboardFilter(adaptersFactory.GetViewAdapter(textView));
+            intellisenseController.AttachKeyboardFilter();
         }
 
         #region IVsCodeWindowManager Members

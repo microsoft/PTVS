@@ -549,6 +549,26 @@ g()
 
 x = 2");
 
+            SuccessTest("x .. Bar()",
+@"class C:
+    def f():
+        if True:
+            pass
+        else:
+            pass
+        x = Foo()
+        y = Bar()",
+@"def g():
+    x = Foo()
+    y = Bar()
+
+class C:
+    def f():
+        if True:
+            pass
+        else:
+            pass
+        g()");
         }
 
         [TestMethod]
@@ -655,11 +675,11 @@ x = 2");
     x = z
     z = 42
     y = 100
-    return x, y, z
+    return x, y
 
 def f():
     z = 200
-    x, y, z = g(z)
+    x, y = g(z)
     print(x, y)");
 
             SuccessTest("x .. 100",
@@ -968,6 +988,23 @@ print(x)",
 
 x = g()
 print(x)");
+
+            SuccessTest("l = .. return r",
+@"def f():
+    r = None
+    l = foo()
+    if l:
+        r = l[0]
+    return r",
+@"def g(r):
+    l = foo()
+    if l:
+        r = l[0]
+    return r
+
+def f():
+    r = None
+    return g(r)");
 
         }
 

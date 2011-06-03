@@ -12,12 +12,14 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel;
 using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Hpc {    
     class ClusterOptions {
         private readonly IPythonProject _project;
+        private ClusterEnvironment _env;
         internal const string RunEnvironmentSetting = "ClusterRunEnvironment";
         internal const string PublishBeforeRunSetting = "ClusterPublishBeforeRun";
         internal const string WorkingDirSetting = "ClusterWorkingDir";
@@ -35,7 +37,27 @@ namespace Microsoft.PythonTools.Hpc {
         Browsable(true), 
         Description("String that includes the head node, number of processes, and the allocation of processes to machines, if specified.")]
         public ClusterEnvironment RunEnvironment {
-            get; set;
+            get { return _env; }
+            // updated from property grid
+            set { 
+                _env = value;
+                if (_env.HeadNode != "localhost") {
+                    if (String.IsNullOrWhiteSpace(DeploymentDirectory)) {
+                        // automatically set the deployment dir to the spool dir on the server
+                        DeploymentDirectory = "\\\\" + _env.HeadNode + "\\CcpSpoolDir\\$(UserName)\\$(Name)";
+                    }
+                } else {
+                    DeploymentDirectory = "";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Called to initially set the environment
+        /// </summary>
+        /// <param name="env"></param>
+        internal void LoadRunEnvironment(ClusterEnvironment env) {
+            _env = env;
         }
 
         [DisplayName("Target platform"), Browsable(true), Description("Selects the target platform (X86 or X64).")]

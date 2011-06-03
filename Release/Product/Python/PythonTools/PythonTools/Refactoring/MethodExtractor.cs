@@ -414,6 +414,7 @@ namespace Microsoft.PythonTools.Refactoring {
             internal readonly HashSet<PythonVariable> _outputVars = new HashSet<PythonVariable>();
             internal readonly HashSet<PythonVariable> _inputVars = new HashSet<PythonVariable>();
             private readonly HashSet<PythonVariable> _readBeforeInitialized;
+            private bool _inLoop = false;
 
             public OuterVariableWalker(PythonAst root, SelectionTarget target, InnerVariableWalker inputCollector, HashSet<PythonVariable> readBeforeInitialized) {
                 _root = root;
@@ -425,6 +426,58 @@ namespace Microsoft.PythonTools.Refactoring {
 
             public override AssignedNameWalker Define {
                 get { return _define; }
+            }
+
+            public override bool Walk(FunctionDefinition node) {
+                bool oldInLoop = _inLoop;
+                _inLoop = false;
+                var res = base.Walk(node);
+                _inLoop = oldInLoop;
+                return res;
+            }
+
+            public override bool Walk(ClassDefinition node) {
+                bool oldInLoop = _inLoop;
+                _inLoop = false;
+                var res = base.Walk(node);
+                _inLoop = oldInLoop;
+                return res;
+            }
+
+            public override bool Walk(WhileStatement node) {
+                if (node.Test != null) {
+                    node.Test.Walk(this);
+                }
+                if (node.Body != null) {
+                    bool oldInLoop = _inLoop;
+                    _inLoop = true;
+                    node.Body.Walk(this);
+                    _inLoop = oldInLoop;
+                }
+                if (node.ElseStatement != null) {
+                    node.ElseStatement.Walk(this);
+                }
+                return false;
+            }
+
+            public override bool Walk(ForStatement node) {
+                if (node.Left != null) {
+                    node.Left.Walk(Define);
+                }
+
+                if (node.List != null) {
+                    node.List.Walk(this);
+                }
+                if (node.Body != null) {
+                    bool oldInLoop = _inLoop;
+                    _inLoop = true;
+                    node.Body.Walk(this);
+                    _inLoop = oldInLoop;
+                }
+                if (node.Else != null) {
+                    node.Else.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(NameExpression node) {
@@ -485,7 +538,8 @@ namespace Microsoft.PythonTools.Refactoring {
                                 // it's assigned afterwards, we don't care...
                             }
                         } else if (_collector._readBeforeInitialized.Contains(reference.Variable) &&
-                            _collector._inputCollector._allWrites.Contains(reference)) {
+                            _collector._inputCollector._allWrites.Contains(reference) &&
+                            _collector._inLoop) {
                             // we read an un-initialized value, so it needs to be passed in.  If we
                             // write to it as well then we need to pass it back out for future calls.
                             _collector._outputVars.Add(reference.Variable);

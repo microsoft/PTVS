@@ -217,6 +217,19 @@ def func():
 
     def funcB(self):
         pass");
+
+            AutoIndentTest(project, "print('abc')\rimport sys\rpass", @"print('abc')
+import sys
+pass");
+
+            AutoIndentTest(project, "a_list = [1, 2, 3]\rimport os\rpass", @"a_list = [1, 2, 3]
+import os
+pass");
+
+            AutoIndentTest(project, "class C:\rdef foo(self):\r'doc string'\rpass", @"class C:
+    def foo(self):
+        'doc string'
+        pass");
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

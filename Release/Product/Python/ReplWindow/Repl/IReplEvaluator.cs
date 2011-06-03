@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Remoting;
 using Microsoft.VisualStudio.Text.Editor;
+using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.Repl {
     /// <summary>
@@ -24,13 +25,17 @@ namespace Microsoft.VisualStudio.Repl {
     /// </summary>
     public interface IReplEvaluator : IDisposable {
         /// <summary>
-        /// Starts the interpreter.  Usually this creates a new interperter process locally or remotely
-        /// and sets up communication that's necessary.
-        /// 
-        /// Called after the text view has been created and the repl window is about to start.  Evaluaters
-        /// can remember their repl window and can set any options on the REPL window that they would like to.
+        /// Initializes the interactive session. 
         /// </summary>
-        void Start(IReplWindow window);
+        /// <param name="window">Window the evaluator is initialized for.</param>
+        /// <returns>Task that completes the initialization.</returns>
+        /// <remarks>
+        /// Usually creates a new process locally or remotely and sets up communication that's necessary.
+        /// 
+        /// Called after the text view has been created and the repl window is about to start. The implementors
+        /// might want to store the <paramref name="window"/> and adjust its look and behavior.
+        /// </remarks>
+        Task<ExecutionResult> Initialize(IReplWindow window);
 
         /// <summary>
         /// Re-starts the interpreter.  Usually this closes the current process (if alive) and starts
@@ -47,12 +52,11 @@ namespace Microsoft.VisualStudio.Repl {
         bool CanExecuteText(string/*!*/ text);
 
         /// <summary>
-        /// Executes the specified text asynchronously and calls back the given completion when the text has been executed.
+        /// Asynchronously executes the specified text.
         /// </summary>
         /// <param name="text">The code snippet to execute.</param>
-        /// <param name="completion">Callback to invoke on execution completion. Do not invoke the callback if this method returns false.</param>
-        /// <returns>True on success.</returns>
-        bool ExecuteText(string text, Action<ExecutionResult> completion);
+        /// <returns>Task that completes the execution.</returns>
+        Task<ExecutionResult> ExecuteText(string text);
         
         void ExecuteFile(string filename);
 

@@ -15,13 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -66,6 +66,7 @@ namespace Microsoft.VisualStudio.Repl {
         private IWpfTextViewHost _textViewHost;
         private IEditorOperations _editorOperations;
         private readonly History/*!*/ _history;
+        private TaskScheduler _uiScheduler;
 
         //
         // Services
@@ -206,6 +207,10 @@ namespace Microsoft.VisualStudio.Repl {
                 listener.ReplWindowCreated(this);
             }
 
+            // by this time all applicable language filters should be attached:
+            _preLanguageCommandFilter = new CommandFilter(this, preLanguage: true);
+            ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_preLanguageCommandFilter, out _languageServiceCommandFilter));
+
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.HorizontalScrollBarId, false);
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.LineNumberMarginId, false);
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.OutliningMarginId, false);
@@ -218,18 +223,30 @@ namespace Microsoft.VisualStudio.Repl {
             _commands = CreateCommands();
 
             textView.TextBuffer.Properties.AddProperty(typeof(IReplEvaluator), _evaluator);
-
-            // Anything that reads options should wait until after this call so the evaluator can set the options first
-            Evaluator.Start(this);
+            SetDefaultFontSize(ComponentModel, textView);
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.GlyphMarginId, _displayPromptInMargin);
 
             ApplyProtection();
 
+            _uiScheduler = TaskScheduler.FromCurrentSynchronizationContext();
+
+            // Anything that reads options should wait until after this call so the evaluator can set the options first
+            (Evaluator.Initialize(this) ?? ExecutionResult.Failed).ContinueWith(FinishInitialization, _uiScheduler);
+        }
+
+        private void FinishInitialization(Task<ExecutionResult> completedTask) {
+            Debug.Assert(Dispatcher.CheckAccess());
+
+            RemoveProtection();
+
+            _buffer.Flush();
+
+            // TODO: remove
             InitializeScopeList();
-            SetDefaultFontSize(ComponentModel, textView);
-            
+
             // may add command filters
             PrepareForInput();
+            ApplyProtection();
         }
 
         private void CreateTextViewHost() {
@@ -336,9 +353,6 @@ namespace Microsoft.VisualStudio.Repl {
         public override void OnToolWindowCreated() {
             Guid commandUiGuid = Microsoft.VisualStudio.VSConstants.GUID_TextEditorFactory;
             ((IVsWindowFrame)Frame).SetGuidProperty((int)__VSFPROPID.VSFPROPID_InheritKeyBindings, ref commandUiGuid);
-
-            _preLanguageCommandFilter = new CommandFilter(this, preLanguage: true);
-            ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_preLanguageCommandFilter, out _languageServiceCommandFilter));
 
             base.OnToolWindowCreated();
 
@@ -451,6 +465,12 @@ namespace Microsoft.VisualStudio.Repl {
 
         public ITextBuffer CurrentLanguageBuffer {
             get { return _currentLanguageBuffer; }
+        }
+
+        private void RequiresLanguageBuffer() {
+            if (_currentLanguageBuffer == null) {
+                throw new InvalidOperationException("Language buffer not available");
+            }
         }
 
         protected override void Dispose(bool disposing) {
@@ -600,7 +620,7 @@ namespace Microsoft.VisualStudio.Repl {
                 return;
             }
 
-            if (!_isRunning) {
+            if (!_isRunning && _currentLanguageBuffer != null) {
                 StoreUncommittedInput();
                 PendSubmissions(inputs);
                 ProcessPendingSubmissions();
@@ -638,7 +658,7 @@ namespace Microsoft.VisualStudio.Repl {
                     // finish line of the current std input buffer or language buffer:
                     if (InStandardInputRegion(new SnapshotPoint(CurrentSnapshot, CurrentSnapshot.Length))) {
                         CancelStandardInput();
-                    } else {
+                    } else if (_currentLanguageBuffer != null) {
                         AppendLineNoPromptInjection(_currentLanguageBuffer);
                         PrepareForInput();
                     }
@@ -821,7 +841,7 @@ namespace Microsoft.VisualStudio.Repl {
                 if (!((IIntellisenseCommandTarget)this.SessionStack).ExecuteKeyboardCommand(IntellisenseKeyboardCommand.Up)) {
                     // uparrow and downarrow at the end of input or with empty input rotate history
                     // with multi-line input, uparrow and downarrow move around in text
-                    if (!_isRunning && CaretAtEnd && _useSmartUpDown) {
+                    if (_currentLanguageBuffer != null && !_isRunning && CaretAtEnd && _useSmartUpDown) {
                         HistoryPrevious();
                     } else {
                         _editorOperations.MoveLineUp(false);
@@ -836,7 +856,7 @@ namespace Microsoft.VisualStudio.Repl {
         public void SmartDownArrow() {
             UIThread(() => {
                 if (!((IIntellisenseCommandTarget)this.SessionStack).ExecuteKeyboardCommand(IntellisenseKeyboardCommand.Down)) {
-                    if (!_isRunning && CaretAtEnd && _useSmartUpDown) {
+                    if (_currentLanguageBuffer != null && !_isRunning && CaretAtEnd && _useSmartUpDown) {
                         HistoryNext();
                     } else {
                         _editorOperations.MoveLineDown(false);
@@ -846,6 +866,8 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public void HistoryPrevious() {
+            RequiresLanguageBuffer();
+
             var previous = _history.GetPrevious();
             if (previous != null) {
                 StoreUncommittedInputForHistory();
@@ -854,6 +876,8 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public void HistoryNext() {
+            RequiresLanguageBuffer();
+
             var next = _history.GetNext();
             if (next != null) {
                 StoreUncommittedInputForHistory();
@@ -970,6 +994,8 @@ namespace Microsoft.VisualStudio.Repl {
         /// Instead, we need to implement indentation ourselves. We still use ISmartIndentProvider provided by the languge.
         /// </remarks>
         private void IndentCurrentLine() {
+            Debug.Assert(_currentLanguageBuffer != null);
+
             var langCaret = TextView.BufferGraph.MapDownToBuffer(
                 Caret.Position.BufferPosition,
                 PointTrackingMode.Positive,
@@ -1022,6 +1048,10 @@ namespace Microsoft.VisualStudio.Repl {
         /// Deletes characters preceeding the current caret position in the current language buffer.
         /// </summary>
         private void DeletePreviousCharacter() {
+            if (_currentLanguageBuffer == null) {
+                return;
+            }
+
             var caretPosition = TextView.Caret.Position.BufferPosition;
             var point = TextView.BufferGraph.MapDownToBuffer(
                 caretPosition, PointTrackingMode.Positive, _currentLanguageBuffer, PositionAffinity.Successor
@@ -1050,6 +1080,8 @@ namespace Microsoft.VisualStudio.Repl {
             if (TextView.Selection.SelectedSpans.Any(span => InReadOnlyRegion(span.Start.Position))) {
                 return;
             }
+
+            Debug.Assert(_currentLanguageBuffer != null);
 
             StringBuilder deletedText = null;
 
@@ -1109,6 +1141,9 @@ namespace Microsoft.VisualStudio.Repl {
         // when we receive it back in post-language command filter.
         private bool ReturnIsLineBreak;
 
+        private const uint CommandEnabled = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+        private const uint CommandDisabled = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+
         private sealed class CommandFilter : IOleCommandTarget {
             private readonly ReplWindow _replWindow;
             private readonly bool _preLanguage;
@@ -1145,15 +1180,11 @@ namespace Microsoft.VisualStudio.Repl {
                     case PkgCmdIDList.cmdidReplHistoryNext:
                     case PkgCmdIDList.cmdidReplHistoryPrevious:
                     case PkgCmdIDList.cmdidSmartExecute:
-                        prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        prgCmds[0].cmdf = (_currentLanguageBuffer != null) ? CommandEnabled : CommandDisabled;
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.comboIdReplScopes:
-                        if (_scopeListVisible) {
-                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                        } else {
-                            prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-                        }
+                        prgCmds[0].cmdf = (_scopeListVisible) ? CommandEnabled : CommandDisabled;
                         return VSConstants.S_OK;
                 }
             }
@@ -1175,14 +1206,17 @@ namespace Microsoft.VisualStudio.Repl {
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.cmdidSmartExecute:
+                        Debug.Assert(_currentLanguageBuffer != null);
                         SmartExecute();
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.cmdidReplHistoryNext:
+                        Debug.Assert(_currentLanguageBuffer != null);
                         HistoryNext();
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.cmdidReplHistoryPrevious:
+                        Debug.Assert(_currentLanguageBuffer != null);
                         HistoryPrevious();
                         return VSConstants.S_OK;
 
@@ -1213,7 +1247,7 @@ namespace Microsoft.VisualStudio.Repl {
             if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
                 switch (prgCmds[0].cmdID) {
                     case PkgCmdIDList.cmdidBreakLine:
-                        prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+                        prgCmds[0].cmdf = CommandEnabled;
                         return VSConstants.S_OK;
                 }
             }
@@ -1303,12 +1337,16 @@ namespace Microsoft.VisualStudio.Repl {
             if (pguidCmdGroup == VSConstants.VSStd2K) {
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.RETURN:
+                        if (_currentLanguageBuffer == null) {
+                            break;
+                        }
+
                         // RETURN might be sent by LineBreak command:
                         bool trySubmit = !ReturnIsLineBreak;
                         ReturnIsLineBreak = false;
-    
+
                         // RETURN that is not handled by any language service is a "try submit" command
-                        
+
                         var langCaret = TextView.BufferGraph.MapDownToBuffer(
                             Caret.Position.BufferPosition,
                             PointTrackingMode.Positive,
@@ -1329,7 +1367,7 @@ namespace Microsoft.VisualStudio.Repl {
                             return VSConstants.S_OK;
                         }
                         break;
-                            
+
 
                     case VSConstants.VSStd2KCmdID.BACKSPACE:
                         if (!TextView.Selection.IsEmpty) {
@@ -1365,7 +1403,7 @@ namespace Microsoft.VisualStudio.Repl {
                         break;
                 }
             }
-            
+
             return nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
@@ -1390,6 +1428,10 @@ namespace Microsoft.VisualStudio.Repl {
 
         public bool CaretInActiveCodeRegion {
             get {
+                if (_currentLanguageBuffer == null) {
+                    return false;
+                }
+
                 var point = TextView.BufferGraph.MapDownToBuffer(
                     Caret.Position.BufferPosition,
                     PointTrackingMode.Positive,
@@ -1403,6 +1445,9 @@ namespace Microsoft.VisualStudio.Repl {
 
         public bool CaretInStandardInputRegion {
             get {
+                if (_stdInputBuffer == null) {
+                    return false;
+                }
 
                 var point = TextView.BufferGraph.MapDownToBuffer(
                     Caret.Position.BufferPosition,
@@ -1430,6 +1475,8 @@ namespace Microsoft.VisualStudio.Repl {
         /// Returns the insertion point relative to the current language buffer.
         /// </summary>
         private int GetActiveCodeInsertionPosition() {
+            Debug.Assert(_currentLanguageBuffer != null);
+
             var langPoint = _textViewHost.TextView.BufferGraph.MapDownToBuffer(
                 new SnapshotPoint(
                     _projectionBuffer.CurrentSnapshot,
@@ -1439,9 +1486,11 @@ namespace Microsoft.VisualStudio.Repl {
                 _currentLanguageBuffer,
                 PositionAffinity.Predecessor
             );
+
             if (langPoint != null) {
                 return langPoint.Value;
             }
+
             return _currentLanguageBuffer.CurrentSnapshot.Length;
         }
 
@@ -1581,6 +1630,8 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         private void ProcessPendingSubmissions() {
+            Debug.Assert(_currentLanguageBuffer != null);
+
             if (_pendingSubmissions == null || _pendingSubmissions.Count == 0) {
                 RestoreUncommittedInput();
 
@@ -1606,6 +1657,7 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public void Submit() {
+            RequiresLanguageBuffer();
             AppendLineNoPromptInjection(_currentLanguageBuffer);
             ExecuteActiveCode();
         }
@@ -1954,6 +2006,8 @@ namespace Microsoft.VisualStudio.Repl {
         #region Execution
 
         private bool CanExecuteActiveCode() {
+            Debug.Assert(_currentLanguageBuffer != null);
+
             var input = GetActiveCode();
             if (input.Trim().Length == 0) {
                 // Always allow "execution" of a blank line.
@@ -2000,45 +2054,50 @@ namespace Microsoft.VisualStudio.Repl {
                 TextView.Selection.Clear();
 
                 _history.UncommittedInput = null;
-                if (text.Length > 0) {
-                    _history.Add(text.TrimEnd(_whitespaceChars));
-                }
-
-                _isRunning = true;
-
-                // Following method assumes that _isRunning will be cleared before 
-                // the following method is called again.
-                StartCursorTimer();
-
-                _sw = Stopwatch.StartNew();
                 if (text.Trim().Length == 0) {
-                    // Special case to avoid round-trip when remoting
-                    FinishExecute(ExecutionResult.Success);
-                } else if (text.StartsWith(_commandPrefix)) {
-                    _history.Last.Command = true;
-                    ExecuteCommand(text);
-                } else if (!Evaluator.ExecuteText(text, FinishExecute)) {
-                    FinishExecute(ExecutionResult.Failure);
+                    PrepareForInput();
+                } else {
+                    _history.Add(text.TrimEnd(_whitespaceChars));
+
+                    _isRunning = true;
+
+                    // Following method assumes that _isRunning will be cleared before 
+                    // the following method is called again.
+                    StartCursorTimer();
+
+                    _sw = Stopwatch.StartNew();
+                    Task<ExecutionResult> task;
+                    if (text.StartsWith(_commandPrefix)) {
+                        _history.Last.Command = true;
+                        task = ExecuteCommand(text);
+                    } else {
+                        task = Evaluator.ExecuteText(text) ?? ExecutionResult.Failed;
+                    }
+
+                    task.ContinueWith(FinishExecute, _uiScheduler);
                 }
             });
         }
 
-        private void FinishExecute(ExecutionResult result) {
-            PerformWrite(() => {
-                _sw.Stop();
-                _buffer.Flush();
-                
-                if (_history.Last != null) {
-                    _history.Last.Duration = _sw.Elapsed.Seconds;
-                }
-                if (!result.IsSuccessful) {
-                    if (_history.Last != null) {
-                        _history.Last.Failed = true;
-                    }
-                }
+        private void FinishExecute(Task<ExecutionResult> result) {
+            Debug.Assert(CheckAccess());
+            RemoveProtection();
 
-                PrepareForInput();
-            });
+            _sw.Stop();
+            _buffer.Flush();
+            
+            if (_history.Last != null) {
+                _history.Last.Duration = _sw.Elapsed.Seconds;
+            }
+
+            if (result.Exception != null || !result.Result.IsSuccessful) {
+                if (_history.Last != null) {
+                    _history.Last.Failed = true;
+                }
+            }
+
+            PrepareForInput();
+            ApplyProtection();
         }
 
         private void SmartExecute() {
@@ -2058,7 +2117,7 @@ namespace Microsoft.VisualStudio.Repl {
             }
         }
 
-        private void ExecuteCommand(string text) {
+        private Task<ExecutionResult> ExecuteCommand(string text) {
             string commandLine = text.Substring(_commandPrefix.Length).Trim();
 
             string command = commandLine.Split(' ')[0];
@@ -2068,32 +2127,25 @@ namespace Microsoft.VisualStudio.Repl {
 
             if (command == _commandPrefix) {
                 // REPL-level comment; do nothing
-                FinishExecute(ExecutionResult.Success);
-                return;
+                return ExecutionResult.Succeeded;
             }
 
             if (commandLine.Length == 0 || command == "help") {
                 ShowReplHelp();
-                FinishExecute(ExecutionResult.Success);
-                return;
+                return ExecutionResult.Succeeded;
             }
 
             IReplCommand commandHandler = _commands.Find(x => x.Command == command);
             if (commandHandler == null) {
                 WriteLine(String.Format("Unknown command '{0}', use \"{1}help\" for help", command, _commandPrefix));
-                FinishExecute(ExecutionResult.Failure);
-                return;
+                return ExecutionResult.Failed;
             }
 
-            bool isAsync;
             try {
-                isAsync = commandHandler.Execute(this, args, FinishExecute);
+                return commandHandler.Execute(this, args) ?? ExecutionResult.Failed;
             } catch (Exception e) {
                 WriteError(String.Format("Command '{0}' failed: {1}", command, e.Message));
-                isAsync = false;
-            }
-            if (!isAsync) {
-                FinishExecute(ExecutionResult.Failure);
+                return ExecutionResult.Failed;
             }
         }
 
@@ -2473,6 +2525,11 @@ namespace Microsoft.VisualStudio.Repl {
         private void ProjectionBufferChanged(object sender, TextContentChangedEventArgs e) {
             // this is an edit performed in this event:
             if (e.EditTag == SuppressPromptInjectionTag) {
+                return;
+            }
+
+            // projection buffer is changed before language buffer is created (for example, output might be printed out during initialization):
+            if (_currentLanguageBuffer == null) {
                 return;
             }
 

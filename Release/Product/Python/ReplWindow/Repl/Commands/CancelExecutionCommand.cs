@@ -13,26 +13,20 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Repl;
 using System.ComponentModel.Composition;
-using System.IO;
-using System.Windows.Threading;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
-using System.Windows.Media;
 
 namespace Microsoft.VisualStudio.Repl {
     [Export(typeof(IReplCommand))]
     class CancelExecutionCommand : IReplCommand {
         #region IReplCommand Members
 
-        public bool Execute(IReplWindow window, string arguments, Action<ExecutionResult> completion) {
+        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
             window.AbortCommand();
-            return false;
+            return ExecutionResult.Succeeded;
         }
 
         public string Description {

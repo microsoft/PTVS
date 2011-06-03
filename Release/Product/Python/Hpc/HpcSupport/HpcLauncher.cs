@@ -217,7 +217,7 @@ namespace Microsoft.PythonTools.Hpc {
 
                 try {
                     Marshal.StructureToPtr(debugInfo, memory, false);
-
+                    
                     int hr = debugger.LaunchDebugTargets2(1, memory);
 
                     if (ErrorHandler.Failed(hr)) {
@@ -228,6 +228,8 @@ namespace Microsoft.PythonTools.Hpc {
                         } else {
                             error = "Unknown error";
                         }
+
+                        OutputState(String.Format("Launching debugger on server failed ({0:X}):\r\n\r\n{1}\r\n", hr, error));
                         return 0;
                     } else {
                         var structure = (VsDebugTargetInfo2)Marshal.PtrToStructure(memory, typeof(VsDebugTargetInfo2));
@@ -263,7 +265,6 @@ namespace Microsoft.PythonTools.Hpc {
 
                 publishUrl = "file://" + workingDir;
             } else {
-                publishUrl = null;
                 workingDir = GetWorkingDir(clusterEnv);
 
                 // make sure we have a valid deployement dir as well
@@ -271,6 +272,7 @@ namespace Microsoft.PythonTools.Hpc {
                 if (!TryGetDeploymentDir(out deploymentDir)) {
                     return VSConstants.S_OK;
                 }
+                publishUrl = deploymentDir;
             }            
 
             string exe, arguments;
@@ -329,6 +331,7 @@ namespace Microsoft.PythonTools.Hpc {
                     return false;
                 }
             }
+
             return true;
         }
 
@@ -795,8 +798,8 @@ namespace Microsoft.PythonTools.Hpc {
         }
 
         private void JobStateChanged(object sender, JobStateEventArg e) {
-            string newJobState = String.Format("Job state changed to {0}", GetStateDescription(e.NewState));
-
+            string newJobState = String.Format("Job state for job {0} changed to {1}", e.JobId, GetStateDescription(e.NewState));
+            
             OutputState(newJobState);
             SetStatus(newJobState);
         }

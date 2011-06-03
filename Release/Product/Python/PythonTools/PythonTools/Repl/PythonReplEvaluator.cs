@@ -21,6 +21,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
@@ -75,17 +76,18 @@ namespace Microsoft.PythonTools.Repl {
 
         #region IReplEvaluator Members
 
-        public void Start(IReplWindow window) {
+        public Task<ExecutionResult> Initialize(IReplWindow window) {
             _window = window;
             _window.SetOptionValue(ReplOptions.CommandPrefix, "$");
-
-            Connect();
 
             window.SetOptionValue(ReplOptions.UseSmartUpDown, CurrentOptions.ReplSmartHistory);
             UpdatePrompts();
             window.SetOptionValue(ReplOptions.DisplayPromptInMargin, !CurrentOptions.InlinePrompts);
             window.SetOptionValue(ReplOptions.SupportAnsiColors, true);
             window.SetOptionValue(ReplOptions.FormattedPrompts, true);
+
+            Connect();
+            return ExecutionResult.Succeeded;
         }
 
         private void Connect() {
@@ -176,7 +178,7 @@ namespace Microsoft.PythonTools.Repl {
             private readonly Process _process;
             private bool _connected;
             private Socket _socket;
-            private Action<ExecutionResult> _completion;
+            private TaskCompletionSource<ExecutionResult> _completion;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _moduleNames;
@@ -421,7 +423,8 @@ namespace Microsoft.PythonTools.Repl {
                 using (new SocketUnlock(this)) {
                     // DONE command
                     if (_completion != null) {
-                        _completion(ExecutionResult.Failure);
+                        _completion.SetResult(ExecutionResult.Failure);
+                       _completion = null;
                     }
                 }
             }
@@ -430,15 +433,16 @@ namespace Microsoft.PythonTools.Repl {
                 using (new SocketUnlock(this)) {
                     // DONE command
                     if (_completion != null) {
-                        _completion(ExecutionResult.Success);
+                        _completion.SetResult(ExecutionResult.Success);
+                       _completion = null;
                     }
                 }
             }
 
-            public bool ExecuteText(string text, Action<ExecutionResult> completion) {
+            public Task<ExecutionResult> ExecuteText(string text) {
                 using (new SocketLock(this)) {
                     if (Socket == null) {
-                        return false;
+                        return null;
                     }
 
                     Socket.Send(RunCommandBytes);
@@ -447,14 +451,10 @@ namespace Microsoft.PythonTools.Repl {
                     text = text.Replace("\r\n", "\n");
                     text = text.Replace("\r", "\n");
                     text = text.TrimEnd(' ');
-
-
-                    _completion = completion;
-
+                    _completion = new TaskCompletionSource<ExecutionResult>();
                     SendString(text);
+                    return _completion.Task;
                 }
-
-                return true;
             }
 
             public void ExecuteFile(string filename) {
@@ -745,21 +745,21 @@ namespace Microsoft.PythonTools.Repl {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };
         }
 
-        public bool ExecuteText(string text, Action<ExecutionResult> completion) {
+        public Task<ExecutionResult> ExecuteText(string text) {
             if (_curListener != null) {
                 for (int i = 0; i < 2; i++) {
-                    if (!_curListener.ExecuteText(text, completion)) {
-                        // we've become disconnected, try again 1 time
-                        Reset();
-                    } else {
-                        break;
+                    Task<ExecutionResult> result = _curListener.ExecuteText(text);
+                    if (result != null) {
+                        return result;
                     }
+
+                    // we've become disconnected, try again 1 time
+                    Reset();
                 }
-                return true;
             } else {
                 _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
             }
-            return false;
+            return ExecutionResult.Failed;
         }
 
         public void ExecuteFile(string filename) {

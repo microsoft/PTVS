@@ -84,6 +84,25 @@ abc = 200
         }
 
         [TestMethod]
+        public void TypelessForVariable() {
+            RefactorTest("baz", "abc",
+                new[] { 
+                    new FileInput(
+@"def f():
+    l = foo
+    for abc in l:
+        l.append(abc)",
+@"def f():
+    l = foo
+    for baz in l:
+        l.append(baz)"
+                    )
+                }
+            );
+        }
+
+
+        [TestMethod]
         public void SanityInstanceField() {
             RefactorTest("foo", "abc",
                 new[] { 

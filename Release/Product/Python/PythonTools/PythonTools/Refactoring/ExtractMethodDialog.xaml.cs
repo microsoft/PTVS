@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Refactoring {
     internal partial class ExtractMethodDialog {
         private readonly ExtractedMethodCreator _previewer;
         private readonly List<ScopeStatement> _targetScopes = new List<ScopeStatement>();
-        internal static readonly Regex _validNameRegex = new Regex("^[a-z_][a-z0-9_]*$");
+        internal static readonly Regex _validNameRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
         public ExtractMethodDialog(ExtractedMethodCreator previewer) {
             _previewer = previewer;

@@ -157,7 +157,6 @@
     <Compile Include="Repl\Commands\CancelExecutionCommand.cs" />
     <Compile Include="Repl\Commands\ClearScreenReplCommand.cs" />
     <Compile Include="Repl\Commands\EchoReplCommand.cs" />
-    <Compile Include="Repl\Commands\LoadReplCommand.cs" />
     <Compile Include="Repl\Commands\ResetReplCommand.cs" />
     <Compile Include="Repl\Commands\WaitReplCommand.cs" />
     <Compile Include="Repl\ReplAggregateClassifier.cs" />

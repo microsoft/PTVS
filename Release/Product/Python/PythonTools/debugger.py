@@ -974,6 +974,8 @@ def attach_process(port_num, debug_id):
         except:
             import time
             time.sleep(50./1000)
+    else:
+        raise Exception('failed to attach')
 
     # start the debugging loop
     global debugger_thread_id

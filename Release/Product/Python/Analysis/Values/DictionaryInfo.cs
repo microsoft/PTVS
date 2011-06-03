@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         _getMethod = new DictionaryGetMethod((IPythonMethodDescriptor)getter, ProjectState, this).SelfSet;
                     }
                 }
-                return _getMethod;
+                return _getMethod.GetDescriptor(node, this, ClassInfo, unit);
             }
 
             return base.GetMember(node, unit, name);
