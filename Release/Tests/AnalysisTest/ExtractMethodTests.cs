@@ -1006,6 +1006,14 @@ def f():
     r = None
     return g(r)");
 
+            SuccessTest("42",
+@"def f(x):
+    return (42)",
+@"def g():
+    return 42
+
+def f(x):
+    return (g())");
         }
 
         private void SuccessTest(string extract, string input, string result, string scopeName = null, string[] parameters = null) {

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -30,11 +31,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _getMethod = null;
         }
 
-        class DictionaryGetMethod : BuiltinMethodInfo {
+        class DictionaryGetBoundMethod : BoundBuiltinMethodInfo {
             private readonly DictionaryInfo _myDict;
 
-            internal DictionaryGetMethod(IPythonMethodDescriptor method, PythonAnalyzer projectState, DictionaryInfo myDict)
-                : base(method, projectState) {
+            internal DictionaryGetBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
+                : base(method) {
                 _myDict = myDict;
             }
 
@@ -59,12 +60,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             if (name == "get") {
                 if (_getMethod == null) {
-                    var getter = unit.ProjectState.Types.Dict.GetMember(unit.DeclaringModule.InterpreterContext, "get");
-                    if (getter is IPythonMethodDescriptor) {
-                        _getMethod = new DictionaryGetMethod((IPythonMethodDescriptor)getter, ProjectState, this).SelfSet;
+                    ISet<Namespace> getMeth;
+                    if (TryGetMember("get", out getMeth)) {
+                        _getMethod = new DictionaryGetBoundMethod((BuiltinMethodInfo)getMeth.First(), this).SelfSet;
                     }
                 }
-                return _getMethod.GetDescriptor(node, this, ClassInfo, unit);
+                return _getMethod;
             }
 
             return base.GetMember(node, unit, name);

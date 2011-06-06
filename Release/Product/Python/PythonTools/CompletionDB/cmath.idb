@@ -673,7 +673,8 @@ g9
 (g10
 g267
 tp283
-ssssg30
-VProvides access to functions for operating on complex numbers
+ssssVdoc
 p284
+VProvides access to functions for operating on complex numbers
+p285
 s.

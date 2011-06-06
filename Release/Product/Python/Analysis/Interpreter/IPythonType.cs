@@ -15,7 +15,6 @@
 
 namespace Microsoft.PythonTools.Interpreter {
     public interface IPythonType : IMemberContainer, IMember {
-        // clrType.GetConstructors(BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance);
         IPythonFunction GetConstructors();
 
         // PythonType.Get__name__(this);

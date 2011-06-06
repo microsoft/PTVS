@@ -40,15 +40,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return GetClrOverloads();
             }
 
-            return null;/*
-            object ctor;
-            if (!ProjectState.TryGetMember(Value, "__new__", out ctor)) {
-                ctor = null;
-            }
-            var func = ctor as IBuiltinFunction;
-            if (func == null) {
-                return new OverloadResult[0];
-            }*/
+            return GetMember(null, "__new__") as IPythonFunction;
         }
 
         public bool IsPythonType {

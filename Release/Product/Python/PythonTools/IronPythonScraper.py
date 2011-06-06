@@ -7,6 +7,7 @@ from System.Reflection import Missing
 clr.AddReference('IronPython')
 from IronPython.Runtime.Operations import PythonOps
 from IronPython.Runtime import SiteLocalStorage
+from IronPython.Runtime.Operations import InstanceOps
 
 clr.AddReference('Microsoft.Dynamic')
 clr.AddReference('Microsoft.Scripting')
@@ -44,10 +45,23 @@ def get_arg_format(param):
         return "**"
 
 
+def sanitize_name(param):
+    for v in param.Name:
+        if not ((v >= '0' and v <= '9') or (v >= 'A' and v <= 'Z') or (v >= 'a' and v <= 'z') or v == '_'):
+            break
+    else:
+        return param.Name
+
+    letters = []
+    for v in param.Name:
+        if ((v >= '0' and v <= '9') or (v >= 'A' and v <= 'Z') or (v >= 'a' and v <= 'z') or v == '_'):
+            letters.append(v)
+    return ''.join(letters)
+
 def get_parameter_info(param):
 	parameter_table = {
 		'type':type_to_name(param.ParameterType),
-		'name':param.Name,		
+		'name': sanitize_name(param),		
 	}
 	
 	default_value = get_default_value(param)
@@ -60,32 +74,46 @@ def get_parameter_info(param):
 	
 	return parameter_table
 
-def get_overloads(func):
+def get_return_type(target):
+    if hasattr(target, 'ReturnType'):
+        return target.ReturnType
+    # constructor
+    return target.DeclaringType
+
+def get_function_overloads(targets):
     res = []
-	
+    for target in targets:
+        args = list(target.GetParameters())
+        if args and args[0].ParameterType.FullName == 'IronPython.Runtime.CodeContext':
+            del args[0]
+        if args and args[0].ParameterType.IsSubclassOf(SiteLocalStorage):
+            del args[0]
+    
+        try:
+            arg_info = [get_parameter_info(arg) for arg in args]
+            if not target.IsStatic and not target.IsConstructor:
+                arg_info = [{'type' : type_to_name(target.DeclaringType), 'name': 'self'}] + arg_info
+    
+            res.append(
+             {'args' :  arg_info,
+              'ret_type' : type_to_name(get_return_type(target)), }
+            )
+        except NonPythonTypeException:
+            pass
+    
+    
+    return tuple(res)
+
+def get_overloads(func):
     if type(func) == type(list.append):
         func = PythonOps.GetBuiltinMethodDescriptorTemplate(func)
 
-    for target in func.Targets:
-		args = list(target.GetParameters())
-		if args and args[0].ParameterType.FullName == 'IronPython.Runtime.CodeContext':
-			del args[0]
-		if args and args[0].ParameterType.IsSubclassOf(SiteLocalStorage):
-			del args[0]
-
-		try:
-			arg_info = [get_parameter_info(arg) for arg in args]
-			if not target.IsStatic:
-				arg_info = [{'type' : type_to_name(target.DeclaringType), 'name': 'self'}] + arg_info
-
-			res.append(
-				{'args' :  arg_info,
-				 'ret_type' : type_to_name(target.ReturnType), }
-			)
-		except NonPythonTypeException:
-			pass
+    targets = func.Targets
+    
+    res = get_function_overloads(targets)
 
     return tuple(res)
+
 
 def get_descriptor_type(descriptor):
 	if hasattr(descriptor, 'PropertyType'):
@@ -93,3 +121,13 @@ def get_descriptor_type(descriptor):
 	elif hasattr(descriptor, 'FieldType'):
 		return clr.GetPythonType(descriptor.FieldType)
 	return object
+
+
+def get_new_overloads(type_obj, func):
+    if func.Targets and func.Targets[0].DeclaringType == clr.GetClrType(InstanceOps):
+        print 'has instance ops', type_obj
+        clrType = clr.GetClrType(type_obj)
+
+        return get_function_overloads(clrType.GetConstructors())
+
+    return None

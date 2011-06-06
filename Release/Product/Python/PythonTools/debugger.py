@@ -17,6 +17,13 @@ except:
 if sys.platform == 'cli':
     import clr
 
+# we can't run the importer at some random point because we might be importing 
+# something complete with the loader lock held.  Therefore we eagerly run a UTF8
+# decode here so that any required imports for it to succeed later have already
+# been imported.
+''.decode('utf8')
+''.encode('utf8') # just in case they differ in what they import...
+
 # save start_new_thread so we can call it later, we'll intercept others calls to it.
 
 DETACHED = False
@@ -147,6 +154,7 @@ class Thread(object):
         self._is_blocked = False
         self.stopped_on_line = None
         self.detach = False
+        self.trace_func = self.trace_func # replace self.trace_func w/ a bound method so we don't need to re-create these regularly
     
     def trace_func(self, frame, event, arg):
         if self.stepping == STEPPING_BREAK:
@@ -165,7 +173,7 @@ class Thread(object):
     def handle_call(self, frame, arg):
         self.cur_frame = frame
 
-        if frame.f_code.co_name == '<module>':
+        if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
             code, module = report_module_load(frame)
 
             # see if this module causes new break points to be bound
@@ -176,17 +184,19 @@ class Thread(object):
                     bound.add(pending_bp)
             PENDING_BREAKPOINTS -= bound
 
-        if self.stepping == STEPPING_INTO:
-            # block when we hit the 1st line, not when we're on the function def
-            self.stepping = STEPPING_OVER
-        elif self.stepping >= STEPPING_OVER:
-            self.stepping += 1
-        elif self.stepping <= STEPPING_OUT:
-            self.stepping -= 1
+        stepping = self.stepping
+        if stepping is not STEPPING_NONE:
+            if stepping == STEPPING_INTO:
+                # block when we hit the 1st line, not when we're on the function def
+                self.stepping = STEPPING_OVER
+            elif stepping >= STEPPING_OVER:
+                self.stepping += 1
+            elif stepping <= STEPPING_OUT:
+                self.stepping -= 1
 
-        if self.stepping == STEPPING_LAUNCH_BREAK and sys.platform == 'cli':
-            # work around IronPython bug - http://ironpython.codeplex.com/workitem/30127
-            self.handle_line(frame, arg)
+            if stepping is STEPPING_LAUNCH_BREAK and sys.platform == 'cli':
+                # work around IronPython bug - http://ironpython.codeplex.com/workitem/30127
+                self.handle_line(frame, arg)
 
         return self.trace_func
         
@@ -197,21 +207,22 @@ class Thread(object):
             return code_obj.co_filename.startswith(sys.prefix)
 
     def handle_line(self, frame, arg):
-        if (((self.stepping == STEPPING_OVER or self.stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
-            or self.stepping == STEPPING_LAUNCH_BREAK):
-            if ((self.stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
-                (self.not_our_code(frame.f_code))):
-                # don't break into inital Python code needed to set things up                
-                return self.trace_func
+        stepping = self.stepping
+        if stepping is not STEPPING_NONE:   # check for the common case of no stepping first...
+            if (((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
+                or stepping == STEPPING_LAUNCH_BREAK):
+                if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
+                    (self.not_our_code(frame.f_code))):
+                    # don't break into inital Python code needed to set things up                
+                    return self.trace_func
             
-            prev_stepping = self.stepping
-            self.stepping = STEPPING_NONE
-            def block_cond():
-                if prev_stepping == STEPPING_OVER or prev_stepping == STEPPING_INTO:
-                    return report_step_finished(self.id)
-                else:
-                    return report_process_loaded(self.id)
-            self.block(block_cond)
+                self.stepping = STEPPING_NONE
+                def block_cond():
+                    if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
+                        return report_step_finished(self.id)
+                    else:
+                        return report_process_loaded(self.id)
+                self.block(block_cond)
 
         if BREAKPOINTS:
             bp = BREAKPOINTS.get(frame.f_lineno)
@@ -238,17 +249,19 @@ class Thread(object):
         return self.trace_func
     
     def handle_return(self, frame, arg):
-        if self.stepping == STEPPING_OUT:
-            # break at the next line
-            self.stepping = STEPPING_OVER
-        elif self.stepping == STEPPING_OVER:
-            if frame.f_code.co_name == "<module>":
-                self.stepping = STEPPING_NONE
-                self.block(lambda: report_step_finished(self.id))
-        elif self.stepping > STEPPING_OVER:
-            self.stepping -= 1
-        elif self.stepping < STEPPING_OUT:
-            self.stepping += 1
+        stepping = self.stepping
+        if stepping is not STEPPING_NONE:
+            if stepping == STEPPING_OUT:
+                # break at the next line
+                self.stepping = STEPPING_OVER
+            elif stepping == STEPPING_OVER:
+                if frame.f_code.co_name == "<module>":
+                    self.stepping = STEPPING_NONE
+                    self.block(lambda: report_step_finished(self.id))
+            elif stepping > STEPPING_OVER:
+                self.stepping -= 1
+            elif stepping < STEPPING_OUT:
+                self.stepping += 1
 
         self.cur_frame = frame.f_back
         
@@ -695,14 +708,19 @@ class DebuggerLoop(object):
         try:
             THREADS_LOCK.acquire()
             THREADS[tid].cur_frame.f_lineno = lineno
+            newline = THREADS[tid].cur_frame.f_lineno
             THREADS_LOCK.release()
             send_lock.acquire()
             self.conn.send(SETL)
             self.conn.send(struct.pack('i', 1))
+            self.conn.send(struct.pack('i', tid))
+            self.conn.send(struct.pack('i', newline))
             send_lock.release()
         except:
             send_lock.acquire()
             self.conn.send(SETL)
+            self.conn.send(struct.pack('i', 0))
+            self.conn.send(struct.pack('i', tid))
             self.conn.send(struct.pack('i', 0))
             send_lock.release()
 

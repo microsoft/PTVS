@@ -1970,7 +1970,8 @@ sastp784
 sg45
 Vutf_32_decode(input: object) -> tuple\u000autf_32_decode(input: object, errors: str) -> tuple\u000a
 p785
-ssssg45
-VProvides access to various codecs (ASCII, UTF7, UTF8, etc...)
+ssssVdoc
 p786
+VProvides access to various codecs (ASCII, UTF7, UTF8, etc...)
+p787
 s.

@@ -71,12 +71,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var overloads = _function.Overloads;
                     var result = new OverloadResult[overloads.Count];
                     for (int i = 0; i < result.Length; i++) {
-                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overloads[i], 0);
+                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overloads[i], 0, GetDoc);
                     }
                     _overloads = new ReadOnlyCollection<OverloadResult>(result);
                 }
                 return _overloads;
             }
+        }
+
+        // can't create delegate to property...
+        private string GetDoc() {
+            return Documentation;
         }
 
         public override string Documentation {

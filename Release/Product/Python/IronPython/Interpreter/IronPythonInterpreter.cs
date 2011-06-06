@@ -35,7 +35,7 @@ using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter {
-        private readonly Dictionary<Type, IronPythonType> _types = new Dictionary<Type, IronPythonType>();
+        private readonly Dictionary<PythonType, IronPythonType> _types = new Dictionary<PythonType, IronPythonType>();
         private readonly ScriptEngine _engine;
         private readonly CodeContext _codeContext;
         private readonly CodeContext _codeContextCls;
@@ -302,10 +302,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #endregion
 
         internal IPythonType GetTypeFromType(Type type) {
+            return GetTypeFromType(DynamicHelpers.GetPythonTypeFromType(type));
+        }
+
+        internal IPythonType GetTypeFromType(PythonType type) {
             IronPythonType res;
             lock (_types) {
                 if (!_types.TryGetValue(type, out res)) {
-                    _types[type] = res = new IronPythonType(this, DynamicHelpers.GetPythonTypeFromType(type));
+                    _types[type] = res = new IronPythonType(this, type);
                 }
             }
             return res;
@@ -380,7 +384,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                     PythonType type = obj as PythonType;
                     if (type != null) {
-                        _members[obj] = res = GetTypeFromType(type.__clrtype__());
+                        _members[obj] = res = GetTypeFromType(type);
                     }
 
                     BuiltinFunction func = obj as BuiltinFunction;

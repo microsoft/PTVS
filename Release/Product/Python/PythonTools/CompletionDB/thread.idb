@@ -652,8 +652,27 @@ stp273
 sg18
 Vexit_thread()
 p274
-ssssVdoc
+sssV_count
 p275
+(dp276
+g5
+g6
+sg7
+(dp277
+g9
+((dp278
+g11
+(g12
+g135
+tp279
+sg15
+(lp280
+stp281
+sg18
+V_count() -> int\u000a
+p282
+ssssVdoc
+p283
 VProvides low level primitives for threading.
-p276
+p284
 s.

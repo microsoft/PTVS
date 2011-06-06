@@ -163,19 +163,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 StringBuilder result = new StringBuilder();
                 bool first = true;
                 foreach (var ns in ReturnValue.Types) {
-                    if (ns == null || ns.Description == null) {
+                    if (ns == null) {
                         continue;
                     }
 
-                    if (first) {
-                        result.Append(" -> ");
-                        first = false;
+                    if (ns.Push()) {
+                        try {
+                            if (ns.Description == null) {
+                                continue;
+                            }
+
+                            if (first) {
+                                result.Append(" -> ");
+                                first = false;
+                            } else {
+                                result.Append(", ");
+                            }
+                            AppendDescription(result, ns);
+                        } finally {
+                            ns.Pop();
+                        }
                     } else {
-                        result.Append(", ");
+                        result.Append("...");
                     }
-                    AppendDescription(result, ns);
                 }
-                //result.Append(GetDependencyDisplay());
+                
                 return result.ToString();
             }
         }

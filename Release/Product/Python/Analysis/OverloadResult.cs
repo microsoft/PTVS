@@ -59,11 +59,13 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly ParameterResult[] _extraParameters;
         private readonly int _removedParams;
         private readonly PythonAnalyzer _projectState;
+        private readonly Func<string> _fallbackDoc;
         private string _doc;
         private static readonly string _calculating = "Documentation is still being calculated, please try again soon.";
 
-        internal BuiltinFunctionOverloadResult(PythonAnalyzer state, string name, IPythonFunctionOverload overload, int removedParams, params ParameterResult[] extraParams)
+        internal BuiltinFunctionOverloadResult(PythonAnalyzer state, string name, IPythonFunctionOverload overload, int removedParams, Func<string> fallbackDoc, params ParameterResult[] extraParams)
             : base(null, name) {
+            _fallbackDoc = fallbackDoc;
             _overload = overload;
             _extraParameters = extraParams;
             _removedParams = removedParams;
@@ -72,12 +74,17 @@ namespace Microsoft.PythonTools.Analysis {
             CalculateDocumentation();
         }
 
-        internal BuiltinFunctionOverloadResult(PythonAnalyzer state, IPythonFunctionOverload overload, int removedParams, string name, params ParameterResult[] extraParams)
+        internal BuiltinFunctionOverloadResult(PythonAnalyzer state, string name, IPythonFunctionOverload overload, int removedParams, params ParameterResult[] extraParams)
+            : this(state, name, overload, removedParams, null, extraParams) {
+        }
+
+        internal BuiltinFunctionOverloadResult(PythonAnalyzer state, IPythonFunctionOverload overload, int removedParams, string name, Func<string> fallbackDoc, params ParameterResult[] extraParams)
             : base(null, name) {
             _overload = overload;
             _extraParameters = extraParams;
             _removedParams = removedParams;
             _projectState = state;
+            _fallbackDoc = fallbackDoc;
 
             CalculateDocumentation();
         }
@@ -116,7 +123,12 @@ namespace Microsoft.PythonTools.Analysis {
                         doc.Append("Returns: ");
                         doc.Append(_overload.ReturnDocumentation);
                     }
-                    _doc = doc.ToString();
+
+                    if (doc.Length == 0 && _fallbackDoc != null) {
+                        _doc = _fallbackDoc();
+                    } else {
+                        _doc = doc.ToString();
+                    }
                 }
             );
         }

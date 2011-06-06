@@ -83,13 +83,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (ctors != null) {
                     var result = new OverloadResult[ctors.Overloads.Count];
                     for (int i = 0; i < result.Length; i++) {
-                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, ctors.Overloads[i], 1, _type.Name);
+                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, ctors.Overloads[i], 1, _type.Name, GetDoc);
                     }
                     return result;
                 }
                 return new OverloadResult[0];
             }
-        }        
+        }
+
+        // can't create delegate to property...
+        private string GetDoc() {
+            return Documentation;
+        }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             var res = base.GetMember(node, unit, name);

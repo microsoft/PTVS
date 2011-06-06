@@ -830,7 +830,7 @@ def f(abc):
                 
                 new VariableLocation(16, 14, VariableType.Reference),
 
-                new VariableLocation(18, 5, VariableType.Reference), 
+                new VariableLocation(18, 12, VariableType.Reference), 
                 new VariableLocation(19, 21, VariableType.Reference), 
                 new VariableLocation(20, 28, VariableType.Reference),
 
@@ -1031,7 +1031,7 @@ x = {42:'abc'}
             ");
 
             foreach (var varRef in entry.GetValues("x.get", 1)) {
-                Assert.AreEqual("built-in method get", varRef.Description);
+                Assert.AreEqual("bound built-in method get", varRef.Description);
             }
         }
 
@@ -2003,6 +2003,12 @@ def f():
 
 def g():
     return c.Length
+
+
+class return_func_class:
+    def return_func(self):
+        '''some help'''
+        return self.return_func
 ";
             var entry = ProcessText(text);
 
@@ -2030,6 +2036,13 @@ def g():
             //AssertContainsExactly(GetVariableDescriptions(entry, "System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
             AssertContainsExactly(GetVariableDescriptions(entry, "None", 1), "None");
             AssertContainsExactly(GetVariableDescriptions(entry, "f.func_name", 1), "property of type str");
+
+            // method which returns it's self, we shouldn't stack overflow producing the help...
+            AssertContainsExactly(GetVariableDescriptions(entry, "return_func_class().return_func", 1), @"method return_func of return_func_class objects  -> method return_func of return_func_class objects ...
+
+some help
+
+some help");
         }
 
         [TestMethod]

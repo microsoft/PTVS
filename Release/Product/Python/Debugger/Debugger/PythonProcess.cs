@@ -300,7 +300,12 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void HandleSetLineResult(Socket socket) {
             int res = socket.ReadInt();
+            int tid = socket.ReadInt();
+            int newLine = socket.ReadInt();
             _setLineResult = res != 0;
+            if (_setLineResult) {
+                _threads[tid].Frames[0].LineNo = newLine;
+            }
             _lineEvent.Set();
         }
 

@@ -20,8 +20,9 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonStackFrame {
+        private int _lineNo;    // mutates on set next line
         private readonly string _frameName, _filename;
-        private readonly int _argCount, _lineNo, _frameId;
+        private readonly int _argCount, _frameId;
         private readonly int _startLine, _endLine;
         private PythonEvaluationResult[] _variables;
         private readonly PythonThread _thread;
@@ -64,6 +65,9 @@ namespace Microsoft.PythonTools.Debugger {
         public int LineNo {
             get {
                 return _lineNo;
+            }
+            set {
+                _lineNo = value;
             }
         }
 

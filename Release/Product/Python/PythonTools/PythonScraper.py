@@ -157,6 +157,20 @@ def generate_member(obj, is_hidden=False):
         
     return member_table
     
+def generate_type_new(type_obj, obj):
+    if isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
+        member_table = {}
+        member_table['kind'] = 'function'
+        member_table['value'] = function_info = generate_builtin_function(obj)
+
+        new_overloads = BuiltinScraper.get_new_overloads(type_obj, obj)
+        if new_overloads is not None:
+            # replace overloads with better version if available
+            function_info['overloads'] = new_overloads
+            return member_table
+
+    return generate_member(obj)
+
 def oldstyle_mro(type_obj, res):
     for base in type_obj.__bases__:
         if base not in res:
@@ -184,8 +198,11 @@ def generate_type(type_obj, is_hidden=False):
         type_table['is_hidden'] = True
     
     for member in type_obj.__dict__:
-        if type_obj is object and member == '__new__':
-            members_table[member] = {'kind' : 'function', 'value': { 'overloads': ({'args': [{'name': 'cls', 'type': (builtin_name, 'type'), 'ret_type': (builtin_name, 'object')}]})}}
+        if member == '__new__':
+            if type_obj is object:
+                members_table[member] = {'kind' : 'function', 'value': { 'overloads': ({'args': [{'name': 'cls', 'type': (builtin_name, 'type'), 'ret_type': (builtin_name, 'object')}]})}}
+            else:
+                members_table[member] = generate_type_new(type_obj, type_obj.__dict__[member])
         else:
             members_table[member] = generate_member(type_obj.__dict__[member])
     
@@ -238,9 +255,9 @@ def generate_builtin_module():
 
 
 def merge_type(baseline_type, new_type):
-    #if 'doc' not in new_type and 'doc' in baseline_type:
-    #    print 'moved doc over', baseline_type['doc']
-    #    new_type['doc'] = baseline_type['doc']
+    if 'doc' not in new_type and 'doc' in baseline_type:
+        print 'moved doc over', baseline_type['doc']
+        new_type['doc'] = baseline_type['doc']
 
     merge_member_table(baseline_type['members'], new_type['members'])
     
@@ -315,6 +332,23 @@ def merge_with_baseline(mod_name, baselinepath, final):
 
     return final
 
+def write_analysis(mod_name, outpath, analysis):
+    out_file = open(os.path.join(outpath, mod_name + '.idb'), 'wb')
+    saved_analysis = cPickle.dumps(analysis)
+    if sys.platform == 'cli':
+        # work around strings always being unicode on IronPython, we fail to
+        # write back out here because IronPython doesn't like the non-ascii
+        # characters in the unicode string
+        import System
+        data = System.Array.CreateInstance(System.Byte, len(saved_analysis))
+        for i, v in enumerate(saved_analysis):
+            data[i] = ord(v)
+            
+        saved_analysis = data
+    out_file.write(saved_analysis)
+    out_file.close()
+
+
 if __name__ == "__main__":
     outpath = sys.argv[1]
     if len(sys.argv) > 2:
@@ -330,8 +364,8 @@ if __name__ == "__main__":
 
     res = merge_with_baseline(builtin_name, baselinepath, res)
 
-    cPickle.dump(res, open(os.path.join(outpath, builtin_name + '.idb'), 'wb'), 2)
-    
+    write_analysis(builtin_name, outpath, res)
+        
     for mod_name in sys.builtin_module_names:
         if mod_name == builtin_name or mod_name == '__main__': continue
         
@@ -340,6 +374,6 @@ if __name__ == "__main__":
         try:
             res = merge_with_baseline(mod_name, baselinepath, res)
 
-            cPickle.dump(res, open(os.path.join(outpath, mod_name + '.idb'), 'wb'), 2)        
+            write_analysis(mod_name, outpath, res)
         except ValueError:
             pass

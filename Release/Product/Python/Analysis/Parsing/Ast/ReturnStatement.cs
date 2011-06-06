@@ -47,13 +47,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 int len = res.Length;
                 _expression.AppendCodeString(res, ast);
                 if (this.IsAltForm(ast)) {
+                    bool foundWhiteSpace = false;
                     for (int i = len; i < res.Length; i++) {
                         if (!Char.IsWhiteSpace(res[i])) {
                             if (i - len > 1) {
                                 res.Remove(len + 1, i - len - 1);
                             }
                             break;
-                        }
+                        } 
+                        foundWhiteSpace = true;
+                    }
+
+                    if (!foundWhiteSpace) {
+                        // ensure a space between the return and the expression
+                        res.Insert(len, ' ');
                     }
                 }
             }
