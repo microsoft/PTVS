@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -138,7 +139,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (files.Count > 0) {
                     Log(writer, "GROUP START \"" + Path.GetDirectoryName(files[0]) + "\"");
                     Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
-                    var projectState = new PythonAnalyzer(new CPythonInterpreter(new TypeDatabase(_indir, _version.Is3x())), _version);
+                    var projectState = new PythonAnalyzer(new CPythonInterpreter(new PythonTypeDatabase(_indir, _version.Is3x())), _version);
                     var modules = new List<IPythonProjectEntry>();
                     for (int i = 0; i < files.Count; i++) {
                         string modName = PythonAnalyzer.PathToModuleName(files[i]);

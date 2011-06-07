@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Navigation {
         public override string Name {
             get {
                 if (DuplicatedByName) {
-                    return base.Name + " [" + _hierarchy.ProjectMgr.Caption + "]";
+                    return _hierarchy.Caption + " [" + _hierarchy.ProjectMgr.Caption + "]";
                 }
                 return base.Name;
             }

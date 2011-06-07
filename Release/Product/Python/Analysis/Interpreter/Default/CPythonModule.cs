@@ -21,23 +21,23 @@ namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonModule : IPythonModule {
         private readonly string _modName;
         private readonly string _dbFile;
-        private readonly TypeDatabase _typeDb;
+        private readonly PythonTypeDatabase _typeDb;
         private readonly bool _isBuiltin;
-        private readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
-        private Dictionary<string, IMember> _hiddenMembers;
+        internal readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
+        internal Dictionary<string, IMember> _hiddenMembers;
         private string _docString;
         private object[] _children;
         private bool _loaded;
         [ThreadStatic] private static int _loadDepth;
 
-        public CPythonModule(TypeDatabase typeDb, string moduleName, string filename, bool isBuiltin) {
+        public CPythonModule(PythonTypeDatabase typeDb, string moduleName, string filename, bool isBuiltin) {
             _modName = moduleName;
             _dbFile = filename;
             _typeDb = typeDb;
             _isBuiltin = isBuiltin;
         }
 
-        private void EnsureLoaded() {
+        internal void EnsureLoaded() {
             if (!_loaded) {
                 // mark as loading now (before it completes), if we have circular references we'll fix them up after loading completes.
                 _loaded = true;
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
-        internal TypeDatabase TypeDb {
+        internal PythonTypeDatabase TypeDb {
             get {
                 return _typeDb;
             }
@@ -144,16 +144,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         #endregion
-
-        public IMember GetAnyMember(string name) {
-            EnsureLoaded();
-
-            IMember res;
-            if (_members.TryGetValue(name, out res) || (_hiddenMembers != null && _hiddenMembers.TryGetValue(name, out res))) {
-                return res;
-            }
-            return null;
-        }
 
         #region IMember Members
 

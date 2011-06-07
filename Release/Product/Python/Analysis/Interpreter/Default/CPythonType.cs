@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly bool _isBuiltin;
         private readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
 
-        public CPythonType(IMemberContainer parent, TypeDatabase typeDb, string typeName, Dictionary<string, object> typeTable, BuiltinTypeId typeId) {
+        public CPythonType(IMemberContainer parent, PythonTypeDatabase typeDb, string typeName, Dictionary<string, object> typeTable, BuiltinTypeId typeId) {
             Debug.Assert(parent is CPythonType || parent is CPythonModule);
 
             _typeName = typeName;
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return  parent as CPythonModule ?? (CPythonModule)((CPythonType)parent).DeclaringModule;
         }
 
-        private void LoadMembers(TypeDatabase typeDb, Dictionary<string, object> membersTable) {
+        private void LoadMembers(PythonTypeDatabase typeDb, Dictionary<string, object> membersTable) {
             foreach (var memberEntry in membersTable) {
                 var memberName = memberEntry.Key;
                 var memberValue = memberEntry.Value as Dictionary<string, object>;

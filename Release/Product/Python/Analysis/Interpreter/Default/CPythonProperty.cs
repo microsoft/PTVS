@@ -18,9 +18,9 @@ using System.Collections.Generic;
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonProperty : IBuiltinProperty {
         private readonly string _doc;
-        private CPythonType _type;
+        private IPythonType _type;
         
-        public CPythonProperty(TypeDatabase typeDb, Dictionary<string, object> valueDict) {
+        public CPythonProperty(PythonTypeDatabase typeDb, Dictionary<string, object> valueDict) {
             object value;
             if (valueDict.TryGetValue("doc", out value)) {
                 _doc = value as string;

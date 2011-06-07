@@ -57,6 +57,9 @@
     <Compile Include="AnalysisVariable.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="GetMemberOptions.cs" />
+    <Compile Include="Interpreter\Default\CPythonBuiltinModule.cs" />
+    <Compile Include="Interpreter\IBuiltinPythonModule.cs" />
+    <Compile Include="Interpreter\PythonTypeDatabaseCreationRequest.cs" />
     <Compile Include="Parsing\AsciiString.cs" />
     <Compile Include="Parsing\Ast\DecoratorStatement.cs" />
     <Compile Include="Parsing\Ast\ErrorStatement.cs" />
@@ -102,7 +105,7 @@
     <Compile Include="Interpreter\Default\CPythonProperty.cs" />
     <Compile Include="Interpreter\Default\CPythonType.cs" />
     <Compile Include="Interpreter\Default\IDefaultInterpreterFactoryCreator.cs" />
-    <Compile Include="Interpreter\Default\TypeDatabase.cs" />
+    <Compile Include="Interpreter\PythonTypeDatabase.cs" />
     <Compile Include="Interpreter\GenerateDatabaseOptions.cs" />
     <Compile Include="Interpreter\IAdvancedPythonType.cs" />
     <Compile Include="Interpreter\IPythonFunction.cs" />

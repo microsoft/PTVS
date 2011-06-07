@@ -43,13 +43,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly TopNamespaceTracker _namespaceTracker;
         private readonly Dictionary<string, IronPythonModule> _modules = new Dictionary<string, IronPythonModule>();
         private readonly HashSet<string> _assemblyLoadSet = new HashSet<string>();
+        private readonly IronPythonInterpreterFactory _factory;
+        private PythonTypeDatabase _typeDb;
 
-        public IronPythonInterpreter()
-            : this(Python.CreateEngine(new Dictionary<string, object> { { "NoAssemblyResolveHook", true } })) {
+        public IronPythonInterpreter(IronPythonInterpreterFactory factory)
+            : this(factory, Python.CreateEngine(new Dictionary<string, object> { { "NoAssemblyResolveHook", true } })) {
         }
 
-        public IronPythonInterpreter(ScriptEngine engine) {
+        public IronPythonInterpreter(IronPythonInterpreterFactory factory, ScriptEngine engine) {
             _engine = engine;
+            _factory = factory;
+
             var pythonContext = HostingHelpers.GetLanguageContext(_engine) as PythonContext;
             _codeContextCls = new ModuleContext(new PythonDictionary(), pythonContext).GlobalContext;
             _codeContextCls.ModuleContext.ShowCls = true;
@@ -83,6 +87,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             LoadAssemblies();
 
             LoadModules();
+
+            
+            if (factory.ConfigurableDatabaseExists()) {
+                LoadNewTypeDb();
+            }
         }
 
         private void LoadModules() {
@@ -91,10 +100,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 PythonModule mod = Importer.Import(_codeContextCls, modName, PythonOps.EmptyTuple, 0) as PythonModule;
                 Debug.Assert(mod != null);
 
-                _modules[modName] = new IronPythonModule(this, mod, modName);
+                if (modName == "__builtin__") {
+                    _modules[modName] = new IronPythonBuiltinModule(this, mod, modName);
+                } else {
+                    _modules[modName] = new IronPythonModule(this, mod, modName);
+                }
             }
-
-        }
+       }
 
         public void Initialize(IInterpreterState state) {
             state.SpecializeFunction("clr", "AddReference", (n) => AddReference(n, null));
@@ -271,6 +283,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
             foreach (var r in _namespaceTracker.Keys) {
                 res.Add(r);
             }
+
+            if (_typeDb != null) {
+                foreach (var name in _typeDb.GetModuleNames()) {
+                    res.Add(name);
+                }
+            }
+            
             return res;
         }
 
@@ -282,6 +301,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IPythonModule ImportModule(string name) {
+            if (_typeDb != null) {
+                var res = _typeDb.GetModule(name);
+                if (res != null) {
+                    return res;
+                }
+            }
+
             IronPythonModule mod;
             if (_modules.TryGetValue(name, out mod)) {
                 return mod;
@@ -473,5 +499,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         #endregion
+
+        internal void LoadNewTypeDb() {
+            _typeDb = new PythonTypeDatabase(_factory.GetConfiguredDatabasePath(), false, (IronPythonBuiltinModule)_modules["__builtin__"]);
+        }
     }
 }

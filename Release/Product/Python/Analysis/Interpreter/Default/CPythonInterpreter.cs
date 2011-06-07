@@ -19,9 +19,9 @@ using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreter : IPythonInterpreter {
-        private TypeDatabase _typeDb;
+        private PythonTypeDatabase _typeDb;
 
-        public CPythonInterpreter(TypeDatabase typeDb) {
+        public CPythonInterpreter(PythonTypeDatabase typeDb) {
             _typeDb = typeDb;
         }
 
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public void Initialize(IInterpreterState state) {
         }
 
-        internal TypeDatabase TypeDb {
+        internal PythonTypeDatabase TypeDb {
             get {
                 return _typeDb;
             }

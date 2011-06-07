@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public override LibraryNode CreateFileLibraryNode(HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
-            return new PythonFileLibraryNode(hierarchy, name, filename, libraryNodeType);
+            return new PythonFileLibraryNode(hierarchy, hierarchy.Caption, filename, libraryNodeType);
         }
 
         protected override void OnNewFile(LibraryTask task) {

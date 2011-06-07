@@ -14,30 +14,23 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Interpreter;
+using System.IO;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonConstant : IPythonConstant {
-        private readonly IPythonType _type;
-
-        public CPythonConstant(IPythonType type) {
-            _type = type;
+    class CPythonBuiltinModule : CPythonModule, IBuiltinPythonModule {
+        public CPythonBuiltinModule(PythonTypeDatabase typeDb, string moduleName, string filename, bool isBuiltin)
+            : base(typeDb, moduleName, filename, isBuiltin) {
         }
 
-        #region IPythonConstant Members
+        public IMember GetAnyMember(string name) {
+            EnsureLoaded();
 
-        public IPythonType Type {
-            get { return _type; }
+            IMember res;
+            if (_members.TryGetValue(name, out res) || (_hiddenMembers != null && _hiddenMembers.TryGetValue(name, out res))) {
+                return res;
+            }
+            return null;
         }
-
-        #endregion
-
-        #region IMember Members
-
-        public PythonMemberType MemberType {
-            get { return PythonMemberType.Constant; }
-        }
-
-        #endregion
     }
 }

@@ -38,7 +38,7 @@ namespace AnalysisTest {
         }
 
         private static IPythonInterpreter CreateInterperter() {
-            return new IronPythonInterpreter(Python.CreateEngine());
+            return new IronPythonInterpreter(new IronPythonInterpreterFactory(), Python.CreateEngine());
         }
 
         [TestMethod]

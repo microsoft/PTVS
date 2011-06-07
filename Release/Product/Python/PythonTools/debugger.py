@@ -37,14 +37,7 @@ exit_lock = thread.allocate_lock()
 exit_lock.acquire()
 THREADS = {}
 THREADS_LOCK = thread.allocate_lock()
-try:
-    l = (lambda : 42)
-    weakref.ref(getattr(l, 'func_code', None) or getattr(l, '__code__', None))
-
-    # this Python implementation supports weak refs to code objects (new in 2.7)
-    MODULES = weakref.WeakKeyDictionary()
-except TypeError:
-    MODULES = {}
+MODULES = []
 
 # Py3k compat - alias unicode to str
 try:
@@ -180,7 +173,7 @@ class Thread(object):
             bound = set()
             global PENDING_BREAKPOINTS
             for pending_bp in PENDING_BREAKPOINTS:
-                if check_break_point(code, module, pending_bp.brkpt_id, pending_bp.lineNo, pending_bp.filename, pending_bp.condition, pending_bp.break_when_changed):
+                if check_break_point(code.co_filename, module, pending_bp.brkpt_id, pending_bp.lineNo, pending_bp.filename, pending_bp.condition, pending_bp.break_when_changed):
                     bound.add(pending_bp)
             PENDING_BREAKPOINTS -= bound
 
@@ -536,7 +529,7 @@ def get_code(func):
 
 class DebuggerExitException(Exception): pass
 
-def check_break_point(code, module, brkpt_id, lineNo, filename, condition, break_when_changed):
+def check_break_point(modFilename, module, brkpt_id, lineNo, filename, condition, break_when_changed):
     if module.filename.lower() == path.abspath(filename).lower():
         cur_bp = BREAKPOINTS.get(lineNo)
         if cur_bp is None:
@@ -545,7 +538,7 @@ def check_break_point(code, module, brkpt_id, lineNo, filename, condition, break
         cond_info = None
         if condition:
             cond_info = ConditionInfo(condition, break_when_changed)
-        cur_bp[(code.co_filename, brkpt_id)] = cond_info
+        cur_bp[(modFilename, brkpt_id)] = cond_info
         report_breakpoint_bound(brkpt_id)
         return True
     return False
@@ -631,8 +624,8 @@ class DebuggerLoop(object):
         condition = read_string(self.conn)
         break_when_changed = read_int(self.conn)
                                 
-        for code, module in MODULES.items():
-            if check_break_point(code, module, brkpt_id, lineNo, filename, condition, break_when_changed):
+        for modFilename, module in MODULES:
+            if check_break_point(modFilename, module, brkpt_id, lineNo, filename, condition, break_when_changed):
                 break
         else:
             # failed to set break point
@@ -857,7 +850,8 @@ def report_exception(frame, exc_info, tid):
     send_lock.release()
 
 def report_module_load(frame):
-    MODULES[frame.f_code] = mod = Module(get_code_filename(frame.f_code))
+    mod = Module(get_code_filename(frame.f_code))
+    MODULES.append((frame.f_code.co_filename, mod))
 
     send_lock.acquire()
     conn.send(MODL)

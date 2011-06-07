@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private IPythonType _retType;
         private static readonly CPythonParameterInfo[] EmptyParameters = new CPythonParameterInfo[0];
 
-        public CPythonFunctionOverload(TypeDatabase typeDb, Dictionary<string, object> argInfo, bool isMethod) {
+        public CPythonFunctionOverload(PythonTypeDatabase typeDb, Dictionary<string, object> argInfo, bool isMethod) {
             if (argInfo != null) {
                 object args;
                 IList<object> argList;

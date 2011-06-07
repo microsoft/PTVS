@@ -13,14 +13,21 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreterFactory : IPythonInterpreterFactory {
+    class IronPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
         private static readonly Guid _ipyInterpreterGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
         private readonly InterpreterConfiguration _config = new IronPythonInterpreterConfiguration();
+        private readonly HashSet<WeakReference> _interpreters = new HashSet<WeakReference>();
+        private bool _generating;
+
+        public IronPythonInterpreterFactory() {
+        }
 
         public InterpreterConfiguration Configuration {
             get {
@@ -31,16 +38,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public string Description {
             get { return "IronPython"; }
         }
-        
+
         public Guid Id {
             get { return _ipyInterpreterGuid; }
         }
 
         public IPythonInterpreter CreateInterpreter() {
-            return new IronPythonInterpreter();
-        }
-
-        void GenerateCompletionDatabase(GenerateDatabaseOptions options) {
+            var res = new IronPythonInterpreter(this);
+            if (!ConfigurableDatabaseExists()) {
+                _interpreters.Add(new WeakReference(res));
+            }
+            return res;
         }
 
         class IronPythonInterpreterConfiguration : InterpreterConfiguration {
@@ -62,9 +70,62 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             public override Version Version {
                 get {
-                    return new Version(2, 7, 0, 0);
+                    return new Version(2, 7);
                 }
             }
         }
+
+        #region IInterpreterWithCompletionDatabase
+
+        bool IInterpreterWithCompletionDatabase.GenerateCompletionDatabase(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
+            return GenerateCompletionDatabaseWorker(options, databaseGenerationCompleted);
+        }
+
+        private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
+            string outPath = GetConfiguredDatabasePath();
+
+            return PythonTypeDatabase.Generate(
+                new PythonTypeDatabaseCreationRequest() { DatabaseOptions = options, Factory = this, OutputPath = outPath },
+                () => {
+                    OnNewDatabaseAvailable();
+                    databaseGenerationCompleted();
+                    _generating = false;
+                }
+            );
+        }
+
+        void IInterpreterWithCompletionDatabase.AutoGenerateCompletionDatabase() {
+            if (!ConfigurableDatabaseExists() && !_generating) {
+                _generating = true;
+                ThreadPool.QueueUserWorkItem(x => GenerateCompletionDatabaseWorker(GenerateDatabaseOptions.StdLibDatabase, () => { }));
+            }
+        }
+
+        internal string GetConfiguredDatabasePath() {
+            return Path.Combine(GetCompletionDatabaseDirPath(), String.Format("{0}\\{1}", Id, Configuration.Version));
+        }
+
+        private string GetCompletionDatabaseDirPath() {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Python Tools\\CompletionDB"
+            );
+        }
+
+        internal bool ConfigurableDatabaseExists() {
+            return File.Exists(Path.Combine(GetConfiguredDatabasePath(), "builtins.idb"));
+        }
+
+        private void OnNewDatabaseAvailable() {
+            foreach (var interpreter in _interpreters) {
+                var curInterpreter = interpreter.Target as IronPythonInterpreter;
+                if (curInterpreter != null) {
+                    curInterpreter.LoadNewTypeDb();
+                }
+            }
+            _interpreters.Clear();
+        }
+
+        #endregion
     }
 }

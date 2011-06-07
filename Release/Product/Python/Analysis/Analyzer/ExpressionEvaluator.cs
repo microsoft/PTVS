@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                             var linkedVars = Scopes[i].GetLinkedVariablesNoCreate(name);
                             if (linkedVars != null) {
                                 foreach (var linkedVar in linkedVars) {
-                                    linkedVar.AddDependency(_unit);
+                                    linkedVar.AddReference(node, _unit);
                                 }
                             }
                         }

@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly string _name;
         private readonly CPythonFunction _func;
 
-        public CPythonMethodDescriptor(TypeDatabase typeDb, string name, Dictionary<string, object> valueDict, IMemberContainer declaringType) {
+        public CPythonMethodDescriptor(PythonTypeDatabase typeDb, string name, Dictionary<string, object> valueDict, IMemberContainer declaringType) {
             _name = name;
             _func = new CPythonFunction(typeDb, name, valueDict, declaringType, isMethod: true);
         }

@@ -981,6 +981,33 @@ def f(abc):
             }
         }
 
+
+        [TestMethod]
+        public void TestReferencesCrossModule() {
+            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+
+            var fooText = @"
+from bar import abc
+
+abc()
+";
+            var barText = "class abc(object): pass";
+
+            var fooMod = state.AddModule("foo", "foo", null);
+            Prepare(fooMod, GetSourceUnit(fooText, "mod1"));
+            var barMod = state.AddModule("bar", "bar", null);
+            Prepare(barMod, GetSourceUnit(barText, "mod2"));
+
+            fooMod.Analyze();
+            barMod.Analyze();
+
+            VerifyReferences(UniqifyVariables(barMod.Analysis.GetVariables("abc", GetLineNumber(barText, "abc"))),
+                new VariableLocation(1, 7, VariableType.Definition),     // definition 
+                new VariableLocation(2, 17, VariableType.Reference),     // import
+                new VariableLocation(4, 1, VariableType.Reference)       // call
+            );
+        }
+
         private static void LocationNames(List<IAnalysisVariable> vars, StringBuilder error) {
             foreach (var var in vars) {
                 error.AppendFormat("   {0} {1} {2}", var.Location.Line, var.Location.Column, var.Type);

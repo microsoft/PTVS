@@ -20,13 +20,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonFunction : IPythonFunction {
         private readonly string _name;
         private readonly string _doc;
-        private readonly CPythonType _declaringType;
+        private readonly IPythonType _declaringType;
         private readonly CPythonModule _declaringModule;
         private readonly CPythonFunctionOverload[] _overloads;
         private readonly bool _isBuiltin, _isStatic;
         private static readonly CPythonFunctionOverload[] EmptyOverloads = new CPythonFunctionOverload[0];
 
-        public CPythonFunction(TypeDatabase typeDb, string name, Dictionary<string, object> functionTable, IMemberContainer declaringType, bool isMethod = false) {
+        public CPythonFunction(PythonTypeDatabase typeDb, string name, Dictionary<string, object> functionTable, IMemberContainer declaringType, bool isMethod = false) {
             _name = name;
 
             object doc;
@@ -51,10 +51,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             object overloads;
             functionTable.TryGetValue("overloads", out overloads);
             _overloads = LoadOverloads(typeDb, overloads, isMethod);
-            _declaringType = declaringType as CPythonType;
+            _declaringType = declaringType as IPythonType;
         }
 
-        private CPythonFunctionOverload[] LoadOverloads(TypeDatabase typeDb, object overloads, bool isMethod) {
+        private CPythonFunctionOverload[] LoadOverloads(PythonTypeDatabase typeDb, object overloads, bool isMethod) {
             var overloadsArr = overloads as IList<object>;
             if (overloadsArr != null) {
                 CPythonFunctionOverload[] res = new CPythonFunctionOverload[overloadsArr.Count];
@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return EmptyOverloads;
         }
 
-        private CPythonFunctionOverload LoadOverload(TypeDatabase typeDb, object overloadObj, bool isMethod) {
+        private CPythonFunctionOverload LoadOverload(PythonTypeDatabase typeDb, object overloadObj, bool isMethod) {
             return new CPythonFunctionOverload(typeDb, overloadObj as Dictionary<string, object>, isMethod);
         }
 

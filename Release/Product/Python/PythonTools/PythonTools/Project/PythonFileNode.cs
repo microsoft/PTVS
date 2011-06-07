@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Project {
                     do {
                         nodes.Add(curNode);
                         curNode = curNode.Parent;
-                    } while (curNode != null && curNode.FindChild(Path.Combine(curNode.VirtualNodeName, "__init__.py")) != null);
+                    } while (curNode != null && curNode.FindChild(Path.Combine(curNode.GetMkDocument(), "__init__.py")) != null);
 
                     for (int i = nodes.Count - 1; i >= 0; i--) {
                         fullName.Append(nodes[i].Caption);

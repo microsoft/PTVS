@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly object _typeObj;
         private IPythonType _type;
 
-        public CPythonParameterInfo(TypeDatabase typeDb, Dictionary<string, object> parameterTable) {
+        public CPythonParameterInfo(PythonTypeDatabase typeDb, Dictionary<string, object> parameterTable) {
             if (parameterTable != null) {
                 object typeObj;
                 
