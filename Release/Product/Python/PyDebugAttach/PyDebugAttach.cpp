@@ -41,7 +41,7 @@ typedef PyObject* (PyDict_New)();
 typedef PyObject* (Py_CompileString)(const char *str, const char *filename, int start);
 typedef int (PyEval_EvalCode)(PyObject *co, PyObject *globals, PyObject *locals);
 typedef PyObject* (PyDict_GetItemString)(PyObject *p, const char *key);
-typedef PyObject* (PyObject_CallFunctionObjArgs)(PyObject *callable, ...);
+typedef PyObject* (PyObject_CallFunctionObjArgs)(PyObject *callable, ...);    // call w/ varargs, last arg should be NULL
 typedef void (PyErr_Fetch)(PyObject **, PyObject **, PyObject **);
 typedef PyObject* (PyEval_GetBuiltins)();
 typedef int (PyDict_SetItemString)(PyObject *dp, const char *key, PyObject *item);
@@ -56,6 +56,8 @@ typedef void (PyErr_Fetch)(PyObject **ptype, PyObject **pvalue, PyObject **ptrac
 typedef PyObject* (PyErr_Occurred)();
 typedef PyObject* (PyImport_ImportModule)(const char *name);
 typedef PyObject* (PyObject_GetAttrString)(PyObject *o, const char *attr_name);
+typedef PyObject* (PyObject_SetAttrString)(PyObject *o, const char *attr_name, PyObject* value);
+typedef PyObject* (PyBool_FromLong)(long v);
 typedef enum {PyGILState_LOCKED, PyGILState_UNLOCKED} PyGILState_STATE;
 typedef PyGILState_STATE (PyGILState_Ensure)();
 typedef void (PyGILState_Release)(PyGILState_STATE);
@@ -98,9 +100,9 @@ char* ReadDebuggerCode() {
 
     wchar_t newName[MAX_PATH];
 #if defined(_AMD64_)
-    _wmakepath_s(newName, drive, dir, L"..\\debugger", L".py");
+    _wmakepath_s(newName, drive, dir, L"..\\visualstudio_py_debugger", L".py");
 #else
-    _wmakepath_s(newName, drive, dir, L"debugger", L".py");
+    _wmakepath_s(newName, drive, dir, L"visualstudio_py_debugger", L".py");
 #endif
 
     ifstream filestr;
@@ -367,7 +369,9 @@ enum ConnErrorMessages {
     ConnError_OutOfMemory,
     ConnError_CannotInjectThread,
     ConnError_SysNotFound,
-    ConnError_SysSetTraceNotFound
+    ConnError_SysSetTraceNotFound,
+	ConnError_SysGetTraceNotFound,
+	ConnError_PyDebugAttachNotFound
 };
 
 long GetPythonThreadId(const char* version, PyThreadState* curThread) {
@@ -439,15 +443,17 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
         auto pyErrRestore = (PyErr_Restore*)GetProcAddress(module, "PyErr_Restore");
         auto pyImportMod = (PyImport_ImportModule*)GetProcAddress(module, "PyImport_ImportModule");
         auto pyGetAttr = (PyObject_GetAttrString*)GetProcAddress(module, "PyObject_GetAttrString");
+        auto pySetAttr = (PyObject_SetAttrString*)GetProcAddress(module, "PyObject_SetAttrString");
         auto pyNone = (PyObject*)GetProcAddress(module, "_Py_NoneStruct");
         auto getSwitchInterval = (_PyEval_GetSwitchInterval*)GetProcAddress(module, "_PyEval_GetSwitchInterval");
         auto setSwitchInterval = (_PyEval_SetSwitchInterval*)GetProcAddress(module, "_PyEval_SetSwitchInterval");
+        auto boolFromLong = (PyBool_FromLong*)GetProcAddress(module, "PyBool_FromLong");
 
         if (addPendingCall== nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease== nullptr || threadHead==nullptr ||
             initThreads==nullptr || getVersion == nullptr || releaseLock== nullptr || threadsInited== nullptr || threadNext==nullptr || threadSwap==nullptr ||
             pyDictNew==nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
-            errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr) {
+            errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr) {
             // we're missing some APIs, we cannot attach.
             connInfo.ReportError(ConnError_PythonNotFound);
             return false;
@@ -560,7 +566,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
             return false;
         }
 
-        auto code = PyObjectHolder(pyCompileString(debuggerCode, "debugger.py", 257 /*Py_file_input*/));
+        auto code = PyObjectHolder(pyCompileString(debuggerCode, "visualstudio_py_debugger.py", 257 /*Py_file_input*/));
         delete [] debuggerCode;
 
         if(*code == nullptr) {                
@@ -603,6 +609,12 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
             return false;
         }
         
+        auto gettrace = PyObjectHolder(pyGetAttr(*sysMod, "gettrace"));
+        if(*gettrace == nullptr) {
+            connInfo.ReportError(ConnError_SysGetTraceNotFound); 
+            return false;
+        }
+
         // we need to walk the thread list each time after we've initialized a thread so that we are always
         // dealing w/ a valid thread list (threads can exit when we run code and therefore the current thread
         // could be corrupt).  We also don't care about newly created threads as our start_new_thread wrapper
@@ -613,6 +625,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
             initialThreads.insert(curThread);
         }
 
+        auto pyTrue = boolFromLong(1);
+        auto pyFalse = boolFromLong(0);
         hash_set<PyThreadState*> seenThreads;
         {
             // Python 3.2's GIL has changed and we need it to be less aggressive in the face of heavy contention
@@ -625,6 +639,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
 
             bool foundThread;
             int processedThreads = 0;
+            bool firstThread = true;
             do {
                 foundThread = false;
                 for(auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
@@ -639,12 +654,23 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                     // skip this thread - it doesn't really have any Python code on it...
                     if(threadId != GetCurrentThreadId()) {
                         // create new debugger Thread object on our injected thread
-                        auto pyThreadId = PyObjectHolder(intFromLong(threadId));                    
-                        auto threadObj = PyObjectHolder(call(*new_thread, *pyThreadId, NULL));
-                        if(*threadObj == pyNone) {
-                            break;
+                        auto pyThreadId = PyObjectHolder(intFromLong(threadId));           
+                        PyFrameObject* frame;
+                        // update all of the frames so they have our trace func
+                        if(version[0] == '3') {
+                            frame = curThread->_30_31.frame;
+                        }else if(version[0] == '2' && version[2] == '4') {
+                            frame = curThread->_24.frame;
+                        }else{                            
+                            frame = curThread->_25_27.frame;
                         }
                     
+                        auto threadObj = PyObjectHolder(call(*new_thread, *pyThreadId, firstThread ? pyTrue : pyFalse, frame, NULL));
+                        if(*threadObj == pyNone || *threadObj == nullptr) {
+                            break;
+                        }
+
+                        firstThread = false;
                         // switch to our new thread so we can call sys.settrace on it...
                         // all of the work here needs to be minimal - in particular we shouldn't
                         // ever evaluate user defined code as we could end up switching to this
@@ -659,38 +685,26 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                         }
 
                         auto traceFunc = PyObjectHolder(pyGetAttr(*threadObj, "trace_func"));
-                    
-                        call(*settrace, *traceFunc, NULL);
+
+                        auto existingTraceFunc = PyObjectHolder(call(*gettrace, NULL));
+
+                        DecRef(call(*settrace, *traceFunc, NULL));
+
+                        if (*existingTraceFunc != pyNone) {
+                            pySetAttr(*threadObj, "prev_trace_func", *existingTraceFunc);
+                        }
 
                         if(errOccured) {
                             pyErrRestore(type, value, traceback);
                         }
 
                         // update all of the frames so they have our trace func
-                        if(version[0] == '3') {
-                            auto curFrame = curThread->_30_31.frame;
-                            while(curFrame != nullptr) {
-                                DecRef(curFrame->f_trace);
-                                IncRef(*traceFunc);
-                                curFrame->f_trace = *traceFunc;
-                                curFrame = curFrame->f_back;
-                            }
-                        }else if(version[0] == '2' && version[2] == '4') {
-                            auto curFrame = curThread->_24.frame;
-                            while(curFrame != nullptr) {
-                                DecRef(curFrame->f_trace);
-                                IncRef(*traceFunc);                                
-                                curFrame->f_trace = *traceFunc;
-                                curFrame = curFrame->f_back;                                
-                            }
-                        }else{                            
-                            auto curFrame = curThread->_25_27.frame;
-                            while(curFrame != nullptr) {
-                                DecRef(curFrame->f_trace);
-                                IncRef(*traceFunc);
-                                curFrame->f_trace = *traceFunc;
-                                curFrame = curFrame->f_back;
-                            }
+                        auto curFrame = frame;
+                        while(curFrame != nullptr) {
+                            DecRef(curFrame->f_trace);
+                            IncRef(*traceFunc);
+                            curFrame->f_trace = *traceFunc;
+                            curFrame = curFrame->f_back;
                         }
                     
                         threadSwap(prevThread);

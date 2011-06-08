@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Debugger {
         CannotInjectThread,
         SysNotFound,
         SysSetTraceNotFound,
+        SysGetTraceNotFound,
         PyDebugAttachNotFound
     };
 }

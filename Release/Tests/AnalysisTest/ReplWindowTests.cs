@@ -14,13 +14,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
+using AnalysisTest.ProjectSystem;
 using AnalysisTest.UI;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Options;
@@ -41,6 +41,7 @@ namespace AnalysisTest {
     [TestClass]
     [DeploymentItem(@"Python.VS.TestData\TestImage.png")]
     [DeploymentItem(@"Python.VS.TestData\TestScript.txt")]
+    [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
     public class ReplWindowTests {
 
         /// <summary>
@@ -427,7 +428,7 @@ namespace AnalysisTest {
             interactive.WithStandardInputPrompt("INPUT: ", (stdInputPrompt) => {
                 interactive.WaitForText(ReplPrompt);
 
-                Keyboard.Type("raw_input()\r");
+                Keyboard.Type(RawInput + "\r");
                 interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
 
                 Keyboard.Type("ignored");
@@ -1056,7 +1057,7 @@ namespace AnalysisTest {
             try {
                 File.WriteAllText(tempFile, 
 @"def foo():
-    print 'hello'
+    print('hello')
 $wait 10
 %% blah
 $wait 20
@@ -1068,7 +1069,7 @@ foo()
                 interactive.WaitForTextStart(
                     ReplPrompt   + command,
                     ReplPrompt   + "def foo():",
-                    SecondPrompt + "    print 'hello'",
+                    SecondPrompt + "    print('hello')",
                     ReplPrompt   + "$wait 10",
                     ReplPrompt   + "$wait 20",
                     ReplPrompt   + "foo()",
@@ -1091,7 +1092,7 @@ foo()
             try {
                 File.WriteAllText(tempFile,
 @"def foo():
-    print 'hello'
+    print('hello')
 %% blah
 1+1
 $cls
@@ -1855,7 +1856,7 @@ $cls
         /// <summary>
         /// Opens the interactive window, clears the screen.
         /// </summary>
-        private InteractiveWindow Prepare(bool reset = false) {
+        internal InteractiveWindow Prepare(bool reset = false) {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
             ConfigurePrompts();
@@ -1973,8 +1974,50 @@ $cls
         }
     }
 
-    [TestClass]
     public class Python3kReplWindowTests : ReplWindowTests {
+        protected override string RawInput {
+            get {
+                return "input";
+            }
+        }
+
+        public override string IntFirstMember {
+            get {
+                return "bit_length";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return false;
+            }
+        }
+
+    }
+    
+    [TestClass]
+    public class Python31ReplWindowTests : Python3kReplWindowTests {
+        protected override string InterpreterDescription {
+            get {
+                return "Python 3.1 Interactive";
+            }
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ExecuteProjectUnicodeFile() {
+            var interactive = Prepare();
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\UnicodeRepl.sln");
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+            Assert.AreNotEqual(null, interactive);
+
+            interactive.WaitForTextEnd("Hello, world!", ReplPrompt);
+        }
+    }
+
+    [TestClass]
+    public class Python32ReplWindowTests : Python3kReplWindowTests {
         protected override string InterpreterDescription {
             get {
                 return "Python 3.2 Interactive";
@@ -1998,6 +2041,7 @@ $cls
                 return false;
             }
         }
+
     }
 }
 

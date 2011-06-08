@@ -113,6 +113,21 @@ namespace AnalysisTest.UI {
             FailWrongText(expected);
         }
 
+        public void WaitForTextEnd(params string[] text) {
+            string expected = GetExpectedText(text);
+
+            for (int i = 0; i < 100; i++) {
+                string curText = Text;
+
+                if (Text.EndsWith(expected)) {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+
+            FailWrongText(expected);
+        }
+
         private void FailWrongText(string expected) {
             StringBuilder msg = new StringBuilder("Did not get text: ");
             AppendRepr(msg, expected);

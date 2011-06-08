@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Debugger {
         private PythonProcess(int pid) {
             _process = Process.GetProcessById(pid);
             _process.Exited += new EventHandler(_process_Exited);
-
+            
             ListenForConnection();
 
             using (var result = DebugAttach.Attach(pid, DebugConnectionListener.ListenerPort, _processGuid)) {
@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Debugger {
             processInfo.RedirectStandardOutput = false;
 
             processInfo.Arguments = 
-                "\"" + Path.Combine(GetPythonToolsInstallPath(), "launcher.py") + "\" " +
+                "\"" + Path.Combine(GetPythonToolsInstallPath(), "visualstudio_py_launcher.py") + "\" " +
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +
                 " " + _processGuid + " " +
@@ -783,7 +783,7 @@ namespace Microsoft.PythonTools.Debugger {
         // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
         internal static string GetPythonToolsInstallPath() {
             string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "Microsoft.PythonTools.Debugger.dll"))) {
+            if (File.Exists(Path.Combine(path, "PyDebugAttach.dll"))) {
                 return path;
             }
 
@@ -792,7 +792,7 @@ namespace Microsoft.PythonTools.Debugger {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
                     var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\1.0");
-                    if (File.Exists(Path.Combine(toolsPath, "Microsoft.PythonTools.Debugger.dll"))) {
+                    if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
                         return toolsPath;
                     }
                 }

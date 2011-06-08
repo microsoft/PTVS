@@ -165,6 +165,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         case ConnErrorMessages.UnknownVersion: msg = "Unknown Python version loaded in process"; break;
                         case ConnErrorMessages.SysNotFound: msg = "sys module not found"; break;
                         case ConnErrorMessages.SysSetTraceNotFound: msg = "settrace not found in sys module"; break;
+                        case ConnErrorMessages.SysGetTraceNotFound: msg = "gettrace not found in sys module"; break;
                         case ConnErrorMessages.PyDebugAttachNotFound: msg = "Cannot find PyDebugAttach.dll at " + attachRes; break;
                         default: msg = "Unknown error"; break;
                     }
@@ -855,7 +856,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private void OnProcessExited(object sender, ProcessExitedEventArgs e) {
-            Send(new AD7ProgramDestroyEvent((uint)e.ExitCode), AD7ProgramDestroyEvent.IID, null);
+            try {
+                Send(new AD7ProgramDestroyEvent((uint)e.ExitCode), AD7ProgramDestroyEvent.IID, null);
+            } catch (InvalidOperationException) {
+                // we can race at shutdown and deliver the event after the debugger is shutting down.
+            }
         }
 
         private void OnModuleLoaded(object sender, ModuleLoadedEventArgs e) {

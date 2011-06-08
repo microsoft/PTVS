@@ -203,11 +203,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var keys = new HashSet<Namespace>();
                 var values = new HashSet<Namespace>();
                 foreach (var x in n.Items) {
-                    foreach (var keyVal in ee.Evaluate(x.SliceStart)) {
-                        keys.Add(keyVal);
+                    if (x.SliceStart != null) {
+                        foreach (var keyVal in ee.Evaluate(x.SliceStart)) {
+                            keys.Add(keyVal);
+                        }
                     }
-                    foreach (var itemVal in ee.Evaluate(x.SliceStop)) {
-                        values.Add(itemVal);
+                    if (x.SliceStop != null) {
+                        foreach (var itemVal in ee.Evaluate(x.SliceStop)) {
+                            values.Add(itemVal);
+                        }
                     }
                 }
 

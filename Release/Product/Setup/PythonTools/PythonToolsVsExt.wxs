@@ -83,10 +83,10 @@
                 <File Id="filBA970A57E66D46D7A10EC9B49E231A33" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_ipython_repl.py" />
             </Component>
             <Component Id="cmp152F3F6773894625BE4156A752510029" Directory="INSTALLLOCATION" Guid="{247687AA-B548-4673-A36B-6A1855C087EE}">
-                <File Id="fil1462CA00441D4802B3048998E9773F34" KeyPath="yes" Source="$(var.TargetDir)\launcher.py" />
+                <File Id="fil1462CA00441D4802B3048998E9773F34" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_launcher.py" />
             </Component>
             <Component Id="cmpDB0F99EF784848118948BD253AAD3DAC" Directory="INSTALLLOCATION" Guid="{F7F114D3-373E-4E9F-B9BE-39F825B8E836}">
-                <File Id="filA1E852F7F32640F1B95890D8FFDF3A15" KeyPath="yes" Source="$(var.TargetDir)\debugger.py" />
+                <File Id="filA1E852F7F32640F1B95890D8FFDF3A15" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
             </Component>
             <Component Id="cmp67E450890B9C4F48901224A227A5C4CC" Directory="INSTALLLOCATION" Guid="{B04EE073-FC98-4F4C-A02D-0219E6B202B6}">
                 <File Id="fil939E6C6B5F3D48A8A6C64E29C3688CC1" KeyPath="yes" Source="$(var.TargetDir)\PythonScraper.py" />

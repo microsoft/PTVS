@@ -614,7 +614,7 @@ namespace Microsoft.PythonTools.Language {
                             RenameVariableUserInput.Instance, 
                             (IVsPreviewChangesService)PythonToolsPackage.GetGlobalService(typeof(SVsPreviewChangesService))
                         );
-                        break;
+                        return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 foreach (var command in PythonToolsPackage.Commands.Keys) {

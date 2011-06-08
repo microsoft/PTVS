@@ -1298,10 +1298,9 @@ namespace Microsoft.VisualStudio.Repl {
                         return VSConstants.S_OK;
 
                     case VSConstants.VSStd2KCmdID.TYPECHAR:
-                        // TODO (tomat): this is strange - we should rather find the next writable span
                         char typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
                         if (!CaretInActiveCodeRegion && !CaretInStandardInputRegion) {
-                            EditorOperations.MoveToEndOfDocument(false);
+                            MoveCaretToCurrentInputEnd();
                         }
 
                         if (!TextView.Selection.IsEmpty) {
@@ -1321,6 +1320,15 @@ namespace Microsoft.VisualStudio.Repl {
             }
 
             return nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        /// <summary>
+        /// Moves the caret to the end of the current input.  Called when the user types
+        /// outside of an input line.
+        /// </summary>
+        private void MoveCaretToCurrentInputEnd() {
+            // TODO (tomat): this is strange - we should rather find the next writable span
+            EditorOperations.MoveToEndOfDocument(false);
         }
 
         #endregion
@@ -1364,6 +1372,9 @@ namespace Microsoft.VisualStudio.Repl {
                             _currentLanguageBuffer.Insert(langCaret.Value.Position, GetLineBreak());
                             IndentCurrentLine();
 
+                            return VSConstants.S_OK;
+                        } else if (!CaretInStandardInputRegion) {
+                            MoveCaretToCurrentInputEnd();
                             return VSConstants.S_OK;
                         }
                         break;
