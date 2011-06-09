@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Repl {
                 foreach (var interpreter in _interpreters) {
                     foreach (var factory in interpreter.GetInterpreterFactories()) {
                         if (factory.Id == interpreterGuid && version == factory.Configuration.Version) {
-                            return new PythonReplEvaluator(factory, _errorProviderFactory);
+                            return new PythonReplEvaluator(interpreter, interpreterGuid, version, _errorProviderFactory);
                         }
                     }
                 }

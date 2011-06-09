@@ -54,12 +54,6 @@ Get-Content $asmverfile
 
 foreach ($config in ("Release","Debug"))
 {
-    msbuild .\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version
-    if ($LASTEXITCODE -gt 0) {
-    	Write-Error "Build failed: $config"
-    	exit 3
-    }
-
     if (-not $skiptests)
     {
         msbuild ..\..\Tests\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version
@@ -69,6 +63,13 @@ foreach ($config in ("Release","Debug"))
             exit 4
         }
     }
+
+    msbuild .\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version
+    if ($LASTEXITCODE -gt 0) {
+    	Write-Error "Build failed: $config"
+    	exit 3
+    }
+    
 }
 
 mkdir $outdir\Debug

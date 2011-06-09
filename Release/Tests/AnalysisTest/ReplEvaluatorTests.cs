@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Repl;
@@ -87,7 +88,22 @@ namespace AnalysisTest {
             string pythonDir = FindPythonInterpreterDir("26");
             string pythonExe = Path.Combine(pythonDir, "python.exe");
             string pythonWinExe = Path.Combine(pythonDir, "pythonw.exe");
-            return new PythonReplEvaluator(new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", pythonExe, pythonWinExe, "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86), null);
+            
+            return new PythonReplEvaluator(new SimpleFactoryProvider(pythonExe, pythonWinExe), Guid.Empty, new Version(2,6), null);
+        }
+
+        class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
+            private readonly string _pythonExe;
+            private readonly string _pythonWinExe;
+
+            public SimpleFactoryProvider(string pythonExe, string pythonWinExe) {
+                _pythonExe = pythonExe;
+                _pythonWinExe = pythonWinExe;
+            }
+            
+            public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
+                yield return new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", _pythonExe, _pythonWinExe, "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
+            }
         }
 
         private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {

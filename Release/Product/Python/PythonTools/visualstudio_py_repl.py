@@ -356,6 +356,7 @@ class BasicReplBackend(ReplBackend):
         contents = open(filename, 'rb').read().replace(_cmd('\r\n'), _cmd('\n'))
         code = compile(contents, filename, 'exec')
         self.exec_mod.__file__ = filename
+        sys.argv = [filename]
         exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
 
     def execution_loop(self):
@@ -636,7 +637,7 @@ def _run_repl():
     # fix sys.path so that cwd is where the project lives.
     sys.path[0] = os.getcwd()
     # remove all of our parsed args in case we have a launch file that cares...
-    sys.argv = [sys.argv[0]] + args 
+    sys.argv = args 
 
     global BACKEND
     BACKEND = backend_type(launch_file=options.launch_file)

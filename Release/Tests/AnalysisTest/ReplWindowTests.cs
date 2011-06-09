@@ -1853,6 +1853,18 @@ $cls
             }
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ExecuteInReplSysArgv() {
+            var interactive = Prepare();
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\SysArgvRepl.sln");
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+            Assert.AreNotEqual(null, interactive);
+            
+            interactive.WaitForTextEnd("Program.py']", ReplPrompt);
+        }
+
         /// <summary>
         /// Opens the interactive window, clears the screen.
         /// </summary>

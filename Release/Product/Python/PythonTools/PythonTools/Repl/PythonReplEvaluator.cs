@@ -37,8 +37,11 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Repl {
     internal class PythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator {
-        private readonly IPythonInterpreterFactory _interpreter;
         private readonly IErrorProviderFactory _errorProviderFactory;
+        private readonly IPythonInterpreterFactoryProvider _factProvider;
+        private readonly Guid _guid;
+        private readonly Version _version;
+        private IPythonInterpreterFactory _interpreter;
         private ListenerThread _curListener;
         private IReplWindow _window;
         private bool _multipleScopes = true;
@@ -54,13 +57,27 @@ namespace Microsoft.PythonTools.Repl {
         private static readonly byte[] InputLineCommandBytes = MakeCommand("inpl");
         private static readonly byte[] ExecuteFileCommandBytes = MakeCommand("excf");
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory) {
-            _interpreter = interpreter;
+        public PythonReplEvaluator(IPythonInterpreterFactoryProvider factoryProvider, Guid guid, Version version, IErrorProviderFactory errorProviderFactory) {
+            _factProvider = factoryProvider;
+            _guid = guid;
+            _version = version;
             _errorProviderFactory = errorProviderFactory;
+        }
+
+        private IPythonInterpreterFactory GetInterpreterFactory() {
+            foreach (var factory in _factProvider.GetInterpreterFactories()) {
+                if (factory.Id == _guid && _version == factory.Configuration.Version) {
+                    return factory;
+                }
+            }
+            return null;
         }
 
         public IPythonInterpreterFactory Interpreter {
             get {
+                if (_interpreter == null) {
+                    _interpreter = GetInterpreterFactory();
+                }
                 return _interpreter;
             }
         }
@@ -68,7 +85,7 @@ namespace Microsoft.PythonTools.Repl {
         internal ProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null) {
-                    _replAnalyzer = new ProjectAnalyzer(_interpreter, _errorProviderFactory);
+                    _replAnalyzer = new ProjectAnalyzer(Interpreter, _errorProviderFactory);
                 }
                 return _replAnalyzer;
             }
@@ -91,7 +108,9 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void Connect() {
-            var processInfo = new ProcessStartInfo(_interpreter.Configuration.InterpreterPath);
+            _interpreter = GetInterpreterFactory();
+
+            var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);
 
 #if DEBUG
             bool debugMode = Environment.GetEnvironmentVariable("DEBUG_REPL") != null;
@@ -119,7 +138,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (startupProj != null) {
                     string searchPath = startupProj.GetProjectProperty(CommonConstants.SearchPath, true);
                     if (!string.IsNullOrEmpty(searchPath)) {
-                        processInfo.EnvironmentVariables[_interpreter.Configuration.PathEnvironmentVariable] = searchPath;
+                        processInfo.EnvironmentVariables[Interpreter.Configuration.PathEnvironmentVariable] = searchPath;
                     }
                 }
             }
@@ -182,8 +201,10 @@ namespace Microsoft.PythonTools.Repl {
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _moduleNames;
+            private StringBuilder _preConnectionOutput;
             internal string _currentScope = "__main__";
             private MemberResults _memberResults;
+            private Thread _stdErrReaderThread;
             internal string _prompt1 = ">>> ", _prompt2 = "... ";
 #if DEBUG
             private Thread _socketLockedThread;
@@ -195,16 +216,14 @@ namespace Microsoft.PythonTools.Repl {
                 _process = process;
 
                 var outputThread = new Thread(OutputThread);
-                outputThread.Name = "PythonReplEvaluator: " + evaluator._interpreter.GetInterpreterDisplay();
+                outputThread.Name = "PythonReplEvaluator: " + evaluator.Interpreter.GetInterpreterDisplay();
                 outputThread.Start();
 
                 if (redirectOutput) {
                     var readOutputThread = new Thread(ReadOutput);
                     readOutputThread.Start();
-                }
 
-                if (redirectOutput) {
-                    var readErrorThread = new Thread(ReadError);
+                    var readErrorThread = _stdErrReaderThread = new Thread(ReadError);
                     readErrorThread.Start();
                 }
             }
@@ -218,7 +237,7 @@ namespace Microsoft.PythonTools.Repl {
                     while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
                         using (new SocketLock(this)) {
                             string cmd = CommandtoString(cmd_buffer);
-                            Debug.WriteLine("Repl {0} received command: {1}", _eval._interpreter.GetInterpreterDisplay(), cmd);
+                            Debug.WriteLine("Repl {0} received command: {1}", _eval.Interpreter.GetInterpreterDisplay(), cmd);
                             switch (cmd) {
                                 case "DONE": HandleExecutionDone(); break;
                                 case "ERRE": HandleExecutionError(); break;
@@ -245,23 +264,41 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void ReadOutput() {
+                ReadStream(_process.StandardOutput);
+
+                if (_process.HasExited && !_connected) {
+                    _stdErrReaderThread.Join(); // wait for stderr to finish being written...
+
+                    Window.WriteError("Failed to launch REPL process\r\n");
+                    if (_preConnectionOutput != null) {
+                        lock (_preConnectionOutput) {
+                            Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
+                        }
+                    }
+                }
+            }
+
+            private void ReadStream(StreamReader reader) {
                 var buffer = new char[1024];
                 try {
                     while (!_process.HasExited) {
-                        _process.StandardOutput.Read(buffer, 0, buffer.Length);
+                        int bytesRead = reader.Read(buffer, 0, buffer.Length);
+                        if (!_connected && bytesRead > 0) {
+                            if (_preConnectionOutput == null) {
+                                Interlocked.CompareExchange(ref _preConnectionOutput, new StringBuilder(), null);
+                            }
+
+                            lock (_preConnectionOutput) {
+                                _preConnectionOutput.Append(buffer, 0, bytesRead);
+                            }
+                        }
                     }
                 } catch {
                 }
             }
 
             private void ReadError() {
-                var buffer = new char[1024];
-                try {
-                    while (!_process.HasExited) {
-                        _process.StandardError.Read(buffer, 0, buffer.Length);
-                    }
-                } catch {
-                }
+                ReadStream(_process.StandardError);
             }
 
             private Socket Socket {
@@ -542,7 +579,7 @@ namespace Microsoft.PythonTools.Repl {
 
             public void Close() {
                 using (new SocketLock(this)) {
-                    if (_socket != null) {
+                    if (_socket != null && _socket.Connected) {
                         var socket = Socket;
                         _socket = null;
 
@@ -648,7 +685,7 @@ namespace Microsoft.PythonTools.Repl {
                     // running outside of VS, make this work for tests.
                     return new PythonInteractiveOptions();
                 }
-                return PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(_interpreter);
+                return PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(Interpreter);
             }
         }
 
@@ -726,7 +763,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            var parser = Parser.CreateParser(new StringReader(text), _interpreter.GetLanguageVersion());
+            var parser = Parser.CreateParser(new StringReader(text), Interpreter.GetLanguageVersion());
             ParseResult result;
             parser.ParseInteractiveCode(out result);
             if (!(result == ParseResult.Empty || result == ParseResult.Complete || result == ParseResult.Invalid)) {
