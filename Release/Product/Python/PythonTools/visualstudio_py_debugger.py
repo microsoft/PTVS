@@ -1046,7 +1046,8 @@ def new_thread(tid = None, set_break = False, frame = None):
 
 def do_wait():
     import msvcrt    
-    sys.stdout.write('Press any key to continue . . . ')
+    sys.__stdout__.write('Press any key to continue . . . ')
+    sys.__stdout__.flush()
     msvcrt.getch()
 
 class _DebuggerOutput(object):
