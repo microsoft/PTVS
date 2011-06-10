@@ -138,6 +138,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else if (token.IsCloseGrouping()) {
                         nesting++;
                         nestingChanged = true;
+                        lastTokenWasCommaOrOperator = true;
                     } else if (token.ClassificationType == Classifier.Provider.Keyword ||
                                token.ClassificationType == Classifier.Provider.Operator) {
                         if (token.ClassificationType == Classifier.Provider.Keyword && text == "lambda") {

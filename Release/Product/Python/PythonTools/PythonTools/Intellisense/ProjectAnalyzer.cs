@@ -48,11 +48,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
         private readonly IErrorProviderFactory _errorProvider;
         private readonly Dictionary<string, IProjectEntry> _projectFiles;
-        private readonly PythonAnalyzer _analysisState;
+        private readonly PythonAnalyzer _pyAnalyzer;
         private readonly Dictionary<Type, Command> _commands = new Dictionary<Type, Command>();
         private readonly IVsErrorList _errorList;
         private readonly PythonProjectNode _project;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
+        private static TaskProvider _taskProvider;
 
         public ProjectAnalyzer(IPythonInterpreterFactory factory, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, errorProvider) {
@@ -67,11 +68,12 @@ namespace Microsoft.PythonTools.Intellisense {
             _interpreterFactory = factory;
             _project = project;
 
-            _analysisState = new PythonAnalyzer(interpreter, factory.GetLanguageVersion());
+            _pyAnalyzer = new PythonAnalyzer(interpreter, factory.GetLanguageVersion());
             _projectFiles = new Dictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
             if (PythonToolsPackage.Instance != null) {
                 _errorList = (IVsErrorList)PythonToolsPackage.GetGlobalService(typeof(SVsErrorList));
+                _pyAnalyzer.CrossModulAnalysisLimit = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
             }
         }
 
@@ -135,7 +137,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var replEval = buffer.GetReplEvaluator();
             if (replEval != null) {
                 // We have a repl window, create an untracked module.
-                return _analysisState.AddModule(null, null, analysisCookie);
+                return _pyAnalyzer.AddModule(null, null, analysisCookie);
             }
 
             string path = buffer.GetFilePath();
@@ -148,14 +150,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 var modName = PythonAnalyzer.PathToModuleName(path);
 
                 if (buffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                    entry = _analysisState.AddModule(
+                    entry = _pyAnalyzer.AddModule(
                         modName,
                         buffer.GetFilePath(),
                         analysisCookie
                     );
 
                 } else if (buffer.ContentType.IsOfType("XAML")) {
-                    entry = _analysisState.AddXamlFile(buffer.GetFilePath());
+                    entry = _pyAnalyzer.AddXamlFile(buffer.GetFilePath());
                 } else {
                     return null;
                 }
@@ -186,13 +188,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (PythonProjectNode.IsPythonFile(path)) {
                     var modName = PythonAnalyzer.PathToModuleName(path);
 
-                    item = _analysisState.AddModule(
+                    item = _pyAnalyzer.AddModule(
                         modName,
                         path,
                         null
                     );
                 } else if (path.EndsWith(".xaml", StringComparison.Ordinal)) {
-                    item = _analysisState.AddXamlFile(path, null);
+                    item = _pyAnalyzer.AddXamlFile(path, null);
                 }
 
                 if (item != null) {
@@ -380,13 +382,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public IPythonInterpreter Interpreter {
             get {
-                return _analysisState.Interpreter;
+                return _pyAnalyzer.Interpreter;
             }
         }
 
         public PythonAnalyzer Project {
             get {
-                return _analysisState;
+                return _pyAnalyzer;
             }
         }
 
@@ -407,17 +409,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     pyEntry.UpdateTree(null, null);
                 }
 
-                TaskProvider provider = GetTaskListProviderForProject(projectEntry);
-                if (provider != null) {
-                    foreach (ErrorResult warning in errorSink.Warnings) {
-                        provider.AddWarning(warning);
-                    }
+                if (errorSink.Warnings.Count > 0 || errorSink.Errors.Count > 0) {
+                    TaskProvider provider = GetTaskProviderAndClearProjectItems(projectEntry);
+                    if (provider != null) {
+                        provider.AddWarnings(projectEntry.FilePath, errorSink.Warnings);
+                        provider.AddErrors(projectEntry.FilePath, errorSink.Errors);
 
-                    foreach (ErrorResult error in errorSink.Errors) {
-                        provider.AddError(error);
+                        UpdateErrorList(errorSink, projectEntry.FilePath, provider);
                     }
-
-                    UpdateErrorList(errorSink, projectEntry.FilePath, provider);
                 }
             } else if ((externalEntry = projectEntry as IExternalProjectEntry) != null) {
                 externalEntry.ParseContent(new StreamReader(content), new FileCookie(filename));
@@ -451,14 +450,14 @@ namespace Microsoft.PythonTools.Intellisense {
                             var buffer = snapshot.TextBuffer;
 
                             SimpleTagger<ErrorTag> squiggles = _errorProvider.GetErrorTagger(snapshot.TextBuffer);
-                            TaskProvider provider = GetTaskListProviderForProject(bufferParser._currentProjEntry);
+                            TaskProvider provider = GetTaskProviderAndClearProjectItems(bufferParser._currentProjEntry);
 
                             // SimpleTagger says it's thread safe (http://msdn.microsoft.com/en-us/library/dd885186.aspx), but it's buggy...  
                             // Post the removing of squiggles to the UI thread so that we don't crash when we're racing with 
                             // updates to the buffer.  http://pytools.codeplex.com/workitem/142
                             var uiTextView = bufferParser.TextView as UIElement;
                             if (uiTextView != null) {   // not a UI element in completion context tests w/ mocks.
-                                uiTextView.Dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, provider).DoUpdate);
+                                uiTextView.Dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, bufferParser._currentProjEntry.FilePath, provider).DoUpdate);
                             }
 
                             UpdateErrorList(errorSink, buffer.GetFilePath(), provider);
@@ -507,65 +506,58 @@ namespace Microsoft.PythonTools.Intellisense {
             private ITextSnapshot _snapshot;
             private SimpleTagger<ErrorTag> _squiggles;
             private TaskProvider _provider;
+            private readonly string _filename;
             
-            public SquiggleUpdater(CollectingErrorSink errorSink, ITextSnapshot snapshot, SimpleTagger<ErrorTag> squiggles, TaskProvider provider) {
+            public SquiggleUpdater(CollectingErrorSink errorSink, ITextSnapshot snapshot, SimpleTagger<ErrorTag> squiggles, string filename, TaskProvider provider) {
                 _errorSink = errorSink;
                 _snapshot = snapshot;
                 _squiggles = squiggles;
                 _provider = provider;
+                _filename = filename;
             }
 
             public void DoUpdate() {
                 _squiggles.RemoveTagSpans(x => true);
 
-                AddWarnings(_snapshot, _errorSink, _squiggles, _provider);
+                AddWarnings(_snapshot, _errorSink, _squiggles, _filename, _provider);
 
-                AddErrors(_snapshot, _errorSink, _squiggles, _provider);
+                AddErrors(_snapshot, _errorSink, _squiggles, _filename, _provider);
             }
         }
 
-        private static void AddErrors(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, TaskProvider provider) {
+        private static void AddErrors(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename, TaskProvider provider) {
             foreach (ErrorResult error in errorSink.Errors) {
                 var span = error.Span;
                 var tspan = CreateSpan(snapshot, span);
                 squiggles.CreateTagSpan(tspan, new ErrorTag(PredefinedErrorTypeNames.SyntaxError, error.Message));
                 if (provider != null) {
-                    provider.AddError(error);
+                    provider.AddErrors(filename, new[] { error });
                 }
             }
         }
 
-        private static void AddWarnings(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, TaskProvider provider) {
+        private static void AddWarnings(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename, TaskProvider provider) {
             foreach (ErrorResult warning in errorSink.Warnings) {
                 var span = warning.Span;
                 var tspan = CreateSpan(snapshot, span);
                 squiggles.CreateTagSpan(tspan, new ErrorTag(PredefinedErrorTypeNames.Warning, warning.Message));
                 if (provider != null) {
-                    provider.AddWarning(warning);
+                    provider.AddWarnings(filename, new[] { warning });
                 }
             }
         }
 
-        private TaskProvider GetTaskListProviderForProject(IProjectEntry projEntry) {
-            TaskProvider provider = null;
-            object providerObj = null;
-            if (_errorList != null && projEntry.FilePath != null) {
-                if (!projEntry.Properties.TryGetValue(typeof(TaskProvider), out providerObj)) {
-                    uint cookie;
-                    projEntry.Properties[typeof(TaskProvider)] = provider = new TaskProvider(projEntry.FilePath);
+        private TaskProvider GetTaskProviderAndClearProjectItems(IProjectEntry projEntry) {
+            if (_taskProvider == null) {
+                _taskProvider = new TaskProvider();
 
-                    ErrorHandler.ThrowOnFailure(((IVsTaskList)_errorList).RegisterTaskProvider(provider, out cookie));
-                    provider.Cookie = cookie;
-
-                    // unregister ourselves when the project entry is collected (and therefore our unregister becomes eligble for finalization)
-                    projEntry.Properties[typeof(ErrorUnRegister)] = new ErrorUnRegister(provider, _errorList, cookie, _project, projEntry.FilePath);
-                } else {
-                    provider = providerObj as TaskProvider;
-                }
-
-                provider.Clear();
+                uint cookie;
+                ErrorHandler.ThrowOnFailure(((IVsTaskList)_errorList).RegisterTaskProvider(_taskProvider, out cookie));
+                _taskProvider.Cookie = cookie;
             }
-            return provider;
+            
+            _taskProvider.Clear(projEntry.FilePath);
+            return _taskProvider;
         }
 
         private void UpdateErrorList(CollectingErrorSink errorSink, string filepath, TaskProvider provider) {
@@ -810,15 +802,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void UnloadFile(IProjectEntry entry) {
-            object value;
-            if (entry.Properties.TryGetValue(typeof(ErrorUnRegister), out value)) {
-                ErrorUnRegister error = value as ErrorUnRegister;
-                if (error != null) {
-                    error.Unload();
-                }
-            }
+            _taskProvider.Clear(entry.FilePath);
         }
-
 
         #endregion
 
@@ -834,13 +819,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
         class TaskProvider : IVsTaskProvider {
             private readonly string _path;
-            private readonly List<ErrorResult> _warnings = new List<ErrorResult>();
-            private readonly List<ErrorResult> _errors = new List<ErrorResult>();
+            private readonly Dictionary<string, List<ErrorResult>> _warnings = new Dictionary<string,List<ErrorResult>>();
+            private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string,List<ErrorResult>>();
             private uint _cookie;
 
 
-            public TaskProvider(string filePath) {
-                _path = filePath;
+            public TaskProvider() {
             }
 
             public uint Cookie {
@@ -855,8 +839,18 @@ namespace Microsoft.PythonTools.Intellisense {
             #region IVsTaskProvider Members
 
             public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
-                ppenum = new TaskEnum(_path, _warnings.ToArray(), _errors.ToArray());
+                lock (this) {
+                    ppenum = new TaskEnum(CopyErrorList(_warnings), CopyErrorList(_errors));
+                }
                 return VSConstants.S_OK;
+            }
+
+            private static Dictionary<string, ErrorResult[]> CopyErrorList(Dictionary<string, List<ErrorResult>> input) {
+                Dictionary<string, ErrorResult[]> errors = new Dictionary<string, ErrorResult[]>();
+                foreach (var keyvalue in input) {
+                    errors[keyvalue.Key] = keyvalue.Value.ToArray();
+                }
+                return errors;
             }
 
             public int ImageList(out IntPtr phImageList) {
@@ -881,74 +875,101 @@ namespace Microsoft.PythonTools.Intellisense {
 
             #endregion
 
-            internal void AddError(ErrorResult error) {
-                _errors.Add(error);
+            internal void AddErrors(string filename, IList<ErrorResult> errors) {
+                if (errors.Count > 0) {
+                    lock (this) {
+                        List<ErrorResult> errorList;
+                        if (!_errors.TryGetValue(filename, out errorList)) {
+                            _errors[filename] = errorList = new List<ErrorResult>();
+                        }
+                        errorList.AddRange(errors);
+                    }
+                }
             }
 
-            internal void AddWarning(ErrorResult error) {
-                _warnings.Add(error);
+            internal void AddWarnings(string filename, IList<ErrorResult> errors) {
+                if (_errors.Count > 0) {
+                    lock (this) {
+                        List<ErrorResult> errorList;
+                        if (!_warnings.TryGetValue(filename, out errorList)) {
+                            _warnings[filename] = errorList = new List<ErrorResult>();
+                        }
+                        errorList.AddRange(errors);
+                    }
+                }
             }
 
-            internal void Clear() {
-                _errors.Clear();
-                _warnings.Clear();
+            internal void Clear(string filename) {
+                lock (this) {
+                    _warnings.Remove(filename);
+                    _errors.Remove(filename);
+                }
             }
 
             class TaskEnum : IVsEnumTaskItems {
-                private int _curIndex;
-                private readonly ErrorResult[] _warnings;
-                private readonly ErrorResult[] _errors;
-                private readonly string _path;
+                private readonly Dictionary<string, ErrorResult[]> _warnings;
+                private readonly Dictionary<string, ErrorResult[]> _errors;
+                private IEnumerator<ErrorInfo> _enum;
 
-                public TaskEnum(string filePath, ErrorResult[] warnings, ErrorResult[] errors) {
+                public TaskEnum(Dictionary<string, ErrorResult[]> warnings, Dictionary<string, ErrorResult[]> errors) {
                     _warnings = warnings;
                     _errors = errors;
-                    _path = filePath;
+                    _enum = Enumerator(warnings, errors);
+                }
+
+                struct ErrorInfo {
+                    public readonly string Filename;
+                    public readonly ErrorResult Error;
+                    public readonly bool IsError;
+
+                    public ErrorInfo(string filename, ErrorResult error, bool isError) {
+                        Filename = filename;
+                        Error = error;
+                        IsError = isError;
+                    }
+                }
+
+                IEnumerator<ErrorInfo> Enumerator(Dictionary<string, ErrorResult[]> warnings, Dictionary<string, ErrorResult[]> errors) {
+                    foreach (var fileAndErrorList in warnings) {
+                        foreach (var error in fileAndErrorList.Value) {
+                            yield return new ErrorInfo(fileAndErrorList.Key, error, false);
+                        }
+                    }
+
+                    foreach (var fileAndErrorList in errors) {
+                        foreach (var error in fileAndErrorList.Value) {
+                            yield return new ErrorInfo(fileAndErrorList.Key, error, true);
+                        }
+                    }                    
                 }
 
                 #region IVsEnumTaskItems Members
 
                 public int Clone(out IVsEnumTaskItems ppenum) {
-                    ppenum = new TaskEnum(_path, _warnings, _errors);
+                    ppenum = new TaskEnum(_warnings, _errors);
                     return VSConstants.S_OK;
                 }
 
                 public int Next(uint celt, IVsTaskItem[] rgelt, uint[] pceltFetched = null) {
-                    for (int i = 0; i < celt; i++) {
-                        var next = EnumOne();
-                        if (next == null) {
-                            if (pceltFetched != null) {
-                                pceltFetched[0] = (uint)i;
-                            }
-                            return VSConstants.S_OK;
-                        }
+                    for (int i = 0; i < celt && _enum.MoveNext(); i++) {
+                        var next = _enum.Current;
+                        pceltFetched[0] = (uint)i + 1;
+                        rgelt[i] = new TaskItem(next.Error, next.Filename, next.IsError);
+                    }
 
-                        rgelt[i] = next;
-                    }
-                    if (pceltFetched != null) {
-                        pceltFetched[0] = celt;
-                    }
                     return VSConstants.S_OK;
                 }
 
                 public int Reset() {
-                    _curIndex = 0;
+                    _enum = Enumerator(_warnings, _errors);
                     return VSConstants.S_OK;
                 }
 
                 public int Skip(uint celt) {
-                    _curIndex += (int)celt;
-                    return VSConstants.S_OK;
-                }
-
-                private TaskItem EnumOne() {
-                    if (_curIndex < _warnings.Length) {
-                        return new TaskItem(_warnings[_curIndex++], _path, false);
-                    } else if (_curIndex < _errors.Length - _warnings.Length) {
-                        return new TaskItem(_errors[_curIndex++ - _warnings.Length], _path, true);
+                    while (celt != 0 && _enum.MoveNext()) {
+                        celt--;
                     }
-
-                    return null;
+                    return VSConstants.S_OK;
                 }
 
                 #endregion
@@ -1069,42 +1090,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     #endregion
                 }
-            }
-        }
-
-        class ErrorUnRegister {
-            private readonly IVsErrorList _errorList;
-            private readonly uint _cookie;
-            private readonly PythonProjectNode _project;
-            private readonly string _filename;
-            private readonly TaskProvider _provider;
-
-            public ErrorUnRegister(TaskProvider provider, IVsErrorList errorList, uint cookie, PythonProjectNode project, string filename) {
-                _errorList = errorList;
-                _cookie = cookie;
-                _project = project;
-                _filename = filename;
-                _provider = provider;
-            }
-
-            ~ErrorUnRegister() {
-                Unload();
-            }
-
-
-            internal void Unload() {
-                _provider.Clear();
-                try {
-                    ((IVsTaskList)_errorList).RefreshTasks(_cookie);
-                    ((IVsTaskList)_errorList).UnregisterTaskProvider(_cookie);
-                } catch (InvalidComObjectException) {
-                    // when shutting down our com object can be disposed of before we hit this.
-                }
-
-                if (_project != null) {
-                    _project.ErrorFiles.Remove(_filename);
-                }
-                GC.SuppressFinalize(this);
             }
         }
     }

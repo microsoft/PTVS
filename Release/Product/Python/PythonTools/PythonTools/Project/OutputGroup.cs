@@ -94,14 +94,16 @@ namespace Microsoft.PythonTools.Project {
             string outputType = this._targetName + "Output";
             this._outputs.Clear();
 
-            foreach (MSBuildExecution.ProjectItemInstance assembly in _project.CurrentConfig.GetItems(outputType)) {
-                Output output = new Output(_project, assembly);
-                _outputs.Add(output);
+            if (_project.CurrentConfig != null) {
+                foreach (MSBuildExecution.ProjectItemInstance assembly in _project.CurrentConfig.GetItems(outputType)) {
+                    Output output = new Output(_project, assembly);
+                    _outputs.Add(output);
 
-                // See if it is our key output
-                if (_keyOutput == null ||
-                    String.Compare(assembly.GetMetadataValue("IsKeyOutput"), true.ToString(), StringComparison.OrdinalIgnoreCase) == 0) {
-                    _keyOutput = output;
+                    // See if it is our key output
+                    if (_keyOutput == null ||
+                        String.Compare(assembly.GetMetadataValue("IsKeyOutput"), true.ToString(), StringComparison.OrdinalIgnoreCase) == 0) {
+                        _keyOutput = output;
+                    }
                 }
             }
 

@@ -230,6 +230,13 @@ pass");
     def foo(self):
         'doc string'
         pass");
+
+            AutoIndentTest(project, "def g():\rfoo(15)\r\r\bfoo(1)\rpass", @"def g():
+    foo(15)
+
+foo(1)
+pass");
+
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

@@ -147,6 +147,7 @@ class Thread(object):
         self._block_lock.acquire()
         self._block_starting_lock = thread.allocate_lock()
         self._is_blocked = False
+        self._is_working = False
         self.stopped_on_line = None
         self.detach = False
         self.trace_func = self.trace_func # replace self.trace_func w/ a bound method so we don't need to re-create these regularly
@@ -344,8 +345,10 @@ class Thread(object):
                 break
 
             # the debugger wants us to do something, do it, and then block again
+            self._is_working = True
             self.unblock_work()
             self.unblock_work = None
+            self._is_working = False
         
         self._block_starting_lock.acquire()
         assert self._is_blocked
@@ -366,7 +369,10 @@ class Thread(object):
         self._block_starting_lock.release()
 
     def run_on_thread(self, text, cur_frame, execution_id):
-        self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id))
+        if not self._is_working:
+            self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id))
+        else:
+            report_execution_error('<error: previous evaluation has not completed>', execution_id)
 
     def run_locally(self, text, cur_frame, execution_id):
         try:
@@ -381,7 +387,10 @@ class Thread(object):
             report_execution_exception(execution_id, sys.exc_info())
 
     def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate):
-        self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate))
+        if not self._is_working:
+            self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate))
+        else:
+            report_children(execution_id, [], False, False)
 
     def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate):
         try:
@@ -923,17 +932,20 @@ def report_process_loaded(tid):
     conn.send(struct.pack('i', tid))
     send_lock.release()
 
+def report_execution_error(exc_text, execution_id):
+    send_lock.acquire()    
+    conn.send(EXCE)
+    conn.send(struct.pack('i', execution_id))
+    write_string(exc_text)
+    send_lock.release()
+
 def report_execution_exception(execution_id, exc_info):
     try:
         exc_text = str(exc_info[1])
     except:
         exc_text = 'An exception was thrown'
 
-    send_lock.acquire()    
-    conn.send(EXCE)
-    conn.send(struct.pack('i', execution_id))
-    write_string(exc_text)
-    send_lock.release()
+    report_execution_error(exc_text, execution_id)
 
 def safe_repr(obj):
     try:

@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (userMod == null) {
                 var modName = node.Root.MakeString();
 
-                if (!ProjectState.Modules.TryGetValue(modName, out moduleRef)) {
+                if (!TryGetUserModule(modName, out moduleRef)) {
                     userMod = ProjectState.ImportBuiltinModule(modName);
                 }
 
@@ -259,6 +259,17 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             return true;
+        }
+
+        private bool TryGetUserModule(string modName, out ModuleReference moduleRef) {
+            if (ProjectState.CrossModulAnalysisLimit != null &&
+                ProjectState.ModulesByFilename.Count > ProjectState.CrossModulAnalysisLimit) {
+                // too many modules loaded, disable cross module analysis by blocking
+                // scripts from seeing other modules.
+                moduleRef = null;
+                return false;
+            }
+            return ProjectState.Modules.TryGetValue(modName, out moduleRef);
         }
 
         private ICollection<string> GetModuleKeys(Namespace userMod) {
@@ -390,7 +401,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 ModuleReference modRef;
 
                 var def = Scopes[Scopes.Length - 1].CreateVariable(nameNode, _unit, saveName);
-                if (!ProjectState.Modules.TryGetValue(strImpName, out modRef)) {
+                if (!TryGetUserModule(strImpName, out modRef)) {
                     var builtinModule = ProjectState.ImportBuiltinModule(strImpName, impNode.Names.Count > 1 && !String.IsNullOrEmpty(newName));
 
                     if (builtinModule != null) {

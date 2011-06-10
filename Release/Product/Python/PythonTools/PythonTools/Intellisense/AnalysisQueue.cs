@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                 } else {
                     _isAnalyzing = false;
                     _event.WaitOne();
-                }
+                }   
             }
         }
 

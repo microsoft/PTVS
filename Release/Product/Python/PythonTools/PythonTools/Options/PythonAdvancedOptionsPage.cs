@@ -20,6 +20,7 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonAdvancedOptionsPage : PythonDialogPage {
         private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut;
+        private int? _crossModuleAnalysisLimit; // not exposed via the UI
         private Severity _indentationInconsistencySeverity;
         private PythonAdvancedOptionsControl _window;
 
@@ -56,7 +57,7 @@ namespace Microsoft.PythonTools.Options {
 
         public Severity IndentationInconsistencySeverity {
             get { return _indentationInconsistencySeverity; }
-            set { 
+            set {
                 _indentationInconsistencySeverity = value;
                 var changed = IndentationInconsistencyChanged;
                 if (changed != null) {
@@ -73,6 +74,11 @@ namespace Microsoft.PythonTools.Options {
         public bool WaitOnNormalExit {
             get { return _waitOnNormalExit; }
             set { _waitOnNormalExit = value; }
+        }
+
+        public int? CrossModuleAnalysisLimit {
+            get { return _crossModuleAnalysisLimit; }
+            set { _crossModuleAnalysisLimit = value; }
         }
 
         public event EventHandler IndentationInconsistencyChanged;
@@ -94,6 +100,7 @@ namespace Microsoft.PythonTools.Options {
         private const string WaitOnNormalExitSetting = "WaitOnNormalExit";
         private const string AutoAnalysisSetting = "AutoAnalysis";
         private const string TeeStandardOutSetting = "TeeStandardOut";
+        private const string CrossModulAnalysisLimitSetting = "CrossModulAnalysisLimit";
 
         public override void LoadSettingsFromStorage() {
             _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
@@ -102,6 +109,14 @@ namespace Microsoft.PythonTools.Options {
             _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
             _teeStdOut = LoadBool(TeeStandardOutSetting) ?? true;
             _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
+            var analysisLimit = LoadString(CrossModulAnalysisLimitSetting);
+            if (analysisLimit == null) {
+                _crossModuleAnalysisLimit = 300;    // default analysis limit
+            } else if (analysisLimit == "-") {
+                _crossModuleAnalysisLimit = null;
+            } else {
+                _crossModuleAnalysisLimit = Convert.ToInt32(analysisLimit);
+            }
         }
 
         public override void SaveSettingsToStorage() {
@@ -111,6 +126,12 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(AutoAnalysisSetting, _autoAnalysis);
             SaveBool(TeeStandardOutSetting, _teeStdOut);
             SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
+            if (_crossModuleAnalysisLimit != null) {
+                SaveInt(CrossModulAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);
+            } else {
+                SaveString(CrossModulAnalysisLimitSetting, "-");
+            }
+
         }
 
     }

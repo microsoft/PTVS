@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal readonly IModuleContext _defaultContext;
         private readonly PythonLanguageVersion _langVersion;
 
+        private int? _crossModuleLimit;
         private static object _nullKey = new object();
 
         public PythonAnalyzer(IPythonInterpreterFactory interpreterFactory)
@@ -236,6 +237,22 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             return moduleName;
+        }
+
+        /// <summary>
+        /// gets or sets the maximum number of files which will be used for cross module analysis.
+        /// 
+        /// By default this is null and cross module analysis will not be limited.  Setting the
+        /// value will cause cross module analysis to be disabled after that number of files has been
+        /// loaded.
+        /// </summary>
+        public int? CrossModulAnalysisLimit {
+            get {
+                return _crossModuleLimit;
+            }
+            set {
+                _crossModuleLimit = value;
+            }
         }
 
         #endregion
