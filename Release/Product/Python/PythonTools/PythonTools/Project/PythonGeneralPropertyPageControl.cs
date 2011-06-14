@@ -19,11 +19,11 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Project {
-    public partial class PythonGeneralyPropertyPageControl : UserControl {
+    public partial class PythonGeneralPropertyPageControl : UserControl {
         private readonly PythonGeneralPropertyPage _propPage;
         private readonly List<IPythonInterpreterFactory> _interpreters = new List<IPythonInterpreterFactory>();
 
-        public PythonGeneralyPropertyPageControl() {
+        public PythonGeneralPropertyPageControl() {
             InitializeComponent();
 
             InitializeInterpreters();
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Project {
             PythonToolsPackage.Instance.InterpreterOptionsPage.InterpretersChanged -= InterpreterOptionsPage_InterpretersChanged;
         }
 
-        internal PythonGeneralyPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage)
+        internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage)
             : this() {
             _propPage = newPythonGeneralPropertyPage;
         }

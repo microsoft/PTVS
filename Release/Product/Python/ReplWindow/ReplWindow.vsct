@@ -26,11 +26,13 @@
     <KeyBindings>
         <KeyBinding guid="guidReplWindowCmdSet" id="cmdidSmartExecute" key1="VK_RETURN" mod1="C" editor="guidReplWindow" />
         <KeyBinding guid="guidReplWindowCmdSet" id="cmdidBreakRepl" key1="VK_CANCEL" mod1="C" editor="guidReplWindow" />
-        <KeyBinding guid="guidReplWindowCmdSet" id="cmdidReplHistoryNext" key1="N" mod1="Alt" editor="guidReplWindow" />
-        <KeyBinding guid="guidReplWindowCmdSet" id="cmdidReplHistoryPrevious" key1="P" mod1="Alt" editor="guidReplWindow" />
+        <KeyBinding guid="guidReplWindowCmdSet" id="cmdidReplHistoryNext"  key1="VK_DOWN" mod1="Alt" editor="guidReplWindow" />
+        <KeyBinding guid="guidReplWindowCmdSet" id="cmdidReplHistoryPrevious" key1="VK_UP" mod1="Alt" editor="guidReplWindow" />
         <KeyBinding guid="guidReplWindowCmdSet" id="cmdidBreakLine" key1="VK_RETURN" mod1="S" editor="guidReplWindow" />
         <KeyBinding guid="guidReplWindowCmdSet" id="comboIdReplScopes" key1="S" mod1="A" editor="guidReplWindow" />
-        
+        <KeyBinding guid="guidReplWindowCmdSet" id="cmdidReplSearchHistoryNext" key1="VK_RIGHT" mod1="Alt" editor="guidReplWindow" />
+        <KeyBinding guid="guidReplWindowCmdSet" id="cmdidReplSearchHistoryPrevious" key1="VK_LEFT" mod1="Alt" editor="guidReplWindow" />
+
     </KeyBindings>
 
 
@@ -151,7 +153,28 @@
                 </Strings>
             </Button>
 
-            <Button guid="guidReplWindowCmdSet" id="cmdidReplClearScreen" priority="0x0300" type="Button">
+          <Button guid="guidReplWindowCmdSet" id="cmdidReplSearchHistoryNext" priority="0x0300" type="Button">
+            <Parent guid="guidReplWindowCmdSet" id="ConsoleMenuGroup"/>
+            <CommandFlag>DynamicVisibility</CommandFlag>
+            <CommandFlag>DefaultInvisible</CommandFlag>
+            <Strings>
+              <CommandName>cmdidReplHistoryNext</CommandName>
+              <ButtonText>Search History Next</ButtonText>
+            </Strings>
+          </Button>
+
+          <Button guid="guidReplWindowCmdSet" id="cmdidReplSearchHistoryPrevious" priority="0x0300" type="Button">
+            <Parent guid="guidReplWindowCmdSet" id="ConsoleMenuGroup"/>
+            <CommandFlag>DynamicVisibility</CommandFlag>
+            <CommandFlag>DefaultInvisible</CommandFlag>
+            <Strings>
+              <CommandName>cmdidReplHistoryNext</CommandName>
+              <ButtonText>Search History Previous</ButtonText>
+            </Strings>
+          </Button>
+
+          
+          <Button guid="guidReplWindowCmdSet" id="cmdidReplClearScreen" priority="0x0300" type="Button">
                 <Parent guid="guidReplWindowCmdSet" id="ConsoleMenuClearGroup"/>
                 <Icon guid="guidReplToolbarImages" id="bmpClearScreen" />
                 <Strings>
@@ -266,8 +289,10 @@
             <IDSymbol name="cmdidReplHistoryPrevious" value="0x0107"/>
             <IDSymbol name="cmdidReplClearScreen" value="0x0108"/>
             <IDSymbol name="cmdidBreakLine" value="0x0109"/>
-            
-            <!-- Groups -->
+            <IDSymbol name="cmdidReplSearchHistoryNext" value="0x010A"/>
+            <IDSymbol name="cmdidReplSearchHistoryPrevious" value="0x010B"/>
+
+          <!-- Groups -->
             <IDSymbol name="ConsoleMenuGroup" value="0x1050" />
             <IDSymbol name="ConsoleMenuEditGroup" value="0x1051" />
             <IDSymbol name="ConsoleMenuClearGroup" value="0x1052" />

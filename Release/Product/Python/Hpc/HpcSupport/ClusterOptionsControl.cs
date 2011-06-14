@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Hpc {
         #region IPythonLauncherOptions Members
 
         public void SaveSettings() {
-            _project.SetProperty(ClusterOptions.AppArgumentsSetting, _options.InterpreterArguments);
+            _project.SetProperty(ClusterOptions.AppArgumentsSetting, _options.ApplicationArguments);
             _project.SetProperty(ClusterOptions.AppCommandSetting, _options.PythonInterpreter);
             _project.SetProperty(ClusterOptions.PublishBeforeRunSetting, _options.PublishBeforeRun.ToString());
             _project.SetProperty(ClusterOptions.RunEnvironmentSetting, _options.RunEnvironment.ToString());
@@ -50,10 +50,11 @@ namespace Microsoft.PythonTools.Hpc {
             _project.SetProperty(ClusterOptions.MpiExecPathSetting, _options.MpiExecPath);
             _project.SetProperty(ClusterOptions.DeploymentDirSetting, _options.DeploymentDirectory);
             _project.SetProperty(ClusterOptions.TargetPlatformSetting, _options.TargetPlatform.ToString());
+            _project.SetProperty(CommonConstants.InterpreterArguments, _options.InterpreterArguments);
         }
 
         public void LoadSettings() {
-            _options.InterpreterArguments = _project.GetProperty(ClusterOptions.AppArgumentsSetting);
+            _options.ApplicationArguments = _project.GetProperty(ClusterOptions.AppArgumentsSetting);
             _options.PythonInterpreter = _project.GetProperty(ClusterOptions.AppCommandSetting);
             _options.PublishBeforeRun = _project.PublishBeforeRun();
             _options.LoadRunEnvironment(new ClusterEnvironment(_project.GetProperty(ClusterOptions.RunEnvironmentSetting)));
@@ -61,6 +62,7 @@ namespace Microsoft.PythonTools.Hpc {
             _options.MpiExecPath = _project.GetProperty(ClusterOptions.MpiExecPathSetting);
             _options.DeploymentDirectory = _project.GetProperty(ClusterOptions.DeploymentDirSetting);
             _options.TargetPlatform = _project.TargetPlatform();
+            _options.InterpreterArguments = _project.GetProperty(CommonConstants.InterpreterArguments);
 
             _propGrid.SelectedObject = _options;
         }

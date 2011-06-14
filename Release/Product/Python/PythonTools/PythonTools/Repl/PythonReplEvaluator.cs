@@ -130,7 +130,13 @@ namespace Microsoft.PythonTools.Repl {
             conn.Listen(0);
             int portNum = ((IPEndPoint)conn.LocalEndPoint).Port;
 
-            string filename, dir;
+            List<string> args = new List<string>();
+
+            if (!String.IsNullOrWhiteSpace(CurrentOptions.InterpreterOptions)) {
+                args.Add(CurrentOptions.InterpreterOptions);
+            }
+
+            string filename, dir, extraArgs = null;
             ProjectAnalyzer analyzer;
             if (PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer)) {
                 processInfo.WorkingDirectory = dir;
@@ -140,10 +146,17 @@ namespace Microsoft.PythonTools.Repl {
                     if (!string.IsNullOrEmpty(searchPath)) {
                         processInfo.EnvironmentVariables[Interpreter.Configuration.PathEnvironmentVariable] = searchPath;
                     }
+
+                    string interpArgs = startupProj.GetProjectProperty(CommonConstants.InterpreterArguments, true);
+                    if (!String.IsNullOrWhiteSpace(interpArgs)) {
+                        args.Add(interpArgs);
+                    }
+
+                    extraArgs = startupProj.GetProjectProperty(CommonConstants.CommandLineArguments, true);
                 }
             }
 
-            List<string> args = new List<string>() { "\"" + Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "visualstudio_py_repl.py") + "\"" };
+            args.Add("\"" + Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "visualstudio_py_repl.py") + "\"");
             args.Add("--port");
             args.Add(portNum.ToString());
 
@@ -174,6 +187,10 @@ namespace Microsoft.PythonTools.Repl {
                     multiScopeSupportChanged(this, EventArgs.Empty);
                 }
                 _multipleScopes = multipleScopes;
+            }
+
+            if (!String.IsNullOrWhiteSpace(extraArgs)) {
+                args.Add(extraArgs);
             }
 
             processInfo.Arguments = String.Join(" ", args);

@@ -450,11 +450,11 @@
     <Compile Include="PythonTools\Options\PythonAdvancedOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="PythonTools\Project\PythonGeneralyPropertyPageControl.cs">
+    <Compile Include="PythonTools\Project\PythonGeneralPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PythonTools\Project\PythonGeneralyPropertyPageControl.Designer.cs">
-      <DependentUpon>PythonGeneralyPropertyPageControl.cs</DependentUpon>
+    <Compile Include="PythonTools\Project\PythonGeneralPropertyPageControl.Designer.cs">
+      <DependentUpon>PythonGeneralPropertyPageControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\PythonFolderNode.cs" />
     <Compile Include="PythonTools\Project\PythonNonCodeFileNode.cs" />
@@ -844,8 +844,8 @@
     <EmbeddedResource Include="PythonTools\Options\PythonAdvancedOptionsControl.resx">
       <DependentUpon>PythonAdvancedOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Project\PythonGeneralyPropertyPageControl.resx">
-      <DependentUpon>PythonGeneralyPropertyPageControl.cs</DependentUpon>
+    <EmbeddedResource Include="PythonTools\Project\PythonGeneralPropertyPageControl.resx">
+      <DependentUpon>PythonGeneralPropertyPageControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonImageList.bmp" />
     <EmbeddedResource Include="PythonTools\Project\VisualStudio.Project.resx">

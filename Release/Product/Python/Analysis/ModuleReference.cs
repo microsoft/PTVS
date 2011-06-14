@@ -12,11 +12,13 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis {
     class ModuleReference {
         public Namespace Module;
+        private Dictionary<ModuleInfo, int> EphmeralReferences; 
 
         public ModuleReference() {
         }
@@ -25,5 +27,46 @@ namespace Microsoft.PythonTools.Analysis {
             Module = module;
         }
 
+        /// <summary>
+        /// Adds an ephemeral reference for the declaring module.  Ephemeral references are modules
+        /// referenced via import statements but that for a module that we don't know actually exists.
+        /// As long as there are ephemeral references to the name we want to provide import completion
+        /// for that module.  But once those have been removed we want to stop displaying those names.
+        /// 
+        /// Therefore we track the version of a module that accessed it and as long as the latest
+        /// analyzed version knows about the module we'll include it in the analysis.
+        /// </summary>
+        /// <param name="module"></param>
+        public void AddEphemeralReference(ModuleInfo module) {
+            if (EphmeralReferences == null) {
+                EphmeralReferences = new Dictionary<ModuleInfo, int>();
+            }
+            EphmeralReferences[module] = module.ProjectEntry.AnalysisVersion;
+        }
+
+        public bool HasEphemeralReferences {
+            get {
+                bool res = false;
+                if (EphmeralReferences != null) {
+                    List<ModuleInfo> toRemove = null;
+                    foreach (var keyValue in EphmeralReferences) {
+                        if (keyValue.Key.ProjectEntry.AnalysisVersion == keyValue.Value) {
+                            res = true;
+                            break;
+                        } else if (toRemove == null) {
+                            toRemove = new List<ModuleInfo>();
+                        }
+                        toRemove.Add(keyValue.Key);
+                    }
+
+                    if (toRemove != null) {
+                        foreach (var value in toRemove) {
+                            EphmeralReferences.Remove(value);
+                        }
+                    }
+                }
+                return res;
+            }
+        }
     }
 }

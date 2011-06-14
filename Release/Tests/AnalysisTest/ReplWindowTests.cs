@@ -766,6 +766,47 @@ namespace AnalysisTest {
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void HistorySearch() {
+            var interactive = Prepare();
+
+            const string code1 = "x = 42";
+            const string code2 = "x = 10042";
+            const string code3 = "x = 300";
+            Keyboard.Type(code1 + "\r");
+
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt);
+
+            Keyboard.Type(code2 + "\r");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt);
+
+            Keyboard.Type(code3 + "\r");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt);
+
+            Keyboard.Type("42");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + "42");
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryPrevious");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code2);
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryPrevious");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code1);
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryPrevious");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code1);
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryNext");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code2);
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.SearchHistoryNext");
+            interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code2);
+        }
+
+        /// <summary>
+        /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
+        /// scroll back through both function definitions
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RegressionImportSysBackspace() {
             var item = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
             item.Intellisense.AddNewLineAtEndOfFullyTypedWord = true;

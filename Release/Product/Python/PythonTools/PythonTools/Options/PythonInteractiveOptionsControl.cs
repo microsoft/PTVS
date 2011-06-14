@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Options {
 
         private void AddToolTips() {
             const string inlinePromptsToolTip = "When checked the prompts are in the editor buffer.  When unchecked the prompts are on the side in a separate margin.";
-            const string useInterpreterPromptsToolTip = "When checked the prompt strings are defined by sys.ps1 and sys.ps2.  When unchecked the prompts are the ones configured here.";
+            const string useInterpreterPromptsToolTip = "When checked the prompts are the ones configured here.  When unchecked the prompt strings are defined by sys.ps1 and sys.ps2.";
             const string backendToolTop = @"Specifies the mode to be used for the interactive window.
 
 The standard mode talks to a local Python process.
@@ -98,10 +98,19 @@ The IPython mode talks to an IPython kernel which can control multiple remote ma
 You can also specify a custom type as modulename.typename.  The module will 
 be imported and the custom backend will be used.
 ";
+            const string interpreterOptionsToolTip = @"Specifies command line options for the interactive window such as -O or -B.  
+
+When launching a project in the interactive window these are combined with any interpreter options listed in the project.";
+
+            const string smartReplHistoryToolTip = "Causes the up/down arrow keys to navigate history when the cursor is at the end of an input.";
+
             _tooltips.SetToolTip(_inlinePrompts, inlinePromptsToolTip);
-            _tooltips.SetToolTip(_useInterpreterPrompts, useInterpreterPromptsToolTip);
+            _tooltips.SetToolTip(_useUserDefinedPrompts, useInterpreterPromptsToolTip);
             _tooltips.SetToolTip(_executionMode, backendToolTop);
             _tooltips.SetToolTip(_executionModeLabel, backendToolTop);
+            _tooltips.SetToolTip(_interpOptionsLabel, interpreterOptionsToolTip);
+            _tooltips.SetToolTip(_interpreterOptions, interpreterOptionsToolTip);
+            _tooltips.SetToolTip(_smartReplHistory, smartReplHistoryToolTip);
         }
 
         private void RefreshOptions() {
@@ -115,10 +124,12 @@ be imported and the custom backend will be used.
                 }
 
                 _inlinePrompts.Checked = CurrentOptions.InlinePrompts;
-                _useInterpreterPrompts.Checked = CurrentOptions.UseInterpreterPrompts;
+                _useUserDefinedPrompts.Checked = !CurrentOptions.UseInterpreterPrompts;
                 _priPrompt.Text = CurrentOptions.PrimaryPrompt;
                 _secPrompt.Text = CurrentOptions.SecondaryPrompt;
                 _startupScript.Text = CurrentOptions.StartupScript;
+                _interpreterOptions.Text = CurrentOptions.InterpreterOptions;
+                _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked;
 
                 int selectedExecutionMode = -1;
                 for (int i = 0; i < _executionModes.Length; i++) {
@@ -175,8 +186,8 @@ be imported and the custom backend will be used.
         }
 
         private void _useInterpreterPrompts_CheckedChanged(object sender, EventArgs e) {
-            _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = !_useInterpreterPrompts.Checked;
-            CurrentOptions.UseInterpreterPrompts = _useInterpreterPrompts.Checked;
+            _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked;
+            CurrentOptions.UseInterpreterPrompts = !_useUserDefinedPrompts.Checked;
         }
 
         private void _inlinePrompts_CheckedChanged(object sender, EventArgs e) {
@@ -216,6 +227,10 @@ be imported and the custom backend will be used.
 
         private void _executionMode_TextChanged(object sender, EventArgs e) {
             CurrentOptions.ExecutionMode = _executionMode.Text;
+        }
+
+        private void InterpreterOptionsTextChanged(object sender, EventArgs e) {
+            CurrentOptions.InterpreterOptions = _interpreterOptions.Text;
         }
     }
 }

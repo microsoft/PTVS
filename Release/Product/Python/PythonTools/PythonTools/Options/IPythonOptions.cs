@@ -45,6 +45,21 @@ namespace Microsoft.PythonTools.Options {
             get;
             set;
         }
+
+        bool TeeStandardOutput {
+            get;
+            set;
+        }
+
+        bool WaitOnAbnormalExit {
+            get;
+            set;
+        }
+
+        bool WaitOnNormalExit {
+            get;
+            set;
+        }
     }
 
     [Guid("77179244-BBD7-4AA2-B27B-F2CCC679953A")]
@@ -93,6 +108,11 @@ namespace Microsoft.PythonTools.Options {
         }
 
         string ExecutionMode {
+            get;
+            set;
+        }
+
+        string InterpreterArguments {
             get;
             set;
         }

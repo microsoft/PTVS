@@ -83,6 +83,35 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        bool IPythonOptions.TeeStandardOutput {
+            get {
+                return PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput;
+            }
+            set {
+                PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput = value;
+                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+            }
+        }
+
+        bool IPythonOptions.WaitOnAbnormalExit {
+            get {
+                return PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit;
+            }
+            set {
+                PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit = value;
+                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+            }
+        }
+
+        bool IPythonOptions.WaitOnNormalExit {
+            get {
+                return PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit;
+            }
+            set {
+                PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit = value;
+                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+            }
+        }
 
         #endregion
 
@@ -263,6 +292,16 @@ namespace Microsoft.PythonTools {
                 }
 
                 CurrentOptions.ExecutionMode = value;
+                SaveSettingsToStorage();
+            }
+        }
+
+        string IPythonInteractiveOptions.InterpreterArguments {
+            get {
+                return CurrentOptions.InterpreterOptions;
+            }
+            set {
+                CurrentOptions.InterpreterOptions = value;
                 SaveSettingsToStorage();
             }
         }

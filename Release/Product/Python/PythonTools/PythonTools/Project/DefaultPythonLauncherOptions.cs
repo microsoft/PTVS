@@ -23,14 +23,31 @@ namespace Microsoft.PythonTools.Project {
         public DefaultPythonLauncherOptions(IPythonProject properties) {
             _properties = properties;
             InitializeComponent();
+            const string searchPathHelp = "Specifies additional directories which are added to sys.path for making libraries available for importing.";
+            const string argumentsHelp = "Specifies arguments which are passed to the script and available via sys.argv.";
+            const string interpArgsHelp = "Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).";
+            const string interpPathHelp = "Overrides the interpreter executable which is used for launching the project.";
+
+            _toolTip.SetToolTip(_searchPathLabel, searchPathHelp);
+            _toolTip.SetToolTip(_searchPaths, searchPathHelp);
+
+            _toolTip.SetToolTip(_arguments, argumentsHelp);
+            _toolTip.SetToolTip(_argumentsLabel, argumentsHelp);
+            
+            _toolTip.SetToolTip(_interpArgsLabel, interpArgsHelp);
+            _toolTip.SetToolTip(_interpArgs, interpArgsHelp);
+            
+            _toolTip.SetToolTip(_interpreterPath, interpPathHelp);
+            _toolTip.SetToolTip(_interpreterPathLabel, interpPathHelp);
         }
 
         #region ILauncherOptionsControl Members
 
         public void SaveSettings() {
             _properties.SetProperty(CommonConstants.SearchPath, SearchPaths);
-            _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);
+            _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);            
             _properties.SetProperty(CommonConstants.InterpreterPath, InterpreterPath);
+            _properties.SetProperty(CommonConstants.InterpreterArguments, InterpreterArguments);
             RaiseIsSaved();
         }
 
@@ -39,6 +56,7 @@ namespace Microsoft.PythonTools.Project {
             SearchPaths = _properties.GetProperty(CommonConstants.SearchPath);
             InterpreterPath = _properties.GetProperty(CommonConstants.InterpreterPath);
             Arguments = _properties.GetProperty(CommonConstants.CommandLineArguments);
+            InterpreterArguments = _properties.GetProperty(CommonConstants.InterpreterArguments);
             _loadingSettings = false;
         }
 
@@ -73,6 +91,11 @@ namespace Microsoft.PythonTools.Project {
             set { _interpreterPath.Text = value; }
         }
 
+        public string InterpreterArguments {
+            get { return _interpArgs.Text; }
+            set { _interpArgs.Text = value; }
+        }
+
         private void RaiseIsDirty() {
             if (!_loadingSettings) {
                 var isDirty = DirtyChanged;
@@ -101,5 +124,8 @@ namespace Microsoft.PythonTools.Project {
             RaiseIsDirty();
         }
 
+        private void InterpreterArgumentsTextChanged(object sender, EventArgs e) {
+            RaiseIsDirty();
+        }
     }
 }

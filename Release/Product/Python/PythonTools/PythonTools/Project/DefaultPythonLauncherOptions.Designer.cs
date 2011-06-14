@@ -23,24 +23,30 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
             this._debugGroup = new System.Windows.Forms.GroupBox();
             this._arguments = new System.Windows.Forms.TextBox();
             this._argumentsLabel = new System.Windows.Forms.Label();
             this._searchPaths = new System.Windows.Forms.TextBox();
             this._searchPathLabel = new System.Windows.Forms.Label();
+            this._interpArgs = new System.Windows.Forms.TextBox();
+            this._interpArgsLabel = new System.Windows.Forms.Label();
             this._interpreterPath = new System.Windows.Forms.TextBox();
             this._interpreterPathLabel = new System.Windows.Forms.Label();
+            this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._debugGroup.SuspendLayout();
             this.SuspendLayout();
             // 
             // _debugGroup
             // 
+            this._debugGroup.Controls.Add(this._interpreterPath);
+            this._debugGroup.Controls.Add(this._interpreterPathLabel);
+            this._debugGroup.Controls.Add(this._interpArgsLabel);
+            this._debugGroup.Controls.Add(this._interpArgs);
             this._debugGroup.Controls.Add(this._arguments);
             this._debugGroup.Controls.Add(this._argumentsLabel);
             this._debugGroup.Controls.Add(this._searchPaths);
             this._debugGroup.Controls.Add(this._searchPathLabel);
-            this._debugGroup.Controls.Add(this._interpreterPath);
-            this._debugGroup.Controls.Add(this._interpreterPathLabel);
             this._debugGroup.Location = new System.Drawing.Point(3, 3);
             this._debugGroup.Name = "_debugGroup";
             this._debugGroup.Size = new System.Drawing.Size(437, 131);
@@ -59,11 +65,11 @@
             // _argumentsLabel
             // 
             this._argumentsLabel.AutoSize = true;
-            this._argumentsLabel.Location = new System.Drawing.Point(4, 51);
+            this._argumentsLabel.Location = new System.Drawing.Point(6, 51);
             this._argumentsLabel.Name = "_argumentsLabel";
-            this._argumentsLabel.Size = new System.Drawing.Size(130, 13);
+            this._argumentsLabel.Size = new System.Drawing.Size(90, 13);
             this._argumentsLabel.TabIndex = 19;
-            this._argumentsLabel.Text = "Command Line Arguments";
+            this._argumentsLabel.Text = "Script Arguments:";
             // 
             // _searchPaths
             // 
@@ -76,28 +82,44 @@
             // _searchPathLabel
             // 
             this._searchPathLabel.AutoSize = true;
-            this._searchPathLabel.Location = new System.Drawing.Point(4, 25);
+            this._searchPathLabel.Location = new System.Drawing.Point(6, 25);
             this._searchPathLabel.Name = "_searchPathLabel";
-            this._searchPathLabel.Size = new System.Drawing.Size(71, 13);
+            this._searchPathLabel.Size = new System.Drawing.Size(74, 13);
             this._searchPathLabel.TabIndex = 17;
-            this._searchPathLabel.Text = "Search Paths";
+            this._searchPathLabel.Text = "Search Paths:";
+            // 
+            // _interpArgs
+            // 
+            this._interpArgs.Location = new System.Drawing.Point(139, 74);
+            this._interpArgs.Name = "_interpArgs";
+            this._interpArgs.Size = new System.Drawing.Size(286, 20);
+            this._interpArgs.TabIndex = 20;
+            this._interpArgs.TextChanged += new System.EventHandler(this.InterpreterArgumentsTextChanged);
+            // 
+            // _interpArgsLabel
+            // 
+            this._interpArgsLabel.AutoSize = true;
+            this._interpArgsLabel.Location = new System.Drawing.Point(6, 77);
+            this._interpArgsLabel.Name = "_interpArgsLabel";
+            this._interpArgsLabel.Size = new System.Drawing.Size(111, 13);
+            this._interpArgsLabel.TabIndex = 21;
+            this._interpArgsLabel.Text = "Interpreter Arguments:";
             // 
             // _interpreterPath
             // 
-            this._interpreterPath.Location = new System.Drawing.Point(139, 74);
+            this._interpreterPath.Location = new System.Drawing.Point(139, 101);
             this._interpreterPath.Name = "_interpreterPath";
             this._interpreterPath.Size = new System.Drawing.Size(286, 20);
-            this._interpreterPath.TabIndex = 2;
-            this._interpreterPath.TextChanged += new System.EventHandler(this.InterpreterPathTextChanged);
+            this._interpreterPath.TabIndex = 22;
             // 
             // _interpreterPathLabel
             // 
             this._interpreterPathLabel.AutoSize = true;
-            this._interpreterPathLabel.Location = new System.Drawing.Point(4, 77);
+            this._interpreterPathLabel.Location = new System.Drawing.Point(6, 104);
             this._interpreterPathLabel.Name = "_interpreterPathLabel";
-            this._interpreterPathLabel.Size = new System.Drawing.Size(80, 13);
-            this._interpreterPathLabel.TabIndex = 15;
-            this._interpreterPathLabel.Text = "Interpreter Path";
+            this._interpreterPathLabel.Size = new System.Drawing.Size(83, 13);
+            this._interpreterPathLabel.TabIndex = 23;
+            this._interpreterPathLabel.Text = "Interpreter Path:";
             // 
             // DefaultPythonLauncherOptions
             // 
@@ -119,7 +141,10 @@
         private System.Windows.Forms.Label _argumentsLabel;
         private System.Windows.Forms.TextBox _searchPaths;
         private System.Windows.Forms.Label _searchPathLabel;
+        private System.Windows.Forms.Label _interpArgsLabel;
+        private System.Windows.Forms.TextBox _interpArgs;
         private System.Windows.Forms.TextBox _interpreterPath;
         private System.Windows.Forms.Label _interpreterPathLabel;
+        private System.Windows.Forms.ToolTip _toolTip;
     }
 }

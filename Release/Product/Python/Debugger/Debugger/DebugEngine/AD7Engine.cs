@@ -81,6 +81,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string RedirectOutputSetting = "REDIRECT_OUTPUT";
 
         /// <summary>
+        /// Specifies options which should be passed to the Python interpreter before the script.  If
+        /// the interpreter options should include a semicolon then it should be escaped as a double
+        /// semi-colon.
+        /// </summary>
+        public const string InterpreterOptions = "INTERPRETER_OPTIONS";
+
+        /// <summary>
         /// Specifies a directory mapping in the form of:
         /// 
         /// OldDir|NewDir
@@ -393,8 +400,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             PythonLanguageVersion version = DefaultVersion;
             PythonDebugOptions debugOptions = PythonDebugOptions.None;
             List<string[]> dirMapping = null;
+            string interpreterOptions = null;
             if (options != null) {
-                var splitOptions = options.Split(new[] { ';' });
+                var splitOptions = SplitOptions(options);
+                
                 foreach (var optionSetting in splitOptions) {
                     var setting = optionSetting.Split(new[] { '=' }, 2);
 
@@ -427,12 +436,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                                     dirMapping.Add(dirs);
                                 }
                                 break;
+                            case InterpreterOptions:
+                                interpreterOptions = setting[1];
+                                break;
                         }
                     }
                 }
             }
 
-            _process = new PythonProcess(version, exe, args, dir, env, debugOptions, dirMapping);
+            _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
 
             AttachEvents(_process);
 
@@ -451,6 +463,26 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.Assert(!_process.HasExited);
 
             return VSConstants.S_OK;
+        }
+
+        private static string[] SplitOptions(string options) {
+            List<string> res = new List<string>();
+            int lastStart = 0;
+            for (int i = 0; i < options.Length; i++) {
+                if (options[i] == ';') {
+                    if (i < options.Length - 1 && options[i + 1] != ';') {
+                        // valid option boundary
+                        res.Add(options.Substring(lastStart, i - lastStart));
+                        lastStart = i + 1;
+                    } else {
+                        i++;
+                    }
+                }
+            }
+            if (options.Length  - lastStart > 0) {
+                res.Add(options.Substring(lastStart, options.Length - lastStart));
+            }
+            return res.ToArray();
         }
 
         // Default version, we never really use this because we always provide the version, but if someone

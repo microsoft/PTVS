@@ -107,6 +107,7 @@ namespace Microsoft.VisualStudio.Repl {
         private ITextBuffer _outputBuffer;
         private ITextBuffer _stdInputBuffer;
         private ITextBuffer _currentLanguageBuffer;
+        private string _historySearch;
 
         // List of projection buffer spans - the projection buffer doesn't allow us to enumerate spans so we need to track them manually:
         private readonly List<ReplSpan> _projectionSpans = new List<ReplSpan>();
@@ -828,6 +829,7 @@ namespace Microsoft.VisualStudio.Repl {
         /// </summary>
         private void VsCancel() {
             // if there's an intellisense session we cancel that, otherwise we clear the current input.
+            _historySearch = null;
             if (!((IIntellisenseCommandTarget)this.SessionStack).ExecuteKeyboardCommand(IntellisenseKeyboardCommand.Escape)) {
                 Cancel();
             }
@@ -865,22 +867,28 @@ namespace Microsoft.VisualStudio.Repl {
             });
         }
 
-        public void HistoryPrevious() {
+        private void HistoryPrevious(string search = null) {
             RequiresLanguageBuffer();
 
-            var previous = _history.GetPrevious();
+            var previous = _history.GetPrevious(search);
             if (previous != null) {
-                StoreUncommittedInputForHistory();
+                if (String.IsNullOrWhiteSpace(search)) {
+                    // don't store search as an uncommited history item
+                    StoreUncommittedInputForHistory();
+                }
                 SetActiveCode(previous);
             }
         }
 
-        public void HistoryNext() {
+        private void HistoryNext(string search = null) {
             RequiresLanguageBuffer();
 
-            var next = _history.GetNext();
+            var next = _history.GetNext(search);
             if (next != null) {
-                StoreUncommittedInputForHistory();
+                if (String.IsNullOrWhiteSpace(search)) {
+                    // don't store search as an uncommited history item
+                    StoreUncommittedInputForHistory();
+                }
                 SetActiveCode(next);
             } else {
                 string code = _history.UncommittedInput;
@@ -889,6 +897,24 @@ namespace Microsoft.VisualStudio.Repl {
                     SetActiveCode(code);
                 }
             }
+        }
+
+        public void SearchHistoryPrevious() {
+            if (_historySearch == null) {
+                _historySearch = GetActiveCode();
+            }
+
+            HistoryPrevious(_historySearch);
+        }
+
+        public void SearchHistoryNext() {
+            RequiresLanguageBuffer();
+
+            if (_historySearch == null) {
+                _historySearch = GetActiveCode();
+            }
+
+            HistoryNext(_historySearch);
         }
 
         private void StoreUncommittedInputForHistory() {
@@ -1177,6 +1203,8 @@ namespace Microsoft.VisualStudio.Repl {
 
             if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
                 switch (prgCmds[0].cmdID) {
+                    case PkgCmdIDList.cmdidReplSearchHistoryNext:
+                    case PkgCmdIDList.cmdidReplSearchHistoryPrevious:
                     case PkgCmdIDList.cmdidReplHistoryNext:
                     case PkgCmdIDList.cmdidReplHistoryPrevious:
                     case PkgCmdIDList.cmdidSmartExecute:
@@ -1220,6 +1248,16 @@ namespace Microsoft.VisualStudio.Repl {
                         HistoryPrevious();
                         return VSConstants.S_OK;
 
+                    case PkgCmdIDList.cmdidReplSearchHistoryNext:
+                        Debug.Assert(_currentLanguageBuffer != null);
+                        SearchHistoryNext();
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidReplSearchHistoryPrevious:
+                        Debug.Assert(_currentLanguageBuffer != null);
+                        SearchHistoryPrevious();
+                        return VSConstants.S_OK;
+
                     case PkgCmdIDList.cmdidReplClearScreen:
                         ClearScreen(insertInputPrompt: true);
                         return VSConstants.S_OK;
@@ -1261,6 +1299,7 @@ namespace Microsoft.VisualStudio.Repl {
             if (pguidCmdGroup == VSConstants.VSStd2K) {
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.RETURN:
+                        _historySearch = null;
                         if (_stdInputStart != null) {
                             if (InStandardInputRegion(TextView.Caret.Position.BufferPosition)) {
                                 SubmitStandardInput();
@@ -1298,6 +1337,7 @@ namespace Microsoft.VisualStudio.Repl {
                         return VSConstants.S_OK;
 
                     case VSConstants.VSStd2KCmdID.TYPECHAR:
+                        _historySearch = null;
                         char typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
                         if (!CaretInActiveCodeRegion && !CaretInStandardInputRegion) {
                             MoveCaretToCurrentInputEnd();

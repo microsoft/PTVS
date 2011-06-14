@@ -19,10 +19,10 @@ using System.Windows.Forms;
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.GeneralPropertyPageGuid)]
     public class PythonGeneralPropertyPage : CommonPropertyPage {
-        private readonly PythonGeneralyPropertyPageControl _control;
+        private readonly PythonGeneralPropertyPageControl _control;
 
         public PythonGeneralPropertyPage() {
-            _control = new PythonGeneralyPropertyPageControl(this);
+            _control = new PythonGeneralPropertyPageControl(this);
         }
 
         public override Control Control {

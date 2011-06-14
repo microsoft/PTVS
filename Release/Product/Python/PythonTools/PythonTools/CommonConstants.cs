@@ -101,6 +101,8 @@ namespace Microsoft.PythonTools {
 
         public const string PublishUrl = "PublishUrl";
 
+        public const string InterpreterArguments = "InterpreterArguments";
+
         //These are VS internal constants - don't change them
         public static Guid Std97CmdGroupGuid = typeof(VSConstants.VSStd97CmdID).GUID;
         public static Guid Std2KCmdGroupGuid = typeof(VSConstants.VSStd2KCmdID).GUID;

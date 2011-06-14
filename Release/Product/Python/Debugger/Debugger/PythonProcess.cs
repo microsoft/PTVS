@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
+        public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, string interpreterOptions, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
             : this(languageVersion) {
             if (dir.EndsWith("\\")) {
                 dir = dir.Substring(0, dir.Length - 1);
@@ -86,6 +86,7 @@ namespace Microsoft.PythonTools.Debugger {
             processInfo.RedirectStandardOutput = false;
 
             processInfo.Arguments = 
+                (String.IsNullOrWhiteSpace(interpreterOptions) ? "" : (interpreterOptions + " ")) +
                 "\"" + Path.Combine(GetPythonToolsInstallPath(), "visualstudio_py_launcher.py") + "\" " +
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +

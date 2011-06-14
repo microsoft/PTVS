@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Options {
         private const string SmartHistorySetting = "InteractiveSmartHistory";
         private const string StartupScriptSetting = "StartupScript";
         private const string ExecutionModeSetting = "ExecutionMode";
+        private const string InterpreterOptionsSetting = "InterpreterOptions";
 
         public PythonInteractiveOptionsPage()
             : base("Interactive Windows") {
@@ -69,6 +70,7 @@ namespace Microsoft.PythonTools.Options {
                 options.ReplSmartHistory = true;
                 options.StartupScript = "";
                 options.ExecutionMode = "";
+                options.InterpreterOptions = "";
             }
         }
 
@@ -94,7 +96,8 @@ namespace Microsoft.PythonTools.Options {
                 ReplIntellisenseMode = LoadEnum<ReplIntellisenseMode>(interpreterId + ReplIntellisenseModeSetting) ?? ReplIntellisenseMode.DontEvaluateCalls,
                 ReplSmartHistory = LoadBool(interpreterId + SmartHistorySetting) ?? true,
                 StartupScript = LoadString(interpreterId + StartupScriptSetting) ?? "",
-                ExecutionMode = LoadString(interpreterId + ExecutionModeSetting) ?? ""
+                ExecutionMode = LoadString(interpreterId + ExecutionModeSetting) ?? "",
+                InterpreterOptions = LoadString(interpreterId + InterpreterOptionsSetting) ?? ""
             };
         }
 
@@ -116,6 +119,7 @@ namespace Microsoft.PythonTools.Options {
                     SaveBool(interpreterId + SmartHistorySetting, options.ReplSmartHistory);
                     SaveString(interpreterId + StartupScriptSetting, options.StartupScript);
                     SaveString(interpreterId + ExecutionModeSetting, options.ExecutionMode ?? "");
+                    SaveString(interpreterId + InterpreterOptionsSetting, options.InterpreterOptions ?? "");
 
                     // propagate changed settings to existing REPL windows
                     foreach (var replWindow in replProvider.GetReplWindows()) {

@@ -31,7 +31,7 @@
             this._evalNever = new System.Windows.Forms.RadioButton();
             this._promptOptionsGroup = new System.Windows.Forms.GroupBox();
             this._inlinePrompts = new System.Windows.Forms.CheckBox();
-            this._useInterpreterPrompts = new System.Windows.Forms.CheckBox();
+            this._useUserDefinedPrompts = new System.Windows.Forms.CheckBox();
             this._priPromptLabel = new System.Windows.Forms.Label();
             this._priPrompt = new System.Windows.Forms.TextBox();
             this._secPromptLabel = new System.Windows.Forms.Label();
@@ -44,6 +44,8 @@
             this._showSettingsFor = new System.Windows.Forms.ComboBox();
             this._executionModeLabel = new System.Windows.Forms.Label();
             this._executionMode = new System.Windows.Forms.ComboBox();
+            this._interpOptionsLabel = new System.Windows.Forms.Label();
+            this._interpreterOptions = new System.Windows.Forms.TextBox();
             this._completionModeGroup.SuspendLayout();
             this._promptOptionsGroup.SuspendLayout();
             this.SuspendLayout();
@@ -51,11 +53,11 @@
             // _smartReplHistory
             // 
             this._smartReplHistory.AutoSize = true;
-            this._smartReplHistory.Location = new System.Drawing.Point(12, 92);
+            this._smartReplHistory.Location = new System.Drawing.Point(184, 19);
             this._smartReplHistory.Name = "_smartReplHistory";
-            this._smartReplHistory.Size = new System.Drawing.Size(210, 17);
+            this._smartReplHistory.Size = new System.Drawing.Size(160, 17);
             this._smartReplHistory.TabIndex = 0;
-            this._smartReplHistory.Text = "Up/Down Arrow Keys use smart &history";
+            this._smartReplHistory.Text = "Arrow Keys use smart &history";
             this._smartReplHistory.UseVisualStyleBackColor = true;
             this._smartReplHistory.CheckedChanged += new System.EventHandler(this._smartReplHistory_CheckedChanged);
             // 
@@ -64,7 +66,7 @@
             this._completionModeGroup.Controls.Add(this._evalAlways);
             this._completionModeGroup.Controls.Add(this._evalNoCalls);
             this._completionModeGroup.Controls.Add(this._evalNever);
-            this._completionModeGroup.Location = new System.Drawing.Point(6, 79);
+            this._completionModeGroup.Location = new System.Drawing.Point(6, 107);
             this._completionModeGroup.Name = "_completionModeGroup";
             this._completionModeGroup.Size = new System.Drawing.Size(364, 86);
             this._completionModeGroup.TabIndex = 3;
@@ -110,15 +112,15 @@
             // _promptOptionsGroup
             // 
             this._promptOptionsGroup.Controls.Add(this._inlinePrompts);
-            this._promptOptionsGroup.Controls.Add(this._useInterpreterPrompts);
+            this._promptOptionsGroup.Controls.Add(this._useUserDefinedPrompts);
             this._promptOptionsGroup.Controls.Add(this._priPromptLabel);
             this._promptOptionsGroup.Controls.Add(this._priPrompt);
             this._promptOptionsGroup.Controls.Add(this._secPromptLabel);
             this._promptOptionsGroup.Controls.Add(this._secPrompt);
             this._promptOptionsGroup.Controls.Add(this._smartReplHistory);
-            this._promptOptionsGroup.Location = new System.Drawing.Point(6, 171);
+            this._promptOptionsGroup.Location = new System.Drawing.Point(6, 199);
             this._promptOptionsGroup.Name = "_promptOptionsGroup";
-            this._promptOptionsGroup.Size = new System.Drawing.Size(364, 119);
+            this._promptOptionsGroup.Size = new System.Drawing.Size(364, 94);
             this._promptOptionsGroup.TabIndex = 4;
             this._promptOptionsGroup.TabStop = false;
             this._promptOptionsGroup.Text = "Input/Output Options";
@@ -134,16 +136,16 @@
             this._inlinePrompts.UseVisualStyleBackColor = true;
             this._inlinePrompts.CheckedChanged += new System.EventHandler(this._inlinePrompts_CheckedChanged);
             // 
-            // _useInterpreterPrompts
+            // _useUserDefinedPrompts
             // 
-            this._useInterpreterPrompts.AutoSize = true;
-            this._useInterpreterPrompts.Location = new System.Drawing.Point(12, 43);
-            this._useInterpreterPrompts.Name = "_useInterpreterPrompts";
-            this._useInterpreterPrompts.Size = new System.Drawing.Size(135, 17);
-            this._useInterpreterPrompts.TabIndex = 1;
-            this._useInterpreterPrompts.Text = "Use inte&rpreter prompts";
-            this._useInterpreterPrompts.UseVisualStyleBackColor = true;
-            this._useInterpreterPrompts.CheckedChanged += new System.EventHandler(this._useInterpreterPrompts_CheckedChanged);
+            this._useUserDefinedPrompts.AutoSize = true;
+            this._useUserDefinedPrompts.Location = new System.Drawing.Point(12, 43);
+            this._useUserDefinedPrompts.Name = "_useUserDefinedPrompts";
+            this._useUserDefinedPrompts.Size = new System.Drawing.Size(146, 17);
+            this._useUserDefinedPrompts.TabIndex = 1;
+            this._useUserDefinedPrompts.Text = "Use use&r defined prompts";
+            this._useUserDefinedPrompts.UseVisualStyleBackColor = true;
+            this._useUserDefinedPrompts.CheckedChanged += new System.EventHandler(this._useInterpreterPrompts_CheckedChanged);
             // 
             // _priPromptLabel
             // 
@@ -244,10 +246,29 @@
             this._executionMode.SelectedIndexChanged += new System.EventHandler(this._executionMode_SelectedIndexChanged);
             this._executionMode.TextChanged += new System.EventHandler(this._executionMode_TextChanged);
             // 
+            // _interpOptionsLabel
+            // 
+            this._interpOptionsLabel.AutoSize = true;
+            this._interpOptionsLabel.Location = new System.Drawing.Point(3, 82);
+            this._interpOptionsLabel.Name = "_interpOptionsLabel";
+            this._interpOptionsLabel.Size = new System.Drawing.Size(97, 13);
+            this._interpOptionsLabel.TabIndex = 12;
+            this._interpOptionsLabel.Text = "Interpreter &Options:";
+            // 
+            // _interpreterOptions
+            // 
+            this._interpreterOptions.Location = new System.Drawing.Point(105, 81);
+            this._interpreterOptions.Name = "_interpreterOptions";
+            this._interpreterOptions.Size = new System.Drawing.Size(265, 20);
+            this._interpreterOptions.TabIndex = 13;
+            this._interpreterOptions.TextChanged += new System.EventHandler(this.InterpreterOptionsTextChanged);
+            // 
             // PythonInteractiveOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this._interpreterOptions);
+            this.Controls.Add(this._interpOptionsLabel);
             this.Controls.Add(this._showSettingsForLabel);
             this.Controls.Add(this._showSettingsFor);
             this.Controls.Add(this._startScriptLabel);
@@ -258,7 +279,7 @@
             this.Controls.Add(this._completionModeGroup);
             this.Controls.Add(this._promptOptionsGroup);
             this.Name = "PythonInteractiveOptionsControl";
-            this.Size = new System.Drawing.Size(395, 317);
+            this.Size = new System.Drawing.Size(395, 305);
             this._completionModeGroup.ResumeLayout(false);
             this._completionModeGroup.PerformLayout();
             this._promptOptionsGroup.ResumeLayout(false);
@@ -277,7 +298,7 @@
         private System.Windows.Forms.RadioButton _evalNever;
         private System.Windows.Forms.GroupBox _promptOptionsGroup;
         private System.Windows.Forms.CheckBox _inlinePrompts;
-        private System.Windows.Forms.CheckBox _useInterpreterPrompts;
+        private System.Windows.Forms.CheckBox _useUserDefinedPrompts;
         private System.Windows.Forms.TextBox _secPrompt;
         private System.Windows.Forms.TextBox _priPrompt;
         private System.Windows.Forms.Label _secPromptLabel;
@@ -290,5 +311,7 @@
         private System.Windows.Forms.ComboBox _showSettingsFor;
         private System.Windows.Forms.Label _executionModeLabel;
         private System.Windows.Forms.ComboBox _executionMode;
+        private System.Windows.Forms.Label _interpOptionsLabel;
+        private System.Windows.Forms.TextBox _interpreterOptions;
     }
 }

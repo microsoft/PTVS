@@ -228,8 +228,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 if (moduleRef != null) {
                     userMod = moduleRef.Module;
+                    if (userMod == null) {
+                        moduleRef.AddEphemeralReference(_unit.DeclaringModule);
+                    }
                 } else if (userMod == null) {
                     moduleRef = ProjectState.Modules[modName] = new ModuleReference();
+                    moduleRef.AddEphemeralReference(_unit.DeclaringModule);
                 }
             }
 
@@ -426,9 +430,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                         def.AddTypes(nameNode, _unit, modRef.Module.SelfSet);
                         continue;
+                    } else {
+                        modRef.AddEphemeralReference(_unit.DeclaringModule);
                     }
                 } else {
                     ProjectState.Modules[strImpName] = modRef = new ModuleReference();
+                    modRef.AddEphemeralReference(_unit.DeclaringModule);
                 }
             }
             return true;

@@ -108,15 +108,18 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public string CreateCommandLineNoDebug(string startupFile) {
             string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
+            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
 
-            return String.Format("{0} \"{1}\" {2}", GetOptions(), startupFile, cmdLineArgs);
+            return String.Format("{0} \"{1}\" {2}", interpArgs, startupFile, cmdLineArgs);
         }
 
         /// <summary>
         /// Creates language specific command line for starting the project with debigging.
         /// </summary>
         public string CreateCommandLineDebug(string startupFile) {
-            return CreateCommandLineNoDebug(startupFile);
+            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);            
+
+            return String.Format("\"{0}\" {1}", startupFile, cmdLineArgs);
         }
 
         /// <summary>
@@ -168,6 +171,7 @@ namespace Microsoft.PythonTools.Project {
 
             dbgInfo.fSendStdoutToOutputWindow = 0;
             StringDictionary env = new StringDictionary();
+            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
             dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
             if (!isWindows) {
                 if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
@@ -179,6 +183,9 @@ namespace Microsoft.PythonTools.Project {
             }
             if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
                 dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
+            }
+            if (!String.IsNullOrWhiteSpace(interpArgs)) {
+                dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
             }
 
             SetupEnvironment(env);
@@ -215,10 +222,6 @@ namespace Microsoft.PythonTools.Project {
             if (!String.IsNullOrWhiteSpace(searchPath)) {
                 environment[this._project.GetInterpreterFactory().Configuration.PathEnvironmentVariable] = searchPath;
             }
-        }
-
-        private string GetOptions() {
-            return "";
         }
 
         /// <summary>

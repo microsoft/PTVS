@@ -346,7 +346,7 @@ namespace Microsoft.PythonTools.Project {
             RefreshCurrentWorkingDirectory();
             RefreshSearchPaths();
 
-            OnProjectPropertyChanged += new EventHandler<ProjectPropertyChangedArgs>(CommonProjectNode_OnProjectPropertyChanged);
+            OnProjectPropertyChanged += CommonProjectNode_OnProjectPropertyChanged;
 
             // track file creation/deletes and update our glyphs when files start/stop existing for files in the project.
             if (_watcher != null) {
@@ -797,8 +797,15 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Parses SearchPath property into a list of distinct absolute paths, preserving the order.
         /// </summary>
-        private IList<string> ParseSearchPath() {
+        protected IList<string> ParseSearchPath() {
             string searchPath = this.ProjectMgr.GetProjectProperty(CommonConstants.SearchPath, true);
+            return ParseSearchPath(searchPath);
+        }
+
+        /// <summary>
+        /// Parses SearchPath string into a list of distinct absolute paths, preserving the order.
+        /// </summary>
+        protected IList<string> ParseSearchPath(string searchPath) {
             List<string> parsedPaths = new List<string>();
             if (!string.IsNullOrEmpty(searchPath)) {
                 foreach (string path in searchPath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)) {

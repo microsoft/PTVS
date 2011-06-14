@@ -131,6 +131,11 @@ namespace Microsoft.PythonTools.Analysis {
             return entry;
         }
 
+        public void RemoveModule(IProjectEntry entry) {
+            _modulesByFilename.Remove(entry.FilePath);
+            Modules.Remove(PathToModuleName(entry.FilePath));
+        }
+
         public IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
             var entry = new XamlProjectEntry(filePath);
 
@@ -153,13 +158,15 @@ namespace Microsoft.PythonTools.Analysis {
                     continue;
                 }
 
-                HashSet<Namespace> l;
-                if (!d.TryGetValue(modName, out l)) {
-                    d[modName] = l = new HashSet<Namespace>();
-                }
-                if (moduleRef != null && moduleRef.Module != null) {
-                    // The REPL shows up here with value=None
-                    l.Add(moduleRef.Module);
+                if (moduleRef.Module != null || moduleRef.HasEphemeralReferences) {
+                    HashSet<Namespace> l;
+                    if (!d.TryGetValue(modName, out l)) {
+                        d[modName] = l = new HashSet<Namespace>();
+                    }
+                    if (moduleRef != null && moduleRef.Module != null) {
+                        // The REPL shows up here with value=None
+                        l.Add(moduleRef.Module);
+                    }
                 }
             }
 
@@ -604,5 +611,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
+
     }
 }

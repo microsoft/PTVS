@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Options {
     class PythonInteractiveOptions {
         private bool _smartHistory, _interpreterPrompts, _inlinePrompts;
         private ReplIntellisenseMode _replIntellisenseMode;
-        private string _priPrompt, _secPrompt, _startupScript, _executionMode;
+        private string _priPrompt, _secPrompt, _startupScript, _executionMode, _interperterOptions;
 
         public string PrimaryPrompt {
             get { return _priPrompt; }
@@ -61,6 +61,11 @@ namespace Microsoft.PythonTools.Options {
         public string ExecutionMode {
             get { return _executionMode; }
             set { _executionMode = value; }
+        }
+
+        public string InterpreterOptions {
+            get { return _interperterOptions; }
+            set { _interperterOptions = value; }
         }
     }
 }

@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override void Reload() {
-            OnProjectPropertyChanged += new EventHandler<ProjectPropertyChangedArgs>(PythonProjectNode_OnProjectPropertyChanged);
+            OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
         }
 
@@ -120,6 +120,37 @@ namespace Microsoft.PythonTools.Project {
                         genProp.WorkingDirectory = e.NewValue;
                     }
                     break;
+                case CommonConstants.SearchPath:
+                    // we need to remove old files from the analyzer and add the new files
+                    HashSet<string> oldDirs = new HashSet<string>(ParseSearchPath(e.OldValue), StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> newDirs = new HashSet<string>(ParseSearchPath(e.NewValue), StringComparer.OrdinalIgnoreCase);
+                    // figure out all the possible directory names we could be removing...
+                    foreach (var fileProject in _analyzer.LoadedFiles) {
+                        var file = fileProject.Key;
+                        var projectEntry = fileProject.Value;
+
+                        // remove the file if directly included, or if included via a package or series of packages.
+                        string dirName = Path.GetDirectoryName(file);
+                        if (!dirName.EndsWith("\\")) {
+                            dirName = dirName + "\\";
+                        }
+                        do {
+                            if (oldDirs.Contains(dirName)) {
+                                if (!newDirs.Contains(dirName)) {
+                                    // path removed
+                                    _analyzer.UnloadFile(projectEntry);
+                                    break;
+                                }
+                            }
+                            dirName = Path.GetDirectoryName(dirName);
+                            if (!dirName.EndsWith("\\")) {
+                                dirName = dirName + "\\";
+                            }
+                        } while (dirName != null && File.Exists(Path.Combine(dirName, "__init__.py")));
+                    }
+
+                    AnalyzeSearchPaths(newDirs);
+                    break;
             }
 
             var debugProp = DebugPropertyPage;
@@ -128,10 +159,17 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private PythonGeneralyPropertyPageControl GeneralPropertyPageControl {
+        private void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
+            // now add all of the missing files, any dups will automatically not be re-analyzed
+            foreach (var dir in newDirs) {
+                _analyzer.AnalyzeDirectory(dir);
+            }
+        }
+
+        private PythonGeneralPropertyPageControl GeneralPropertyPageControl {
             get {
                 if (PropertyPage != null && PropertyPage.Control != null) {
-                    return (PythonGeneralyPropertyPageControl)PropertyPage.Control;
+                    return (PythonGeneralPropertyPageControl)PropertyPage.Control;
                 }
 
                 return null;
@@ -211,6 +249,7 @@ namespace Microsoft.PythonTools.Project {
         internal ProjectAnalyzer GetAnalyzer() {
             if (_analyzer == null) {
                 _analyzer = CreateAnalyzer();
+                AnalyzeSearchPaths(ParseSearchPath());
             }
             return _analyzer;
         }
@@ -301,6 +340,7 @@ namespace Microsoft.PythonTools.Project {
 
             Reanalyze(this, analyzer);
             analyzer.SwitchAnalyzers(_analyzer);
+            AnalyzeSearchPaths(ParseSearchPath());
 
             _analyzer = analyzer;
         }

@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 members = new MemberResult[0];
             }
 
-            if (dlrEval != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(Text)) {
+            if (dlrEval != null && fixedText != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(Text)) {
                 if (members.Length == 0) {
                     members = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
                     if (members == null) {

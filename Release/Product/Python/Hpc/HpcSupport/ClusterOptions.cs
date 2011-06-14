@@ -78,7 +78,13 @@ namespace Microsoft.PythonTools.Hpc {
             set;
         }
 
-        [DisplayName("Interpreter Arguments"), Browsable(true), Description("Extra arguments to be passed to the interpreter.")]
+        [DisplayName("Application Arguments"), Browsable(true), Description("Extra arguments to be passed to the Python script.")]
+        public string ApplicationArguments {
+            get;
+            set;
+        }
+
+        [DisplayName("Interpreter Arguments"), Browsable(true), Description("Extra arguments to be passed to the interpreter such as -O.")]
         public string InterpreterArguments {
             get;
             set;

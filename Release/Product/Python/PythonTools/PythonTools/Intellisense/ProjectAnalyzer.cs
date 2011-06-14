@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     !Path.GetFullPath(path).StartsWith(Path.GetDirectoryName(_interpreterFactory.Configuration.InterpreterPath), StringComparison.OrdinalIgnoreCase)) { // don't analyze std lib
                     // TODO: We're doing this on the UI thread and when we end up w/ a lot to queue here we hang for a while...
                     // But this adds files to the analyzer so it's not as simple as queueing this onto another thread.
-                    AddImplicitFiles(Path.GetDirectoryName(Path.GetFullPath(path)));
+                    AnalyzeDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
                 }
             }
 
@@ -199,18 +199,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 if (item != null) {
                     _projectFiles[path] = item;
+                    IPythonProjectEntry pyEntry = item as IPythonProjectEntry;
+                    if (pyEntry != null) {
+                        pyEntry.BeginParsingTree();
+                    }
+                    _queue.EnqueueFile(item, path);
                 }
-            }
-
-            if (item != null) {
-                IPythonProjectEntry pyEntry = item as IPythonProjectEntry;
-                if (pyEntry != null) {
-                    pyEntry.BeginParsingTree();
-                }
-                _queue.EnqueueFile(item, path);
             }
 
             return item;
+        }
+
+        public IEnumerable<KeyValuePair<string, IProjectEntry>> LoadedFiles {
+            get {
+                return _projectFiles;
+            }
         }
 
         public IProjectEntry GetAnalysisFromFile(string path) {
@@ -460,7 +463,10 @@ namespace Microsoft.PythonTools.Intellisense {
                                 uiTextView.Dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, bufferParser._currentProjEntry.FilePath, provider).DoUpdate);
                             }
 
-                            UpdateErrorList(errorSink, buffer.GetFilePath(), provider);
+                            string path = bufferParser._currentProjEntry.FilePath;
+                            if (path != null) {
+                                UpdateErrorList(errorSink, path, provider);
+                            }
                         }
                     }
                 } else {
@@ -519,9 +525,11 @@ namespace Microsoft.PythonTools.Intellisense {
             public void DoUpdate() {
                 _squiggles.RemoveTagSpans(x => true);
 
-                AddWarnings(_snapshot, _errorSink, _squiggles, _filename, _provider);
+                if (_filename != null) {
+                    AddWarnings(_snapshot, _errorSink, _squiggles, _filename, _provider);
 
-                AddErrors(_snapshot, _errorSink, _squiggles, _filename, _provider);
+                    AddErrors(_snapshot, _errorSink, _squiggles, _filename, _provider);
+                }
             }
         }
 
@@ -555,8 +563,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 ErrorHandler.ThrowOnFailure(((IVsTaskList)_errorList).RegisterTaskProvider(_taskProvider, out cookie));
                 _taskProvider.Cookie = cookie;
             }
-            
-            _taskProvider.Clear(projEntry.FilePath);
+
+            if (projEntry.FilePath != null) {
+                _taskProvider.Clear(projEntry.FilePath);
+            }
             return _taskProvider;
         }
 
@@ -789,20 +799,30 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        private void AddImplicitFiles(string dir) {
+        /// <summary>
+        /// Analyzes a complete directory including all of the contained files and packages.
+        /// </summary>
+        public void AnalyzeDirectory(string dir) {
             foreach (string filename in Directory.GetFiles(dir, "*.py")) {
+                AnalyzeFile(filename);
+            }
+
+            foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
                 AnalyzeFile(filename);
             }
 
             foreach (string innerDir in Directory.GetDirectories(dir)) {
                 if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
-                    AddImplicitFiles(innerDir);
+                    AnalyzeDirectory(innerDir);
                 }
             }
         }
 
         internal void UnloadFile(IProjectEntry entry) {
-            _taskProvider.Clear(entry.FilePath);
+            if (entry.FilePath != null) {
+                _taskProvider.Clear(entry.FilePath);
+                _pyAnalyzer.RemoveModule(entry);
+            }
         }
 
         #endregion

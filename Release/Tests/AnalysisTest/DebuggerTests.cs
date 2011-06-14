@@ -932,8 +932,8 @@ namespace AnalysisTest {
             TestExitCode(debugger, DebuggerTestPath + @"ExceptionalExit.py", 1);
         }
 
-        private void TestExitCode(PythonDebugger debugger, string filename, int expectedExitCode) {
-            var process = DebugProcess(debugger, filename);
+        private void TestExitCode(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null) {
+            var process = DebugProcess(debugger, filename, interpreterOptions: interpreterOptions);
 
             bool created = false, exited = false;
             process.ThreadCreated += (sender, args) => {
@@ -953,10 +953,10 @@ namespace AnalysisTest {
             Assert.IsTrue(exited);
         }
 
-        private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null) {
+        private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null) {
             string fullPath = Path.GetFullPath(filename);
             string dir = Path.GetFullPath(Path.GetDirectoryName(filename));
-            var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\"", dir, "");
+            var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions);
             process.ProcessLoaded += (sender, args) => {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);
@@ -965,6 +965,18 @@ namespace AnalysisTest {
             };
 
             return process;
+        }
+
+        #endregion
+
+        #region Argument Tests
+
+        [TestMethod]
+        public void TestInterpreterArguments() {
+            var debugger = new PythonDebugger();
+
+            // test which verifies we have no doc string when running w/ -OO
+            TestExitCode(debugger, DebuggerTestPath + @"DocString.py", 0, interpreterOptions:"-OO");
         }
 
         #endregion

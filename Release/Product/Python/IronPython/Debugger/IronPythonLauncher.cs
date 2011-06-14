@@ -99,8 +99,9 @@ namespace Microsoft.IronPythonTools.Debugger {
         /// </summary>
         public string CreateCommandLineNoDebug(string startupFile) {
             string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
+            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
 
-            return String.Format("\"{0}\" {1}", startupFile, cmdLineArgs);
+            return String.Format("{0} \"{1}\" {2}", interpArgs, startupFile, cmdLineArgs);
         }
 
         #endregion
@@ -171,7 +172,7 @@ namespace Microsoft.IronPythonTools.Debugger {
             if (_project != null) {
                 cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
             }
-            return String.Format("-X:Debug {0} {1} \"{2}\"", GetOptions(), cmdLineArgs, startupFile);
+            return String.Format("-X:Debug {0} \"{1}\" {2}", GetOptions(), startupFile, cmdLineArgs);
         }
 
         /// <summary>
@@ -412,6 +413,8 @@ namespace Microsoft.IronPythonTools.Debugger {
 
         private string GetOptions() {
             if (_project != null) {
+                string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+
                 var debugStdLib = _project.GetProperty(IronPythonLauncherOptions.DebugStandardLibrarySetting);
                 bool debugStdLibResult;
                 if (!bool.TryParse(debugStdLib, out debugStdLibResult) || !debugStdLibResult) {
@@ -420,8 +423,10 @@ namespace Microsoft.IronPythonTools.Debugger {
                     string interpDir = Path.GetDirectoryName(interpreter);
                     var res = "-X:NoDebug \"" + System.Text.RegularExpressions.Regex.Escape(Path.Combine(interpDir, "Lib\\")) + ".*\"";
 
-                    return res;
+                    return interpArgs + " " + res;
                 }
+
+                return interpArgs;
             }
             return String.Empty;
         }

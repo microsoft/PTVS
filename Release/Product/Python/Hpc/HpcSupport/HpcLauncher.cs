@@ -568,7 +568,7 @@ namespace Microsoft.PythonTools.Hpc {
             if (schedulerNode == "localhost") {
                 arguments = "-n " + environment.NumberOfProcesses + " ";
             }
-            string tmpArgs = "\"" + appCommand + "\" \"" + startupFile + "\" " + appArgs;
+            string tmpArgs = "\"" + appCommand + "\" \"" + startupFile + "\" \"" + appArgs + "\"";
             
             if (debug) {
                 arguments += "\"" +  Path.Combine(workingDir, MpiShimExe) + "\" " +
@@ -585,7 +585,7 @@ namespace Microsoft.PythonTools.Hpc {
             return true;
         }
 
-        private static string GetDebugOptions(ClusterEnvironment clusterEnv) {
+        private string GetDebugOptions(ClusterEnvironment clusterEnv) {
             string options = "";
 
             if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
@@ -604,6 +604,14 @@ namespace Microsoft.PythonTools.Hpc {
                     }
                     options += AD7Engine.WaitOnNormalExitSetting + "=True";
                 }
+            }
+
+            var interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+            if (!String.IsNullOrWhiteSpace(interpArgs)) {
+                if (!String.IsNullOrEmpty(options)) {
+                    options += ";";
+                }
+                options += AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
             }
             return options;
         }

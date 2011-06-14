@@ -31,7 +31,6 @@ namespace Microsoft.VisualStudio.Repl {
         internal History(int maxLength) {
             _maxLength = maxLength;
             _pos = -1;
-            _live = false;
             _history = new List<HistoryEntry>();
         }
 
@@ -102,35 +101,56 @@ namespace Microsoft.VisualStudio.Repl {
             return _history[pos].Text;
         }
 
-        private string MoveToNext() {
-            _live = true;
-            if (Length <= 0 || _pos < 0 || _pos == Length - 1) {
-                return null;
-            }
-            _pos++;
-            return GetHistoryText(_pos);
-        }
+        private string MoveToNext(string search) {
+            do {
+                _live = true;
+                if (_pos < 0 || _pos == Length - 1) {
+                    return null;
+                }
+                _pos++;
+            } while (SearchDoesntMatch(search));
 
-        private string MoveToPrevious() {
+            return GetHistoryMatch(search);
+        }
+        
+        private string MoveToPrevious(string search) {
             bool wasLive = _live;
             _live = true;
-            if (Length == 0 || (Length > 1 && _pos == 0)) {
+            do {
+                if (Length == 0 || (Length > 1 && _pos == 0)) {
+                    // we have no history or we have history but have scrolled to the very beginning
+                    return null;
+                }
+                if (_pos == -1) {
+                    // no search in progress, start our search at the end
+                    _pos = Length - 1;
+                } else if (!wasLive && String.IsNullOrWhiteSpace(search)) {
+                    // Handles up up up enter up
+                    // Do nothing
+                } else {
+                    // go to the previous item
+                    _pos--;
+                }
+            } while (SearchDoesntMatch(search));
+
+            return GetHistoryMatch(search);
+        }
+
+        private bool SearchDoesntMatch(string search) {
+            return !String.IsNullOrWhiteSpace(search) && GetHistoryText(_pos).IndexOf(search) == -1;
+        }
+
+        private string GetHistoryMatch(string search) {
+            if (SearchDoesntMatch(search)) {
                 return null;
             }
-            if (_pos == -1) {
-                _pos = Length - 1;
-            } else if (!wasLive) {
-                // Handles up up up enter up
-                // Do nothing
-            } else {
-                _pos--;
-            }
+
             return GetHistoryText(_pos);
         }
 
-        private string Get(Func<string> moveFn) {
+        private string Get(Func<string, string> moveFn, string search) {
             var startPos = _pos;
-            string next = moveFn();
+            string next = moveFn(search);
             if (next == null) {
                 _pos = startPos;
                 return null;
@@ -138,12 +158,12 @@ namespace Microsoft.VisualStudio.Repl {
             return next;
         }
 
-        internal string GetNext() {
-            return Get(MoveToNext);
+        internal string GetNext(string search = null) {
+            return Get(MoveToNext, search);
         }
 
-        internal string GetPrevious() {
-            return Get(MoveToPrevious);
+        internal string GetPrevious(string search = null) {
+            return Get(MoveToPrevious, search);
         }
 
         internal class HistoryEntry {

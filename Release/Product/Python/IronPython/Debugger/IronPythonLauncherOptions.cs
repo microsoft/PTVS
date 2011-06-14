@@ -24,6 +24,23 @@ namespace Microsoft.IronPythonTools.Debugger {
         public const string DebugStandardLibrarySetting = "DebugStdLib";
         public IronPythonLauncherOptions() {
             InitializeComponent();
+
+            const string searchPathHelp = "Specifies additional directories which are added to sys.path for making libraries available for importing.";
+            const string argumentsHelp = "Specifies arguments which are passed to the script and available via sys.argv.";
+            const string interpArgsHelp = "Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).";
+            const string interpPathHelp = "Overrides the interpreter executable which is used for launching the project.";
+
+            _toolTip.SetToolTip(_searchPathLabel, searchPathHelp);
+            _toolTip.SetToolTip(_searchPaths, searchPathHelp);
+
+            _toolTip.SetToolTip(_arguments, argumentsHelp);
+            _toolTip.SetToolTip(_argumentsLabel, argumentsHelp);
+
+            _toolTip.SetToolTip(_interpArgsLabel, interpArgsHelp);
+            _toolTip.SetToolTip(_interpArgs, interpArgsHelp);
+
+            _toolTip.SetToolTip(_interpreterPath, interpPathHelp);
+            _toolTip.SetToolTip(_interpreterPathLabel, interpPathHelp);
         }
 
         public IronPythonLauncherOptions(IPythonProject properties) : this() {
@@ -37,6 +54,7 @@ namespace Microsoft.IronPythonTools.Debugger {
             _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);
             _properties.SetProperty(CommonConstants.InterpreterPath, InterpreterPath);
             _properties.SetProperty(DebugStandardLibrarySetting, DebugStandardLibrary.ToString());
+            _properties.SetProperty(CommonConstants.InterpreterArguments, _interpArgs.Text);
             RaiseIsSaved();
         }
 
@@ -46,6 +64,7 @@ namespace Microsoft.IronPythonTools.Debugger {
             InterpreterPath = _properties.GetProperty(CommonConstants.InterpreterPath);
             Arguments = _properties.GetProperty(CommonConstants.CommandLineArguments);
             DebugStandardLibrary = Convert.ToBoolean(_properties.GetProperty(DebugStandardLibrarySetting));
+            _interpArgs.Text = _properties.GetProperty(CommonConstants.InterpreterArguments);
             _loadingSettings = false;
         }
 
@@ -114,6 +133,10 @@ namespace Microsoft.IronPythonTools.Debugger {
         }
 
         private void DebugStdLibCheckedChanged(object sender, EventArgs e) {
+            RaiseIsDirty();
+        }
+
+        private void InterpreterArgsTextChanged(object sender, EventArgs e) {
             RaiseIsDirty();
         }
     }
