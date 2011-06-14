@@ -47,8 +47,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // mapping between PythonProcess threads and AD7Threads
         private Dictionary<PythonThread, AD7Thread> _threads = new Dictionary<PythonThread, AD7Thread>();
         private Dictionary<PythonModule, AD7Module> _modules = new Dictionary<PythonModule, AD7Module>();
-        private HashSet<string> _breakOnException = new HashSet<string>();
-        private bool _defaultBreakOnException;
+        private Dictionary<string, int> _breakOnException = new Dictionary<string, int>();
+        private int _defaultBreakOnExceptionMode;
         private AutoResetEvent _loadComplete = new AutoResetEvent(false);
         private bool _programCreated;
         private object _syncLock = new object();
@@ -99,6 +99,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         public AD7Engine() {            
             _breakpointManager = new BreakpointManager(this);
+            _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
             Debug.WriteLine("Python Engine Created " + GetHashCode());
         }
 
@@ -303,39 +304,49 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         int IDebugEngine2.RemoveAllSetExceptions(ref Guid guidType) {
             _breakOnException.Clear();
-            _defaultBreakOnException = false;
+            _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
 
-            _process.SetExceptionInfo(_defaultBreakOnException, _breakOnException);
+            _process.SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
             return VSConstants.S_OK;
         }
 
         int IDebugEngine2.RemoveSetException(EXCEPTION_INFO[] pException) {
+            bool sendUpdate = false;
             for (int i = 0; i < pException.Length; i++) {
                 if (pException[i].guidType == DebugEngineGuid) {
+                    sendUpdate = true;
                     if (pException[i].bstrExceptionName == "Python Exceptions") {
-                        _defaultBreakOnException = false;
+                        _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
                     } else {
                         _breakOnException.Remove(pException[i].bstrExceptionName);
                     }
                 }
             }
 
-            _process.SetExceptionInfo(_defaultBreakOnException, _breakOnException);
+            if (sendUpdate) {
+                _process.SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+            }
             return VSConstants.S_OK;
         }
 
         int IDebugEngine2.SetException(EXCEPTION_INFO[] pException) {
+            bool sendUpdate = false;
             for (int i = 0; i < pException.Length; i++) {
                 if (pException[i].guidType == DebugEngineGuid) {
+                    sendUpdate = true;
                     if (pException[i].bstrExceptionName == "Python Exceptions") {
-                        _defaultBreakOnException = true;
+                        _defaultBreakOnExceptionMode =
+                            (int)(pException[i].dwState & (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT));
                     } else {
-                        _breakOnException.Add(pException[i].bstrExceptionName);
+                        _breakOnException[pException[i].bstrExceptionName] = 
+                            (int)(pException[i].dwState & (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT));
                     }
                 }
             }
 
-            _process.SetExceptionInfo(_defaultBreakOnException, _breakOnException);
+            if (sendUpdate) {
+                _process.SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+            }
             return VSConstants.S_OK;
         }
 

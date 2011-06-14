@@ -93,6 +93,7 @@
     <Compile Include="Debugger\PythonThread.cs" />
     <Compile Include="Debugger\ThreadEventArgs.cs" />
     <Compile Include="Debugger\PythonBreakpoint.cs" />
+    <Compile Include="Debugger\TryHandlerWalker.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

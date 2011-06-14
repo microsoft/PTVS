@@ -7,6 +7,7 @@ import socket
 import struct
 import weakref
 import traceback
+import types
 from os import path
 
 try:
@@ -96,6 +97,7 @@ EXCE = cmd('EXCE')
 EXCR = cmd('EXCR')
 CHLD = cmd('CHLD')
 OUTP = cmd('OUTP')
+REQH = cmd('REQH')
 UNICODE_PREFIX = cmd('U')
 ASCII_PREFIX = cmd('A')
 NONE_PREFIX = cmd('N')
@@ -110,19 +112,88 @@ def get_thread_from_id(id):
 def should_send_frame(frame):
     return  frame is not None and frame.f_code is not get_code(debug) and frame.f_code is not get_code(new_thread_wrapper)
 
+def lookup_local(frame, name):
+    bits = name.split('.')
+    obj = frame.f_locals.get(bits[0]) or frame.f_globals.get(bits[0]) or frame.f_builtins.get(bits[0])
+    bits.pop(0)
+    while bits and obj is not None and type(obj) is types.ModuleType:
+        obj = getattr(obj, bits.pop(0), None)
+    return obj
+        
+BREAK_MODE_ALWAYS = 1
+BREAK_MODE_UNHANDLED = 32
 class ExceptionBreakInfo(object):
     def __init__(self):
-        self.break_always = False
-        self.break_on = set()
+        self.default_mode = BREAK_MODE_UNHANDLED
+        self.break_on = { }
+        self.handler_cache = { }
+        self.handler_lock = thread.allocate_lock()
     
-    def ShouldBreak(self, name):
-        return self.break_always or name in self.break_on
+    def Clear(self):
+        self.default_mode = BREAK_MODE_UNHANDLED
+        self.break_on.clear()
+        self.handler_cache.clear()
+
+    def ShouldBreak(self, thread, ex_type, ex_value, trace):
+        name = ex_type.__module__ + '.' + ex_type.__name__
+        mode = self.break_on.get(name, self.default_mode)
+        return (bool(mode & BREAK_MODE_ALWAYS) or
+                (bool(mode & BREAK_MODE_UNHANDLED) and not self.IsHandled(thread, ex_type, ex_value, trace)))
     
-    def AddBreakingException(self, name):    
-        if sys.version >= '3.0' and name.startswith('exceptions.'):
+    def IsHandled(self, thread, ex_type, ex_value, trace):
+        if trace is None:
+            # get out if we didn't get a traceback
+            return False
+
+        if trace.tb_next is not None:
+            # don't break if this isn't the top of the traceback
+            return True
+            
+        cur_frame = trace.tb_frame
+        
+        while should_send_frame(cur_frame) and cur_frame.f_code.co_filename is not None:
+            handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
+            
+            if handlers is None:
+                # req handlers for this file from the debug engine
+                self.handler_lock.acquire()
+                conn.send(REQH)
+                write_string(cur_frame.f_code.co_filename)
+
+                # wait for the handler data to be received
+                self.handler_lock.acquire()
+                self.handler_lock.release()
+
+                handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
+
+            if handlers is None:
+                # no code available, so assume unhandled
+                return False
+
+            line = cur_frame.f_lineno
+            for line_start, line_end, expressions in handlers:
+                if line_start <= line < line_end:
+                    if '*' in expressions:
+                        return True
+
+                    for text in expressions:
+                        try:
+                            res = lookup_local(cur_frame, text)
+                            if res is not None and issubclass(ex_type, res):
+                                return True
+                        except:
+                            print("Error resolving: " + str(text))
+                            traceback.print_exc()
+
+            cur_frame = cur_frame.f_back
+
+        return False
+    
+    def AddException(self, name, mode=BREAK_MODE_UNHANDLED):
+        if sys.version_info[0] >= 3 and name.startswith('exceptions.'):
             name = 'builtins' + name[10:]
         
-        self.break_on.add(name)
+        self.break_on[name] = mode
 
 BREAK_ON = ExceptionBreakInfo()
 
@@ -285,12 +356,8 @@ class Thread(object):
         self.cur_frame = frame.f_back
         
     def handle_exception(self, frame, arg):
-        if frame.f_code.co_filename != __file__:
-            exc_type = arg[0]
-            exc_name = exc_type.__module__ + '.' + exc_type.__name__
-
-            if BREAK_ON.ShouldBreak(exc_name):
-                self.block(lambda: report_exception(frame, arg, self.id))
+        if frame.f_code.co_filename != __file__ and BREAK_ON.ShouldBreak(self, *arg):
+            self.block(lambda: report_exception(frame, arg, self.id))
 
         # forward call to previous trace function, if any, updating the current trace function
         # with a new one if available
@@ -536,7 +603,7 @@ class Thread(object):
                     type_name = type(obj).__name__
                 except:
                     type_name = 'unknown'
-    				
+                    
                 write_object(type(obj), safe_repr(obj), safe_hex_repr(obj), type_name)
 
             cur_frame = cur_frame.f_back
@@ -614,6 +681,7 @@ class DebuggerLoop(object):
             cmd('detc') : self.command_detach,
             cmd('clst') : self.command_clear_stepping,
             cmd('sexi') : self.command_set_exception_info,
+            cmd('sehi') : self.command_set_exception_handler_info,
         }
 
     def loop(self):
@@ -720,12 +788,38 @@ class DebuggerLoop(object):
         THREADS_LOCK.release()
     
     def command_set_exception_info(self):
-        BREAK_ON.break_always = bool(read_int(self.conn))
-        BREAK_ON.break_on.clear()
+        BREAK_ON.Clear()
+        BREAK_ON.default_mode = read_int(self.conn)
 
         break_on_count = read_int(self.conn)
         for i in xrange(break_on_count):
-            BREAK_ON.AddBreakingException(read_string(self.conn))        
+            mode = read_int(self.conn)
+            name = read_string(self.conn)
+            BREAK_ON.AddException(name, mode)
+
+    def command_set_exception_handler_info(self):
+        try:
+            filename = read_string(self.conn)
+
+            statement_count = read_int(self.conn)
+            handlers = []
+            for _ in xrange(statement_count):
+                line_start, line_end = read_int(self.conn), read_int(self.conn)
+
+                expressions = set()
+                text = read_string(self.conn).strip()
+                while text != '-':
+                    expressions.add(text)
+                    text = read_string(self.conn)
+
+                if not expressions:
+                    expressions = set('*')
+
+                handlers.append((line_start, line_end, expressions))
+
+            BREAK_ON.handler_cache[filename] = handlers
+        finally:
+            BREAK_ON.handler_lock.release()
 
     def command_clear_stepping(self):
         tid = read_int(self.conn)
@@ -954,10 +1048,10 @@ def safe_repr(obj):
         return '__repr__ raised an exception'
 
 def safe_hex_repr(obj):
-	try:
-		return hex(obj)
-	except:
-		return None
+    try:
+        return hex(obj)
+    except:
+        return None
 
 def report_execution_result(execution_id, result):
     obj_repr = safe_repr(result)

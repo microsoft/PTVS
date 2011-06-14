@@ -21,7 +21,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
 
@@ -35,12 +37,12 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly Dictionary<int, PythonBreakpoint> _breakpoints = new Dictionary<int, PythonBreakpoint>();
         private readonly IdDispenser _ids = new IdDispenser();
         private readonly AutoResetEvent _lineEvent = new AutoResetEvent(false);         // set when result of setting current line returns
-        private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();        
+        private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
         private readonly PythonLanguageVersion _langVersion;
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
-        
+
         private bool _sentExited;
         private Socket _socket;
         private int _breakpointCounter;
@@ -58,7 +60,7 @@ namespace Microsoft.PythonTools.Debugger {
         private PythonProcess(int pid) {
             _process = Process.GetProcessById(pid);
             _process.Exited += new EventHandler(_process_Exited);
-            
+
             ListenForConnection();
 
             using (var result = DebugAttach.Attach(pid, DebugConnectionListener.ListenerPort, _processGuid)) {
@@ -105,13 +107,13 @@ namespace Microsoft.PythonTools.Debugger {
                     }
                 }
             }
-            
+
             Debug.WriteLine(String.Format("Launching: {0} {1}", processInfo.FileName, processInfo.Arguments));
             _process = new Process();
             _process.StartInfo = processInfo;
             _process.Exited += new EventHandler(_process_Exited);
         }
-        
+
         public static ConnErrorMessages TryAttach(int pid, out PythonProcess process) {
             try {
                 process = new PythonProcess(pid);
@@ -225,12 +227,13 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public void SetExceptionInfo(bool breakAlways, ICollection<string> breakOn) {
+        public void SetExceptionInfo(int defaultBreakOnMode, ICollection<KeyValuePair<string, int>> breakOn) {
             _socket.Send(SetExceptionInfoCommandBytes);
-            _socket.Send(BitConverter.GetBytes(breakAlways ? 1 : 0));
+            _socket.Send(BitConverter.GetBytes(defaultBreakOnMode));
             _socket.Send(BitConverter.GetBytes(breakOn.Count));
-            foreach (var name in breakOn) {
-                SendString(_socket, name);
+            foreach (var item in breakOn) {
+                _socket.Send(BitConverter.GetBytes(item.Value));
+                SendString(_socket, item.Key);
             }
         }
 
@@ -250,9 +253,9 @@ namespace Microsoft.PythonTools.Debugger {
             GC.SuppressFinalize(this);
         }
 
-        private void DebugEventThread() {            
+        private void DebugEventThread() {
             Debug.WriteLine("DebugEvent Thread Started " + _processGuid);
-            
+
 
             byte[] cmd_buffer = new byte[4];
             try {
@@ -278,6 +281,7 @@ namespace Microsoft.PythonTools.Debugger {
                         case "SETL": HandleSetLineResult(socket); break;
                         case "CHLD": HandleEnumChildren(socket); break;
                         case "OUTP": HandleDebuggerOutput(socket); break;
+                        case "REQH": HandleRequestHandlers(socket); break;
                         case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
                     }
                 }
@@ -286,12 +290,107 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        private static string ToDottedNameString(Expression expr, PythonAst ast) {
+            NameExpression name;
+            MemberExpression member;
+            if ((name = expr as NameExpression) != null) {
+                return name.Name;
+            } else if ((member = expr as MemberExpression) != null) {
+                while (member.Target is MemberExpression) {
+                    member = (MemberExpression)member.Target;
+                }
+                if (member.Target is NameExpression) {
+                    return expr.ToCodeString(ast);
+                }
+            }
+            return null;
+        }
+
+        internal IList<Tuple<int, int, IList<string>>> GetHandledExceptionRanges(string filename) {
+            PythonAst ast;
+            TryHandlerWalker walker = new TryHandlerWalker();
+            var statements = new List<Tuple<int, int, IList<string>>>();
+
+            try {
+                using (var source = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                    ast = Parser.CreateParser(source, LanguageVersion).ParseFile();
+                    ast.Walk(walker);
+                }
+            } catch (Exception ex) {
+                Debug.WriteLine("Exception in GetHandledExceptionRanges:");
+                Debug.WriteLine(string.Format("Filename: {0}", filename));
+                Debug.WriteLine(ex);
+                return statements;
+            }
+
+            foreach (var statement in walker.Statements) {
+                int start = statement.GetStart(ast).Line;
+                int end = statement.Body.GetEnd(ast).Line + 1;
+                var expressions = new List<string>();
+
+                if (statement.Handlers == null) {
+                    expressions.Add("*");
+                } else {
+                    foreach (var handler in statement.Handlers) {
+                        Expression expr = handler.Test;
+                        TupleExpression tuple;
+                        if (expr == null) {
+                            expressions.Clear();
+                            expressions.Add("*");
+                            break;
+                        } else if ((tuple = handler.Test as TupleExpression) != null) {
+                            foreach (var e in tuple.Items) {
+                                var text = ToDottedNameString(e, ast);
+                                if (text != null) {
+                                    expressions.Add(text);
+                                }
+                            }
+                        } else {
+                            var text = ToDottedNameString(expr, ast);
+                            if (text != null) {
+                                expressions.Add(text);
+                            }
+                        }
+                    }
+                }
+
+                if (expressions.Count > 0) {
+                    statements.Add(new Tuple<int, int, IList<string>>(start, end, expressions));
+                }
+            }
+
+
+            return statements;
+        }
+
+        private void HandleRequestHandlers(Socket socket) {
+            string filename = socket.ReadString();
+
+            Debug.WriteLine("Exception handlers requested for: " + filename);
+            var statements = GetHandledExceptionRanges(filename);
+
+            _socket.Send(SetExceptionHandlerInfoCommandBytes);
+            SendString(_socket, filename);
+
+            _socket.Send(BitConverter.GetBytes(statements.Count));
+
+            foreach (var t in statements) {
+                _socket.Send(BitConverter.GetBytes(t.Item1));
+                _socket.Send(BitConverter.GetBytes(t.Item2));
+
+                foreach (var expr in t.Item3) {
+                    SendString(_socket, expr);
+                }
+                SendString(_socket, "-");
+            }
+        }
+
         private void HandleDebuggerOutput(Socket socket) {
             int tid = socket.ReadInt();
             string output = socket.ReadString();
 
             PythonThread thread;
-            if (_threads.TryGetValue(tid, out thread)) {                
+            if (_threads.TryGetValue(tid, out thread)) {
                 var outputEvent = DebuggerOutput;
                 if (outputEvent != null) {
                     outputEvent(this, new OutputEventArgs(thread, output));
@@ -323,7 +422,7 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleExecutionException(Socket socket) {
             int execId = socket.ReadInt();
             CompletionInfo completion;
-                
+
             lock (_pendingExecutes) {
                 completion = _pendingExecutes[execId];
                 _pendingExecutes.Remove(execId);
@@ -336,7 +435,7 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleExecutionResult(Socket socket) {
             int execId = socket.ReadInt();
             CompletionInfo completion;
-            lock (_pendingExecutes) {                    
+            lock (_pendingExecutes) {
                 completion = _pendingExecutes[execId];
 
                 _pendingExecutes.Remove(execId);
@@ -373,7 +472,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             if ((typeName == "unicode" && LanguageVersion.Is2x()) ||
                 (typeName == "str" && LanguageVersion.Is3x())) {
-                    objRepr = objRepr.FixupEscapedUnicodeChars();
+                objRepr = objRepr.FixupEscapedUnicodeChars();
             }
             return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, text, childText, childIsIndex, childIsEnumerate, frame, isExpandable);
         }
@@ -504,7 +603,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void HandleBreakPointHit(Socket socket) {
             int breakId = socket.ReadInt();
-                int threadId = socket.ReadInt();
+            int threadId = socket.ReadInt();
             var brkEvent = BreakpointHit;
             PythonBreakpoint unboundBreakpoint;
             if (brkEvent != null) {
@@ -612,7 +711,7 @@ namespace Microsoft.PythonTools.Debugger {
                             if (!mappingInfo[0].EndsWith("\\")) {
                                 len++;
                             }
-                            
+
                             string newFile = Path.Combine(mapTo, file.Substring(len));
                             Debug.WriteLine(String.Format("Filename mapped from {0} to {1}", file, newFile));
                             return newFile;
@@ -727,6 +826,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] GetChildrenCommandBytes = MakeCommand("chld");
         private static byte[] DetachCommandBytes = MakeCommand("detc");
         private static byte[] SetExceptionInfoCommandBytes = MakeCommand("sexi");
+        private static byte[] SetExceptionHandlerInfoCommandBytes = MakeCommand("sehi");
 
         private static byte[] MakeCommand(string command) {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };

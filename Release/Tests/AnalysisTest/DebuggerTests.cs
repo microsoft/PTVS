@@ -795,6 +795,18 @@ namespace AnalysisTest {
             }
         }
 
+        class ExceptionHandlerInfo {
+            public readonly int FirstLine;
+            public readonly int LastLine;
+            public readonly HashSet<string> Expressions;
+
+            public ExceptionHandlerInfo(int firstLine, int lastLine, params string[] expressions) {
+                FirstLine = firstLine;
+                LastLine = lastLine;
+                Expressions = new HashSet<string>(expressions);
+            }
+        }
+
         public string ExceptionModule {
             get {
                 if (Version.Version.Is3x()) {
@@ -823,9 +835,10 @@ namespace AnalysisTest {
         public void TestExceptions() {
             var debugger = new PythonDebugger();
             for (int i = 0; i < 2; i++) {
-                TestException(debugger, DebuggerTestPath + @"SimpleException.py", i == 0, new ExceptionInfo(ExceptionModule + ".Exception", 3));
+                TestException(debugger, DebuggerTestPath + @"SimpleException.py", i == 0, 1, new KeyValuePair<string, int>[0],
+                    new ExceptionInfo(ExceptionModule + ".Exception", 3));
 
-                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0,
+                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, 1, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(PickleModule + ".PickleError", 6),
                     new ExceptionInfo(ExceptionModule + ".StopIteration", 13),
                     new ExceptionInfo(ExceptionModule + ".NameError", 15),
@@ -835,17 +848,53 @@ namespace AnalysisTest {
                     new ExceptionInfo(ExceptionModule + ".Exception", 32)
                 );
 
+                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, 32, new KeyValuePair<string, int>[] {
+                    new KeyValuePair<string, int>(PickleModule + ".PickleError", 0)
+                });
+                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, 0, new KeyValuePair<string, int>[] {
+                    new KeyValuePair<string, int>(PickleModule + ".PickleError", 1),
+                    new KeyValuePair<string, int>(ExceptionModule + ".StopIteration", 32),
+                    new KeyValuePair<string, int>(ExceptionModule + ".NameError", 0),
+                    new KeyValuePair<string, int>(ExceptionModule + ".Exception", 33),
+                },
+                    new ExceptionInfo(PickleModule + ".PickleError", 6),
+                    new ExceptionInfo(ExceptionModule + ".Exception", 29),
+                    new ExceptionInfo(ExceptionModule + ".Exception", 32)
+                );
+
                 if (Version.Version.Is2x()) {
-                    TestException(debugger, DebuggerTestPath + @"UnicodeException.py", i == 0, new ExceptionInfo(ExceptionModule + ".Exception", 3));
+                    TestException(debugger, DebuggerTestPath + @"UnicodeException.py", i == 0, 1, new KeyValuePair<string, int>[0],
+                        new ExceptionInfo(ExceptionModule + ".Exception", 3));
                 }
+
+                // Only the last exception in each file should be noticed.
+                TestException(debugger, DebuggerTestPath + @"UnhandledException1.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    new ExceptionInfo(ExceptionModule + ".Exception", 81)
+                );
+                TestException(debugger, DebuggerTestPath + @"UnhandledException2.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    new ExceptionInfo(ExceptionModule + ".Exception", 16)
+                );
+                TestException(debugger, DebuggerTestPath + @"UnhandledException3.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    new ExceptionInfo(ExceptionModule + ".ValueError", 12)
+                );
+                TestException(debugger, DebuggerTestPath + @"UnhandledException4.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    new ExceptionInfo(ExceptionModule + ".OSError", 17)
+                );
+                TestException(debugger, DebuggerTestPath + @"UnhandledException5.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    new ExceptionInfo(ExceptionModule + ".ValueError", 4)
+                );
+                TestException(debugger, DebuggerTestPath + @"UnhandledException6.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    new ExceptionInfo(ExceptionModule + ".OSError", 12)
+                );
             }
         }
 
-        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess, params ExceptionInfo[] exceptions) {
+        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess, 
+            int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, params ExceptionInfo[] exceptions) {
             bool loaded = false;
             var process = DebugProcess(debugger, filename, (processObj, threadObj) => {
                 loaded = true;
-                processObj.SetExceptionInfo(true, new string[0]);
+                processObj.SetExceptionInfo(defaultExceptionMode, exceptionModes);
             });
 
             int curException = 0;
@@ -875,6 +924,50 @@ namespace AnalysisTest {
             process.WaitForExit();
 
             Assert.AreEqual(exceptions.Length, curException);
+        }
+
+        [TestMethod]
+        public void TestExceptionHandlers() {
+            var debugger = new PythonDebugger();
+
+            TestGetHandledExceptionRanges(debugger, DebuggerTestPath + @"ExceptionHandlers.py",
+                new ExceptionHandlerInfo(1, 3, "*"),
+                new ExceptionHandlerInfo(6, 7, "*"),
+                new ExceptionHandlerInfo(9, 13, "*"),
+                
+                new ExceptionHandlerInfo(18, 19, "ArithmeticError", "AssertionError", "AttributeError", "BaseException", "BufferError", "BytesWarning", "DeprecationWarning", "EOFError", "EnvironmentError", "Exception", "FloatingPointError", "FutureWarning", "GeneratorExit", "IOError", "ImportError", "ImportWarning", "IndentationError", "IndexError", "KeyError", "KeyboardInterrupt", "LookupError", "MemoryError", "NameError", "NotImplementedError", "OSError", "OverflowError", "PendingDeprecationWarning", "ReferenceError", "RuntimeError", "RuntimeWarning", "StandardError", "StopIteration", "SyntaxError", "SyntaxWarning", "SystemError", "SystemExit", "TabError", "TypeError", "UnboundLocalError", "UnicodeDecodeError", "UnicodeEncodeError", "UnicodeError", "UnicodeTranslateError", "UnicodeWarning", "UserWarning", "ValueError", "Warning", "WindowsError", "ZeroDivisionError"),
+                new ExceptionHandlerInfo(69, 70, "ArithmeticError", "AssertionError", "AttributeError", "BaseException", "BufferError", "BytesWarning", "DeprecationWarning", "EOFError", "EnvironmentError", "Exception", "FloatingPointError", "FutureWarning", "GeneratorExit", "IOError", "ImportError", "ImportWarning", "IndentationError", "IndexError", "KeyError", "KeyboardInterrupt", "LookupError", "MemoryError", "NameError", "NotImplementedError", "OSError", "OverflowError", "PendingDeprecationWarning", "ReferenceError", "RuntimeError", "RuntimeWarning", "StandardError", "StopIteration", "SyntaxError", "SyntaxWarning", "SystemError", "SystemExit", "TabError", "TypeError", "UnboundLocalError", "UnicodeDecodeError", "UnicodeEncodeError", "UnicodeError", "UnicodeTranslateError", "UnicodeWarning", "UserWarning", "ValueError", "Warning", "WindowsError", "ZeroDivisionError"),
+                new ExceptionHandlerInfo(72, 73, "*"),
+                
+                new ExceptionHandlerInfo(125, 126, "struct.error", "socket.error", "os.error"),
+                new ExceptionHandlerInfo(130, 131, "struct.error", "socket.error", "os.error"),
+                
+                new ExceptionHandlerInfo(133, 143, "ValueError"),
+                new ExceptionHandlerInfo(135, 141, "TypeError"),
+                new ExceptionHandlerInfo(137, 139, "ValueError"),
+
+                new ExceptionHandlerInfo(146, 148, "ValueError"),
+                new ExceptionHandlerInfo(150, 156, "TypeError"),
+                new ExceptionHandlerInfo(152, 154, "ValueError"),
+
+                new ExceptionHandlerInfo(159, 160, "Exception"),
+                new ExceptionHandlerInfo(162, 163, "Exception"),
+                new ExceptionHandlerInfo(165, 166, "ValueError", "TypeError"),
+                new ExceptionHandlerInfo(168, 169, "ValueError", "TypeError"),
+
+                new ExceptionHandlerInfo(171, 172, "is_included", "also.included", "this.one.too.despite.having.lots.of.dots")
+            );
+        }
+
+        private void TestGetHandledExceptionRanges(PythonDebugger debugger, string filename, params ExceptionHandlerInfo[] expected) {
+            var process = DebugProcess(debugger, filename, (processObj, threadObj) => { });
+
+            var actual = process.GetHandledExceptionRanges(filename);
+            Assert.AreEqual(expected.Length, actual.Count);
+
+            Assert.IsTrue(actual.All(a => 
+                expected.SingleOrDefault(e => e.FirstLine == a.Item1 && e.LastLine == a.Item2 && e.Expressions.ContainsExactly(a.Item3)) != null
+            ));
         }
 
         #endregion

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools {
@@ -31,6 +32,7 @@ namespace Microsoft.PythonTools {
         public ProvideDebugExceptionAttribute(string engineGuid, params string[] path) {
             _engineGuid = engineGuid;
             _path = path;
+            _state = (int)(enum_EXCEPTION_STATE.EXCEPTION_JUST_MY_CODE_SUPPORTED | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT);
         }
 
         public int Code {

@@ -42,6 +42,11 @@ namespace AnalysisTest {
                     return false;
                 }
             }
+            foreach (var value in set) {
+                if (!values.Contains(value)) {
+                    return false;
+                }
+            }
             return true;
         }
     }
