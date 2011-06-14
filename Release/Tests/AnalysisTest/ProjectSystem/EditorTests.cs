@@ -100,7 +100,8 @@ namespace AnalysisTest.ProjectSystem {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndent() {
-            var project = DebugProject.OpenProject(@"Python.VS.TestData\AutoIndent.sln");
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AutoIndent.sln");            
+
 
             // http://pytools.codeplex.com/workitem/116
             AutoIndentTest(project, "def f():\rprint 'hi'\r\rdef inner(): pass←←←←←←←←←←←←←←←←←\r", @"def f():
@@ -237,6 +238,16 @@ pass");
 foo(1)
 pass");
 
+            AutoIndentTest(project, "def m():\rif True:\rpass\relse:\rabc()\r\r\b\bm()\r\rm()\rpass", @"def m():
+    if True:
+        pass
+    else:
+        abc()
+
+m()
+
+m()
+pass");
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

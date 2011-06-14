@@ -23,7 +23,6 @@ namespace Microsoft.PythonTools.Options {
     class InterpreterOptions {
         public string Display;
         public Guid Id;
-        public string InteractiveOptions;
         public string InterpreterPath;
         public string WindowsInterpreterPath;
         public string Architecture;

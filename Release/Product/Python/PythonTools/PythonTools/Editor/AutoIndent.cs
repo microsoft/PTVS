@@ -122,9 +122,15 @@ namespace Microsoft.PythonTools.Editor {
                     // Where exprRangeOpen parses back to the False where exprRangeNoOpen parses back to just the
                     // 42 because there are no implied groupings.  But we want to use the indentation level from
                     // the open one.
-                    var line2 = exprRangeImplicitOpen.Value.Start.GetContainingLine();
-                    var tokens2 = classifier.GetClassificationSpans(line2.Extent);
-                    indentation = GetIndentation(line2.GetText(), options.GetTabSize());
+                    var endLine = exprRangeImplicitOpen.Value.End.GetContainingLine().LineNumber;
+                    int minIndentation = Int32.MaxValue;
+                    for (var line2 = exprRangeImplicitOpen.Value.Start.GetContainingLine();
+                        line2.LineNumber <= endLine;
+                        line2 = line2.Snapshot.GetLineFromLineNumber(line2.LineNumber + 1)) {
+                        var tokens2 = classifier.GetClassificationSpans(line2.Extent);
+                        minIndentation = Math.Min(minIndentation, GetIndentation(line2.GetText(), options.GetTabSize()));
+                    }
+                    indentation = minIndentation;
                 } else if (exprRangeNoImplicitOpen != null) {
                     var line2 = exprRangeNoImplicitOpen.Value.Start.GetContainingLine();
                     var tokens2 = classifier.GetClassificationSpans(line2.Extent);

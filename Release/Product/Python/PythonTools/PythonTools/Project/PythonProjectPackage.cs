@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.Project {
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a703-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_TextView
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a702-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Designer
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a701-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Code
+    [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651A700-06E5-11D1-8EBD-00A0C90F26EA}")]  //LOGVIEWID_Debugging
     [ProvideImportTemplates("#111", PythonConstants.ProjectFactoryGuid, "$PackageFolder$\\Templates\\Projects\\ImportProject", "ImportWinApp.pyproj", "ImportConApp.pyproj", "ImportConApp.pyproj")]
     [Guid(PythonConstants.ProjectSystemPackageGuid)]
     [DeveloperActivity("Python", typeof(PythonProjectPackage))]

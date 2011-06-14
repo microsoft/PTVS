@@ -25,11 +25,6 @@ namespace Microsoft.PythonTools.Options {
 
         public PythonInterpreterOptionsControl() {
             InitializeComponent();
-            
-            const string optionsToolTip = "Options for the interactive window process.  For example: Frames=True;RecursionLimit=1001\r\n\r\nChanges take effect after interactive window reset.";
-            _toolTips.SetToolTip(_interactiveOptionsValue, optionsToolTip);
-            _toolTips.SetToolTip(_interactiveOptions, optionsToolTip);
-
             InitInterpreters();
         }
 
@@ -77,7 +72,6 @@ namespace Microsoft.PythonTools.Options {
 
                 _loadingOptions = true;
                 try {
-                    _interactiveOptionsValue.Text = curOptions.InteractiveOptions ?? "";
                     _path.Text = curOptions.InterpreterPath;
                     _windowsPath.Text = curOptions.WindowsInterpreterPath;
                     _arch.SelectedIndex = _arch.Items.Count - 1;
@@ -123,12 +117,6 @@ namespace Microsoft.PythonTools.Options {
         public int DefaultInterpreter {
             get {
                 return _defaultInterpreter.SelectedIndex;
-            }
-        }
-
-        private void InteractiveOptionsValueTextChanged(object sender, EventArgs e) {
-            if (!_loadingOptions) {
-                CurrentOptions.InteractiveOptions = _interactiveOptionsValue.Text;
             }
         }
 

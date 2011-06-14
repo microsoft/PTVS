@@ -135,6 +135,7 @@ class ExceptionBreakInfo(object):
         self.handler_cache.clear()
 
     def ShouldBreak(self, thread, ex_type, ex_value, trace):
+        probe_stack()
         name = ex_type.__module__ + '.' + ex_type.__name__
         mode = self.break_on.get(name, self.default_mode)
         return (bool(mode & BREAK_MODE_ALWAYS) or
@@ -197,6 +198,13 @@ class ExceptionBreakInfo(object):
 
 BREAK_ON = ExceptionBreakInfo()
 
+def probe_stack(depth = 10):
+  """helper to make sure we have enough stack space to proceed w/o corrupting 
+     debugger state."""
+  if depth == 0:
+      return
+  probe_stack(depth - 1)
+
 class Thread(object):
     def __init__(self, id = None):
         if id is not None:
@@ -226,23 +234,28 @@ class Thread(object):
         self.trace_func_stack = []
     
     def trace_func(self, frame, event, arg):
-        if self.stepping == STEPPING_BREAK:
-            if self.cur_frame is None:
-                # happens during attach, we need frame for blocking
-                self.cur_frame = frame
+        try:
+            if self.stepping == STEPPING_BREAK:
+                if self.cur_frame is None:
+                    # happens during attach, we need frame for blocking
+                    self.cur_frame = frame
 
-            if self.detach:
-                sys.settrace(None)
-                return None
+                if self.detach:
+                    sys.settrace(None)
+                    return None
 
-            self.async_break()
+                self.async_break()
 
-        return self._events[event](frame, arg)
+            return self._events[event](frame, arg)
+        except RuntimeError:
+            # stack overflow, disable tracing
+            return self.trace_func
     
     def handle_call(self, frame, arg):
         self.cur_frame = frame
 
         if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
+            probe_stack()
             code, module = report_module_load(frame)
 
             # see if this module causes new break points to be bound
@@ -271,6 +284,7 @@ class Thread(object):
         old_trace_func = self.prev_trace_func
         if old_trace_func is not None:
             self.trace_func_stack.append(old_trace_func)
+            self.prev_trace_func = None  # clear first incase old_trace_func stack overflows
             self.prev_trace_func = old_trace_func(frame, 'call', arg)
 
         return self.trace_func
@@ -288,10 +302,12 @@ class Thread(object):
                 or stepping == STEPPING_LAUNCH_BREAK 
                 or stepping == STEPPING_ATTACH_BREAK):
                 if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
-                    (self.not_our_code(frame.f_code))):
+                    (self.not_our_code(frame.f_code)) or
+                    frame.f_code.co_filename == __file__):  # don't break into our own debugger
                     # don't break into inital Python code needed to set things up
                     return self.trace_func
             
+                probe_stack()
                 self.stepping = STEPPING_NONE
                 def block_cond():
                     if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
@@ -319,12 +335,14 @@ class Thread(object):
                             block = True
 
                         if block:
+                            probe_stack()
                             self.block(lambda: report_breakpoint_hit(bp_id, self.id))
                         break
 
         # forward call to previous trace function, if any, updating trace function appropriately
         old_trace_func = self.prev_trace_func
         if old_trace_func is not None:
+            self.prev_trace_func = None  # clear first incase old_trace_func stack overflows
             self.prev_trace_func = old_trace_func(frame, 'line', arg)
 
         return self.trace_func
@@ -1174,6 +1192,7 @@ class _DebuggerOutput(object):
 
     def write(self, value):
         if not DETACHED:
+            probe_stack(3)
             send_lock.acquire()
             conn.send(OUTP)
             conn.send(struct.pack('i', thread.get_ident()))

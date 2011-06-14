@@ -50,7 +50,6 @@ namespace Microsoft.PythonTools.Options {
 
         private const string DefaultInterpreterSetting = "DefaultInterpreter";
         private const string DefaultInterpreterVersionSetting = "DefaultInterpreterVersion";
-        private const string InteractiveOptionsSetting = "InteractiveOptions";
 
         public override void LoadSettingsFromStorage() {
             _defaultInterpreter = GetDefaultInterpreterId();
@@ -64,7 +63,6 @@ namespace Microsoft.PythonTools.Options {
                     new InterpreterOptions() {
                         Display = interpreter.GetInterpreterDisplay(),
                         Id = interpreter.Id,
-                        InteractiveOptions = null,
                         InterpreterPath = interpreter.Configuration.InterpreterPath,
                         WindowsInterpreterPath = interpreter.Configuration.WindowsInterpreterPath,
                         Version = interpreter.Configuration.Version.ToString(),
@@ -188,14 +186,6 @@ namespace Microsoft.PythonTools.Options {
                             PythonToolsPackage.Instance.InteractiveOptionsPage._window.NewInterpreter(fact);
                         }
                     }
-                }
-
-                // save settings available for all interpreters.
-                Version version;
-                if (Version.TryParse(option.Version, out version)) {
-                    string savePath = GetInterpreterSettingPath(option.Id, version);
-
-                    SaveString(savePath + InteractiveOptionsSetting, option.InteractiveOptions ?? "");
                 }
 
                 i++;

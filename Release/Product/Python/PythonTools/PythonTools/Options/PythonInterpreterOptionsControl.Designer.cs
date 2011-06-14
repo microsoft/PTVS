@@ -41,8 +41,6 @@
             this._version = new System.Windows.Forms.TextBox();
             this._pathEnvVarLabel = new System.Windows.Forms.Label();
             this._pathEnvVar = new System.Windows.Forms.TextBox();
-            this._interactiveOptions = new System.Windows.Forms.Label();
-            this._interactiveOptionsValue = new System.Windows.Forms.TextBox();
             this._generateCompletionDb = new System.Windows.Forms.Button();
             this._removeInterpreter = new System.Windows.Forms.Button();
             this._toolTips = new System.Windows.Forms.ToolTip(this.components);
@@ -101,8 +99,6 @@
             this._interpreterSettingsGroup.Controls.Add(this._version);
             this._interpreterSettingsGroup.Controls.Add(this._pathEnvVarLabel);
             this._interpreterSettingsGroup.Controls.Add(this._pathEnvVar);
-            this._interpreterSettingsGroup.Controls.Add(this._interactiveOptions);
-            this._interpreterSettingsGroup.Controls.Add(this._interactiveOptionsValue);
             this._interpreterSettingsGroup.Controls.Add(this._generateCompletionDb);
             this._interpreterSettingsGroup.Controls.Add(this._removeInterpreter);
             this._interpreterSettingsGroup.Location = new System.Drawing.Point(3, 72);
@@ -222,23 +218,6 @@
             this._pathEnvVar.TabIndex = 11;
             this._pathEnvVar.TextChanged += new System.EventHandler(this.PathEnvVarTextChanged);
             // 
-            // _interactiveOptions
-            // 
-            this._interactiveOptions.AutoSize = true;
-            this._interactiveOptions.Location = new System.Drawing.Point(12, 154);
-            this._interactiveOptions.Name = "_interactiveOptions";
-            this._interactiveOptions.Size = new System.Drawing.Size(141, 13);
-            this._interactiveOptions.TabIndex = 12;
-            this._interactiveOptions.Text = "&Interactive Window Options:";
-            // 
-            // _interactiveOptionsValue
-            // 
-            this._interactiveOptionsValue.Location = new System.Drawing.Point(159, 151);
-            this._interactiveOptionsValue.Name = "_interactiveOptionsValue";
-            this._interactiveOptionsValue.Size = new System.Drawing.Size(219, 20);
-            this._interactiveOptionsValue.TabIndex = 13;
-            this._interactiveOptionsValue.TextChanged += new System.EventHandler(this.InteractiveOptionsValueTextChanged);
-            // 
             // _generateCompletionDb
             // 
             this._generateCompletionDb.Location = new System.Drawing.Point(15, 177);
@@ -295,8 +274,6 @@
         private System.Windows.Forms.Label _showSettingsForLabel;
         private System.Windows.Forms.ComboBox _showSettingsFor;
         private System.Windows.Forms.GroupBox _interpreterSettingsGroup;
-        private System.Windows.Forms.TextBox _interactiveOptionsValue;
-        private System.Windows.Forms.Label _interactiveOptions;
         private System.Windows.Forms.ToolTip _toolTips;
         private System.Windows.Forms.Button _addInterpreter;
         private System.Windows.Forms.Label _versionLabel;
