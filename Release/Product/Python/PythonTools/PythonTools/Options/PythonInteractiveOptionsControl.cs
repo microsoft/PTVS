@@ -61,8 +61,13 @@ namespace Microsoft.PythonTools.Options {
                 _startupScript.Enabled = false;
                 _executionMode.Enabled = false;
                 _completionModeGroup.Enabled = false;
-                _promptOptionsGroup.Enabled = false;
+                EnableOrDisableOptions(false);
+
             }
+        }
+
+        private void EnableOrDisableOptions(bool enable) {
+            _priPrompt.Enabled = _priPromptLabel.Enabled = _secPrompt.Enabled = _secPromptLabel.Enabled = _useUserDefinedPrompts.Enabled = _enableAttach.Enabled = _smartReplHistory.Enabled = _inlinePrompts.Enabled = enable;
         }
 
         public void NewInterpreter(IPythonInterpreterFactory factory) {
@@ -74,7 +79,7 @@ namespace Microsoft.PythonTools.Options {
                 _startupScript.Enabled = true;
                 _executionMode.Enabled = true;
                 _completionModeGroup.Enabled = true;
-                _promptOptionsGroup.Enabled = true;
+                EnableOrDisableOptions(true);
             }
 
             _factories.Add(factory);
@@ -103,6 +108,11 @@ be imported and the custom backend will be used.
 When launching a project in the interactive window these are combined with any interpreter options listed in the project.";
 
             const string smartReplHistoryToolTip = "Causes the up/down arrow keys to navigate history when the cursor is at the end of an input.";
+            const string enableAttachToolTip = @"Enable attaching to the Visual Studio debugger to the REPL process.  Attaching can be performed by entering:
+
+import visualstudio_py_repl
+visualstudio_py_repl.BACKEND.attach()";
+
 
             _tooltips.SetToolTip(_inlinePrompts, inlinePromptsToolTip);
             _tooltips.SetToolTip(_useUserDefinedPrompts, useInterpreterPromptsToolTip);
@@ -111,6 +121,7 @@ When launching a project in the interactive window these are combined with any i
             _tooltips.SetToolTip(_interpOptionsLabel, interpreterOptionsToolTip);
             _tooltips.SetToolTip(_interpreterOptions, interpreterOptionsToolTip);
             _tooltips.SetToolTip(_smartReplHistory, smartReplHistoryToolTip);
+            _tooltips.SetToolTip(_enableAttach, enableAttachToolTip);
         }
 
         private void RefreshOptions() {
@@ -130,6 +141,7 @@ When launching a project in the interactive window these are combined with any i
                 _startupScript.Text = CurrentOptions.StartupScript;
                 _interpreterOptions.Text = CurrentOptions.InterpreterOptions;
                 _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked;
+                _enableAttach.Checked = CurrentOptions.EnableAttach;
 
                 int selectedExecutionMode = -1;
                 for (int i = 0; i < _executionModes.Length; i++) {
@@ -231,6 +243,10 @@ When launching a project in the interactive window these are combined with any i
 
         private void InterpreterOptionsTextChanged(object sender, EventArgs e) {
             CurrentOptions.InterpreterOptions = _interpreterOptions.Text;
+        }
+
+        private void EnableAttachCheckedChanged(object sender, EventArgs e) {
+            CurrentOptions.EnableAttach = _enableAttach.Checked;
         }
     }
 }

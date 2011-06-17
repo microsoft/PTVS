@@ -306,5 +306,14 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        bool IPythonInteractiveOptions.EnableAttach {
+            get {
+                return CurrentOptions.EnableAttach;
+            }
+            set {
+                CurrentOptions.EnableAttach = value;
+                SaveSettingsToStorage();
+            }
+        }
     }
 }

@@ -60,6 +60,14 @@ namespace Microsoft.PythonTools.Debugger {
             _targets.Remove(id);
         }
 
+        public static PythonProcess GetProcess(Guid id) {
+            WeakReference value;
+            if (_targets.TryGetValue(id, out value)) {
+                return (PythonProcess)value.Target;
+            }
+            return null;
+        }
+
         private static void ListenForConnection() {
             try {
                 try {

@@ -1038,6 +1038,9 @@ namespace AnalysisTest {
             process.ProcessExited += (sender, args) => {
                 Assert.AreEqual(args.ExitCode, expectedExitCode);
             };
+            process.ExceptionRaised += (sender, args) => {
+                process.Resume();
+            };
 
             process.Start();
             process.WaitForExit();

@@ -259,7 +259,7 @@
             this.Controls.Add(this._addInterpreter);
             this.Controls.Add(this._interpreterSettingsGroup);
             this.Name = "PythonInterpreterOptionsControl";
-            this.Size = new System.Drawing.Size(395, 317);
+            this.Size = new System.Drawing.Size(395, 292);
             this._interpreterSettingsGroup.ResumeLayout(false);
             this._interpreterSettingsGroup.PerformLayout();
             this.ResumeLayout(false);

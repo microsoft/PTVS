@@ -42,12 +42,15 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly PythonLanguageVersion _langVersion;
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
+        private readonly bool _delayUnregister;
 
         private bool _sentExited;
         private Socket _socket;
         private int _breakpointCounter;
         private bool _setLineResult;                    // contains result of attempting to set the current line of a frame
         private bool _createdFirstThread;
+        private int _defaultBreakMode;
+        private ICollection<KeyValuePair<string, int>> _breakOn;
 
         private static Random _portGenerator = new Random();
 
@@ -73,6 +76,18 @@ namespace Microsoft.PythonTools.Debugger {
                     throw new AttachException(ConnErrorMessages.TimeOut);
                 }
             }
+        }
+
+        private PythonProcess(Socket socket, int pid, PythonLanguageVersion version) {
+            _process = Process.GetProcessById(pid);
+            _process.Exited += new EventHandler(_process_Exited);
+            
+            _delayUnregister = true;
+            
+            ListenForConnection();
+
+            socket.Send(BitConverter.GetBytes(DebugConnectionListener.ListenerPort));
+            SendString(socket, _processGuid.ToString());
         }
 
         public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, string interpreterOptions, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
@@ -124,6 +139,10 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        public static PythonProcess AttachRepl(Socket socket, int pid, PythonLanguageVersion version) {
+            return new PythonProcess(socket, pid, version);
+        }
+
         class AttachException : Exception {
             private readonly ConnErrorMessages _error;
 
@@ -143,6 +162,12 @@ namespace Microsoft.PythonTools.Debugger {
         public int Id {
             get {
                 return _process.Id;
+            }
+        }
+
+        public Guid ProcessGuid {
+            get {
+                return _processGuid;
             }
         }
 
@@ -228,6 +253,17 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void SetExceptionInfo(int defaultBreakOnMode, ICollection<KeyValuePair<string, int>> breakOn) {
+            lock (this) {
+                if (_socket != null) {
+                    SendExceptionInfo(defaultBreakOnMode, breakOn);
+                } else {
+                    _breakOn = breakOn;
+                    defaultBreakOnMode = _defaultBreakMode;
+                }
+            }
+        }
+
+        private void SendExceptionInfo(int defaultBreakOnMode, ICollection<KeyValuePair<string, int>> breakOn) {
             _socket.Send(SetExceptionInfoCommandBytes);
             _socket.Send(BitConverter.GetBytes(defaultBreakOnMode));
             _socket.Send(BitConverter.GetBytes(breakOn.Count));
@@ -244,7 +280,19 @@ namespace Microsoft.PythonTools.Debugger {
         internal void Connected(Socket socket) {
             Debug.WriteLine("Process Connected: " + _processGuid);
 
-            _socket = socket;
+            lock (this) {
+                _socket = socket;
+                if (_breakOn != null) {
+                    SendExceptionInfo(_defaultBreakMode, _breakOn);
+                }
+            }
+
+            if (!_delayUnregister) {
+                Unregister();
+            }
+        }
+
+        internal void Unregister() {
             var debuggerThread = new Thread(DebugEventThread);
             debuggerThread.Name = "Python Debugger Thread " + _processGuid;
             debuggerThread.Start();
@@ -507,6 +555,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void HandleProcessLoad(Socket socket) {
+            Debug.WriteLine("Process loaded " + _processGuid);
+
             // process is loaded, no user code has run
             int threadId = socket.ReadInt();
             var thread = _threads[threadId];
@@ -529,11 +579,12 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleBreakPointSet(Socket socket) {
             // break point successfully set
             int id = socket.ReadInt();
-            var unbound = _breakpoints[id];
-
-            var brkEvent = BreakpointBindSucceeded;
-            if (brkEvent != null) {
-                brkEvent(this, new BreakpointEventArgs(unbound));
+            PythonBreakpoint unbound;
+            if (_breakpoints.TryGetValue(id, out unbound)) {
+                var brkEvent = BreakpointBindSucceeded;
+                if (brkEvent != null) {
+                    brkEvent(this, new BreakpointEventArgs(unbound));
+                }
             }
         }
 
@@ -666,7 +717,11 @@ namespace Microsoft.PythonTools.Debugger {
 
         public void Detach() {
             DebugWriteCommand("Detach");
-            _socket.Send(DetachCommandBytes);
+            try {
+                _socket.Send(DetachCommandBytes);
+            } catch (SocketException) {
+                // socket is closed after we send detach
+            }
         }
 
         [DllImport("kernel32", SetLastError = true, ExactSpelling = true)]
@@ -797,8 +852,8 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void SendString(Socket socket, string str) {
             byte[] bytes = Encoding.UTF8.GetBytes(str);
-            _socket.Send(BitConverter.GetBytes(bytes.Length));
-            _socket.Send(bytes);
+            socket.Send(BitConverter.GetBytes(bytes.Length));
+            socket.Send(bytes);
         }
 
         private int? ReadInt(Socket socket) {

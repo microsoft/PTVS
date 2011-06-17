@@ -116,5 +116,10 @@ namespace Microsoft.PythonTools.Options {
             get;
             set;
         }
+
+        bool EnableAttach {
+            get;
+            set;
+        }
     }
 }

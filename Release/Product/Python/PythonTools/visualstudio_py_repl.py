@@ -49,6 +49,8 @@ class UnsupportedReplException(Exception):
     def __init__(self, reason):
         self.reason = reason
 
+# save the start_new_thread so we won't debug/break into the REPL comm thread.
+start_new_thread = thread.start_new_thread
 class ReplBackend(object):
     """back end for executing REPL code.  This base class handles all of the 
 communication with the remote process while derived classes implement the 
@@ -61,6 +63,7 @@ actual inspection and introspection."""
     _RDLN = _cmd('RDLN')
     _STDO = _cmd('STDO')
     _STDE = _cmd('STDE')
+    _DBGA = _cmd('DBGA')
     _UNICODE_PREFIX = _cmd('U')
     _ASCII_PREFIX = _cmd('A')
     
@@ -76,7 +79,7 @@ actual inspection and introspection."""
         self.conn.connect(('127.0.0.1', port))
 
         # start a new thread for communicating w/ the remote process
-        thread.start_new_thread(self._repl_loop, ())
+        start_new_thread(self._repl_loop, ())
 
     def _repl_loop(self):
         """loop on created thread which processes communicates with the REPL window"""    
@@ -208,7 +211,12 @@ actual inspection and introspection."""
     
     def _cmd_excf(self):
         """handles executing a single file"""
-        self.execute_file(self._read_string())
+        self.execute_file(self._read_string())                
+
+    def _cmd_debug_attach(self):
+        port, = struct.unpack('i', self.conn.recv(4))
+        id = self._read_string()
+        self.attach_process(port, id)
 
     _COMMANDS = {
         _cmd('run ') : _cmd_run,
@@ -220,6 +228,7 @@ actual inspection and introspection."""
         _cmd('setm') : _cmd_setm,
         _cmd('inpl'): _cmd_inpl,
         _cmd('excf'): _cmd_excf,
+        _cmd('dbga'): _cmd_debug_attach,
     }
 
     def _write_member_dict(self, mem_dict):
@@ -333,6 +342,10 @@ actual inspection and introspection."""
         """flushes the stdout/stderr buffers"""
         raise NotImplementedError
 
+    def attach_process(self, port, debugger_id):
+        """starts processing execution requests"""
+        raise NotImplementedError
+    
 def exit_work_item():
     sys.exit(0)
 
@@ -540,6 +553,14 @@ class BasicReplBackend(ReplBackend):
     def flush(self):
         sys.stdout.flush()
 
+    def attach_process(self, port, debugger_id):
+        def execute_attach_process_work_item():
+            import visualstudio_py_debugger
+            visualstudio_py_debugger.attach_process(port, debugger_id, True)        
+        
+        self.execute_item = execute_attach_process_work_item
+        self.execute_item_lock.release()
+    
     @staticmethod
     def _get_member_type(inst, name, from_dict):
         try:
@@ -611,6 +632,9 @@ def _run_repl():
                    help='the script file to run on startup')
     parser.add_option('--execution_mode', dest='backend',
                    help='the backend to use')
+    parser.add_option('--enable-attach', dest='enable_attach', 
+                    action="store_true", default=False,
+                   help='enable attaching the debugger via $attach')
 
     (options, args) = parser.parse_args()
     
@@ -620,6 +644,13 @@ def _run_repl():
     global __name__
     __name__ = 'visualstudio_py_repl'
     
+    if options.enable_attach:
+        # importing this hooks start_new_thread
+        import visualstudio_py_debugger
+        visualstudio_py_debugger.DONT_DEBUG.append(__file__)
+        new_thread = visualstudio_py_debugger.new_thread()
+        sys.settrace(new_thread.trace_func)
+        visualstudio_py_debugger.intercept_threads(True)
 
     backend_type = BasicReplBackend
     backend_error = None

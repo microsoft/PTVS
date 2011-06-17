@@ -428,7 +428,7 @@ namespace AnalysisTest {
             interactive.WithStandardInputPrompt("INPUT: ", (stdInputPrompt) => {
                 interactive.WaitForText(ReplPrompt);
 
-                Keyboard.Type(RawInput + "\r");
+                Keyboard.Type(RawInput + "()" + "\r");
                 interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
 
                 Keyboard.Type("ignored");
@@ -1904,6 +1904,44 @@ $cls
             Assert.AreNotEqual(null, interactive);
             
             interactive.WaitForTextEnd("Program.py']", ReplPrompt);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AttachReplTest() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\DebuggerProject.sln");
+            GetInteractiveOptions().EnableAttach = true;
+            try {
+                var interactive = Prepare(true);
+                
+                const string attachCmd = "$attach";
+                Keyboard.Type(attachCmd + "\r");
+
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
+                interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
+
+                DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgRunMode);
+
+                GetPythonAutomation().OpenInteractive(InterpreterDescription);
+                interactive = app.GetInteractiveWindow(InterpreterDescription);
+
+                const string import = "import BreakpointTest";
+                Keyboard.Type(import + "\r");
+                interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
+
+                DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgBreakMode);
+
+                Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, 1);
+
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.DetachAll");
+
+                DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgDesignMode);
+
+                interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
+            } finally {
+                GetInteractiveOptions().EnableAttach = false;
+            }            
         }
 
         /// <summary>

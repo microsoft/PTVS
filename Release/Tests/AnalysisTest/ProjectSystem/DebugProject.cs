@@ -667,7 +667,7 @@ namespace AnalysisTest.ProjectSystem {
         }
 
 
-        private static void WaitForMode(dbgDebugMode mode) {
+        internal static void WaitForMode(dbgDebugMode mode) {
             for (int i = 0; i < 300 && VsIdeTestHostContext.Dte.Debugger.CurrentMode != mode; i++) {
                 Thread.Sleep(100);
             }

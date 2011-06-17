@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Options {
         private const string StartupScriptSetting = "StartupScript";
         private const string ExecutionModeSetting = "ExecutionMode";
         private const string InterpreterOptionsSetting = "InterpreterOptions";
+        private const string EnableAttachSetting = "EnableAttach";
 
         public PythonInteractiveOptionsPage()
             : base("Interactive Windows") {
@@ -71,6 +72,7 @@ namespace Microsoft.PythonTools.Options {
                 options.StartupScript = "";
                 options.ExecutionMode = "";
                 options.InterpreterOptions = "";
+                options.EnableAttach = false;
             }
         }
 
@@ -97,7 +99,8 @@ namespace Microsoft.PythonTools.Options {
                 ReplSmartHistory = LoadBool(interpreterId + SmartHistorySetting) ?? true,
                 StartupScript = LoadString(interpreterId + StartupScriptSetting) ?? "",
                 ExecutionMode = LoadString(interpreterId + ExecutionModeSetting) ?? "",
-                InterpreterOptions = LoadString(interpreterId + InterpreterOptionsSetting) ?? ""
+                InterpreterOptions = LoadString(interpreterId + InterpreterOptionsSetting) ?? "",
+                EnableAttach = LoadBool(interpreterId + EnableAttachSetting) ?? false
             };
         }
 
@@ -120,6 +123,7 @@ namespace Microsoft.PythonTools.Options {
                     SaveString(interpreterId + StartupScriptSetting, options.StartupScript);
                     SaveString(interpreterId + ExecutionModeSetting, options.ExecutionMode ?? "");
                     SaveString(interpreterId + InterpreterOptionsSetting, options.InterpreterOptions ?? "");
+                    SaveBool(interpreterId + EnableAttachSetting, options.EnableAttach);
 
                     // propagate changed settings to existing REPL windows
                     foreach (var replWindow in replProvider.GetReplWindows()) {

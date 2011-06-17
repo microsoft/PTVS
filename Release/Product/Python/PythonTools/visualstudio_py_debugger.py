@@ -20,7 +20,7 @@ if sys.platform == 'cli':
 
 # save start_new_thread so we can call it later, we'll intercept others calls to it.
 
-DETACHED = False
+DETACHED = True
 def thread_creator(func, args, kwargs = {}):
     id = _start_new_thread(new_thread_wrapper, (func, ) + args, kwargs)
         
@@ -158,8 +158,11 @@ class ExceptionBreakInfo(object):
             if handlers is None:
                 # req handlers for this file from the debug engine
                 self.handler_lock.acquire()
+                
+                send_lock.acquire()
                 conn.send(REQH)
                 write_string(cur_frame.f_code.co_filename)
+                send_lock.release()
 
                 # wait for the handler data to be received
                 self.handler_lock.acquire()
@@ -205,6 +208,15 @@ def probe_stack(depth = 10):
       return
   probe_stack(depth - 1)
 
+
+# list of files that we shouldn't be debugging
+DONT_DEBUG = [__file__]
+
+
+def should_debug_code(code):
+    return code.co_filename not in DONT_DEBUG
+
+
 class Thread(object):
     def __init__(self, id = None):
         if id is not None:
@@ -234,8 +246,9 @@ class Thread(object):
         self.trace_func_stack = []
     
     def trace_func(self, frame, event, arg):
+        
         try:
-            if self.stepping == STEPPING_BREAK:
+            if self.stepping == STEPPING_BREAK and should_debug_code(frame.f_code):
                 if self.cur_frame is None:
                     # happens during attach, we need frame for blocking
                     self.cur_frame = frame
@@ -247,7 +260,7 @@ class Thread(object):
                 self.async_break()
 
             return self._events[event](frame, arg)
-        except RuntimeError:
+        except (RuntimeError, KeyboardInterrupt):
             # stack overflow, disable tracing
             return self.trace_func
     
@@ -256,15 +269,17 @@ class Thread(object):
 
         if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
             probe_stack()
-            code, module = report_module_load(frame)
+            code, module = new_module(frame)
+            if not DETACHED:
+                report_module_load(module)
 
-            # see if this module causes new break points to be bound
-            bound = set()
-            global PENDING_BREAKPOINTS
-            for pending_bp in PENDING_BREAKPOINTS:
-                if check_break_point(code.co_filename, module, pending_bp.brkpt_id, pending_bp.lineNo, pending_bp.filename, pending_bp.condition, pending_bp.break_when_changed):
-                    bound.add(pending_bp)
-            PENDING_BREAKPOINTS -= bound
+                # see if this module causes new break points to be bound
+                bound = set()
+                global PENDING_BREAKPOINTS
+                for pending_bp in PENDING_BREAKPOINTS:
+                    if check_break_point(code.co_filename, module, pending_bp.brkpt_id, pending_bp.lineNo, pending_bp.filename, pending_bp.condition, pending_bp.break_when_changed):
+                        bound.add(pending_bp)
+                PENDING_BREAKPOINTS -= bound
 
         stepping = self.stepping
         if stepping is not STEPPING_NONE:
@@ -276,7 +291,7 @@ class Thread(object):
             elif stepping <= STEPPING_OUT:
                 self.stepping -= 1
 
-            if stepping is STEPPING_LAUNCH_BREAK and sys.platform == 'cli':
+            if stepping is STEPPING_LAUNCH_BREAK and sys.platform == 'cli' and not DETACHED:
                 # work around IronPython bug - http://ironpython.codeplex.com/workitem/30127
                 self.handle_line(frame, arg)
 
@@ -296,48 +311,49 @@ class Thread(object):
             return code_obj.co_filename.startswith(sys.prefix)
 
     def handle_line(self, frame, arg):
-        stepping = self.stepping
-        if stepping is not STEPPING_NONE:   # check for the common case of no stepping first...
-            if (((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
-                or stepping == STEPPING_LAUNCH_BREAK 
-                or stepping == STEPPING_ATTACH_BREAK):
-                if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
-                    (self.not_our_code(frame.f_code)) or
-                    frame.f_code.co_filename == __file__):  # don't break into our own debugger
-                    # don't break into inital Python code needed to set things up
-                    return self.trace_func
+        if not DETACHED:
+            stepping = self.stepping
+            if stepping is not STEPPING_NONE:   # check for the common case of no stepping first...
+                if (((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
+                    or stepping == STEPPING_LAUNCH_BREAK 
+                    or stepping == STEPPING_ATTACH_BREAK):
+                    if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
+                        (self.not_our_code(frame.f_code)) or
+                        not should_debug_code(frame.f_code)):  # don't break into our own debugger
+                        # don't break into inital Python code needed to set things up
+                        return self.trace_func
             
-                probe_stack()
-                self.stepping = STEPPING_NONE
-                def block_cond():
-                    if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
-                        return report_step_finished(self.id)
-                    else:
-                        return report_process_loaded(self.id)
-                self.block(block_cond)
-
-        if BREAKPOINTS:
-            bp = BREAKPOINTS.get(frame.f_lineno)
-            if bp is not None:
-                for (filename, bp_id), condition in bp.items():
-                    if filename == frame.f_code.co_filename:                        
-                        if condition:                            
-                            try:
-                                res = eval(condition.condition, frame.f_globals, frame.f_locals)
-                                if condition.break_when_changed:
-                                    block = condition.last_value != res
-                                    condition.last_value = res
-                                else:
-                                    block = res
-                            except:
-                                block = True
+                    probe_stack()
+                    self.stepping = STEPPING_NONE
+                    def block_cond():
+                        if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
+                            return report_step_finished(self.id)
                         else:
-                            block = True
+                            return report_process_loaded(self.id)
+                    self.block(block_cond)
 
-                        if block:
-                            probe_stack()
-                            self.block(lambda: report_breakpoint_hit(bp_id, self.id))
-                        break
+            if BREAKPOINTS:
+                bp = BREAKPOINTS.get(frame.f_lineno)
+                if bp is not None:
+                    for (filename, bp_id), condition in bp.items():
+                        if filename == frame.f_code.co_filename:                        
+                            if condition:                            
+                                try:
+                                    res = eval(condition.condition, frame.f_globals, frame.f_locals)
+                                    if condition.break_when_changed:
+                                        block = condition.last_value != res
+                                        condition.last_value = res
+                                    else:
+                                        block = res
+                                except:
+                                    block = True
+                            else:
+                                block = True
+
+                            if block:
+                                probe_stack()
+                                self.block(lambda: report_breakpoint_hit(bp_id, self.id))
+                            break
 
         # forward call to previous trace function, if any, updating trace function appropriately
         old_trace_func = self.prev_trace_func
@@ -348,19 +364,20 @@ class Thread(object):
         return self.trace_func
     
     def handle_return(self, frame, arg):
-        stepping = self.stepping
-        if stepping is not STEPPING_NONE:
-            if stepping == STEPPING_OUT:
-                # break at the next line
-                self.stepping = STEPPING_OVER
-            elif stepping == STEPPING_OVER:
-                if frame.f_code.co_name == "<module>":
-                    self.stepping = STEPPING_NONE
-                    self.block(lambda: report_step_finished(self.id))
-            elif stepping > STEPPING_OVER:
-                self.stepping -= 1
-            elif stepping < STEPPING_OUT:
-                self.stepping += 1
+        if not DETACHED:
+            stepping = self.stepping
+            if stepping is not STEPPING_NONE:
+                if stepping == STEPPING_OUT:
+                    # break at the next line
+                    self.stepping = STEPPING_OVER
+                elif stepping == STEPPING_OVER:
+                    if frame.f_code.co_name == "<module>" and should_debug_code(frame.f_code):
+                        self.stepping = STEPPING_NONE
+                        self.block(lambda: report_step_finished(self.id))
+                elif stepping > STEPPING_OVER:
+                    self.stepping -= 1
+                elif stepping < STEPPING_OUT:
+                    self.stepping += 1
 
         # forward call to previous trace function, if any
         old_trace_func = self.prev_trace_func
@@ -374,7 +391,7 @@ class Thread(object):
         self.cur_frame = frame.f_back
         
     def handle_exception(self, frame, arg):
-        if frame.f_code.co_filename != __file__ and BREAK_ON.ShouldBreak(self, *arg):
+        if not DETACHED and should_debug_code(frame.f_code) and BREAK_ON.ShouldBreak(self, *arg):
             self.block(lambda: report_exception(frame, arg, self.id))
 
         # forward call to previous trace function, if any, updating the current trace function
@@ -557,29 +574,11 @@ class Thread(object):
             report_children(execution_id, [], False, False)
 
     def enum_thread_frames_locally(self):
-        send_lock.acquire()
-        conn.send(THRF)
-        conn.send(struct.pack('i',self.id))
+        # first gather all the frames (which can run user code)
+        frames = []
+        cur_frame = self.cur_frame
     
-        cur_frame = None
-        if thread is not None:
-            cur_frame = self.cur_frame
-    
-        # count the frames
-        tmp_frame = cur_frame
-        frame_count = 0
-        while should_send_frame(tmp_frame):
-            frame_count += 1
-            tmp_frame = tmp_frame.f_back
-    
-        # send the frame count
-        conn.send(struct.pack('i', frame_count))
         while should_send_frame(cur_frame):
-            # send each frame
-    
-            # send the starting line number
-            conn.send(struct.pack('i', cur_frame.f_code.co_firstlineno))
-                
             # calculate the ending line number
             lineno = cur_frame.f_code.co_firstlineno
             try:
@@ -595,24 +594,14 @@ class Thread(object):
                         lineno += line_incr
                     else:
                         lineno += ord(line_incr)
-    
-            conn.send(struct.pack('i', lineno))
-    
-            # and then the current line number
-            conn.send(struct.pack('i', cur_frame.f_lineno))
-    
-            write_string(cur_frame.f_code.co_name)
-            write_string(get_code_filename(cur_frame.f_code))
-            conn.send(struct.pack('i', cur_frame.f_code.co_argcount))
                 
             if cur_frame.f_locals is cur_frame.f_globals:
                 var_names = cur_frame.f_globals
             else:
                 var_names = cur_frame.f_code.co_varnames
-                
-            conn.send(struct.pack('i', len(var_names)))
+                        
+            vars = []
             for var_name in var_names:
-                write_string(var_name)
                 try:
                     obj = cur_frame.f_locals[var_name]
                 except:
@@ -622,9 +611,43 @@ class Thread(object):
                 except:
                     type_name = 'unknown'
                     
-                write_object(type(obj), safe_repr(obj), safe_hex_repr(obj), type_name)
+                vars.append((var_name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name))
+                
+
+            frames.append((cur_frame.f_code.co_firstlineno,
+                           lineno, 
+                           cur_frame.f_lineno, 
+                           cur_frame.f_code.co_name,
+                           get_code_filename(cur_frame.f_code),
+                           cur_frame.f_code.co_argcount,
+                           vars))
 
             cur_frame = cur_frame.f_back
+
+
+
+        # then send them
+        send_lock.acquire()
+        conn.send(THRF)
+        conn.send(struct.pack('i',self.id))
+    
+        # send the frame count
+        conn.send(struct.pack('i', len(frames)))
+        for firstlineno, lineno, curlineno, name, filename, argcount, variables in frames:
+            # send each frame    
+            conn.send(struct.pack('i', firstlineno))
+            conn.send(struct.pack('i', lineno))
+            conn.send(struct.pack('i', curlineno))
+    
+            write_string(name)
+            write_string(filename)
+            conn.send(struct.pack('i', argcount))
+                
+            conn.send(struct.pack('i', len(variables)))
+            for name, type_obj, safe_repr_obj, hex_repr_obj, type_name in variables:
+                write_string(name)
+                    
+                write_object(type_obj, safe_repr_obj, hex_repr_obj, type_name)
         
         send_lock.release()
 
@@ -714,6 +737,8 @@ class DebuggerLoop(object):
                         print ('unknown command', inp)
                     break
         except DebuggerExitException:
+            pass
+        except socket.error:
             pass
         except:
             traceback.print_exc()
@@ -901,16 +926,23 @@ class DebuggerLoop(object):
             thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate)
     
     def command_detach(self):
+        global conn
+
         # tell all threads to stop tracing...
         THREADS_LOCK.acquire()
         for tid, pyThread in THREADS.items():
-            pyThread.detach = True
-            pyThread.stepping = STEPPING_BREAK
+            if not _INTERCEPTING_FOR_ATTACH:
+                pyThread.detach = True
+                pyThread.stepping = STEPPING_BREAK
 
             if pyThread._is_blocked:
                 pyThread.unblock()
 
-        THREADS.clear()
+        if not _INTERCEPTING_FOR_ATTACH:
+            THREADS.clear()
+        
+        BREAKPOINTS.clear()
+
         THREADS_LOCK.release()
 
         global DETACHED
@@ -919,10 +951,12 @@ class DebuggerLoop(object):
         DETACHED = True
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
+
         send_lock.release()
 
-        thread.start_new_thread = _start_new_thread
-        thread.start_new = _start_new_thread
+        if not _INTERCEPTING_FOR_ATTACH:
+            thread.start_new_thread = _start_new_thread
+            thread.start_new = _start_new_thread
 
         raise DebuggerExitException()
 
@@ -1001,17 +1035,18 @@ def report_exception(frame, exc_info, tid):
     write_string(excp_text)
     send_lock.release()
 
-def report_module_load(frame):
+def new_module(frame):
     mod = Module(get_code_filename(frame.f_code))
     MODULES.append((frame.f_code.co_filename, mod))
 
+    return frame.f_code, mod
+
+def report_module_load(mod):
     send_lock.acquire()
     conn.send(MODL)
     conn.send(struct.pack('i', mod.module_id))
     write_string(mod.filename)
     send_lock.release()
-
-    return frame.f_code, mod
 
 def report_step_finished(tid):
     send_lock.acquire()
@@ -1130,7 +1165,14 @@ except NameError:
 
 
 debugger_thread_id = -1
-def attach_process(port_num, debug_id):    
+_INTERCEPTING_FOR_ATTACH = False
+def intercept_threads(for_attach = False):
+    thread.start_new_thread = thread_creator
+    thread.start_new = thread_creator
+    global _INTERCEPTING_FOR_ATTACH
+    _INTERCEPTING_FOR_ATTACH = for_attach
+
+def attach_process(port_num, debug_id, report_and_block = False):
     global conn
     for i in xrange(50):
         try:
@@ -1144,13 +1186,29 @@ def attach_process(port_num, debug_id):
     else:
         raise Exception('failed to attach')
 
+    global DETACHED
+    DETACHED = False
+
     # start the debugging loop
     global debugger_thread_id
     debugger_thread_id = _start_new_thread(DebuggerLoop(conn).loop, ())
-    
+
+    if report_and_block:
+        THREADS_LOCK.acquire()
+        main_thread = THREADS[thread.get_ident()]
+        for cur_thread in THREADS.values():
+            report_new_thread(cur_thread)
+
+        THREADS_LOCK.release()
+
+        for filename, module in MODULES:
+            report_module_load(module)            
+
+        main_thread.block(lambda: report_process_loaded(thread.get_ident()))
+
     # intercept all new thread requests
-    thread.start_new_thread = thread_creator
-    thread.start_new = thread_creator        
+    if not _INTERCEPTING_FOR_ATTACH:
+        intercept_threads()
 
 
 def new_thread(tid = None, set_break = False, frame = None):
@@ -1165,7 +1223,8 @@ def new_thread(tid = None, set_break = False, frame = None):
     cur_thread.cur_frame = frame
     if set_break:
         cur_thread.stepping = STEPPING_ATTACH_BREAK
-    report_new_thread(cur_thread)
+    if not DETACHED:
+        report_new_thread(cur_thread)
     return cur_thread
 
 def do_wait():

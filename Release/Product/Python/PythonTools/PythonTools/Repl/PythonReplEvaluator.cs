@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -26,12 +27,16 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Debugger;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
@@ -44,7 +49,7 @@ namespace Microsoft.PythonTools.Repl {
         private IPythonInterpreterFactory _interpreter;
         private ListenerThread _curListener;
         private IReplWindow _window;
-        private bool _multipleScopes = true;
+        private bool _multipleScopes = true, _enableAttach;
         private ProjectAnalyzer _replAnalyzer;
 
         private static readonly byte[] RunCommandBytes = MakeCommand("run ");
@@ -56,6 +61,7 @@ namespace Microsoft.PythonTools.Repl {
         private static readonly byte[] SetModuleCommandBytes = MakeCommand("setm");
         private static readonly byte[] InputLineCommandBytes = MakeCommand("inpl");
         private static readonly byte[] ExecuteFileCommandBytes = MakeCommand("excf");
+        private static readonly byte[] DebugAttachCommandBytes = MakeCommand("dbga");
 
         public PythonReplEvaluator(IPythonInterpreterFactoryProvider factoryProvider, Guid guid, Version version, IErrorProviderFactory errorProviderFactory) {
             _factProvider = factoryProvider;
@@ -165,6 +171,11 @@ namespace Microsoft.PythonTools.Repl {
                 args.Add("\"" + CurrentOptions.StartupScript + "\"");
             }
 
+            _enableAttach = CurrentOptions.EnableAttach;
+            if (CurrentOptions.EnableAttach) {
+                args.Add("--enable-attach");                
+            }
+
             bool multipleScopes = true;
             if (!String.IsNullOrWhiteSpace(CurrentOptions.ExecutionMode)) {
                 // change ID to module name if we have a registered mode
@@ -207,6 +218,11 @@ namespace Microsoft.PythonTools.Repl {
             _curListener = new ListenerThread(this, conn, processInfo.RedirectStandardOutput, process);
         }
 
+        public bool AttachEnabled {
+            get {
+                return _enableAttach;
+            }
+        }
         
         class ListenerThread {
             private readonly PythonReplEvaluator _eval;
@@ -250,6 +266,7 @@ namespace Microsoft.PythonTools.Repl {
                 try {
                     _socket = _socket.Accept();
                     _connected = true;
+                    
                     Socket socket;
                     while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
                         using (new SocketLock(this)) {
@@ -332,7 +349,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (res == null) {
                         throw new SocketException();
                     }
-                    Debug.Assert(res.Connected);
+
                     return res;
                 }
             }
@@ -350,6 +367,45 @@ namespace Microsoft.PythonTools.Repl {
                 });
             }
 
+            internal string DoDebugAttach() {
+                PythonProcess debugProcess;
+                using (new SocketLock(this)) {
+                    Socket.Send(DebugAttachCommandBytes);
+
+                    debugProcess = PythonProcess.AttachRepl(_socket, _process.Id, _eval._replAnalyzer.Project.LanguageVersion);
+                }
+
+                // TODO: Surround in SocketUnlock
+                var debugTarget = new VsDebugTargetInfo2();
+                debugTarget.guidLaunchDebugEngine = AD7Engine.DebugEngineGuid;
+                debugTarget.dwDebugEngineCount = 1;
+                
+                debugTarget.dlo = (uint)DEBUG_LAUNCH_OPERATION.DLO_Custom;
+                debugTarget.bstrExe = debugProcess.ProcessGuid.ToString();
+                debugTarget.cbSize = (uint)System.Runtime.InteropServices.Marshal.SizeOf(typeof(VsDebugTargetInfo));
+                debugTarget.bstrCurDir = "";
+                debugTarget.guidPortSupplier = new Guid("{708C1ECA-FF48-11D2-904F-00C04FA302A1}");     // local port supplier
+                debugTarget.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_WaitForAttachComplete | (uint)__VSDBGLAUNCHFLAGS5.DBGLAUNCH_BreakOneProcess;
+                debugTarget.bstrOptions = AD7Engine.AttachRunning + "=True";
+                debugTarget.pDebugEngines = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(Guid)));
+                Marshal.StructureToPtr(AD7Engine.DebugEngineGuid, debugTarget.pDebugEngines, false);
+                IntPtr memory = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VsDebugTargetInfo2)));
+                Marshal.StructureToPtr(debugTarget, memory, false);
+                var debugger = (IVsDebugger2)PythonToolsPackage.GetGlobalService(typeof(SVsShellDebugger));
+                int hr = debugger.LaunchDebugTargets2(1, memory);                
+                if (hr < 0) {
+                    var uiShell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
+                    string errorText;
+                    uiShell.GetErrorInfo(out errorText);
+                    if (String.IsNullOrWhiteSpace(errorText)) {
+                        errorText = "Unknown Error: " + hr;
+                    }
+                    return errorText;
+                }
+
+                GC.KeepAlive(debugProcess);
+                return null;
+            }
 
             /// <summary>
             /// Replaces \r\n with \n
@@ -970,5 +1026,8 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        internal string AttachDebugger() {
+            return _curListener.DoDebugAttach();
+        }
     }
 }

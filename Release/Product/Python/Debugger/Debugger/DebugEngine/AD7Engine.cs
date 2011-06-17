@@ -87,6 +87,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// </summary>
         public const string InterpreterOptions = "INTERPRETER_OPTIONS";
 
+        public const string AttachRunning = "ATTACH_RUNNING";
+
         /// <summary>
         /// Specifies a directory mapping in the form of:
         /// 
@@ -189,7 +191,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     Debug.Fail("Asked to attach to a process while we are debugging");
                     return VSConstants.E_FAIL;
                 }
-                _attached = false;
             }
 
             AD7EngineCreateEvent.Send(this);
@@ -410,6 +411,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             PythonLanguageVersion version = DefaultVersion;
             PythonDebugOptions debugOptions = PythonDebugOptions.None;
+            bool attachRunning = false;
             List<string[]> dirMapping = null;
             string interpreterOptions = null;
             if (options != null) {
@@ -450,19 +452,33 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             case InterpreterOptions:
                                 interpreterOptions = setting[1];
                                 break;
+                            case AttachRunning:
+                                attachRunning = Convert.ToBoolean(setting[1]);
+                                break;
                         }
                     }
                 }
             }
 
-            _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
+            Guid processId;
+            if (attachRunning && Guid.TryParse(exe, out processId)) {
+                _process = DebugConnectionListener.GetProcess(processId);
+                AttachEvents(_process);
+                _process.Unregister();
+                _attached = true;
+            } else {
+                _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
+                AttachEvents(_process);
+            }
 
-            AttachEvents(_process);
+            
 
             _programCreated = false;
             _loadComplete.Reset();
 
-            _process.Start();
+            if (!attachRunning) {
+                _process.Start();
+            }
 
             AD_PROCESS_ID adProcessId = new AD_PROCESS_ID();
             adProcessId.ProcessIdType = (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM;
@@ -599,10 +615,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // but have stepping state remain. An example is when a tracepoint is executed, 
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread) {
-            Debug.WriteLine("PythonEngine Continue");
             AssertMainThread();
 
             AD7Thread thread = (AD7Thread)pThread;
+
+            Debug.WriteLine("PythonEngine Continue " + thread.GetDebuggedThread().Id);
 
             // TODO: How does this differ from ExecuteOnThread?
             thread.GetDebuggedThread().Resume();
@@ -619,6 +636,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _breakpointManager.ClearBoundBreakpoints();
 
             _process.Detach();
+            _ad7ProgramId = Guid.Empty;
 
             return VSConstants.S_OK;
         }
@@ -869,6 +887,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private void OnThreadCreated(object sender, ThreadEventArgs e) {
+            Debug.WriteLine("Thread created:  " + e.Thread.Id);
             var newThread = new AD7Thread(this, e.Thread);
             _threads.Add(e.Thread, newThread);
 
@@ -891,7 +910,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     // we've delviered the program created event, deliver the load complete event
                     SendLoadComplete(_threads[e.Thread]);
                 } else {
-                    Debug.WriteLine("Delaying load complete " + GetHashCode());
+                    Debug.WriteLine("Delaying load complete " + GetHashCode() + " on thread " + _threads[e.Thread].GetDebuggedThread().Id);
                     // we haven't delivered the program created event, wait until we do to deliver the process loaded event.
                     _processLoadedThread = _threads[e.Thread];
                 }

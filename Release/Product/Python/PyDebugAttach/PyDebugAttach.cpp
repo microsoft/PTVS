@@ -89,22 +89,7 @@ int AttachCallback(void *initThreads) {
     return 0;
 }
 
-char* ReadDebuggerCode() {
-    auto filename = GetCurrentModuleFilename();
-    if(filename.length() == 0) {
-        return nullptr;
-    }
-
-    wchar_t drive[_MAX_DRIVE], dir[_MAX_DIR], file[_MAX_FNAME], ext[_MAX_EXT];
-    _wsplitpath_s(filename.c_str(), drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, ext, _MAX_EXT);
-
-    wchar_t newName[MAX_PATH];
-#if defined(_AMD64_)
-    _wmakepath_s(newName, drive, dir, L"..\\visualstudio_py_debugger", L".py");
-#else
-    _wmakepath_s(newName, drive, dir, L"visualstudio_py_debugger", L".py");
-#endif
-
+char* ReadDebuggerCode(wchar_t* newName) {
     ifstream filestr;
     filestr.open(newName, ios::binary);
     if(filestr.fail()) {
@@ -559,8 +544,23 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
         // go ahead and bring in the debugger module and initialize all threads in the process...
         GilHolder gilLock(gilEnsure, gilRelease);   // acquire and hold the GIL until done...
 
+        auto filename = GetCurrentModuleFilename();
+        if(filename.length() == 0) {
+            return nullptr;
+        }
+
+        wchar_t drive[_MAX_DRIVE], dir[_MAX_DIR], file[_MAX_FNAME], ext[_MAX_EXT];
+        _wsplitpath_s(filename.c_str(), drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, ext, _MAX_EXT);
+
+        wchar_t newName[MAX_PATH];
+#if defined(_AMD64_)
+        _wmakepath_s(newName, drive, dir, L"..\\visualstudio_py_debugger", L".py");
+#else
+        _wmakepath_s(newName, drive, dir, L"visualstudio_py_debugger", L".py");
+#endif
+
         // run the debugger code...
-        auto debuggerCode = ReadDebuggerCode();
+        auto debuggerCode = ReadDebuggerCode(newName);
         if(debuggerCode == nullptr) {
             connInfo.ReportError(ConnError_LoadDebuggerFailed);
             return false;
@@ -576,9 +576,14 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
 
         // create a globals/locals dict for evaluating the code...
         auto globalsDict = PyObjectHolder(pyDictNew());
-        dictSetItem(*globalsDict, "__builtins__", getBuiltins());                                            
+        dictSetItem(*globalsDict, "__builtins__", getBuiltins());   
+        int size = WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), NULL, 0, NULL, NULL);
+        char* filenameBuffer = new char[1024];
+        if(WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), filenameBuffer, size, NULL, NULL) != 0) {
+            dictSetItem (*globalsDict, "__file__", strFromString(filenameBuffer));
+        }
         pyEvalCode(*code, *globalsDict, *globalsDict);
-        
+
         // now initialize debugger process wide state
         auto attach_process = PyObjectHolder(getDictItem(*globalsDict, "attach_process"), true);
         auto new_thread = PyObjectHolder(getDictItem(*globalsDict, "new_thread"), true);
