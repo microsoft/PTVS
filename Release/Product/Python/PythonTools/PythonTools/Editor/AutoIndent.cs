@@ -49,6 +49,14 @@ namespace Microsoft.PythonTools.Editor {
             return token.ClassificationType.IsOfType("CloseGroupingClassification");
         }
 
+        private struct LineInfo {
+            public static readonly LineInfo Empty = new LineInfo();
+            public bool NeedsUpdate;
+            public int Indentation;
+            public bool ShouldIndentAfter;
+            public bool ShouldDedentAfter;
+        }
+
         private static int CalculateIndentation(string baseline, ITextSnapshotLine line, IEditorOptions options, IClassifier classifier) {
             int indentation = GetIndentation(baseline, options.GetTabSize());
             int tabSize = options.GetIndentSize();
@@ -56,7 +64,7 @@ namespace Microsoft.PythonTools.Editor {
             if (tokens.Count > 0 && !IsUnterminatedStringToken(tokens[tokens.Count - 1])) {
                 int tokenIndex = tokens.Count - 1;
 
-                while(tokenIndex >= 0 &&
+                while (tokenIndex >= 0 &&
                     (tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.Comment) ||
                     tokens[tokenIndex].ClassificationType.IsOfType(PredefinedClassificationTypeNames.WhiteSpace))) {
                     tokenIndex--;
@@ -86,7 +94,7 @@ namespace Microsoft.PythonTools.Editor {
 
                 string sline = tokens[tokenIndex].Span.GetText();
                 var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
-                        
+
                 // use the expression parser to figure out if we're in a grouping...
                 var revParser = new ReverseExpressionParser(
                         line.Snapshot,
@@ -97,50 +105,67 @@ namespace Microsoft.PythonTools.Editor {
                         )
                     );
 
-                int paramIndex;
-                SnapshotPoint? sigStart;
-                var exprRangeNoImplicitOpen = revParser.GetExpressionRange(0, out paramIndex, out sigStart, false);
-                var exprRangeImplicitOpen = revParser.GetExpressionRange(1, out paramIndex, out sigStart, false);
+                var tokenStack = new System.Collections.Generic.Stack<ClassificationSpan>();
+                tokenStack.Push(null);  // end with an implicit newline
+                bool endAtNextNull = false;
 
-                if (exprRangeImplicitOpen != null && 
-                    (exprRangeNoImplicitOpen == null || exprRangeImplicitOpen.Value.Span != exprRangeNoImplicitOpen.Value.Span) &&
-                    IsOpenGrouping(exprRangeImplicitOpen.Value)) {
-                    // we are in an open grouping, indent to the open grouping chars level + 1
-                    return exprRangeImplicitOpen.Value.Start - exprRangeImplicitOpen.Value.Start.GetContainingLine().Start + 1;
-                } else if (exprRangeNoImplicitOpen != null && IsProceededByKeywordWhichCausesDedent(classifier, exprRangeNoImplicitOpen.Value)) {
-                    // return, break, continue, raise, etc... w/ an expression after it, dedent to the level of the line that contains the return, etc...
-                    indentation = GetIndentation(exprRangeNoImplicitOpen.Value.Start.GetContainingLine().GetText(), options.GetTabSize()) - tabSize;
-                } else if (indentation >= tabSize && ShouldDedentAfterKeyword(tokens[0])) {
-                    // return, break, continue, raise, etc... no code generally executes after these, do a dedent.
-                    indentation -= tabSize;
-                } else if (exprRangeImplicitOpen != null && exprRangeNoImplicitOpen != null) {
-                    // we have both a valid expression starting in a grouping and not starting in a grouping,
-                    // we dedent to the same level as the line with the starting open paren.  An example of this:
-                    // assert False, \
-                    //      42
-                    //
-                    // Where exprRangeOpen parses back to the False where exprRangeNoOpen parses back to just the
-                    // 42 because there are no implied groupings.  But we want to use the indentation level from
-                    // the open one.
-                    var endLine = exprRangeImplicitOpen.Value.End.GetContainingLine().LineNumber;
-                    int minIndentation = Int32.MaxValue;
-                    for (var line2 = exprRangeImplicitOpen.Value.Start.GetContainingLine();
-                        line2.LineNumber <= endLine;
-                        line2 = line2.Snapshot.GetLineFromLineNumber(line2.LineNumber + 1)) {
-                        var tokens2 = classifier.GetClassificationSpans(line2.Extent);
-                        minIndentation = Math.Min(minIndentation, GetIndentation(line2.GetText(), options.GetTabSize()));
+                foreach (var token in revParser) {
+                    tokenStack.Push(token);
+                    if (token == null && endAtNextNull) {
+                        break;
+                    } else if (token != null &&
+                       token.ClassificationType == revParser.Classifier.Provider.Keyword &&
+                       ReverseExpressionParser.IsStmtKeyword(token.Span.GetText())) {
+                        endAtNextNull = true;
                     }
-                    indentation = minIndentation;
-                } else if (exprRangeNoImplicitOpen != null) {
-                    var line2 = exprRangeNoImplicitOpen.Value.Start.GetContainingLine();
-                    var tokens2 = classifier.GetClassificationSpans(line2.Extent);
-                    indentation = GetIndentation(line2.GetText(), options.GetTabSize());
-                } else if (sigStart != null) {
-                    return sigStart.Value - sigStart.Value.GetContainingLine().Start + 1;
-                } else if (lastChar == ':') {
-                    // not in an expression context, we have a function or class def which we should indent afterwards
-                    indentation += tabSize;
-                } 
+                }
+
+                var indentStack = new System.Collections.Generic.Stack<LineInfo>();
+                var current = LineInfo.Empty;
+
+                while (tokenStack.Count > 0) {
+                    var token = tokenStack.Pop();
+                    if (token == null) {
+                        current.NeedsUpdate = true;
+                    } else if (token.IsOpenGrouping()) {
+                        indentStack.Push(current);
+                        var start = token.Span.Start;
+                        current = new LineInfo { 
+                            Indentation = start.Position - start.GetContainingLine().Start.Position + 1 
+                        };
+                    } else if (token.IsCloseGrouping()) {
+                        if (indentStack.Count > 0) {
+                            current = indentStack.Pop();
+                        } else {
+                            current.NeedsUpdate = true;
+                        }
+                    } else if (ReverseExpressionParser.IsExplicitLineJoin(token)) {
+                        while (token != null && tokenStack.Count > 0) {
+                            token = tokenStack.Pop();
+                        }
+                    } else if (current.NeedsUpdate == true) {
+                        var line2 = token.Span.Start.GetContainingLine();
+                        current = new LineInfo {
+                            Indentation = GetIndentation(line2.GetText(), tabSize)
+                        };
+                    }
+
+                    if (token != null && ShouldDedentAfterKeyword(token)) {     // dedent after some statements
+                        current.ShouldDedentAfter = true;
+                    }
+
+                    if (token != null && token.Span.GetText() == ":" &&         // indent after a colon
+                        indentStack.Count == 0) {                               // except in a grouping
+                        current.ShouldIndentAfter = true;
+                        // If the colon isn't at the end of the line, cancel it out.
+                        // If the following is a ShouldDedentAfterKeyword, only one dedent will occur.
+                        current.ShouldDedentAfter = (tokenStack.Count != 0 && tokenStack.Peek() != null);
+                    }
+                }
+
+                indentation = current.Indentation +
+                    (current.ShouldIndentAfter ? tabSize : 0) -
+                    (current.ShouldDedentAfter ? tabSize : 0);
             }
 
             return indentation;
