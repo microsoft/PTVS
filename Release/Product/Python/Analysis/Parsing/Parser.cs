@@ -66,6 +66,10 @@ namespace Microsoft.PythonTools.Parsing {
             _langVersion = langVersion;
             _verbatim = verbatim;
             _bindReferences = bindRefs;
+            if (langVersion.Is3x()) {
+                // 3.x always does true division
+                _languageFeatures |= FutureOptions.TrueDivision;
+            }
 
             Reset(FutureOptions.None);
         }

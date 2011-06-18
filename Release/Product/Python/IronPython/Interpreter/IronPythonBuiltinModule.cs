@@ -29,6 +29,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 case "generator": return Interpreter.GetBuiltinType(BuiltinTypeId.Generator);
                 case "builtin_function": return Interpreter.GetBuiltinType(BuiltinTypeId.BuiltinFunction);
                 case "builtin_method_descriptor": return Interpreter.GetBuiltinType(BuiltinTypeId.BuiltinMethodDescriptor);
+                case "dict_keys": return Interpreter.GetBuiltinType(BuiltinTypeId.DictKeys);
+                case "dict_values": return Interpreter.GetBuiltinType(BuiltinTypeId.DictValues);
                 case "function": return Interpreter.GetBuiltinType(BuiltinTypeId.Function);
                 case "ellipsis": return Interpreter.GetBuiltinType(BuiltinTypeId.Ellipsis);
             }

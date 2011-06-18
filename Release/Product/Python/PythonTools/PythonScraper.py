@@ -250,7 +250,14 @@ def generate_builtin_module():
     members_table['generator'] = generate_member(types.GeneratorType, is_hidden=True)
     members_table['NoneType'] = generate_member(type(None), is_hidden=True)
     members_table['ellipsis'] = generate_member(type(Ellipsis), is_hidden=True)
-    
+    if sys.version_info[0] == 2:
+        members_table['dict_keys'] = generate_member(type({}.iterkeys()), is_hidden=True)
+        members_table['dict_values'] = generate_member(type({}.itervalues()), is_hidden=True)
+    else:
+        members_table['dict_keys'] = generate_member(type({}.keys()), is_hidden=True)
+        members_table['dict_values'] = generate_member(type({}.values()), is_hidden=True)
+            
+    members_table['object']['value']['doc'] = "The most base type"
     return res
 
 

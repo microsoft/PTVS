@@ -36,10 +36,10 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Dictionary<object, object> _itemCache;
         private readonly BuiltinModule _builtinModule;
         private readonly Dictionary<string, XamlProjectEntry> _xamlByFilename = new Dictionary<string, XamlProjectEntry>();
-        internal readonly Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _intType, _rangeFunc, _frozensetType;
-        internal readonly HashSet<Namespace> _objectSet;
+        internal readonly Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
+        internal readonly ISet<Namespace> _objectSet;
         internal readonly Namespace _functionType;
-        internal readonly BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _stringType, _boolType, _setType;
+        internal readonly BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _longType, _floatType;
         internal readonly ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
         private readonly KnownTypes _types;
@@ -69,11 +69,13 @@ namespace Microsoft.PythonTools.Analysis {
             _classmethodObj = GetBuiltin("classmethod");
             _staticmethodObj = GetBuiltin("staticmethod");
             _typeObj = GetBuiltin("type");
-            _intType = GetBuiltin("int");
+            _intType = (BuiltinClassInfo)GetBuiltin("int");
             _stringType = (BuiltinClassInfo)GetBuiltin("str");
-            
-            _objectSet = new HashSet<Namespace>(new[] { GetBuiltin("object") });
 
+            _objectType = (BuiltinClassInfo)GetBuiltin("object");
+            _objectSet = _objectType.SelfSet;
+
+            
             _setType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Set));
             _rangeFunc = GetBuiltin("range");
             _frozensetType = GetBuiltin("frozenset");
@@ -83,7 +85,13 @@ namespace Microsoft.PythonTools.Analysis {
             _boolType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Bool));
             _noneInst = (ConstantInfo)GetNamespaceFromObjects(null);
             _listType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.List));
+            if (_langVersion.Is2x()) {
+                _longType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Long));
+            }
             _tupleType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Tuple));
+            _floatType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Float));
+            _dictKeysType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictKeys));
+            _dictValuesType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictValues));
 
             _queue = new Deque<AnalysisUnit>();
 

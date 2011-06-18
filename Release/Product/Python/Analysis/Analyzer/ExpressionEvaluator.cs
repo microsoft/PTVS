@@ -255,8 +255,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
+            var namedArgs = GetNamedArguments(n.Args);
             foreach (var target in targetRefs) {
-                res = res.Union(target.Call(node, ee._unit, argTypes, GetNamedArguments(n.Args)), ref madeSet);
+                res = res.Union(target.Call(node, ee._unit, argTypes, namedArgs), ref madeSet);
             }
 
             return res;

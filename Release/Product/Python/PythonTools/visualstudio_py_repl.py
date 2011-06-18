@@ -350,11 +350,14 @@ def exit_work_item():
     sys.exit(0)
 
 class BasicReplBackend(ReplBackend):
+    future_bits = 0x3e010   # code flags used to mark future bits
+
     """Basic back end which executes all Python code in-proc"""
     def __init__(self, mod_name = '__main__', launch_file = None):
         ReplBackend.__init__(self)
         sys.modules[mod_name] = self.exec_mod = imp.new_module(mod_name)
         self.launch_file = launch_file
+        self.code_flags = 0
         self.execute_item = None
         self.execute_item_lock = threading.Lock()
         self.execute_item_lock.acquire()    # lock starts acquired (we use it like manual reset event)
@@ -367,10 +370,19 @@ class BasicReplBackend(ReplBackend):
 
     def run_file_as_main(self, filename):
         contents = open(filename, 'rb').read().replace(_cmd('\r\n'), _cmd('\n'))
+        self.code_flags = 0
         code = compile(contents, filename, 'exec')
+        self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
         self.exec_mod.__file__ = filename
         sys.argv = [filename]
         exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
+
+    def execute_code_work_item(self):
+        _debug_write('Executing: ' + repr(self.current_code))
+        code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
+        self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
+        exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
+        self.current_code = None
 
     def execution_loop(self):
         """loop on the main thread which is responsible for executing code"""
@@ -444,12 +456,6 @@ class BasicReplBackend(ReplBackend):
                 except SocketError:
                     _debug_write('err sending DONE')
                     return
-
-    def execute_code_work_item(self):
-        _debug_write('Executing: ' + repr(self.current_code))
-        code = compile(self.current_code, '<stdin>', 'single')
-        exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
-        self.current_code = None
 
     def execute_file_work_item(self):
         self.run_file_as_main(self.current_code)

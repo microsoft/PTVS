@@ -243,6 +243,8 @@
     <Compile Include="Values\BuiltinPropertyInfo.cs" />
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
+    <Compile Include="Values\IteratorInfo.cs" />
+    <Compile Include="Values\IterableInfo.cs" />
     <Compile Include="Values\DependencyInfo.cs" />
     <Compile Include="Values\DictionaryInfo.cs" />
     <Compile Include="Values\EnumInstanceInfo.cs" />

@@ -44,5 +44,15 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The non-unicode string type
         /// </summary>
         Bytes,
+
+        /// <summary>
+        /// The type returned by dict.iterkeys (2.x) or dict.keys (3.x)
+        /// </summary>
+        DictKeys,
+
+        /// <summary>
+        /// The type returned by dict.itervalues (2.x) or dict.values (3.x)
+        /// </summary>
+        DictValues
     }
 }

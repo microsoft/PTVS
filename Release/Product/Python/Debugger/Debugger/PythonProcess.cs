@@ -49,6 +49,7 @@ namespace Microsoft.PythonTools.Debugger {
         private int _breakpointCounter;
         private bool _setLineResult;                    // contains result of attempting to set the current line of a frame
         private bool _createdFirstThread;
+        private bool _stoppedForException;
         private int _defaultBreakMode;
         private ICollection<KeyValuePair<string, int>> _breakOn;
 
@@ -231,8 +232,15 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void Resume() {
+            _stoppedForException = false;
             DebugWriteCommand("ResumeAll");
             _socket.Send(ResumeAllCommandBytes);
+        }
+
+        public bool StoppedForException {
+            get {
+                return _stoppedForException;
+            }
         }
 
         public void Continue() {
@@ -677,6 +685,7 @@ namespace Microsoft.PythonTools.Debugger {
                     excepRaised(this, new ExceptionRaisedEventArgs(_threads[tid], new PythonException(typeName, desc)));
                 }
             }
+            _stoppedForException = true;
         }
 
         private static string CommandtoString(byte[] cmd_buffer) {
@@ -702,6 +711,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void SendResumeThread(int threadId) {
+            _stoppedForException = false;
             DebugWriteCommand("ResumeThread");
             // race w/ removing the breakpoint, let the thread continue
             _socket.Send(ResumeThreadCommandBytes);
@@ -834,6 +844,10 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal bool SetLineNumber(PythonStackFrame pythonStackFrame, int lineNo) {
+            if (_stoppedForException) {
+                return false;
+            }
+
             DebugWriteCommand("Set Line Number");
             _setLineResult = false;
             _socket.Send(SetLineNumberCommand);

@@ -83,6 +83,15 @@ namespace AnalysisTest {
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
 
+        [TestMethod]
+        public void GeneratorChildrenTest() {
+            ChildTest("GeneratorTest.py", 6, "a", 0, 
+                new ChildInfo("gi_code"), 
+                new ChildInfo("gi_frame"),
+                new ChildInfo("gi_running")
+            );
+        }
+
         public virtual string EnumChildrenTestName {
             get {
                 return "EnumChildTest.py";
@@ -131,7 +140,7 @@ namespace AnalysisTest {
                 Assert.IsTrue(evalRes.IsExpandable);
                 var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
 
-                Assert.IsTrue(children.Length == childrenReceived.Count);
+                Assert.AreEqual(children.Length, childrenReceived.Count);
                 for (int i = 0; i < children.Length; i++) {
                     var curChild = children[i];
                     bool foundChild = false;
@@ -164,7 +173,7 @@ namespace AnalysisTest {
 
         private bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
             return curReceived.ChildText == curChild.ChildText && 
-                curReceived.StringRepr == curChild.Repr &&
+                (curReceived.StringRepr == curChild.Repr || curChild.Repr == null) &&
                 (Version.Version.Is3x() || (curChild.HexRepr == null || curChild.HexRepr == curReceived.HexRepr));// __hex__ no longer used in 3.x, http://mail.python.org/pipermail/python-list/2009-September/1218287.html
         }
 
@@ -173,7 +182,7 @@ namespace AnalysisTest {
             public readonly string Repr;
             public readonly string HexRepr;
 
-            public ChildInfo(string key, string value, string hexRepr = null) {
+            public ChildInfo(string key, string value = null, string hexRepr = null) {
                 ChildText = key;
                 Repr = value;
                 HexRepr = hexRepr;

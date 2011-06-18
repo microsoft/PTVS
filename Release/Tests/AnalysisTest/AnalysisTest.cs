@@ -189,8 +189,8 @@ class D(C):
 ";
             var entry = ProcessText(code);
 
-            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "_C__X")), "__X", "__init__");
-            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "print")), "_C__X", "__init__");
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "_C__X")), "__X", "__init__", "__doc__", "__class__");
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(code, "print")), "_C__X", "__init__", "__doc__", "__class__");
 
             code = @"
 class C(object):
@@ -1063,6 +1063,35 @@ x = {42:'abc'}
         }
 
         [TestMethod]
+        public void TestDictMethods() {
+            var entry = ProcessText(@"
+x = {42:'abc'}
+            ");
+
+            Assert.AreEqual(entry.GetValues("x.items()[0][0]", 1).Select(x => x.PythonType).First(), IntType);
+            Assert.AreEqual(entry.GetValues("x.items()[0][1]", 1).Select(x => x.PythonType).First(), StringType);
+            Assert.AreEqual(entry.GetValues("x.keys()[0]", 1).Select(x => x.PythonType).First(), IntType);
+            Assert.AreEqual(entry.GetValues("x.values()[0]", 1).Select(x => x.PythonType).First(), StringType);
+            Assert.AreEqual(entry.GetValues("x.pop(1)", 1).Select(x => x.PythonType).First(), StringType);
+            Assert.AreEqual(entry.GetValues("x.popitem()[0]", 1).Select(x => x.PythonType).First(), IntType);
+            Assert.AreEqual(entry.GetValues("x.popitem()[1]", 1).Select(x => x.PythonType).First(), StringType);
+            Assert.AreEqual(entry.GetValues("x.iterkeys().next()", 1).Select(x => x.PythonType).First(), IntType);
+            Assert.AreEqual(entry.GetValues("x.itervalues().next()", 1).Select(x => x.PythonType).First(), StringType);
+            Assert.AreEqual(entry.GetValues("x.iteritems().next()[0]", 1).Select(x => x.PythonType).First(), IntType);
+            Assert.AreEqual(entry.GetValues("x.iteritems().next()[1]", 1).Select(x => x.PythonType).First(), StringType);
+        }
+
+        [TestMethod]
+        public void TestFutureDivision() {
+            var entry = ProcessText(@"
+from __future__ import division
+x = 1/2
+            ");
+
+            Assert.AreEqual(entry.GetValues("x", 1).Select(x => x.PythonType).First(), FloatType);
+        }
+
+        [TestMethod]
         public void TestBoundMethodDescription() {
             var entry = ProcessText(@"
 class C:
@@ -1532,7 +1561,7 @@ x = D().g(C(), 42)
 
 ";
             var entry = ProcessText(text);
-            AssertContainsExactly(entry.GetMembersFromName("other", GetLineNumber(text, "other.g")), "g");
+            AssertContainsExactly(entry.GetMembersFromName("other", GetLineNumber(text, "other.g")), "g", "__doc__", "__class__");
             AssertContainsExactly(entry.GetTypesFromName("x", GetLineNumber(text, "x =")), ListType, StringType);
             AssertContainsExactly(entry.GetMembersFromName("x", GetLineNumber(text, "x =")),
                 GetIntersection(_listMembers, _strMembers));
@@ -1609,7 +1638,7 @@ foo = a.abc
             var entry = ProcessText(text);
             AssertContainsExactly(entry.GetTypesFromName("foo", 1), IntType);
             AssertContainsExactly(entry.GetMembersFromName("foo", 1), _intMembers);
-            AssertContainsExactly(entry.GetMembersFromName("a", 1), "abc", "func");
+            AssertContainsExactly(entry.GetMembersFromName("a", 1), "abc", "func", "__doc__", "__class__");
         }
 
         [TestMethod]

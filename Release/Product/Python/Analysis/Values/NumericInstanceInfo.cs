@@ -35,6 +35,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.Is:
                 case PythonOperator.IsNot:
                     return ProjectState._boolType.Instance;
+                case PythonOperator.TrueDivide:
+                    if (ClassInfo == unit.ProjectState._intType || ClassInfo == unit.ProjectState._longType) {
+                        bool intsOnly = true, rhsInt = false;
+                        foreach (var type in rhs) {
+                            if (type.IsOfType(unit.ProjectState._intType) || type.IsOfType(unit.ProjectState._longType)) {
+                                rhsInt = true;
+                            } else {
+                                intsOnly = false;
+                            }
+                        }
+
+                        if (rhsInt) {
+                            if (intsOnly) {
+                                return unit.ProjectState._floatType;
+                            }
+                            return base.BinaryOperation(node, unit, operation, rhs).Union(unit.ProjectState._floatType);
+                        }
+                    }
+                    break;
             }
             return base.BinaryOperation(node, unit, operation, rhs);
         }

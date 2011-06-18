@@ -228,7 +228,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
             }
+
+
+            if (!result.ContainsKey("__doc__")) {
+                result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
+            }
+            if (!result.ContainsKey("__class__")) {
+                result["__class__"] = GetObjectMember(moduleContext, "__class__");
+            }
             return result;
+        }
+
+        private Namespace GetObjectMember(IModuleContext moduleContext, string name) {
+            return _analysisUnit.ProjectState.GetNamespaceFromObjects(_analysisUnit.ProjectState.Types.Object.GetMember(moduleContext, name));
         }
 
         internal override void AddReference(Node node, AnalysisUnit unit) {
@@ -278,7 +290,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
             }
-            return result ?? EmptySet<Namespace>.Instance;
+
+            return result ?? GetOldStyleMember(name, unit.DeclaringModule.InterpreterContext);
+        }
+
+        private ISet<Namespace> GetOldStyleMember(string name, IModuleContext context) {
+            switch (name) {
+                case "__doc__": 
+                case "__class__":
+                    return GetObjectMember(context, name).SelfSet;
+            }
+            return EmptySet<Namespace>.Instance;
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {

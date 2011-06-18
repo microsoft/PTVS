@@ -291,6 +291,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 case BuiltinTypeId.BuiltinFunction: name = "builtin_function"; break;
                 case BuiltinTypeId.BuiltinMethodDescriptor: name = "builtin_method_descriptor"; break;
+                case BuiltinTypeId.DictKeys: name = "dict_keys"; break;
+                case BuiltinTypeId.DictValues: name = "dict_values"; break;
                 case BuiltinTypeId.Function: name = "function"; break;
                 case BuiltinTypeId.Generator: name = "generator"; break;
                 case BuiltinTypeId.NoneType: name = "NoneType"; break;
@@ -442,6 +444,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 case "set": return BuiltinTypeId.Set;
                 case "type": return BuiltinTypeId.Type;
                 case "object": return BuiltinTypeId.Object;
+                case "long": return BuiltinTypeId.Long;
                 case "str":
                     if (_is3x) {
                         return BuiltinTypeId.Str;
@@ -455,6 +458,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 case "builtin_method_descriptor": return BuiltinTypeId.BuiltinMethodDescriptor;
                 case "NoneType": return BuiltinTypeId.NoneType;
                 case "ellipsis": return BuiltinTypeId.Ellipsis;
+                case "dict_keys": return BuiltinTypeId.DictKeys;
+                case "dict_values": return BuiltinTypeId.DictValues;
             }
             return BuiltinTypeId.Unknown;
         }

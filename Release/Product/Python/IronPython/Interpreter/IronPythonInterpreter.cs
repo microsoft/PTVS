@@ -272,6 +272,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 case BuiltinTypeId.Type: return GetTypeFromType(typeof(PythonType));
                 case BuiltinTypeId.NoneType: return GetTypeFromType(typeof(DynamicNull));
                 case BuiltinTypeId.Ellipsis: return GetTypeFromType(typeof(Ellipsis));
+                case BuiltinTypeId.DictKeys: return GetTypeFromType(typeof(DictionaryKeyEnumerator));
+                case BuiltinTypeId.DictValues: return GetTypeFromType(typeof(DictionaryValueEnumerator));
                 default:
                     return null;
             }

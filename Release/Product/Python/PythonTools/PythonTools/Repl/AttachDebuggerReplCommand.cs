@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.Repl {
             if (eval != null) {
                 if (eval.AttachEnabled) {
                     string error = eval.AttachDebugger();
-                    if (error == null) {
+                    if (error != null) {
                         window.WriteError("Failed to attach: " + error);
                     }
                 } else {

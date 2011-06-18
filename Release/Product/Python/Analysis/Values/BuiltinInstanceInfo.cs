@@ -87,6 +87,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override bool IsOfType(BuiltinClassInfo klass) {
+            return this.ClassInfo == klass;
+        }
+
         #region IReferenceableContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {

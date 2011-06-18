@@ -27,12 +27,13 @@ namespace Microsoft.PythonTools {
     class ProvideDebugExceptionAttribute : RegistrationAttribute {
         private readonly string _engineGuid;
         private readonly string[] _path;
-        private int _code, _state;
+        private int _code;
+        private enum_EXCEPTION_STATE _state;
 
         public ProvideDebugExceptionAttribute(string engineGuid, params string[] path) {
             _engineGuid = engineGuid;
             _path = path;
-            _state = (int)(enum_EXCEPTION_STATE.EXCEPTION_JUST_MY_CODE_SUPPORTED | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT);
+            _state = enum_EXCEPTION_STATE.EXCEPTION_JUST_MY_CODE_SUPPORTED | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
         }
 
         public int Code {
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        public int State {
+        public enum_EXCEPTION_STATE State {
             get {
                 return _state;
             }
@@ -61,7 +62,7 @@ namespace Microsoft.PythonTools {
             }
 
             key.SetValue("Code", _code);
-            key.SetValue("State", _state);
+            key.SetValue("State", (int)_state);
         }
 
         public override void Unregister(RegistrationAttribute.RegistrationContext context) {

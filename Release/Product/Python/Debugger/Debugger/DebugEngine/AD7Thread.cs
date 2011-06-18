@@ -120,6 +120,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.E_NOTIMPL;
         }
 
+        internal const int E_CANNOT_SET_NEXT_STATEMENT_ON_EXCEPTION = unchecked((int)0x80040105);
+
         // Sets the next statement to the given stack frame and code context.
         int IDebugThread2.SetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext) {
             var frame = (AD7StackFrame)stackFrame;
@@ -127,6 +129,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             if (frame.StackFrame.SetLineNumber((int)context.LineNumber + 1)) {
                 return VSConstants.S_OK;
+            } else if (frame.StackFrame.Thread.Process.StoppedForException) {
+                return E_CANNOT_SET_NEXT_STATEMENT_ON_EXCEPTION;
             }
 
             return VSConstants.E_FAIL;

@@ -173,6 +173,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return SelfSet;
         }
 
+        public virtual bool IsOfType(BuiltinClassInfo klass) {
+            return false;
+        }
+
         #endregion
 
         #region Union Equality

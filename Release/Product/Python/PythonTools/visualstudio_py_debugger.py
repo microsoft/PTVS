@@ -71,6 +71,14 @@ def cmd(cmd_str):
         return bytes(cmd_str, 'ascii')
     return cmd_str
 
+if sys.version[0] == '3':
+  # work around a crashing bug on CPython 3.x where they take a hard stack overflow
+  # we'll never see this exception but it'll allow us to keep our try/except handler
+  # the same across all versions of Python
+  class StackOverflowException(Exception): pass
+else:
+  StackOverflowException = RuntimeError
+  
 # we can't run the importer at some random point because we might be importing 
 # something complete with the loader lock held.  Therefore we eagerly run a UTF8
 # decode here so that any required imports for it to succeed later have already
@@ -260,7 +268,7 @@ class Thread(object):
                 self.async_break()
 
             return self._events[event](frame, arg)
-        except (RuntimeError, KeyboardInterrupt):
+        except (StackOverflowException, KeyboardInterrupt):
             # stack overflow, disable tracing
             return self.trace_func
     
@@ -525,7 +533,10 @@ class Thread(object):
             is_enumerate = False
             maybe_enumerate = False
             try:
-                if hasattr(res, 'items'):
+                if isinstance(res, types.GeneratorType):
+                    # go to the except block
+                    raise Exception('generator')
+                elif hasattr(res, 'items'):
                     # dictionary-like object
                     enum = res.items()
                 else:
@@ -607,7 +618,10 @@ class Thread(object):
                 except:
                     obj = '<undefined>'
                 try:
-                    type_name = type(obj).__name__
+                    if sys.version[0] == '2' and type(obj) is types.InstanceType:
+                        type_name = "instance (" + obj.__class__.__name__ + ")"
+                    else:
+                        type_name = type(obj).__name__
                 except:
                     type_name = 'unknown'
                     

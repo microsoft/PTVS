@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using System.Text;
 
@@ -239,23 +240,32 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             var newScope = (DeclaringModule.NodeScopes[Ast] as ClassScope).Class;
 
             newScope.Bases.Clear();
-            // Process base classes
-            foreach (var baseClassArg in Ast.Bases) {
-                if (baseClassArg.Name != null) {
-                    // TODO: support namaed args to user defined meta classes and metaclass arg.
-                    continue;
+            if (Ast.Bases.Count == 0) {
+                if (ddg.ProjectState.LanguageVersion.Is3x()) {
+                    // 3.x all classes inherit from object by default
+                    newScope.Bases.Add(ddg.ProjectState._objectSet);
                 }
-                var baseClass = baseClassArg.Expression;
-
-                baseClass.Walk(ddg);
-                var bases = ddg._eval.Evaluate(baseClass);
-                newScope.Bases.Add(bases);
-
-                foreach (var baseValue in bases) {
-                    ClassInfo ci = baseValue as ClassInfo;
-                    if (ci != null) {
-                        ci.SubClasses.AddTypes(Ast, newScope._analysisUnit, new[] { newScope });
+            } else {
+                // Process base classes
+                foreach (var baseClassArg in Ast.Bases) {
+                    if (baseClassArg.Name != null) {
+                        // TODO: support namaed args to user defined meta classes and metaclass arg.
+                        continue;
                     }
+                    var baseClass = baseClassArg.Expression;
+
+                    baseClass.Walk(ddg);
+                    var bases = ddg._eval.Evaluate(baseClass);
+                    newScope.Bases.Add(bases);
+
+
+                    foreach (var baseValue in bases) {
+                        ClassInfo ci = baseValue as ClassInfo;
+                        if (ci != null) {
+                            ci.SubClasses.AddTypes(Ast, newScope._analysisUnit, new[] { newScope });
+                        }
+                    }
+
                 }
             }
 

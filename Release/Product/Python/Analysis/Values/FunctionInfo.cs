@@ -465,7 +465,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 ISet<Namespace> existing;
                 if (!res.TryGetValue(variable.Key, out existing)) {
                     res[variable.Key] = existing = new HashSet<Namespace>();
+                } else if (!(existing is HashSet<Namespace>)) {
+                    // someone has overwritten a function attribute with their own value
+                    res[variable.Key] = existing = new HashSet<Namespace>(existing);
                 }
+                
                 existing.UnionWith(variable.Value.Types);
             }
             return res;
