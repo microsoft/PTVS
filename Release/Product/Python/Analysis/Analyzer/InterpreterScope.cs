@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// Gets the line number that this scope starts at.
         /// </summary>
-        public int GetStart(PythonAst ast) {
+        public virtual int GetStart(PythonAst ast) {
             if (_node == null) {
                 return 1;
             }
@@ -44,9 +44,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         /// <summary>
-        /// Gets the line number that this scoep ends at.
+        /// Gets the line number that this scope ends at.
         /// </summary>
-        public int GetStop(PythonAst ast) {
+        public virtual int GetStop(PythonAst ast) {
             if (_node == null) {
                 return int.MaxValue;
             }

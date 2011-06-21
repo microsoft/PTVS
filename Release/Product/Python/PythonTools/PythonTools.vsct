@@ -85,7 +85,7 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <ButtonText>Send to Interactive</ButtonText>
+          <ButtonText>Send to &amp;Interactive</ButtonText>
           <CommandName>SendToRepl</CommandName>
         </Strings>
       </Button>
@@ -95,7 +95,7 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <ButtonText>Send to Defining Module</ButtonText>
+          <ButtonText>Send to &amp;Defining Module</ButtonText>
           <CommandName>SendToModule</CommandName>
         </Strings>
       </Button>
@@ -286,7 +286,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <CommandName>cmdidFillParagraph</CommandName>
-          <ButtonText>Fill Comment Paragraph</ButtonText>
+          <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
         </Strings>
       </Button>
 
@@ -312,7 +312,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <CommandName>cmdidSetAsStartupFile</CommandName>
-          <ButtonText>Set as Startup File</ButtonText>
+          <ButtonText>S&amp;et as Startup File</ButtonText>
         </Strings>
       </Button>
 
@@ -322,7 +322,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <CommandName>cmdIdAddSearchPath</CommandName>
-          <ButtonText>Add Search Path...</ButtonText>
+          <ButtonText>Add Search &amp;Path...</ButtonText>
         </Strings>
       </Button>
 
@@ -332,7 +332,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <CommandName>cmdidStartWithoutDebugging</CommandName>
-          <ButtonText>Start without Debugging</ButtonText>
+          <ButtonText>&amp;Start without Debugging</ButtonText>
         </Strings>
       </Button>
 
@@ -342,7 +342,7 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <CommandName>cmdidStartDebugging</CommandName>
-          <ButtonText>Start with Debugging</ButtonText>
+          <ButtonText>Start with &amp;Debugging</ButtonText>
         </Strings>
       </Button>
     </Buttons>

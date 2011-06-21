@@ -172,8 +172,11 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public void Start() {
+        public void Start(bool startListening = true) {
             _process.Start();
+            if (startListening) {
+                StartListening();
+            }
         }
 
         private void ListenForConnection() {
@@ -301,17 +304,26 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal void Unregister() {
-            var debuggerThread = new Thread(DebugEventThread);
-            debuggerThread.Name = "Python Debugger Thread " + _processGuid;
-            debuggerThread.Start();
-
             DebugConnectionListener.UnregisterProcess(_processGuid);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Starts listening for debugger communication.  Can be called after Start
+        /// to give time to attach to debugger events.
+        /// </summary>
+        public void StartListening() {
+            var debuggerThread = new Thread(DebugEventThread);
+            debuggerThread.Name = "Python Debugger Thread " + _processGuid;
+            debuggerThread.Start();
+        }
+
         private void DebugEventThread() {
             Debug.WriteLine("DebugEvent Thread Started " + _processGuid);
-
+            while (!_process.HasExited && _socket == null) {
+                // wait for connection...
+                System.Threading.Thread.Sleep(10);
+            }
 
             byte[] cmd_buffer = new byte[4];
             try {

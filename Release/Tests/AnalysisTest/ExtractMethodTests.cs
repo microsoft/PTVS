@@ -165,6 +165,18 @@ namespace AnalysisTest {
         /// </summary>
         [TestMethod]
         public void StatementTests() {
+            SuccessTest("b",
+@"def f():
+    return (a or
+            b or 
+            c)",
+@"def g():
+    return b
+
+def f():
+    return (a or
+            g() or 
+            c)");
 
             SuccessTest("assert False",
 @"x = 1
@@ -573,6 +585,25 @@ class C:
 
         [TestMethod]
         public void ClassTests() {
+            SuccessTest("x = foo",
+@"class C(object):
+    '''Doc string'''
+
+    def abc(self, foo):
+        x = foo
+        print(x)",
+@"class C(object):
+    '''Doc string'''
+
+    def g(self, foo):
+        x = foo
+        return x
+
+    def abc(self, foo):
+        x = self.g(foo)
+        print(x)", scopeName: "C");
+
+
             SuccessTest("print(self.abc)",
 @"class C:
     def f(self):

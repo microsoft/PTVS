@@ -668,7 +668,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 if (node is ScopeStatement) {
                     _parents.Add((ScopeStatement)node);
                 }
-                return _selectedSpan.OverlapsWith(Span.FromBounds(GetStartIndex(node), node.EndIndex));
+                return _selectedSpan.IntersectsWith(Span.FromBounds(GetStartIndex(node), node.EndIndex));
             }
 
             private static int GetStartIndex(Node node) {

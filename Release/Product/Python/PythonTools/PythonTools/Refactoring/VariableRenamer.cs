@@ -38,15 +38,26 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             var analysis = _view.GetExpressionAnalysis();
+            
+            string originalName = null;
+            Expression expr = null;
+            if (analysis != ExpressionAnalysis.Empty) {
+                expr = analysis.GetEvaluatedExpression();
+                if (expr is NameExpression) {
+                    originalName = ((NameExpression)expr).Name;
+                } else if (expr is MemberExpression) {
+                    originalName = ((MemberExpression)expr).Name;
+                }
 
-            var expr = analysis.GetEvaluatedExpression();
+                if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty) {
+                    if (_view.Selection.Start.Position < analysis.Span.GetStartPoint(_view.TextBuffer.CurrentSnapshot) ||
+                        _view.Selection.End.Position > analysis.Span.GetEndPoint(_view.TextBuffer.CurrentSnapshot)) {
+                        originalName = null;
+                    }
+                }
+            }
 
-            string originalName;
-            if (expr is NameExpression) {
-                originalName = ((NameExpression)expr).Name;
-            } else if (expr is MemberExpression) {
-                originalName = ((MemberExpression)expr).Name;
-            } else {
+            if (originalName == null) {
                 input.CannotRename("Please select a symbol to be renamed.");
                 return;
             }

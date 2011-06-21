@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -98,39 +99,39 @@ namespace Microsoft.PythonTools.Analysis {
         private void CalculateDocumentation() {
             // initially fill in w/ a string saying we don't yet have the documentation
             _doc = _calculating;
-            
-            // and then asynchronously calculate the documentation
-            ThreadPool.QueueUserWorkItem(
-                x => {                    
-                    //var overloadDoc = _projectState.DocProvider.GetOverloads(_overload).First();
-                    StringBuilder doc = new StringBuilder();
-                    if (!String.IsNullOrEmpty(_overload.Documentation)) {
-                        doc.AppendLine(_overload.Documentation);
-                    }
 
-                    foreach (var param in _overload.GetParameters()) {
-                        if (!String.IsNullOrEmpty(param.Documentation)) {
-                            doc.AppendLine();
-                            doc.Append(param.Name);
-                            doc.Append(": ");
-                            doc.Append(param.Documentation);
-                        }
-                    }
+            // give the documentation a brief time period to complete synchrnously.
+            var task = Task.Factory.StartNew(DocCalculator);
+            task.Wait(50);
+        }
 
-                    if (!String.IsNullOrEmpty(_overload.ReturnDocumentation)) {
-                        doc.AppendLine();
-                        doc.AppendLine();
-                        doc.Append("Returns: ");
-                        doc.Append(_overload.ReturnDocumentation);
-                    }
+        private void DocCalculator() {
+            StringBuilder doc = new StringBuilder();
+            if (!String.IsNullOrEmpty(_overload.Documentation)) {
+                doc.AppendLine(_overload.Documentation);
+            }
 
-                    if (doc.Length == 0 && _fallbackDoc != null) {
-                        _doc = _fallbackDoc();
-                    } else {
-                        _doc = doc.ToString();
-                    }
+            foreach (var param in _overload.GetParameters()) {
+                if (!String.IsNullOrEmpty(param.Documentation)) {
+                    doc.AppendLine();
+                    doc.Append(param.Name);
+                    doc.Append(": ");
+                    doc.Append(param.Documentation);
                 }
-            );
+            }
+
+            if (!String.IsNullOrEmpty(_overload.ReturnDocumentation)) {
+                doc.AppendLine();
+                doc.AppendLine();
+                doc.Append("Returns: ");
+                doc.Append(_overload.ReturnDocumentation);
+            }
+
+            if (doc.Length == 0 && _fallbackDoc != null) {
+                _doc = _fallbackDoc();
+            } else {
+                _doc = doc.ToString();
+            }
         }
 
         public override ParameterResult[] Parameters {

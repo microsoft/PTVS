@@ -263,7 +263,6 @@ def generate_builtin_module():
 
 def merge_type(baseline_type, new_type):
     if 'doc' not in new_type and 'doc' in baseline_type:
-        print 'moved doc over', baseline_type['doc']
         new_type['doc'] = baseline_type['doc']
 
     merge_member_table(baseline_type['members'], new_type['members'])
@@ -341,7 +340,7 @@ def merge_with_baseline(mod_name, baselinepath, final):
 
 def write_analysis(mod_name, outpath, analysis):
     out_file = open(os.path.join(outpath, mod_name + '.idb'), 'wb')
-    saved_analysis = cPickle.dumps(analysis)
+    saved_analysis = cPickle.dumps(analysis, 2)
     if sys.platform == 'cli':
         # work around strings always being unicode on IronPython, we fail to
         # write back out here because IronPython doesn't like the non-ascii
@@ -384,3 +383,6 @@ if __name__ == "__main__":
             write_analysis(mod_name, outpath, res)
         except ValueError:
             pass
+
+    f = open(os.path.join(outpath, 'database.ver'), 'w')
+    f.write('1')

@@ -64,6 +64,7 @@ actual inspection and introspection."""
     _STDO = _cmd('STDO')
     _STDE = _cmd('STDE')
     _DBGA = _cmd('DBGA')
+    _DETC = _cmd('DETC')
     _UNICODE_PREFIX = _cmd('U')
     _ASCII_PREFIX = _cmd('A')
     
@@ -248,6 +249,11 @@ actual inspection and introspection."""
             self.conn.send(struct.pack('i', len(string)))
             self.conn.send(string)
 
+    def on_debugger_detach(self):
+        self.send_lock.acquire()
+        self.conn.send(ReplBackend._DETC)
+        self.send_lock.release()
+
     def send_image(self, filename):
         self.send_lock.acquire()
         self.conn.send(ReplBackend._IMGD)
@@ -367,6 +373,10 @@ class BasicReplBackend(ReplBackend):
         sys.stdout = _ReplOutput(self, is_stdout = True)
         sys.stderr = _ReplOutput(self, is_stdout = False)
         sys.stdin = _ReplInput(self)
+        if sys.platform == 'cli':
+            import System
+            System.Console.SetOut(DotNetOutput(self, True))
+            System.Console.SetError(DotNetOutput(self, False))
 
     def run_file_as_main(self, filename):
         contents = open(filename, 'rb').read().replace(_cmd('\r\n'), _cmd('\n'))
@@ -559,9 +569,15 @@ class BasicReplBackend(ReplBackend):
     def flush(self):
         sys.stdout.flush()
 
+    def do_detach(self):
+        import visualstudio_py_debugger
+        visualstudio_py_debugger.DETACH_CALLBACKS.remove(self.do_detach)
+        self.on_debugger_detach()
+
     def attach_process(self, port, debugger_id):
         def execute_attach_process_work_item():
             import visualstudio_py_debugger
+            visualstudio_py_debugger.DETACH_CALLBACKS.append(self.do_detach)
             visualstudio_py_debugger.attach_process(port, debugger_id, True)        
         
         self.execute_item = execute_attach_process_work_item
@@ -625,6 +641,45 @@ class _ReplInput(object):
 
     def flush(self): pass
 
+
+if sys.platform == 'cli':
+    import System
+    class DotNetOutput(System.IO.TextWriter):        
+        def __new__(cls, backend, is_stdout):
+            return System.IO.TextWriter.__new__(cls)
+        
+        def __init__(self, backend, is_stdout):
+            self.backend = backend
+            self.is_stdout = is_stdout
+
+        def Write(self, value, *args):
+            if not args:
+                if type(value) is str or type(value) is System.Char:
+                    if self.is_stdout:
+                        self.backend.write_stdout(str(value).replace('\r\n', '\n'))
+                    else:
+                        self.backend.write_stderr(str(value).replace('\r\n', '\n'))
+                else:
+                    super(DotNetOutput, self).Write(value)
+            else:
+                super(DotNetOutput, self).Write(value, *args)
+
+        def WriteLine(self, value, *args):
+            if not args:
+                if type(value) is str or type(value) is System.Char:
+                    if self.is_stdout:
+                        self.backend.write_stdout(str(value).replace('\r\n', '\n') + '\n')
+                    else:
+                        self.backend.write_stderr(str(value).replace('\r\n', '\n') + '\n')
+                else:
+                    super(DotNetOutput, self).Write(value)
+            else:
+                super(DotNetOutput, self).WriteLine(value, *args)
+
+        @property
+        def Encoding(self):
+            return System.Text.Encoding.UTF8
+    
 
 BACKEND = None
 

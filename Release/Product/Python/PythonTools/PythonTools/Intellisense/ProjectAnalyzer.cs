@@ -557,7 +557,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private TaskProvider GetTaskProviderAndClearProjectItems(IProjectEntry projEntry) {
             if (_taskProvider == null) {
-                _taskProvider = new TaskProvider();
+                _taskProvider = new TaskProvider(_errorList);
 
                 uint cookie;
                 ErrorHandler.ThrowOnFailure(((IVsTaskList)_errorList).RegisterTaskProvider(_taskProvider, out cookie));
@@ -838,13 +838,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         class TaskProvider : IVsTaskProvider {
-            private readonly string _path;
             private readonly Dictionary<string, List<ErrorResult>> _warnings = new Dictionary<string,List<ErrorResult>>();
             private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string,List<ErrorResult>>();
             private uint _cookie;
+            private readonly IVsErrorList _errorList;
 
-
-            public TaskProvider() {
+            public TaskProvider(IVsErrorList errorList) {
+                _errorList = errorList;
             }
 
             public uint Cookie {
@@ -908,7 +908,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             internal void AddWarnings(string filename, IList<ErrorResult> errors) {
-                if (_errors.Count > 0) {
+                if (errors.Count > 0) {
                     lock (this) {
                         List<ErrorResult> errorList;
                         if (!_warnings.TryGetValue(filename, out errorList)) {
@@ -924,6 +924,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     _warnings.Remove(filename);
                     _errors.Remove(filename);
                 }
+                ((IVsTaskList)_errorList).RefreshTasks(_cookie);
             }
 
             class TaskEnum : IVsEnumTaskItems {

@@ -192,6 +192,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             _scopeTree = new Stack<InterpreterScope>();
             _scopeTree.Push(MyScope.Scope);
+            MyScope.Scope.Children.Clear();
 
             // create new analysis object and add to the queue to be analyzed
             var newAnalysis = new ModuleAnalysis(_unit, _scopeTree);

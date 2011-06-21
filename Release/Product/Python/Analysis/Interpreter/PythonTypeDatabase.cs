@@ -37,6 +37,11 @@ namespace Microsoft.PythonTools.Interpreter {
         const string EventViewerSource = "Python Tools for Visual Studio";
         const string EventViewerLog = "Application";
 
+        /// <summary>
+        /// Gets the version of the analysis format that this class reads.
+        /// </summary>
+        public static readonly int CurrentVersion = 1;
+
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _dbDir = databaseDirectory;
             _modules["__builtin__"] = _builtinModule = builtinsModule ?? new CPythonBuiltinModule(this, "__builtin__", Path.Combine(databaseDirectory, is3x ? "builtins.idb" : "__builtin__.idb"), true);

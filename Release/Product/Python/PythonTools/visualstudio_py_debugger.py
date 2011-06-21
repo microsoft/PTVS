@@ -963,8 +963,9 @@ class DebuggerLoop(object):
         send_lock.acquire()
         conn.send(DETC)
         DETACHED = True
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
+        if not _INTERCEPTING_FOR_ATTACH:
+            sys.stdout = sys.__stdout__
+            sys.stderr = sys.__stderr__
 
         send_lock.release()
 
@@ -972,8 +973,13 @@ class DebuggerLoop(object):
             thread.start_new_thread = _start_new_thread
             thread.start_new = _start_new_thread
 
+        for callback in DETACH_CALLBACKS:
+            callback()
+
         raise DebuggerExitException()
 
+
+DETACH_CALLBACKS = []
 
 def new_thread_wrapper(func, *posargs, **kwargs):
     cur_thread = new_thread()

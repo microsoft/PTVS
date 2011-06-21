@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisVariable.cs" />
+    <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="GetMemberOptions.cs" />
     <Compile Include="Interpreter\Default\CPythonBuiltinModule.cs" />

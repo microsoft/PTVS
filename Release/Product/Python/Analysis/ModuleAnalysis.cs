@@ -116,12 +116,42 @@ namespace Microsoft.PythonTools.Analysis {
             if (name != null) {
                 for (int i = scopes.Count - 1; i >= 0; i--) {
                     VariableDef def;
-                    if (IncludeScope(scopes, i, lineNumber) && scopes[i].Variables.TryGetValue(name.Name, out def)) {
-                        foreach (var res in ToVariables(def)) {
-                            yield return res;
+                    if (IncludeScope(scopes, i, lineNumber)) {
+                        if (scopes[i].Variables.TryGetValue(name.Name, out def)) {
+                            foreach (var res in ToVariables(def)) {
+                                yield return res;
+                            }
+
+                            // if the member is defined in a base class as well include the base class member and references
+                            if (scopes[i] is ClassScope) {
+                                var klass = scopes[i].Namespace as ClassInfo;
+                                if (klass.Push()) {
+                                    try {
+                                        foreach (var baseClass in klass.Bases) {
+                                            foreach (var baseNs in baseClass) {
+                                                if (baseNs.Push()) {
+                                                    try {
+                                                        ClassInfo baseClassNs = baseNs as ClassInfo;
+                                                        if (baseClassNs != null) {
+                                                            if (baseClassNs.Scope.Variables.TryGetValue(name.Name, out def)) {
+                                                                foreach (var res in ToVariables(def)) {
+                                                                    yield return res;
+                                                                }
+                                                            }
+                                                        }
+                                                    } finally {
+                                                        baseNs.Pop();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } finally {
+                                        klass.Pop();
+                                    }
+                                }
+                            }
+                            yield break;
                         }
-                        
-                        yield break;
                     }
                 }
 
@@ -444,12 +474,15 @@ namespace Microsoft.PythonTools.Analysis {
                 //     pass
                 var parent = _unit.Ast.GlobalParent;
                 int lastStart = curScope.GetStart(parent);
+                
                 for (int i = curScope.Children.Count - 1; i >= 0; i--) {
                     var scope = curScope.Children[i];
                     var curStart = scope.GetStart(parent);
                     if (curStart <= lineNumber && (scope.GetStop(parent) >= lineNumber || lineNumber < lastStart)) {
-                        curScope = scope;
-                        chain.Add(curScope);
+                        if (!(scope is StatementScope)) {
+                            curScope = scope;
+                            chain.Add(curScope);
+                        }
                         break;
                     }
                     lastStart = curStart;

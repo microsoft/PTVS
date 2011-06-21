@@ -34,6 +34,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -49,7 +50,7 @@ namespace Microsoft.PythonTools.Repl {
         private IPythonInterpreterFactory _interpreter;
         private ListenerThread _curListener;
         private IReplWindow _window;
-        private bool _multipleScopes = true, _enableAttach;
+        private bool _multipleScopes = true, _enableAttach, _attached;
         private ProjectAnalyzer _replAnalyzer;
 
         private static readonly byte[] RunCommandBytes = MakeCommand("run ");
@@ -266,7 +267,7 @@ namespace Microsoft.PythonTools.Repl {
                 try {
                     _socket = _socket.Accept();
                     _connected = true;
-                    
+
                     Socket socket;
                     while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
                         using (new SocketLock(this)) {
@@ -286,6 +287,7 @@ namespace Microsoft.PythonTools.Repl {
                                 case "MODC": HandleModulesChanged(); break;
                                 case "PRPC": HandlePromptChanged(); break;
                                 case "RDLN": HandleReadLine(); break;
+                                case "DETC": HandleDebuggerDetach(); break;
                                 case "EXIT":
                                     // REPL has exited
                                     return;
@@ -294,6 +296,7 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 } catch (SocketException) {
                     _socket = null;
+                } catch (DisconnectedException) {
                 }
             }
 
@@ -347,10 +350,15 @@ namespace Microsoft.PythonTools.Repl {
 
                     var res = _socket;
                     if (res == null) {
-                        throw new SocketException();
+                        throw new DisconnectedException("The interactive window has become disconnected from the remote process.  Please reset the window.");
                     }
 
                     return res;
+                }
+            }
+
+            class DisconnectedException : Exception {
+                public DisconnectedException(string message) : base(message) {
                 }
             }
 
@@ -367,7 +375,15 @@ namespace Microsoft.PythonTools.Repl {
                 });
             }
 
+            private void HandleDebuggerDetach() {
+                _eval._attached = false;
+            }
+
             internal string DoDebugAttach() {
+                if (_eval._attached) {
+                    return "Cannot attach to debugger when already attached.";
+                }
+
                 PythonProcess debugProcess;
                 using (new SocketLock(this)) {
                     Socket.Send(DebugAttachCommandBytes);
@@ -392,8 +408,9 @@ namespace Microsoft.PythonTools.Repl {
                 IntPtr memory = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VsDebugTargetInfo2)));
                 Marshal.StructureToPtr(debugTarget, memory, false);
                 var debugger = (IVsDebugger2)PythonToolsPackage.GetGlobalService(typeof(SVsShellDebugger));
-                int hr = debugger.LaunchDebugTargets2(1, memory);                
-                if (hr < 0) {
+                
+                int hr = debugger.LaunchDebugTargets2(1, memory);
+                if (ErrorHandler.Failed(hr)) {
                     var uiShell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
                     string errorText;
                     uiShell.GetErrorInfo(out errorText);
@@ -401,6 +418,8 @@ namespace Microsoft.PythonTools.Repl {
                         errorText = "Unknown Error: " + hr;
                     }
                     return errorText;
+                } else {
+                    _eval._attached = true;
                 }
 
                 GC.KeepAlive(debugProcess);
@@ -955,6 +974,7 @@ namespace Microsoft.PythonTools.Repl {
             if (_curListener != null) {
                 _curListener.Close();
             }
+            _attached = false;
         }
 
         #endregion

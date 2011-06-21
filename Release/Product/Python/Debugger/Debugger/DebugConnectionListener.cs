@@ -57,13 +57,17 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static void UnregisterProcess(Guid id) {
-            _targets.Remove(id);
+            lock (_targets) {
+                _targets.Remove(id);
+            }
         }
 
         public static PythonProcess GetProcess(Guid id) {
             WeakReference value;
-            if (_targets.TryGetValue(id, out value)) {
-                return (PythonProcess)value.Target;
+            lock (_targets) {
+                if (_targets.TryGetValue(id, out value)) {
+                    return (PythonProcess)value.Target;
+                }
             }
             return null;
         }

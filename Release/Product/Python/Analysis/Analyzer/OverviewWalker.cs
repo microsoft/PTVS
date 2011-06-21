@@ -135,7 +135,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 outerUnit.DeclaringModule.NodeScopes[node] = funcScope;
 
                 var declScope = outerUnit.Scopes[outerUnit.Scopes.Length - 1];
-                declScope.Children.Add(funcScope);
+                if (!node.IsLambda) {
+                    declScope.Children.Add(funcScope);
+                }
                 scopes[scopes.Length - 1] = funcScope;
                 scope = funcScope;
 
@@ -171,6 +173,122 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 _scopes.Pop();
                 _curUnit = _analysisStack.Pop();
             }
+        }
+
+        private void UpdateChildRanges(Statement node) {
+            var declScope = _curUnit.Scopes[_curUnit.Scopes.Length - 1];
+            InterpreterScope prevScope = null;
+            if (declScope.Children.Count > 0) {
+                prevScope = declScope.Children[declScope.Children.Count - 1];
+                StatementScope prevStmtScope = prevScope as StatementScope;
+                if (prevStmtScope != null) {
+                    prevStmtScope.EndNode = node;
+                } else {
+                    declScope.Children.Add(new StatementScope(node));
+                }
+            } else {
+                declScope.Children.Add(new StatementScope(node));
+            }
+        }
+
+        public override bool Walk(AssertStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(AssignmentStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(AugmentedAssignStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(BreakStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ContinueStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(DelStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ErrorStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(EmptyStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ExpressionStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ExecStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+        
+        public override bool Walk(ForStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(FromImportStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(IfStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ImportStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(PrintStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(RaiseStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ReturnStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(TryStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(WhileStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
+        }
+
+        public override bool Walk(WithStatement node) {
+            UpdateChildRanges(node);
+            return base.Walk(node);
         }
     }
 }

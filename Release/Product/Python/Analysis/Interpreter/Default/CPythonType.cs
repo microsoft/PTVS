@@ -95,7 +95,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public IPythonFunction GetConstructors() {
             IMember member;
-            if (_members.TryGetValue("__new__", out member) || _members.TryGetValue("__init__", out member)) {
+            if (_members.TryGetValue("__new__", out member) && member is IPythonFunction && ((IPythonFunction)member).Overloads.Count > 0) {
+                return member as IPythonFunction;
+            } else if (TypeId != BuiltinTypeId.Object && _members.TryGetValue("__init__", out member)) {
+                if (member is CPythonMethodDescriptor) {
+                    return ((CPythonMethodDescriptor)member).Function;
+                }
                 return member as IPythonFunction;
             }
             return null;

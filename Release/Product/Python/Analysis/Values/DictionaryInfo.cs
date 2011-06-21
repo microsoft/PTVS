@@ -171,7 +171,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
                 if (_list == null) {
                     _list = new ListInfo(
-                        new[] { _myDict.KeyValueTuple },
+                        new ISet<Namespace>[] { _myDict.KeyValueTuple },
                         unit.ProjectState._listType
                     );
                 }
@@ -278,7 +278,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict._keyValueTuple }, unit.ProjectState._dictValuesType);
+                    _list = new IteratorInfo(new[] { _myDict.KeyValueTuple }, unit.ProjectState._dictValuesType);
                 }
                 return _list;
             }

@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private object _syncLock = new object();
         private AD7Thread _processLoadedThread, _startThread;
         private AD7Module _startModule;
-        private bool _attached;
+        private bool _attached, _pseudoAttach;
         private BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         public const string DebugEngineId = "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}";
@@ -463,22 +463,20 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Guid processId;
             if (attachRunning && Guid.TryParse(exe, out processId)) {
                 _process = DebugConnectionListener.GetProcess(processId);
-                AttachEvents(_process);
-                _process.Unregister();
                 _attached = true;
+                _pseudoAttach = true;
             } else {
                 _process = new PythonProcess(version, exe, args, dir, env, interpreterOptions, debugOptions, dirMapping);
-                AttachEvents(_process);
             }
-
-            
 
             _programCreated = false;
             _loadComplete.Reset();
 
             if (!attachRunning) {
-                _process.Start();
+                _process.Start(false);
             }
+
+            AttachEvents(_process);
 
             AD_PROCESS_ID adProcessId = new AD_PROCESS_ID();
             adProcessId.ProcessIdType = (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM;
@@ -861,21 +859,23 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Send(eventObject, iidEvent, this, thread);
         }
 
-        private void AttachEvents(PythonProcess _process) {
-            _process.ProcessLoaded += OnProcessLoaded;
-            _process.ModuleLoaded += OnModuleLoaded;
-            _process.ThreadCreated += OnThreadCreated;
+        private void AttachEvents(PythonProcess process) {
+            process.ProcessLoaded += OnProcessLoaded;
+            process.ModuleLoaded += OnModuleLoaded;
+            process.ThreadCreated += OnThreadCreated;
 
-            _process.BreakpointBindFailed += OnBreakpointBindFailed;
-            _process.BreakpointBindSucceeded += OnBreakpointBindSucceeded;
+            process.BreakpointBindFailed += OnBreakpointBindFailed;
+            process.BreakpointBindSucceeded += OnBreakpointBindSucceeded;
 
-            _process.BreakpointHit += OnBreakpointHit;
-            _process.AsyncBreakComplete += OnAsyncBreakComplete;
-            _process.ExceptionRaised += OnExceptionRaised;
-            _process.ProcessExited += OnProcessExited;
-            _process.StepComplete += OnStepComplete;
-            _process.ThreadExited += OnThreadExited;
-            _process.DebuggerOutput += OnDebuggerOutput;
+            process.BreakpointHit += OnBreakpointHit;
+            process.AsyncBreakComplete += OnAsyncBreakComplete;
+            process.ExceptionRaised += OnExceptionRaised;
+            process.ProcessExited += OnProcessExited;
+            process.StepComplete += OnStepComplete;
+            process.ThreadExited += OnThreadExited;
+            process.DebuggerOutput += OnDebuggerOutput;
+            
+            process.StartListening();
         }
 
         private void OnThreadExited(object sender, ThreadEventArgs e) {
@@ -906,6 +906,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private void OnProcessLoaded(object sender, ThreadEventArgs e) {
             lock (_syncLock) {
+                if (_pseudoAttach) {
+                    _process.Unregister();
+                }
+
                 if (_programCreated) {
                     // we've delviered the program created event, deliver the load complete event
                     SendLoadComplete(_threads[e.Thread]);

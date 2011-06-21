@@ -649,6 +649,10 @@ namespace Microsoft.VisualStudio.Repl {
 
             // flush output produced by the process before it was killed:
             UIThread(_buffer.Flush);
+
+            if (_isRunning) {
+                PrepareForInput();
+            }
         }
 
         public void AbortCommand() {
