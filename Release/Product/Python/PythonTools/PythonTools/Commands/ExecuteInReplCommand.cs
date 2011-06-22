@@ -104,6 +104,7 @@ namespace Microsoft.PythonTools.Commands {
             var window = (IReplWindow)EnsureReplWindow(analyzer);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
+            window.WriteLine("Restarting Python interpreter...");
             window.Evaluator.Reset();
 
             ErrorHandler.ThrowOnFailure(windowFrame.Show());

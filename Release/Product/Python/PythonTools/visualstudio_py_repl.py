@@ -355,6 +355,16 @@ actual inspection and introspection."""
 def exit_work_item():
     sys.exit(0)
 
+
+if sys.platform == 'cli':
+    # We need special handling to reset the abort for keyboard interrupt exceptions
+    class ReplAbortException(Exception): pass
+
+    import clr
+    clr.AddReference('Microsoft.Dynamic')
+    from Microsoft.Scripting import KeyboardInterruptException
+
+
 class BasicReplBackend(ReplBackend):
     future_bits = 0x3e010   # code flags used to mark future bits
 
@@ -394,9 +404,76 @@ class BasicReplBackend(ReplBackend):
         exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
         self.current_code = None
 
+    def run_one_command(self, cur_modules, cur_ps1, cur_ps2):
+        # runs a single iteration of an input, execute file, etc...
+        # This is extracted into it's own method so we play nice w/ IronPython thread abort.
+        # Otherwise we have a nested exception hanging around and the 2nd abort doesn't
+        # work (that's probably an IronPython bug)
+        try:    
+            new_modules = self._get_cur_module_set()
+            try:
+                if new_modules != cur_modules:
+                    self.send_modules_changed()
+            except:
+                pass
+            cur_modules = new_modules
+        
+            self.execute_item_lock.acquire()
+        
+            if self.execute_item is not None:
+                try:
+                    self.execute_item()
+                finally:
+                    self.execute_item = None
+            
+            try:
+                self.send_command_executed()
+            except SocketError:
+                return True, None, None, None
+        
+            try:
+                if cur_ps1 != sys.ps1 or cur_ps2 != sys.ps2:
+                    new_ps1 = str(sys.ps1)
+                    new_ps2 = str(sys.ps2)
+                
+                    self.send_prompt(new_ps1, new_ps2)
+        
+                    cur_ps1 = new_ps1
+                    cur_ps2 = new_ps2
+            except:
+                pass
+        except SystemExit:
+            self.send_error()
+            self.send_exit()
+            return True, None, None, None
+        except BaseException:
+            _debug_write('Exception')
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            if sys.platform == 'cli' and isinstance(exc_value.clsException, System.Threading.ThreadAbortException):
+                try:
+                    System.Threading.Thread.ResetAbort()
+                except SystemError:
+                    pass
+                sys.stderr.write('KeyboardInterrupt')
+            else:
+                exc_next = exc_tb.tb_next.tb_next
+                sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
+            try:
+                self.send_error()
+            except SocketError:
+                _debug_write('err sending DONE')
+                return True, None, None, None
+        
+        return False, cur_modules, cur_ps1, cur_ps2
+
     def execution_loop(self):
         """loop on the main thread which is responsible for executing code"""
         
+        if sys.platform == 'cli' and sys.version_info[:3] < (2, 7, 1):
+            # IronPython doesn't support thread.interrupt_main until 2.7.1
+            import System
+            self.main_thread = System.Threading.Thread.CurrentThread
+
         # save our selves so global lookups continue to work (required pre-2.6)...
         cur_modules = set()
         try:
@@ -418,54 +495,9 @@ class BasicReplBackend(ReplBackend):
                 traceback.print_exc()
 
         while True:
-            try:    
-                new_modules = self._get_cur_module_set()
-                try:
-                    if new_modules != cur_modules:
-                        self.send_modules_changed()
-                except:
-                    pass
-                cur_modules = new_modules
-
-                self.execute_item_lock.acquire()
-
-                if self.execute_item is not None:
-                    try:
-                        self.execute_item()
-                    finally:
-                        self.execute_item = None
-                
-                try:
-                    self.send_command_executed()
-                except SocketError:
-                    return
-            
-                try:
-                    if cur_ps1 != sys.ps1 or cur_ps2 != sys.ps2:
-                        new_ps1 = str(sys.ps1)
-                        new_ps2 = str(sys.ps2)
-                    
-                        self.send_prompt(new_ps1, new_ps2)
-
-                        cur_ps1 = new_ps1
-                        cur_ps2 = new_ps2
-                except:
-                    pass
-            except SystemExit:
-                self.send_error()
-                self.send_exit()
+            exit, cur_modules, cur_ps1, cur_ps2 = self.run_one_command(cur_modules, cur_ps1, cur_ps2)
+            if exit:
                 return
-            except BaseException:
-                _debug_write('Exception')
-            
-                exc_type, exc_value, exc_tb = sys.exc_info()
-                exc_next = exc_tb.tb_next.tb_next
-                sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
-                try:
-                    self.send_error()
-                except SocketError:
-                    _debug_write('err sending DONE')
-                    return
 
     def execute_file_work_item(self):
         self.run_file_as_main(self.current_code)
@@ -498,7 +530,11 @@ class BasicReplBackend(ReplBackend):
         self.execute_item_lock.release()
 
     def interrupt_main(self):
-        thread.interrupt_main()
+        if sys.platform == 'cli' and sys.version_info[:3] < (2, 7, 1):
+            # IronPython doesn't get thread.interrupt_main until 2.7.1
+            self.main_thread.Abort(ReplAbortException())
+        else:
+            thread.interrupt_main()
 
     def exit_process(self):
         self.execute_item = exit_work_item

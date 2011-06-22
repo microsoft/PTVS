@@ -9,7 +9,7 @@
     <WorkingDirectory>.</WorkingDirectory>
     <InterpreterId>80659ab7-4d53-4e0c-8588-a766116cbd46</InterpreterId>
     <LaunchProvider>IronPython (.NET) launcher</LaunchProvider>
-    <InterpreterVersion>2.7.0.0</InterpreterVersion>
+    <InterpreterVersion>2.7</InterpreterVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
