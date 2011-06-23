@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
     [Export(typeof(IDefaultInterpreterFactoryCreator))]
     class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDefaultInterpreterFactoryCreator {
         private readonly List<IPythonInterpreterFactory> _interpreters = new List<IPythonInterpreterFactory>();
-        private static readonly Guid CpyInterpreterGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
+        private static readonly Guid _cpyInterpreterGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
         private static readonly Guid _cpy64InterpreterGuid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
         internal static CPythonInterpreterFactoryProvider Instance;
         const string PythonCorePath = "SOFTWARE\\Python\\PythonCore";
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             foreach(var baseKey in new[] { Registry.LocalMachine, Registry.CurrentUser }) {
                 using (var python = baseKey.OpenSubKey(PythonCorePath)) {
                     if (python != null) {
-                        RegisterInterpreters(registeredPaths, python, CpyInterpreterGuid, "Python", ProcessorArchitecture.X86);
+                        RegisterInterpreters(registeredPaths, python, _cpyInterpreterGuid, "Python", ProcessorArchitecture.X86);
                     }
                 }
             }

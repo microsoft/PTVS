@@ -434,14 +434,16 @@ namespace Microsoft.PythonTools.Intellisense {
             List<PythonAst> asts = new List<PythonAst>();
             bool hasErrors = false;
             foreach (var snapshot in snapshots) {
-                var snapshotContent = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
+                ITextDocument doc;
 
                 if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                     if (!snapshot.IsReplBufferWithCommand()) {
                         PythonAst ast;
                         CollectingErrorSink errorSink;
 
-                        ParsePythonCode(snapshotContent, indentationSeverity, out ast, out errorSink);
+                        var reader = new SnapshotSpanSourceCodeStream(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
+                        ParsePythonCode(reader, indentationSeverity, out ast, out errorSink);
+                        
                         if (ast != null) {
                             asts.Add(ast);
 
@@ -473,6 +475,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     // other file such as XAML
                     IExternalProjectEntry externalEntry;
                     if ((externalEntry = (analysis as IExternalProjectEntry)) != null) {
+                        var snapshotContent = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
                         externalEntry.ParseContent(snapshotContent, new SnapshotCookie(snapshotContent.Snapshot));
                         _analysisQueue.Enqueue(analysis, AnalysisPriority.High);
                     }
@@ -584,7 +587,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void ParsePythonCode(FileStream content, Severity indentationSeverity, out PythonAst ast, out CollectingErrorSink errorSink) {
+        private void ParsePythonCode(Stream content, Severity indentationSeverity, out PythonAst ast, out CollectingErrorSink errorSink) {
             ast = null;
             errorSink = new CollectingErrorSink();
 

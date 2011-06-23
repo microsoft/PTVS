@@ -166,14 +166,6 @@ namespace Microsoft.VisualStudio.Repl {
             // Set the window title reading it from the resources.z
             Caption = title;
 
-            // Set the image that will appear on the tab of the window frame
-            // when docked with an other window
-            // The resource ID correspond to the one defined in the resx file
-            // while the Index is the offset in the bitmap strip. Each image in
-            // the strip being 16x16.
-            BitmapResourceID = 301;
-            BitmapIndex = 1;
-
             _componentModel = model;
             _evaluator = evaluator;
             _languageContentType = contentType;
@@ -202,7 +194,7 @@ namespace Microsoft.VisualStudio.Repl {
 
             _postLanguageCommandFilter = new CommandFilter(this, preLanguage: false);
             ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_postLanguageCommandFilter, out _editorCommandFilter));
-
+            
             // may add command filters
             foreach (var listener in _creationListeners) {
                 listener.ReplWindowCreated(this);
@@ -228,7 +220,7 @@ namespace Microsoft.VisualStudio.Repl {
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.GlyphMarginId, _displayPromptInMargin);
 
             ApplyProtection();
-
+            
             _uiScheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
             // Anything that reads options should wait until after this call so the evaluator can set the options first
@@ -313,6 +305,9 @@ namespace Microsoft.VisualStudio.Repl {
             
             _projectionBuffer = projBuffer;
             _projectionBuffer.Changed += new EventHandler<TextContentChangedEventArgs>(ProjectionBufferChanged);
+
+            // we need at least one span - projection buffers throw when checking if they're readonly if there are no spans
+            InsertProjectionSpan(0, new ReplSpan("", ReplSpanKind.Output));
 
             // get our classifier...
             _primaryClassifier = projBuffer.Properties.GetProperty<ReplAggregateClassifier>(typeof(ReplAggregateClassifier));
@@ -580,6 +575,9 @@ namespace Microsoft.VisualStudio.Repl {
             }
 
             ClearProjection();
+
+            // we need at least one span - projection buffers throw when checking if they're readonly if there are no spans
+            InsertProjectionSpan(0, new ReplSpan("", ReplSpanKind.Output));
 
             if (insertInputPrompt) {
                 PrepareForInput();

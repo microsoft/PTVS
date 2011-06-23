@@ -2980,9 +2980,9 @@ namespace Microsoft.PythonTools.Parsing {
             return s;
         }
 
-        internal static string MakeString(byte[] bytes) {
-            StringBuilder res = new StringBuilder(bytes.Length);
-            for (int i = 0; i < bytes.Length; i++) {
+        internal static string MakeString(IList<byte> bytes) {
+            StringBuilder res = new StringBuilder(bytes.Count);
+            for (int i = 0; i < bytes.Count; i++) {
                 res.Append((char)bytes[i]);
             }
             return res.ToString();
@@ -4526,113 +4526,94 @@ namespace Microsoft.PythonTools.Parsing {
             int bomRead = stream.Read(bomBuffer, 0, 3);
             int bytesRead = 0;
             bool isUtf8 = false;
+            List<byte> readBytes = new List<byte>();
             if (bomRead == 3 && (bomBuffer[0] == 0xef && bomBuffer[1] == 0xbb && bomBuffer[2] == 0xbf)) {
                 isUtf8 = true;
                 bytesRead = 3;
+                readBytes.AddRange(bomBuffer);
             } else {
-                stream.Seek(0, SeekOrigin.Begin);
+                for (int i = 0; i < bomRead; i++) {
+                    readBytes.Add(bomBuffer[i]);
+                }
             }
 
-            string line;
-            try {
-                line = ReadOneLine(sr, ref bytesRead);
-            } catch (BadSourceException) {
-                errors.Add("failed to read encoding", null, 0, 0, ErrorCodes.SyntaxError, Severity.FatalError);
-                return new StreamReader(stream, defaultEncoding);
-            }
+            string line = ReadOneLine(readBytes, ref bytesRead, stream);
 
             bool gotEncoding = false;
             string encodingName = null;
             // magic encoding must be on line 1 or 2
-            if (line != null && !(gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName))) {
-                try {
-                    line = ReadOneLine(sr, ref bytesRead);
-                } catch (BadSourceException) {
-                    errors.Add("failed to read encoding", null, 0, 0, ErrorCodes.SyntaxError, Severity.FatalError);
-                    return new StreamReader(stream, defaultEncoding);
-                }
+            if (!(gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName))) {
+                line = ReadOneLine(readBytes, ref bytesRead, stream);
 
-                if (line != null) {
-                    gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName);
-                }
+                gotEncoding = Tokenizer.TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName);
             }
 
             if (gotEncoding && isUtf8 && encodingName != "utf-8") {
                 // we have both a BOM & an encoding type, throw an error
                 errors.Add("file has both Unicode marker and PEP-263 file encoding.  You can only use \"utf-8\" as the encoding name when a BOM is present.", null, 0, 0, ErrorCodes.SyntaxError, Severity.FatalError);
+            } else if (isUtf8) {
+                return new StreamReader(new PartiallyReadStream(readBytes, stream), Encoding.UTF8);
             } else if (encoding == null) {
-                return new StreamReader(stream, defaultEncoding);
-            }
-
-            // if we didn't get an encoding seek back to the beginning...
-            if (!gotEncoding || stream.Position != stream.Length) {
-                stream.Seek(startPosition, SeekOrigin.Begin);
+                return new StreamReader(new PartiallyReadStream(readBytes, stream), defaultEncoding);
             }
 
             // re-read w/ the correct encoding type...
-            return new StreamReader(stream, encoding);
+            return new StreamReader(new PartiallyReadStream(readBytes, stream), encoding);
         }
 
         /// <summary>
-        /// Reads one line keeping track of the # of bytes read
+        /// Reads one line keeping track of the # of bytes read and saving the bytes that were read
         /// </summary>
-        private static string ReadOneLine(StreamReader reader, ref int totalRead) {
-            Stream sr = reader.BaseStream;
-            byte[] buffer = new byte[256];
-            StringBuilder builder = null;
+        private static string ReadOneLine(List<byte> previewedBytes, ref int curIndex, Stream reader) {
+            byte[] buffer = new byte[256];            
+            int bufferReadCount = reader.Read(buffer, 0, buffer.Length);
+            for (int i = 0; i < bufferReadCount; i++) {
+                previewedBytes.Add(buffer[i]);
+            }
 
-            int bytesRead = sr.Read(buffer, 0, buffer.Length);
+            int startIndex = curIndex;
+            do {
+                for (int i = curIndex; i < previewedBytes.Count; i++) {
+                    bool foundEnd = false;
 
-            while (bytesRead > 0) {
-                totalRead += bytesRead;
-
-                bool foundEnd = false;
-                for (int i = 0; i < bytesRead; i++) {
-                    if (buffer[i] == '\r') {
-                        if (i + 1 < bytesRead) {
-                            if (buffer[i + 1] == '\n') {
-                                totalRead -= (bytesRead - (i + 2));   // skip cr/lf
-                                sr.Seek(i + 2, SeekOrigin.Begin);
-                                reader.DiscardBufferedData();
+                    if (previewedBytes[i] == '\r') {
+                        if (i + 1 < previewedBytes.Count) {
+                            if (previewedBytes[i + 1] == '\n') {
+                                curIndex = i + 2;
                                 foundEnd = true;
                             }
                         } else {
-                            totalRead -= (bytesRead - (i + 1)); // skip cr
-                            sr.Seek(i + 1, SeekOrigin.Begin);
-                            reader.DiscardBufferedData();
+                            curIndex = i + 1;
                             foundEnd = true;
                         }
-                    } else if (buffer[i] == '\n') {
-                        totalRead -= (bytesRead - (i + 1)); // skip lf
-                        sr.Seek(i + 1, SeekOrigin.Begin);
-                        reader.DiscardBufferedData();
+                    } else if (previewedBytes[i] == '\n') {
+                        curIndex = i + 1;
                         foundEnd = true;
                     }
 
                     if (foundEnd) {
-                        if (builder != null) {
-                            builder.Append(Parser.MakeString(buffer), 0, i);
-                            return builder.ToString();
-                        }
-                        return MakeString(buffer).Substring(0, i);
-                    }
+                        return MakeString(previewedBytes).Substring(startIndex, i - startIndex);
+                    }                    
                 }
-
-                if (builder == null) builder = new StringBuilder();
-                builder.Append(MakeString(buffer), 0, bytesRead);
-                bytesRead = sr.Read(buffer, 0, buffer.Length);
-            }
-
-            // no string
-            if (builder == null) {
-                return null;
-            }
+                
+                bufferReadCount = reader.Read(buffer, 0, buffer.Length);
+                for (int i = 0; i < bufferReadCount; i++) {
+                    previewedBytes.Add(buffer[i]);
+                }
+            } while (bufferReadCount != 0);
 
             // no new-line
-            return builder.ToString();
+            curIndex = previewedBytes.Count;
+            return MakeString(previewedBytes);
         }
 
         #endregion
+
+        public static Encoding DefaultEncoding {
+            get {
+                return PythonAsciiEncoding.SourceEncoding;
+            }
+        }
 
         #region Verbatim AST support
 

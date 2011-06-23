@@ -180,6 +180,7 @@
     <Compile Include="PythonTools\CommonUtils.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactory.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
+    <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\ImpersonationHelper.cs" />
     <Compile Include="PythonTools\Intellisense\DecoratorCompletionAnalysis.cs" />
@@ -467,7 +468,6 @@
     <Compile Include="PythonTools\Repl\PythonReplEvaluatorProvider.cs" />
     <Compile Include="PythonTools\Repl\ReplIntellisenseMode.cs" />
     <Compile Include="PythonTools\Repl\SwitchModuleCommand.cs" />
-    <Compile Include="PythonTools\SnapshotMultpleSpanSourceCodeReader.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeReader.cs" />
     <Compile Include="PythonTools\SolutionAdvisor.cs" />
     <Compile Include="PythonTools\Intellisense\IntellisenseController.cs" />

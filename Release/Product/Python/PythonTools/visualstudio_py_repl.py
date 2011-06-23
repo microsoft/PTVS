@@ -157,7 +157,7 @@ actual inspection and introspection."""
         """gets the signatures for the given expression"""
         expression = self._read_string()
         try:
-            doc, args, vargs, varkw, defaults = self.get_signatures(expression)
+            sigs = self.get_signatures(expression)
         except:
             self._send('SERR')
             _debug_write('error in eval')
@@ -166,19 +166,19 @@ actual inspection and introspection."""
             self.send_lock.acquire()
             self.conn.send(ReplBackend._SRES)
             # single overload
-            self.conn.send(struct.pack('i', 1))
+            self.conn.send(struct.pack('i', len(sigs)))
+            for doc, args, vargs, varkw, defaults in sigs:
+                # write overload
+                self._write_string((doc or '')[:256])
+                arg_count = len(args) + (vargs is not None) + (varkw is not None)
+                self.conn.send(struct.pack('i', arg_count))
+                for arg in args:
+                    self._write_string(arg)
 
-            # write overload
-            self._write_string((doc or '')[:256])
-            arg_count = len(args) + (vargs is not None) + (varkw is not None)
-            self.conn.send(struct.pack('i', arg_count))
-            for arg in args:
-                self._write_string(arg)
-
-            if vargs is not None:
-                self._write_string('*' + vargs)
-            if varkw is not None:
-                self._write_string('**' + varkw)
+                if vargs is not None:
+                    self._write_string('*' + vargs)
+                if varkw is not None:
+                    self._write_string('**' + varkw)
 
             self.send_lock.release()
     
@@ -362,8 +362,20 @@ if sys.platform == 'cli':
 
     import clr
     clr.AddReference('Microsoft.Dynamic')
+    clr.AddReference('Microsoft.Scripting')
+    clr.AddReference('IronPython')
     from Microsoft.Scripting import KeyboardInterruptException
+    from Microsoft.Scripting import ParamDictionaryAttribute
+    from IronPython.Runtime.Operations import PythonOps
+    from IronPython.Runtime import PythonContext
 
+    from System import DBNull, ParamArrayAttribute
+    builtin_method_descriptor_type = type(list.append)
+
+class _OldClass:
+    pass
+
+_OldClassType = type(_OldClass)
 
 class BasicReplBackend(ReplBackend):
     future_bits = 0x3e010   # code flags used to mark future bits
@@ -449,15 +461,21 @@ class BasicReplBackend(ReplBackend):
         except BaseException:
             _debug_write('Exception')
             exc_type, exc_value, exc_tb = sys.exc_info()
-            if sys.platform == 'cli' and isinstance(exc_value.clsException, System.Threading.ThreadAbortException):
-                try:
-                    System.Threading.Thread.ResetAbort()
-                except SystemError:
-                    pass
-                sys.stderr.write('KeyboardInterrupt')
+            if sys.platform == 'cli':
+                if isinstance(exc_value.clsException, System.Threading.ThreadAbortException):
+                    try:
+                        System.Threading.Thread.ResetAbort()
+                    except SystemError:
+                        pass
+                    sys.stderr.write('KeyboardInterrupt')
+                else:
+                    # let IronPython format the exception so users can do -X:ExceptionDetail or -X:ShowClrExceptions
+                    excep_text = clr.GetCurrentRuntime().GetLanguage(PythonContext).FormatException(exc_value.clsException)
+                    sys.stderr.write(excep_text)
             else:
                 exc_next = exc_tb.tb_next.tb_next
                 sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
+
             try:
                 self.send_error()
             except SocketError:
@@ -567,21 +585,59 @@ class BasicReplBackend(ReplBackend):
 
         return t.__module__ + '.' + t.__name__, inst_members, type_members
 
+    def get_ipy_sig(self, obj, ctor):
+        args = []
+        vargs = None
+        varkw = None
+        defaults = []
+        for param in ctor.GetParameters():
+            if param.IsDefined(ParamArrayAttribute, False):
+                vargs = param.Name
+            elif param.IsDefined(ParamDictionaryAttribute, False):
+                varkw = param.Name
+            else:
+                args.append(param.Name)
+
+            if param.DefaultValue is not DBNull.Value:
+                defaults.append(repr(param.DefaultValue))
+
+        return obj.__doc__, args, vargs, varkw, tuple(defaults)
+    
     def get_signatures(self, expression):
         val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
         doc = val.__doc__
-        args, vargs, varkw, defaults = inspect.getargspec(val)
+        type_obj = None
+        if isinstance(val, type) or isinstance(val, _OldClassType):
+            type_obj = val
+            val = val.__init__
 
-        if type(val) is types.MethodType:
-            if ((sys.version >= '3.0' and val.__self__ is not None) or
-               (sys.version < '3.0' and val.im_self is not None)):
-                # remove self for instance methods
-                args = args[1:]
+        try:
+            args, vargs, varkw, defaults = inspect.getargspec(val)
+        except TypeError:
+            # we're not doing inspect on a Python function...
+            if sys.platform == 'cli':
+                if type_obj is not None:
+                    clr_type = clr.GetClrType(type_obj)
+                    ctors = clr_type.GetConstructors()
+                    return [self.get_ipy_sig(type_obj, ctor) for ctor in ctors]
+                elif type(val) is types.BuiltinFunctionType:
+                    return [self.get_ipy_sig(val, target) for target in val.Targets]
+                elif type(val) is builtin_method_descriptor_type:
+                    val = PythonOps.GetBuiltinMethodDescriptorTemplate(val)
+                    return [self.get_ipy_sig(val, target) for target in val.Targets]
+            raise
+
+        remove_self = type_obj is not None or (type(val) is types.MethodType and 
+                        ((sys.version >= '3.0' and val.__self__ is not None) or
+                        (sys.version < '3.0' and val.im_self is not None)))
+
+        if remove_self:
+            # remove self for instance methods and types
+            args = args[1:]
             
         if defaults is not None:
             defaults = [repr(default) for default in defaults]
-            
-        return doc, args, vargs, varkw, defaults
+        return [(doc, args, vargs, varkw, defaults)]
 
     def set_current_module(self, module):
         mod = sys.modules.get(module)
@@ -622,7 +678,10 @@ class BasicReplBackend(ReplBackend):
     @staticmethod
     def _get_member_type(inst, name, from_dict):
         try:
-            val = inst.__dict__[name] if from_dict else getattr(type(inst), name)
+            if from_dict:
+                val = inst.__dict__[name] 
+            else:
+                val = getattr(type(inst), name)
             mem_t = type(val)
             mem_t_name = mem_t.__module__ + '.' + mem_t.__name__
             return mem_t_name

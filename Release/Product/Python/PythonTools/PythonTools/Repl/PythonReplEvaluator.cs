@@ -110,6 +110,7 @@ namespace Microsoft.PythonTools.Repl {
             window.SetOptionValue(ReplOptions.SupportAnsiColors, true);
             window.SetOptionValue(ReplOptions.FormattedPrompts, true);
 
+            window.WriteLine("Python interactive window.  Type $help for a list of commands.");            
             Connect();
             return ExecutionResult.Succeeded;
         }

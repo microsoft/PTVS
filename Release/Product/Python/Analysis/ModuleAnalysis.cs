@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
             if (locatedDef != null) {
-                var start = locatedDef.Node.GetStart(_unit.Ast.GlobalParent);
+                var start = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
                 yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, start.Line, start.Column));
             }
 

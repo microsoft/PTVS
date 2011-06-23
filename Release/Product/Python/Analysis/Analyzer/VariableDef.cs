@@ -212,21 +212,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// A variable def which has a specific location where it is defined (currently just function parameters).
     /// </summary>
     sealed class LocatedVariableDef : VariableDef {
-        private readonly IProjectEntry _entry;
+        private readonly ProjectEntry _entry;
         private readonly Node _location;
         
-        public LocatedVariableDef(IProjectEntry entry, Node location) {
+        public LocatedVariableDef(ProjectEntry entry, Node location) {
             _entry = entry;
             _location = location;
         }
 
-        public LocatedVariableDef(IProjectEntry entry, Node location, VariableDef copy) {
+        public LocatedVariableDef(ProjectEntry entry, Node location, VariableDef copy) {
             _entry = entry;
             _location = location;
             _dependencies = copy._dependencies;
         }
 
-        public IProjectEntry Entry {
+        public ProjectEntry Entry {
             get {
                 return _entry;
             }

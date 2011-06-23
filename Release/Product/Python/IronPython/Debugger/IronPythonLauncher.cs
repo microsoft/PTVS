@@ -37,6 +37,8 @@ namespace Microsoft.IronPythonTools.Debugger {
         private static Process _chironProcess;
         private static string _chironDir;
         private static int _chironPort;
+        private static readonly Guid _cpyInterpreterGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
+        private static readonly Guid _cpy64InterpreterGuid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
 
         private readonly IPythonProject _project;
 
@@ -52,6 +54,13 @@ namespace Microsoft.IronPythonTools.Debugger {
         }
 
         public int LaunchFile(string file, bool debug) {
+            var interpreterFactoryId = _project.GetInterpreterFactory().Id;
+
+            if (interpreterFactoryId == _cpyInterpreterGuid || interpreterFactoryId == _cpy64InterpreterGuid) {
+                MessageBox.Show("The project is currently set to use the .NET debugger for IronPython debugging but the project is configured to start with a CPython interpreter.\r\n\r\nTo fix this change the debugger type in project properties->Debug->Launch mode.");
+                return VSConstants.S_OK;
+            }
+
             string extension = Path.GetExtension(file);
             if (String.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) ||
                 String.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase)) {
@@ -80,8 +89,19 @@ namespace Microsoft.IronPythonTools.Debugger {
             bool isWindows;
             string interpreter = GetInterpreterExecutableInternal(out isWindows);
             ProcessStartInfo startInfo;
-            if (!isWindows && PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
-                command = "/c \"\"" + interpreter + "\" " + command + " & if errorlevel 1 pause\"";
+            if (!isWindows && (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit || PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit)) {
+                command = "/c \"\"" + interpreter + "\" " + command;
+                    
+                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit &&
+                    PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    command += " & pause";
+                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                    command += " & if not errorlevel 1 pause";
+                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    command += " & if errorlevel 1 pause";
+                }
+
+                command += "\"";                
                 startInfo = new ProcessStartInfo("cmd.exe", command);
             } else {
                 startInfo = new ProcessStartInfo(interpreter, command);

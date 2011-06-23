@@ -117,10 +117,6 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        internal static TextReader GetContentProvider(ITextBuffer buffer, ITextSnapshot snapshot) {
-            return new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
-        }
-
         public bool IsParsing {
             get {
                 return _analysisPending > 0;

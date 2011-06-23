@@ -14,9 +14,8 @@
 
 using System;
 using System.IO;
-using System.Text;
-using Microsoft.VisualStudio.Text;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools {
     internal partial class SnapshotSpanSourceCodeReader : TextReader, ISnapshotTextReader {
@@ -107,7 +106,7 @@ namespace Microsoft.PythonTools {
             CheckDisposed();
             _position = _span.Start.Position;
         }
-    
+
         private void CheckDisposed() {
             if (_snapshot == null) {
                 throw new ObjectDisposedException("This SnapshotSpanSourceCodeReader has been closed");

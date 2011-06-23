@@ -299,9 +299,9 @@ class Thread(object):
             elif stepping <= STEPPING_OUT:
                 self.stepping -= 1
 
-            if stepping is STEPPING_LAUNCH_BREAK and sys.platform == 'cli' and not DETACHED:
-                # work around IronPython bug - http://ironpython.codeplex.com/workitem/30127
-                self.handle_line(frame, arg)
+        if frame.f_lineno == 1  and sys.platform == 'cli' and frame.f_code.co_name == '<module>':
+            # work around IronPython bug - http://ironpython.codeplex.com/workitem/30127
+            self.handle_line(frame, arg)
 
         # forward call to previous trace function, if any, saving old trace func for when we return
         old_trace_func = self.prev_trace_func

@@ -67,6 +67,7 @@
     <Compile Include="Parsing\Ast\ErrorParameter.cs" />
     <Compile Include="Parsing\Ast\NodeAttributes.cs" />
     <Compile Include="Parsing\ParserOptions.cs" />
+    <Compile Include="Parsing\PartiallyReadStream.cs" />
     <Compile Include="Parsing\PythonAsciiEncoding.cs" />
     <Compile Include="Parsing\TokenizerOptions.cs" />
     <Compile Include="SetOfOne.cs" />

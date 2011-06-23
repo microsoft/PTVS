@@ -79,6 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (dlrEval != null && fixedText != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(Text)) {
+                var replStart = _stopwatch.ElapsedMilliseconds;
                 if (members.Length == 0) {
                     members = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
                     if (members == null) {
@@ -100,6 +101,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         members = memberDict.Values.ToArray();
                     }
                 }
+                Trace.WriteLine(String.Format("Repl {0} lookup time {1} for {2} members", this, _stopwatch.ElapsedMilliseconds - replStart, members.Length));
             }
             
             members = DoFilterCompletions(members);

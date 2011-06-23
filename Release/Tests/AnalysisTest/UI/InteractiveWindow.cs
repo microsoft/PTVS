@@ -216,7 +216,10 @@ namespace AnalysisTest.UI {
 
         public void Reset() {
             Debug.WriteLine("REPL resetting");
-            ReplWindow.Reset();
+            Dispatcher dispatcher = ((FrameworkElement)ReplWindow.TextView).Dispatcher;
+            dispatcher.Invoke(new Action(() => {
+                ReplWindow.Reset();
+            }), DispatcherPriority.Normal);
         }
 
         public void WithStandardInputPrompt(string prompt, Action<string> action) {

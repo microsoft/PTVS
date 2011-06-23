@@ -28,7 +28,6 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public ReplSpan(string litaral, ReplSpanKind kind) {
-            Debug.Assert(kind.IsPrompt());
             _span = litaral;
             Kind = kind;
         }
@@ -47,7 +46,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         public int Length {
             get {
-                return Kind.IsPrompt() ? Prompt.Length : TrackingSpan.GetSpan(TrackingSpan.TextBuffer.CurrentSnapshot).Length;
+                return _span is string ? Prompt.Length : TrackingSpan.GetSpan(TrackingSpan.TextBuffer.CurrentSnapshot).Length;
             }
         }
 

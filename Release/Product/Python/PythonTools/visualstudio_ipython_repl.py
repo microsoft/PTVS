@@ -173,7 +173,7 @@ class IPythonBackend(ReplBackend):
         
         reply = self.object_info_reply 
         argspec = reply['argspec']
-        return reply['docstring'], argspec['args'], argspec['varargs'], argspec['varkw'], argspec['defaults']
+        return [(reply['docstring'], argspec['args'], argspec['varargs'], argspec['varkw'], argspec['defaults'])]
 
     def interrupt_main(self):
         """aborts the current running command"""

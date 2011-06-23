@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Parsing {
                 byte b = bytes[index];
                 if (b > 0x7f) {
                     DecoderFallbackBuffer dfb = DecoderFallback.CreateFallbackBuffer();
-                    if (dfb.Fallback(new[] { b }, 0)) {
+                    if (dfb.Fallback(bytes, index)) {
                         outputChars += dfb.Remaining;
                     }
                 } else {
@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Parsing {
                 byte b = bytes[byteIndex];
                 if (b > 0x7f) {
                     DecoderFallbackBuffer dfb = DecoderFallback.CreateFallbackBuffer();
-                    if (dfb.Fallback(new[] { b }, 0)) {
+                    if (dfb.Fallback(bytes, byteIndex)) {
                         while (dfb.Remaining != 0) {
                             chars[charIndex++] = dfb.GetNextChar();
                             outputChars++;
@@ -246,7 +246,7 @@ namespace Microsoft.PythonTools.Parsing {
     // no ctors on DecoderFallbackBuffer in Silverlight
     class SourceNonStrictDecoderFallbackBuffer : DecoderFallbackBuffer {
         public override bool Fallback(byte[] bytesUnknown, int index) {
-            throw new BadSourceException(bytesUnknown[index]);
+            throw new BadSourceException(bytesUnknown[index], index);
         }
 
         public override char GetNextChar() {
@@ -265,8 +265,10 @@ namespace Microsoft.PythonTools.Parsing {
     [Serializable]
     public class BadSourceException : Exception {
         internal byte _badByte;
-        public BadSourceException(byte b) {
+        internal int _index;
+        public BadSourceException(byte b, int index) {
             _badByte = b;
+            _index = index;
         }
 
         public BadSourceException() : base() { }
@@ -278,5 +280,16 @@ namespace Microsoft.PythonTools.Parsing {
         }
         protected BadSourceException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
+        public byte BadByte {
+            get {
+                return _badByte;
+            }
+        }
+
+        public int Index {
+            get {
+                return _index;
+            }
+        }
     }
 }

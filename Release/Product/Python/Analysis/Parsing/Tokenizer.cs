@@ -793,23 +793,16 @@ namespace Microsoft.PythonTools.Parsing {
             } else if (isBytes) {
                 makeUnicode = false;
             } else {
-                makeUnicode = _langVersion.Is3x();
+                makeUnicode = _langVersion.Is3x() || UnicodeLiterals;
             }
 
             if (makeUnicode) {
-                string contents = LiteralParser.ParseString(_buffer, start, length, isRaw, isUnicode || UnicodeLiterals, !_disableLineFeedLineSeparator);
-                if (isUnicode) {
-                    if (Verbatim) {
-                        return new VerbatimUnicodeStringToken(contents, GetTokenString());
-                    }
-                    return new UnicodeStringToken(contents);
-                }
-
+                string contents = LiteralParser.ParseString(_buffer, start, length, isRaw, true, !_disableLineFeedLineSeparator);
                 if (Verbatim) {
-                    return new VerbatimConstantValueToken(contents, GetTokenString());
+                    return new VerbatimUnicodeStringToken(contents, GetTokenString());
                 }
-                return new ConstantValueToken(contents);
-            } else {
+                return new UnicodeStringToken(contents);
+            } else {                
                 var data = LiteralParser.ParseBytes(_buffer, start, length, isRaw, !_disableLineFeedLineSeparator);
                 if (data.Count == 0) {
                     if (Verbatim) {
@@ -2310,8 +2303,33 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             // make the buffer full:
-            int count = _reader.Read(_buffer, _end, _buffer.Length - _end);
-            _end += count;
+            try {
+                int count = _reader.Read(_buffer, _end, _buffer.Length - _end);
+                _end += count;
+            } catch (BadSourceException bse) {
+                int curLine = _newLineLocations.Count;
+                for (int i = _end; i < _buffer.Length && i < bse.Index; i++) {
+                    if (_buffer[i] == '\r') {
+                        if (i < _buffer.Length && _buffer[i + 1] == '\n') {
+                            i++;
+                        }
+                        _newLineLocations.Add(i + 1);
+                        curLine++;
+                    } else if (_buffer[i] == '\n') {
+                        curLine++;
+                        _newLineLocations.Add(i + 1);
+                    }
+                }
+                _errors.Add(
+                    String.Format("Non-ASCII character '\\x{0:x}' in file test.py on line {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse._badByte, curLine),
+                    _newLineLocations.ToArray(),
+                    CurrentIndex + bse.Index,
+                    CurrentIndex + bse.Index + 1,
+                    ErrorCodes.SyntaxError,
+                    Severity.FatalError
+                );
+                throw;
+            }
 
             ClearInvalidChars();
         }

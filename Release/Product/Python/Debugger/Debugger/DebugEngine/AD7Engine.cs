@@ -581,7 +581,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 return VSConstants.S_FALSE;
             }
 
-            _process.Terminate();
+            if (!_pseudoAttach) {
+                _process.Terminate();
+            } else {
+                _process.Detach();
+            }
 
             return VSConstants.S_OK;
         }
