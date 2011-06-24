@@ -578,8 +578,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
         auto globalsDict = PyObjectHolder(pyDictNew());
         dictSetItem(*globalsDict, "__builtins__", getBuiltins());   
         int size = WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), NULL, 0, NULL, NULL);
-        char* filenameBuffer = new char[1024];
+        char* filenameBuffer = new char[size];
         if(WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), filenameBuffer, size, NULL, NULL) != 0) {
+            filenameBuffer[size] = 0;
             dictSetItem (*globalsDict, "__file__", strFromString(filenameBuffer));
         }
         pyEvalCode(*code, *globalsDict, *globalsDict);

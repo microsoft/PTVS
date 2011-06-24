@@ -230,7 +230,7 @@ namespace Microsoft.PythonTools.Repl {
             private readonly PythonReplEvaluator _eval;
             private readonly object _socketLock = new object();
             private readonly Process _process;
-            private bool _connected;
+            internal bool _connected;
             private Socket _socket;
             private TaskCompletionSource<ExecutionResult> _completion;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
@@ -905,6 +905,9 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public void Reset() {
+            // suppress reporting "failed to launch repl" process
+            _curListener._connected = true;
+
             Close();
 
             Connect();

@@ -33,7 +33,7 @@ namespace AnalysisTest.Mocks {
 
         public Encoding Encoding {
             get {
-                throw new NotImplementedException();
+                return Encoding.UTF8;
             }
             set {
                 throw new NotImplementedException();

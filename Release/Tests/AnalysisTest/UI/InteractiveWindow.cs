@@ -60,7 +60,7 @@ namespace AnalysisTest.UI {
             });
         }
 
-        public void WaitForReadyState() {
+        public void WaitForReadyState(int timeout = 500) {
             Assert.IsTrue(_replWindowInfo.ReadyForInput.WaitOne(500));
         }
 
@@ -188,7 +188,7 @@ namespace AnalysisTest.UI {
             Debug.WriteLine("REPL Cancelling Execution");
             _replWindowInfo.ReadyForInput.Reset();
             VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
-            WaitForReadyState();
+            WaitForReadyState(2000);
         }
 
         public IReplWindow ReplWindow {

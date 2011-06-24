@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -439,7 +440,7 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()", 
                     stdInputPrompt + "ignored", 
-                                     "u''", 
+                                     UnicodeStringPrefix + "''", 
                     ReplPrompt
                 );
 
@@ -449,7 +450,7 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored",
-                                     "u''",
+                                     UnicodeStringPrefix + "''",
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt
                 );
@@ -459,7 +460,7 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored",
-                                     "u''",
+                                     UnicodeStringPrefix + "''",
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored2"                    
                 );
@@ -469,13 +470,19 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored",
-                                     "u''",
+                                     UnicodeStringPrefix + "''",
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored2",
-                                     "u''",
+                                     UnicodeStringPrefix + "''",
                     ReplPrompt
                 );
             });
+        }
+
+        protected virtual string UnicodeStringPrefix {
+            get {
+                return "u";
+            }
         }
 
         /// <summary>
@@ -1673,7 +1680,14 @@ $cls
             Keyboard.Type(c + "\r");
             interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt);
             Keyboard.Type("\r");
-            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt, "('a', 'b', 'c')", ReplPrompt);
+
+            interactive.WaitForText(ReplPrompt + inputCode, SecondPrompt + autoIndent + b, SecondPrompt + autoIndent + c, SecondPrompt, PrintAbcOutput, ReplPrompt);
+        }
+
+        protected virtual string PrintAbcOutput {
+            get {
+                return "('a', 'b', 'c')";
+            }
         }
 
         /// <summary>
@@ -1741,16 +1755,23 @@ $cls
                 string assignCode = "x = 42";
                 string inspectCode = "?x";
                 Keyboard.Type(assignCode + "\r");
+                
                 interactive.WaitForText(ReplPrompt + assignCode, ReplPrompt);
+                interactive.WaitForReadyState();
 
                 Keyboard.Type(inspectCode + "\r");
                 interactive.WaitForText(ReplPrompt + assignCode, ReplPrompt + inspectCode, 
-                    "Type:		int",
-                    "Base Class:	<type 'int'>",
-                    "String Form:	42",
-                    "Namespace:	Interactive",
+                    "Type:       ",
+                    "int",
+                    "Base Class: ",
+                    "<type 'int'>",
+                    "String Form:",
+                    "42",
+                    "Namespace:  ",
+                    "Interactive",
                     "Docstring:",
-                    "    int(x[, base]) -> integer",
+                    "",
+                    "int(x[, base]) -> integer",
                     "",
                     "Convert a string or number to an integer, if possible.  A floating point",
                     "argument will be truncated towards zero (this does not include a string",
@@ -1783,13 +1804,15 @@ $cls
                 Keyboard.Type(code);
                 interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
 
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(2000);
 
                 interactive.CancelExecution();
                 
                 interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt,
                     "---------------------------------------------------------------------------",
-                    "KeyboardInterrupt                         Traceback (most recent call last)");
+                    "",
+                    "KeyboardInterrupt",
+                    "                         Traceback (most recent call last)");
 
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
@@ -1815,6 +1838,7 @@ $cls
                 Keyboard.Type(code + "\r");
 
                 interactive.WaitForText(ReplPrompt + code, ReplPrompt);
+                interactive.WaitForReadyState();
 
                 Keyboard.Type("x.");
 
@@ -1897,13 +1921,16 @@ $cls
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgv() {
-            var interactive = Prepare();
-            var project = DebugProject.OpenProject(@"Python.VS.TestData\SysArgvRepl.sln");
+            // project is typed to 2.6 so execute in interactive always executes there
+            if (InterpreterDescription == "Python 2.6 Interactive") {
+                var interactive = Prepare();
+                var project = DebugProject.OpenProject(@"Python.VS.TestData\SysArgvRepl.sln");
 
-            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
-            Assert.AreNotEqual(null, interactive);
-            
-            interactive.WaitForTextEnd("Program.py']", ReplPrompt);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                Assert.AreNotEqual(null, interactive);
+
+                interactive.WaitForTextEnd("Program.py']", ReplPrompt);
+            }
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -2010,8 +2037,10 @@ $cls
             options.SecondaryPrompt = SecondPrompt;
         }
 
-        protected static IPythonInteractiveOptions GetInteractiveOptions() {
-            return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions("Python 2.6");
+        protected IPythonInteractiveOptions GetInteractiveOptions() {
+            string name = InterpreterDescription;
+            Debug.Assert(name.EndsWith(" Interactive"));
+            return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
         }
 
         protected static IVsPython GetPythonAutomation() {
@@ -2084,6 +2113,17 @@ $cls
             }
         }
 
+        protected override string UnicodeStringPrefix {
+            get {
+                return "";
+            }
+        }
+
+        protected override string PrintAbcOutput {
+            get {
+                return "a b c";
+            }
+        }
     }
     
     [TestClass]

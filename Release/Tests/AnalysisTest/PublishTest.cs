@@ -35,7 +35,7 @@ namespace AnalysisTest {
         private const string TestSharePrivate = "\\\\dinov1\\PubTest";
         private const string PrivateShareUser = "dinov1\\TestUser";
         private const string PrivateShareUserWithoutMachine = "TestUser";
-        private const string PrivateSharePassword = "!1Octopus";
+        private const string PrivateSharePassword = "!10ctopus";
         private const string PrivateSharePasswordIncorrect = "NotThisPassword";
 
         [TestCleanup]

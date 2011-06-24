@@ -2405,7 +2405,7 @@ mod1.f(42)
             AssertContainsExactly(entry1.Analysis.GetTypesFromName("abc", GetLineNumber(text1, "pass") ), IntType);
         }
 
-        private IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
+        protected IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
             Dictionary<LocationInfo, IAnalysisVariable> res = new Dictionary<LocationInfo,IAnalysisVariable>();
             foreach (var v in vars) {
                 if (!res.ContainsKey(v.Location) || res[v.Location].Type == VariableType.Value) {

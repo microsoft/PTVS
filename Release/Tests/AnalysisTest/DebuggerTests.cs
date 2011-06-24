@@ -18,8 +18,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using EnvDTE90;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnalysisTest {
@@ -85,11 +87,19 @@ namespace AnalysisTest {
 
         [TestMethod]
         public void GeneratorChildrenTest() {
-            ChildTest("GeneratorTest.py", 6, "a", 0, 
-                new ChildInfo("gi_code"), 
-                new ChildInfo("gi_frame"),
-                new ChildInfo("gi_running")
-            );
+            if (Version.Version <= PythonLanguageVersion.V25) {
+                // gi_code new in 2.6
+                ChildTest("GeneratorTest.py", 6, "a", 0,
+                    new ChildInfo("gi_frame"),
+                    new ChildInfo("gi_running")
+                );
+            } else {
+                ChildTest("GeneratorTest.py", 6, "a", 0,
+                    new ChildInfo("gi_code"),
+                    new ChildInfo("gi_frame"),
+                    new ChildInfo("gi_running")
+                );
+            }
         }
 
         public virtual string EnumChildrenTestName {
@@ -877,9 +887,20 @@ namespace AnalysisTest {
                 }
 
                 // Only the last exception in each file should be noticed.
-                TestException(debugger, DebuggerTestPath + @"UnhandledException1.py", i == 0, 32, new KeyValuePair<string, int>[0],
-                    new ExceptionInfo(ExceptionModule + ".Exception", 81)
-                );
+                if (Version.Version <= PythonLanguageVersion.V25) {
+                    TestException(debugger, DebuggerTestPath + @"UnhandledException1_v25.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                        new ExceptionInfo(ExceptionModule + ".Exception", 57)
+                    );
+                } else if(Version.Version.Is3x()) {
+                    TestException(debugger, DebuggerTestPath + @"UnhandledException1_v3x.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                        new ExceptionInfo(ExceptionModule + ".Exception", 56)
+                    );
+                } else {
+                    TestException(debugger, DebuggerTestPath + @"UnhandledException1.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                        new ExceptionInfo(ExceptionModule + ".Exception", 81)
+                    );
+                }
+
                 TestException(debugger, DebuggerTestPath + @"UnhandledException2.py", i == 0, 32, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(ExceptionModule + ".Exception", 16)
                 );
@@ -910,7 +931,9 @@ namespace AnalysisTest {
             process.ExceptionRaised += (sender, args) => {
                 // V30 raises an exception as the process shuts down.
                 if (loaded && ((Version.Version == PythonLanguageVersion.V30 && curException < exceptions.Length) || Version.Version != PythonLanguageVersion.V30)) {
-                    Assert.AreEqual(args.Exception.TypeName, exceptions[curException].TypeName);
+                    if (GetType() != typeof(DebuggerTestsIpy) || curException < exceptions.Length) {    // Ipy over reports
+                        Assert.AreEqual(args.Exception.TypeName, exceptions[curException].TypeName);
+                    }
 
                     // http://ironpython.codeplex.com/workitem/30130
                     if (GetType() != typeof(DebuggerTestsIpy)) {
@@ -918,7 +941,9 @@ namespace AnalysisTest {
                     }
                     Assert.IsTrue(args.Exception.Description.IndexOf(filename) != -1);
 
-                    curException++;
+                    if (GetType() != typeof(DebuggerTestsIpy) || curException < exceptions.Length) {    // Ipy over reports
+                        curException++;
+                    }
                     if (resumeProcess) {
                         process.Resume();
                     } else {

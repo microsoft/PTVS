@@ -49,9 +49,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 if (this.IsAltForm(ast)) {
                     for (int i = len; i < res.Length; i++) {
                         if (!Char.IsWhiteSpace(res[i])) {
-                            if (i - len > 1) {
-                                res.Remove(len, i - len);
-                            }
+                            res.Remove(len, i - len);
                             break;
                         } 
                     }

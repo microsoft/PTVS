@@ -2277,7 +2277,7 @@ namespace AnalysisTest {
                 Assert.AreEqual(fiStmt.Root.MakeString(), fromName);
                 Assert.AreEqual(names.Length, fiStmt.Names.Count);
                 for (int i = 0; i < names.Length; i++) {
-                    Assert.AreEqual(names[i], fiStmt.Names[i]);
+                    Assert.AreEqual(names[i], fiStmt.Names[i].Name);
                 }
 
                 if (asNames == null) {
@@ -2289,7 +2289,7 @@ namespace AnalysisTest {
                 } else {
                     Assert.AreEqual(asNames.Length, fiStmt.AsNames.Count);
                     for (int i = 0; i < asNames.Length; i++) {
-                        Assert.AreEqual(asNames[i], fiStmt.AsNames[i]);
+                        Assert.AreEqual(asNames[i], fiStmt.AsNames[i].Name);
                     }
                 }
             };
@@ -2314,7 +2314,7 @@ namespace AnalysisTest {
                 } else {
                     Assert.AreEqual(asNames.Length, fiStmt.AsNames.Count);
                     for (int i = 0; i < asNames.Length; i++) {
-                        Assert.AreEqual(asNames[i], fiStmt.AsNames[i]);
+                        Assert.AreEqual(asNames[i], fiStmt.AsNames[i].Name);
                     }
                 }
             };
@@ -2837,7 +2837,7 @@ namespace AnalysisTest {
 
                 Assert.AreEqual(names.Length, global.Names.Count);
                 for (int i = 0; i < names.Length; i++) {
-                    Assert.AreEqual(names[i], global.Names[i]);
+                    Assert.AreEqual(names[i], global.Names[i].Name);
                 }
             };
         }
@@ -2849,7 +2849,7 @@ namespace AnalysisTest {
 
                 Assert.AreEqual(names.Length, nonlocal.Names.Count);
                 for (int i = 0; i < names.Length; i++) {
-                    Assert.AreEqual(names[i], nonlocal.Names[i]);
+                    Assert.AreEqual(names[i], nonlocal.Names[i].Name);
                 }
             };
         }

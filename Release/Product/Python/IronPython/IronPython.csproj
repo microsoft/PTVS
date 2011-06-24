@@ -120,6 +120,7 @@
       <DependentUpon>IronPythonLauncherOptions.cs</DependentUpon>
     </Compile>
     <Compile Include="Debugger\IronPythonLauncherProvider.cs" />
+    <Compile Include="Interpreter\IronPythonTypeGroup.cs" />
     <Compile Include="Interpreter\IronPythonBuiltinModule.cs" />
     <Compile Include="Interpreter\IronPythonConstant.cs" />
     <Compile Include="Interpreter\IronPythonEvent.cs" />

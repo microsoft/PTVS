@@ -208,7 +208,6 @@ namespace AnalysisTest {
             }
 
             public void WriteLine(string text) {
-                throw new NotImplementedException();
             }
 
             public void WriteOutput(object value) {

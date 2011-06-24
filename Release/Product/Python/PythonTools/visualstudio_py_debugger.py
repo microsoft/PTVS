@@ -122,9 +122,19 @@ def get_thread_from_id(id):
 def should_send_frame(frame):
     return  frame is not None and frame.f_code is not get_code(debug) and frame.f_code is not get_code(new_thread_wrapper)
 
+def lookup_builtin(name, frame):
+    try:
+        return  frame.f_builtins.get(bits)
+    except:
+        # http://ironpython.codeplex.com/workitem/30908
+        builtins = frame.f_globals['__builtins__']
+        if not isinstance(builtins, dict):
+            builtins = builtins.__dict__
+        return builtins.get(name)
+
 def lookup_local(frame, name):
     bits = name.split('.')
-    obj = frame.f_locals.get(bits[0]) or frame.f_globals.get(bits[0]) or frame.f_builtins.get(bits[0])
+    obj = frame.f_locals.get(bits[0]) or frame.f_globals.get(bits[0]) or lookup_builtin(bits[0], frame)
     bits.pop(0)
     while bits and obj is not None and type(obj) is types.ModuleType:
         obj = getattr(obj, bits.pop(0), None)
@@ -163,41 +173,41 @@ class ExceptionBreakInfo(object):
         cur_frame = trace.tb_frame
         
         while should_send_frame(cur_frame) and cur_frame.f_code.co_filename is not None:
-            handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
-            
-            if handlers is None:
-                # req handlers for this file from the debug engine
-                self.handler_lock.acquire()
-                
-                send_lock.acquire()
-                conn.send(REQH)
-                write_string(cur_frame.f_code.co_filename)
-                send_lock.release()
-
-                # wait for the handler data to be received
-                self.handler_lock.acquire()
-                self.handler_lock.release()
-
+            if cur_frame.f_code.co_filename != __file__:
                 handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
+            
+                if handlers is None:
+                    # req handlers for this file from the debug engine
+                    self.handler_lock.acquire()
+                
+                    send_lock.acquire()
+                    conn.send(REQH)
+                    write_string(cur_frame.f_code.co_filename)
+                    send_lock.release()
 
-            if handlers is None:
-                # no code available, so assume unhandled
-                return False
+                    # wait for the handler data to be received
+                    self.handler_lock.acquire()
+                    self.handler_lock.release()
 
-            line = cur_frame.f_lineno
-            for line_start, line_end, expressions in handlers:
-                if line_start <= line < line_end:
-                    if '*' in expressions:
-                        return True
+                    handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
 
-                    for text in expressions:
-                        try:
-                            res = lookup_local(cur_frame, text)
-                            if res is not None and issubclass(ex_type, res):
-                                return True
-                        except:
-                            print("Error resolving: " + str(text))
-                            traceback.print_exc()
+                if handlers is None:
+                    # no code available, so assume unhandled
+                    return False
+
+                line = cur_frame.f_lineno
+                for line_start, line_end, expressions in handlers:
+                    if line_start <= line < line_end:
+                        if '*' in expressions:
+                            return True
+
+                        for text in expressions:
+                            try:
+                                res = lookup_local(cur_frame, text)
+                                if res is not None and issubclass(ex_type, res):
+                                    return True
+                            except:
+                                pass
 
             cur_frame = cur_frame.f_back
 

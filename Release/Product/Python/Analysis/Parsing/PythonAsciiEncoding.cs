@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools.Parsing {
     // no ctors on DecoderFallbackBuffer in Silverlight
     class NonStrictDecoderFallbackBuffer : DecoderFallbackBuffer {
         private List<byte> _bytes = new List<byte>();
-        private int _index;
+        private int _index, _remaining = 1;
 
         public override bool Fallback(byte[] bytesUnknown, int index) {
             _bytes.AddRange(bytesUnknown);
@@ -217,6 +217,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (_index == _bytes.Count) {
                 return char.MinValue;
             }
+            _remaining--;
             return (char)_bytes[_index++];
         }
 
@@ -229,7 +230,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public override int Remaining {
-            get { return _bytes.Count - _index; }
+            get { return _remaining; }
         }
     }
 

@@ -20,9 +20,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonConstructorFunction : IPythonFunction {
         private readonly ConstructorInfo[] _infos;
         private readonly IronPythonInterpreter _interpreter;
-        private readonly IronPythonType _type;
+        private readonly IPythonType _type;
 
-        public IronPythonConstructorFunction(IronPythonInterpreter interpreter, ConstructorInfo[] infos, IronPythonType type) {
+        public IronPythonConstructorFunction(IronPythonInterpreter interpreter, ConstructorInfo[] infos, IPythonType type) {
             _interpreter = interpreter;
             _infos = infos;
             _type = type;

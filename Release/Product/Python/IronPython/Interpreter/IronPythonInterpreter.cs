@@ -484,7 +484,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                     TypeGroup tg = obj as TypeGroup;
                     if (tg != null) {
-                        _members[obj] = res = new PythonObject<TypeGroup>(this, tg);
+                        _members[obj] = res = new IronPythonTypeGroup(this, tg);
                     }
 
                     var attrType = (obj != null) ? obj.GetType() : typeof(DynamicNull);

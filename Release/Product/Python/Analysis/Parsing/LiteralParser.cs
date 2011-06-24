@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (ch == 'u' || ch == 'U') {
                         int len = (ch == 'u') ? 4 : 8;
                         int max = 16;
-                        if (isUni) {
+                        if (isUni && !isRaw) {
                             if (TryParseInt(text, i, len, max, out val)) {
                                 buf.Append((char)val);
                                 i += len;

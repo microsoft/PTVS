@@ -162,7 +162,7 @@ def g():
 def f(sender, args): pass
 ";
             var entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("f", GetLineNumber(text, "x =")), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 1, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "x ="))), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 5, VariableType.Definition));
 
             text = @"
 from System import EventHandler
@@ -170,7 +170,7 @@ def f(sender, args): pass
 
 x = EventHandler(f)";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("f", GetLineNumber(text, "x =")), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 1, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "x ="))), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
 
             // left hand side is unknown, right hand side should still have refs added
             text = @"
@@ -180,7 +180,7 @@ def f(sender, args): pass
 a.foo += EventHandler(f)
 ";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("f", GetLineNumber(text, "a.foo +=")), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 1, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "a.foo +="))), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
         }
 
         [TestMethod]
