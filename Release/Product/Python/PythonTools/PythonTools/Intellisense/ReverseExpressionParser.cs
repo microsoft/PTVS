@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Parses an expression in reverse to get the experssion we need to
     /// analyze for completion, quick info, or signature help.
     /// </summary>
-    class ReverseExpressionParser {
+    class ReverseExpressionParser : IEnumerable<ClassificationSpan> {
         private readonly ITextSnapshot _snapshot;
         private readonly ITextBuffer _buffer;
         private readonly ITrackingSpan _span;
@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return ((IList<string>)_assignOperators).Contains(text);
         }
 
-        private static bool IsStmtKeyword(string text) {
+        public static bool IsStmtKeyword(string text) {
             return ((IList<string>)_stmtKeywords).Contains(text);
         }
 
@@ -272,6 +272,16 @@ namespace Microsoft.PythonTools.Intellisense {
         public ITextSnapshotLine CurrentLine {
             get { return _curLine; }
             set { _curLine = value; }
+        }
+
+        public IEnumerator<ClassificationSpan> GetEnumerator()
+        {
+            return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
         }
     }
 }
