@@ -111,11 +111,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 // detach the process exited event, we don't need to send the exited event
                 // which could happen when we terminate the process and check if it's still
                 // running.
-                _process.ProcessExited -= OnProcessExited;
+                try {
+                    _process.ProcessExited -= OnProcessExited;
 
-                // we launched the process, go ahead and kill it now that
-                // VS has released us
-                _process.Terminate();
+                    // we launched the process, go ahead and kill it now that
+                    // VS has released us
+                    _process.Terminate();
+                } catch (InvalidOperationException) {
+                }
             }
         }
 

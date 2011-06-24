@@ -45,6 +45,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="CompletionContextTests.cs" />
+    <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ExtractMethodTests.cs" />
     <Compile Include="Mocks\MockBufferGraph.cs" />
     <Compile Include="Mocks\MockMappingPoint.cs" />

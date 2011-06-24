@@ -17,6 +17,8 @@ except:
 
 if sys.platform == 'cli':
     import clr
+    from System.Runtime.CompilerServices import ConditionalWeakTable
+    IPY_SEEN_MODULES = ConditionalWeakTable[object, object]()
 
 # save start_new_thread so we can call it later, we'll intercept others calls to it.
 
@@ -299,7 +301,10 @@ class Thread(object):
             elif stepping <= STEPPING_OUT:
                 self.stepping -= 1
 
-        if frame.f_lineno == 1  and sys.platform == 'cli' and frame.f_code.co_name == '<module>':
+        if (sys.platform == 'cli' and 
+            frame.f_code.co_name == '<module>' and 
+            not IPY_SEEN_MODULES.TryGetValue(frame.f_code)[0]):
+            IPY_SEEN_MODULES.Add(frame.f_code, None)
             # work around IronPython bug - http://ironpython.codeplex.com/workitem/30127
             self.handle_line(frame, arg)
 

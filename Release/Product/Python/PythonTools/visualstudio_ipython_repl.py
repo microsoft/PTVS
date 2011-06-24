@@ -3,7 +3,7 @@
 from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException
 try:
     from IPython.zmq import kernelmanager
-    from IPython.zmq.kernelmanager import XReqSocketChannel, KernelManager, SubSocketChannel, RepSocketChannel, HBSocketChannel
+    from IPython.zmq.kernelmanager import ShellSocketChannel, KernelManager, SubSocketChannel, StdInSocketChannel, HBSocketChannel
     from IPython.utils.traitlets import Type
 except ImportError:
     raise UnsupportedReplException('IPython mode requires IPython 0.11 or later.')
@@ -34,7 +34,7 @@ class DefaultHandler(object):
 
         x.append((self.__class__.__name__, msg))
     
-class VsXReqSocketChannel(DefaultHandler, XReqSocketChannel):    
+class VsShellSocketChannel(DefaultHandler, ShellSocketChannel):    
     
     def handle_execute_reply(self, content):
         # we could have a payload here...
@@ -74,8 +74,10 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
         # called when an expression statement is printed, we treat 
         # identical to stream output but it always goes to stdout
         output = content['data']
-        self._vs_backend.write_stdout(output)        
-        self._vs_backend.write_stdout('\n') 
+        output_str = output.get('text/plain', None)
+        if output_str is not None:
+          self._vs_backend.write_stdout(output_str)        
+          self._vs_backend.write_stdout('\n') 
         
     def handle_pyerr(self, content):
         # TODO: this includes escape sequences w/ color, we need to unescape that
@@ -93,7 +95,7 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
         pass
 
 
-class VsRepSocketChannel(DefaultHandler, RepSocketChannel):
+class VsStdInSocketChannel(DefaultHandler, StdInSocketChannel):
     def handle_input_request(self, content):
         # queue this to another thread so we don't block the channel
         def read_and_respond():
@@ -109,9 +111,9 @@ class VsHBSocketChannel(DefaultHandler, HBSocketChannel):
 
 
 class VsKernelManager(KernelManager):
-    xreq_channel_class = Type(VsXReqSocketChannel)
+    shell_channel_class = Type(VsShellSocketChannel)
     sub_channel_class = Type(VsSubSocketChannel)
-    rep_channel_class = Type(VsRepSocketChannel)
+    stdin_channel_class = Type(VsStdInSocketChannel)
     hb_channel_class = Type(VsHBSocketChannel)
 
 
@@ -128,8 +130,8 @@ class IPythonBackend(ReplBackend):
         self.members_lock = thread.allocate_lock()
         self.members_lock.acquire()
         
-        self.km.xreq_channel._vs_backend = self
-        self.km.rep_channel._vs_backend = self
+        self.km.shell_channel._vs_backend = self
+        self.km.stdin_channel._vs_backend = self
         self.km.sub_channel._vs_backend = self
         self.km.hb_channel._vs_backend = self        
         
@@ -140,10 +142,10 @@ class IPythonBackend(ReplBackend):
         self.exit_lock.acquire()
     
     def run_command(self, command):
-        self.km.xreq_channel.execute(command, False)
+        self.km.shell_channel.execute(command, False)
         
     def execute_file(self, filename):
-        self.km.xreq_channel.execute(file(filename).read(), False)
+        self.km.shell_channel.execute(file(filename).read(), False)
 
     def exit_process(self):
         self.exit_lock.release()
@@ -151,7 +153,7 @@ class IPythonBackend(ReplBackend):
     def get_members(self, expression):
         """returns a tuple of the type name, instance members, and type members"""      
         text = expression + '.'
-        self.km.xreq_channel.complete(text, text, 1)
+        self.km.shell_channel.complete(text, text, 1)
                 
         self.members_lock.acquire()
         
@@ -167,7 +169,7 @@ class IPythonBackend(ReplBackend):
     def get_signatures(self, expression):
         """returns doc, args, vargs, varkw, defaults."""
         
-        self.km.xreq_channel.object_info(expression)
+        self.km.shell_channel.object_info(expression)
         
         self.members_lock.acquire()
         

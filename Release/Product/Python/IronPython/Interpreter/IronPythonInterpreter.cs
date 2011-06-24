@@ -330,7 +330,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #endregion
 
         internal IPythonType GetTypeFromType(Type type) {
-            return GetTypeFromType(DynamicHelpers.GetPythonTypeFromType(type));
+            if (type.IsGenericParameter && type.GetInterfaces().Length != 0) {
+                // generic parameter with constraints, IronPython will throw an 
+                // exception while constructing the PythonType 
+                // http://ironpython.codeplex.com/workitem/30905
+                // Return the type for the interface
+                return GetTypeFromType(type.GetInterfaces()[0]);
+            }
+
+            var pyType = DynamicHelpers.GetPythonTypeFromType(type);
+            
+            return GetTypeFromType(pyType);
         }
 
         internal IPythonType GetTypeFromType(PythonType type) {

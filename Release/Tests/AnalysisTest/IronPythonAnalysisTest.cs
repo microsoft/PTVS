@@ -38,8 +38,25 @@ namespace AnalysisTest {
         }
 
         private static IPythonInterpreter CreateInterperter() {
-            return new IronPythonInterpreter(new IronPythonInterpreterFactory(), Python.CreateEngine());
+            var engine = Python.CreateEngine();
+            engine.Runtime.LoadAssembly(typeof(IronPythonAnalysisTest).Assembly);
+            return new IronPythonInterpreter(new IronPythonInterpreterFactory(), engine);
         }
+
+        [TestMethod]
+        public void TestGenerics() {
+            var text = @"
+import clr
+clr.AddReference('AnalysisTest')
+from AnalysisTest.DotNetAnalysis import *
+
+y = GenericType()
+zzz = y.ReturnsGenericParam()
+";
+            var entry = ProcessText(text);
+            AssertContainsExactly(entry.GetMembersFromName("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
+        }
+
 
         [TestMethod]
         public void TestImportClr() {

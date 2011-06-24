@@ -621,10 +621,10 @@ class BasicReplBackend(ReplBackend):
                     ctors = clr_type.GetConstructors()
                     return [self.get_ipy_sig(type_obj, ctor) for ctor in ctors]
                 elif type(val) is types.BuiltinFunctionType:
-                    return [self.get_ipy_sig(val, target) for target in val.Targets]
+                    return [self.get_ipy_sig(target, target.Targets[0]) for target in val.Overloads.Functions]
                 elif type(val) is builtin_method_descriptor_type:
                     val = PythonOps.GetBuiltinMethodDescriptorTemplate(val)
-                    return [self.get_ipy_sig(val, target) for target in val.Targets]
+                    return [self.get_ipy_sig(target, target.Targets[0]) for target in val.Overloads.Functions]
             raise
 
         remove_self = type_obj is not None or (type(val) is types.MethodType and 
