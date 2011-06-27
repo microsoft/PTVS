@@ -4559,26 +4559,22 @@ namespace Microsoft.PythonTools.Parsing {
 
             if ((gotEncoding == null || gotEncoding == true) && isUtf8 && encodingName != "utf-8") {
                 // we have both a BOM & an encoding type, throw an error
-                errors.Add("file has both Unicode marker and PEP-263 file encoding.  You can only use \"utf-8\" as the encoding name when a BOM is present.", null, 0, 0, ErrorCodes.SyntaxError, Severity.FatalError);
+                errors.Add("file has both Unicode marker and PEP-263 file encoding.  You must use \"utf-8\" as the encoding name when a BOM is present.", 
+                    GetEncodingLineNumbers(readBytes), 
+                    encodingIndex,
+                    encodingIndex + encodingName.Length, 
+                    ErrorCodes.SyntaxError, 
+                    Severity.FatalError
+                );
+                encoding = Encoding.UTF8;
             } else if (isUtf8) {
                 return new StreamReader(new PartiallyReadStream(readBytes, stream), UTF8Throwing);
             } else if (encoding == null) {
                 if (gotEncoding == null) {
                     // get line number information for the bytes we've read...
-                    int[] lineNos = new int[2];
-                    for (int i = 0, lineCount = 0; i < readBytes.Count && lineCount < 2; i++) {
-                        if (readBytes[i] == '\r') {
-                            lineNos[lineCount++] = i;
-                            if (i + 1 < readBytes.Count && readBytes[i + 1] == '\n') {
-                                i++;
-                            }
-                        } else if (readBytes[i] == '\n') {
-                            lineNos[lineCount++] = i;
-                        }
-                    }
                     errors.Add(
                         String.Format("encoding problem: unknown encoding (line {0})", lineNo), 
-                        lineNos, 
+                        GetEncodingLineNumbers(readBytes), 
                         encodingIndex, 
                         encodingIndex + encodingName.Length, 
                         ErrorCodes.SyntaxError, 
@@ -4590,6 +4586,21 @@ namespace Microsoft.PythonTools.Parsing {
 
             // re-read w/ the correct encoding type...
             return new StreamReader(new PartiallyReadStream(readBytes, stream), encoding);
+        }
+
+        private static int[] GetEncodingLineNumbers(IList<byte> readBytes) {
+            int[] lineNos = new int[2];
+            for (int i = 0, lineCount = 0; i < readBytes.Count && lineCount < 2; i++) {
+                if (readBytes[i] == '\r') {
+                    lineNos[lineCount++] = i;
+                    if (i + 1 < readBytes.Count && readBytes[i + 1] == '\n') {
+                        i++;
+                    }
+                } else if (readBytes[i] == '\n') {
+                    lineNos[lineCount++] = i;
+                }
+            }
+            return lineNos;
         }
 
         private static Encoding UTF8Throwing {

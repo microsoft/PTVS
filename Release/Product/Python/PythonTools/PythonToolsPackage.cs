@@ -152,7 +152,22 @@ namespace Microsoft.PythonTools {
             
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
-            // Set the cursor at the beginning of the declaration.
+            // Set the cursor at the beginning of the declaration.            
+            ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
+            // Make sure that the text is visible.
+            viewAdapter.CenterLines(line, 1);
+        }
+
+        internal static void NavigateTo(string filename, Guid docViewGuidType, int pos) {
+            IVsTextView viewAdapter;
+            IVsWindowFrame pWindowFrame;
+            OpenDocument(filename, out viewAdapter, out pWindowFrame);
+
+            ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
+
+            // Set the cursor at the beginning of the declaration.          
+            int line, col;
+            ErrorHandler.ThrowOnFailure(viewAdapter.GetLineAndColumn(pos, out line, out col));
             ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
             // Make sure that the text is visible.
             viewAdapter.CenterLines(line, 1);

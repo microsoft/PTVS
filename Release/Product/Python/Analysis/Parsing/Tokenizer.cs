@@ -2069,35 +2069,22 @@ namespace Microsoft.PythonTools.Parsing {
                 _start = 0;
                 _bufferResized = true;
             }
-
+            
             // make the buffer full:
             try {
                 int count = _reader.Read(_buffer, _end, _buffer.Length - _end);
                 _end += count;
             } catch (BadSourceException bse) {
-                int curLine = _newLineLocations.Count;
-                for (int i = _end; i < _buffer.Length && i < bse.Index; i++) {
-                    if (_buffer[i] == '\r') {
-                        if (i < _buffer.Length && _buffer[i + 1] == '\n') {
-                            i++;
-                        }
-                        _newLineLocations.Add(i + 1);
-                        curLine++;
-                    } else if (_buffer[i] == '\n') {
-                        curLine++;
-                        _newLineLocations.Add(i + 1);
-                    }
-                }
                 StreamReader streamReader = _reader as StreamReader;
-                if (streamReader != null && streamReader.CurrentEncoding != PythonAsciiEncoding.Instance) {
+                if (streamReader != null && streamReader.CurrentEncoding != PythonAsciiEncoding.SourceEncoding) {
                     _errors.Add(
                         String.Format(
                             "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}", 
                             Parser.NormalizeEncodingName(streamReader.CurrentEncoding.WebName), 
-                            bse.BadByte, 
-                            bse.Index
+                            bse.BadByte,
+                            bse.Index + CurrentIndex
                         ),
-                        _newLineLocations.ToArray(),
+                        null,
                         CurrentIndex + bse.Index,
                         CurrentIndex + bse.Index + 1,
                         ErrorCodes.SyntaxError,
@@ -2105,8 +2092,8 @@ namespace Microsoft.PythonTools.Parsing {
                     );
                 } else {
                     _errors.Add(
-                        String.Format("Non-ASCII character '\\x{0:x}' in file test.py on line {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse._badByte, curLine),
-                        _newLineLocations.ToArray(),
+                        String.Format("Non-ASCII character '\\x{0:x}' at position {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse._badByte, bse.Index + CurrentIndex),
+                        null,
                         CurrentIndex + bse.Index,
                         CurrentIndex + bse.Index + 1,
                         ErrorCodes.SyntaxError,

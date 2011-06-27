@@ -180,6 +180,11 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (_openFiles) {
                 _openFiles.Remove(bufferParser);
             }
+            if (ImplicitProject && _taskProvider != null && _errorList != null && bufferParser._currentProjEntry.FilePath != null) {
+                // remove the file from the error list
+                _taskProvider.Clear(bufferParser._currentProjEntry.FilePath);
+                ((IVsTaskList)_errorList).RefreshTasks(_taskProvider.Cookie);
+            }
         }
 
         public IProjectEntry AnalyzeFile(string path) {
@@ -1035,6 +1040,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     public int Column(out int piCol) {
+                        if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+                            // we don't have the column number calculated
+                            piCol = 0;
+                            return VSConstants.E_FAIL;
+                        }
                         piCol = Span.Start.Column - 1;
                         return VSConstants.S_OK;
                     }
@@ -1060,12 +1070,22 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     public int Line(out int piLine) {
+                        if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+                            // we don't have the line number calculated
+                            piLine = 0;
+                            return VSConstants.E_FAIL;
+                        }
                         piLine = Span.Start.Line - 1;
                         return VSConstants.S_OK;
                     }
 
                     public int NavigateTo() {
-                        PythonToolsPackage.NavigateTo(_path, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
+                        if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+                            // we have just an absolute index, use that to naviagte
+                            PythonToolsPackage.NavigateTo(_path, Guid.Empty, Span.Start.Index);
+                        } else {
+                            PythonToolsPackage.NavigateTo(_path, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
+                        }
                         return VSConstants.S_OK;
                     }
 

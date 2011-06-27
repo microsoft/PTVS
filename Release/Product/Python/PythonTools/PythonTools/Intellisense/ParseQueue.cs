@@ -169,6 +169,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     doc.EncodingChanged -= EncodingChanged;
                 }
             }
+            
 
             if (PythonToolsPackage.Instance != null) {
                 PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged -= OptionsPage_IndentationInconsistencyChanged;
