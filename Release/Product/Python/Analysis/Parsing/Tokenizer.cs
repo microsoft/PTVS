@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -1724,237 +1723,6 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        internal static bool TryGetEncoding(Encoding defaultEncoding, string line, ref Encoding enc, out string encName) {
-            // encoding is "# coding: <encoding name>
-            // minimum length is 18
-            encName = null;
-            if (line.Length < 10) return false;
-            if (line[0] != '#') return false;
-
-            // we have magic comment line
-            int codingIndex;
-            if ((codingIndex = line.IndexOf("coding")) == -1) return false;
-            if (line.Length <= (codingIndex + 6)) return false;
-            if (line[codingIndex + 6] != ':' && line[codingIndex + 6] != '=') return false;
-
-            // it contains coding: or coding=
-            int encodingStart = codingIndex + 7;
-            while (encodingStart < line.Length) {
-                if (!Char.IsWhiteSpace(line[encodingStart])) break;
-
-                encodingStart++;
-            }
-
-            // line is coding: [all white space]
-            if (encodingStart == line.Length) return false;
-
-            int encodingEnd = encodingStart;
-            while (encodingEnd < line.Length) {
-                if (Char.IsWhiteSpace(line[encodingEnd])) break;
-
-                encodingEnd++;
-            }
-
-            // get the encoding string name
-            encName = line.Substring(encodingStart, encodingEnd - encodingStart);
-
-            // and we have the magic ending as well...
-            if (TryGetEncoding(encName, out enc)) {
-                enc.DecoderFallback = new NonStrictDecoderFallback();
-                return true;
-            }
-            return false;
-        }
-
-        internal static bool TryGetEncoding(string name, out Encoding encoding) {
-            name = NormalizeEncodingName(name);
-
-            EncodingInfoWrapper encInfo;
-            if (CodecsInfo.Codecs.TryGetValue(name, out encInfo)) {
-                encoding = (Encoding)encInfo.GetEncoding().Clone();
-                return true;
-            }
-
-            encoding = null;
-            return false;
-        }
-
-        static class CodecsInfo {
-            public static readonly Dictionary<string, EncodingInfoWrapper> Codecs = MakeCodecsDict();
-
-            private static Dictionary<string, EncodingInfoWrapper> MakeCodecsDict() {
-                Dictionary<string, EncodingInfoWrapper> d = new Dictionary<string, EncodingInfoWrapper>();
-                EncodingInfo[] encs = Encoding.GetEncodings();
-                for (int i = 0; i < encs.Length; i++) {
-                    string normalizedName = NormalizeEncodingName(encs[i].Name);
-
-                    // setup well-known mappings, for everything
-                    // else we'll store as lower case w/ _                
-                    switch (normalizedName) {
-                        case "us_ascii":
-                            d["cp" + encs[i].CodePage.ToString()] = d[normalizedName] = d["us"] = d["ascii"] = d["646"] = d["us_ascii"] = new AsciiEncodingInfoWrapper();
-                            continue;
-                        case "iso_8859_1":
-                            d["8859"] = d["latin_1"] = d["latin1"] = d["iso 8859_1"] = d["iso8859_1"] = d["cp819"] = d["819"] = d["latin"] = d["latin1"] = d["l1"] = encs[i];
-                            break;
-                        case "utf_7":
-                            d["u7"] = d["unicode-1-1-utf-7"] = encs[i];
-                            break;
-                        case "utf_8":
-                            d["utf_8_sig"] = encs[i];
-                            d["utf_8"] = d["utf8"] = d["u8"] = new EncodingInfoWrapper(encs[i], new byte[0]);
-                            continue;
-                        case "utf_16":
-                            d["utf_16_le"] = d["utf_16le"] = new EncodingInfoWrapper(encs[i], new byte[0]);
-                            d["utf16"] = new EncodingInfoWrapper(encs[i], encs[i].GetEncoding().GetPreamble());
-                            break;
-                        case "unicodefffe": // big endian unicode                    
-                            // strip off the pre-amble, CPython doesn't include it.
-                            d["utf_16_be"] = d["utf_16be"] = new EncodingInfoWrapper(encs[i], new byte[0]);
-                            break;
-                    }
-
-                    // publish under normalized name (all lower cases, -s replaced with _s)
-                    d[normalizedName] = encs[i];
-                    // publish under Windows code page as well...                
-                    d["windows-" + encs[i].GetEncoding().WindowsCodePage.ToString()] = encs[i];
-                    // publish under code page number as well...
-                    d["cp" + encs[i].CodePage.ToString()] = d[encs[i].CodePage.ToString()] = encs[i];
-                }
-
-#if DEBUG
-                // all codecs should be stored in lowercase because we only look up from lowercase strings
-                foreach (KeyValuePair<string, EncodingInfoWrapper> kvp in d) {
-                    Debug.Assert(kvp.Key.ToLower(CultureInfo.InvariantCulture) == kvp.Key);
-                }
-#endif
-                return d;
-            }
-        }
-
-        class EncodingInfoWrapper {
-            private EncodingInfo _info;
-            private Encoding _encoding;
-            private byte[] _preamble;
-
-            public EncodingInfoWrapper(Encoding enc) {
-                _encoding = enc;
-            }
-
-            public EncodingInfoWrapper(EncodingInfo info) {
-                _info = info;
-            }
-
-            public EncodingInfoWrapper(EncodingInfo info, byte[] preamble) {
-                _info = info;
-                _preamble = preamble;
-            }
-
-            public virtual Encoding GetEncoding() {
-                if (_encoding != null) return _encoding;
-
-                if (_preamble == null) {
-                    return _info.GetEncoding();
-                }
-
-                return new EncodingWrapper(_info.GetEncoding(), _preamble);
-            }
-
-            public static implicit operator EncodingInfoWrapper(EncodingInfo info) {
-                return new EncodingInfoWrapper(info);
-            }
-        }
-
-        class AsciiEncodingInfoWrapper : EncodingInfoWrapper {
-            public AsciiEncodingInfoWrapper()
-                : base((EncodingInfo)null) {
-            }
-
-            public override Encoding GetEncoding() {
-                return PythonAsciiEncoding.Instance;
-            }
-        }
-
-        class EncodingWrapper : Encoding {
-            private byte[] _preamble;
-            private Encoding _encoding;
-
-            public EncodingWrapper(Encoding encoding, byte[] preamable) {
-                _preamble = preamable;
-                _encoding = encoding;
-            }
-
-            private void SetEncoderFallback() {
-#if !SILVERLIGHT
-                _encoding.EncoderFallback = EncoderFallback;
-#endif
-            }
-
-            private void SetDecoderFallback() {
-#if !SILVERLIGHT
-                _encoding.DecoderFallback = DecoderFallback;
-#endif
-            }
-
-            public override int GetByteCount(char[] chars, int index, int count) {
-                SetEncoderFallback();
-                return _encoding.GetByteCount(chars, index, count);
-            }
-
-            public override int GetBytes(char[] chars, int charIndex, int charCount, byte[] bytes, int byteIndex) {
-                SetEncoderFallback();
-                return _encoding.GetBytes(chars, charIndex, charCount, bytes, byteIndex);
-            }
-
-            public override int GetCharCount(byte[] bytes, int index, int count) {
-                SetDecoderFallback();
-                return _encoding.GetCharCount(bytes, index, count);
-            }
-
-            public override int GetChars(byte[] bytes, int byteIndex, int byteCount, char[] chars, int charIndex) {
-                SetDecoderFallback();
-                return _encoding.GetChars(bytes, byteIndex, byteCount, chars, charIndex);
-            }
-
-            public override int GetMaxByteCount(int charCount) {
-                SetEncoderFallback();
-                return _encoding.GetMaxByteCount(charCount);
-            }
-
-            public override int GetMaxCharCount(int byteCount) {
-                SetDecoderFallback();
-                return _encoding.GetMaxCharCount(byteCount);
-            }
-
-            public override byte[] GetPreamble() {
-                return _preamble;
-            }
-
-            public override Encoder GetEncoder() {
-                SetEncoderFallback();
-                return _encoding.GetEncoder();
-            }
-
-            public override Decoder GetDecoder() {
-                SetDecoderFallback();
-                return _encoding.GetDecoder();
-            }
-
-            public override object Clone() {
-                // need to call base.Clone to be marked as read/write
-                EncodingWrapper res = (EncodingWrapper)base.Clone();
-                res._encoding = (Encoding)_encoding.Clone();
-                return res;
-            }
-        }
-
-        internal static string NormalizeEncodingName(string name) {
-            if (name == null) {
-                return null;
-            }
-            return name.ToLower(CultureInfo.InvariantCulture).Replace('-', '_').Replace(' ', '_');
-        }
-
         private void ReportSyntaxError(IndexSpan span, string message, int errorCode) {
             _errors.Add(message, _newLineLocations.ToArray(), span.Start, span.End, errorCode, Severity.FatalError);
         }
@@ -2320,14 +2088,31 @@ namespace Microsoft.PythonTools.Parsing {
                         _newLineLocations.Add(i + 1);
                     }
                 }
-                _errors.Add(
-                    String.Format("Non-ASCII character '\\x{0:x}' in file test.py on line {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse._badByte, curLine),
-                    _newLineLocations.ToArray(),
-                    CurrentIndex + bse.Index,
-                    CurrentIndex + bse.Index + 1,
-                    ErrorCodes.SyntaxError,
-                    Severity.FatalError
-                );
+                StreamReader streamReader = _reader as StreamReader;
+                if (streamReader != null && streamReader.CurrentEncoding != PythonAsciiEncoding.Instance) {
+                    _errors.Add(
+                        String.Format(
+                            "(unicode error) '{0}' codec can't decode byte 0x{1:x} in position {2}", 
+                            Parser.NormalizeEncodingName(streamReader.CurrentEncoding.WebName), 
+                            bse.BadByte, 
+                            bse.Index
+                        ),
+                        _newLineLocations.ToArray(),
+                        CurrentIndex + bse.Index,
+                        CurrentIndex + bse.Index + 1,
+                        ErrorCodes.SyntaxError,
+                        Severity.FatalError
+                    );
+                } else {
+                    _errors.Add(
+                        String.Format("Non-ASCII character '\\x{0:x}' in file test.py on line {1}, but no encoding declared; see http://www.python.org/peps/pep-0263.html for details", bse._badByte, curLine),
+                        _newLineLocations.ToArray(),
+                        CurrentIndex + bse.Index,
+                        CurrentIndex + bse.Index + 1,
+                        ErrorCodes.SyntaxError,
+                        Severity.FatalError
+                    );
+                }
                 throw;
             }
 

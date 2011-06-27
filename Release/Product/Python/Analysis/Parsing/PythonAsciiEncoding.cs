@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Parsing {
                 byte b = bytes[index];
                 if (b > 0x7f) {
                     DecoderFallbackBuffer dfb = DecoderFallback.CreateFallbackBuffer();
-                    if (dfb.Fallback(bytes, index)) {
+                    if (dfb.Fallback(new byte[] { b }, index)) {
                         outputChars += dfb.Remaining;
                     }
                 } else {
@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Parsing {
                 byte b = bytes[byteIndex];
                 if (b > 0x7f) {
                     DecoderFallbackBuffer dfb = DecoderFallback.CreateFallbackBuffer();
-                    if (dfb.Fallback(bytes, byteIndex)) {
+                    if (dfb.Fallback(new byte[] { b }, byteIndex)) {
                         while (dfb.Remaining != 0) {
                             chars[charIndex++] = dfb.GetNextChar();
                             outputChars++;
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Parsing {
     // no ctors on DecoderFallbackBuffer in Silverlight
     class SourceNonStrictDecoderFallbackBuffer : DecoderFallbackBuffer {
         public override bool Fallback(byte[] bytesUnknown, int index) {
-            throw new BadSourceException(bytesUnknown[index], index);
+            throw new BadSourceException(bytesUnknown[0], index);
         }
 
         public override char GetNextChar() {

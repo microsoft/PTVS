@@ -434,8 +434,6 @@ namespace Microsoft.PythonTools.Intellisense {
             List<PythonAst> asts = new List<PythonAst>();
             bool hasErrors = false;
             foreach (var snapshot in snapshots) {
-                ITextDocument doc;
-
                 if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                     if (!snapshot.IsReplBufferWithCommand()) {
                         PythonAst ast;

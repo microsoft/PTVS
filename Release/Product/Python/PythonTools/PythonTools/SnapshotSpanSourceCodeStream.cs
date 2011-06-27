@@ -36,9 +36,17 @@ namespace Microsoft.PythonTools {
                 _encoding = doc.Encoding;
             } else {
                 _encoding = Parser.DefaultEncoding;
-            }
+            }            
 
-            _buffer = new byte[_encoding.GetMaxByteCount(BufferSizeInChars)];
+            var preamble = _encoding.GetPreamble();
+            _buffer = new byte[Math.Max(_encoding.GetMaxByteCount(BufferSizeInChars), preamble.Length)];
+
+            if (preamble.Length != 0) {
+                for (int i = 0; i < preamble.Length; i++) {
+                    _buffer[i] = preamble[i];
+                }
+                _bufferLength = preamble.Length;
+            }
 
             _span = span;
             _snapshot = span.Snapshot;

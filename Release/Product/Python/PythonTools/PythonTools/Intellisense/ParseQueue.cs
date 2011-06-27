@@ -164,7 +164,12 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var buffer in _buffers) {
                 buffer.ChangedLowPriority -= BufferChangedLowPriority;
                 buffer.Properties.RemoveProperty(typeof(BufferParser));
+                ITextDocument doc;
+                if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out doc)) {
+                    doc.EncodingChanged -= EncodingChanged;
+                }
             }
+
             if (PythonToolsPackage.Instance != null) {
                 PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged -= OptionsPage_IndentationInconsistencyChanged;
             }
@@ -214,6 +219,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             buffer.ChangedHighPriority += BufferChangedLowPriority;
             buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
+            ITextDocument doc;
+            if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out doc)) {
+                doc.EncodingChanged += EncodingChanged;
+            }
         }
 
         private void EnsureMutableBuffers() {
@@ -279,7 +288,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
         }
-        
+
+        internal void EncodingChanged(object sender, EncodingChangedEventArgs e) {
+            lock (this) {
+                if (_parsing) {
+                    // we are currently parsing, just reque when we complete
+                    _requeue = true;
+                    _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                } else {
+                    Requeue();
+                }
+            }
+        }
+
         internal void BufferChangedLowPriority(object sender, TextContentChangedEventArgs e) {
             lock (this) {
                 // only immediately re-parse on line changes after we've seen a text change.                   
