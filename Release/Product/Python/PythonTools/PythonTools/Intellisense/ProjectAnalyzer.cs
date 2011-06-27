@@ -54,6 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonProjectNode _project;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private static TaskProvider _taskProvider;
+        private static char[] _invalidPathChars = Path.GetInvalidPathChars();
 
         public ProjectAnalyzer(IPythonInterpreterFactory factory, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, errorProvider) {
@@ -165,6 +166,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _projectFiles[path] = entry;
 
                 if (ImplicitProject &&
+                    !String.IsNullOrWhiteSpace(_interpreterFactory.Configuration.InterpreterPath) &&
+                    _interpreterFactory.Configuration.InterpreterPath.IndexOfAny(_invalidPathChars) == -1 &&
                     !Path.GetFullPath(path).StartsWith(Path.GetDirectoryName(_interpreterFactory.Configuration.InterpreterPath), StringComparison.OrdinalIgnoreCase)) { // don't analyze std lib
                     // TODO: We're doing this on the UI thread and when we end up w/ a lot to queue here we hang for a while...
                     // But this adds files to the analyzer so it's not as simple as queueing this onto another thread.

@@ -14,6 +14,7 @@
 
 using System;
 using System.Drawing;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
@@ -22,6 +23,8 @@ namespace Microsoft.PythonTools.Options {
     public partial class PythonInterpreterOptionsControl : UserControl {
         private bool _loadingOptions;
         private ToolTip _invalidVersionToolTip = new ToolTip();
+        private ToolTip _invalidPathToolTip = new ToolTip();
+        private ToolTip _invalidWindowsPathToolTip = new ToolTip();
 
         public PythonInterpreterOptionsControl() {
             InitializeComponent();
@@ -122,13 +125,40 @@ namespace Microsoft.PythonTools.Options {
 
         private void PathTextChanged(object sender, EventArgs e) {
             if (!_loadingOptions) {
-                CurrentOptions.InterpreterPath = _path.Text;
+                if (_path.Text.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
+                    ShowErrorBalloon(_invalidPathToolTip, _pathLabel, _path, "The path contains invalid characters.");
+                } else {
+                    CurrentOptions.InterpreterPath = _path.Text;
+                    HideErrorBalloon(_invalidPathToolTip, _pathLabel);
+                }
             }
+        }
+
+        private void HideErrorBalloon(ToolTip toolTip, Label inputLabel) {
+            toolTip.RemoveAll();
+            toolTip.Hide(this);
+            inputLabel.ForeColor = SystemColors.ControlText;
+        }
+
+        private void ShowErrorBalloon(ToolTip toolTip, Label inputLabel, Control inputControl, string message) {
+            toolTip.ShowAlways = true;
+            toolTip.IsBalloon = true;
+            toolTip.ToolTipIcon = ToolTipIcon.None;
+            toolTip.Show(message,
+                this,
+                new System.Drawing.Point(inputControl.Location.X + 10, inputControl.Location.Y + _interpreterSettingsGroup.Location.Y + inputControl.Height - 5),
+                5000);
+            inputLabel.ForeColor = Color.Red;
         }
 
         private void WindowsPathTextChanged(object sender, EventArgs e) {
             if (!_loadingOptions) {
-                CurrentOptions.WindowsInterpreterPath = _windowsPath.Text;
+                if (_windowsPath.Text.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
+                    ShowErrorBalloon(_invalidWindowsPathToolTip, _windowsPathLabel, _windowsPath, "The path contains invalid characters.");
+                } else {
+                    CurrentOptions.WindowsInterpreterPath = _windowsPath.Text;
+                    HideErrorBalloon(_invalidWindowsPathToolTip, _windowsPathLabel);
+                }
             }
         }
 
@@ -149,18 +179,9 @@ namespace Microsoft.PythonTools.Options {
                 Version vers;
                 if (Version.TryParse(_version.Text, out vers)) {
                     CurrentOptions.Version = _version.Text;
-                    _invalidVersionToolTip.RemoveAll();
-                    _invalidVersionToolTip.Hide(this);
-                    _versionLabel.ForeColor = SystemColors.ControlText;
+                    HideErrorBalloon(_invalidVersionToolTip, _versionLabel);
                 } else {
-                    _invalidVersionToolTip.ShowAlways = true;
-                    _versionLabel.ForeColor = Color.Red;
-                    _invalidVersionToolTip.IsBalloon = true;
-                    _invalidVersionToolTip.ToolTipIcon = ToolTipIcon.None;
-                    _invalidVersionToolTip.Show("Version is not in invalid format and will not be saved.\r\n\r\nValid formats are in the form of Major.Minor[.Build[.Revision]].", 
-                        this, 
-                        new System.Drawing.Point(_version.Location.X + 10, _version.Location.Y + _interpreterSettingsGroup.Location.Y + _version.Height - 5), 
-                        5000);
+                    ShowErrorBalloon(_invalidVersionToolTip, _versionLabel, _version, "Version is not in invalid format and will not be saved.\r\n\r\nValid formats are in the form of Major.Minor[.Build[.Revision]].");
                 }
             }
         }
