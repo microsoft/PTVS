@@ -405,6 +405,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private void InitializeBuiltinModules() {
             var names = _interpreter.GetModuleNames();
+            Dictionary<string, BuiltinModule> allBuiltins = new Dictionary<string, BuiltinModule>();
             foreach (string modName in names) {
                 var mod = _interpreter.ImportModule(modName);
                 if (mod != null) {
@@ -416,8 +417,42 @@ namespace Microsoft.PythonTools.Analysis {
                             continue;
                         }
                     }
-                    Modules[modName] = new ModuleReference(new BuiltinModule(mod, this));
+
+                    var newMod = new BuiltinModule(mod, this);
+                    Modules[modName] = new ModuleReference(newMod);
+                    if (modName.IndexOf('.') != -1) {
+                        allBuiltins[modName] = newMod;
+                    }
                 }
+            }
+
+            // now make sure children modules are listed in their parents...
+            foreach (var nameModule in allBuiltins) {
+                var modName = nameModule.Key;
+                var module = nameModule.Value;
+
+                int dotStart = modName.LastIndexOf('.');
+                Debug.Assert(dotStart != -1);
+                string parentName = modName.Substring(0, dotStart);
+                do {
+                    ModuleReference parentRef;
+                    if (!Modules.TryGetValue(parentName, out parentRef)) {
+                        Modules[parentName] = parentRef = new ModuleReference(new BuiltinModule(new EmptyBuiltinModule(parentName), this));
+                    }
+                    BuiltinModule parentModule = parentRef.Module as BuiltinModule;
+                    if (parentModule == null) {
+                        break;
+                    }
+                    int dotEnd;
+                    string curModName;
+                    if ((dotEnd = modName.IndexOf('.', dotStart + 1)) == -1) {
+                        curModName = modName.Substring(dotStart + 1);
+                    } else {
+                        curModName = modName.Substring(dotStart + 1, dotEnd - dotStart - 1);
+                    }
+                    parentModule[curModName] = module;
+                    module = parentModule;
+                } while (dotStart != 0 && (dotStart = parentName.LastIndexOf('.', dotStart - 1)) != -1);
             }
         }
 

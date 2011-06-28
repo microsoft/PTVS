@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class BuiltinNamespace<MemberContainerType> : Namespace where MemberContainerType : IMemberContainer {
         private readonly PythonAnalyzer _projectState;
         internal readonly MemberContainerType _type;
-        private Dictionary<string, ISet<Namespace>> _specializedValues;
+        internal Dictionary<string, ISet<Namespace>> _specializedValues;
 
         public BuiltinNamespace(MemberContainerType pythonType, PythonAnalyzer projectState) {
             _projectState = projectState;

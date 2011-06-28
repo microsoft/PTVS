@@ -57,6 +57,7 @@
     <Compile Include="AnalysisVariable.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
     <Compile Include="Interpreter\Default\CPythonBuiltinModule.cs" />
     <Compile Include="Interpreter\IBuiltinPythonModule.cs" />

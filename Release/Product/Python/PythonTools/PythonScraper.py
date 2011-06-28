@@ -92,6 +92,7 @@ except ImportError:
 import sys
 import os
 import datetime
+from os.path import join
 
 if sys.platform == "cli":
 	# provides extra type info when generating against IronPython which can be used w/ CPython completions
@@ -218,6 +219,10 @@ def generate_data(data_value):
 
 def generate_module(module_name):
     module = __import__(module_name)    
+    if '.' in module_name:
+        for name in module_name.split('.')[1:]:
+            module = getattr(module, name)
+
     all_members = {}
     module_table = {'members': all_members}
         
@@ -383,6 +388,26 @@ if __name__ == "__main__":
             write_analysis(mod_name, outpath, res)
         except ValueError:
             pass
+
+    # inspect extension modules installed into site-packages
+    def package_inspector(site_packages, dirname, fnames):
+        for filename in fnames:
+            if filename.endswith('.pyd'):
+                base_path = dirname[len(site_packages)+1:]
+                package_name = '.'.join(base_path.split('\\'))
+                if package_name:
+                    mod_name =  package_name + '.' + filename[:-4]
+                else:
+                    mod_name = filename[:-4]
+                res = generate_module(mod_name)
+                print mod_name
+                try:
+                    write_analysis(mod_name, outpath, res)
+                except ValueError:
+                    pass
+
+    site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
+    os.path.walk(site_packages, package_inspector, site_packages)
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
     f.write('1')

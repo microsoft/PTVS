@@ -42,7 +42,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
-            return ProjectState.GetAllMembers(_interpreterModule, moduleContext);
+            var res = ProjectState.GetAllMembers(_interpreterModule, moduleContext);
+            if (_specializedValues != null) {
+                foreach (var value in _specializedValues) {
+                    res[value.Key] = value.Value;
+                }
+            }
+            return res;
         }        
 
         public override string Description {
