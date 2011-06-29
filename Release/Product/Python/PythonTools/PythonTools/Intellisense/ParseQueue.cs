@@ -53,8 +53,6 @@ namespace Microsoft.PythonTools.Intellisense {
             if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
                 bufferParser = new BufferParser(textView, projEntry, _parser, new[] { buffer });
                 
-                buffer.Properties.AddProperty(typeof(BufferParser), bufferParser);
-                
                 var curSnapshot = buffer.CurrentSnapshot;
                 var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
                 bufferParser.EnqueingEntry();
@@ -83,6 +81,9 @@ namespace Microsoft.PythonTools.Intellisense {
             EnqueWorker(() => {
                 for (int i = 0; i < 10; i++) {
                     try {
+                        if (!File.Exists(filename)) {
+                            break;
+                        }
                         using (var reader = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
                             _parser.ParseFile(projEntry, filename, reader, severity);
                             return;
@@ -184,7 +185,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public ITextBuffer[] Buffers {
             get {
-                return _buffers.ToArray();
+                return _buffers.Where(
+                    x => !x.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)
+                ).ToArray();
             }
         }
 
@@ -218,6 +221,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
                 buffer.Properties.AddProperty(typeof(ProjectAnalyzer), replEvaluator.ReplAnalyzer);
             }
+            buffer.Properties.AddProperty(typeof(BufferParser), this);
             buffer.ChangedHighPriority += BufferChangedLowPriority;
             buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
             ITextDocument doc;
@@ -247,9 +251,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 _parsing = true;
-                snapshots = new ITextSnapshot[_buffers.Count];
-                for (int i = 0; i < _buffers.Count; i++) {
-                    snapshots[i] = _buffers[i].CurrentSnapshot;
+                var buffers = Buffers;
+                snapshots = new ITextSnapshot[buffers.Length];
+                for (int i = 0; i < buffers.Length; i++) {
+                    snapshots[i] = buffers[i].CurrentSnapshot;
                 }
             }
 

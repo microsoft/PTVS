@@ -977,7 +977,7 @@ namespace Microsoft.PythonTools.Project
 			this.ProjectMgr.Tracker.OnItemRemoved(documentToRemove, removeFlags[0]);
 
 			// Notify hierarchy event listeners that items have been invalidated
-			OnInvalidateItems(this.parentNode);
+			OnInvalidateItems(this);
 
 			// Dispose the node now that is deleted.
 			this.Dispose(true);

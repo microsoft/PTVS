@@ -120,35 +120,14 @@ namespace Microsoft.PythonTools {
                     // TODO: Binary search the statements?  The perf of this seems fine for the time being
                     // w/ a 5000+ line file though.                    
                     foreach (var statement in suite.Statements) {
+                        SnapshotSpan? span = ShouldInclude(statement, spans);
+                        if (span == null) {
+                            continue;
+                        }
+
                         FunctionDefinition funcDef = statement as FunctionDefinition;
                         if (funcDef != null) {
-                            SnapshotSpan? span = ShouldInclude(statement, spans);
-                            if (span == null) {
-                                continue;
-                            }
-
-                            TagSpan tagSpan = null;
-                            try {
-                                var funcDefStart = funcDef.GetStart(ast);
-                                var funcDefEnd = funcDef.GetEnd(ast);
-                                int nameLen = funcDef.HeaderIndex - funcDef.StartIndex + 1;
-                                if (funcDefStart.IsValid && funcDefEnd.IsValid) {
-                                    int length = funcDefEnd.Index - funcDefStart.Index - nameLen;
-                                    if (length >= 0 && length < snapshot.Length - (funcDefStart.Index + nameLen)) {
-                                        var funcSpan = GetFinalSpan(snapshot,
-                                            funcDefStart.Index + nameLen,
-                                            length);
-
-                                        tagSpan = new TagSpan(
-                                            new SnapshotSpan(snapshot, funcSpan),
-                                            new OutliningTag(snapshot, funcSpan, true)
-                                        );
-                                    }
-                                }
-                            } catch (ArgumentException) {
-                                // sometimes Python's parser gives usbad spans, ignore those and fix the parser
-                                Debug.Assert(false, "bad argument when making span/tag");
-                            }
+                            TagSpan tagSpan = GetFunctionSpan(ast, snapshot, funcDef);
 
                             if (tagSpan != null) {
                                 yield return tagSpan;
@@ -157,32 +136,10 @@ namespace Microsoft.PythonTools {
 
                         ClassDefinition classDef = statement as ClassDefinition;
                         if (classDef != null) {
-                            SnapshotSpan? span = ShouldInclude(statement, spans);
-                            if (span != null) {
-                                TagSpan tagSpan = null;
-                                try {
-                                    var classDefStart = classDef.GetStart(ast);
-                                    var classDefEnd = classDef.GetEnd(ast);
-                                    int nameLen = classDef.HeaderIndex - classDef.StartIndex + 1;
-                                    if (classDefStart.IsValid && classDefEnd.IsValid) {
-                                        var classSpan = GetFinalSpan(snapshot,
-                                            classDefStart.Index + nameLen,
-                                            classDefEnd.Index - classDefStart.Index - nameLen
-                                        );
+                            TagSpan tagSpan = GetClassSpan(ast, snapshot, classDef);
 
-                                        tagSpan = new TagSpan(
-                                            new SnapshotSpan(snapshot, classSpan),
-                                            new OutliningTag(snapshot, classSpan, false)
-                                        );
-                                    }
-                                } catch (ArgumentException) {
-                                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
-                                    Debug.Assert(false, "bad argument when making span/tag");
-                                }
-
-                                if (tagSpan != null) {
-                                    yield return tagSpan;
-                                }
+                            if (tagSpan != null) {
+                                yield return tagSpan;
                             }
 
                             // recurse into the class definition and outline it's members
@@ -194,40 +151,164 @@ namespace Microsoft.PythonTools {
                         if (isTopLevel) {
                             IfStatement ifStmt = statement as IfStatement;
                             if (ifStmt != null) {
-                                SnapshotSpan? span = ShouldInclude(statement, spans);
-                                if (span != null) {
-                                    TagSpan tagSpan = null;
-                                    try {
-                                        var ifStmtStart = ifStmt.GetStart(ast);
-                                        var ifStmtEnd = ifStmt.GetEnd(ast);
-                                        var testLen = ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1;
-                                        if (ifStmtStart.IsValid && ifStmtEnd.IsValid) {
-                                            int length = ifStmtEnd.Index - ifStmtStart.Index - testLen;
-                                            if (length > 0) {
-                                                var ifSpan = GetFinalSpan(snapshot,
-                                                    ifStmtStart.Index + testLen,
-                                                    length
-                                                );
+                                TagSpan tagSpan = GetIfSpan(ast, snapshot, ifStmt);
 
-                                                tagSpan = new TagSpan(
-                                                    new SnapshotSpan(snapshot, ifSpan),
-                                                    new OutliningTag(snapshot, ifSpan, false)
-                                                );
-                                            }
-                                        }
-                                    } catch (ArgumentException) {
-                                        // sometimes Python's parser gives usbad spans, ignore those and fix the parser
-                                        Debug.Assert(false, "bad argument when making span/tag");
-                                    }
+                                if (tagSpan != null) {
+                                    yield return tagSpan;
+                                }
+                            }
 
-                                    if (tagSpan != null) {
-                                        yield return tagSpan;
-                                    }
+                            WhileStatement whileStatment = statement as WhileStatement;
+                            if (whileStatment != null) {
+                                TagSpan tagSpan = GetWhileSpan(ast, snapshot, whileStatment);
+
+                                if (tagSpan != null) {
+                                    yield return tagSpan;
+                                }
+                            }
+
+                            ForStatement forStatement = statement as ForStatement;
+                            if (forStatement != null) {
+                                TagSpan tagSpan = GetForSpan(ast, snapshot, forStatement);
+
+                                if (tagSpan != null) {
+                                    yield return tagSpan;
                                 }
                             }
                         }
                     }
                 }
+            }
+
+            private static TagSpan GetForSpan(PythonAst ast, ITextSnapshot snapshot, ForStatement forStmt) {
+                TagSpan tagSpan = null;
+                try {
+                    var start = forStmt.GetStart(ast);
+                    var end = forStmt.GetEnd(ast);
+                    var testLen = forStmt.List.EndIndex - forStmt.StartIndex + 1;
+                    if (start.IsValid && end.IsValid) {
+                        int length = end.Index - start.Index - testLen;
+                        if (length > 0) {
+                            var forSpan = GetFinalSpan(snapshot,
+                                start.Index + testLen,
+                                length
+                            );
+
+                            tagSpan = new TagSpan(
+                                new SnapshotSpan(snapshot, forSpan),
+                                new OutliningTag(snapshot, forSpan, false)
+                            );
+                        }
+                    }
+                } catch (ArgumentException) {
+                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
+                    Debug.Assert(false, "bad argument when making span/tag");
+                }
+                return tagSpan;
+            }
+
+            private static TagSpan GetWhileSpan(PythonAst ast, ITextSnapshot snapshot, WhileStatement whileStmt) {
+                TagSpan tagSpan = null;
+                try {
+                    var start = whileStmt.GetStart(ast);
+                    var end = whileStmt.GetEnd(ast);
+                    var testLen = whileStmt.Test.EndIndex - whileStmt.StartIndex + 1;
+                    if (start.IsValid && end.IsValid) {
+                        int length = end.Index - start.Index - testLen;
+                        if (length > 0) {
+                            var whileSpan = GetFinalSpan(snapshot,
+                                start.Index + testLen,
+                                length
+                            );
+
+                            tagSpan = new TagSpan(
+                                new SnapshotSpan(snapshot, whileSpan),
+                                new OutliningTag(snapshot, whileSpan, false)
+                            );
+                        }
+                    }
+                } catch (ArgumentException) {
+                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
+                    Debug.Assert(false, "bad argument when making span/tag");
+                }
+                return tagSpan;
+            }
+
+            private static TagSpan GetIfSpan(PythonAst ast, ITextSnapshot snapshot, IfStatement ifStmt) {
+                TagSpan tagSpan = null;
+                try {
+                    var ifStmtStart = ifStmt.GetStart(ast);
+                    var ifStmtEnd = ifStmt.GetEnd(ast);
+                    var testLen = ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1;
+                    if (ifStmtStart.IsValid && ifStmtEnd.IsValid) {
+                        int length = ifStmtEnd.Index - ifStmtStart.Index - testLen;
+                        if (length > 0) {
+                            var ifSpan = GetFinalSpan(snapshot,
+                                ifStmtStart.Index + testLen,
+                                length
+                            );
+
+                            tagSpan = new TagSpan(
+                                new SnapshotSpan(snapshot, ifSpan),
+                                new OutliningTag(snapshot, ifSpan, false)
+                            );
+                        }
+                    }
+                } catch (ArgumentException) {
+                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
+                    Debug.Assert(false, "bad argument when making span/tag");
+                }
+                return tagSpan;
+            }
+
+            private static TagSpan GetFunctionSpan(PythonAst ast, ITextSnapshot snapshot, FunctionDefinition funcDef) {
+                TagSpan tagSpan = null;
+                try {
+                    var funcDefStart = funcDef.GetStart(ast);
+                    var funcDefEnd = funcDef.GetEnd(ast);
+                    int nameLen = funcDef.HeaderIndex - funcDef.StartIndex + 1;
+                    if (funcDefStart.IsValid && funcDefEnd.IsValid) {
+                        int length = funcDefEnd.Index - funcDefStart.Index - nameLen;
+                        if (length >= 0 && length < snapshot.Length - (funcDefStart.Index + nameLen)) {
+                            var funcSpan = GetFinalSpan(snapshot,
+                                funcDefStart.Index + nameLen,
+                                length);
+
+                            tagSpan = new TagSpan(
+                                new SnapshotSpan(snapshot, funcSpan),
+                                new OutliningTag(snapshot, funcSpan, true)
+                            );
+                        }
+                    }
+                } catch (ArgumentException) {
+                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
+                    Debug.Assert(false, "bad argument when making span/tag");
+                }
+                return tagSpan;
+            }
+
+            private static TagSpan GetClassSpan(PythonAst ast, ITextSnapshot snapshot, ClassDefinition classDef) {
+                TagSpan tagSpan = null;
+                try {
+                    var classDefStart = classDef.GetStart(ast);
+                    var classDefEnd = classDef.GetEnd(ast);
+                    int nameLen = classDef.HeaderIndex - classDef.StartIndex + 1;
+                    if (classDefStart.IsValid && classDefEnd.IsValid) {
+                        var classSpan = GetFinalSpan(snapshot,
+                            classDefStart.Index + nameLen,
+                            classDefEnd.Index - classDefStart.Index - nameLen
+                        );
+
+                        tagSpan = new TagSpan(
+                            new SnapshotSpan(snapshot, classSpan),
+                            new OutliningTag(snapshot, classSpan, false)
+                        );
+                    }
+                } catch (ArgumentException) {
+                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
+                    Debug.Assert(false, "bad argument when making span/tag");
+                }
+                return tagSpan;
             }
 
             private static Span GetFinalSpan(ITextSnapshot snapshot, int start, int length) {

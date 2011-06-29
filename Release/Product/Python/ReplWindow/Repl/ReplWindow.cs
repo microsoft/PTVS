@@ -647,10 +647,6 @@ namespace Microsoft.VisualStudio.Repl {
 
             // flush output produced by the process before it was killed:
             UIThread(_buffer.Flush);
-
-            if (_isRunning) {
-                PrepareForInput();
-            }
         }
 
         public void AbortCommand() {
@@ -998,6 +994,59 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         /// <summary>
+        /// Moves to the end of the line.
+        /// </summary>
+        public void End(bool extendSelection) {
+            UIThread(() => {
+                if (((IIntellisenseCommandTarget)this.SessionStack).ExecuteKeyboardCommand(IntellisenseKeyboardCommand.End)) {
+                    return;
+                } else if (SessionStack.TopSession != null) {
+                    this.SessionStack.TopSession.Dismiss();
+                }
+
+                if (!_isRunning && !_displayPromptInMargin) {
+                    var caret = Caret;
+
+                    // map the end of the current language line (if applicable).
+                    var langLineEndPoint = TextView.BufferGraph.MapDownToFirstMatch(
+                        caret.Position.BufferPosition.GetContainingLine().End,
+                        PointTrackingMode.Positive,
+                        x => x.TextBuffer.ContentType == _languageContentType,
+                        PositionAffinity.Successor);
+
+                    if (langLineEndPoint == null) {
+                        // we're on some random line that doesn't include language buffer, just go to the start of the buffer
+                        _editorOperations.MoveToEndOfLine(extendSelection);
+                    } else {
+                        var projectionLine = caret.Position.BufferPosition.GetContainingLine();
+                        ITextSnapshotLine langLine = langLineEndPoint.Value.Snapshot.GetLineFromPosition(langLineEndPoint.Value.Position);
+
+                        var projectionPoint = TextView.BufferGraph.MapUpToBuffer(
+                            langLine.End,
+                            PointTrackingMode.Positive,
+                            PositionAffinity.Successor,
+                            _projectionBuffer
+                        );
+                        Debug.Assert(projectionPoint != null);
+
+                        var moveTo = projectionPoint.Value;
+
+                        if (extendSelection) {
+                            VirtualSnapshotPoint anchor = TextView.Selection.AnchorPoint;
+                            caret.MoveTo(moveTo);
+                            TextView.Selection.Select(anchor.TranslateTo(TextView.TextSnapshot), TextView.Caret.Position.VirtualBufferPosition);
+                        } else {
+                            TextView.Selection.Clear();
+                            caret.MoveTo(moveTo);
+                        }
+                    }
+                } else {
+                    _editorOperations.MoveToEndOfLine(extendSelection);
+                }
+            });
+        }
+
+        /// <summary>
         /// Pastes from the clipboard into the text view
         /// </summary>
         public bool PasteClipboard() {
@@ -1170,7 +1219,8 @@ namespace Microsoft.VisualStudio.Repl {
         private bool ReturnIsLineBreak;
 
         private const uint CommandEnabled = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
-        private const uint CommandDisabled = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+        private const uint CommandDisabled = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+        private const uint CommandDisabledAndHidden = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
 
         private sealed class CommandFilter : IOleCommandTarget {
             private readonly ReplWindow _replWindow;
@@ -1210,11 +1260,15 @@ namespace Microsoft.VisualStudio.Repl {
                     case PkgCmdIDList.cmdidReplHistoryNext:
                     case PkgCmdIDList.cmdidReplHistoryPrevious:
                     case PkgCmdIDList.cmdidSmartExecute:
-                        prgCmds[0].cmdf = (_currentLanguageBuffer != null) ? CommandEnabled : CommandDisabled;
+                        prgCmds[0].cmdf = (_currentLanguageBuffer != null) ? CommandEnabled : CommandDisabledAndHidden;
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.comboIdReplScopes:
-                        prgCmds[0].cmdf = (_scopeListVisible) ? CommandEnabled : CommandDisabled;
+                        prgCmds[0].cmdf = _scopeListVisible ? CommandEnabled : CommandDisabledAndHidden;
+                        return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidBreakRepl:
+                        prgCmds[0].cmdf = _isRunning ? CommandEnabled : CommandDisabled;
                         return VSConstants.S_OK;
                 }
             }
@@ -1333,6 +1387,14 @@ namespace Microsoft.VisualStudio.Repl {
                     case VSConstants.VSStd2KCmdID.BOL_EXT:
                         Home(true);
                         return VSConstants.S_OK;
+
+                    case VSConstants.VSStd2KCmdID.EOL:
+                        End(false);
+                        break;
+
+                    case VSConstants.VSStd2KCmdID.EOL_EXT:
+                        End(true);
+                        break;
 
                     case VSConstants.VSStd2KCmdID.SHOWCONTEXTMENU:
                         ShowContextMenu();

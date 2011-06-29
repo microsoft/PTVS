@@ -92,6 +92,7 @@ namespace Microsoft.PythonTools.Intellisense {
             paramIndex = 0;
             sigStart = null;
             bool nestingChanged = false, lastTokenWasCommaOrOperator = true;
+            int otherNesting = 0;
 
             ClassificationSpan lastToken = null;
             // Walks backwards over all the lines
@@ -108,10 +109,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 // Walk backwards over the tokens in the current line
                 do {
                     var token = enumerator.Current;
-                    
+
                     if (token == null) {
                         // new line
-                        if (nesting != 0 || (enumerator.MoveNext() && IsExplicitLineJoin(enumerator.Current))) {
+                        if (nesting != 0 || otherNesting != 0 || (enumerator.MoveNext() && IsExplicitLineJoin(enumerator.Current))) {
                             // we're in a grouping, or the previous token is an explicit line join, we'll keep going.
                             continue;
                         } else {
@@ -120,12 +121,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     var text = token.Span.GetText();
-                    if (token.IsOpenGrouping()) {
+                    if (text == "(") {
                         if (nesting != 0) {
                             nesting--;
                             nestingChanged = true;
-                            if (nesting == 0 && sigStart == null) {
-                                sigStart = token.Span.Start;
+                            if (nesting == 0) {
+                                if (sigStart == null) {
+                                    sigStart = token.Span.Start;
+                                }
                             }
                         } else {
                             if (start == null) {
@@ -135,8 +138,26 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         }
                         lastTokenWasCommaOrOperator = true;
-                    } else if (token.IsCloseGrouping()) {
+                    } else if (token.IsOpenGrouping()) {
+                        if (otherNesting != 0) {
+                            otherNesting--;
+                        } else {
+                            if (nesting == 0) {
+                                if (start == null) {
+                                    return null;
+                                }
+                                break;
+                            }
+                            paramIndex = 0;
+                        }
+                        nestingChanged = true;
+                        lastTokenWasCommaOrOperator = true;
+                    } else if (text == ")") {
                         nesting++;
+                        nestingChanged = true;
+                        lastTokenWasCommaOrOperator = true;
+                    } else if (token.IsCloseGrouping()) {
+                        otherNesting++;
                         nestingChanged = true;
                         lastTokenWasCommaOrOperator = true;
                     } else if (token.ClassificationType == Classifier.Provider.Keyword ||
@@ -155,7 +176,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 startAtLastToken = start;
                                 currentParamAtLastColon = paramIndex;
                             }
-                            if (nesting == 0) {
+                            if (nesting == 0 && otherNesting == 0) {
                                 if (start == null) {
                                     // hovering directly over a keyword, don't provide a tooltip
                                     return null;
@@ -165,10 +186,10 @@ namespace Microsoft.PythonTools.Intellisense {
                                 break;
                             } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
                                 (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
-                                    if (start == null || (nestingChanged && nesting != 0)) {
-                                        return null;
-                                    }
-                                    break;
+                                if (start == null || (nestingChanged && nesting != 0)) {
+                                    return null;
+                                }
+                                break;
                             } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
                                 // if and else can be used in an expression context or a statement context
                                 if (currentParamAtLastColon != -1) {
@@ -185,12 +206,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         lastTokenWasCommaOrOperator = true;
                     } else if (token.ClassificationType == Classifier.Provider.CommaClassification) {
                         lastTokenWasCommaOrOperator = true;
-                        if (nesting == 0) {
+                        if (nesting == 0 && otherNesting == 0) {
                             if (start == null) {
                                 return null;
                             }
                             break;
-                        } else if (nesting == 1 && sigStart == null) {
+                        } else if (nesting == 1 && otherNesting == 0 && sigStart == null) {
                             paramIndex++;
                         }
                     } else if (token.ClassificationType == Classifier.Provider.Comment) {

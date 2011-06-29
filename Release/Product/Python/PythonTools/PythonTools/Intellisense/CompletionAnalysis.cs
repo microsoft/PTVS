@@ -13,9 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
@@ -104,25 +109,53 @@ namespace Microsoft.PythonTools.Intellisense {
                 path = newPath;
             }
 
+            PythonReplEvaluator pyReplEval = null;
+            IReplEvaluator eval;
+            if (TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
+                pyReplEval = eval as PythonReplEvaluator;
+            }
+            IEnumerable<string> replScopes = null;
+            if (pyReplEval != null) {
+                replScopes = pyReplEval.GetAvailableScopes();
+            }
+
             MemberResult[] modules = new MemberResult[0];
             if (path.Length == 0) {
                 if (analysis != null) {
                     modules = analysis.ProjectState.GetModules(true);
                 }
-
-#if REPL
-                var repl = Intellisense.GetRepl(_textBuffer);
-                if (repl != null) {
-                    modules = Intellisense.MergeMembers(modules, repl.GetModules());
+                if (replScopes != null) {
+                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(MemberResultComparer.Instance);
+                    allModules.UnionWith(modules);
+                    foreach (var scope in replScopes) {
+                        // remove an existing scope, add the new one (we take precedence)
+                        var newMod = new MemberResult(scope, PythonMemberType.Module);
+                        allModules.Remove(newMod);
+                        allModules.Add(newMod);
+                    }
+                    modules = allModules.ToArray();
                 }
-#endif
             } else {
                 if (analysis != null) {
                     modules = analysis.ProjectState.GetModuleMembers(analysis.InterpreterContext, path, includeMembers);
                 }
+
+                if (replScopes != null) {
+                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(MemberResultComparer.Instance);
+                    allModules.UnionWith(modules);
+                    foreach (var scope in replScopes) {
+                        if (scope.StartsWith(text)) {
+                            // remove an existing scope, add the new one (we take precedence)
+                            var newMod = new MemberResult(scope, PythonMemberType.Module);
+                            allModules.Remove(newMod);
+                            allModules.Add(newMod);
+                        }
+                    }
+                    modules = allModules.ToArray();
+                }
             }
 
-            var sortedAndFiltered = NormalCompletionAnalysis.FilterCompletions(modules, text, (x, y) => x.StartsWith(y));
+            var sortedAndFiltered = NormalCompletionAnalysis.FilterCompletions(modules, text, CompletionFilter);
             Array.Sort(sortedAndFiltered, NormalCompletionAnalysis.ModuleSort);
 
             var result = new Completion[sortedAndFiltered.Length];
@@ -130,6 +163,25 @@ namespace Microsoft.PythonTools.Intellisense {
                 result[i] = PythonCompletion(glyphService, sortedAndFiltered[i]);
             }
             return result;
+        }
+
+        private static bool CompletionFilter(string x, string y) {
+            return x.StartsWith(y);
+        }
+
+        class MemberResultComparer : IEqualityComparer<MemberResult> {
+            public static readonly MemberResultComparer Instance = new MemberResultComparer();
+            #region IEqualityComparer<MemberResult> Members
+
+            public bool Equals(MemberResult x, MemberResult y) {
+                return x.Name.Equals(y.Name);
+            }
+
+            public int GetHashCode(MemberResult obj) {
+                return obj.Name.GetHashCode();
+            }
+
+            #endregion
         }
 
         public override string ToString() {

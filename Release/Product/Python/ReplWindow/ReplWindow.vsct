@@ -106,9 +106,11 @@
           If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
 
             <Button guid="guidReplWindowCmdSet" id="cmdidBreakRepl" priority="0x0300" type="Button">
-                <Parent guid="guidReplWindowCmdSet" id="ConsoleMenuGroup"/>
-                <Icon guid="guidReplToolbarImages" id="bmpCancelEval" />
-                <Strings>
+              <Parent guid="guidReplWindowCmdSet" id="ConsoleMenuGroup"/>
+              <Icon guid="guidReplToolbarImages" id="bmpCancelEval" />
+              <CommandFlag>DynamicVisibility</CommandFlag>
+              <CommandFlag>DefaultInvisible</CommandFlag>
+              <Strings>
                     <CommandName>cmdidBreakRepl</CommandName>
                     <ButtonText>Cancel Execution</ButtonText>
                 </Strings>

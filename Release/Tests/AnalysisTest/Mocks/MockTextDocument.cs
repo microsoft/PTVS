@@ -41,8 +41,8 @@ namespace AnalysisTest.Mocks {
         }
 
         public event EventHandler<EncodingChangedEventArgs> EncodingChanged {
-            add { throw new NotImplementedException(); }
-            remove { throw new NotImplementedException(); }
+            add {  }
+            remove {  }
         }
 
         public event EventHandler<TextDocumentFileActionEventArgs> FileActionOccurred {

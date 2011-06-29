@@ -67,6 +67,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (_curWaiter != null) {
                         _curWaiter.Set();
                     }
+                    _tree = null;
                     return;
                 }
 

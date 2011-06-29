@@ -348,7 +348,9 @@ namespace Microsoft.PythonTools.Project {
         private void Reanalyze(HierarchyNode node, ProjectAnalyzer newAnalyzer) {
             if (node != null) {
                 for (var child = node.FirstChild; child != null; child = child.NextSibling) {
-                    newAnalyzer.AnalyzeFile(node.Url);
+                    if (child is FileNode) {
+                        newAnalyzer.AnalyzeFile(child.Url);
+                    }
 
                     Reanalyze(child, newAnalyzer);
                 }

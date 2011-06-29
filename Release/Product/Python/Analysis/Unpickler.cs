@@ -523,7 +523,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private void LoadUnicode() {
-                _stack.Add(LiteralParser.ParseString(ReadLineNoNewline(), true, true));
+                _stack.Add(LiteralParser.ParseString(ReadLineNoNewline(), false, true));
             }
         }
     }

@@ -273,7 +273,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 moduleRef = null;
                 return false;
             }
-            return ProjectState.Modules.TryGetValue(modName, out moduleRef);
+
+            // look for absolute name, then relative name
+            if (ProjectState.Modules.TryGetValue(modName, out moduleRef) ||
+                ProjectState.Modules.TryGetValue(_unit.FullName + "." + modName, out moduleRef)) {
+                return true;
+            }
+
+            // search relative name in our parents.
+            int lastDot;
+            string name = _unit.FullName;
+            while ((lastDot = name.LastIndexOf('.')) != -1) {
+                name = name.Substring(0, lastDot);
+                if (ProjectState.Modules.TryGetValue(name + "." + modName, out moduleRef)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private ICollection<string> GetModuleKeys(Namespace userMod) {

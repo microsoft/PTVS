@@ -442,6 +442,10 @@ namespace Microsoft.PythonTools.Intellisense {
             List<PythonAst> asts = new List<PythonAst>();
             bool hasErrors = false;
             foreach (var snapshot in snapshots) {
+                if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)) {
+                    continue;
+                }
+
                 if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                     if (!snapshot.IsReplBufferWithCommand()) {
                         PythonAst ast;

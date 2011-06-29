@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Project {
 
             var allFactories = model.GetAllPythonInterpreterFactories();
             if (allFactories.Length == 0) {
-                MessageBox.Show("No Python interpreters are installed.\r\n\r\nPlease download a Python distribution or configure an interpreter manually in Tools->Options->Python Tools->Interpreters.", "No Python Interpreters Installed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("No Python interpreters are installed.\r\n\r\nPlease download a Python distribution or configure an interpreter manually in Tools->Options->Python Tools->Interpreter Options.", "No Python Interpreters Installed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return VSConstants.S_OK;
             }
 

@@ -691,53 +691,24 @@ namespace Microsoft.PythonTools.Project
 
             this.OnItemDeleted();
             this.Parent.RemoveChild(this);
+            this.ProjectMgr.ItemIdMap.Add(this);
+            this.ItemNode.Item.Xml.Include = CommonUtils.CreateFriendlyFilePath(ProjectMgr.BaseURI.Uri.LocalPath, newFileName);
 
-            // Since this node has been removed all of its state is zombied at this point
-            // Do not call virtual methods after this point since the object is in a deleted state.
+            this.Parent.AddChild(this);
+            this.ItemNode.RefreshProperties();
 
-            string[] file = new string[1];
-            file[0] = newFileName;
-            VSADDRESULT[] result = new VSADDRESULT[1];
-            Guid emptyGuid = Guid.Empty;
-            ErrorHandler.ThrowOnFailure(this.ProjectMgr.AddItemWithSpecific(newParentId, VSADDITEMOPERATION.VSADDITEMOP_OPENFILE, null, 0, file, IntPtr.Zero, 0, ref emptyGuid, null, ref emptyGuid, result));
-            FileNode childAdded = this.ProjectMgr.FindChild(newFileName) as FileNode;
-            Debug.Assert(childAdded != null, "Could not find the renamed item in the hierarchy");
-            // Update the itemid to the newly added.
-            this.ID = childAdded.ID;
-
-            // Remove the item created by the add item. We need to do this otherwise we will have two items.
-            // Please be aware that we have not removed the ItemNode associated to the removed file node from the hierrachy.
-            // What we want to achieve here is to reuse the existing build item. 
-            // We want to link to the newly created node to the existing item node and addd the new include.
-
-            //temporarily keep properties from new itemnode since we are going to overwrite it
-            string newInclude = childAdded.ItemNode.Item.EvaluatedInclude;
-            string dependentOf = childAdded.ItemNode.GetMetadata(ProjectFileConstants.DependentUpon);
-            childAdded.ItemNode.RemoveFromProjectFile();
-
-            // Assign existing msbuild item to the new childnode
-            childAdded.ItemNode = this.ItemNode;
-            childAdded.ItemNode.Item.ItemType = this.ItemNode.ItemTypeName;
-            childAdded.ItemNode.Item.Xml.Include = newInclude;
-            if(!string.IsNullOrEmpty(dependentOf))
-                childAdded.ItemNode.SetMetadata(ProjectFileConstants.DependentUpon, dependentOf);
-            childAdded.ItemNode.RefreshProperties();
+            this.ReDraw(UIHierarchyElement.Caption);
 
             //Update the new document in the RDT.
-            DocumentManager.RenameDocument(this.ProjectMgr.Site, oldFileName, newFileName, childAdded.ID);
+            DocumentManager.RenameDocument(this.ProjectMgr.Site, oldFileName, newFileName, ID);
 
             //Select the new node in the hierarchy
             IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.ProjectMgr.Site, SolutionExplorer);
             ErrorHandler.ThrowOnFailure(uiWindow.ExpandItem(this.ProjectMgr, this.ID, EXPANDFLAGS.EXPF_SelectItem));
 
-            //Update FirstChild
-            childAdded.FirstChild = this.FirstChild;
+            RenameChildNodes(this);
 
-            //Update ChildNodes
-            SetNewParentOnChildNodes(childAdded);
-            RenameChildNodes(childAdded);
-
-            return childAdded;
+            return this;
         }
 
         /// <summary>
@@ -851,8 +822,12 @@ namespace Microsoft.PythonTools.Project
             uint itemId;
             uint uiVsDocCookie;
 
-            SuspendFileChanges sfc = new SuspendFileChanges(this.ProjectMgr.Site, oldName);
-            sfc.Suspend();
+            SuspendFileChanges sfc = null;
+
+            if (File.Exists(oldName)) {
+                sfc = new SuspendFileChanges(this.ProjectMgr.Site, oldName);
+                sfc.Suspend();
+            }
 
             try
             {
@@ -911,7 +886,9 @@ namespace Microsoft.PythonTools.Project
             }
             finally
             {
-                sfc.Resume();
+                if (sfc != null) {
+                    sfc.Resume();
+                }
                 if(docData != IntPtr.Zero)
                 {
                     Marshal.Release(docData);

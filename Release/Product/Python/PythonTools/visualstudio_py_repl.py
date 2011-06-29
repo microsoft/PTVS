@@ -411,6 +411,7 @@ class BasicReplBackend(ReplBackend):
 
     def execute_code_work_item(self):
         _debug_write('Executing: ' + repr(self.current_code))
+        stripped_code = self.current_code.strip()
         code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
         self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
         exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
@@ -727,14 +728,36 @@ class _ReplInput(object):
     def __init__(self, backend):
         self.backend = backend
     
-    # TODO: Rest of file API
     def readline(self):
         return self.backend.read_line()
+    
+    def readlines(self, size = None):
+        res = []
+        while True:
+            line = self.readline()
+            if line is not None:
+                res.append(line)
+            else:
+                break
+        
+        return res
+
+    def xreadlines(self):
+        return self
     
     def write(self, *args):
         raise IOError("File not open for writing")
 
     def flush(self): pass
+
+    def isatty(self):
+        return True
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.readline()
 
 
 if sys.platform == 'cli':
@@ -824,7 +847,7 @@ def _run_repl():
     # fix sys.path so that cwd is where the project lives.
     sys.path[0] = os.getcwd()
     # remove all of our parsed args in case we have a launch file that cares...
-    sys.argv = args 
+    sys.argv = args or ['']
 
     global BACKEND
     BACKEND = backend_type(launch_file=options.launch_file)

@@ -60,10 +60,10 @@ namespace Microsoft.PythonTools.Intellisense {
             MemberResult[] members;            
             
             IReplEvaluator eval;
-            PythonReplEvaluator dlrEval = null;
+            PythonReplEvaluator pyReplEval = null;
 
              if (_snapshot.TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
-                 dlrEval = eval as PythonReplEvaluator;
+                 pyReplEval = eval as PythonReplEvaluator;
              }
 
             var analysis = GetAnalysisEntry();
@@ -78,17 +78,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 members = new MemberResult[0];
             }
 
-            if (dlrEval != null && fixedText != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(Text)) {
+            if (pyReplEval != null && fixedText != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(Text)) {
                 var replStart = _stopwatch.ElapsedMilliseconds;
                 if (members.Length == 0) {
-                    members = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
+                    members = pyReplEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
                     if (members == null) {
                         members = new MemberResult[0];
                     }
                 } else {
                     // prefer analysis members over live members but merge the two together.
                     Dictionary<string, MemberResult> memberDict = new Dictionary<string, MemberResult>();
-                    var replMembers = dlrEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
+                    var replMembers = pyReplEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
                     if (replMembers != null) {
                         foreach (var member in replMembers) {
                             memberDict[member.Name] = member;

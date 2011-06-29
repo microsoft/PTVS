@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Repl;
@@ -34,14 +36,20 @@ namespace Microsoft.PythonTools.Commands {
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
             IReplWindow repl = (IReplWindow)window;
-
-            // TODO: enable multiple statements
-
-            foreach (var span in activeView.Selection.SelectedSpans) {
-                repl.InsertCode(span.GetText());
-            }
+            
+            PythonReplEvaluator eval = repl.Evaluator as PythonReplEvaluator;
+            
+            repl.Submit(GetActiveInputs(activeView, eval));
 
             repl.Focus();
+        }
+
+        private static IEnumerable<string> GetActiveInputs(IWpfTextView activeView, PythonReplEvaluator eval) {
+            foreach (var span in activeView.Selection.SelectedSpans) {
+                foreach (var input in eval.SplitCode(span.GetText())) {
+                    yield return input;
+                }
+            }
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

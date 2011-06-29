@@ -38,8 +38,10 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using Microsoft.VisualStudio.Text.Projection;
 
 namespace Microsoft.PythonTools.Repl {
     internal class PythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator {
@@ -52,6 +54,8 @@ namespace Microsoft.PythonTools.Repl {
         private IReplWindow _window;
         private bool _multipleScopes = true, _enableAttach, _attached;
         private ProjectAnalyzer _replAnalyzer;
+
+        internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
 
         private static readonly byte[] RunCommandBytes = MakeCommand("run ");
         private static readonly byte[] AbortCommandBytes = MakeCommand("abrt");
@@ -112,7 +116,18 @@ namespace Microsoft.PythonTools.Repl {
 
             window.WriteLine("Python interactive window.  Type $help for a list of commands.");            
             Connect();
+
+            _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
             return ExecutionResult.Succeeded;
+        }
+
+        private void BufferGraphGraphBuffersChanged(object sender, GraphBuffersChangedEventArgs e) {
+            foreach (var removed in e.RemovedBuffers) {
+                BufferParser parser;
+                if (removed.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
+                    parser.RemoveBuffer(removed);
+                }
+            }
         }
 
         private void Connect() {
@@ -161,6 +176,12 @@ namespace Microsoft.PythonTools.Repl {
                     }
 
                     extraArgs = startupProj.GetProjectProperty(CommonConstants.CommandLineArguments, true);
+                }
+                if (analyzer.InterpreterFactory == _interpreter) {
+                    if (_replAnalyzer != null && _replAnalyzer != analyzer) {
+                        analyzer.SwitchAnalyzers(_replAnalyzer);
+                    }
+                    _replAnalyzer = analyzer;
                 }
             }
 
@@ -688,6 +709,10 @@ namespace Microsoft.PythonTools.Repl {
                         // race w/ killing the process
                     }
                 }
+
+                if (_completion != null) {
+                    _completion.SetResult(ExecutionResult.Failure);
+                }
             }
 
             private void SendString(string text) {
@@ -856,6 +881,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
+            
             var parser = Parser.CreateParser(new StringReader(text), Interpreter.GetLanguageVersion());
             ParseResult result;
             parser.ParseInteractiveCode(out result);
@@ -864,7 +890,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             // Single-line: if it's executable, then execute
-            if (text.IndexOf('\n') == text.LastIndexOf('\n')) {
+            if (text.IndexOf('\n') == -1) {
                 return true;
             }
 
@@ -876,6 +902,13 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> ExecuteText(string text) {
+            var parser = Parser.CreateParser(new StringReader(text), Interpreter.GetLanguageVersion());
+            ParseResult parseResult;
+            parser.ParseInteractiveCode(out parseResult);
+            if (parseResult == ParseResult.Empty) {
+                return ExecutionResult.Succeeded;
+            }
+
             if (_curListener != null) {
                 for (int i = 0; i < 2; i++) {
                     Task<ExecutionResult> result = _curListener.ExecuteText(text);
@@ -911,6 +944,25 @@ namespace Microsoft.PythonTools.Repl {
             Close();
 
             Connect();
+
+            BufferParser parser = null;
+            
+            foreach (var buffer in _window.TextView.BufferGraph.GetTextBuffers(TruePredicate)) {
+                if (!buffer.Properties.ContainsProperty(InputBeforeReset)) {
+                    buffer.Properties.AddProperty(InputBeforeReset, InputBeforeReset);
+                }
+
+                if (parser == null) {
+                    buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser);
+                }
+            }
+            if (parser != null) {
+                parser.Requeue();
+            }
+        }
+
+        private static bool TruePredicate(ITextBuffer buffer) {
+            return true;
         }
 
         const string _splitRegexPattern = @"(?x)\s*,\s*(?=(?:[^""]*""[^""]*"")*[^""]*$)"; // http://regexhero.net/library/52/
@@ -1052,6 +1104,41 @@ namespace Microsoft.PythonTools.Repl {
 
         internal string AttachDebugger() {
             return _curListener.DoDebugAttach();
+        }
+
+        internal IEnumerable<string> SplitCode(string code) {
+            var lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            StringBuilder temp = new StringBuilder();
+            string prevText = null;
+            foreach (var line in lines) {
+                temp.AppendLine(line);
+                string newCode = temp.ToString();
+
+                var parser = Parser.CreateParser(new StringReader(newCode), Interpreter.GetLanguageVersion());
+                ParseResult result;
+                parser.ParseInteractiveCode(out result);
+                if (result != ParseResult.Invalid) {
+                    prevText = newCode;
+                } else if (prevText != null) {
+                    // we have a complete input
+                    yield return FixEndingNewLine(prevText);
+                    temp.Clear();
+                    temp.AppendLine(line);
+                    prevText = temp.ToString();
+                }
+            }
+
+            if (temp.Length > 0) {
+                yield return FixEndingNewLine(temp.ToString());
+            }
+        }
+
+        private static string FixEndingNewLine(string prevText) {
+            if ((prevText.IndexOf('\n') == prevText.LastIndexOf('\n')) &&
+                (prevText.IndexOf('\r') == prevText.LastIndexOf('\r'))) {
+                prevText = prevText.TrimEnd();
+            }
+            return prevText;
         }
     }
 }

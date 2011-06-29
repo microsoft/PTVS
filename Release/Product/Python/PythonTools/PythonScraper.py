@@ -218,7 +218,10 @@ def generate_data(data_value):
     return data_table
 
 def generate_module(module_name):
-    module = __import__(module_name)    
+    try:
+        module = __import__(module_name)    
+    except:
+        return None
     if '.' in module_name:
         for name in module_name.split('.')[1:]:
             module = getattr(module, name)
@@ -400,14 +403,17 @@ if __name__ == "__main__":
                 else:
                     mod_name = filename[:-4]
                 res = generate_module(mod_name)
-                print mod_name
-                try:
-                    write_analysis(mod_name, outpath, res)
-                except ValueError:
-                    pass
+                if res is not None:
+                    try:
+                        write_analysis(mod_name, outpath, res)
+                    except ValueError:
+                        pass
 
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
-    os.path.walk(site_packages, package_inspector, site_packages)
+    if sys.version >= '3':
+        os.walk(site_packages, package_inspector, site_packages)
+    else:
+        os.path.walk(site_packages, package_inspector, site_packages)
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
     f.write('1')
