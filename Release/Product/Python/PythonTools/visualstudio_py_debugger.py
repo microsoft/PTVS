@@ -140,6 +140,7 @@ def lookup_local(frame, name):
         obj = getattr(obj, bits.pop(0), None)
     return obj
         
+BREAK_MODE_NEVER = 0
 BREAK_MODE_ALWAYS = 1
 BREAK_MODE_UNHANDLED = 32
 class ExceptionBreakInfo(object):
@@ -148,6 +149,9 @@ class ExceptionBreakInfo(object):
         self.break_on = { }
         self.handler_cache = { }
         self.handler_lock = thread.allocate_lock()
+        self.AddException('exceptions.IndexError', BREAK_MODE_NEVER)
+        self.AddException('exceptions.AttributeError', BREAK_MODE_NEVER)
+        self.AddException('exceptions.StopIteration', BREAK_MODE_NEVER)
     
     def Clear(self):
         self.default_mode = BREAK_MODE_UNHANDLED

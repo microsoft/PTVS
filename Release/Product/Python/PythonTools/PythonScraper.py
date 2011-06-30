@@ -301,7 +301,8 @@ def merge_method(baseline_method, new_method):
         #print 'merging method', new_method
         new_method['overloads'] = baseline_method['overloads']
     elif 'overloads' in new_method:
-        print('has overloads', new_method['overloads'])
+        #print('has overloads', new_method['overloads'])
+        pass
     
     if 'doc' in baseline_method and 'doc' not in new_method:
         new_method['doc'] = baseline_method['doc']
@@ -324,10 +325,10 @@ def merge_member_table(baseline_table, new_table):
             merger = _MERGES.get(kind, None)
             if merger is not None:
                 member_table['value'] = merger(base_member_table['value'], member_table['value'])
-            else:
-                print('unknown kind')
-        elif base_member_table is not None:
-            print('kinds differ', kind, base_member_table['kind'], name)
+            #else:
+            #    print('unknown kind')
+        #elif base_member_table is not None:
+        #    print('kinds differ', kind, base_member_table['kind'], name)
     
 def merge_with_baseline(mod_name, baselinepath, final):
     if baselinepath is not None:
@@ -356,7 +357,11 @@ def write_analysis(mod_name, outpath, analysis):
         import System
         data = System.Array.CreateInstance(System.Byte, len(saved_analysis))
         for i, v in enumerate(saved_analysis):
-            data[i] = ord(v)
+            try:
+                data[i] = ord(v)
+            except:
+                print v
+                pass
             
         saved_analysis = data
     out_file.write(saved_analysis)

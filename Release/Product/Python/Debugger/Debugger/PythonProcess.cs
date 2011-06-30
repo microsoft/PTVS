@@ -269,7 +269,7 @@ namespace Microsoft.PythonTools.Debugger {
                     SendExceptionInfo(defaultBreakOnMode, breakOn);
                 } else {
                     _breakOn = breakOn;
-                    defaultBreakOnMode = _defaultBreakMode;
+                    _defaultBreakMode = defaultBreakOnMode;
                 }
             }
         }

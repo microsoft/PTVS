@@ -24,5 +24,6 @@
   <ItemGroup>
     <None Include="Program.py" />
     <None Include="Decorator.py" />
+    <None Include="ClassAndFunc.py" />
   </ItemGroup>
 </Project>

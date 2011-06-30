@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// 
         /// _openFiles must be locked when calling this function.
         /// </summary>
-        private void ReAnalyzeTextBuffers(BufferParser bufferParser) {
+        internal void ReAnalyzeTextBuffers(BufferParser bufferParser) {
             ITextBuffer[] buffers = bufferParser.Buffers;
             if (buffers.Length > 0) {
                 var projEntry = CreateProjectEntry(buffers[0], new SnapshotCookie(buffers[0].CurrentSnapshot));

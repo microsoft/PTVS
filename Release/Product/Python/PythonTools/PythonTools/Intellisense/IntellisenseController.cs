@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 sig.SetCurrentParameter(sig.Parameters[curParam - 1]);
                             }
                         }
-                    } else if (deleting == '(') {
+                    } else if (deleting == '(' || deleting == ')') {
                         _sigHelpSession.Dismiss();
                         // delete the ( before triggering help again
                         caretPoint.Value.Snapshot.TextBuffer.Delete(new Span(caretPoint.Value.Position - 1, 1));
@@ -215,19 +215,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
         /// <summary>
         /// Updates the current parameter for the caret's current position.
-        /// </summary>
-        private void UpdateCurrentParameter() {
-            UpdateCurrentParameter(_textView.Caret.Position.BufferPosition.Position);
-        }
-
-        /// <summary>
-        /// Updates the current parameter assuming the caret is at the provided position.
         /// 
         /// This will analyze the buffer for where we are currently located, find the current
         /// parameter that we're entering, and then update the signature.  If our current
         /// signature does not have enough parameters we'll find a signature which does.
         /// </summary>
-        private void UpdateCurrentParameter(int position) {
+        private void UpdateCurrentParameter() {
+            if (_sigHelpSession == null) {
+                // we moved out of the original span for sig help, re-trigger based upon the position
+                TriggerSignatureHelp();
+                return;
+            }
+
+            int position = _textView.Caret.Position.BufferPosition.Position;
             // we advance to the next parameter
             // TODO: Take into account params arrays
             // TODO: need to parse and see if we have keyword arguments entered into the current signature yet
@@ -245,14 +245,45 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 if (targetPt != null) {
                     var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
-
+                    
                     var sigs = targetPt.Value.Snapshot.GetSignatures(span);
-                    int curParam = sigs.ParameterIndex;
+                    bool retrigger = false;
+                    if (sigs.Signatures.Count == _sigHelpSession.Signatures.Count) {
+                        for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
+                            var leftSig = sigs.Signatures[i];
+                            var rightSig = _sigHelpSession.Signatures[i];
 
-                    if (curParam < sig.Parameters.Count) {
-                        sig.SetCurrentParameter(sig.Parameters[curParam]);
+                            if (leftSig.Parameters.Count == rightSig.Parameters.Count) {
+                                for (int j = 0; j < leftSig.Parameters.Count; j++) {
+                                    var leftParam = leftSig.Parameters[j];
+                                    var rightParam = rightSig.Parameters[j];
+
+                                    if (leftParam.Name != rightParam.Name || leftParam.Documentation != rightParam.Documentation) {
+                                        retrigger = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (leftSig.Content != rightSig.Content || leftSig.Documentation != rightSig.Documentation) {
+                                retrigger = true;
+                            }
+                        }
                     } else {
-                        CommaFindBestSignature(curParam);
+                        retrigger = true;
+                    }
+
+                    if (retrigger) {
+                        _sigHelpSession.Dismiss();
+                        TriggerSignatureHelp();
+                    } else {
+                        int curParam = sigs.ParameterIndex;
+
+                        if (curParam < sig.Parameters.Count) {
+                            sig.SetCurrentParameter(sig.Parameters[curParam]);
+                        } else {
+                            CommaFindBestSignature(curParam);
+                        }
                     }
                 }
             }
@@ -439,11 +470,13 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                             break;
                         case VSConstants.VSStd2KCmdID.LEFT:
-                            UpdateCurrentParameter(_textView.Caret.Position.BufferPosition.Position - 1);
-                            break;
+                            _editOps.MoveToPreviousCharacter(false);
+                            UpdateCurrentParameter();
+                            return VSConstants.S_OK;
                         case VSConstants.VSStd2KCmdID.RIGHT:
-                            UpdateCurrentParameter(_textView.Caret.Position.BufferPosition.Position + 1);
-                            break;
+                            _editOps.MoveToNextCharacter(false);
+                            UpdateCurrentParameter();
+                            return VSConstants.S_OK;
                         case VSConstants.VSStd2KCmdID.HOME:
                         case VSConstants.VSStd2KCmdID.BOL:
                         case VSConstants.VSStd2KCmdID.BOL_EXT:

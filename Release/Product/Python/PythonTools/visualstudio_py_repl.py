@@ -38,6 +38,25 @@ def _debug_write(out):
         sys.__stdout__.flush()
 
 
+class SafeSendLock(object):
+    """a lock which ensures we're released if we take a KeyboardInterrupt exception acquiring it"""
+    def __init__(self):
+        self.lock = thread.allocate_lock()
+
+    def acquire(self):
+        try:
+            self.lock.acquire()
+        except KeyboardInterrupt:
+            try:
+                self.lock.release()
+            except:
+                pass
+            raise
+
+    def release(self):
+        self.lock.release()
+
+
 def _cmd(cmd_str):
     """creates a command string for sending out via sockets - this handles Python v2 vs v3"""
     if sys.version >= '3.0':
@@ -70,7 +89,7 @@ actual inspection and introspection."""
     
     def __init__(self):
         self.conn = None
-        self.send_lock = threading.Lock()
+        self.send_lock = SafeSendLock()
         self.input_event = threading.Lock()
         self.input_event.acquire()  # lock starts acquired (we use it like a manual reset event)        
         self.input_string = None
@@ -121,6 +140,8 @@ actual inspection and introspection."""
     def _read_string(self):
         """ reads length of text to read, and then the text encoded in UTF-8, and returns the string"""
         len, = struct.unpack('i', self.conn.recv(4))
+        if not len:
+            return ''
         return self.conn.recv(len).decode('utf8')
     
     def _cmd_run(self):
@@ -460,6 +481,7 @@ class BasicReplBackend(ReplBackend):
             self.send_exit()
             return True, None, None, None
         except BaseException:
+            sys.__stdout__.write(traceback.format_exc())
             _debug_write('Exception')
             exc_type, exc_value, exc_tb = sys.exc_info()
             if sys.platform == 'cli':
@@ -471,11 +493,13 @@ class BasicReplBackend(ReplBackend):
                     sys.stderr.write('KeyboardInterrupt')
                 else:
                     # let IronPython format the exception so users can do -X:ExceptionDetail or -X:ShowClrExceptions
-                    excep_text = clr.GetCurrentRuntime().GetLanguage(PythonContext).FormatException(exc_value.clsException)
-                    sys.stderr.write(excep_text)
+                    exc_next = exc_tb.tb_next.tb_next
+                    sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
             else:
                 exc_next = exc_tb.tb_next.tb_next
+                sys.__stdout__.write('sending error')
                 sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
+                sys.__stdout__.write('done error')
 
             try:
                 self.send_error()
@@ -549,11 +573,14 @@ class BasicReplBackend(ReplBackend):
         self.execute_item_lock.release()
 
     def interrupt_main(self):
+        # acquire the send lock so we dont interrupt while we're communicting w/ the debugger
+        self.send_lock.acquire()
         if sys.platform == 'cli' and sys.version_info[:3] < (2, 7, 1):
             # IronPython doesn't get thread.interrupt_main until 2.7.1
             self.main_thread.Abort(ReplAbortException())
         else:
             thread.interrupt_main()
+        self.send_lock.release()
 
     def exit_process(self):
         self.execute_item = exit_work_item
@@ -562,7 +589,13 @@ class BasicReplBackend(ReplBackend):
 
     def get_members(self, expression):
         """returns a tuple of the type name, instance members, and type members"""
-        val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
+        if not expression:
+            all_members = {}
+            for key, value in self.exec_mod.__dict__.iteritems():
+                all_members[key] = self.get_type_name(value)
+            return '', all_members, {}
+        else:
+            val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
         t = type(val)
 
         inst_members = {}
@@ -677,14 +710,22 @@ class BasicReplBackend(ReplBackend):
         self.execute_item_lock.release()
     
     @staticmethod
+    def get_type_name(val):
+        try:
+            mem_t = type(val)
+            mem_t_name = mem_t.__module__ + '.' + mem_t.__name__
+            return mem_t_name
+        except:
+            pass                
+
+    @staticmethod
     def _get_member_type(inst, name, from_dict):
         try:
             if from_dict:
                 val = inst.__dict__[name] 
             else:
                 val = getattr(type(inst), name)
-            mem_t = type(val)
-            mem_t_name = mem_t.__module__ + '.' + mem_t.__name__
+            mem_t_name = BasicReplBackend.get_type_name(val)
             return mem_t_name
         except:
             return

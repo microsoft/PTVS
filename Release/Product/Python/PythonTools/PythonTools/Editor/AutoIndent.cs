@@ -260,7 +260,23 @@ namespace Microsoft.PythonTools.Editor {
             SkipPreceedingBlankLines(line, out baselineText, out baseline);
 
             var classifier = line.Snapshot.TextBuffer.GetPythonClassifier();
-            return CalculateIndentation(baselineText, baseline, options, classifier);
+            var desiredIndentation = CalculateIndentation(baselineText, baseline, options, classifier);
+
+            var caretLine = textView.Caret.Position.BufferPosition.GetContainingLine();
+            var lineText = caretLine.GetText();
+            int indentationUpdate = 0;
+            for (int i = textView.Caret.Position.BufferPosition.Position - caretLine.Start; i < lineText.Length; i++) {
+                if (lineText[i] == ' ') {
+                    indentationUpdate++;
+                } else if (lineText[i] == '\t') {
+                    indentationUpdate += textView.Options.GetIndentSize();
+                } else {
+                    desiredIndentation -= indentationUpdate;
+                    break;
+                }
+            }
+            
+            return desiredIndentation;
         }
     }
 }

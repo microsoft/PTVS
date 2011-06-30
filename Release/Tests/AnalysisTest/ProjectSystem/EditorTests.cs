@@ -264,6 +264,12 @@ pass");
     @property
     def bar(self):
         pass");
+
+            // http://pytools.codeplex.com/workitem/299
+            AutoIndentExistingTest(project, "ClassAndFunc.py", 2, 4, @"class C:
+    def f(self):
+    
+        pass");
         }
 
         /// <summary>

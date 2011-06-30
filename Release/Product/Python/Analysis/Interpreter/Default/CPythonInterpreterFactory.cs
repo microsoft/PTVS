@@ -113,9 +113,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 new PythonTypeDatabaseCreationRequest() { DatabaseOptions = options, Factory = this, OutputPath = outPath },
                 () => {
                     lock (_interpreters) {
-                        _typeDb = new PythonTypeDatabase(outPath, Is3x);
+                        if (ConfigurableDatabaseExists()) {
+                            _typeDb = new PythonTypeDatabase(outPath, Is3x);
 
-                        OnNewDatabaseAvailable();
+                            OnNewDatabaseAvailable();
+                        }
                     }
                     databaseGenerationCompleted();
 

@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 
 
 namespace Microsoft.PythonTools.Project {
@@ -82,5 +83,22 @@ namespace Microsoft.PythonTools.Project {
             return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetAnalysisFromFile(Url);
         }
 
+        protected override FileNode RenameFileNode(string oldFileName, string newFileName, uint newParentId) {
+            var res = base.RenameFileNode(oldFileName, newFileName, newParentId);
+            if (res != null) {
+                var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
+                var analysis = GetAnalysis();
+                analyzer.UnloadFile(analysis);
+                
+                var textBuffer = GetTextBuffer();
+                
+                BufferParser parser;
+                if (textBuffer != null && textBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser)) {
+                    analyzer.ReAnalyzeTextBuffers(parser);
+                }
+
+            }
+            return res;
+        }
     }
 }

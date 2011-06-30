@@ -16,7 +16,7 @@ using System;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools {
-    class ConfigurablePythonInterpreterFactory : IPythonInterpreterFactory {
+    class ConfigurablePythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
         private readonly IPythonInterpreterFactory _realFactory;
 
         public ConfigurablePythonInterpreterFactory(IPythonInterpreterFactory realFactory) {
@@ -39,6 +39,18 @@ namespace Microsoft.PythonTools {
 
         public IPythonInterpreter CreateInterpreter() {
             return _realFactory.CreateInterpreter();
+        }
+
+        #endregion
+
+        #region IInterpreterWithCompletionDatabase Members
+
+        public bool GenerateCompletionDatabase(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GenerateCompletionDatabase(options, databaseGenerationCompleted);
+        }
+
+        public void AutoGenerateCompletionDatabase() {
+            ((IInterpreterWithCompletionDatabase)_realFactory).AutoGenerateCompletionDatabase();
         }
 
         #endregion

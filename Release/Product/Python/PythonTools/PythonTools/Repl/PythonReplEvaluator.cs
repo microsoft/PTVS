@@ -692,13 +692,20 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public void Close() {
-                using (new SocketLock(this)) {
-                    if (_socket != null && _socket.Connected) {
-                        var socket = Socket;
-                        _socket = null;
+                // try and exit gracefully first, but if we're wedged don't both...
+                if (Monitor.TryEnter(_socketLock, 200)) {
+                    try {
+                        using (new SocketLock(this)) {
+                            if (_socket != null && _socket.Connected) {
+                                var socket = Socket;
+                                _socket = null;
 
-                        socket.Send(ExitCommandBytes);
-                        socket.Close();
+                                socket.Send(ExitCommandBytes);
+                                socket.Close();
+                            }
+                        }
+                    } finally {
+                        Monitor.Exit(_socketLock);
                     }
                 }
 
