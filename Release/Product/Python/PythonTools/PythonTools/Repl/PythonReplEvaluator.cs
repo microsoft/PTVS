@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -96,7 +97,7 @@ namespace Microsoft.PythonTools.Repl {
         internal ProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null) {
-                    _replAnalyzer = new ProjectAnalyzer(Interpreter, _errorProviderFactory);
+                    _replAnalyzer = new ProjectAnalyzer(Interpreter, _factProvider.GetInterpreterFactories().ToArray(), _errorProviderFactory);
                 }
                 return _replAnalyzer;
             }
@@ -595,7 +596,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (Socket == null) {
                         return null;
                     } else if (!Socket.Connected) {
-                        _eval._window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+                        _eval._window.WriteError("Current interactive window is disconnected or has not completed starting up." + Environment.NewLine);
                         return ExecutionResult.Failed;
                     }
 
@@ -626,7 +627,7 @@ namespace Microsoft.PythonTools.Repl {
 
             public OverloadDoc[] GetSignatureDocumentation(ProjectAnalyzer analyzer, string text) {
                 using (new SocketLock(this)) {
-                    if (!Socket.Connected) {
+                    if (_connected || !Socket.Connected) {
                         return new OverloadDoc[0];
                     }
                     Socket.Send(GetSignaturesCommandBytes);
@@ -646,7 +647,7 @@ namespace Microsoft.PythonTools.Repl {
                 _memberResults = null;
                 
                 using (new SocketLock(this)) {
-                    if (!Socket.Connected) {
+                    if (!_connected || !Socket.Connected) {
                         return new MemberResult[0];
                     }
                     Socket.Send(GetMembersCommandBytes);
@@ -688,14 +689,16 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public IEnumerable<string> GetAvailableScopes() {
-                using (new SocketLock(this)) {
-                    Socket.Send(GetModulesListCommandBytes);
-                }
+                if (_connected) {   // if startup's taking a long time we won't be connected yet
+                    using (new SocketLock(this)) {
+                        Socket.Send(GetModulesListCommandBytes);
+                    }
 
-                _completionResultEvent.WaitOne(1000);
+                    _completionResultEvent.WaitOne(1000);
 
-                if (_moduleNames != null) {
-                    return _moduleNames.Values;
+                    if (_moduleNames != null) {
+                        return _moduleNames.Values;
+                    }
                 }
                 return new string[0];
             }

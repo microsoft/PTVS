@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -22,5 +23,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// during the analysis of the program  .
         /// </summary>
         void SpecializeFunction(string moduleName, string name, Action<CallExpression> dlg);
+
+        /// <summary>
+        /// Gets the list of additional directories which should be analyzed
+        /// </summary>
+        IEnumerable<string> AnalysisDirectories {
+            get;
+        }
     }
 }

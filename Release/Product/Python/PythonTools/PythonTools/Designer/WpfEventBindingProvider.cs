@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if !DEV11
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -209,3 +211,5 @@ namespace Microsoft.PythonTools.Designer {
         }
     }
 }
+
+#endif

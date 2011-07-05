@@ -17,6 +17,18 @@
         ObjDir=$(ProjectDir)..\..\Python\Hpc\obj\Win32\$(Configuration);
     </DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' == ''">
+    <DefineConstants>
+        ObjDir=$(ProjectDir)..\..\Python\Hpc\obj\Win32\$(Configuration);
+        VSTargetVersion=10.0
+    </DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' != ''">
+    <DefineConstants>
+        ObjDir=$(ProjectDir)..\..\Python\Hpc\obj\Win32\$(Configuration);
+        VSTargetVersion=$(VSTarget)
+    </DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="PythonHpcSupport.wxs" />
     <Compile Include="PythonHpcSupportVsExt.wxs" />

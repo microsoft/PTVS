@@ -285,8 +285,12 @@ namespace Microsoft.PythonTools {
 
         internal static IPythonInterpreterFactory[] GetAllPythonInterpreterFactories(this IComponentModel model) {
             var interpreters = new List<IPythonInterpreterFactory>();
-            foreach (var provider in model.GetExtensions<IPythonInterpreterFactoryProvider>()) {
-                interpreters.AddRange(provider.GetInterpreterFactories());
+            if (model != null) {
+                foreach (var provider in model.GetExtensions<IPythonInterpreterFactoryProvider>()) {
+                    if (provider != null) {
+                        interpreters.AddRange(provider.GetInterpreterFactories());
+                    }
+                }
             }
             interpreters.Sort((x, y) => x.GetInterpreterDisplay().CompareTo(y.GetInterpreterDisplay()));
             return interpreters.ToArray();

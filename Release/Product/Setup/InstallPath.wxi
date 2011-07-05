@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
     <Property Id="VSINSTALLPATH">
-      <RegistrySearch Id="VSInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\10.0" Name="InstallDir" Type="directory" />
+      <RegistrySearch Id="VSInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)" Name="InstallDir" Type="directory" />
     </Property>
     
-    <CustomAction Id="ExtensionSetDefaultPerUserFolder" Property="ExtensionPerUserFolder" Value="[LocalAppDataFolder]Microsoft\VisualStudio\10.0" Execute="immediate" /> 
+    <CustomAction Id="ExtensionSetDefaultPerUserFolder" Property="ExtensionPerUserFolder" Value="[LocalAppDataFolder]Microsoft\VisualStudio\$(var.VSTargetVersion)" Execute="immediate" /> 
     <CustomAction Id="ExtensionSetDefaultPerMachineFolder" Property="ExtensionPerMachineFolder" Value="[VSINSTALLPATH]" Execute="immediate" /> 
     <CustomAction Id="ExtensionSetPerUserFolder" Property="EXTENSION_INSTALLPATH" Value="[ExtensionPerUserFolder]" Execute="immediate" /> 
     <CustomAction Id="ExtensionSetPerMachineFolder" Property="EXTENSION_INSTALLPATH" Value="[ExtensionPerMachineFolder]" Execute="immediate" /> 

@@ -221,14 +221,16 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (userMod == null) {
                 var modName = node.Root.MakeString();
 
-                if (!TryGetUserModule(modName, out moduleRef)) {
+                if (!TryGetUserModule(modName, out moduleRef) || moduleRef.Module == null) {
                     userMod = ProjectState.ImportBuiltinModule(modName);
                 }
 
                 if (moduleRef != null) {
-                    userMod = moduleRef.Module;
-                    if (userMod == null) {
-                        moduleRef.AddEphemeralReference(_unit.DeclaringModule);
+                    if (moduleRef.Module != null) {
+                        userMod = moduleRef.Module;
+                        if (userMod == null) {
+                            moduleRef.AddEphemeralReference(_unit.DeclaringModule);
+                        }
                     }
                 } else if (userMod == null) {
                     moduleRef = ProjectState.Modules[modName] = new ModuleReference();

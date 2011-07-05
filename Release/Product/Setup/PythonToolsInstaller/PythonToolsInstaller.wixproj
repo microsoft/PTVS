@@ -13,9 +13,19 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' == ''">
     <DefineConstants>
         PyToolsDir=$(ProjectDir)..\..\Python\PythonTools\;
-        MsiVersion=$(WixVersion)
+        MsiVersion=$(WixVersion);
+        VSTargetVersion=10.0
+    </DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' != ''">
+    <DefineConstants>
+        PyToolsDir=$(ProjectDir)..\..\Python\PythonTools\;
+        MsiVersion=$(WixVersion);
+        VSTargetVersion=$(VSTarget)
     </DefineConstants>
   </PropertyGroup>
   <PropertyGroup>

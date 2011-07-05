@@ -1091,7 +1091,8 @@ def f(x):
         }
 
         private void ExtractMethodTest(string input, string extract, TestResult expected, string scopeName = null, string targetName = "g", params string[] parameters) {
-            var analyzer = new ProjectAnalyzer(new IronPythonInterpreterFactory(), new MockErrorProviderFactory());
+            var fact = new IronPythonInterpreterFactory();
+            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             var buffer = new MockTextBuffer(input);
             var view = new MockTextView(buffer);
             buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);

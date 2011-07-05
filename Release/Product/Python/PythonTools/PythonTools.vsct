@@ -100,7 +100,7 @@
         </Strings>
       </Button>
       
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7f00" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -112,7 +112,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x7f01" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -124,7 +124,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x7f02" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -136,7 +136,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x7f03" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -148,7 +148,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x7f04" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -160,7 +160,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x7f05" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -172,7 +172,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x7f06" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -184,7 +184,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x7f07" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -196,7 +196,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x7f08" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -208,7 +208,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x7f09" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -220,7 +220,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x7f0a" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -232,7 +232,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x7f0b" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -244,7 +244,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x7f0c" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -256,7 +256,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x7f0d" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -268,7 +268,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x7f0e" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -280,7 +280,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x7fff" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x7f0f" type="Button">
         <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -316,7 +316,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x0300" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x0301" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -326,7 +326,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidStartWithoutDebugging" priority="0x0300" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidStartWithoutDebugging" priority="0x0302" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -336,7 +336,7 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidStartDebugging" priority="0x0300" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidStartDebugging" priority="0x0303" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -370,79 +370,79 @@
     </CommandPlacement>
 
     <!-- Make some commands also available via Tools/Python Tools menu for discoverability -->
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x102">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x103">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x104">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x105">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x106">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x107">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x108">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x109">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x10a">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x10b">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x10c">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x10d">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x10e">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x10f">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x110">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x111">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" priority="0x101">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" priority="0x120">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" priority="0x121">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x100">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x122">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
@@ -451,7 +451,7 @@
       <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x600">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x601">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
 

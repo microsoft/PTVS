@@ -44,6 +44,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly Dictionary<string, IronPythonModule> _modules = new Dictionary<string, IronPythonModule>();
         private readonly HashSet<string> _assemblyLoadSet = new HashSet<string>();
         private readonly IronPythonInterpreterFactory _factory;
+        private IInterpreterState _state;
         private PythonTypeDatabase _typeDb;
 
         public IronPythonInterpreter(IronPythonInterpreterFactory factory)
@@ -114,6 +115,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             state.SpecializeFunction("clr", "AddReferenceByName", (n) => AddReference(n, null));
             state.SpecializeFunction("clr", "AddReferenceToFile", (n) => AddReference(n, (s) => ClrModule.LoadAssemblyFromFile(_codeContext, s)));
             state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n) => AddReference(n, (s) => ClrModule.LoadAssemblyFromFileWithPath(_codeContext, s)));
+            _state = state;
         }
 
         /// <summary>
@@ -228,6 +230,24 @@ namespace Microsoft.IronPythonTools.Interpreter {
                                 asm = ClrModule.LoadAssemblyByName(_codeContext, asmName);
                             } catch {
                                 asm = ClrModule.LoadAssemblyByPartialName(asmName);
+                            }
+                        }
+
+                        if (asm == null && _state != null) {
+                            var invalidPathChars = Path.GetInvalidPathChars();
+                            foreach (var dir in _state.AnalysisDirectories) {
+                                if (dir.IndexOfAny(invalidPathChars) == -1 && asmName.IndexOfAny(invalidPathChars) == -1) {
+
+                                    string path = Path.Combine(dir, asmName);
+                                    if (File.Exists(path)) {
+                                        asm = Assembly.LoadFrom(path);
+                                    } else if (File.Exists(path + ".dll")) {
+                                        asm = Assembly.LoadFrom(path + ".dll");
+                                    } else if (File.Exists(path + ".exe")) {
+                                        asm = Assembly.LoadFrom(path + ".exe");
+                                    }
+                                }
+
                             }
                         }
                     } catch {

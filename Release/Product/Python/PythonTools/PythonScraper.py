@@ -421,4 +421,4 @@ if __name__ == "__main__":
         package_inspector(site_packages, root, files)
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('1')
+    f.write('2')

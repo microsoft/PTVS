@@ -820,8 +820,8 @@ x = foo
         }
 
         private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
-            var fact = new CPythonInterpreterFactory(version ?? new Version(2, 6), new Guid(), "test interpreter", "C:\\foo\\python.exe", "C:\\foo\\pythonw.exe", "PYTHONPATH", ProcessorArchitecture.X86);
-            var analyzer = new ProjectAnalyzer(fact, new MockErrorProviderFactory());
+            var fact = new CPythonInterpreterFactory(version ?? new Version(2, 6), new Guid(), "test interpreter", "C:\\foo\\python.exe", "C:\\foo\\pythonw.exe", "PYTHONPATH", ProcessorArchitecture.X86);            
+            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
             MockTextView[] views = new MockTextView[inputs.Length];
             Dictionary<string, ITextBuffer> bufferTable = new Dictionary<string, ITextBuffer>();

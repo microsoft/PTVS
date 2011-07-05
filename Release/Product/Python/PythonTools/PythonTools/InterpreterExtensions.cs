@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static string GetInterpreterDisplay(this IPythonInterpreterFactory interpreterFactory) {
             var configurable = interpreterFactory as ConfigurablePythonInterpreterFactory;
             if (configurable != null) {
-                return configurable.Description;
+                return configurable.Description ?? "";
             }
 
             return String.Format("{0} {1}", interpreterFactory.Description, FormatVersion(interpreterFactory.Configuration.Version));

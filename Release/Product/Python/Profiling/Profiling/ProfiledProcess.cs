@@ -174,10 +174,22 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private static Win32.RegistryKey OpenVisualStudioKey() {
+            if (PythonProfilingPackage.Instance != null) {
+                return PythonProfilingPackage.Instance.ApplicationRegistryRoot;
+            }
+
             if (Environment.Is64BitOperatingSystem) {
+#if DEV11
+                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
+#else
                 return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#endif
             } else {
+#if DEV11
+                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
+#else
                 return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#endif
             }
         }
 

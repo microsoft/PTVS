@@ -14,17 +14,22 @@
 
 using System;
 using System.IO;
+#if !DEV11
 using Microsoft.PythonTools.Designer;
 using Microsoft.Windows.Design.Host;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     class PythonNonCodeFileNode : CommonNonCodeFileNode {
+#if !DEV11
         private DesignerContext _designerContext;
+#endif
 
         public PythonNonCodeFileNode(CommonProjectNode root, MsBuildProjectElement e)
             : base(root, e) {
         }
 
+#if !DEV11
         protected internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
             get {
                 if (_designerContext == null) {
@@ -59,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
             }
             return service;
         }
-
+#endif
 
     }
 }

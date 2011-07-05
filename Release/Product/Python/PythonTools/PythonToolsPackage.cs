@@ -273,7 +273,7 @@ namespace Microsoft.PythonTools {
 
             var defaultFactory = GetDefaultInterpreter(model.GetAllPythonInterpreterFactories());
             EnsureCompletionDb(defaultFactory);
-            return new ProjectAnalyzer(defaultFactory.CreateInterpreter(), defaultFactory, model.GetService<IErrorProviderFactory>());
+            return new ProjectAnalyzer(defaultFactory.CreateInterpreter(), defaultFactory, model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>());
         }
 
         /// <summary>
@@ -355,8 +355,11 @@ namespace Microsoft.PythonTools {
                     return ((CommonPackage)Instance).UserRegistryRoot;
                 }
 
-
+#if DEV11
+                return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
+#else
                 return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#endif
             }
         }
 
@@ -367,7 +370,11 @@ namespace Microsoft.PythonTools {
                 }
 
 
+#if DEV11
+                return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
+#else
                 return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#endif
             }
         }
 
@@ -537,7 +544,7 @@ namespace Microsoft.PythonTools {
             }
 
             // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = OpenVisualStudioKey()) {
+            using (var configKey = PythonToolsPackage.ApplicationRegistryRoot) {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
                     var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\1.0");
@@ -549,14 +556,5 @@ namespace Microsoft.PythonTools {
 
             return null;
         }
-
-        private static Win32.RegistryKey OpenVisualStudioKey() {
-            if (Environment.Is64BitOperatingSystem) {
-                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
-            } else {
-                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
-            }
-        }
-
     }
 }

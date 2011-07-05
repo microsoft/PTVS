@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 1;
+        public static readonly int CurrentVersion = 2;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _dbDir = databaseDirectory;
@@ -500,9 +500,17 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static Win32.RegistryKey OpenVisualStudioKey() {
             if (Environment.Is64BitOperatingSystem) {
+#if DEV11
+                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
+#else
                 return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#endif
             } else {
+#if DEV11
+                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
+#else
                 return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#endif
             }
         }
     }

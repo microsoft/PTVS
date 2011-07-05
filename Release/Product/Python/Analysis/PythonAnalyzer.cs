@@ -45,6 +45,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly KnownTypes _types;
         internal readonly IModuleContext _defaultContext;
         private readonly PythonLanguageVersion _langVersion;
+        private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         private int? _crossModuleLimit;
         private static object _nullKey = new object();
@@ -230,6 +231,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void SpecializeFunction(string moduleName, string name, Action<CallExpression> dlg) {
             SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(call); return null; });
+        }
+
+        public IEnumerable<string> AnalysisDirectories {
+            get {
+                return _analysisDirs;
+            }
         }
 
         public static string PathToModuleName(string path) {
@@ -655,5 +662,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
 
+        public void AddAnalysisDirectory(string dir) {
+            _analysisDirs.Add(dir);
+        }
     }
 }

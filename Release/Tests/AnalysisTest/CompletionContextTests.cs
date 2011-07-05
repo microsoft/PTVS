@@ -170,8 +170,8 @@ e): ");
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-
-            var analyzer = new ProjectAnalyzer(new IronPythonInterpreterFactory(), new MockErrorProviderFactory());
+            var fact = new IronPythonInterpreterFactory();
+            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             var buffer = new MockTextBuffer(sourceCode);
             buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
             var textView = new MockTextView(buffer);
@@ -189,8 +189,8 @@ e): ");
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-
-            var analyzer = new ProjectAnalyzer(new IronPythonInterpreterFactory(), new MockErrorProviderFactory());
+            var fact = new IronPythonInterpreterFactory();
+            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             var buffer = new MockTextBuffer(sourceCode);
             buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
@@ -202,8 +202,8 @@ e): ");
             if (location < 0) {
                 location = sourceCode.Length + location;
             }
-
-            var analyzer = new ProjectAnalyzer(new IronPythonInterpreterFactory(), new MockErrorProviderFactory());
+            var fact = new IronPythonInterpreterFactory();
+            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             var buffer = new MockTextBuffer(sourceCode);
             buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;

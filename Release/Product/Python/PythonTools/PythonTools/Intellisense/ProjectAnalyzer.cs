@@ -54,17 +54,19 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonProjectNode _project;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private static TaskProvider _taskProvider;
+        private readonly IPythonInterpreterFactory[] _allFactories;
         private static char[] _invalidPathChars = Path.GetInvalidPathChars();
 
-        public ProjectAnalyzer(IPythonInterpreterFactory factory, IErrorProviderFactory errorProvider)
-            : this(factory.CreateInterpreter(), factory, errorProvider) {
+        public ProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
+            : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
         }
 
-        public ProjectAnalyzer(IPythonInterpreter interpreter, IPythonInterpreterFactory factory, IErrorProviderFactory errorProvider, PythonProjectNode project = null) {
+        public ProjectAnalyzer(IPythonInterpreter interpreter, IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider, PythonProjectNode project = null) {
             _errorProvider = errorProvider;
 
             _queue = new ParseQueue(this);
             _analysisQueue = new AnalysisQueue(this);
+            _allFactories = allFactories;
 
             _interpreterFactory = factory;
             _project = project;
@@ -165,10 +167,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 _projectFiles[path] = entry;
 
-                if (ImplicitProject &&
-                    !String.IsNullOrWhiteSpace(_interpreterFactory.Configuration.InterpreterPath) &&
-                    _interpreterFactory.Configuration.InterpreterPath.IndexOfAny(_invalidPathChars) == -1 &&
-                    !Path.GetFullPath(path).StartsWith(Path.GetDirectoryName(_interpreterFactory.Configuration.InterpreterPath), StringComparison.OrdinalIgnoreCase)) { // don't analyze std lib
+                if (ImplicitProject && ShouldAnalyzePath(path)) { // don't analyze std lib
                     // TODO: We're doing this on the UI thread and when we end up w/ a lot to queue here we hang for a while...
                     // But this adds files to the analyzer so it's not as simple as queueing this onto another thread.
                     AnalyzeDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
@@ -176,6 +175,17 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return entry;
+        }
+
+        private bool ShouldAnalyzePath(string path) {
+            foreach (var fact in _allFactories) {
+                if (!String.IsNullOrWhiteSpace(fact.Configuration.InterpreterPath) &&
+                       fact.Configuration.InterpreterPath.IndexOfAny(_invalidPathChars) == -1 &&
+                       Path.GetFullPath(path).StartsWith(Path.GetDirectoryName(fact.Configuration.InterpreterPath), StringComparison.OrdinalIgnoreCase)) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public void StopMonitoringTextBuffer(BufferParser bufferParser) {
@@ -594,7 +604,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (provider != null) {
+            if (provider != null && (errorSink.Errors.Count > 0 || errorSink.Warnings.Count > 0)) {
                 ((IVsTaskList)_errorList).RefreshTasks(provider.Cookie);
             }
         }
@@ -817,7 +827,11 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Analyzes a complete directory including all of the contained files and packages.
         /// </summary>
-        public void AnalyzeDirectory(string dir) {
+        public void AnalyzeDirectory(string dir, bool addDir = true) {
+            if (addDir) {
+                _pyAnalyzer.AddAnalysisDirectory(dir);
+            }
+
             foreach (string filename in Directory.GetFiles(dir, "*.py")) {
                 AnalyzeFile(filename);
             }
@@ -828,7 +842,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             foreach (string innerDir in Directory.GetDirectories(dir)) {
                 if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
-                    AnalyzeDirectory(innerDir);
+                    AnalyzeDirectory(innerDir, false);
                 }
             }
         }
@@ -936,11 +950,14 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             internal void Clear(string filename) {
+                bool removed;
                 lock (this) {
-                    _warnings.Remove(filename);
-                    _errors.Remove(filename);
+                    removed = _warnings.Remove(filename);
+                    removed = _errors.Remove(filename) || removed;
                 }
-                ((IVsTaskList)_errorList).RefreshTasks(_cookie);
+                if (removed) {
+                    ((IVsTaskList)_errorList).RefreshTasks(_cookie);
+                }
             }
 
             class TaskEnum : IVsEnumTaskItems {

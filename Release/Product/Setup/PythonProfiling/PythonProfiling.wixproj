@@ -18,6 +18,20 @@
         x64Dir=$(BuildRoot)\Binaries\x64\$(Configuration)
     </DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' == ''">
+    <DefineConstants>
+        ObjDir=$(ProjectDir)..\..\Python\Profiling\obj\Win32\$(Configuration);
+        x64Dir=$(BuildRoot)\Binaries\x64\$(Configuration);
+        VSTargetVersion=10.0
+    </DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' != ''">
+    <DefineConstants>
+        ObjDir=$(ProjectDir)..\..\Python\Profiling\obj\Win32\$(Configuration);
+        x64Dir=$(BuildRoot)\Binaries\x64\$(Configuration);
+        VSTargetVersion=$(VSTarget)
+    </DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="PythonProfiling.wxs" />
     <Compile Include="PythonProfilingVsExt.wxs" />

@@ -13,8 +13,17 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' == ''">
     <DefineConstants>
-        ObjDir=$(ProjectDir)..\..\Python\ReplWindow\obj\Win32\$(Configuration)
+        ObjDir=$(ProjectDir)..\..\Python\ReplWindow\obj\Win32\$(Configuration);
+        VSTargetVersion=10.0
+    </DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' != ''">
+    <DefineConstants>
+        ObjDir=$(ProjectDir)..\..\Python\ReplWindow\obj\Win32\$(Configuration);
+        VSTargetVersion=$(VSTarget)
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>

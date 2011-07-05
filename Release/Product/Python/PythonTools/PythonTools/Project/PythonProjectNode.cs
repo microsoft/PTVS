@@ -24,13 +24,17 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Text.Adornments;
+#if !DEV11
 using Microsoft.Windows.Design.Host;
+#endif
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
     public class PythonProjectNode : CommonProjectNode, IPythonProject {
+#if !DEV11
         private DesignerContext _designerContext;
+#endif
         private IPythonInterpreter _interpreter;
         private ProjectAnalyzer _analyzer;
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
@@ -131,21 +135,19 @@ namespace Microsoft.PythonTools.Project {
 
                         // remove the file if directly included, or if included via a package or series of packages.
                         string dirName = Path.GetDirectoryName(file);
-                        if (!dirName.EndsWith("\\")) {
-                            dirName = dirName + "\\";
-                        }
                         do {
-                            if (oldDirs.Contains(dirName)) {
-                                if (!newDirs.Contains(dirName)) {
+                            string tmpDir = dirName;
+                            if (!tmpDir.EndsWith("\\")) {
+                                tmpDir = tmpDir + "\\";
+                            }
+                            if (oldDirs.Contains(tmpDir)) {
+                                if (!newDirs.Contains(tmpDir)) {
                                     // path removed
                                     _analyzer.UnloadFile(projectEntry);
                                     break;
                                 }
                             }
                             dirName = Path.GetDirectoryName(dirName);
-                            if (!dirName.EndsWith("\\")) {
-                                dirName = dirName + "\\";
-                            }
                         } while (dirName != null && File.Exists(Path.Combine(dirName, "__init__.py")));
                     }
 
@@ -185,6 +187,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+#if !DEV11
         protected override internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
             get {
                 if (_designerContext == null) {
@@ -200,6 +203,7 @@ namespace Microsoft.PythonTools.Project {
                 return _designerContext;
             }
         }
+#endif
 
         public override IProjectLauncher GetLauncher() {
             var compModel = PythonToolsPackage.ComponentModel;
@@ -256,7 +260,7 @@ namespace Microsoft.PythonTools.Project {
 
         private ProjectAnalyzer CreateAnalyzer() {
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
-            return new ProjectAnalyzer(GetInterpreter(), GetInterpreterFactory(), model.GetService<IErrorProviderFactory>(), this);
+            return new ProjectAnalyzer(GetInterpreter(), GetInterpreterFactory(), model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>(), this);
         }
 
         private void CreateInterpreter() {
