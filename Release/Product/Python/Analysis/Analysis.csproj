@@ -83,7 +83,6 @@
     <Compile Include="IAnalysisValue.cs" />
     <Compile Include="IAnalysisVariable.cs" />
     <Compile Include="IInterpreterState.cs" />
-    <Compile Include="ImportInfo.cs" />
     <Compile Include="Analyzer\ClassScope.cs" />
     <Compile Include="Analyzer\DDG.cs" />
     <Compile Include="Analyzer\EmptySet.cs" />
