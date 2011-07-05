@@ -88,7 +88,9 @@ namespace Microsoft.PythonTools.Project {
             if (res != null) {
                 var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
                 var analysis = GetAnalysis();
-                analyzer.UnloadFile(analysis);
+                if (analysis != null) {
+                    analyzer.UnloadFile(analysis);
+                }
                 
                 var textBuffer = GetTextBuffer();
                 

@@ -51,8 +51,12 @@ namespace Microsoft.PythonTools {
         public static string CreateFriendlyDirectoryPath(string basePath, string path) {
             string normalizedBaseDir = NormalizeDirectoryPath(basePath);
             string normalizedDir = NormalizeDirectoryPath(path);
-            return normalizedBaseDir == normalizedDir ? "." :
-                new DirectoryInfo(normalizedDir).Name;
+
+            if (normalizedBaseDir == normalizedDir) {
+                return ".";
+            }
+
+            return new Uri(basePath).MakeRelativeUri(new Uri(path)).ToString().Replace('/', Path.DirectorySeparatorChar);
         }
 
         public static string CreateFriendlyFilePath(string basePath, string path) {

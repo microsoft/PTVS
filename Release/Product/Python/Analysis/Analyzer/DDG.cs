@@ -173,7 +173,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private void WalkFromImportWorker(NameExpression node, Namespace userMod, string impName, string newName) {
             var saveName = (newName == null) ? impName : newName;
-            //GlobalScope.Imports[node].Types.Add(new[] { impName, newName });
 
             var variable = Scopes[Scopes.Length - 1].CreateVariable(node, _unit, saveName);
 
@@ -238,8 +237,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             var asNames = node.AsNames ?? node.Names;
-            var impInfo = new ImportInfo(node.Root.MakeString(), node.GetSpan(_unit.Ast.GlobalParent));
-            //GlobalScope.Imports[node] = impInfo;
 
             int len = Math.Min(node.Names.Count, asNames.Count);
             for (int i = 0; i < len; i++) {
@@ -408,22 +405,39 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override bool Walk(ImportStatement node) {
             var x = _unit.ProjectEntry.Tree;
-            var iinfo = new ImportInfo("", node.GetSpan(_unit.Ast.GlobalParent));
-            //GlobalScope.Imports[node] = iinfo;
+
             int len = Math.Min(node.Names.Count, node.AsNames.Count);
             for (int i = 0; i < len; i++) {
-                var impNode = node.Names[i];
-                var newName = node.AsNames[i] != null ? node.AsNames[i].Name : null;
-                var nameNode = node.AsNames[i] != null ? node.AsNames[i] : node.Names[i].Names[0];
-                var strImpName = impNode.MakeString();
-                iinfo.Types.Add(new[] { strImpName, newName });
+                var curName = node.Names[i];
+                var asName = node.AsNames[i];
 
-                var saveName = (String.IsNullOrEmpty(newName)) ? strImpName : newName;
+                string importing, saveName;
+                Node nameNode;
+                bool bottom = false;
+                if (curName.Names.Count > 1) {
+                    // import foo.bar
+                    if (asName != null) {
+                        // import foo.bar as baz, baz becomes the value of the bar module
+                        importing = curName.MakeString();
+                        saveName = asName.Name;
+                        nameNode = asName;
+                        bottom = true;
+                    } else {
+                        // plain import foo.bar, we bring in foo into the scope
+                        saveName = importing = curName.Names[0].Name;
+                        nameNode = curName.Names[0];
+                    }
+                } else {
+                    // import foo
+                    saveName = importing = curName.Names[0].Name;
+                    nameNode = curName.Names[0];
+                }
+
                 ModuleReference modRef;
 
                 var def = Scopes[Scopes.Length - 1].CreateVariable(nameNode, _unit, saveName);
-                if (!TryGetUserModule(strImpName, out modRef)) {
-                    var builtinModule = ProjectState.ImportBuiltinModule(strImpName, impNode.Names.Count > 1 && !String.IsNullOrEmpty(newName));
+                if (!TryGetUserModule(importing, out modRef)) {
+                    var builtinModule = ProjectState.ImportBuiltinModule(importing, bottom);
 
                     if (builtinModule != null) {
                         builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
@@ -451,7 +465,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         modRef.AddEphemeralReference(_unit.DeclaringModule);
                     }
                 } else {
-                    ProjectState.Modules[strImpName] = modRef = new ModuleReference();
+                    ProjectState.Modules[importing] = modRef = new ModuleReference();
                     modRef.AddEphemeralReference(_unit.DeclaringModule);
                 }
             }

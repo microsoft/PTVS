@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Options {
                     CurrentOptions.Version = _version.Text;
                     HideErrorBalloon(_invalidVersionToolTip, _versionLabel);
                 } else {
-                    ShowErrorBalloon(_invalidVersionToolTip, _versionLabel, _version, "Version is not in invalid format and will not be saved.\r\n\r\nValid formats are in the form of Major.Minor[.Build[.Revision]].");
+                    ShowErrorBalloon(_invalidVersionToolTip, _versionLabel, _version, "Version is an invalid format and will not be saved.\r\n\r\nValid formats are in the form of Major.Minor[.Build[.Revision]].");
                 }
             }
         }

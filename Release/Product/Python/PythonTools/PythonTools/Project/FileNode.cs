@@ -693,9 +693,10 @@ namespace Microsoft.PythonTools.Project
             this.Parent.RemoveChild(this);
             this.ProjectMgr.ItemIdMap.Add(this);
             this.ItemNode.Item.Xml.Include = CommonUtils.CreateFriendlyFilePath(ProjectMgr.BaseURI.Uri.LocalPath, newFileName);
+            this.ItemNode.RefreshProperties();
+            this.ProjectMgr.SetProjectFileDirty(true);
 
             this.Parent.AddChild(this);
-            this.ItemNode.RefreshProperties();
 
             this.ReDraw(UIHierarchyElement.Caption);
 

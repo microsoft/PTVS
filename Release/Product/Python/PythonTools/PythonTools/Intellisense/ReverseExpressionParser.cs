@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } while (enumerator.MoveNext());
             }
 
-            if (start.HasValue && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0) {
+            if (start.HasValue && lastToken != null && (lastToken.Span.End.Position - start.Value.Start.Position) >= 0) {
                 return new SnapshotSpan(
                     Snapshot,
                     new Span(

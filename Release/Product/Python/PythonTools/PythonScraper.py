@@ -224,7 +224,10 @@ def generate_module(module_name):
         return None
     if '.' in module_name:
         for name in module_name.split('.')[1:]:
-            module = getattr(module, name)
+            try:
+                module = getattr(module, name)
+            except:
+                module = sys.modules[module_name]
 
     all_members = {}
     module_table = {'members': all_members}
@@ -360,7 +363,6 @@ def write_analysis(mod_name, outpath, analysis):
             try:
                 data[i] = ord(v)
             except:
-                print v
                 pass
             
         saved_analysis = data
@@ -415,10 +417,8 @@ if __name__ == "__main__":
                         pass
 
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
-    if sys.version >= '3':
-        os.walk(site_packages, package_inspector, site_packages)
-    else:
-        os.path.walk(site_packages, package_inspector, site_packages)
+    for root, dirs, files in os.walk(site_packages, package_inspector, site_packages):
+        package_inspector(site_packages, root, files)
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
     f.write('1')

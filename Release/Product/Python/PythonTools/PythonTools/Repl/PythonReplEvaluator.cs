@@ -594,6 +594,9 @@ namespace Microsoft.PythonTools.Repl {
                 using (new SocketLock(this)) {
                     if (Socket == null) {
                         return null;
+                    } else if (!Socket.Connected) {
+                        _eval._window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+                        return ExecutionResult.Failed;
                     }
 
                     Socket.Send(RunCommandBytes);
@@ -623,6 +626,9 @@ namespace Microsoft.PythonTools.Repl {
 
             public OverloadDoc[] GetSignatureDocumentation(ProjectAnalyzer analyzer, string text) {
                 using (new SocketLock(this)) {
+                    if (!Socket.Connected) {
+                        return new OverloadDoc[0];
+                    }
                     Socket.Send(GetSignaturesCommandBytes);
                     SendString(text);
                 }
@@ -638,8 +644,11 @@ namespace Microsoft.PythonTools.Repl {
             public MemberResult[] GetMemberNames(ProjectAnalyzer analyzer, string text) {
                 _completionResultEvent.Reset();
                 _memberResults = null;
-
+                
                 using (new SocketLock(this)) {
+                    if (!Socket.Connected) {
+                        return new MemberResult[0];
+                    }
                     Socket.Send(GetMembersCommandBytes);
                     SendString(text);
                 }
