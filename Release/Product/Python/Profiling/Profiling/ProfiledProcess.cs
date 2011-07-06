@@ -130,7 +130,11 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private string GetPerfToolsPath() {
+#if DEV11
+            RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\VisualStudio\11.0");
+#else
             RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\VisualStudio\10.0");
+#endif
             var shFolder = key.GetValue("ShellFolder") as string;
             if (shFolder == null) {
                 throw new InvalidOperationException("Cannot find shell folder for Visual Studio");

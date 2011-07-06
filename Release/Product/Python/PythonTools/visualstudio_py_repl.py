@@ -493,10 +493,16 @@ class BasicReplBackend(ReplBackend):
                     sys.stderr.write('KeyboardInterrupt')
                 else:
                     # let IronPython format the exception so users can do -X:ExceptionDetail or -X:ShowClrExceptions
-                    exc_next = exc_tb.tb_next.tb_next
+                    if exc_tb.tb_next is not None:
+                        exc_next = exc_tb.tb_next.tb_next
+                    else:
+                        exc_next = None
                     sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
             else:
-                exc_next = exc_tb.tb_next.tb_next
+                if exc_tb.tb_next is not None:
+                    exc_next = exc_tb.tb_next.tb_next
+                else:
+                    exc_next = None
                 sys.__stdout__.write('sending error')
                 sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
                 sys.__stdout__.write('done error')

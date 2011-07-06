@@ -591,23 +591,29 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
+            static string _noReplProcess = "Current interactive window is disconnected or has not completed starting up." + Environment.NewLine + "Please reset the process or wait for it to start." + Environment.NewLine;
             public Task<ExecutionResult> ExecuteText(string text) {
                 using (new SocketLock(this)) {
                     if (Socket == null) {
                         return null;
                     } else if (!Socket.Connected) {
-                        _eval._window.WriteError("Current interactive window is disconnected or has not completed starting up." + Environment.NewLine);
+                        _eval._window.WriteError(_noReplProcess);
+                        return ExecutionResult.Failed;
+                    }
+                    try {
+                        Socket.Send(RunCommandBytes);
+
+                        // normalize line endings to \n which is all older versions of CPython can handle.
+                        text = text.Replace("\r\n", "\n");
+                        text = text.Replace("\r", "\n");
+                        text = text.TrimEnd(' ');
+                        _completion = new TaskCompletionSource<ExecutionResult>();
+                        SendString(text);
+                    } catch (SocketException) {
+                        _eval._window.WriteError(_noReplProcess);
                         return ExecutionResult.Failed;
                     }
 
-                    Socket.Send(RunCommandBytes);
-
-                    // normalize line endings to \n which is all older versions of CPython can handle.
-                    text = text.Replace("\r\n", "\n");
-                    text = text.Replace("\r", "\n");
-                    text = text.TrimEnd(' ');
-                    _completion = new TaskCompletionSource<ExecutionResult>();
-                    SendString(text);
                     return _completion.Task;
                 }
             }
@@ -630,8 +636,12 @@ namespace Microsoft.PythonTools.Repl {
                     if (_connected || !Socket.Connected) {
                         return new OverloadDoc[0];
                     }
-                    Socket.Send(GetSignaturesCommandBytes);
-                    SendString(text);
+                    try {
+                        Socket.Send(GetSignaturesCommandBytes);
+                        SendString(text);
+                    } catch (SocketException) {
+                        return new OverloadDoc[0];
+                    }
                 }
 
                 if (_completionResultEvent.WaitOne(1000)) {
@@ -650,8 +660,12 @@ namespace Microsoft.PythonTools.Repl {
                     if (!_connected || !Socket.Connected) {
                         return new MemberResult[0];
                     }
-                    Socket.Send(GetMembersCommandBytes);
-                    SendString(text);
+                    try {
+                        Socket.Send(GetMembersCommandBytes);
+                        SendString(text);
+                    } catch (SocketException) {
+                        return new MemberResult[0];
+                    }
                 }
 
                 if (_completionResultEvent.WaitOne(1000) && _memberResults != null) {
