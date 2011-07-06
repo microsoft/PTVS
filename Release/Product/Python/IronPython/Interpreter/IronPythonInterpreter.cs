@@ -98,13 +98,18 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private void LoadModules() {
             var names = _engine.Operations.GetMember<PythonTuple>(_engine.GetSysModule(), "builtin_module_names");
             foreach (string modName in names) {
-                PythonModule mod = Importer.Import(_codeContextCls, modName, PythonOps.EmptyTuple, 0) as PythonModule;
-                Debug.Assert(mod != null);
+                try {
+                    PythonModule mod = Importer.Import(_codeContextCls, modName, PythonOps.EmptyTuple, 0) as PythonModule;
+                    Debug.Assert(mod != null);
 
-                if (modName == "__builtin__") {
-                    _modules[modName] = new IronPythonBuiltinModule(this, mod, modName);
-                } else {
-                    _modules[modName] = new IronPythonModule(this, mod, modName);
+                    if (modName == "__builtin__") {
+                        _modules[modName] = new IronPythonBuiltinModule(this, mod, modName);
+                    } else {
+                        _modules[modName] = new IronPythonModule(this, mod, modName);
+                    }
+                } catch {
+                    // importing can throw, ignore that module
+                    continue;
                 }
             }
        }
@@ -131,16 +136,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
        
 
         internal static string GetPythonInstallDir() {
-#if DEBUG
-            string result = Environment.GetEnvironmentVariable("DLR_ROOT");
-            if (result != null) {
-                result = Path.Combine(result, @"Bin\Debug");
-                if (IronPythonExistsIn(result)) {
-                    return result;
-                }
-            }
-#endif
-
             using (var ipy = Registry.LocalMachine.OpenSubKey("SOFTWARE\\IronPython")) {
                 if (ipy != null) {
                     using (var twoSeven = ipy.OpenSubKey("2.7")) {
@@ -168,11 +163,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         // ignore
                     }
                 }
-            }
-
-            string extensionDir = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.GetFiles()[0].Name);
-            if (IronPythonExistsIn(extensionDir)) {
-                return extensionDir;
             }
 
             return null;

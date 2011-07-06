@@ -7,6 +7,7 @@ except ImportError:
 import threading
 import sys
 import socket
+import select
 import time
 import struct
 import imp
@@ -109,7 +110,18 @@ actual inspection and introspection."""
                 # has it's own format which we must parse before continuing to
                 # the next command.
                 self.flush()                
-                inp = self.conn.recv(4)
+                self.conn.settimeout(10)
+                
+                try:
+                    inp = self.conn.recv(4)
+                except socket.timeout:
+                    r, w, x = select.select([], [], [self.conn], 0)
+                    if x:
+                        # an exception event has occured on the socket...
+                        raise
+                    continue
+
+                self.conn.settimeout(None)
                 if inp == '':
                     break
                 self.flush()
@@ -120,10 +132,16 @@ actual inspection and introspection."""
         except:
             _debug_write('error in repl loop')
             _debug_write(traceback.format_exc())
-            try:
-                self.interrupt_main()
-            finally:
-                self.exit_process()
+            self.exit_process()
+            
+            time.sleep(2) # try and exit gracefully, then interrupt main if necessary
+            
+            if sys.platform == 'cli':
+                # just kill us as fast as possible
+                import System
+                System.Environment.Exit(1)
+
+            self.interrupt_main()
 
     def _send(self, *data):
         self.send_lock.acquire()

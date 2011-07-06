@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Commands {
         internal static IReplWindow/*!*/ EnsureReplWindow(IPythonInterpreterFactory factory) {
             var compModel = PythonToolsPackage.ComponentModel;
             var provider = compModel.GetService<IReplWindowProvider>();
-
+            
             string replId = PythonReplEvaluatorProvider.GetReplId(factory);
             var window = provider.FindReplWindow(replId);
             if (window == null) {
@@ -70,26 +70,37 @@ namespace Microsoft.PythonTools.Commands {
 
         private void QueryStatusMethod(object sender, EventArgs args) {
             var oleMenu = sender as OleMenuCommand;
-
-            IWpfTextView textView;
-            var pyProj = CommonPackage.GetStartupProject() as PythonProjectNode;
-            if (pyProj != null) {
-                // startup project, enabled in Start in REPL mode.
+            ProjectAnalyzer analyzer;
+            string filename, dir;
+            if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer) ||
+                analyzer.InterpreterFactory.Id == PythonToolsPackage._noInterpretersFactoryGuid) {
+                // no interpreters installed, disable the command.
                 oleMenu.Visible = true;
-                oleMenu.Enabled = true;
-                oleMenu.Supported = true;
-                oleMenu.Text = "Execute Project in P&ython Interactive";
-            } else if ((textView = CommonPackage.GetActiveTextView()) != null &&
-                textView.TextBuffer.ContentType == PythonToolsPackage.Instance.ContentType) {
-                // enabled in Execute File mode...
-                oleMenu.Visible = true;
-                oleMenu.Enabled = true;
-                oleMenu.Supported = true;
-                oleMenu.Text = "Execute File in P&ython Interactive";
-            } else {
-                oleMenu.Visible = false;
                 oleMenu.Enabled = false;
-                oleMenu.Supported = false;
+                oleMenu.Supported = true;
+            } else {
+                var window = (IReplWindow)EnsureReplWindow(analyzer);
+
+                IWpfTextView textView;
+                var pyProj = CommonPackage.GetStartupProject() as PythonProjectNode;
+                if (pyProj != null) {
+                    // startup project, enabled in Start in REPL mode.
+                    oleMenu.Visible = true;
+                    oleMenu.Enabled = true;
+                    oleMenu.Supported = true;
+                    oleMenu.Text = "Execute Project in P&ython Interactive";
+                } else if ((textView = CommonPackage.GetActiveTextView()) != null &&
+                    textView.TextBuffer.ContentType == PythonToolsPackage.Instance.ContentType) {
+                    // enabled in Execute File mode...
+                    oleMenu.Visible = true;
+                    oleMenu.Enabled = true;
+                    oleMenu.Supported = true;
+                    oleMenu.Text = "Execute File in P&ython Interactive";
+                } else {
+                    oleMenu.Visible = false;
+                    oleMenu.Enabled = false;
+                    oleMenu.Supported = false;
+                }
             }
         }
 
@@ -100,7 +111,7 @@ namespace Microsoft.PythonTools.Commands {
                 // TODO: Error reporting
                 return;
             }
-
+            
             var window = (IReplWindow)EnsureReplWindow(analyzer);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 

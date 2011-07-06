@@ -92,13 +92,29 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Lowest;
-            using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.Read))) {
-                try {
-                    new PyLibAnalyzer(dirs, indir, version).AnalyzeStdLib(writer, outdir);
-                } catch (Exception e) {
-                    Console.WriteLine("Error while saving analysis: {0}", e.ToString());
-                    Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
-                    return -3;
+            try {
+                using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.Read))) {
+                    try {
+                        new PyLibAnalyzer(dirs, indir, version).AnalyzeStdLib(writer, outdir);
+                    } catch (Exception e) {
+                        Console.WriteLine("Error while saving analysis: {0}", e.ToString());
+                        Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
+                        return -3;
+                    }
+                }
+            } catch (IOException) {
+                // another process is already analyzing this project.  This happens when we have 2 VSs started at the same time w/o the
+                // database being created yet.  Wait for that process to finish and then we can exit ourselves and both VS's will pick 
+                // up the new analysis.
+
+                while (true) {
+                    try {
+                        using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))) {
+                            break;
+                        }
+                    } catch (IOException) {
+                        Thread.Sleep(20000);
+                    }
                 }
             }
 

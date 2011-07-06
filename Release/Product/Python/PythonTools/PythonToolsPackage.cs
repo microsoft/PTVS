@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ImportWarning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.IndentationError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.IndexError", State = enum_EXCEPTION_STATE.EXCEPTION_JUST_MY_CODE_SUPPORTED)]
-    [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.KeyError")]
+    [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.KeyError", State = enum_EXCEPTION_STATE.EXCEPTION_JUST_MY_CODE_SUPPORTED)]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.KeyboardInterrupt")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.LookupError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.MemoryError")]
@@ -289,7 +289,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private static Guid _noInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
+        internal static Guid _noInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
         private static IPythonInterpreterFactory _noInterpretersFactory;
 
         internal IPythonInterpreterFactory GetDefaultInterpreter(IPythonInterpreterFactory[] factories) {

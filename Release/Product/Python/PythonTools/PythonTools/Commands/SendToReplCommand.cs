@@ -55,7 +55,12 @@ namespace Microsoft.PythonTools.Commands {
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView();
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                if (activeView.Selection.IsEmpty || activeView.Selection.Mode == TextSelectionMode.Box) {
+                var analyzer = activeView.GetAnalyzer();
+
+                if (activeView.Selection.IsEmpty || 
+                    activeView.Selection.Mode == TextSelectionMode.Box ||
+                    analyzer == null || 
+                    analyzer.InterpreterFactory.Id == PythonToolsPackage._noInterpretersFactoryGuid) {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
                 } else {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);

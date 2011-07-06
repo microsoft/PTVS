@@ -150,6 +150,7 @@ class ExceptionBreakInfo(object):
         self.handler_cache = { }
         self.handler_lock = thread.allocate_lock()
         self.AddException('exceptions.IndexError', BREAK_MODE_NEVER)
+        self.AddException('exceptions.KeyError', BREAK_MODE_NEVER)
         self.AddException('exceptions.AttributeError', BREAK_MODE_NEVER)
         self.AddException('exceptions.StopIteration', BREAK_MODE_NEVER)
     

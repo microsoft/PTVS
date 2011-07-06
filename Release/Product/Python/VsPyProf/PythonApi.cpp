@@ -18,7 +18,11 @@
 
 VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
 	wchar_t buffer[MAX_PATH];
+#if DEV11
+	const wchar_t *dllName = L"\\System32\\VsPerf110.dll";
+#else
 	const wchar_t *dllName = L"\\System32\\VsPerf100.dll";
+#endif
 
 	if (!GetWindowsDirectory(buffer, MAX_PATH) ||
 		(wcslen(buffer) + wcslen(dllName) + 1) > MAX_PATH ||

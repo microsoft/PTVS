@@ -118,6 +118,11 @@
       <AdditionalOptions>/debugtype:cv,fixup %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(VSTarget)' == '11.0'">
+    <ClCompile>
+      <PreprocessorDefinitions>DEV11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="python.h" />
     <ClInclude Include="PythonApi.h" />

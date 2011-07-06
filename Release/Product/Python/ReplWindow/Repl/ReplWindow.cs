@@ -420,6 +420,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         protected override void OnClose() {
             TextView.Close();
+            _evaluator.Dispose();
             base.OnClose();
         }
 
@@ -552,6 +553,10 @@ namespace Microsoft.VisualStudio.Repl {
                 return;
             }
 
+            if (_stdInputStart != null) {
+                CancelStandardInput();
+            }
+
             RemoveProtection();
             
             _adornmentToMinimize = false;
@@ -603,13 +608,15 @@ namespace Microsoft.VisualStudio.Repl {
                 return;
             }
 
-            if (_isRunning) {
-                AppendUncommittedInput(text);
-            } else {
-                if (!TextView.Selection.IsEmpty) {
-                    CutOrDeleteSelection(false);
+            if (_stdInputStart == null) {
+                if (_isRunning) {
+                    AppendUncommittedInput(text);
+                } else {
+                    if (!TextView.Selection.IsEmpty) {
+                        CutOrDeleteSelection(false);
+                    }
+                    _editorOperations.InsertText(text);
                 }
-                _editorOperations.InsertText(text);
             }
         }
 
@@ -619,12 +626,14 @@ namespace Microsoft.VisualStudio.Repl {
                 return;
             }
 
-            if (!_isRunning && _currentLanguageBuffer != null) {
-                StoreUncommittedInput();
-                PendSubmissions(inputs);
-                ProcessPendingSubmissions();
-            } else {
-                PendSubmissions(inputs);
+            if (_stdInputStart == null) {
+                if (!_isRunning && _currentLanguageBuffer != null) {
+                    StoreUncommittedInput();
+                    PendSubmissions(inputs);
+                    ProcessPendingSubmissions();
+                } else {
+                    PendSubmissions(inputs);
+                }
             }
         }
 
@@ -641,7 +650,11 @@ namespace Microsoft.VisualStudio.Repl {
         /// <summary>
         /// See IReplWindow
         /// </summary>
-        public void Reset() {
+        public void Reset() {            
+            if (_stdInputStart != null) {
+                UIThread(CancelStandardInput);
+            }
+
             WriteLine("Resetting execution engine");
             Evaluator.Reset();
 
@@ -935,61 +948,57 @@ namespace Microsoft.VisualStudio.Repl {
                     this.SessionStack.TopSession.Dismiss();
                 }
 
-                if (!_isRunning && !_displayPromptInMargin) {
-                    var caret = Caret;
+                var caret = Caret;
 
-                    // map the end of the current language line (if applicable).
-                    var langLineEndPoint = TextView.BufferGraph.MapDownToFirstMatch(
-                        caret.Position.BufferPosition.GetContainingLine().End,
-                        PointTrackingMode.Positive,
-                        x => x.TextBuffer.ContentType == _languageContentType,
-                        PositionAffinity.Successor);
+                // map the end of the current language line (if applicable).
+                var langLineEndPoint = TextView.BufferGraph.MapDownToFirstMatch(
+                    caret.Position.BufferPosition.GetContainingLine().End,
+                    PointTrackingMode.Positive,
+                    x => x.TextBuffer.ContentType == _languageContentType,
+                    PositionAffinity.Successor);
 
-                    if (langLineEndPoint == null) {
-                        // we're on some random line that doesn't include language buffer, just go to the start of the buffer
-                        _editorOperations.MoveToStartOfLine(extendSelection);
-                    } else {
-                        var projectionLine = caret.Position.BufferPosition.GetContainingLine();
-                        ITextSnapshotLine langLine = langLineEndPoint.Value.Snapshot.GetLineFromPosition(langLineEndPoint.Value.Position);
-
-                        var projectionPoint = TextView.BufferGraph.MapUpToBuffer(
-                            langLine.Start, 
-                            PointTrackingMode.Positive, 
-                            PositionAffinity.Successor, 
-                            _projectionBuffer
-                        );
-                        Debug.Assert(projectionPoint != null);
-
-                        //
-                        // If the caret is already at the first non-whitespace character or
-                        // the line is entirely whitepsace, move to the start of the view line.
-                        // See (EditorOperations.MoveToHome).
-                        //
-                        // If the caret is in the prompt move the caret to the begining of the language line.
-                        //
-                        
-                        int firstNonWhiteSpace = IndexOfNonWhiteSpaceCharacter(langLine);
-                        SnapshotPoint moveTo;
-                        if (firstNonWhiteSpace == -1 || 
-                            projectionPoint.Value.Position + firstNonWhiteSpace == caret.Position.BufferPosition ||
-                            caret.Position.BufferPosition < projectionPoint.Value.Position) {
-                            moveTo = projectionPoint.Value;
-                        } else {
-                            moveTo = projectionPoint.Value + firstNonWhiteSpace;
-                        }
-
-                        if (extendSelection) {
-                            VirtualSnapshotPoint anchor = TextView.Selection.AnchorPoint;
-                            caret.MoveTo(moveTo);
-                            TextView.Selection.Select(anchor.TranslateTo(TextView.TextSnapshot), TextView.Caret.Position.VirtualBufferPosition);
-                        } else {
-                            TextView.Selection.Clear();
-                            caret.MoveTo(moveTo);
-                        }
-                    }
-                } else {
+                if (langLineEndPoint == null) {
+                    // we're on some random line that doesn't include language buffer, just go to the start of the buffer
                     _editorOperations.MoveToStartOfLine(extendSelection);
-                }
+                } else {
+                    var projectionLine = caret.Position.BufferPosition.GetContainingLine();
+                    ITextSnapshotLine langLine = langLineEndPoint.Value.Snapshot.GetLineFromPosition(langLineEndPoint.Value.Position);
+
+                    var projectionPoint = TextView.BufferGraph.MapUpToBuffer(
+                        langLine.Start, 
+                        PointTrackingMode.Positive, 
+                        PositionAffinity.Successor, 
+                        _projectionBuffer
+                    );
+                    Debug.Assert(projectionPoint != null);
+
+                    //
+                    // If the caret is already at the first non-whitespace character or
+                    // the line is entirely whitepsace, move to the start of the view line.
+                    // See (EditorOperations.MoveToHome).
+                    //
+                    // If the caret is in the prompt move the caret to the begining of the language line.
+                    //
+                        
+                    int firstNonWhiteSpace = IndexOfNonWhiteSpaceCharacter(langLine);
+                    SnapshotPoint moveTo;
+                    if (firstNonWhiteSpace == -1 || 
+                        projectionPoint.Value.Position + firstNonWhiteSpace == caret.Position.BufferPosition ||
+                        caret.Position.BufferPosition < projectionPoint.Value.Position) {
+                        moveTo = projectionPoint.Value;
+                    } else {
+                        moveTo = projectionPoint.Value + firstNonWhiteSpace;
+                    }
+
+                    if (extendSelection) {
+                        VirtualSnapshotPoint anchor = TextView.Selection.AnchorPoint;
+                        caret.MoveTo(moveTo);
+                        TextView.Selection.Select(anchor.TranslateTo(TextView.TextSnapshot), TextView.Caret.Position.VirtualBufferPosition);
+                    } else {
+                        TextView.Selection.Clear();
+                        caret.MoveTo(moveTo);
+                    }
+                }                
             });
         }
 
@@ -1004,44 +1013,40 @@ namespace Microsoft.VisualStudio.Repl {
                     this.SessionStack.TopSession.Dismiss();
                 }
 
-                if (!_isRunning && !_displayPromptInMargin) {
-                    var caret = Caret;
+                var caret = Caret;
 
-                    // map the end of the current language line (if applicable).
-                    var langLineEndPoint = TextView.BufferGraph.MapDownToFirstMatch(
-                        caret.Position.BufferPosition.GetContainingLine().End,
-                        PointTrackingMode.Positive,
-                        x => x.TextBuffer.ContentType == _languageContentType,
-                        PositionAffinity.Successor);
+                // map the end of the current language line (if applicable).
+                var langLineEndPoint = TextView.BufferGraph.MapDownToFirstMatch(
+                    caret.Position.BufferPosition.GetContainingLine().End,
+                    PointTrackingMode.Positive,
+                    x => x.TextBuffer.ContentType == _languageContentType,
+                    PositionAffinity.Successor);
 
-                    if (langLineEndPoint == null) {
-                        // we're on some random line that doesn't include language buffer, just go to the start of the buffer
-                        _editorOperations.MoveToEndOfLine(extendSelection);
-                    } else {
-                        var projectionLine = caret.Position.BufferPosition.GetContainingLine();
-                        ITextSnapshotLine langLine = langLineEndPoint.Value.Snapshot.GetLineFromPosition(langLineEndPoint.Value.Position);
-
-                        var projectionPoint = TextView.BufferGraph.MapUpToBuffer(
-                            langLine.End,
-                            PointTrackingMode.Positive,
-                            PositionAffinity.Successor,
-                            _projectionBuffer
-                        );
-                        Debug.Assert(projectionPoint != null);
-
-                        var moveTo = projectionPoint.Value;
-
-                        if (extendSelection) {
-                            VirtualSnapshotPoint anchor = TextView.Selection.AnchorPoint;
-                            caret.MoveTo(moveTo);
-                            TextView.Selection.Select(anchor.TranslateTo(TextView.TextSnapshot), TextView.Caret.Position.VirtualBufferPosition);
-                        } else {
-                            TextView.Selection.Clear();
-                            caret.MoveTo(moveTo);
-                        }
-                    }
-                } else {
+                if (langLineEndPoint == null) {
+                    // we're on some random line that doesn't include language buffer, just go to the start of the buffer
                     _editorOperations.MoveToEndOfLine(extendSelection);
+                } else {
+                    var projectionLine = caret.Position.BufferPosition.GetContainingLine();
+                    ITextSnapshotLine langLine = langLineEndPoint.Value.Snapshot.GetLineFromPosition(langLineEndPoint.Value.Position);
+
+                    var projectionPoint = TextView.BufferGraph.MapUpToBuffer(
+                        langLine.End,
+                        PointTrackingMode.Positive,
+                        PositionAffinity.Successor,
+                        _projectionBuffer
+                    );
+                    Debug.Assert(projectionPoint != null);
+
+                    var moveTo = projectionPoint.Value;
+
+                    if (extendSelection) {
+                        VirtualSnapshotPoint anchor = TextView.Selection.AnchorPoint;
+                        caret.MoveTo(moveTo);
+                        TextView.Selection.Select(anchor.TranslateTo(TextView.TextSnapshot), TextView.Caret.Position.VirtualBufferPosition);
+                    } else {
+                        TextView.Selection.Clear();
+                        caret.MoveTo(moveTo);
+                    }
                 }
             });
         }
@@ -1268,7 +1273,7 @@ namespace Microsoft.VisualStudio.Repl {
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.cmdidBreakRepl:
-                        prgCmds[0].cmdf = _isRunning ? CommandEnabled : CommandDisabled;
+                        prgCmds[0].cmdf = _isRunning || _stdInputStart != null ? CommandEnabled : CommandDisabled;
                         return VSConstants.S_OK;
                 }
             }
@@ -1390,11 +1395,11 @@ namespace Microsoft.VisualStudio.Repl {
 
                     case VSConstants.VSStd2KCmdID.EOL:
                         End(false);
-                        break;
+                        return VSConstants.S_OK;
 
                     case VSConstants.VSStd2KCmdID.EOL_EXT:
                         End(true);
-                        break;
+                        return VSConstants.S_OK;
 
                     case VSConstants.VSStd2KCmdID.SHOWCONTEXTMENU:
                         ShowContextMenu();
@@ -1837,28 +1842,29 @@ namespace Microsoft.VisualStudio.Repl {
             _stdInputStart = null;
 
             UIThread(() => {
-                RemoveProtection();
+                // if the user cleared the screen we cancelled the input, so we won't have our span here.
+                if (_projectionSpans[_projectionSpans.Count - 1].Kind == ReplSpanKind.StandardInput) {
+                    RemoveProtection();
 
-                // replace previous span w/ a span that won't grow...
-                Debug.Assert(_projectionSpans[_projectionSpans.Count - 1].Kind == ReplSpanKind.StandardInput);
+                    // replace previous span w/ a span that won't grow...
+                    var newSpan = new ReplSpan(
+                        new CustomTrackingSpan(
+                            _stdInputBuffer.CurrentSnapshot,
+                            _projectionSpans[_projectionSpans.Count - 1].TrackingSpan.GetSpan(_stdInputBuffer.CurrentSnapshot),
+                            PointTrackingMode.Negative,
+                            PointTrackingMode.Negative
+                        ),
+                        ReplSpanKind.StandardInput
+                    );
+                    ReplaceProjectionSpan(_projectionSpans.Count - 1, newSpan);
 
-                var newSpan = new ReplSpan(
-                    new CustomTrackingSpan(
-                        _stdInputBuffer.CurrentSnapshot,
-                        _projectionSpans[_projectionSpans.Count - 1].TrackingSpan.GetSpan(_stdInputBuffer.CurrentSnapshot),
-                        PointTrackingMode.Negative,
-                        PointTrackingMode.Negative
-                    ),
-                    ReplSpanKind.StandardInput
-                );
-                ReplaceProjectionSpan(_projectionSpans.Count - 1, newSpan);
-
-                if (wasRunning) {
-                    _isRunning = true;
-                } else {
-                    PrepareForInput();
+                    if (wasRunning) {
+                        _isRunning = true;
+                    } else {
+                        PrepareForInput();
+                    }
+                    ApplyProtection();
                 }
-                ApplyProtection();
             });
 
             // input has been cancelled:
@@ -1978,14 +1984,14 @@ namespace Microsoft.VisualStudio.Repl {
                         Debug.Assert(lastPrompt + 1 < _projectionSpans.Count);
 
                         var projectionSpan = _projectionSpans[lastPrompt + 1];
-                        Debug.Assert(projectionSpan.Kind == ReplSpanKind.Language);
+                        Debug.Assert(projectionSpan.Kind == ReplSpanKind.Language || projectionSpan.Kind == ReplSpanKind.StandardInput);
 
                         int oldLineNumber = GetSpanProjectionLine(projectionSpan).LineNumber;
                         InsertProjectionSpan(lastPrimaryPrompt, outputSpan);
                         newLine = GetSpanProjectionLine(projectionSpan);
                         int newLineNumber = newLine.LineNumber;
 
-                        Debug.Assert(_projectionSpans.Last().Kind == ReplSpanKind.Language);
+                        Debug.Assert(_projectionSpans.Last().Kind == ReplSpanKind.Language || _projectionSpans.Last().Kind == ReplSpanKind.StandardInput);
 
                         if (oldLineNumber != newLineNumber) {
                             int delta = newLineNumber - oldLineNumber;

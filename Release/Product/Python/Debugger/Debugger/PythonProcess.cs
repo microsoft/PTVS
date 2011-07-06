@@ -361,6 +361,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static string ToDottedNameString(Expression expr, PythonAst ast) {
             NameExpression name;
             MemberExpression member;
+            ParenthesisExpression paren;
             if ((name = expr as NameExpression) != null) {
                 return name.Name;
             } else if ((member = expr as MemberExpression) != null) {
@@ -370,6 +371,8 @@ namespace Microsoft.PythonTools.Debugger {
                 if (member.Target is NameExpression) {
                     return expr.ToCodeString(ast);
                 }
+            } else if ((paren = expr as ParenthesisExpression) != null) {
+                return ToDottedNameString(paren.Expression, ast);
             }
             return null;
         }
@@ -413,6 +416,7 @@ namespace Microsoft.PythonTools.Debugger {
                                     expressions.Add(text);
                                 }
                             }
+                        
                         } else {
                             var text = ToDottedNameString(expr, ast);
                             if (text != null) {
@@ -648,15 +652,16 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleThreadExit(Socket socket) {
             // thread exit
             int threadId = socket.ReadInt();
-            var thread = _threads[threadId];
+            PythonThread thread;
+            if (_threads.TryGetValue(threadId, out thread)) {
+                var exited = ThreadExited;
+                if (exited != null) {
+                    exited(this, new ThreadEventArgs(thread));
+                }
 
-            var exited = ThreadExited;
-            if (exited != null) {
-                exited(this, new ThreadEventArgs(thread));
+                _threads.Remove(threadId);
+                Debug.WriteLine("Thread exited, {0} active threads", _threads.Count);
             }
-
-            _threads.Remove(threadId);
-            Debug.WriteLine("Thread exited, {0} active threads", _threads.Count);
 
         }
 

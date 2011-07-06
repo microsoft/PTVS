@@ -61,7 +61,7 @@ namespace AnalysisTest.UI {
         }
 
         public void WaitForReadyState(int timeout = 500) {
-            Assert.IsTrue(_replWindowInfo.ReadyForInput.WaitOne(500));
+            Assert.IsTrue(_replWindowInfo.ReadyForInput.WaitOne(timeout));
         }
 
         public void WaitForIdleState() {
@@ -184,10 +184,18 @@ namespace AnalysisTest.UI {
             WaitForReadyState();
         }
 
-        public void CancelExecution() {
+        public void CancelExecution(int attempts = 100) {
             Debug.WriteLine("REPL Cancelling Execution");
             _replWindowInfo.ReadyForInput.Reset();
-            VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
+            for (int i = 0; i < attempts; i++) {
+                try {
+                    VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
+                    break;
+                } catch {
+                    // command may not be immediately available
+                    Thread.Sleep(1000);
+                }
+            }
             WaitForReadyState(2000);
         }
 

@@ -413,9 +413,9 @@ namespace AnalysisTest {
 
             interactive.WaitForText(ReplPrompt);
 
-            interactive.CancelExecution();
+            interactive.CancelExecution(1);
 
-            interactive.WaitForText(ReplPrompt, ReplPrompt);
+            interactive.WaitForText(ReplPrompt);
         }
 
         /// <summary>
@@ -465,7 +465,7 @@ namespace AnalysisTest {
                     stdInputPrompt + "ignored2"                    
                 );
 
-                interactive.CancelExecution();
+                interactive.CancelExecution(1);
 
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()",
@@ -1907,7 +1907,7 @@ $cls
                 interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
                 var helpSession = interactive.WaitForSession<ISignatureHelpSession>();
-                Assert.AreEqual(helpSession.SelectedSignature.Documentation, "<no docstring>");
+                Assert.AreEqual(helpSession.SelectedSignature.Documentation, null);
 
                 Keyboard.PressAndRelease(Key.Escape);
 

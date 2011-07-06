@@ -94,8 +94,8 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             } else if (values.Count + definitions.Count == 0) {
-                if (references.Count != 0) {
-                    ShowFindSymbolsDialog(analysis, new SymbolList("References", StandardGlyphGroup.GlyphReference, references.Values));
+                if (String.IsNullOrWhiteSpace(analysis.Expression)) {
+                    MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."));
                 } else {
                     MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", analysis.Expression));
                 }

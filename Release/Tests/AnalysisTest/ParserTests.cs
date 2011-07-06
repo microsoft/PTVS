@@ -73,6 +73,7 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -109,6 +110,7 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
@@ -120,6 +122,7 @@ namespace AnalysisTest {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -137,6 +140,7 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -173,6 +177,7 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
@@ -184,6 +189,7 @@ namespace AnalysisTest {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -201,6 +207,7 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -236,6 +243,7 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
@@ -243,6 +251,7 @@ namespace AnalysisTest {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax, set literals require Python 2.7 or later.", 1521, 161, 7, 1522, 161, 8)
             );
@@ -260,6 +269,7 @@ namespace AnalysisTest {
                 new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
                 new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                 new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
+                new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                 new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                 new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                 new ErrorInfo("print statement expected expression to be printed", 297, 28, 1, 311, 28, 15),
@@ -295,6 +305,7 @@ namespace AnalysisTest {
                 new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                 new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
@@ -302,6 +313,7 @@ namespace AnalysisTest {
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                 new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                 new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
+                new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                 new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                 new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
             );
@@ -321,6 +333,7 @@ namespace AnalysisTest {
                     new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                     new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
                     new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
+                    new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
                     new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
                     new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
                     new ErrorInfo("'continue' not supported inside 'finally' clause", 374, 34, 9, 382, 34, 17),
@@ -356,6 +369,7 @@ namespace AnalysisTest {
                     new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                     new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                     new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
+                    new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
                     new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
@@ -367,6 +381,7 @@ namespace AnalysisTest {
                     new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
                     new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
                     new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
+                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
                     new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
                     new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
                 );

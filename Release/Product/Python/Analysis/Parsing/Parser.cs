@@ -1962,6 +1962,7 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
 
                 default:
+                    ReportSyntaxError(_lookahead);
                     NextToken();
                     parameter = new ErrorParameter(_verbatim ? Error(_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
                     break;
