@@ -253,7 +253,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     // Handle "import *"
                     if (userMod != null) {
                         foreach (var varName in GetModuleKeys(userMod)) {
-                            WalkFromImportWorker(nameNode, userMod, varName, null);
+                            if (!varName.StartsWith("_")) {
+                                WalkFromImportWorker(nameNode, userMod, varName, null);
+                            }
                         }
                     }
                 } else {

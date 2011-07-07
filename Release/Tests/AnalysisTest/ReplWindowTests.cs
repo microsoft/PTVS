@@ -413,7 +413,11 @@ namespace AnalysisTest {
 
             interactive.WaitForText(ReplPrompt);
 
-            interactive.CancelExecution(1);
+            try {
+                VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
+                Assert.Fail("CancelExecution should not be available");
+            } catch {
+            }
 
             interactive.WaitForText(ReplPrompt);
         }
@@ -440,7 +444,7 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()", 
                     stdInputPrompt + "ignored", 
-                                     UnicodeStringPrefix + "''", 
+                                     "''", 
                     ReplPrompt
                 );
 
@@ -450,7 +454,7 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored",
-                                     UnicodeStringPrefix + "''",
+                                     "''",
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt
                 );
@@ -460,7 +464,7 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored",
-                                     UnicodeStringPrefix + "''",
+                                     "''",
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored2"                    
                 );
@@ -470,10 +474,10 @@ namespace AnalysisTest {
                 interactive.WaitForText(
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored",
-                                     UnicodeStringPrefix + "''",
+                                     "''",
                     ReplPrompt     + RawInput + "()",
                     stdInputPrompt + "ignored2",
-                                     UnicodeStringPrefix + "''",
+                                     "''",
                     ReplPrompt
                 );
             });

@@ -132,6 +132,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         // non-null if reading from stdin - position in the _inputBuffer where we map stdin
         private int? _stdInputStart;
+        private bool _readingStdIn;
         private int _currentInputId = 1;
         private string _inputValue;
         private string _uncommittedInput;
@@ -1140,7 +1141,13 @@ namespace Microsoft.VisualStudio.Repl {
             );
 
             if (point == null || point.Value == 0) {
-                return;
+                point = TextView.BufferGraph.MapDownToBuffer(
+                    caretPosition, PointTrackingMode.Positive, _stdInputBuffer, PositionAffinity.Successor
+                );
+
+                if (point == null || point.Value == 0) {
+                    return;
+                }
             }
 
             var line = point.Value.GetContainingLine();
@@ -1152,7 +1159,7 @@ namespace Microsoft.VisualStudio.Repl {
                 characterSize = 1;
             }
 
-            _currentLanguageBuffer.Delete(new Span(point.Value.Position - characterSize, characterSize));
+            point.Value.Snapshot.TextBuffer.Delete(new Span(point.Value.Position - characterSize, characterSize));
         }
 
         /// <summary>
@@ -1811,19 +1818,18 @@ namespace Microsoft.VisualStudio.Repl {
             Debug.Assert(!CheckAccess());
 
             bool wasRunning = _isRunning;
-
+            _readingStdIn = true;
             UIThread(() => {
                 RemoveProtection();
 
-                // TODO: What do we do if we weren't running?
+                _buffer.Flush();
+
                 if (_isRunning) {
                     _isRunning = false;
                 } else if (_projectionSpans.Count > 0 && _projectionSpans[_projectionSpans.Count - 1].Kind == ReplSpanKind.Language) {
                     // we need to remove our input prompt.
                     RemoveLastInputPrompt();
                 }
-
-                _buffer.Flush();
 
                 AddStandardInputPrompt();
                 AddStandardInputSpan();
@@ -1840,6 +1846,7 @@ namespace Microsoft.VisualStudio.Repl {
 
             _inputEvent.WaitOne();
             _stdInputStart = null;
+            _readingStdIn = false;
 
             UIThread(() => {
                 // if the user cleared the screen we cancelled the input, so we won't have our span here.
@@ -1944,7 +1951,7 @@ namespace Microsoft.VisualStudio.Repl {
             int newOutputLength = text.Length;
             using (var edit = _outputBuffer.CreateEdit()) {
                 edit.Insert(oldBufferLength, text);
-                if (!EndsWithLineBreak(text)) {
+                if (!_readingStdIn && !EndsWithLineBreak(text)) {
                     var lineBreak = GetLineBreak();
                     edit.Insert(oldBufferLength, lineBreak);
                     newOutputLength += lineBreak.Length;
@@ -2297,7 +2304,6 @@ namespace Microsoft.VisualStudio.Repl {
 
         internal void SetCurrentScope(string newItem) {
             string activeCode = GetActiveCode();
-            WriteLine(String.Format("Current scope changed to {0}", newItem));
             ((IMultipleScopeEvaluator)_evaluator).SetScope(newItem);
             SetActiveCode(activeCode);
         }

@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
             var remoteEval = window.Evaluator as PythonReplEvaluator;
-            if(remoteEval != null) {
+            if (remoteEval != null) {
                 remoteEval.SetScope(arguments);
             }
             return ExecutionResult.Succeeded;

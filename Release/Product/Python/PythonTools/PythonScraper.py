@@ -102,7 +102,10 @@ else:
 
 
 def type_to_name(type):
-    return type.__module__, type.__name__
+    if hasattr(type, '__module__'):
+        return type.__module__, type.__name__
+
+    return '', type.__name__
     
 def generate_builtin_function(function):
     function_table = {}
@@ -229,13 +232,16 @@ def generate_module(module_name):
             except:
                 module = sys.modules[module_name]
 
+    if type(module) is not type(sys):
+        return None
+    
     all_members = {}
     module_table = {'members': all_members}
         
     if isinstance(module.__doc__, str):
         module_table['doc'] = module.__doc__
 
-    for attr in module.__dict__:
+    for attr in module:
         attr_value = module.__dict__[attr]
         
         all_members[attr] = generate_member(attr_value)
@@ -243,6 +249,12 @@ def generate_module(module_name):
     return module_table
 
 
+def get_module_members(module):
+    """returns an iterable which gives the names of the module which should be exposed"""
+    if hasattr(module, '__all__'):
+        return module.__all__
+
+    return module.__dict__
 
 if sys.version_info[0] == 2:
     builtin_name = '__builtin__'
@@ -399,10 +411,17 @@ if __name__ == "__main__":
         except ValueError:
             pass
 
+    f = open(os.path.join(outpath, 'database.ver'), 'w')
+    f.write('3')
+
     # inspect extension modules installed into site-packages
     def package_inspector(site_packages, dirname, fnames):
         for filename in fnames:
             if filename.endswith('.pyd'):
+                if filename in ['cseries.pyd', 'opencv_cv.pyd', 'opencv_backend.pyd']:
+                    # these are known to crash the process, 
+                    # better would be to determine these dynamically
+                    continue
                 base_path = dirname[len(site_packages)+1:]
                 package_name = '.'.join(base_path.split('\\'))
                 if package_name:
@@ -419,6 +438,3 @@ if __name__ == "__main__":
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
     for root, dirs, files in os.walk(site_packages, package_inspector, site_packages):
         package_inspector(site_packages, root, files)
-
-    f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('2')

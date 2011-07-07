@@ -28,10 +28,9 @@ namespace Microsoft.PythonTools.Commands {
             string scope;
             if (path != null && (scope = eval.GetScopeByFilename(path)) != null) {
                 // we're now in the correct module, execute the code
-                eval.SetScope(scope);
                 window.Cancel();
                 window.WriteLine(window.GetOptionValue(ReplOptions.PrimaryPrompt) + " $module " + scope);
-                window.WriteLine(String.Format("Current scope changed to {0}", scope));
+                eval.SetScope(scope);
 
                 base.DoCommand(sender, args);
             } else {

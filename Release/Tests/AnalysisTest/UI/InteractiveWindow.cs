@@ -196,7 +196,7 @@ namespace AnalysisTest.UI {
                     Thread.Sleep(1000);
                 }
             }
-            WaitForReadyState(2000);
+            WaitForReadyState(10000);
         }
 
         public IReplWindow ReplWindow {

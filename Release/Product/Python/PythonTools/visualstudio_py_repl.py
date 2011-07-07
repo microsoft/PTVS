@@ -160,7 +160,15 @@ actual inspection and introspection."""
         len, = struct.unpack('i', self.conn.recv(4))
         if not len:
             return ''
-        return self.conn.recv(len).decode('utf8')
+        res = self.conn.recv(len).decode('utf8')
+        if sys.version[0] == '2' and sys.platform != 'cli':
+            # Py 2.x, we want an ASCII string if possible
+            try:
+                res = res.encode('ascii')
+            except UnicodeEncodeError:
+                pass
+
+        return res
     
     def _cmd_run(self):
         """runs the received snippet of code"""

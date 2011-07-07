@@ -255,6 +255,7 @@ namespace Microsoft.PythonTools.Repl {
             internal bool _connected;
             private Socket _socket;
             private TaskCompletionSource<ExecutionResult> _completion;
+            private string _executionText;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _moduleNames;
@@ -289,7 +290,13 @@ namespace Microsoft.PythonTools.Repl {
                 byte[] cmd_buffer = new byte[4];
                 try {
                     _socket = _socket.Accept();
-                    _connected = true;
+                    using (new SocketLock(this)) {
+                        _connected = true;
+                        if (_executionText != null) {
+                            SendExecuteText(_executionText);
+                            _executionText = null;
+                        }
+                    }
 
                     Socket socket;
                     while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
@@ -595,24 +602,23 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            static string _noReplProcess = "Current interactive window is disconnected or has not completed starting up." + Environment.NewLine + "Please reset the process or wait for it to start." + Environment.NewLine;
+            static string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;
             public Task<ExecutionResult> ExecuteText(string text) {
                 using (new SocketLock(this)) {
-                    if (Socket == null) {
-                        return null;
+                    if (!_connected) {
+                        // delay executing the text until we're connected
+                        _completion = new TaskCompletionSource<ExecutionResult>();
+                        _executionText = text;
+                        return _completion.Task;
                     } else if (!Socket.Connected) {
                         _eval._window.WriteError(_noReplProcess);
                         return ExecutionResult.Failed;
                     }
-                    try {
-                        Socket.Send(RunCommandBytes);
 
-                        // normalize line endings to \n which is all older versions of CPython can handle.
-                        text = text.Replace("\r\n", "\n");
-                        text = text.Replace("\r", "\n");
-                        text = text.TrimEnd(' ');
+                    try {
                         _completion = new TaskCompletionSource<ExecutionResult>();
-                        SendString(text);
+
+                        SendExecuteText(text);
                     } catch (SocketException) {
                         _eval._window.WriteError(_noReplProcess);
                         return ExecutionResult.Failed;
@@ -620,6 +626,16 @@ namespace Microsoft.PythonTools.Repl {
 
                     return _completion.Task;
                 }
+            }
+
+            private void SendExecuteText(string text) {
+                Socket.Send(RunCommandBytes);
+
+                // normalize line endings to \n which is all older versions of CPython can handle.
+                text = text.Replace("\r\n", "\n");
+                text = text.Replace("\r", "\n");
+                text = text.TrimEnd(' ');
+                SendString(text);
             }
 
             public void ExecuteFile(string filename) {
@@ -637,7 +653,7 @@ namespace Microsoft.PythonTools.Repl {
 
             public OverloadDoc[] GetSignatureDocumentation(ProjectAnalyzer analyzer, string text) {
                 using (new SocketLock(this)) {
-                    if (_connected || !Socket.Connected) {
+                    if (!Socket.Connected || _connected) {
                         return new OverloadDoc[0];
                     }
                     try {
@@ -661,7 +677,7 @@ namespace Microsoft.PythonTools.Repl {
                 _memberResults = null;
                 
                 using (new SocketLock(this)) {
-                    if (!_connected || !Socket.Connected) {
+                    if (!Socket.Connected || !_connected) {
                         return new MemberResult[0];
                     }
                     try {
@@ -699,10 +715,16 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public void SetScope(string scopeName) {
-                using (new SocketLock(this)) {
-                    Socket.Send(SetModuleCommandBytes);
-                    SendString(scopeName);
-                    _currentScope = scopeName;
+                try {
+                    using (new SocketLock(this)) {
+                        Socket.Send(SetModuleCommandBytes);
+                        SendString(scopeName);
+                        _currentScope = scopeName;
+
+                        _eval._window.WriteLine(String.Format("Current module changed to {0}", scopeName));
+                    }
+                } catch (SocketException) {
+                    _eval._window.WriteLine("Cannot change module, interactive window is disconnected.");
                 }
             }
 
@@ -947,15 +969,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (_curListener != null) {
-                for (int i = 0; i < 2; i++) {
-                    Task<ExecutionResult> result = _curListener.ExecuteText(text);
-                    if (result != null) {
-                        return result;
-                    }
-
-                    // we've become disconnected, try again 1 time
-                    Reset();
-                }
+                return _curListener.ExecuteText(text);
             } else {
                 _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
             }
