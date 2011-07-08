@@ -418,11 +418,15 @@ if sys.platform == 'cli':
 
     from System import DBNull, ParamArrayAttribute
     builtin_method_descriptor_type = type(list.append)
+    
+    import System
+    NamespaceType = type(System)
 
 class _OldClass:
     pass
 
 _OldClassType = type(_OldClass)
+_OldInstanceType = type(_OldClass())
 
 class BasicReplBackend(ReplBackend):
     future_bits = 0x3e010   # code flags used to mark future bits
@@ -719,10 +723,27 @@ class BasicReplBackend(ReplBackend):
             try:
                 if (name == '__main__' or 
                    (name != 'visualstudio_py_repl' and module.__file__ is not None)):
-                    res.append((name, module.__file__))
+
+                    if sys.platform == 'cli' and type(module) is NamespaceType:
+                        self.get_namespaces(name, module, res)
+                    else:
+                        res.append((name, module.__file__))
+
             except:
                 pass
         return res
+    
+    def get_namespaces(self, basename, namespace, names):
+        names.append((basename, ''))
+        try:
+            for name in dir(namespace):
+                new_name = basename + '.' + name
+                new_namespace = getattr(namespace, name)
+
+                if type(new_namespace) is NamespaceType:
+                    self.get_namespaces(new_name, new_namespace, names)
+        except:
+            pass
     
     def flush(self):
         sys.stdout.flush()
@@ -755,6 +776,8 @@ class BasicReplBackend(ReplBackend):
         try:
             if from_dict:
                 val = inst.__dict__[name] 
+            elif type(inst) is _OldInstanceType:
+                val = getattr(inst.__class__, name)
             else:
                 val = getattr(type(inst), name)
             mem_t_name = BasicReplBackend.get_type_name(val)

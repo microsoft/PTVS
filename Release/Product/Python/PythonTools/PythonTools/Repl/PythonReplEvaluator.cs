@@ -258,7 +258,8 @@ namespace Microsoft.PythonTools.Repl {
             private string _executionText;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
-            private Dictionary<string, string> _moduleNames;
+            private Dictionary<string, string> _fileToModuleName;
+            private Dictionary<string, bool> _allModules;
             private StringBuilder _preConnectionOutput;
             internal string _currentScope = "__main__";
             private MemberResults _memberResults;
@@ -520,12 +521,20 @@ namespace Microsoft.PythonTools.Repl {
             private void HandleModuleList() {
                 int moduleCount = Socket.ReadInt();
                 Dictionary<string, string> moduleNames = new Dictionary<string, string>();
+                Dictionary<string, bool> allModules = new Dictionary<string, bool>();
                 for (int i = 0; i < moduleCount; i++) {
                     string name = Socket.ReadString();
                     string filename = Socket.ReadString();
-                    moduleNames[filename] = name;
+                    if (!String.IsNullOrWhiteSpace(filename)) {
+                        moduleNames[filename] = name;
+                        allModules[name] = true;
+                    } else {
+                        allModules[name] = false;
+                    }
                 }
-                _moduleNames = moduleNames;
+
+                _fileToModuleName = moduleNames;
+                _allModules = allModules;
                 _completionResultEvent.Set();
             }
 
@@ -628,7 +637,13 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
+            [DllImport("user32", CallingConvention=CallingConvention.Winapi)]
+            static extern bool AllowSetForegroundWindow(int dwProcessId);
+
             private void SendExecuteText(string text) {
+                bool res = AllowSetForegroundWindow(_process.Id);
+                Debug.WriteLine(String.Format("Allow set fore ground: {0}", res));
+
                 Socket.Send(RunCommandBytes);
 
                 // normalize line endings to \n which is all older versions of CPython can handle.
@@ -653,7 +668,7 @@ namespace Microsoft.PythonTools.Repl {
 
             public OverloadDoc[] GetSignatureDocumentation(ProjectAnalyzer analyzer, string text) {
                 using (new SocketLock(this)) {
-                    if (!Socket.Connected || _connected) {
+                    if (!Socket.Connected || !_connected) {
                         return new OverloadDoc[0];
                     }
                     try {
@@ -708,7 +723,7 @@ namespace Microsoft.PythonTools.Repl {
                 GetAvailableScopes();
 
                 string res;
-                if (_moduleNames.TryGetValue(path, out res)) {
+                if (_fileToModuleName.TryGetValue(path, out res)) {
                     return res;
                 }
                 return null;
@@ -728,7 +743,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            public IEnumerable<string> GetAvailableScopes() {
+            public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopes() {
                 if (_connected) {   // if startup's taking a long time we won't be connected yet
                     using (new SocketLock(this)) {
                         Socket.Send(GetModulesListCommandBytes);
@@ -736,11 +751,11 @@ namespace Microsoft.PythonTools.Repl {
 
                     _completionResultEvent.WaitOne(1000);
 
-                    if (_moduleNames != null) {
-                        return _moduleNames.Values;
+                    if (_fileToModuleName != null) {
+                        return _allModules;
                     }
                 }
-                return new string[0];
+                return new KeyValuePair<string, bool>[0];
             }
 
             public void Close() {
@@ -998,7 +1013,10 @@ namespace Microsoft.PythonTools.Repl {
 
             BufferParser parser = null;
             
-            foreach (var buffer in _window.TextView.BufferGraph.GetTextBuffers(TruePredicate)) {
+            var buffersBeforeReset = _window.TextView.BufferGraph.GetTextBuffers(TruePredicate);
+            for (int i = 0; i < buffersBeforeReset.Count - 1; i++) {
+                var buffer = buffersBeforeReset[i];
+
                 if (!buffer.Properties.ContainsProperty(InputBeforeReset)) {
                     buffer.Properties.AddProperty(InputBeforeReset, InputBeforeReset);
                 }
@@ -1100,6 +1118,10 @@ namespace Microsoft.PythonTools.Repl {
                     return new MemberResult(name, PythonMemberType.Method);
                 case "__builtin__.getset_descriptor":
                     return new MemberResult(name, PythonMemberType.Property);
+                case "__builtin__.namespace#":
+                    return new MemberResult(name, PythonMemberType.Namespace);
+                case "__builtin__.type":
+                    return new MemberResult(name, PythonMemberType.Class);
             }
 
             return new MemberResult(name, PythonMemberType.Field);
@@ -1109,10 +1131,16 @@ namespace Microsoft.PythonTools.Repl {
             return _curListener.GetSignatureDocumentation(analyzer, text);
         }
 
+        public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
+            return _curListener.GetAvailableScopes();
+        }
+
         #region IMultipleScopeEvaluator Members
 
-        public IEnumerable<string> GetAvailableScopes() {            
-            return _curListener.GetAvailableScopes();
+        public IEnumerable<string> GetAvailableScopes() {
+            foreach (var keyValue in _curListener.GetAvailableScopes()) {
+                yield return keyValue.Key;
+            }
         }
 
         public event EventHandler<EventArgs> AvailableScopesChanged;

@@ -35,8 +35,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var kvp in _instanceAttrs) {
                     var types = kvp.Value.Types;
                     var key = kvp.Key;
-
-                    MergeTypes(res, key, types);
+                    foreach (var module in kvp.Value._dependencies.Keys) {
+                        kvp.Value.ClearOldValues(module);
+                    }
+                    if (kvp.Value._dependencies.Count > 0 || kvp.Value.Types.Count > 0) {
+                        MergeTypes(res, key, types);
+                    }
                 }
             }
 
@@ -49,7 +53,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             if (baseClass != null &&
                                 baseClass.Instance._instanceAttrs != null) {
                                 foreach (var kvp in baseClass.Instance._instanceAttrs) {
-                                    MergeTypes(res, kvp.Key, kvp.Value.Types);
+                                    foreach (var module in kvp.Value._dependencies.Keys) {
+                                        kvp.Value.ClearOldValues(module);
+                                    }
+                                    if (kvp.Value._dependencies.Count > 0 || kvp.Value.Types.Count > 0) {
+                                        MergeTypes(res, kvp.Key, kvp.Value.Types);
+                                    }
                                 }
                             }
                         } finally {

@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools {
 
         internal static ExpressionAnalysis GetExpressionAnalysis(this ITextView view) {
             ITrackingSpan span = GetCaretSpan(view);
-            return view.TextBuffer.CurrentSnapshot.AnalyzeExpression(span, false);
+            return span.TextBuffer.CurrentSnapshot.AnalyzeExpression(span, false);
         }
 
         internal static ITrackingSpan GetCaretSpan(this ITextView view) {

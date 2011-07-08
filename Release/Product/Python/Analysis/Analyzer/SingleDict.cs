@@ -121,6 +121,22 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
+        public IEnumerable<TKey> Keys {
+            get {
+                SingleDependency single = _data as SingleDependency;
+                if (single != null) {
+                    yield return single.Key;
+                }
+
+                Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
+                if (dict != null) {
+                    foreach (var value in dict.Keys) {
+                        yield return value;
+                    }
+                }
+            }
+        }
+
         public int Count {
             get {
                 SingleDependency single = _data as SingleDependency;

@@ -114,9 +114,9 @@ namespace Microsoft.PythonTools.Intellisense {
             if (TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
                 pyReplEval = eval as PythonReplEvaluator;
             }
-            IEnumerable<string> replScopes = null;
+            IEnumerable<KeyValuePair<string, bool>> replScopes = null;
             if (pyReplEval != null) {
-                replScopes = pyReplEval.GetAvailableScopes();
+                replScopes = pyReplEval.GetAvailableScopesAndKind();
             }
 
             MemberResult[] modules = new MemberResult[0];
@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     allModules.UnionWith(modules);
                     foreach (var scope in replScopes) {
                         // remove an existing scope, add the new one (we take precedence)
-                        var newMod = new MemberResult(scope, PythonMemberType.Module);
+                        var newMod = new MemberResult(scope.Key, scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace);
                         allModules.Remove(newMod);
                         allModules.Add(newMod);
                     }
@@ -143,10 +143,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (replScopes != null) {
                     HashSet<MemberResult> allModules = new HashSet<MemberResult>(MemberResultComparer.Instance);
                     allModules.UnionWith(modules);
-                    foreach (var scope in replScopes) {
+                    foreach (var scopeAndKind in replScopes) {
+                        var scope = scopeAndKind.Key;
+                        var isModule = scopeAndKind.Value;
+
                         if (scope.StartsWith(text)) {
                             // remove an existing scope, add the new one (we take precedence)
-                            var newMod = new MemberResult(scope, PythonMemberType.Module);
+                            var newMod = new MemberResult(scope.Substring(text.Length), isModule ? PythonMemberType.Module : PythonMemberType.Namespace);
                             allModules.Remove(newMod);
                             allModules.Add(newMod);
                         }

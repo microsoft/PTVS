@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -203,7 +204,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
             var result = new Dictionary<string, ISet<Namespace>>(Scope.Variables.Count);
             foreach (var v in Scope.Variables) {
-                result[v.Key] = v.Value.Types;
+                foreach (var module in v.Value._dependencies.Keys.ToArray()) {
+                    v.Value.ClearOldValues(module);
+                }
+                if (v.Value._dependencies.Count > 0 || v.Value.Types.Count > 0) {
+                    result[v.Key] = v.Value.Types;
+                }
             }
 
             foreach (var b in _bases) {
