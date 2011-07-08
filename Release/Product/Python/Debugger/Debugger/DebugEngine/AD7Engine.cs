@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         default: msg = "Unknown error"; break;
                     }
 
-                    MessageBox.Show("Failed to attach debugger: " + msg);
+                    MessageBox.Show("Failed to attach debugger: " + msg, "Python Tools for Visual Studio");
                     return VSConstants.E_FAIL;
                 }
                     

@@ -281,7 +281,7 @@ namespace Microsoft.PythonTools.Profiling {
             var item = GetReport(itemid);
 
             if (!File.Exists(item.Filename)) {
-                MessageBox.Show(String.Format("Performance report no longer exits: {0}", item.Filename));
+                MessageBox.Show(String.Format("Performance report no longer exits: {0}", item.Filename), "Python Tools for Visual Studio");
             } else {
                 var dte = (EnvDTE.DTE)PythonProfilingPackage.GetGlobalService(typeof(EnvDTE.DTE));
                 dte.ItemOperations.OpenFile(item.Filename);

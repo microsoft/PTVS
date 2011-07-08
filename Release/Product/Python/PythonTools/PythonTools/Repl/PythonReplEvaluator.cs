@@ -739,7 +739,7 @@ namespace Microsoft.PythonTools.Repl {
                         _eval._window.WriteLine(String.Format("Current module changed to {0}", scopeName));
                     }
                 } catch (SocketException) {
-                    _eval._window.WriteLine("Cannot change module, interactive window is disconnected.");
+                    _eval._window.WriteError("Cannot change module, interactive window is disconnected.");
                 }
             }
 

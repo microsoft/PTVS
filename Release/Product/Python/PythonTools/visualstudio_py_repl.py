@@ -216,7 +216,7 @@ actual inspection and introspection."""
             self.conn.send(struct.pack('i', len(sigs)))
             for doc, args, vargs, varkw, defaults in sigs:
                 # write overload
-                self._write_string((doc or '')[:256])
+                self._write_string((doc or '')[:4096])
                 arg_count = len(args) + (vargs is not None) + (varkw is not None)
                 self.conn.send(struct.pack('i', arg_count))
                 for arg in args:

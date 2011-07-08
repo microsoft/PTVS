@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Commands {
             
             // TODO: Fix doc string parsing
             if (fillPrefix.Prefix == null || fillPrefix.Prefix.Length == 0 || fillPrefix.IsDocString) {
-                System.Windows.MessageBox.Show("Must invoke FillCommentParagraph on a comment line or non-blank line.");
+                System.Windows.MessageBox.Show("Must invoke FillCommentParagraph on a comment line or non-blank line.", "Python Tools for Visual Studio");
                 return;
             }
 

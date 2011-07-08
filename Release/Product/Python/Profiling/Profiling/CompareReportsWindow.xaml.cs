@@ -33,9 +33,9 @@ namespace Microsoft.PythonTools.Profiling {
 
         private void OkClick(object sender, RoutedEventArgs e) {
             if (!File.Exists(_baselineFile.Text)) {
-                MessageBox.Show(String.Format("{0} does not exist, correct the filename or select Cancel.", _baselineFile.Text));
+                MessageBox.Show(String.Format("{0} does not exist, correct the filename or select Cancel.", _baselineFile.Text), "Python Tools for Visual Studio");
             } else if (!File.Exists(_comparisonFile.Text)) {
-                MessageBox.Show(String.Format("{0} does not exist, correct the filename or select Cancel.", _comparisonFile.Text));
+                MessageBox.Show(String.Format("{0} does not exist, correct the filename or select Cancel.", _comparisonFile.Text), "Python Tools for Visual Studio");
             } else {
                 DialogResult = true;
                 Close();

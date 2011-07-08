@@ -79,10 +79,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
+            string expr = vars.Expression;
+            if (expr.Length > 4096) {
+                expr = expr.Substring(0, 4096) + "...";
+            }
             if (multiline) {
-                result.Insert(0, vars.Expression + ": " + Environment.NewLine);
+                result.Insert(0, expr + ": " + Environment.NewLine);
             } else {
-                result.Insert(0, vars.Expression + ": ");
+                result.Insert(0, expr + ": ");
             }
 
             quickInfoContent.Add(result.ToString());

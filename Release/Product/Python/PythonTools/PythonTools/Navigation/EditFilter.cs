@@ -95,9 +95,9 @@ namespace Microsoft.PythonTools.Language {
                 }
             } else if (values.Count + definitions.Count == 0) {
                 if (String.IsNullOrWhiteSpace(analysis.Expression)) {
-                    MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."));
+                    MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."), "Python Tools for Visual Studio");
                 } else {
-                    MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", analysis.Expression));
+                    MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", analysis.Expression), "Python Tools for Visual Studio");
                 }
             } else if (definitions.Count == 0) {
                 ShowFindSymbolsDialog(analysis, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
@@ -151,6 +151,11 @@ namespace Microsoft.PythonTools.Language {
             values = new Dictionary<LocationInfo,SimpleLocationInfo>();
 
             foreach (var v in provider.Variables) {
+                if (v.Location.FilePath == null) {
+                    // ignore references in the REPL
+                    continue;
+                }
+
                 switch (v.Type) {
                     case VariableType.Definition:
                         values.Remove(v.Location);

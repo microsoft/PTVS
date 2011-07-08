@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static string GetText(ITextSnapshot snapshot, ClassificationSpan start, ClassificationSpan target, bool includeEnd) {
-            var nsLen = target.Span.Start - start.Span.End - (includeEnd ? 0 : 1);
+            var nsLen = (includeEnd ? target.Span.End : target.Span.Start) - start.Span.End - 1;
             var nsSpan = new SnapshotSpan(snapshot, start.Span.End + 1, nsLen);
             var nsText = nsSpan.GetText().Trim();
             return nsText;
@@ -104,7 +104,9 @@ namespace Microsoft.PythonTools.Intellisense {
         
         private IEnumerable<Completion> FromCompletions(IGlyphService glyphService, IEnumerable<Completion> inputs) {
             foreach (var input in inputs) {
-                yield return input;
+                if (input.InsertionText.IndexOf('.') == -1) {
+                    yield return input;
+                }
             }
 
             yield return PythonCompletion(glyphService, "*", "Import all members from the module", StandardGlyphGroup.GlyphArrow);

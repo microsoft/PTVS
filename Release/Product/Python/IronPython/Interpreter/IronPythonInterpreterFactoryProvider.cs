@@ -12,20 +12,28 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
-        private readonly IPythonInterpreterFactory _interpreter = new IronPythonInterpreterFactory();
+        private readonly IPythonInterpreterFactory _interpreter = new IronPythonInterpreterFactory(ProcessorArchitecture.X86);
+        private readonly IPythonInterpreterFactory _interpreterX64 = new IronPythonInterpreterFactory(ProcessorArchitecture.Amd64);
 
         #region IPythonInterpreterProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
             if (IronPythonInterpreter.GetPythonInstallDir() != null) {
+                
                 yield return _interpreter;
+
+                if (Environment.Is64BitOperatingSystem) {
+                    yield return _interpreterX64;
+                }
             }
         }
 

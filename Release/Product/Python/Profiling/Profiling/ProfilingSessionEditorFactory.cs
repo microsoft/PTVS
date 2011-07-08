@@ -180,10 +180,10 @@ namespace Microsoft.PythonTools.Profiling {
                     fs.Close();
                 }
             } catch (IOException e) {
-                MessageBox.Show("Failed to open file {0}\r\n\r\n" + e.Message);
+                MessageBox.Show("Failed to open file {0}\r\n\r\n" + e.Message, "Python Tools for Visual Studio");
                 return VSConstants.E_FAIL;
             } catch (InvalidOperationException e) {
-                MessageBox.Show("Failed to read performance session {0}\r\n\r\n" + e.Message);
+                MessageBox.Show("Failed to read performance session {0}\r\n\r\n" + e.Message, "Python Tools for Visual Studio");
                 return VSConstants.E_FAIL;
             }
 

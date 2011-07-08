@@ -147,9 +147,15 @@ namespace Microsoft.PythonTools.Intellisense {
                         var scope = scopeAndKind.Key;
                         var isModule = scopeAndKind.Value;
 
-                        if (scope.StartsWith(text)) {
+                        if (scope.StartsWith(text, StringComparison.OrdinalIgnoreCase)) {
+                            var split = scope.Split('.');
+                            var subPath = new string[split.Length - path.Length];
+                            for(int i = 0; i<subPath.Length; i++) {
+                                subPath[i] = split[i + path.Length];
+                            }
+                            
                             // remove an existing scope, add the new one (we take precedence)
-                            var newMod = new MemberResult(scope.Substring(text.Length), isModule ? PythonMemberType.Module : PythonMemberType.Namespace);
+                            var newMod = new MemberResult(String.Join(".", subPath), isModule ? PythonMemberType.Module : PythonMemberType.Namespace);
                             allModules.Remove(newMod);
                             allModules.Add(newMod);
                         }
@@ -169,7 +175,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static bool CompletionFilter(string x, string y) {
-            return x.StartsWith(y);
+            return x.StartsWith(y, StringComparison.OrdinalIgnoreCase);
         }
 
         class MemberResultComparer : IEqualityComparer<MemberResult> {

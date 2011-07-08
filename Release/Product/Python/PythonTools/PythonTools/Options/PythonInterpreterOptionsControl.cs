@@ -293,10 +293,10 @@ namespace Microsoft.PythonTools.Options {
             var curFactory = CurrentOptions.Factory;
             switch(new GenerateIntellisenseDbDialog(CurrentOptions, () => DatabaseGenerated(curFactory)).ShowDialog()) {
                 case DialogResult.OK:
-                    MessageBox.Show("Analysis is complete and now available.");
+                    MessageBox.Show("Analysis is complete and now available.", "Python Tools for Visual Studio");
                     break;
                 case DialogResult.Ignore:
-                    MessageBox.Show("Analysis is proceeding in the background, it will become available when completed.");
+                    MessageBox.Show("Analysis is proceeding in the background, it will become available when completed.", "Python Tools for Visual Studio");
                     break;
             }
         }

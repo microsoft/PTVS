@@ -22,11 +22,15 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
         private static readonly Guid _ipyInterpreterGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
-        private readonly InterpreterConfiguration _config = new IronPythonInterpreterConfiguration();
+        private static readonly Guid _ipy64InterpreterGuid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
+        private readonly InterpreterConfiguration _config;
         private readonly HashSet<WeakReference> _interpreters = new HashSet<WeakReference>();
+        private readonly ProcessorArchitecture _arch;
         private bool _generating;
 
-        public IronPythonInterpreterFactory() {
+        public IronPythonInterpreterFactory(ProcessorArchitecture arch = ProcessorArchitecture.X86) {
+            _arch = arch;
+            _config = new IronPythonInterpreterConfiguration(arch);
         }
 
         public InterpreterConfiguration Configuration {
@@ -36,11 +40,22 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public string Description {
-            get { return "IronPython"; }
+            get {
+                if (_arch == ProcessorArchitecture.X86) {
+                    return "IronPython";
+                }
+
+                return "IronPython 64-bit";
+            }
         }
 
         public Guid Id {
-            get { return _ipyInterpreterGuid; }
+            get {
+                if (_arch == ProcessorArchitecture.X86) {
+                    return _ipyInterpreterGuid;
+                }
+                return _ipy64InterpreterGuid;
+            }
         }
 
         public IPythonInterpreter CreateInterpreter() {
@@ -52,12 +67,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         class IronPythonInterpreterConfiguration : InterpreterConfiguration {
+            private readonly ProcessorArchitecture _arch;
+            
+            public IronPythonInterpreterConfiguration(ProcessorArchitecture arch) {
+                _arch = arch;
+            }
+
             public override string InterpreterPath {
-                get { return Path.Combine(IronPythonInterpreter.GetPythonInstallDir(), "ipy.exe"); }
+                get { 
+                    return Path.Combine(IronPythonInterpreter.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipy.exe" : "ipy64.exe"); 
+                }
             }
 
             public override string WindowsInterpreterPath {
-                get { return Path.Combine(IronPythonInterpreter.GetPythonInstallDir(), "ipyw.exe"); }
+                get { return Path.Combine(IronPythonInterpreter.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipyw.exe" : "ipyw64.exe"); }
             }
 
             public override string PathEnvironmentVariable {
@@ -65,7 +88,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
 
             public override ProcessorArchitecture Architecture {
-                get { return ProcessorArchitecture.MSIL; }
+                get { return _arch; }
             }
 
             public override Version Version {

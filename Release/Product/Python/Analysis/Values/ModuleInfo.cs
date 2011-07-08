@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
@@ -48,7 +49,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
             var res = new Dictionary<string, ISet<Namespace>>();
             foreach (var kvp in _scope.Variables) {
-                res[kvp.Key] = kvp.Value.Types;
+                foreach (var module in kvp.Value._dependencies.Keys.ToArray()) {
+                    kvp.Value.ClearOldValues(module);
+                }
+                if (kvp.Value._dependencies.Count > 0 || kvp.Value.Types.Count > 0) {
+                    res[kvp.Key] = kvp.Value.Types;
+                }
             }
             return res;
         }

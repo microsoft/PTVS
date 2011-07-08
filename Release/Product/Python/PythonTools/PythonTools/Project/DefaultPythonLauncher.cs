@@ -143,9 +143,9 @@ namespace Microsoft.PythonTools.Project {
 
         private static void LaunchDebugger(IServiceProvider provider, VsDebugTargetInfo dbgInfo) {
             if (!Directory.Exists(UnquotePath(dbgInfo.bstrCurDir))) {
-                MessageBox.Show(String.Format("Working directory \"{0}\" does not exist.", dbgInfo.bstrCurDir));
+                MessageBox.Show(String.Format("Working directory \"{0}\" does not exist.", dbgInfo.bstrCurDir), "Python Tools for Visual Studio");
             } else if (!File.Exists(UnquotePath(dbgInfo.bstrExe))) {
-                MessageBox.Show(String.Format("Interpreter \"{0}\" does not exist.", dbgInfo.bstrExe));
+                MessageBox.Show(String.Format("Interpreter \"{0}\" does not exist.", dbgInfo.bstrExe), "Python Tools for Visual Studio");
             } else {
                 VsShellUtilities.LaunchDebugger(provider, dbgInfo);
             }

@@ -550,7 +550,7 @@ namespace Microsoft.PythonTools.Hpc {
 
             var appCommand = _project.GetProperty(ClusterOptions.AppCommandSetting);
             if (String.IsNullOrWhiteSpace(appCommand)) {
-                MessageBox.Show("The path to the interpreter on the cluster is not configured.  Please update project properties->Debug->Python Interpreter to point at the correct location of the interpreter");                
+                MessageBox.Show("The path to the interpreter on the cluster is not configured.  Please update project properties->Debug->Python Interpreter to point at the correct location of the interpreter", "Python Tools for Visual Studio");                
                 return false;
             }
             string mpiExecCommand;
@@ -625,7 +625,7 @@ namespace Microsoft.PythonTools.Hpc {
                     if (String.IsNullOrWhiteSpace(ccpHome) || !File.Exists(mpiexecPath = Path.Combine(ccpHome, "Bin\\mpiexec.exe"))) {
                         string sdkHome = Environment.GetEnvironmentVariable("CCP_SDK");
                         if (String.IsNullOrWhiteSpace(sdkHome) || !File.Exists(mpiexecPath = Path.Combine(sdkHome, "Bin\\mpiexec.exe"))) {
-                            MessageBox.Show("Could not find mpiexec.exe.  Please specify path in project settings->Debug or install Microsoft HPC Pack or Microsoft HPC Pack SDK");
+                            MessageBox.Show("Could not find mpiexec.exe.  Please specify path in project settings->Debug or install Microsoft HPC Pack or Microsoft HPC Pack SDK", "Python Tools for Visual Studio");
                             return false;
                         }
                     }
