@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Refactoring {
             StringBuilder newCall = new StringBuilder();
 
             var method = res.ToCodeString(_ast);
-
+            
             // fix up indentation...
             for (int curScope = 0; curScope < _scopes.Length; curScope++) {
                 if (_scopes[curScope] == info.TargetScope) {

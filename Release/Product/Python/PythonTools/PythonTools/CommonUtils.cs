@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools {
                 return ".";
             }
 
-            return new Uri(basePath).MakeRelativeUri(new Uri(path)).ToString().Replace('/', Path.DirectorySeparatorChar);
+            return new Uri(normalizedBaseDir).MakeRelativeUri(new Uri(normalizedDir)).ToString().Replace('/', Path.DirectorySeparatorChar);
         }
 
         public static string CreateFriendlyFilePath(string basePath, string path) {

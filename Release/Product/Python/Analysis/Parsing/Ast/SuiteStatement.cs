@@ -68,7 +68,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             var colonWhiteSpace = this.GetProceedingWhiteSpaceDefaultNull(ast);
             if (colonWhiteSpace != null) {
                 ast.SetAttribute(res, NodeAttributes.PreceedingWhiteSpace, "");
-                ast.SetAttribute(res, NodeAttributes.SecondPreceedingWhiteSpace, this.GetSecondWhiteSpace(ast));
             } else if (itemWhiteSpace != null) {
                 ast.SetAttribute(res, NodeAttributes.ListWhiteSpace, new string[0]);
 

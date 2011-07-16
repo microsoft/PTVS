@@ -56,6 +56,39 @@ namespace AnalysisTest {
     bar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
         }
 
+        [TestMethod]
+        public void TestExtractSuiteWhiteSpace() {
+            SuccessTest("x .. 200",
+@"def f():
+
+
+    x = 100 
+    y = 200",
+@"def g():
+    x = 100 
+    y = 200
+
+def f():
+
+
+    g()");
+
+            SuccessTest("x .. 200",
+@"def f():
+    a = 300
+
+    x = 100 
+    y = 200",
+@"def g():
+    x = 100 
+    y = 200
+
+def f():
+    a = 300
+
+    g()");
+        }
+
         /// <summary>
         /// Test cases that verify we correctly identify when not all paths contain return statements.
         /// </summary>

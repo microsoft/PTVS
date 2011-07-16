@@ -255,7 +255,7 @@ namespace Microsoft.PythonTools.Repl {
             internal bool _connected;
             private Socket _socket;
             private TaskCompletionSource<ExecutionResult> _completion;
-            private string _executionText;
+            private string _executionText, _executionFile;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _fileToModuleName;
@@ -293,10 +293,15 @@ namespace Microsoft.PythonTools.Repl {
                     _socket = _socket.Accept();
                     using (new SocketLock(this)) {
                         _connected = true;
+                        if (_executionFile != null) {
+                            SendExecuteFile(_executionFile);
+                            _executionFile = null;
+                        }
+
                         if (_executionText != null) {
                             SendExecuteText(_executionText);
                             _executionText = null;
-                        }
+                        } 
                     }
 
                     Socket socket;
@@ -641,8 +646,7 @@ namespace Microsoft.PythonTools.Repl {
             static extern bool AllowSetForegroundWindow(int dwProcessId);
 
             private void SendExecuteText(string text) {
-                bool res = AllowSetForegroundWindow(_process.Id);
-                Debug.WriteLine(String.Format("Allow set fore ground: {0}", res));
+                AllowSetForegroundWindow(_process.Id);
 
                 Socket.Send(RunCommandBytes);
 
@@ -655,9 +659,24 @@ namespace Microsoft.PythonTools.Repl {
 
             public void ExecuteFile(string filename) {
                 using (new SocketLock(this)) {
-                    Socket.Send(ExecuteFileCommandBytes);
-                    SendString(filename);
+                    if (!_connected) {
+                        // delay executing the text until we're connected
+                        _executionFile = filename;
+                        return;
+                    } else if (!Socket.Connected) {
+                        _eval._window.WriteError(_noReplProcess);
+                        return;
+                    }
+
+                    SendExecuteFile(filename);
                 }
+            }
+
+            private void SendExecuteFile(string filename) {
+                AllowSetForegroundWindow(_process.Id);
+
+                Socket.Send(ExecuteFileCommandBytes);
+                SendString(filename);
             }
 
             public void AbortCommand() {

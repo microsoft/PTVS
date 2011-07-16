@@ -39,17 +39,22 @@ namespace Microsoft.PythonTools.Hpc {
         public ClusterEnvironment RunEnvironment {
             get { return _env; }
             // updated from property grid
-            set { 
+            set {
+                var oldEnv = _env;
                 _env = value;
                 if (_env.HeadNode != "localhost") {
-                    if (String.IsNullOrWhiteSpace(DeploymentDirectory)) {
+                    if (String.IsNullOrWhiteSpace(DeploymentDirectory) || DeploymentDirectory == GetDefaultDeploymentDir(oldEnv.HeadNode)) {
                         // automatically set the deployment dir to the spool dir on the server
-                        DeploymentDirectory = "\\\\" + _env.HeadNode + "\\CcpSpoolDir\\$(UserName)\\$(Name)";
+                        DeploymentDirectory = GetDefaultDeploymentDir(_env.HeadNode);
                     }
                 } else {
                     DeploymentDirectory = "";
                 }
             }
+        }
+
+        private string GetDefaultDeploymentDir(string headNode) {
+            return "\\\\" + headNode + "\\CcpSpoolDir\\$(UserName)\\$(Name)";
         }
 
         /// <summary>

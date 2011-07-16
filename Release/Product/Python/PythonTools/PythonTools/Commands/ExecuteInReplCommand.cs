@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
+using System.Threading;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -54,14 +55,6 @@ namespace Microsoft.PythonTools.Commands {
             return window;
         }
 
-        /*
-        internal static VsReplWindow TryGetReplWindow() {
-            var compModel = PythonToolsPackage.ComponentModel;
-            var provider = compModel.GetExtensions<IReplWindowProvider>();
-
-            return provider.First().FindReplWindow(PythonReplEvaluatorProvider.GetReplId(_analyzer.Interpreter)) as VsReplWindow;
-        }*/
-        
         public override EventHandler BeforeQueryStatus {
             get {
                 return QueryStatusMethod;
@@ -115,16 +108,18 @@ namespace Microsoft.PythonTools.Commands {
             var window = (IReplWindow)EnsureReplWindow(analyzer);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
-            window.WriteLine("Restarting Python interpreter...");
-            window.Evaluator.Reset();
-
             ErrorHandler.ThrowOnFailure(windowFrame.Show());
             window.Focus();
 
-            window.WriteLine(String.Format("Running {0}", filename));
-            string scopeName = Path.GetFileNameWithoutExtension(filename);
+            // The interpreter may take some time to startup, do this off the UI thread.
+            ThreadPool.QueueUserWorkItem(x => {
+                window.Reset();
+                
+                window.WriteLine(String.Format("Running {0}", filename));
+                string scopeName = Path.GetFileNameWithoutExtension(filename);
 
-            window.Evaluator.ExecuteFile(filename);
+                window.Evaluator.ExecuteFile(filename);
+            });
         }
         
         public override int CommandId {

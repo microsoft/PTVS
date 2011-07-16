@@ -655,7 +655,7 @@ namespace Microsoft.VisualStudio.Repl {
             if (_stdInputStart != null) {
                 UIThread(CancelStandardInput);
             }
-
+            
             WriteLine("Resetting execution engine");
             Evaluator.Reset();
 
@@ -1850,27 +1850,31 @@ namespace Microsoft.VisualStudio.Repl {
 
             UIThread(() => {
                 // if the user cleared the screen we cancelled the input, so we won't have our span here.
-                if (_projectionSpans[_projectionSpans.Count - 1].Kind == ReplSpanKind.StandardInput) {
-                    RemoveProtection();
+                // We can also have an interleaving output span, so we'll search back for the last input span.
+                for (int i = _projectionSpans.Count - 1; i >= 0; i--) {
+                    if (_projectionSpans[i].Kind == ReplSpanKind.StandardInput) {
+                        RemoveProtection();
 
-                    // replace previous span w/ a span that won't grow...
-                    var newSpan = new ReplSpan(
-                        new CustomTrackingSpan(
-                            _stdInputBuffer.CurrentSnapshot,
-                            _projectionSpans[_projectionSpans.Count - 1].TrackingSpan.GetSpan(_stdInputBuffer.CurrentSnapshot),
-                            PointTrackingMode.Negative,
-                            PointTrackingMode.Negative
-                        ),
-                        ReplSpanKind.StandardInput
-                    );
-                    ReplaceProjectionSpan(_projectionSpans.Count - 1, newSpan);
+                        // replace previous span w/ a span that won't grow...
+                        var newSpan = new ReplSpan(
+                            new CustomTrackingSpan(
+                                _stdInputBuffer.CurrentSnapshot,
+                                _projectionSpans[i].TrackingSpan.GetSpan(_stdInputBuffer.CurrentSnapshot),
+                                PointTrackingMode.Negative,
+                                PointTrackingMode.Negative
+                            ),
+                            ReplSpanKind.StandardInput
+                        );
+                        ReplaceProjectionSpan(i, newSpan);
 
-                    if (wasRunning) {
-                        _isRunning = true;
-                    } else {
-                        PrepareForInput();
-                    }
-                    ApplyProtection();
+                        if (wasRunning) {
+                            _isRunning = true;
+                        } else {
+                            PrepareForInput();
+                        }
+                        ApplyProtection();
+                        break;
+                    }                    
                 }
             });
 
