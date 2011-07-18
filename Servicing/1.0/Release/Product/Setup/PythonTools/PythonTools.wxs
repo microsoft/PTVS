@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define InstallLocationName = "Python Tools for Visual Studio" ?>
+
+  <Module Id="PythonTools" Language="1033" Version="1.0.0.0">
+    <Package Id="DB5A4FB0-1771-45D7-97E6-7C731734F328" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
+
+    <?include ..\InstallPath.wxi ?>
+    <?include ..\MergeModule.wxi ?>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="EXTENSION_INSTALLPATH">
+        <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
+          <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
+            <Directory Id="_B3593B26D51E4E91BED2317473CC5D85" Name="Python Tools for Visual Studio">
+              <Directory Id="INSTALLLOCATION" Name="1.0">
+                <Directory Id="X64INSTALL" Name="x64">
+                    </Directory>
+                </Directory>
+              </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <ComponentGroupRef Id="PythonToolsExt"/>
+  </Module>
+</Wix>

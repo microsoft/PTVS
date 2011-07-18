@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--"Yes" or empty or key not found = do the check. "No" = don't do the check. -->
+<PreCheckinSettings>
+  <ConfigurationTitle>TCWCS</ConfigurationTitle>
+  <MaxBuildMinutes>60</MaxBuildMinutes>
+  <MaxTestMinutes>60</MaxTestMinutes>
+
+  <Platform>Win32</Platform>
+  <Configuration>Debug</Configuration>
+
+  <BuildSource>Yes</BuildSource>
+  <RunCodeAnalysis>Yes</RunCodeAnalysis>
+
+  <RunMSTestTests>Yes</RunMSTestTests>
+  <RunTAEFTests>No</RunTAEFTests>
+</PreCheckinSettings>

@@ -1,0 +1,314 @@
+(dp0
+Vmembers
+p1
+(dp2
+Vsetmode
+p3
+(dp4
+Vkind
+p5
+Vfunction
+p6
+sVvalue
+p7
+(dp8
+Voverloads
+p9
+((dp10
+Vret_type
+p11
+(V__builtin__
+p12
+Vint
+p13
+tp14
+sVargs
+p15
+(lp16
+(dp17
+Vtype
+p18
+(g12
+g13
+tp19
+sVname
+p20
+Vfd
+p21
+sa(dp22
+g18
+(g12
+g13
+tp23
+sg20
+Vflags
+p24
+sastp25
+sVdoc
+p26
+Vsetmode(fd, mode) -> Previous mode\u000a\u000aSet the line-end translation mode for the file descriptor fd. To set\u000ait to text mode, flags should be os.O_TEXT; for binary, it should be\u000aos.O_BINARY.
+p27
+sssVopen_osfhandle
+p28
+(dp29
+g5
+g6
+sg7
+(dp30
+g9
+((dp31
+g11
+(g12
+g13
+tp32
+sg15
+(lp33
+(dp34
+g18
+(g12
+Vlong
+p35
+tp36
+sg20
+Vos_handle
+p37
+sa(dp38
+g18
+(g12
+g13
+tp39
+sg20
+Varg1
+p40
+sastp41
+sg26
+Vopen_osfhandle(handle, flags) -> file descriptor\u000a\u000aCreate a C runtime file descriptor from the file handle handle. The\u000aflags parameter should be a bitwise OR of os.O_APPEND, os.O_RDONLY,\u000aand os.O_TEXT. The returned file descriptor may be used as a parameter\u000ato os.fdopen() to create a file object.\u000a
+p42
+sssVungetwch
+p43
+(dp44
+g5
+g6
+sg7
+(dp45
+g9
+(tsg26
+Vungetwch(unicode_char) -> None\u000a\u000aWide char variant of ungetch(), accepting a Unicode value.
+p46
+sssVputch
+p47
+(dp48
+g5
+g6
+sg7
+(dp49
+g9
+(tsg26
+Vputch(char) -> None\u000a\u000aPrint the character char to the console without buffering.
+p50
+sssV__doc__
+p51
+(dp52
+g5
+Vdata
+p53
+sg7
+(dp54
+g18
+(g12
+Vstr
+p55
+tp56
+sssV__package__
+p57
+(dp58
+g5
+g53
+sg7
+(dp59
+g18
+(g12
+VNoneType
+p60
+tp61
+sssVheapmin
+p62
+(dp63
+g5
+g6
+sg7
+(dp64
+g9
+((dp65
+g11
+(g12
+g60
+tp66
+sg15
+(lp67
+stp68
+sg26
+Vheapmin() -> None\u000a\u000aForce the malloc() heap to clean itself up and return unused blocks\u000ato the operating system. On failure, this raises IOError.
+p69
+sssVungetch
+p70
+(dp71
+g5
+g6
+sg7
+(dp72
+g9
+(tsg26
+Vungetch(char) -> None\u000a\u000aCause the character char to be "pushed back" into the console buffer;\u000ait will be the next character read by getch() or getche().
+p73
+sssVgetche
+p74
+(dp75
+g5
+g6
+sg7
+(dp76
+g9
+((dp77
+g11
+(g12
+g55
+tp78
+sg15
+(lp79
+stp80
+sg26
+Vgetche() -> key character\u000a\u000aSimilar to getch(), but the keypress will be echoed if it represents\u000aa printable character.
+p81
+sssVget_osfhandle
+p82
+(dp83
+g5
+g6
+sg7
+(dp84
+g9
+((dp85
+g11
+(g12
+Vobject
+p86
+tp87
+sg15
+(lp88
+(dp89
+g18
+(g12
+g13
+tp90
+sg20
+Vfd
+p91
+sastp92
+sg26
+Vget_osfhandle(fd) -> file handle\u000a\u000aReturn the file handle for the file descriptor fd. Raises IOError\u000aif fd is not recognized.
+p93
+sssV__name__
+p94
+(dp95
+g5
+g53
+sg7
+(dp96
+g18
+(g12
+g55
+tp97
+sssVgetwche
+p98
+(dp99
+g5
+g6
+sg7
+(dp100
+g9
+((dp101
+g11
+(g12
+g55
+tp102
+sg15
+(lp103
+stp104
+sg26
+Vgetwche() -> Unicode key character\u000a\u000aWide char variant of getche(), returning a Unicode value.
+p105
+sssVkbhit
+p106
+(dp107
+g5
+g6
+sg7
+(dp108
+g9
+((dp109
+g11
+(g12
+Vbool
+p110
+tp111
+sg15
+(lp112
+stp113
+sg26
+Vkbhit() -> bool\u000a\u000aReturn true if a keypress is waiting to be read.
+p114
+sssVgetch
+p115
+(dp116
+g5
+g6
+sg7
+(dp117
+g9
+((dp118
+g11
+(g12
+g55
+tp119
+sg15
+(lp120
+stp121
+sg26
+Vgetch() -> key character\u000a\u000aRead a keypress and return the resulting character. Nothing is echoed to\u000athe console. This call will block if a keypress is not already\u000aavailable, but will not wait for Enter to be pressed. If the pressed key\u000awas a special function key, this will return '\u005c\u005c000' or '\u005c\u005cxe0'; the next\u000acall will return the keycode. The Control-C keypress cannot be read with\u000athis function.
+p122
+sssVputwch
+p123
+(dp124
+g5
+g6
+sg7
+(dp125
+g9
+(tsg26
+Vputwch(unicode_char) -> None\u000a\u000aWide char variant of putch(), accepting a Unicode value.
+p126
+sssVgetwch
+p127
+(dp128
+g5
+g6
+sg7
+(dp129
+g9
+((dp130
+g11
+(g12
+g55
+tp131
+sg15
+(lp132
+stp133
+sg26
+Vgetwch() -> Unicode key character\u000a\u000aWide char variant of getch(), returning a Unicode value.
+p134
+ssssVdoc
+p135
+VFunctions from the Microsoft Visual C Runtime.
+p136
+s.

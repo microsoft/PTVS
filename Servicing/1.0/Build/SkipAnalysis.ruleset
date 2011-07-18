@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Skip Analysis" Description="Use this when no code analysis is desired.  This rule set contains a single rule in order to avoid empty rule set warning CA0064.  The rule, chosen because it is likely to pass, is Mobility rule CA1601, &quot;Do not use timers that prevent power state changes&quot;." ToolsVersion="10.0">
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA1601" Action="Warning" />
+  </Rules>
+</RuleSet>

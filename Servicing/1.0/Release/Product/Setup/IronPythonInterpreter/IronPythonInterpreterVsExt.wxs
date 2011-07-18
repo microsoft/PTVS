@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLLOCATION">
+            <Directory Id="dir055B4C60794E4761AAB20840CF15B84D" Name="Templates" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="IronPythonInterpreterVsExt">
+            <!-- Per user components -->
+            <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{B2C46CB0-DF28-4540-BC7F-29B0EA636055}">
+                <Condition>NOT ALLUSERS = 1</Condition>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+                    <RegistryValue Type='string' Name='0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC,1.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\IronPython Interpreter\1.0\'/>
+                </RegistryKey>
+            </Component>
+
+            <!-- Both per user and all user components -->
+            <Component Id="cmp64254102A9BC48CD939A8E6751D62D9A" Directory="INSTALLLOCATION" Guid="{EB91BBC0-2DFD-4F4B-87A6-7F882098247B}">
+                <File Id="fil191B722F9D5E4D809E5D3C9CA08D806D" KeyPath="yes" Source="$(var.ObjDir)\extension.vsixmanifest" />
+            </Component>
+            <Component Id="cmp00FA5BB73B254ABFBA0E280148B14AB7" Directory="INSTALLLOCATION" Guid="{BEBF666B-D16E-4AEB-8DD7-76C496D2CA8A}">
+                <File Id="filD41C4353EEAD40E18CD79B0F5BE688E2" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.IronPython.dll" />
+            </Component>
+            <Component Id="cmpB8DC2ECDD91E480B876F1C054FB0227E" Directory="INSTALLLOCATION" Guid="{A2F7E7FF-8CA1-481A-828F-9512389526FC}">
+                <File Id="fil8B6431B474834558A48DCB708060FC79" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.IronPython.pkgdef" />
+            </Component>
+            <Component Id="cmpDD08B213874C495EBEE23D51F077B436" Directory="dir041BB14BAC9592609EC93BFD263C1679" Guid="{9F2F96C6-CE1B-4556-ADD6-558AFFF9ECFF}">
+                <File Id="filBE1A3903EEFE43C99E704F3A55E573CA" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\WpfWindow\WpfWindow.zip" />
+            </Component>
+            <Component Id="cmp8683E6C3200A433AA285D8708EDF2D24" Directory="dirB8A29750C71B9A312D4757EEBE831332" Guid="{7E12DECB-6DF2-42E8-93B9-A6F30536C3A4}">
+                <File Id="filD75CDAB2B3E542BD849E3CDCA378D8D2" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\SilverlightProject\SilverlightProject.zip" />
+            </Component>
+            <Component Id="cmpF1E7795CF44641B9A2B0299EA89EC9DD" Directory="dirE40177D2D8C394B5C5097124A223252D" Guid="{1AF4468D-852E-4995-93A8-FA4F17DCF2EA}">
+                <File Id="fil225FBD987F444A5886EB51A3D64D9810" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\WinformsProject\WinformsApp.zip" />
+            </Component>
+            <Component Id="cmp51C6FE51A3E144CFB6D3BBFBDC61503E" Directory="dir4373EC4F5A09E3740B14E661A10DCD52" Guid="{11DC2CA7-104E-46D8-B517-1468E5FBEA67}">
+                <File Id="fil57ED8E47ADD64E0D89199AAAC4DD026F" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\WpfProject\WpfApp.zip" />
+            </Component>
+            <Component Id="cmp6541998E98EC44749220E0FBFA6508F1" Directory="dirDCCF5264823D44DDA6D5D3A453254D62" Guid="{36D9A52B-4169-4EEF-9930-4C9784945A3C}">
+                <File Id="fil663B43B46676465E9DF6F86202FF3F88" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ConsoleProject\ConsoleProject.zip" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirE40177D2D8C394B5C5097124A223252D" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirB8A29750C71B9A312D4757EEBE831332" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir4373EC4F5A09E3740B14E661A10DCD52" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirDCCF5264823D44DDA6D5D3A453254D62" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir041BB14BAC9592609EC93BFD263C1679" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir055B4C60794E4761AAB20840CF15B84D">
+            <Directory Id="dir09D551762C64E912856A96ED35E3D478" Name="Files" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir055B4C60794E4761AAB20840CF15B84D">
+            <Directory Id="dir618B2AB2A5714E7090C606039F60C756" Name="Projects" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dirE40177D2D8C394B5C5097124A223252D" Name="WinformsProject" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dirB8A29750C71B9A312D4757EEBE831332" Name="SilverlightProject" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dir4373EC4F5A09E3740B14E661A10DCD52" Name="WpfProject" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dirDCCF5264823D44DDA6D5D3A453254D62" Name="ConsoleProject" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
+            <Directory Id="dir041BB14BAC9592609EC93BFD263C1679" Name="WpfWindow" />
+        </DirectoryRef>
+    </Fragment>
+</Wix>

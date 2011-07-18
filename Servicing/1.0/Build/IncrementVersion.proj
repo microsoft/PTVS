@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="MessagesIV">
+
+  <PropertyGroup>
+    <TasksPath Condition="'$(TasksPath)'==''">$(MSBuildProjectDirectory)</TasksPath>
+    <TasksPath Condition="!HasTrailingSlash('$(TasksPath)')">$(TasksPath)\</TasksPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TfCommand>&quot;$(VS100COMNTOOLS)..\IDE\TF.exe&quot;</TfCommand>
+  </PropertyGroup>
+
+  <Target Name="MessagesIV">
+    <Message Text="%24(Configuration) = %22$(Configuration)%22"></Message>
+    <Message Text="%24(Platform) = %22$(Platform)%22"></Message>
+    <Message Text="%24(MSBuildProjectDirectory) = %22$(MSBuildProjectDirectory)%22"></Message>
+    <Message Text="%24(TasksPath) = %22$(TasksPath)%22"></Message>
+    <Message Text="%24(OutputPath) = %22$(OutputPath)%22"></Message>
+    <Message Text="%24(OutDir) = %22$(OutDir)%22"></Message>
+    <Message Text="%24(ActualOutputPath) = %22$(ActualOutputPath)%22"></Message>
+    <Message Text="%24(HOMEDRIVE) = %22$(HOMEDRIVE)%22"></Message>
+    <Message Text="%24(HOMEPATH) = %22$(HOMEPATH)%22"></Message>
+    <Message Text="%24(BuildRoot) = %22$(BuildRoot)%22"></Message>
+    <Message Text="%24(TargetsPath) = %22$(TargetsPath)%22"></Message>
+    <Message Text="%24(MSBuildBinPath) = %22$(MSBuildBinPath)%22"></Message>
+    <Message Text="%24(ProjectToolsVersion) = %22$(ProjectToolsVersion)%22"></Message>
+    
+    <!--<Message Text="%24(DropLocation) = %22$(DropLocation)%22"></Message>
+    <Message Text="%24(BuildNumber) = %22$(BuildNumber)%22"></Message>
+    <Message Text="%24(BuildDefinition) = %22$(BuildDefinition)%22"></Message>
+    <Message Text="%24(BuildDefinitionId) = %22$(BuildDefinitionId)%22"></Message>
+    <Message Text="%24(BuildDefinitionPath) = %22$(BuildDefinitionPath)%22"></Message>
+    <Message Text="%24(BuildDir) = %22$(BuildDir)%22"></Message>
+    <Message Text="%24(BuildDefinitionName) = %22$(BuildDefinitionName)%22"></Message>
+    <Message Text="%24(SourceDir) = %22$(SourceDir)%22"></Message>
+    <Message Text="%24(BuildDefinitionUri) = %22$(BuildDefinitionUri)%22"></Message>
+    <Message Text="%24(BuildUri) = %22$(BuildUri)%22"></Message>
+    <Message Text="%24(LastBuildNumber) = %22$(LastBuildNumber)%22"></Message>
+    <Message Text="%24(LastGoodBuildLabel) = %22$(LastGoodBuildLabel)%22"></Message>
+    <Message Text="%24(LastGoodBuildNumber) = %22$(LastGoodBuildNumber)%22"></Message>
+    <Message Text="%24(NoCICheckinComment) = %22$(NoCICheckinComment)%22"></Message>-->
+  </Target>
+
+  <!--"OfficialBuild" is the only target called by a build definition, the definition "Official Build". -->
+  <!--That definition runs 5 builds.  The condition below ensures only 1 of them executes IncrementVersion. -->
+  <Target Name="OfficialBuild">
+    <CallTarget Condition="'$(Configuration)'=='IncrementVersion'" Targets="IncrementVersion" />
+    <MSBuild Condition="'$(Configuration)'!='IncrementVersion'" Projects="@(ProjectFile)" Targets="Build"/>
+    <MSBuild Condition="'$(Configuration)'!='IncrementVersion'" Projects="@(SequencedProjectFile)" Targets="Build"/>
+  </Target>
+
+  <Target Name="OfficialRebuild">
+    <CallTarget Targets="IncrementVersion" />
+    <MSBuild Projects="@(ProjectFile)" Targets="Clean"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Clean"/>
+    <MSBuild Projects="@(ProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
+  </Target>
+
+  <Target Name="FakeOfficialBuild">
+    <CallTarget Targets="FakeIncrementVersion" />
+    <MSBuild Projects="@(ProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
+  </Target>
+
+  <Target Name="FakeOfficialRebuild">
+    <CallTarget Targets="FakeIncrementVersion" />
+    <MSBuild Projects="@(ProjectFile)" Targets="Clean"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Clean"/>
+    <MSBuild Projects="@(ProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
+  </Target>
+
+  <Target Name="IncrementVersion">
+    <CallTarget Targets="CheckOutFiles" />
+    <CallTarget Targets="IncrementVersionXmlFile" />
+    <CallTarget Targets="UpdateAssemblyInfoFiles" />
+    <CallTarget Targets="CheckInFiles" />
+  </Target>
+
+  <Target Name="FakeIncrementVersion">
+    <CallTarget Targets="UndoFileChanges" />
+    <CallTarget Targets="CheckOutFiles" />
+    <CallTarget Targets="IncrementVersionXmlFile" />
+    <CallTarget Targets="UpdateAssemblyInfoFiles" />
+  </Target>
+
+  <ItemGroup>
+    <VersionXml Include = "$(TasksPath)Version.xml"/>
+    <AssemblyInfos Include = "$(TasksPath)AssemblyVersion.cs"/>
+    <AssemblyInfos Include = "$(TasksPath)AssemblyVersion.cpp"/>
+    <WixVersions Include = "$(TasksPath)ProductVersion.wxi"/>
+    <RCVersions Include = "$(TasksPath)ResourceVersion.rc2"/>
+    <UpdatedFiles Include = "@(VersionXml)"/>
+    <UpdatedFiles Include = "@(AssemblyInfos)"/>
+    <UpdatedFiles Include = "@(WixVersions)"/>
+    <UpdatedFiles Include = "@(RCVersions)"/>
+  </ItemGroup>
+
+  <Target Name="CheckOutFiles">
+    <Message Text="Getting and checking out versioning files"></Message>
+    
+    <Exec Command="$(TfCommand) get /force /noprompt DoIncrementVersion %22%(UpdatedFiles.FullPath)%22" />
+    <Exec Command="$(TfCommand) checkout %22%(UpdatedFiles.FullPath)%22" />
+  </Target>
+
+  <Target Name="IncrementVersionXmlFile" DependsOnTargets="CheckOutFiles">
+    <!--<Message Text="Executing VersionNumber.Update"></Message>-->
+
+    <VersionNumber.Update VersionNumberConfigFileLocation="$(TasksPath)\version.xml"
+                          SkipSourceControl="true">
+      <Output TaskParameter="VersionNumber" PropertyName="BuildNumber" />
+    </VersionNumber.Update>
+  </Target>
+
+  <Target Name="DecomposeBuildNumber"  DependsOnTargets="IncrementVersionXmlFile">
+    <PropertyGroup>
+      <Ver1>$([System.Text.RegularExpressions.Regex]::Replace($(BuildNumber), '(\d+)\.(\d+)\.(\d+)\.(\d+)', '$1'))</Ver1>
+      <Ver2>$([System.Text.RegularExpressions.Regex]::Replace($(BuildNumber), '(\d+)\.(\d+)\.(\d+)\.(\d+)', '$2'))</Ver2>
+      <Ver3>$([System.Text.RegularExpressions.Regex]::Replace($(BuildNumber), '(\d+)\.(\d+)\.(\d+)\.(\d+)', '$3'))</Ver3>
+      <Ver4>$([System.Text.RegularExpressions.Regex]::Replace($(BuildNumber), '(\d+)\.(\d+)\.(\d+)\.(\d+)', '$4'))</Ver4>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="UpdateAssemblyInfoFiles"  DependsOnTargets="DecomposeBuildNumber">
+    <Message Text="%24(BuildNumber) = %22$(BuildNumber)%22"></Message>
+
+    <File.Replace Path="%(AssemblyInfos.FullPath)" NewValue="AssemblyVersion$1(&quot;$(BuildNumber)&quot;)" regularExpression="AssemblyVersion(Attribute)?\(\&quot;(\d+.\d+.\d+.\d+)\&quot;\)" ignoreCase="true" />
+    <File.Replace Path="%(AssemblyInfos.FullPath)" NewValue="AssemblyFileVersion$1(&quot;$(BuildNumber)&quot;)" regularExpression="AssemblyFileVersion(Attribute)?\(\&quot;(\d+.\d+.\d+.\d+)\&quot;\)" ignoreCase="true" />
+    <File.Replace Path="%(WixVersions.FullPath)" NewValue="ProductVersion = &quot;$(BuildNumber)&quot;" regularExpression="ProductVersion = &quot;(\d+.\d+.\d+.\d+)\&quot;" ignoreCase="true" />
+    <File.Replace Path="%(RCVersions.FullPath)" TextEncoding="Windows-1252" NewValue="#define TCWCS_VERSION_NUMBERS $(Ver1), $(Ver2), $(Ver3), $(Ver4)" regularExpression="#define TCWCS_VERSION_NUMBERS \d+, \d+, \d+, \d+" ignoreCase="true" />
+    <File.Replace Path="%(RCVersions.FullPath)" TextEncoding="Windows-1252" NewValue="#define TCWCS_VERSION_STRING &quot;$(BuildNumber)&quot;" regularExpression="#define TCWCS_VERSION_STRING &quot;\d+.\d+.\d+.\d+\&quot;" ignoreCase="true" />
+  </Target>
+
+  <Target Name="CheckInFiles" DependsOnTargets="UpdateAssemblyInfoFiles">
+    <!--<Message Text="Checking in Version.xml and AssemblyVersion.cs file"></Message>-->
+    <!--<Message Text="%40(UpdatedFiles.FullPath) = %22@(UpdatedFiles.FullPath)%22"></Message>-->
+    <!-- $(NoCICheckinComment) (= "***NO_CI***") in the comment ensures this checkin does not trigger a rolling build definition. -->
+    <Exec IgnoreExitCode="false" Command="$(TfCommand) checkin /bypass /override:&quot;Automated&quot; /comment:&quot;Updated versioning files to v $(BuildNumber) ***NO_CI***&quot; /noprompt &quot;@(UpdatedFiles, '&quot; &quot;')&quot;" />
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="CheckInFiles" />
+
+  <Target Name="UndoFileChanges">
+    <!--<Message Text="Undoing changes to version.xml and AssemblyInfo.cs files"></Message>-->
+    
+    <Exec Command="$(TfCommand) undo &quot;@(UpdatedFiles, '&quot; &quot;')&quot;"
+          ContinueOnError="true"/>
+  </Target>
+
+</Project>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <?define ProductName = "Python Tools for Visual Studio" ?>
+  <?define ProductDescription = "Python Tools for Visual Studio" ?>
+
+  <!-- Product GUIDs: Must just be unique-->
+  <?if "$(var.VSTargetVersion)" = "10.0" ?>
+      <?define InstallerGuid=6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48?>
+      <?define InstallerUpgradeGuid=4D6FE7B2-2E09-4553-A90C-8CBC6DCE508A?>
+  <?else?>
+      <?define InstallerGuid=6BFFC17F-BDD4-4316-9927-CF394776668B?>
+      <?define InstallerUpgradeGuid=6A060E66-FDD1-49EC-AD4A-13A0BA2B5F7C?>  
+  <?endif ?>
+</Include>

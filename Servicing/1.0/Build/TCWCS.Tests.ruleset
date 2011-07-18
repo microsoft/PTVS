@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="TCWCS Tests Coding Rules" Description="Test-specific ruleset with low signal/noise ratio tests disabled." ToolsVersion="10.0">
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+
+<!-- From Minimum rules  -->
+
+<!-- Types that own disposable fields should be disposable  -->
+    <Rule Id="CA1001" Action="Error" />  
+<!-- Types that own native resources should be disposable -->
+    <Rule Id="CA1049" Action="Error" />
+<!-- Do not hide base class methods  -->
+    <Rule Id="CA1061" Action="Error" />
+<!-- Implement IDisposable correctly   -->
+    <Rule Id="CA1063" Action="Error" />
+<!-- Avoid duplicate accelerators  -->
+    <Rule Id="CA1301" Action="Error" />
+<!-- P/Invoke entry points should exist  -->
+    <Rule Id="CA1400" Action="Error" />
+<!-- Call GetLastError immediately after P/Invoke  -->
+    <Rule Id="CA1404" Action="Error" />
+<!-- Declare P/Invokes correctly  -->
+    <Rule Id="CA1415" Action="Error" />
+<!-- Value type fields should be portable  -->
+    <Rule Id="CA1900" Action="Error" />
+<!-- P/Invoke declarations should be portable  -->
+    <Rule Id="CA1901" Action="Error" />
+<!-- Dispose objects before losing scope   -->
+    <Rule Id="CA2000" Action="Error" />
+<!-- Do not lock on objects with weak identity  -->
+    <Rule Id="CA2002" Action="Error" />
+<!-- Rethrow to preserve stack details  -->
+    <Rule Id="CA2200" Action="Error" />
+<!-- Do not dispose objects multiple times   -->
+    <Rule Id="CA2202" Action="Error" />
+<!-- Initialize value type static fields inline   -->
+    <Rule Id="CA2207" Action="Error" />
+<!-- Disposable fields should be disposed   -->
+    <Rule Id="CA2213" Action="Error" />
+<!-- Disposable types should declare finalizer    -->
+    <Rule Id="CA2216" Action="Error" />
+<!-- Finalizers should call base class finalizer     -->
+    <Rule Id="CA2220" Action="Error" />
+<!-- Mark Windows Forms entry points with STAThread    -->
+    <Rule Id="CA2232" Action="Error" />
+<!-- Implement serialization methods correctly   -->
+    <Rule Id="CA2238" Action="Error" />
+<!-- Implement ISerializable correctly   -->
+    <Rule Id="CA2240" Action="Error" />
+<!-- Provide correct arguments to formatting methods   -->
+    <Rule Id="CA2241" Action="Error" />
+<!-- Test for NaN correctly   -->
+    <Rule Id="CA2242" Action="Error" />
+
+<!-- From Basic Correctness -->
+
+<!-- Do not ignore method results   -->
+    <Rule Id="CA1806" Action="Error" />
+<!-- Dispose methods should call base class dispose    -->
+    <Rule Id="CA2215" Action="Error" />
+
+<!-- From Extended Correctness -->
+
+<!-- Mark boolean pinvoke arguments with MarshalAs -->
+    <Rule Id="CA1414" Action="Error" />
+<!-- Remove empty finalizers  -->
+    <Rule Id="CA1821" Action="Error" />
+<!-- Override GetHashCode on overriding Equals   -->
+    <Rule Id="CA2218" Action="Error" />
+<!-- Do not raise exceptions in exception clauses   -->
+    <Rule Id="CA2219" Action="Error" />
+<!-- Operations should not overflow    -->
+    <Rule Id="CA2233" Action="Error" />
+<!-- Attribute string literals should parse correctly    -->
+    <Rule Id="CA2243" Action="Error" />
+
+  </Rules>
+</RuleSet>
