@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 int bytesRead = 0;
                 for (int i = 0; i < count && _position < _readBytes.Count; i++) {
-                    buffer[i + offset] = _readBytes[i];
+                    buffer[i + offset] = _readBytes[(int)_position];
                     _position++;
                     bytesRead++;
                 }
