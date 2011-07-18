@@ -7,6 +7,8 @@
     <Description xml:space="preserve">Provides support for profiling Python projects</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
     <SupportedProducts>
       <VisualStudio Version="10.0">
         <Edition>Ultimate</Edition>

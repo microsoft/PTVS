@@ -510,6 +510,11 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\PythonProject.ico" />
+    <Content Include="PythonProjectBig.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Templates\Files\TextFile\textfile.txt" />
     <Content Include="Templates\Files\TextFile\textfile.vstemplate" />
     <Content Include="visualstudio_ipython_repl.py">

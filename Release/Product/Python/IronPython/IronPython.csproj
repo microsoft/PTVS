@@ -159,6 +159,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="PythonProject.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="PythonProjectBig.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <None Include="Resources\PythonProject.ico" />
     <Content Include="Templates\Files\WpfWindow\WpfWindow.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

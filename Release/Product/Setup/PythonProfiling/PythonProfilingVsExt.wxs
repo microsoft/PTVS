@@ -32,6 +32,12 @@
             <Component Id="cmpC36F2C4A6A74416797A1CEBE5D7379B5" Directory="INSTALLLOCATION" Guid="{EACB9E23-0DB9-4972-9A9B-509F55C59941}">
                 <File Id="fil365CA8F1D96947D088222E077FB9689F" KeyPath="yes" Source="$(var.TargetDir)\proflaun.py" />
             </Component>
+            <Component Id="cmp1740FD279C4C404FB5DE08CB749650EF" Directory="INSTALLLOCATION" Guid="{CDB7EA26-5EAF-42EE-A65F-35FFD410EF85}">
+                <File Id="filAF13F92DD59644C1A4FF5421E0DDAF39" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
+            </Component>
+            <Component Id="cmpC11203AA5FED4C65825E8755F32974DC" Directory="INSTALLLOCATION" Guid="{D46013C7-35B9-4120-8AF9-D5038B85FC37}">
+                <File Id="fil0194A4CB827D4DEB99BF6B69419106B0" KeyPath="yes" Source="$(var.TargetDir)\PythonProjectBig.ico" />
+            </Component>
 		</ComponentGroup>
     </Fragment>
     <Fragment>

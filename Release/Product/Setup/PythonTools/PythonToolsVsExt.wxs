@@ -52,6 +52,9 @@
             <Component Id="cmp6D5E90B270732C7CF3CA0505224114C6" Directory="INSTALLLOCATION" Guid="{43A11BE3-DC0C-49D6-A1CF-7A2C12629A8B}">
                 <File Id="filE15A5066C20482C91FF1B652A7525942" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
             </Component>
+            <Component Id="cmpD8230A7821204B19B812CF984972DD19" Directory="INSTALLLOCATION" Guid="{85628118-CFDA-4FC9-87B7-67B023D8844D}">
+                <File Id="filA04236B904B24049B9E4D28C2CB17667" KeyPath="yes" Source="$(var.TargetDir)\PythonProjectBig.ico" />
+            </Component>
             <Component Id="cmpEF47FA8913654BB49C6272600811A0F4" Directory="INSTALLLOCATION" Guid="{5704A9C3-E8C1-4F91-936F-639AEC8ED786}">
                 <File Id="fil9A920B42E2294FA6A15F1F88235DA801" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.MpiShim.exe" />
             </Component>
