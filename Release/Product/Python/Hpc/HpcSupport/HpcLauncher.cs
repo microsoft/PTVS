@@ -301,7 +301,8 @@ namespace Microsoft.PythonTools.Hpc {
 
                 scheduler.AddJob(job);
                 SetStatus("Scheduling job on server...");
-                ScheduleJob(clusterEnv, job);
+
+                ScheduleJob(scheduler, job);
             }
 
             return VSConstants.S_OK;
@@ -706,20 +707,33 @@ namespace Microsoft.PythonTools.Hpc {
             }            
         }
 
-        private static void ScheduleJob(ClusterEnvironment clusterEnv, ISchedulerJob job) {
-            var jobPath = Path.Combine(Environment.GetEnvironmentVariable("CCP_HOME"), "Bin\\job.exe");
-            var info = new ProcessStartInfo(jobPath, "submit /id:" + job.Id + " /scheduler:" + clusterEnv.HeadNode);
-            
+        private static void ScheduleJob(Scheduler scheduler, ISchedulerJob job) {
             var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
-            
+
             IVsOutputWindowPane pane;
             if (ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowGeneralPane, out pane))) {
                 pane.Activate();
 
-                pane.OutputString("Submitting job using command " + info.FileName + " " + info.Arguments + Environment.NewLine);
-
+                pane.OutputString("Submitting job " + job.Id + Environment.NewLine);
             }
-            LaunchRedirectedToVsOutputWindow(info);
+
+            var shell = (IVsUIShell)HpcSupportPackage.GetGlobalService(typeof(SVsUIShell));
+            IntPtr owner;
+            if (ErrorHandler.Succeeded(shell.GetDialogOwnerHwnd(out owner))) {
+                scheduler.SetInterfaceMode(false, owner);
+            }
+
+            try {
+                scheduler.SubmitJob(job, null, null);
+            } catch (Exception ex) {
+                string msg;
+                msg = "Failed to submit job " + ex.ToString();
+                if (pane != null) {
+                    pane.OutputString(msg);
+                } else {
+                    MessageBox.Show(msg, "Python Tools for Visual Studio");
+                }
+            }
         }
 
         private static Process LaunchRedirectedToVsOutputWindow(ProcessStartInfo info, bool reportExit = true) {

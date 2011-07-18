@@ -227,8 +227,10 @@ namespace Microsoft.VisualStudio.Repl {
             }
 
             if (entries.Length > 0) {
-                foreach (var entry in entries) {
-                    _window.AppendOutput(entry.Properties.Color, entry.Buffer.ToString());
+                for (int i = 0; i < entries.Length; i++) {
+                    var entry = entries[i];
+
+                    _window.AppendOutput(entry.Properties.Color, entry.Buffer.ToString(), i == entries.Length - 1);
                 }
                 _window.TextView.Caret.EnsureVisible();
             }

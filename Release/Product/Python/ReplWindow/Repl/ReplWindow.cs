@@ -1948,14 +1948,14 @@ namespace Microsoft.VisualStudio.Repl {
         /// <summary>
         /// Appends text to the output buffer and updates projection buffer to include it.
         /// </summary>
-        internal void AppendOutput(ConsoleColor color, string text) {
+        internal void AppendOutput(ConsoleColor color, string text, bool lastOutput) {
             int oldBufferLength = _outputBuffer.CurrentSnapshot.Length;
             
             // append the text to output buffer and make sure it ends with a line break:
             int newOutputLength = text.Length;
             using (var edit = _outputBuffer.CreateEdit()) {
                 edit.Insert(oldBufferLength, text);
-                if (!_readingStdIn && !EndsWithLineBreak(text)) {
+                if (lastOutput && !_readingStdIn && !EndsWithLineBreak(text)) {
                     var lineBreak = GetLineBreak();
                     edit.Insert(oldBufferLength, lineBreak);
                     newOutputLength += lineBreak.Length;
