@@ -225,10 +225,7 @@ namespace AnalysisTest.UI {
         public void Reset() {
             Debug.WriteLine("REPL resetting");
             
-            Dispatcher dispatcher = ((FrameworkElement)ReplWindow.TextView).Dispatcher;
-            dispatcher.Invoke(new Action(() => {
-                Assert.IsTrue(ReplWindow.Reset().Wait(10000));
-            }), DispatcherPriority.Normal);
+            Assert.IsTrue(ReplWindow.Reset().Wait(10000));
         }
 
         public void WithStandardInputPrompt(string prompt, Action<string> action) {

@@ -157,10 +157,14 @@ actual inspection and introspection."""
 
     def _read_string(self):
         """ reads length of text to read, and then the text encoded in UTF-8, and returns the string"""
-        len, = struct.unpack('i', self.conn.recv(4))
-        if not len:
+        strlen, = struct.unpack('i', self.conn.recv(4))
+        if not strlen:
             return ''
-        res = self.conn.recv(len).decode('utf8')
+        res = ''
+        while len(res) != strlen:
+            res = res + self.conn.recv(strlen - len(res))
+
+        res = res.decode('utf8')
         if sys.version[0] == '2' and sys.platform != 'cli':
             # Py 2.x, we want an ASCII string if possible
             try:

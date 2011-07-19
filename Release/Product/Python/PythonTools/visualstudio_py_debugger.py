@@ -1028,7 +1028,12 @@ def write_string(string):
 
 def read_string(conn):
     str_len = read_int(conn)
-    return conn.recv(str_len).decode('utf8')
+    if not str_len:
+        return ''
+    res = ''
+    while len(res) != str_len:
+        res = res + conn.recv(str_len - len(res))
+    return res.decode('utf8')
 
 def read_int(conn):
     return struct.unpack('i', conn.recv(4))[0]

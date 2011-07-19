@@ -1754,8 +1754,9 @@ $cls
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
-            var interactive = Prepare(true);
+            InteractiveWindow interactive = null;
             try {
+                interactive = Prepare(true);
                 string assignCode = "x = 42";
                 string inspectCode = "?x";
                 Keyboard.Type(assignCode + "\r");
@@ -1765,16 +1766,11 @@ $cls
 
                 Keyboard.Type(inspectCode + "\r");
                 interactive.WaitForText(ReplPrompt + assignCode, ReplPrompt + inspectCode, 
-                    "Type:       ",
-                    "int",
-                    "Base Class: ",
-                    "<type 'int'>",
-                    "String Form:",
-                    "42",
-                    "Namespace:  ",
-                    "Interactive",
+                    "Type:       int",
+                    "Base Class: <type 'int'>",
+                    "String Form:42",
+                    "Namespace:  Interactive",
                     "Docstring:",
-                    "",
                     "int(x[, base]) -> integer",
                     "",
                     "Convert a string or number to an integer, if possible.  A floating point",
@@ -1787,7 +1783,7 @@ $cls
                 ReplPrompt);
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
-                interactive.Reset();
+                ForceReset();
             }
         }
 
@@ -1802,8 +1798,9 @@ $cls
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
-            var interactive = Prepare(true);
+            InteractiveWindow interactive = null;
             try {
+                interactive = Prepare(true);
                 const string code = "while True: pass\r\n";
                 Keyboard.Type(code);
                 interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
@@ -1814,14 +1811,19 @@ $cls
                 
                 interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt,
                     "---------------------------------------------------------------------------",
-                    "",
-                    "KeyboardInterrupt",
-                    "                         Traceback (most recent call last)");
+                    "KeyboardInterrupt                         Traceback (most recent call last)");
 
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
-                interactive.Reset();
+                ForceReset();
             }
+        }
+
+        private void ForceReset() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+
+            var interactive = app.GetInteractiveWindow(InterpreterDescription);
+            interactive.Reset();
         }
 
         /// <summary>
@@ -1836,8 +1838,9 @@ $cls
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
-            var interactive = Prepare(true);
+            InteractiveWindow interactive = null;
             try {
+                interactive = Prepare(true);
                 const string code = "x = 42";
                 Keyboard.Type(code + "\r");
 
@@ -1876,7 +1879,7 @@ $cls
                 interactive.WaitForSessionDismissed();
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
-                interactive.Reset();
+                ForceReset();
             }
         }
 
@@ -1893,10 +1896,9 @@ $cls
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
-            var interactive = Prepare(true);
+            InteractiveWindow interactive = null;
             try {
-                
-
+                interactive = Prepare(true);
                 Assert.AreNotEqual(null, interactive);
 
                 const string code = "def f(): pass";
@@ -1911,14 +1913,14 @@ $cls
                 interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
                 var helpSession = interactive.WaitForSession<ISignatureHelpSession>();
-                Assert.AreEqual(helpSession.SelectedSignature.Documentation, null);
+                Assert.AreEqual(helpSession.SelectedSignature.Documentation, "<no docstring>");
 
                 Keyboard.PressAndRelease(Key.Escape);
 
                 interactive.WaitForSessionDismissed();
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
-                interactive.Reset();
+                ForceReset();
             }
         }
 

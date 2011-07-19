@@ -622,6 +622,11 @@ namespace Microsoft.PythonTools.Repl {
 
             static string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;
             public Task<ExecutionResult> ExecuteText(string text) {
+                if (text.StartsWith("$")) {
+                    _eval._window.WriteError("Unknown command 'unknown', use \"$help\" for help" + Environment.NewLine);
+                    return ExecutionResult.Failed;
+                }
+
                 using (new SocketLock(this)) {
                     if (!_connected) {
                         // delay executing the text until we're connected
