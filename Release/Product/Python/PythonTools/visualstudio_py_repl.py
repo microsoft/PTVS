@@ -419,6 +419,10 @@ if sys.platform == 'cli':
     from Microsoft.Scripting import ParamDictionaryAttribute
     from IronPython.Runtime.Operations import PythonOps
     from IronPython.Runtime import PythonContext
+    from Microsoft.Scripting import SourceUnit, SourceCodeKind
+    from Microsoft.Scripting.Runtime import Scope
+
+    python_context = clr.GetCurrentRuntime().GetLanguage(PythonContext)
 
     from System import DBNull, ParamArrayAttribute
     builtin_method_descriptor_type = type(list.append)
@@ -438,7 +442,10 @@ class BasicReplBackend(ReplBackend):
     """Basic back end which executes all Python code in-proc"""
     def __init__(self, mod_name = '__main__', launch_file = None):
         ReplBackend.__init__(self)
-        sys.modules[mod_name] = self.exec_mod = imp.new_module(mod_name)
+        if sys.platform == 'cli':
+            self.exec_mod = Scope()
+        else:
+            sys.modules[mod_name] = self.exec_mod = imp.new_module(mod_name)
         self.launch_file = launch_file
         self.code_flags = 0
         self.execute_item = None
@@ -457,19 +464,28 @@ class BasicReplBackend(ReplBackend):
 
     def run_file_as_main(self, filename):
         contents = open(filename, 'rb').read().replace(_cmd('\r\n'), _cmd('\n'))
-        self.code_flags = 0
-        code = compile(contents, filename, 'exec')
-        self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
-        self.exec_mod.__file__ = filename
         sys.argv = [filename]
-        exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
+        self.exec_mod.__file__ = filename
+        if sys.platform == 'cli':
+            code = python_context.CreateSnippet(contents, None, SourceCodeKind.File)
+            code.Execute(self.exec_mod)
+        else:
+            self.code_flags = 0
+            code = compile(contents, filename, 'exec')
+            self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
+            exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
 
     def execute_code_work_item(self):
         _debug_write('Executing: ' + repr(self.current_code))
         stripped_code = self.current_code.strip()
-        code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
-        self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
-        exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
+
+        if sys.platform == 'cli':
+            code = python_context.CreateSnippet(stripped_code, None, SourceCodeKind.InteractiveCode)
+            code.Execute(self.exec_mod)
+        else:
+            code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
+            self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
+            exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
         self.current_code = None
 
     def run_one_command(self, cur_modules, cur_ps1, cur_ps2):
@@ -629,13 +645,31 @@ class BasicReplBackend(ReplBackend):
 
     def get_members(self, expression):
         """returns a tuple of the type name, instance members, and type members"""
+        getattr_func = getattr
         if not expression:
             all_members = {}
-            for key, value in self.exec_mod.__dict__.iteritems():
+            if sys.platform == 'cli':
+                code = python_context.CreateSnippet('vars()', None, SourceCodeKind.AutoDetect)
+                items = code.Execute(self.exec_mod)
+            else:
+                items = self.exec_mod.__dict__.iteritems()
+
+            for key, value in items:
                 all_members[key] = self.get_type_name(value)
             return '', all_members, {}
         else:
-            val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
+            if sys.platform == 'cli':
+                code = python_context.CreateSnippet(expression, None, SourceCodeKind.AutoDetect)
+                val = code.Execute(self.exec_mod)
+
+                code = python_context.CreateSnippet('dir(' + expression + ')', None, SourceCodeKind.AutoDetect)
+                members = code.Execute(self.exec_mod)
+
+                code = python_context.CreateSnippet('lambda value, name: getattr(value, name)', None, SourceCodeKind.AutoDetect)
+                getattr_func = code.Execute(self.exec_mod)
+            else:
+                val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
+                members = dir(val)
         t = type(val)
 
         inst_members = {}
@@ -643,20 +677,22 @@ class BasicReplBackend(ReplBackend):
             # collect the instance members
             try:
                 for mem_name in val.__dict__:
-                    mem_t = self._get_member_type(val, mem_name, True)
+                    mem_t = self._get_member_type(val, mem_name, True, getattr_func)
                     if mem_t is not None:
                         inst_members[mem_name] = mem_t
             except:
                 pass
 
         # collect the type members
+        
         type_members = {}
-        for mem_name in dir(val):
+        for mem_name in members:
             if mem_name not in inst_members:
-                mem_t = self._get_member_type(val, mem_name, False)
+                mem_t = self._get_member_type(val, mem_name, False, getattr_func)
                 if mem_t is not None:
                     type_members[mem_name] = mem_t
 
+    
         return t.__module__ + '.' + t.__name__, inst_members, type_members
 
     def get_ipy_sig(self, obj, ctor):
@@ -678,7 +714,11 @@ class BasicReplBackend(ReplBackend):
         return obj.__doc__, args, vargs, varkw, tuple(defaults)
     
     def get_signatures(self, expression):
-        val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
+        if sys.platform == 'cli':
+            code = python_context.CreateSnippet(expression, None, SourceCodeKind.AutoDetect)
+            val = code.Execute(self.exec_mod)
+        else:
+            val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
         doc = val.__doc__
         type_obj = None
         if isinstance(val, type) or isinstance(val, _OldClassType):
@@ -717,7 +757,10 @@ class BasicReplBackend(ReplBackend):
         mod = sys.modules.get(module)
         if mod is not None:
             _debug_write('Setting module to ' + module)
-            self.exec_mod = mod
+            if sys.platform == 'cli':
+                self.exec_mod = clr.GetClrType(type(sys)).GetProperty('Scope', System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sys, ())
+            else:
+                self.exec_mod = mod
         else:
             _debug_write('Unknown module ' + module)
 
@@ -776,17 +819,22 @@ class BasicReplBackend(ReplBackend):
             pass                
 
     @staticmethod
-    def _get_member_type(inst, name, from_dict):
+    def _get_member_type(inst, name, from_dict, getattr_func = None):
         try:
             if from_dict:
                 val = inst.__dict__[name] 
             elif type(inst) is _OldInstanceType:
-                val = getattr(inst.__class__, name)
+                val = getattr_func(inst.__class__, name)
             else:
-                val = getattr(type(inst), name)
+                val = getattr_func(type(inst), name)
             mem_t_name = BasicReplBackend.get_type_name(val)
             return mem_t_name
         except:
+            if not from_dict:
+                try:
+                    return BasicReplBackend.get_type_name(getattr_func(inst, name))
+                except:
+                    pass
             return
 
 
