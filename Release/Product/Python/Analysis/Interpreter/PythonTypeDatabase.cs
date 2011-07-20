@@ -34,9 +34,6 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly bool _is3x;
         private IBuiltinPythonModule _builtinModule;
 
-        const string EventViewerSource = "Python Tools for Visual Studio";
-        const string EventViewerLog = "Application";
-
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
@@ -121,10 +118,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 proc.WaitForExit();
             } catch (Win32Exception ex) {
                 // failed to start process, interpreter doesn't exist?           
-                if (!EventLog.SourceExists(EventViewerSource))
-                    EventLog.CreateEventSource(EventViewerSource, EventViewerLog);
-
-                EventLog.WriteEntry(EventViewerSource, "Failed to start analysis " + ex.ToString(), EventLogEntryType.Error);
                 LogEvent(request, "FAIL_SCRAPE " + ex.ToString().Replace("\r\n", " -- "));
                 return false;
             }
@@ -160,10 +153,6 @@ namespace Microsoft.PythonTools.Interpreter {
                             }
                         } catch (Win32Exception ex) {
                             // failed to start the process           
-                            if (!EventLog.SourceExists(EventViewerSource))
-                                EventLog.CreateEventSource(EventViewerSource, EventViewerLog);
-
-                            EventLog.WriteEntry(EventViewerSource, "Failed to start 2nd analysis " + ex.ToString(), EventLogEntryType.Error);
                             LogEvent(request, "FAIL_STDLIB " + ex.ToString().Replace("\r\n", " -- "));
                         }
 
