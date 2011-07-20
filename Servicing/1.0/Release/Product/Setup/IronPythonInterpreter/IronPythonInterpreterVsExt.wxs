@@ -40,6 +40,12 @@
             <Component Id="cmp6541998E98EC44749220E0FBFA6508F1" Directory="dirDCCF5264823D44DDA6D5D3A453254D62" Guid="{36D9A52B-4169-4EEF-9930-4C9784945A3C}">
                 <File Id="fil663B43B46676465E9DF6F86202FF3F88" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ConsoleProject\ConsoleProject.zip" />
             </Component>
+            <Component Id="cmp0775519BE75E42899297B336091A299B" Directory="INSTALLLOCATION" Guid="{728CE51B-1B1B-48DC-BAA0-3FC999EC3AAB}">
+                <File Id="filB42D7C02C97741BB8853394C1C43AEFA" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
+            </Component>
+            <Component Id="cmp7CE9042D10D7413EA0216E062A9B8521" Directory="INSTALLLOCATION" Guid="{925B9FF2-EF93-437D-8D0F-49B407B1C1C4}">
+                <File Id="fil01F85EDDDA7F48A6AF4B2979844BD39E" KeyPath="yes" Source="$(var.TargetDir)\PythonProjectBig.ico" />
+            </Component>
         </ComponentGroup>
     </Fragment>
     <Fragment>

@@ -4679,10 +4679,14 @@ namespace Microsoft.PythonTools.Parsing {
                     // else we'll store as lower case w/ _                
                     switch (normalizedName) {
                         case "us_ascii":
-                            d["cp" + encs[i].CodePage.ToString()] = d[normalizedName] = d["us"] = d["ascii"] = d["646"] = d["us_ascii"] = new AsciiEncodingInfoWrapper();
+                            d["cp" + encs[i].CodePage.ToString()] = d[normalizedName] = d["us"] = d["ascii"] = d["646"] = d["us_ascii"] =
+                                d["ansi_x3.4_1968"] = d["ansi_x3_4_1968"] = d["ansi_x3.4_1986"] = d["cp367"] = d["csascii"] = d["ibm367"] =
+                                d["iso646_us"] = d["iso_646.irv_1991"] = d["iso_ir_6"]
+                                = new AsciiEncodingInfoWrapper();
                             continue;
                         case "iso_8859_1":
-                            d["8859"] = d["latin_1"] = d["latin1"] = d["iso 8859_1"] = d["iso8859_1"] = d["cp819"] = d["819"] = d["latin"] = d["latin1"] = d["l1"] = encs[i];
+                            d["iso_ir_100"] = d["iso_8859_1_1987"] = d["iso_8859_1"] = d["iso8859"] = d["ibm819"] = d["csisolatin1"] = d["8859"] = d["latin_1"] =
+                            d["latin1"] = d["iso 8859_1"] = d["iso8859_1"] = d["cp819"] = d["819"] = d["latin"] = d["latin1"] = d["l1"] = encs[i];
                             break;
                         case "utf_7":
                             d["u7"] = d["unicode-1-1-utf-7"] = encs[i];
@@ -4699,6 +4703,65 @@ namespace Microsoft.PythonTools.Parsing {
                             // strip off the pre-amble, CPython doesn't include it.
                             d["utf_16_be"] = d["utf_16be"] = new EncodingInfoWrapper(encs[i], new byte[0]);
                             break;
+                        case "gb2312":
+                            d["x_mac_simp_chinese"] = d["936"] = d["ms936"] = d["chinese"] = d["csiso58gb231280"] = d["euc_cn"] = d["euccn"] = d["eucgb2312_cn"] = d["gb2312_1980"] =
+                            d["gb2312_80"] = d["iso_ir_58"] = d["gbk"] = encs[i];
+                            break;
+                        case "big5":
+                            d["x_mac_trad_chinese"] = d["big5_tw"] = d["csbig5"] = encs[i];
+                            break;
+                        case "cp950":
+                            d["ms950"] = d["hkscs"] = d["big5_hkscs"] = encs[i];
+                            break;
+                        case "ibm037":
+                            d["cp037"] = d["csibm037"] = d["ebcdic_cp_ca"] = d["ebcdic_cp_nl"] = d["ebcdic_cp_us"] = d["ebcdic_cp_wt"] = d["ibm039"] = encs[i];
+                            break;
+                        case "gb18030": d["gb18030_2000"] = encs[i]; break;
+                    }
+
+                    switch (encs[i].CodePage) {
+                        case 500: d["csibm500"] = d["ebcdic_cp_be"] = d["ebcdic_cp_ch"] = encs[i]; break;
+                        case 1026: d["csibm1026"] = encs[i]; break;
+                        case 1140: d["ibm1140"] = encs[i]; break;
+                        case 850: d["cspc850multilingual"] = encs[i]; break;
+                        case 852: d["cspcp852"] = encs[i]; break;
+                        case 855: d["csibm855"] = encs[i]; break;
+                        case 857: d["csibm857"] = encs[i]; break;
+                        case 858: d["csibm858"] = d["ibm858"] = encs[i]; break;
+                        case 861: d["csibm861"] = d["cp_is"] = encs[i]; break;
+                        case 862: d["cspc862latinhebrew"] = encs[i]; break;
+                        case 863: d["csibm863"] = encs[i]; break;
+                        case 864: d["csibm864"] = encs[i]; break;
+                        case 865: d["csibm865"] = encs[i]; break;
+                        case 866: d["csibm866"] = encs[i]; break;
+                        case 869: d["csibm869"] = d["cp_gr"] = encs[i]; break;
+                        case 932: d["csshiftjis"] = d["shiftjis"] = d["sjis"] = d["s_jis"] = d["shiftjis2004"] = d["sjis_2004"] = d["s_jis_2004"] = d["x_mac_japanese"] = d["mskanji"] = d["ms_kanji"] = encs[i]; break;
+                        case 949: d["uhc"] = d["ms949"] = encs[i]; break;
+                        case 51949: d["euckr"] = d["korean"] = d["ksc5601"] = d["ks_c_5601"] = d["ks_c_5601_1987"] = d["ksx1001"] = d["ks_x_1001"] = d["x_mac_korean"] = encs[i]; break;
+                        case 52936: d["hz"] = d["hzgb"] = d["hz_gb"] = encs[i]; break;
+                        case 50220: d["iso2022_jp"] = d["iso2022jp"] = encs[i]; break;
+                        case 50221: d["iso2022_jp_1"] = d["iso2022jp_1"] = d["iso_2022_jp_1"] = encs[i]; break;
+                        case 50222: d["iso2022_jp_2"] = d["iso2022jp_2"] = d["iso_2022_jp_2"] = encs[i]; break;
+                        case 50225: d["csiso2022kr"] = d["iso2022kr"] = d["iso_2022_kr"] = encs[i]; break;
+                        case 28603: d["iso8859_13"] = d["iso_8859_13"] = d["l7"] = d["latin7"] = encs[i]; break;
+                        case 28605: d["iso8859_15"] = d["l9"] = d["latin9"] = encs[i]; break;
+                        case 28592: d["csisolatin2"] = d["iso_8859_2_1987"] = d["iso_ir_101"] = d["l2"] = d["latin2"] = encs[i]; break;
+                        case 28593: d["csisolatin3"] = d["iso_8859_3_1988"] = d["iso_ir_109"] = d["l3"] = d["latin3"] = encs[i]; break;
+                        case 28594: d["csisolatin4"] = d["iso_8859_4_1988"] = d["iso_ir_110"] = d["l4"] = d["latin4"] = encs[i]; break;
+                        case 28595: d["csisolatincyrillic"] = d["cyrillic"] = d["iso_8859_5_1988"] = d["iso_ir_144"] = encs[i]; break;
+                        case 28596: d["arabic"] = d["asmo_708"] = d["csisolatinarabic"] = d["ecma_114"] = d["iso_8859_6_1987"] = d["iso_ir_127"] = encs[i]; break;
+                        case 28597: d["csisolatingreek"] = d["ecma_118"] = d["elot_928"] = d["greek"] = d["greek8"] = d["iso_8859_7_1987"] = d["iso_ir_126"] = encs[i]; break;
+                        case 28598: d["csisolatinhebrew"] = d["hebrew"] = d["iso_8859_8_1988"] = d["iso_ir_138"] = encs[i]; break;
+                        case 28599: d["csisolatin5"] = d["iso_8859_9_1989"] = d["iso_ir_148"] = d["l5"] = d["latin5"] = encs[i]; break;
+                        case 1361: d["ms1361"] = encs[i]; break;
+                        case 20866: d["cskoi8r"] = encs[i]; break;
+                        case 10006: d["macgreek"] = d["mac_greek"] = encs[i]; break;
+                        case 10007: d["mac_cyrillic"] = d["maccyrillic"] = encs[i]; break;
+                        case 10079: d["maciceland"] = d["mac_iceland"] = encs[i]; break;
+                        case 10081: d["macturkish"] = d["mac_turkish"] = encs[i]; break;
+                        case 10010: d["mac_romanian"] = encs[i]; break;
+                        case 10004: d["mac_arabic"] = encs[i]; break;
+                        case 10082: d["mac_croatian"] = encs[i]; break;
                     }
 
                     // publish under normalized name (all lower cases, -s replaced with _s)

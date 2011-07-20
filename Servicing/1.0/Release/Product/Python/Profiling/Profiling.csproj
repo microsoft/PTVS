@@ -198,6 +198,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="Resources\cmdbar.bmp" />
+    <Content Include="PythonProject.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="PythonProjectBig.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\Package.ico" />
     <Content Include="$(BuildRoot)\Binaries\Win32\$(Configuration)\vspyprof.dll" Condition="Exists('$(BuildRoot)\Binaries\Win32\$(Configuration)\vspyprof.dll')">
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -208,6 +216,7 @@
       <VSIXSubPath>x64</VSIXSubPath>
     </Content>
     <Resource Include="Resources\treeview.bmp" />
+    <None Include="Resources\PythonProject.ico" />
     <Content Include="vspyprof.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -832,18 +832,27 @@ namespace Microsoft.PythonTools.Intellisense {
                 _pyAnalyzer.AddAnalysisDirectory(dir);
             }
 
-            foreach (string filename in Directory.GetFiles(dir, "*.py")) {
-                AnalyzeFile(filename);
-            }
-
-            foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
-                AnalyzeFile(filename);
-            }
-
-            foreach (string innerDir in Directory.GetDirectories(dir)) {
-                if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
-                    AnalyzeDirectory(innerDir, false);
+            try {
+                foreach (string filename in Directory.GetFiles(dir, "*.py")) {
+                    AnalyzeFile(filename);
                 }
+            } catch (DirectoryNotFoundException) {
+            }
+
+            try {
+                foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
+                    AnalyzeFile(filename);
+                }
+            } catch (DirectoryNotFoundException) {
+            }
+
+            try {
+                foreach (string innerDir in Directory.GetDirectories(dir)) {
+                    if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
+                        AnalyzeDirectory(innerDir, false);
+                    }
+                }
+            } catch (DirectoryNotFoundException) {
             }
         }
 

@@ -98,6 +98,10 @@ namespace Microsoft.PythonTools.Intellisense {
             // Walks backwards over all the lines
             var enumerator = ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
             if (enumerator.MoveNext()) {
+                if (enumerator.Current != null && enumerator.Current.ClassificationType == this._classifier.Provider.StringLiteral) {
+                    return enumerator.Current.Span;
+                }
+
                 lastToken = enumerator.Current;
                 if (!forCompletion && ShouldSkipAsLastToken(lastToken) && enumerator.MoveNext()) {
                     // skip trailing new line if the user is hovering at the end of the line

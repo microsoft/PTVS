@@ -71,7 +71,8 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 int bytesRead = 0;
                 for (int i = 0; i < count && _position < _readBytes.Count; i++) {
-                    buffer[i + offset] = _readBytes[i];
+                    // _position is a long from a stream, but we're a 32-bit process and won't have a 2gb python file
+                    buffer[i + offset] = _readBytes[(int)_position];
                     _position++;
                     bytesRead++;
                 }

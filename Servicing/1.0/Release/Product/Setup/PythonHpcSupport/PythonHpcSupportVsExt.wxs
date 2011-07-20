@@ -35,6 +35,12 @@
             <Component Id="cmp6A505238B0B94551B74D0C09B7F4BE04" Directory="dirDB60FDC6880B412AAF8ACD9FB2E9F798" Guid="{AC99DA69-242A-4E45-9C4A-9058A0B1B4C0}">
                 <File Id="fil61D7599C3767439994764A8A78DD77C3" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\HpcMpiProject\HpcMpiApp.zip" />
             </Component>
+            <Component Id="cmp5A39EC972CCB4D3F943C845BE2BD3108" Directory="INSTALLLOCATION" Guid="{DADA0040-D356-49BB-8A27-A6A5742CF712}">
+                <File Id="filF9C3E3EE4B03454A80484BD15C2F2B6F" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
+            </Component>
+            <Component Id="cmp50B6E339694C469B8AB7501BC2174040" Directory="INSTALLLOCATION" Guid="{8DA30F86-D072-4A81-BB2E-3C032706C5AE}">
+                <File Id="fil2813AEF167BF467A856BFCDF2F8B91EC" KeyPath="yes" Source="$(var.TargetDir)\PythonProjectBig.ico" />
+            </Component>
 		</ComponentGroup>
     </Fragment>
 </Wix>
