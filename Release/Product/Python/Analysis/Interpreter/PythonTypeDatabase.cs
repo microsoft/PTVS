@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);
             }
 
-            if (proc.ExitCode == 0 && (request.DatabaseOptions & GenerateDatabaseOptions.StdLibDatabase) != 0) {
+            if ((proc.ExitCode == 0 || DatabaseExists(outPath)) && (request.DatabaseOptions & GenerateDatabaseOptions.StdLibDatabase) != 0) {
                 Thread t = new Thread(x => {
                     psi = new ProcessStartInfo();
                     psi.CreateNoWindow = true;
@@ -164,6 +164,16 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (proc.ExitCode == 0) {
                 LogEvent(request, "DONE (SCRAPE)");
                 databaseGenerationCompleted();
+            }
+            return false;
+        }
+
+        private static bool DatabaseExists(string path) {
+            string versionFile = Path.Combine(path, "database.ver");
+            if (File.Exists(versionFile)) {
+                string allLines = File.ReadAllText(versionFile);
+                int version;
+                return Int32.TryParse(allLines, out version) && version == PythonTypeDatabase.CurrentVersion;
             }
             return false;
         }
