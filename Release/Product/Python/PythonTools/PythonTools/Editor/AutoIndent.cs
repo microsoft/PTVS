@@ -271,7 +271,14 @@ namespace Microsoft.PythonTools.Editor {
                 } else if (lineText[i] == '\t') {
                     indentationUpdate += textView.Options.GetIndentSize();
                 } else {
-                    desiredIndentation -= indentationUpdate;
+                    if (indentationUpdate > desiredIndentation) {
+                        // we would dedent this line (e.g. there's a return on the previous line) but the user is
+                        // hitting enter with a statement to the right of the caret and they're in the middle of white space.
+                        // So we need to instead just maintain the existing indentation level.
+                        desiredIndentation = Math.Max(GetIndentation(baselineText, options.GetTabSize()) - indentationUpdate, 0);
+                    } else {
+                        desiredIndentation -= indentationUpdate;
+                    }
                     break;
                 }
             }
