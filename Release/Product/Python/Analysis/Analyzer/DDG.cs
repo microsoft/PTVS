@@ -433,7 +433,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     }
                 } else {
                     // import foo
-                    saveName = importing = curName.Names[0].Name;
+                    importing = curName.Names[0].Name;
+                    if (asName != null) {
+                        saveName = asName.Name;
+                    } else {
+                        saveName = importing;
+                    }
                     nameNode = curName.Names[0];
                 }
 
