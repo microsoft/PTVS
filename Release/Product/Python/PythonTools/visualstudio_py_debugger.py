@@ -1034,7 +1034,7 @@ def read_string(conn):
     str_len = read_int(conn)
     if not str_len:
         return ''
-    res = ''
+    res = cmd('')
     while len(res) < str_len:
         res = res + conn.recv(str_len - len(res))
     return res.decode('utf8')
