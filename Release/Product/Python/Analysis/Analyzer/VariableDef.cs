@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -21,6 +22,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
     abstract class DependentData<TStorageType>  where TStorageType : DependencyInfo {
         internal SingleDict<IProjectEntry, TStorageType> _dependencies;
 
+        /// <summary>
+        /// Clears old values from old modules.  These old values are values which were assigned from
+        /// an out of data analysis.
+        /// </summary>
+        public void ClearOldValues() {
+            foreach (var module in _dependencies.Keys.ToArray()) {
+                ClearOldValues(module);
+            }
+        }
+
+        /// <summary>
+        /// Clears old values from the specified module.  These old values are values which were assigned from
+        /// an out of data analysis.
+        /// </summary>
+        /// <param name="fromModule"></param>
         public void ClearOldValues(IProjectEntry fromModule) {
             TStorageType deps;
             if (_dependencies.TryGetValue(fromModule, out deps)) {

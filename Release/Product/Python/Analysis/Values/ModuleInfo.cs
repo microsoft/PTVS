@@ -49,9 +49,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
             var res = new Dictionary<string, ISet<Namespace>>();
             foreach (var kvp in _scope.Variables) {
-                foreach (var module in kvp.Value._dependencies.Keys.ToArray()) {
-                    kvp.Value.ClearOldValues(module);
-                }
+                kvp.Value.ClearOldValues();
                 if (kvp.Value._dependencies.Count > 0 || kvp.Value.Types.Count > 0) {
                     res[kvp.Key] = kvp.Value.Types;
                 }
