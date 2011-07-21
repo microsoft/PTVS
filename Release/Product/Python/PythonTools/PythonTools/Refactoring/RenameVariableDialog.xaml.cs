@@ -33,15 +33,22 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private void OkClick(object sender, RoutedEventArgs e) {
             this.DialogResult = true;
+            CloseTooltip();
             Close();
         }
 
         private void CancelClick(object sender, RoutedEventArgs e) {
             this.DialogResult = false;
+            CloseTooltip();
             Close();
         }
 
-        internal RenameVariableRequest GetRenameVariableRequest() {            
+        private void CloseTooltip() {
+            var toolTip = (ToolTip)_newName.ToolTip;
+            toolTip.IsOpen = false;
+        }
+
+        internal RenameVariableRequest GetRenameVariableRequest() {
             return new RenameVariableRequest(
                 _newName.Text,
                 _previewChanges.IsChecked == true,
@@ -52,15 +59,15 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private void _newName_TextChanged(object sender, TextChangedEventArgs e) {
             if (_ok != null) {
-                var toolTip = (ToolTip)_newName.ToolTip;
                 if (!ExtractMethodDialog._validNameRegex.IsMatch(_newName.Text)) {
+                    var toolTip = (ToolTip)_newName.ToolTip;
                     toolTip.Visibility = System.Windows.Visibility.Visible;
                     toolTip.IsOpen = true;
                     toolTip.IsEnabled = true;
                     toolTip.PlacementTarget = _newName;
                     _ok.IsEnabled = false;
                 } else {
-                    toolTip.IsOpen = false;
+                    CloseTooltip();
                     _ok.IsEnabled = _originalName != _newName.Text;
                 }
             }
