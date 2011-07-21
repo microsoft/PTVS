@@ -67,13 +67,22 @@ namespace Microsoft.PythonTools.Intellisense {
             if (Object.ReferenceEquals(end, imp)) {
                 itemText = String.Empty;
             } else {
-                if (isSpace) {
-                    return EmptyCompletionContext;
-                }
-
                 var itemLen = end.Span.End - imp.Span.End - 1;
                 var itemSpan = new SnapshotSpan(snapshot, imp.Span.End + 1, itemLen);
                 itemText = itemSpan.GetText();
+                string trimmedText = itemText.TrimEnd();
+                int spaceIndex;
+                if ((spaceIndex = trimmedText.LastIndexOfAny(new[] { ' ', '\t' })) != -1) {
+                    itemText = itemText.Substring(spaceIndex + 1);
+                }
+
+                if (isSpace) {
+                    if (!trimmedText.EndsWith(",")) {
+                        return EmptyCompletionContext;
+                    } else {
+                        itemText = "";
+                    }
+                }
             }
 
             return new FromImportCompletionAnalysis(itemText, loc.Start, span, buffer, nsText);
@@ -109,7 +118,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            yield return PythonCompletion(glyphService, "*", "Import all members from the module", StandardGlyphGroup.GlyphArrow);
+            if (String.IsNullOrWhiteSpace(Text)) {
+                yield return PythonCompletion(glyphService, "*", "Import all members from the module", StandardGlyphGroup.GlyphArrow);
+            }
         }
     }
 
