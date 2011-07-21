@@ -161,7 +161,7 @@ actual inspection and introspection."""
         if not strlen:
             return ''
         res = ''
-        while len(res) != strlen:
+        while len(res) < strlen:
             res = res + self.conn.recv(strlen - len(res))
 
         res = res.decode('utf8')

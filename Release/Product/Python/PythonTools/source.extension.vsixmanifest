@@ -9,6 +9,8 @@
     <MoreInfoUrl>http://pytools.codeplex.com</MoreInfoUrl>
     <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
     <InstalledByMsi>false</InstalledByMsi>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
     <SupportedProducts>
       <VisualStudio Version="10.0">
         <Edition>Ultimate</Edition>

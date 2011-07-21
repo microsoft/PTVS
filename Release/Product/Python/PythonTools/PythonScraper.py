@@ -83,6 +83,8 @@ type_name:
     
 """
 
+BLACKLIST = ['cseries.pyd', 'opencv_cv.pyd', 'opencv_backend.pyd', 'h5.pyd', 'h5a.pyd', 'h5d.pyd', 'h5e.pyd', 'h5f.pyd', 'h5fd.pyd', 'h5g.pyd', 'h5i.pyd', 'h5l.pyd', 'h5o.pyd', 'h5p.pyd', 'h5r.pyd', 'h5s.pyd', 'h5t.pyd', 'h5z.pyd', 'h5z.pyd', 'utils.pyd', '_conv.pyd', '_proxy.pyd', 'phonon.pyd', 'QtDeclarative.pyd', 'QtHelp.pyd', 'QtMultimedia.pyd', 'QtOpenGL.pyd', 'QtScriptTools.pyd', 'QtSql.pyd', 'QtSvg.pyd', 'QtTest.pyd', 'QtUiTools.pyd', 'QtWebKit.pyd']
+
 import types
 try:
     import cPickle
@@ -418,7 +420,7 @@ if __name__ == "__main__":
     def package_inspector(site_packages, dirname, fnames):
         for filename in fnames:
             if filename.endswith('.pyd'):
-                if filename in ['cseries.pyd', 'opencv_cv.pyd', 'opencv_backend.pyd', 'h5.pyd', 'h5a.pyd', 'h5d.pyd', 'h5e.pyd', 'h5f.pyd', 'h5fd.pyd', 'h5g.pyd', 'h5i.pyd', 'h5l.pyd', 'h5o.pyd', 'h5p.pyd', 'h5r.pyd', 'h5s.pyd', 'h5t.pyd', 'h5z.pyd', 'h5z.pyd', 'utils.pyd', '_conv.pyd', '_proxy.pyd', 'phonon.pyd', 'QtDeclarative.pyd', 'QtHelp.pyd', 'QtMultimedia.pyd', 'QtOpenGL.pyd', 'QtScriptTools.pyd', 'QtSql.pyd', 'QtSvg.pyd', 'QtTest.pyd', 'QtUiTools.pyd', 'QtWebKit.pyd']:
+                if filename in BLACKLIST:
                     # these are known to crash the process, 
                     # better would be to determine these dynamically
                     continue

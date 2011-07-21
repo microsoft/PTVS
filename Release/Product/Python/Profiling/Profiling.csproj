@@ -198,9 +198,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Resource Include="Resources\cmdbar.bmp" />
-    <Resource Include="PythonProject.ico">
+    <Content Include="PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="PythonProjectBig.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
