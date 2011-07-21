@@ -25,7 +25,6 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.Hpc.Scheduler;
 using Microsoft.Hpc.Scheduler.Properties;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -44,6 +43,45 @@ namespace Microsoft.PythonTools.Hpc {
         private const string MpiShimExe = "Microsoft.PythonTools.MpiShim.exe";
         private static bool _createdGeneralPane;
         private static HiddenForm _pumpForm;
+
+        #region Debugger constants for Python debugger - cloned from AD7Engine.cs
+
+        private const string DebugEngineId = "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}";
+        private static Guid DebugEngineGuid = new Guid(DebugEngineId);
+
+        /// <summary>
+        /// Specifies whether the process should prompt for input before exiting on an abnormal exit.
+        /// </summary>
+        private const string WaitOnAbnormalExitSetting = "WAIT_ON_ABNORMAL_EXIT";
+
+        /// <summary>
+        /// Specifies whether the process should prompt for input before exiting on a normal exit.
+        /// </summary>
+        private const string WaitOnNormalExitSetting = "WAIT_ON_NORMAL_EXIT";
+
+        /// <summary>
+        /// Specifies if the output should be redirected to the visual studio output window.
+        /// </summary>
+        private const string RedirectOutputSetting = "REDIRECT_OUTPUT";
+
+        /// <summary>
+        /// Specifies options which should be passed to the Python interpreter before the script.  If
+        /// the interpreter options should include a semicolon then it should be escaped as a double
+        /// semi-colon.
+        /// </summary>
+        private const string InterpreterOptions = "INTERPRETER_OPTIONS";
+
+        /// <summary>
+        /// Specifies a directory mapping in the form of:
+        /// 
+        /// OldDir|NewDir
+        /// 
+        /// for mapping between the files on the local machine and the files deployed on the
+        /// running machine.
+        /// </summary>
+        private const string DirMappingSetting = "DIR_MAPPING";
+
+        #endregion
 
         public HpcLauncher(IPythonProject project) {
             _project = project;
@@ -187,7 +225,7 @@ namespace Microsoft.PythonTools.Hpc {
 
             debugInfo.cbSize = (uint)Marshal.SizeOf(typeof(VsDebugTargetInfo2));
             debugInfo.dlo = (uint)DEBUG_LAUNCH_OPERATION.DLO_Custom;
-            debugInfo.guidLaunchDebugEngine = AD7Engine.DebugEngineGuid;
+            debugInfo.guidLaunchDebugEngine = DebugEngineGuid;
             debugInfo.dwDebugEngineCount = 1;
             debugInfo.guidPortSupplier = new Guid("{708C1ECA-FF48-11D2-904F-00C04FA302A1}");     // local port supplier
             debugInfo.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_WaitForAttachComplete | (uint)__VSDBGLAUNCHFLAGS5.DBGLAUNCH_BreakOneProcess;
@@ -195,7 +233,7 @@ namespace Microsoft.PythonTools.Hpc {
             debugInfo.bstrExe = exe;
             debugInfo.bstrCurDir = curDir;
             debugInfo.bstrArg = args;
-            debugInfo.bstrOptions = AD7Engine.DirMappingSetting + "=" + projectDir + "|" + curDir;
+            debugInfo.bstrOptions = DirMappingSetting + "=" + projectDir + "|" + curDir;
             if (!String.IsNullOrWhiteSpace(options)) {
                 debugInfo.bstrOptions += ";" + options;
             }
@@ -207,7 +245,7 @@ namespace Microsoft.PythonTools.Hpc {
             }
 
             try {
-                Marshal.StructureToPtr(AD7Engine.DebugEngineGuid, debugInfo.pDebugEngines, false);
+                Marshal.StructureToPtr(DebugEngineGuid, debugInfo.pDebugEngines, false);
 
                 IntPtr memory = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VsDebugTargetInfo2)));
                 if (memory == IntPtr.Zero) {
@@ -590,20 +628,20 @@ namespace Microsoft.PythonTools.Hpc {
             string options = "";
 
             if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
-                options = AD7Engine.RedirectOutputSetting + "=True";
+                options = RedirectOutputSetting + "=True";
             }
             if (clusterEnv.HeadNode == "localhost") { // don't wait on the cluster, there's no one to press enter.
                 if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
                     if (!String.IsNullOrEmpty(options)) {
                         options += ";";
                     }
-                    options += AD7Engine.WaitOnAbnormalExitSetting + "=True";
+                    options += WaitOnAbnormalExitSetting + "=True";
                 }
                 if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
                     if (!String.IsNullOrEmpty(options)) {
                         options += ";";
                     }
-                    options += AD7Engine.WaitOnNormalExitSetting + "=True";
+                    options += WaitOnNormalExitSetting + "=True";
                 }
             }
 
@@ -612,7 +650,7 @@ namespace Microsoft.PythonTools.Hpc {
                 if (!String.IsNullOrEmpty(options)) {
                     options += ";";
                 }
-                options += AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
+                options += InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
             }
             return options;
         }
