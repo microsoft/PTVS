@@ -420,7 +420,7 @@ namespace Microsoft.PythonTools.Hpc {
 
             job.AddTasks(tasks);
             job.OnJobState += JobStateChanged;
-            AddJobStateStatusUpdate(job, tasks);
+            job.OnTaskState += OnTaskStateChange;
 
             return job;
         }
@@ -436,20 +436,22 @@ namespace Microsoft.PythonTools.Hpc {
             return workingDir;
         }
 
-        private static void AddJobStateStatusUpdate(ISchedulerJob job, ISchedulerTask[] tasks) {
-            job.OnTaskState += (sender, args) => {
-                if (args.NewState == TaskState.Failed || args.NewState == TaskState.Finished) {
-                    string output = tasks[0].Output;
-                    if (!String.IsNullOrWhiteSpace(output)) {
-                        var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
-                        IVsOutputWindowPane pane;
-                        if (ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowGeneralPane, out pane))) {
-                            pane.Activate();
-                            pane.OutputString(output);
-                        }
+        private static void OnTaskStateChange(object sender, ITaskStateEventArg args) {
+            if (args.NewState == TaskState.Failed) {
+                var scheduler = (Scheduler)sender;
+                var job = scheduler.OpenJob(args.JobId);
+                var task = job.OpenTask(args.TaskId);
+
+                string output = task.Output;
+                if (!String.IsNullOrWhiteSpace(output)) {
+                    var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
+                    IVsOutputWindowPane pane;
+                    if (ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowGeneralPane, out pane))) {
+                        pane.Activate();
+                        pane.OutputString(output);
                     }
                 }
-            };
+            }
         }
 
         private static void SetJobParameters(ClusterEnvironment clusterEnv, ISchedulerJob job, ISchedulerTask[] tasks) {
