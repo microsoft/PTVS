@@ -229,7 +229,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     sealed class LocatedVariableDef : VariableDef {
         private readonly ProjectEntry _entry;
-        private readonly Node _location;
+        private Node _location;
         
         public LocatedVariableDef(ProjectEntry entry, Node location) {
             _entry = entry;
@@ -251,6 +251,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public Node Node {
             get {
                 return _location;
+            }
+            set {
+                _location = value;
             }
         }
     }
