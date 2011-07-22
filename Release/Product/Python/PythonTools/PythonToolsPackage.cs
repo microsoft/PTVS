@@ -411,7 +411,7 @@ namespace Microsoft.PythonTools {
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            RegisterCommands(new Command[] { new ExecuteInReplCommand(), new SendToReplCommand(), new FillParagraphCommand(), new SendToDefiningModuleCommand() });
+            RegisterCommands(new Command[] { new ExecuteInReplCommand(), new SendToReplCommand(), new FillParagraphCommand(), new SendToDefiningModuleCommand(), new DiagnosticsCommand() });
             RegisterCommands(GetReplCommands());
             
             InterpreterOptionsPage.InterpretersChanged += InterpretersChanged;

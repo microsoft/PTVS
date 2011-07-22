@@ -175,6 +175,13 @@
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="ProvideImportTemplatesAttribute.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
+    <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
+    <Compile Include="PythonTools\Commands\DiagnosticsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Commands\DiagnosticsForm.Designer.cs">
+      <DependentUpon>DiagnosticsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Commands\ExecuteInReplCommand.cs" />
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
@@ -763,6 +770,9 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">
+      <DependentUpon>DiagnosticsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\GenerateIntellisenseDbDialog.resx">
       <DependentUpon>GenerateIntellisenseDbDialog.cs</DependentUpon>
     </EmbeddedResource>

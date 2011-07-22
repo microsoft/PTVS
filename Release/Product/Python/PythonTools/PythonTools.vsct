@@ -345,7 +345,17 @@
           <ButtonText>Start with &amp;Debugging</ButtonText>
         </Strings>
       </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidDiagnostics" priority="0x001" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+        <Strings>
+          <ButtonText>Diagnostic Info...</ButtonText>
+          <CommandName>cmdidDiagnostics</CommandName>
+        </Strings>
+      </Button>
+
     </Buttons>
+
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
@@ -468,7 +478,8 @@
       <IDSymbol name="cmdidSendToRepl" value="0x0103"/>
       <IDSymbol name="cmdidSendToDefiningModule" value="0x0104"/>
       <IDSymbol name="cmdidFillParagraph" value="0x0105"/>
-
+      <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
+      
       <IDSymbol name="cmdidReplWindow" value="0x0201" />
       <IDSymbol name="cmdidReplWindow2" value="0x0202" />
       <IDSymbol name="cmdidReplWindow3" value="0x0203" />
