@@ -34,15 +34,15 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Dictionary<string, ModuleReference> _modules;
         private readonly Dictionary<string, ModuleInfo> _modulesByFilename;
         private readonly Dictionary<object, object> _itemCache;
-        private readonly BuiltinModule _builtinModule;
+        private BuiltinModule _builtinModule;
         private readonly Dictionary<string, XamlProjectEntry> _xamlByFilename = new Dictionary<string, XamlProjectEntry>();
-        internal readonly Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
-        internal readonly ISet<Namespace> _objectSet;
-        internal readonly Namespace _functionType;
-        internal readonly BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _longType, _floatType;
-        internal readonly ConstantInfo _noneInst;
+        internal Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
+        internal ISet<Namespace> _objectSet;
+        internal Namespace _functionType;
+        internal BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _longType, _floatType;
+        internal ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
-        private readonly KnownTypes _types;
+        private KnownTypes _types;
         internal readonly IModuleContext _defaultContext;
         private readonly PythonLanguageVersion _langVersion;
         private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -64,6 +64,16 @@ namespace Microsoft.PythonTools.Analysis {
             InitializeBuiltinModules();
             pythonInterpreter.ModuleNamesChanged += new EventHandler(ModuleNamesChanged);
 
+            _queue = new Deque<AnalysisUnit>();
+
+            LoadKnownTypes();
+
+            pythonInterpreter.Initialize(this);
+
+            _defaultContext = pythonInterpreter.CreateModuleContext();
+        }
+
+        private void LoadKnownTypes() {
             _types = new KnownTypes(this);
             _builtinModule = (BuiltinModule)Modules["__builtin__"].Module;
             _propertyObj = GetBuiltin("property");
@@ -76,7 +86,6 @@ namespace Microsoft.PythonTools.Analysis {
             _objectType = (BuiltinClassInfo)GetBuiltin("object");
             _objectSet = _objectType.SelfSet;
 
-            
             _setType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Set));
             _rangeFunc = GetBuiltin("range");
             _frozensetType = GetBuiltin("frozenset");
@@ -94,15 +103,9 @@ namespace Microsoft.PythonTools.Analysis {
             _dictKeysType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictKeys));
             _dictValuesType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictValues));
 
-            _queue = new Deque<AnalysisUnit>();
-
             SpecializeFunction("__builtin__", "range", (n, unit, args) => unit.DeclaringModule.GetOrMakeNodeVariable(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet));
             SpecializeFunction("__builtin__", "min", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "max", ReturnUnionOfInputs);
-
-            pythonInterpreter.Initialize(this);
-
-            _defaultContext = pythonInterpreter.CreateModuleContext();
 
             // cached for quick checks to see if we're a call to clr.AddReference
 
@@ -110,6 +113,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         void ModuleNamesChanged(object sender, EventArgs e) {
+            LoadKnownTypes();
+
             InitializeBuiltinModules();
         }
 
