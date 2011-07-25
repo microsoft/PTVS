@@ -178,6 +178,35 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public MemberResult[] GetModules(bool topLevelOnly = false) {
+            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModules(topLevelOnly));
+
+            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
+
+            foreach (var child in children) {
+                res.Add(new MemberResult(child.Key, PythonMemberType.Module));
+            }
+
+            return res.ToArray();
+        }
+
+        public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
+            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
+
+            var children = GlobalScope.GetChildrenPackages(InterpreterContext);
+
+            foreach (var child in children) {
+                var mod = (ModuleInfo)child.Value;
+                var childName = mod.Name.Substring(this.GlobalScope.Name.Length + 1);
+
+                if (childName.StartsWith(names[0])) {
+                    res.AddRange(PythonAnalyzer.GetModuleMembers(InterpreterContext, names, includeMembers, mod as IModule));
+                }
+            }
+
+            return res.ToArray();
+        }
+
         private static bool IncludeScope(List<InterpreterScope> scopes, int i, int lineNo) {
             if (scopes[i].VisibleToChildren || i == scopes.Count - 1) {
                 return true;

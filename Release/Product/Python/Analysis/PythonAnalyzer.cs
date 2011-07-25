@@ -209,28 +209,33 @@ namespace Microsoft.PythonTools.Analysis {
             if (Modules.TryGetValue(names[0], out moduleRef) && moduleRef.Module != null) {
                 var module = moduleRef.Module as IModule;
                 if (module != null) {
-                    for (int i = 1; i < names.Length && module != null; i++) {
-                        module = module.GetChildPackage(moduleContext, names[i]);
-                    }
-
-                    if (module != null) {
-                        List<MemberResult> result = new List<MemberResult>();
-                        if (includeMembers) {
-                            foreach (var keyValue in ((Namespace)module).GetAllMembers(moduleContext)) {
-                                result.Add(new MemberResult(keyValue.Key, keyValue.Value));
-                            }
-                            return result.ToArray();
-                        } else {
-                            foreach (var child in module.GetChildrenPackages(moduleContext)) {
-                                result.Add(new MemberResult(child.Key, child.Key, new[] { child.Value }, PythonMemberType.Module));
-                            }
-                            return result.ToArray();
-                        }
-                    }
+                    return GetModuleMembers(moduleContext, names, includeMembers, module);
                 }
 
             }
 
+            return new MemberResult[0];
+        }
+
+        internal static MemberResult[] GetModuleMembers(IModuleContext moduleContext, string[] names, bool includeMembers, IModule module) {
+            for (int i = 1; i < names.Length && module != null; i++) {
+                module = module.GetChildPackage(moduleContext, names[i]);
+            }
+
+            if (module != null) {
+                List<MemberResult> result = new List<MemberResult>();
+                if (includeMembers) {
+                    foreach (var keyValue in ((Namespace)module).GetAllMembers(moduleContext)) {
+                        result.Add(new MemberResult(keyValue.Key, keyValue.Value));
+                    }
+                    return result.ToArray();
+                } else {
+                    foreach (var child in module.GetChildrenPackages(moduleContext)) {
+                        result.Add(new MemberResult(child.Key, child.Key, new[] { child.Value }, PythonMemberType.Module));
+                    }
+                    return result.ToArray();
+                }
+            }
             return new MemberResult[0];
         }
 

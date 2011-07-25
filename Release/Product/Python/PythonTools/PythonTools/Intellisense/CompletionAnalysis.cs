@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Intellisense {
             MemberResult[] modules = new MemberResult[0];
             if (path.Length == 0) {
                 if (analysis != null) {
-                    modules = analysis.ProjectState.GetModules(true);
+                    modules = analysis.GetModules(true);
                 }
                 if (replScopes != null) {
                     HashSet<MemberResult> allModules = new HashSet<MemberResult>(MemberResultComparer.Instance);
@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             } else {
                 if (analysis != null) {
-                    modules = analysis.ProjectState.GetModuleMembers(analysis.InterpreterContext, path, includeMembers);
+                    modules = analysis.GetModuleMembers(path, includeMembers);
                 }
 
                 if (replScopes != null) {
