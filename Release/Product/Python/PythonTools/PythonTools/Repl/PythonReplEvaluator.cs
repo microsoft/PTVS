@@ -623,7 +623,7 @@ namespace Microsoft.PythonTools.Repl {
             static string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;
             public Task<ExecutionResult> ExecuteText(string text) {
                 if (text.StartsWith("$")) {
-                    _eval._window.WriteError(String.Format("Unknown command '{0}', use \"$help\" for help" + Environment.NewLine, text.Substring(1)));
+                    _eval._window.WriteError(String.Format("Unknown command '{0}', use \"$help\" for help" + Environment.NewLine, text.Substring(1).Trim()));
                     return ExecutionResult.Failed;
                 }
 
