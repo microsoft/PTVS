@@ -763,17 +763,20 @@ namespace Microsoft.PythonTools.Hpc {
                 scheduler.SetInterfaceMode(false, owner);
             }
 
-            try {
-                scheduler.SubmitJob(job, null, null);
-            } catch (Exception ex) {
-                string msg;
-                msg = "Failed to submit job " + ex.ToString();
-                if (pane != null) {
-                    pane.OutputString(msg);
-                } else {
-                    MessageBox.Show(msg, "Python Tools for Visual Studio");
+
+            ThreadPool.QueueUserWorkItem(x => {
+                try {
+                    scheduler.SubmitJob(job, null, null);
+                } catch (Exception ex) {
+                    string msg;
+                    msg = "Failed to submit job " + ex.ToString();
+                    if (pane != null) {
+                        pane.OutputString(msg);
+                    } else {
+                        MessageBox.Show(msg, "Python Tools for Visual Studio");
+                    }
                 }
-            }
+            });
         }
 
         private static Process LaunchRedirectedToVsOutputWindow(ProcessStartInfo info, bool reportExit = true) {
