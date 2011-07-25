@@ -1255,7 +1255,7 @@ def attach_process(port_num, debug_id, report_and_block = False):
 
         main_thread.block(lambda: report_process_loaded(thread.get_ident()))
 
-    for mod_name, mod_value in sys.modules.iteritems():
+    for mod_name, mod_value in sys.modules.items():
         try:
             filename = getattr(mod_value, '__file__', None)
             if filename is not None:

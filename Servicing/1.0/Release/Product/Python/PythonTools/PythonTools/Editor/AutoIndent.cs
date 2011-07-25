@@ -258,24 +258,39 @@ namespace Microsoft.PythonTools.Editor {
             ITextSnapshotLine baseline;
             string baselineText;
             SkipPreceedingBlankLines(line, out baselineText, out baseline);
-
+            
             var classifier = line.Snapshot.TextBuffer.GetPythonClassifier();
             var desiredIndentation = CalculateIndentation(baselineText, baseline, options, classifier);
 
             var caretLine = textView.Caret.Position.BufferPosition.GetContainingLine();
-            var lineText = caretLine.GetText();
-            int indentationUpdate = 0;
-            for (int i = textView.Caret.Position.BufferPosition.Position - caretLine.Start; i < lineText.Length; i++) {
-                if (lineText[i] == ' ') {
-                    indentationUpdate++;
-                } else if (lineText[i] == '\t') {
-                    indentationUpdate += textView.Options.GetIndentSize();
-                } else {
-                    desiredIndentation -= indentationUpdate;
-                    break;
+            // VS will get the white space when the user is moving the cursor or when the user is doing an edit which
+            // introduces a new line.  When the user is moving the cursor the caret line differs from the line
+            // we're querying.  When editing the lines are the same and so we want to account for the white space of
+            // non-blank lines.  An alternate strategy here would be to watch for the edit and fix things up after
+            // the fact which is what would happen pre-Dev10 when the language would not get queried for non-blank lines
+            // (and is therefore what C# and other languages are doing).
+            if (caretLine.LineNumber == line.LineNumber) {
+                var lineText = caretLine.GetText();
+                int indentationUpdate = 0;
+                for (int i = textView.Caret.Position.BufferPosition.Position - caretLine.Start; i < lineText.Length; i++) {
+                    if (lineText[i] == ' ') {
+                        indentationUpdate++;
+                    } else if (lineText[i] == '\t') {
+                        indentationUpdate += textView.Options.GetIndentSize();
+                    } else {
+                        if (indentationUpdate > desiredIndentation) {
+                            // we would dedent this line (e.g. there's a return on the previous line) but the user is
+                            // hitting enter with a statement to the right of the caret and they're in the middle of white space.
+                            // So we need to instead just maintain the existing indentation level.
+                            desiredIndentation = Math.Max(GetIndentation(baselineText, options.GetTabSize()) - indentationUpdate, 0);
+                        } else {
+                            desiredIndentation -= indentationUpdate;
+                        }
+                        break;
+                    }
                 }
             }
-            
+
             return desiredIndentation;
         }
     }

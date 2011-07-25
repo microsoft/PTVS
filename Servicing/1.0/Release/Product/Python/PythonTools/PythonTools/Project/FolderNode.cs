@@ -134,9 +134,24 @@ namespace Microsoft.PythonTools.Project
 				return ShowFileOrFolderAlreadExistsErrorMessage(newPath);
 			}
 
+			if (!ProjectMgr.Tracker.CanRenameItem(Url, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory)) 
+			{
+				return VSConstants.S_OK;
+			}
+
 			try
 			{
-				RenameFolder(label);
+				var oldTriggerFlag = this.ProjectMgr.EventTriggeringFlag;
+				ProjectMgr.EventTriggeringFlag |= ProjectNode.EventTriggering.DoNotTriggerTrackerQueryEvents;
+				try 
+				{
+					RenameFolder(label);
+				} 
+				finally 
+				{
+					ProjectMgr.EventTriggeringFlag = oldTriggerFlag;
+				}
+
 
 				//Refresh the properties in the properties window
 				IVsUIShell shell = this.ProjectMgr.GetService(typeof(SVsUIShell)) as IVsUIShell;

@@ -68,7 +68,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (!Variables.TryGetValue(name, out value)) {
                 return Variables[name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location);
             } else if (!(value is LocatedVariableDef)) {
-                return Variables[name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value);                
+                return Variables[name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value);
+            } else {
+                ((LocatedVariableDef)value).Node = location;
             }
             return value;
         }

@@ -57,6 +57,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private bool _attached, _pseudoAttach;
         private BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
+
+        // These constants are duplicated in HpcLauncher and cannot be changed
+        
         public const string DebugEngineId = "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}";
         public static Guid DebugEngineGuid = new Guid(DebugEngineId);
         /// <summary>

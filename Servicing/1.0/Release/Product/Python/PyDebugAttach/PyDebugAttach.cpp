@@ -616,10 +616,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
         }
         
         auto gettrace = PyObjectHolder(pyGetAttr(*sysMod, "gettrace"));
-        if(*gettrace == nullptr) {
-            connInfo.ReportError(ConnError_SysGetTraceNotFound); 
-            return false;
-        }
 
         // we need to walk the thread list each time after we've initialized a thread so that we are always
         // dealing w/ a valid thread list (threads can exit when we run code and therefore the current thread
@@ -670,7 +666,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                         }else{                            
                             frame = curThread->_25_27.frame;
                         }
-                    
+
                         auto threadObj = PyObjectHolder(call(*new_thread, *pyThreadId, firstThread ? pyTrue : pyFalse, frame, NULL));
                         if(*threadObj == pyNone || *threadObj == nullptr) {
                             break;
@@ -692,12 +688,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
 
                         auto traceFunc = PyObjectHolder(pyGetAttr(*threadObj, "trace_func"));
 
-                        auto existingTraceFunc = PyObjectHolder(call(*gettrace, NULL));
+                        if(*gettrace == NULL) {
+                            DecRef(call(*settrace, *traceFunc, NULL));
+                        }else{
+                            auto existingTraceFunc = PyObjectHolder(call(*gettrace, NULL));
 
-                        DecRef(call(*settrace, *traceFunc, NULL));
+                            DecRef(call(*settrace, *traceFunc, NULL));
 
-                        if (*existingTraceFunc != pyNone) {
-                            pySetAttr(*threadObj, "prev_trace_func", *existingTraceFunc);
+                            if (*existingTraceFunc != pyNone) {
+                                pySetAttr(*threadObj, "prev_trace_func", *existingTraceFunc);
+                            }
                         }
 
                         if(errOccured) {

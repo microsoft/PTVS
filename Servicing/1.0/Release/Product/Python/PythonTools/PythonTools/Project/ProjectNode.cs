@@ -139,7 +139,8 @@ namespace Microsoft.PythonTools.Project
         {
             TriggerAll = 0,
             DoNotTriggerHierarchyEvents = 1,
-            DoNotTriggerTrackerEvents = 2
+            DoNotTriggerTrackerEvents = 2,
+            DoNotTriggerTrackerQueryEvents = 4
         }
 
         #endregion

@@ -364,7 +364,7 @@ class Thread(object):
                 bp = BREAKPOINTS.get(frame.f_lineno)
                 if bp is not None:
                     for (filename, bp_id), condition in bp.items():
-                        if filename == frame.f_code.co_filename:                        
+                        if filename == frame.f_code.co_filename:   
                             if condition:                            
                                 try:
                                     res = eval(condition.condition, frame.f_globals, frame.f_locals)
@@ -711,16 +711,19 @@ def get_code(func):
 
 class DebuggerExitException(Exception): pass
 
+def add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id):
+    cur_bp = BREAKPOINTS.get(lineNo)
+    if cur_bp is None:
+        cur_bp = BREAKPOINTS[lineNo] = dict()
+    
+    cond_info = None
+    if condition:
+        cond_info = ConditionInfo(condition, break_when_changed)
+    cur_bp[(modFilename, brkpt_id)] = cond_info
+
 def check_break_point(modFilename, module, brkpt_id, lineNo, filename, condition, break_when_changed):
     if module.filename.lower() == path.abspath(filename).lower():
-        cur_bp = BREAKPOINTS.get(lineNo)
-        if cur_bp is None:
-            cur_bp = BREAKPOINTS[lineNo] = dict()
-        
-        cond_info = None
-        if condition:
-            cond_info = ConditionInfo(condition, break_when_changed)
-        cur_bp[(modFilename, brkpt_id)] = cond_info
+        add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id)
         report_breakpoint_bound(brkpt_id)
         return True
     return False
@@ -814,6 +817,7 @@ class DebuggerLoop(object):
                 break
         else:
             # failed to set break point
+            add_break_point(filename, break_when_changed, condition, lineNo, brkpt_id)
             PENDING_BREAKPOINTS.add(PendingBreakPoint(brkpt_id, lineNo, filename, condition, break_when_changed))
             report_breakpoint_failed(brkpt_id)
 
@@ -1030,7 +1034,7 @@ def read_string(conn):
     str_len = read_int(conn)
     if not str_len:
         return ''
-    res = ''
+    res = cmd('')
     while len(res) < str_len:
         res = res + conn.recv(str_len - len(res))
     return res.decode('utf8')
@@ -1250,6 +1254,14 @@ def attach_process(port_num, debug_id, report_and_block = False):
             report_module_load(module)            
 
         main_thread.block(lambda: report_process_loaded(thread.get_ident()))
+
+    for mod_name, mod_value in sys.modules.items():
+        try:
+            filename = getattr(mod_value, '__file__', None)
+            if filename is not None:
+                MODULES.append((filename, Module(path.abspath(filename))))
+        except:
+            traceback.print_exc()
 
     # intercept all new thread requests
     if not _INTERCEPTING_FOR_ATTACH:

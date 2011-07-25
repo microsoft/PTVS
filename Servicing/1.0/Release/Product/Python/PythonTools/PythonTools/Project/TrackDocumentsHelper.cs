@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Project
 		internal bool CanRenameItem(string oldFileName, string newFileName, VSRENAMEFILEFLAGS flag)
 		{
 			// If we are silent then we assume that the file can be renamed, since we do not want to trigger this event.
-			if((this.projectMgr.EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerTrackerEvents) != 0)
+			if((this.projectMgr.EventTriggeringFlag & (ProjectNode.EventTriggering.DoNotTriggerTrackerEvents | ProjectNode.EventTriggering.DoNotTriggerTrackerQueryEvents)) != 0)
 			{
 				return true;
 			}

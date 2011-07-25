@@ -415,6 +415,7 @@ if __name__ == "__main__":
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
     f.write('3')
+    f.close()
 
     # inspect extension modules installed into site-packages
     def package_inspector(site_packages, dirname, fnames):

@@ -82,9 +82,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (File.Exists(Path.Combine(GetConfiguredDatabasePath(), Is3x ? "builtins.idb" : "__builtin__.idb"))) {
                 string versionFile = Path.Combine(GetConfiguredDatabasePath(), "database.ver");
                 if (File.Exists(versionFile)) {
-                    string allLines = File.ReadAllText(versionFile);
-                    int version;
-                    return Int32.TryParse(allLines, out version) && version == PythonTypeDatabase.CurrentVersion;
+                    try {
+                        string allLines = File.ReadAllText(versionFile);
+                        int version;
+                        return Int32.TryParse(allLines, out version) && version == PythonTypeDatabase.CurrentVersion;
+                    } catch (IOException) {
+                    }
                 }
                 return false;
             }

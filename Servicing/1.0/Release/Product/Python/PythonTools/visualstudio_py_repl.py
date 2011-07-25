@@ -160,7 +160,7 @@ actual inspection and introspection."""
         strlen, = struct.unpack('i', self.conn.recv(4))
         if not strlen:
             return ''
-        res = ''
+        res = _cmd('')
         while len(res) < strlen:
             res = res + self.conn.recv(strlen - len(res))
 

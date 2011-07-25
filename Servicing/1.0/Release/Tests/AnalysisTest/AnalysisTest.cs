@@ -103,6 +103,17 @@ namespace AnalysisTest {
         }
 
         [TestMethod]
+        public void TestImportAs() {
+            var entry = ProcessText(@"import sys as s, array as a");
+
+            AssertContains(entry.GetMembers("s", 1).Select(x => x.Name), "winver");
+            AssertContains(entry.GetMembers("a", 1).Select(x => x.Name), "ArrayType");
+
+            entry = ProcessText(@"import sys as s");
+            AssertContains(entry.GetMembers("s", 1).Select(x => x.Name), "winver");
+        }
+
+        [TestMethod]
         public void TestImportStar() {
             var entry = ProcessText(@"
 from nt import *
