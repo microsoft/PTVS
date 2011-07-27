@@ -196,7 +196,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
-                        if (keyValue.Value.References != null) {
+                        if (keyValue.Value.References != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
                             foreach (var reference in keyValue.Value.References) {
                                 yield return new KeyValuePair<IProjectEntry, SimpleSrcLocation>(keyValue.Key, reference);
                             }
@@ -210,7 +210,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
-                        if (keyValue.Value.Assignments != null) {
+                        if (keyValue.Value.Assignments != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
                             foreach (var reference in keyValue.Value.Assignments) {
                                 yield return new KeyValuePair<IProjectEntry, SimpleSrcLocation>(keyValue.Key, reference);
                             }
