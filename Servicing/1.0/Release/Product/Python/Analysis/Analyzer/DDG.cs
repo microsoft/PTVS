@@ -174,7 +174,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private void WalkFromImportWorker(NameExpression node, Namespace userMod, string impName, string newName) {
             var saveName = (newName == null) ? impName : newName;
 
-            var variable = Scopes[Scopes.Length - 1].CreateVariable(node, _unit, saveName);
+            bool addRef = node.Name != "*";
+
+            var variable = Scopes[Scopes.Length - 1].CreateVariable(node, _unit, saveName, addRef);
 
             ISet<Namespace> newTypes = EmptySet<Namespace>.Instance;
             bool madeSet = false;
@@ -182,7 +184,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             // look for builtin / user-defined modules first
             ModuleInfo module = userMod as ModuleInfo;
             if (module != null) {
-                var importedValue = module.Scope.CreateVariable(node, _unit, impName);
+                var importedValue = module.Scope.CreateVariable(node, _unit, impName, addRef);
                 Scopes[Scopes.Length - 1].GetLinkedVariables(saveName).Add(importedValue);
 
                 newTypes = newTypes.Union(importedValue.Types, ref madeSet);
