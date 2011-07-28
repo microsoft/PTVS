@@ -122,6 +122,17 @@ namespace Microsoft.PythonTools.Analysis {
                                 yield return res;
                             }
 
+                            // if a variable is imported from another module then also yield the defs/refs for the 
+                            // value in the defining module.
+                            var linked = scopes[i].GetLinkedVariablesNoCreate(name.Name);
+                            if (linked != null) {
+                                foreach (var linkedVar in linked) {
+                                    foreach (var res in ToVariables(linkedVar)) {
+                                        yield return res;
+                                    }
+                                }
+                            }
+
                             // if the member is defined in a base class as well include the base class member and references
                             if (scopes[i] is ClassScope) {
                                 var klass = scopes[i].Namespace as ClassInfo;
