@@ -645,7 +645,7 @@ class Thread(object):
                 except:
                     type_name = 'unknown'
                     
-                vars.append((var_name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name))
+                vars.append((var_name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
                 
 
             frames.append((cur_frame.f_code.co_firstlineno,
@@ -678,10 +678,10 @@ class Thread(object):
             conn.send(struct.pack('i', argcount))
                 
             conn.send(struct.pack('i', len(variables)))
-            for name, type_obj, safe_repr_obj, hex_repr_obj, type_name in variables:
+            for name, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len in variables:
                 write_string(name)
                     
-                write_object(type_obj, safe_repr_obj, hex_repr_obj, type_name)
+                write_object(type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
         
         send_lock.release()
 
@@ -1155,21 +1155,27 @@ def safe_hex_repr(obj):
     except:
         return None
 
+def get_object_len(obj):
+    try:
+        return len(obj)
+    except:
+        return None
+
 def report_execution_result(execution_id, result):
     obj_repr = safe_repr(result)
     hex_repr = safe_hex_repr(result)
     res_type = type(result)
     type_name = type(result).__name__
-    
+    obj_len = get_object_len(result)
 
     send_lock.acquire()
     conn.send(EXCR)
     conn.send(struct.pack('i', execution_id))
-    write_object(res_type, obj_repr, hex_repr, type_name)
+    write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
     send_lock.release()
 
 def report_children(execution_id, children, is_index, is_enumerate):
-    children = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__) for index, result in children]
+    children = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in children]
 
     send_lock.acquire()
     conn.send(CHLD)
@@ -1177,9 +1183,9 @@ def report_children(execution_id, children, is_index, is_enumerate):
     conn.send(struct.pack('i', len(children)))
     conn.send(struct.pack('i', is_index))
     conn.send(struct.pack('i', is_enumerate))
-    for child_name, obj_repr, hex_repr, res_type, type_name in children:
+    for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in children:
         write_string(child_name)
-        write_object(res_type, obj_repr, hex_repr, type_name)
+        write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
 
     send_lock.release()
 
@@ -1191,11 +1197,11 @@ try:
     NONEXPANDABLE_TYPES.append(long)
 except NameError: pass
 
-def write_object(obj_type, obj_repr, hex_repr, type_name):
+def write_object(obj_type, obj_repr, hex_repr, type_name, obj_len):
     write_string(obj_repr)
     write_string(hex_repr)
     write_string(type_name)
-    if obj_type in NONEXPANDABLE_TYPES:
+    if obj_type in NONEXPANDABLE_TYPES or obj_len == 0:
         conn.send(struct.pack('i', 0))
     else:
         conn.send(struct.pack('i', 1))
