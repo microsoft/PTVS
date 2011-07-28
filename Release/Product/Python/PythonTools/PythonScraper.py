@@ -439,5 +439,5 @@ if __name__ == "__main__":
                         pass
 
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
-    for root, dirs, files in os.walk(site_packages, package_inspector, site_packages):
+    for root, dirs, files in os.walk(site_packages):
         package_inspector(site_packages, root, files)
