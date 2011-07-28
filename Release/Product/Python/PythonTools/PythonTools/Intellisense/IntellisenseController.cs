@@ -416,10 +416,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
                 
                 if (_activeSession != null && !_activeSession.IsDismissed) {
-                    if (_activeSession.SelectedCompletionSet.SelectionStatus.IsSelected) {
-                        if (PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(ch) != -1) {
-                            _activeSession.Commit();
-                        }
+                    if (_activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
+                        PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(ch) != -1) {
+                        _activeSession.Commit();
+                    } else if (ch != '_' && !(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z') && !(ch >= '0' && ch <= '9')) {
+                        _activeSession.Dismiss();
                     }
                 }
 
