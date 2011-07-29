@@ -1325,10 +1325,7 @@ class _DebuggerOutput(object):
             conn.send(struct.pack('i', thread.get_ident()))
             write_string(value)
             send_lock.release()
-        if self.is_stdout:
-            sys.__stdout__.write(value)
-        else:
-            sys.__stderr__.write(value)
+        self.old_out.write(value)
     
     def isatty(self):
         return True
