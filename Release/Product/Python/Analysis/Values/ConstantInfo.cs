@@ -40,6 +40,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+            if (operation == PythonOperator.Mod) {
+                if (_value is string) {
+                    return ProjectState._unicodeType.SelfSet;
+                } else if (_value is AsciiString) {
+                    return ProjectState._bytesType.SelfSet;
+                }
+            }
             return _builtinInfo.BinaryOperation(node, unit, operation, rhs);
         }
 

@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
         internal ISet<Namespace> _objectSet;
         internal Namespace _functionType;
-        internal BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _longType, _floatType;
+        internal BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _longType, _floatType, _unicodeType, _bytesType;
         internal ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
         private KnownTypes _types;
@@ -82,6 +82,13 @@ namespace Microsoft.PythonTools.Analysis {
             _typeObj = GetBuiltin("type");
             _intType = (BuiltinClassInfo)GetBuiltin("int");
             _stringType = (BuiltinClassInfo)GetBuiltin("str");
+            if (_langVersion.Is2x()) {
+                _unicodeType = (BuiltinClassInfo)GetBuiltin("unicode");
+                _bytesType = (BuiltinClassInfo)GetBuiltin("str");
+            } else {
+                _unicodeType = (BuiltinClassInfo)GetBuiltin("str");
+                _bytesType = (BuiltinClassInfo)GetBuiltin("bytes");
+            }
 
             _objectType = (BuiltinClassInfo)GetBuiltin("object");
             _objectSet = _objectType.SelfSet;

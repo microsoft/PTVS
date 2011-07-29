@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -85,6 +86,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (res.Count > 0) {
                 _klass.AddMemberReference(node, unit, name);
             }
+        }
+
+        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+            if (operation == PythonOperator.Mod) {
+                if (_klass == ProjectState._unicodeType) {
+                    return ProjectState._unicodeType.SelfSet;
+                } else if (_klass == ProjectState._bytesType) {
+                    return ProjectState._bytesType.SelfSet;
+                }
+            }
+
+            return base.BinaryOperation(node, unit, operation, rhs);
         }
 
         public override bool IsOfType(BuiltinClassInfo klass) {

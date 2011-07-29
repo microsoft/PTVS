@@ -419,7 +419,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (_activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
                         PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(ch) != -1) {
                         _activeSession.Commit();
-                    } else if (ch != '_' && !(ch >= 'a' && ch <= 'z') && !(ch >= 'A' && ch <= 'Z') && !(ch >= '0' && ch <= '9')) {
+                    } else if (!IsIdentifierChar(ch)) {
                         _activeSession.Dismiss();
                     }
                 }
@@ -495,6 +495,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        private static bool IsIdentifierChar(char ch) {
+            return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
         }
 
         private bool EnterOnCompleteText() {

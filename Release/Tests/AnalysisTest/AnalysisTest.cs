@@ -677,6 +677,29 @@ def g():
         }
 
         [TestMethod]
+        public void TestStringFormatting() {
+            var text = @"
+x = u'abc %d'
+y = x % (42, )
+
+
+x1 = 'abc %d'
+y1 = x1 % (42, )
+
+foo = 'abc %d'.lower()
+bar = foo % (42, )
+
+foo2 = u'abc' + u'%d'
+bar2 = foo2 % (42, )";
+
+            var entry = ProcessText(text);
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y", GetLineNumber(text, "y ="))), "type unicode");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y1", GetLineNumber(text, "y1 ="))), "type str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar", GetLineNumber(text, "bar ="))), "type str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar2", GetLineNumber(text, "bar2 ="))), "type unicode");
+        }
+
+        [TestMethod]
         public void TestReferences() {
             // instance variables
             var text = @"
