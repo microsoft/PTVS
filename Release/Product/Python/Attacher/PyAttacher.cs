@@ -43,7 +43,11 @@ namespace Microsoft.PythonTools.Debugger {
         private int _langVersion;
 
         private static Process _checkProcess;
-        private static readonly string[] _pythonMods = new[] { "python24.dll", "python25.dll", "python26.dll", "python27.dll", "python30.dll", "python31.dll" };
+        private static readonly string[] _pythonMods = new[] { 
+            "python24.dll",   "python25.dll",   "python26.dll",   "python27.dll",   "python30.dll",   "python31.dll",   "python32.dll",
+            "python24_d.dll", "python25_d.dll", "python26_d.dll", "python27_d.dll", "python30_d.dll", "python31_d.dll", "python32_d.dll" 
+        };
+
         private static IsWow64Process _isWow64;
         private static bool _checkedIsWow64;
         private static IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);

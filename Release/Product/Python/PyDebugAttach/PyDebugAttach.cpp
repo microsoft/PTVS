@@ -26,7 +26,7 @@
 #include <fstream>
 #include <hash_set>
 #include "..\VsPyProf\python.h"
-
+    
 using namespace std;
 
 typedef int (Py_IsInitialized) ();
@@ -63,6 +63,9 @@ typedef PyGILState_STATE (PyGILState_Ensure)();
 typedef void (PyGILState_Release)(PyGILState_STATE);
 typedef unsigned long (_PyEval_GetSwitchInterval)(void);
 typedef void (_PyEval_SetSwitchInterval)(unsigned long microseconds);
+typedef void* (PyThread_get_key_value)(int);
+typedef int (PyThread_set_key_value)(int, void*);
+typedef void (PyThread_delete_key_value)(int);
 
 wstring GetCurrentModuleFilename()
 { 
@@ -228,9 +231,19 @@ void SuspendThreads(MyHashMap &suspendedThreads, Py_AddPendingCall* addPendingCa
     } while(suspended && !threadsInited());
 }
 
-void DecRef(PyObject* object) {
-    if(object != nullptr && --object->ob_refcnt == 0) {
-        object->ob_type->tp_dealloc(object);
+PyObject* GetPyObjectPointerNoDebugInfo(bool isDebug, PyObject* object) {
+    if(object != nullptr && isDebug) {
+        // debug builds have 2 extra pointers at the front that we don't care about
+        return (PyObject*)((size_t*)object+2);
+    }
+    return object;
+}
+
+void DecRef(PyObject* object, bool isDebug) {
+    auto noDebug = GetPyObjectPointerNoDebugInfo(isDebug, object);  
+
+    if(noDebug != nullptr && --noDebug->ob_refcnt == 0) {
+        ((PyTypeObject*)GetPyObjectPointerNoDebugInfo(isDebug, noDebug->ob_type))->tp_dealloc(object);
     }
 }
 
@@ -242,27 +255,37 @@ void IncRef(PyObject* object) {
 class PyObjectHolder {
 private:
     PyObject* _object;
+    bool _isDebug;
 public:
-    PyObjectHolder() {
+    PyObjectHolder(bool isDebug) {
         _object = nullptr;
+        _isDebug = isDebug;
     }
 
-    PyObjectHolder(PyObject *object) {
+    PyObjectHolder(bool isDebug, PyObject *object) {
         _object = object;
+        _isDebug = isDebug;
     };
 
-    PyObjectHolder(PyObject *object, bool addRef) {
+    PyObjectHolder(bool isDebug, PyObject *object, bool addRef) {
         _object = object;
-        if(_object != nullptr) {
-            _object->ob_refcnt++;
+        _isDebug = isDebug;
+        if(_object != nullptr && addRef) {
+            GetPyObjectPointerNoDebugInfo(_isDebug, _object)->ob_refcnt++;
         }
     };
 
-    ~PyObjectHolder() {
-        DecRef(_object);
+    PyObject* ToPython() {
+        return _object;
     }
 
-    PyObject* operator* () { return _object; }
+    ~PyObjectHolder() {
+        DecRef(_object, _isDebug);
+    }
+
+    PyObject* operator* () { 
+        return GetPyObjectPointerNoDebugInfo(_isDebug, _object);
+    }
 };
 
 // Structure for our shared memory communication, aligned to be identical on 64-bit and 32-bit
@@ -386,7 +409,7 @@ public:
     }
 };
 
-bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
+bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
     // Python DLL?
     auto isInit = (Py_IsInitialized*)GetProcAddress(module, "Py_IsInitialized");
     auto getVersion = (GetVersionFunc*)GetProcAddress(module, "Py_GetVersion");
@@ -433,12 +456,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
         auto getSwitchInterval = (_PyEval_GetSwitchInterval*)GetProcAddress(module, "_PyEval_GetSwitchInterval");
         auto setSwitchInterval = (_PyEval_SetSwitchInterval*)GetProcAddress(module, "_PyEval_SetSwitchInterval");
         auto boolFromLong = (PyBool_FromLong*)GetProcAddress(module, "PyBool_FromLong");
+        auto getThreadTls = (PyThread_get_key_value*)GetProcAddress(module, "PyThread_get_key_value");
+        auto setThreadTls = (PyThread_set_key_value*)GetProcAddress(module, "PyThread_set_key_value");
+        auto delThreadTls = (PyThread_delete_key_value*)GetProcAddress(module, "PyThread_delete_key_value");
 
         if (addPendingCall== nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease== nullptr || threadHead==nullptr ||
             initThreads==nullptr || getVersion == nullptr || releaseLock== nullptr || threadsInited== nullptr || threadNext==nullptr || threadSwap==nullptr ||
             pyDictNew==nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
-            errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr) {
+            errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
+            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr) {
             // we're missing some APIs, we cannot attach.
             connInfo.ReportError(ConnError_PythonNotFound);
             return false;
@@ -566,7 +593,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
             return false;
         }
 
-        auto code = PyObjectHolder(pyCompileString(debuggerCode, "visualstudio_py_debugger.py", 257 /*Py_file_input*/));
+        auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, "visualstudio_py_debugger.py", 257 /*Py_file_input*/));
         delete [] debuggerCode;
 
         if(*code == nullptr) {                
@@ -575,47 +602,48 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
         }
 
         // create a globals/locals dict for evaluating the code...
-        auto globalsDict = PyObjectHolder(pyDictNew());
-        dictSetItem(*globalsDict, "__builtins__", getBuiltins());   
+        auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
+        dictSetItem(globalsDict.ToPython(), "__builtins__", getBuiltins());   
         int size = WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), NULL, 0, NULL, NULL);
         char* filenameBuffer = new char[size];
         if(WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), filenameBuffer, size, NULL, NULL) != 0) {
             filenameBuffer[size] = 0;
-            dictSetItem (*globalsDict, "__file__", strFromString(filenameBuffer));
+            dictSetItem (globalsDict.ToPython(), "__file__", strFromString(filenameBuffer));
         }
-        pyEvalCode(*code, *globalsDict, *globalsDict);
+        pyEvalCode(code.ToPython(), globalsDict.ToPython(), globalsDict.ToPython());
 
         // now initialize debugger process wide state
-        auto attach_process = PyObjectHolder(getDictItem(*globalsDict, "attach_process"), true);
-        auto new_thread = PyObjectHolder(getDictItem(*globalsDict, "new_thread"), true);
+        auto attach_process = PyObjectHolder(isDebug, getDictItem(globalsDict.ToPython(), "attach_process"), true);
+        auto new_thread = PyObjectHolder(isDebug, getDictItem(globalsDict.ToPython(), "new_thread"), true);
 
         if (*attach_process == nullptr || *new_thread == nullptr) {
             connInfo.ReportError(ConnError_LoadDebuggerBadDebugger);
             return false;
         }
 
-        auto pyPortNum = PyObjectHolder(intFromLong(connInfo.Buffer->PortNumber));
+        auto pyPortNum = PyObjectHolder(isDebug, intFromLong(connInfo.Buffer->PortNumber));
 
         // we are about to open our socket and wait for the connection, let VS know.
         connInfo.ReportError(ConnError_None);
         SetEvent(connInfo.Buffer->AttachStartingEvent);   
 
-        auto debugId = PyObjectHolder(strFromString(connInfo.Buffer->DebugId));
-        DecRef(call(*attach_process, *pyPortNum, *debugId, NULL));       
+        auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
+        
+        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), NULL), isDebug);       
 
-        auto sysMod = PyObjectHolder(pyImportMod("sys"));
+        auto sysMod = PyObjectHolder(isDebug, pyImportMod("sys"));
         if(*sysMod == nullptr) {
             connInfo.ReportError(ConnError_SysNotFound);
             return false;
         }
 
-        auto settrace = PyObjectHolder(pyGetAttr(*sysMod, "settrace"));
+        auto settrace = PyObjectHolder(isDebug, pyGetAttr(sysMod.ToPython(), "settrace"));
         if(*settrace == nullptr) {
             connInfo.ReportError(ConnError_SysSetTraceNotFound); 
             return false;
         }
         
-        auto gettrace = PyObjectHolder(pyGetAttr(*sysMod, "gettrace"));
+        auto gettrace = PyObjectHolder(isDebug, pyGetAttr(sysMod.ToPython(), "gettrace"));
 
         // we need to walk the thread list each time after we've initialized a thread so that we are always
         // dealing w/ a valid thread list (threads can exit when we run code and therefore the current thread
@@ -639,6 +667,17 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                 setSwitchInterval(INFINITE);
             }
 
+            // find what index is holding onto the thread state...
+            auto curThread = *curPythonThread;
+            int threadStateIndex = -1;
+            for(int i = 0; i < 100000; i++) {
+                void* value = getThreadTls(i);
+                if(value == curThread) {
+                    threadStateIndex = i;
+                    break;
+                }
+            }
+
             bool foundThread;
             int processedThreads = 0;
             bool firstThread = true;
@@ -656,7 +695,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                     // skip this thread - it doesn't really have any Python code on it...
                     if(threadId != GetCurrentThreadId()) {
                         // create new debugger Thread object on our injected thread
-                        auto pyThreadId = PyObjectHolder(intFromLong(threadId));           
+                        auto pyThreadId = PyObjectHolder(isDebug, intFromLong(threadId));           
                         PyFrameObject* frame;
                         // update all of the frames so they have our trace func
                         if(version[0] == '3') {
@@ -667,8 +706,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                             frame = curThread->_25_27.frame;
                         }
 
-                        auto threadObj = PyObjectHolder(call(*new_thread, *pyThreadId, firstThread ? pyTrue : pyFalse, frame, NULL));
-                        if(*threadObj == pyNone || *threadObj == nullptr) {
+                        auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), firstThread ? pyTrue : pyFalse, frame, NULL));
+                        if(threadObj.ToPython() == pyNone || *threadObj == nullptr) {
                             break;
                         }
 
@@ -677,6 +716,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                         // all of the work here needs to be minimal - in particular we shouldn't
                         // ever evaluate user defined code as we could end up switching to this
                         // thread on the main thread and corrupting state.
+                        auto prevThreadState = getThreadTls(threadStateIndex);
+                        delThreadTls(threadStateIndex);
+                        setThreadTls(threadStateIndex, curThread);
                         auto prevThread = threadSwap(curThread);
                                
                         // save and restore the error in case something funky happens...
@@ -686,17 +728,17 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                             pyErrFetch(&type, &value, &traceback);
                         }
 
-                        auto traceFunc = PyObjectHolder(pyGetAttr(*threadObj, "trace_func"));
-
+                        auto traceFunc = PyObjectHolder(isDebug, pyGetAttr(threadObj.ToPython(), "trace_func"));
+                        
                         if(*gettrace == NULL) {
-                            DecRef(call(*settrace, *traceFunc, NULL));
+                            DecRef(call(settrace.ToPython(), traceFunc.ToPython(), NULL), isDebug);
                         }else{
-                            auto existingTraceFunc = PyObjectHolder(call(*gettrace, NULL));
+                            auto existingTraceFunc = PyObjectHolder(isDebug, call(gettrace.ToPython(), NULL));
 
-                            DecRef(call(*settrace, *traceFunc, NULL));
+                            DecRef(call(settrace.ToPython(), traceFunc.ToPython(), NULL), isDebug);
 
-                            if (*existingTraceFunc != pyNone) {
-                                pySetAttr(*threadObj, "prev_trace_func", *existingTraceFunc);
+                            if (existingTraceFunc.ToPython() != pyNone) {
+                                pySetAttr(threadObj.ToPython(), "prev_trace_func", existingTraceFunc.ToPython());
                             }
                         }
 
@@ -705,14 +747,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo) {
                         }
 
                         // update all of the frames so they have our trace func
-                        auto curFrame = frame;
+                        auto curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, frame);
                         while(curFrame != nullptr) {
-                            DecRef(curFrame->f_trace);
+                            DecRef(curFrame->f_trace, isDebug);
                             IncRef(*traceFunc);
-                            curFrame->f_trace = *traceFunc;
-                            curFrame = curFrame->f_back;
+                            curFrame->f_trace = traceFunc.ToPython();
+                            curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, curFrame->f_back);
                         }
-                    
+                        
+                        delThreadTls(threadStateIndex);
+                        setThreadTls(threadStateIndex, prevThread);
                         threadSwap(prevThread);
                     }
                     break;
@@ -757,7 +801,12 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
                 if(GetModuleBaseName(hProcess, hMods[i], mod_name, MAX_PATH)) {            
                     if(_wcsnicmp(mod_name, L"python", 6) == 0) {
 
-                        if(DoAttach(hMods[i], connInfo)) {
+                        bool isDebug = false;
+                        if(wcslen(mod_name) >= 10 && _wcsnicmp(mod_name + 8, L"_d", 2) == 0) {
+                            isDebug = true;
+                        }
+
+                        if(DoAttach(hMods[i], connInfo, isDebug)) {
                             // we've successfully attached the debugger
                             break;
                         }
