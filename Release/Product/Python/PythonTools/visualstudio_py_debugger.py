@@ -1298,8 +1298,9 @@ def do_wait():
 
 class _DebuggerOutput(object):
     """file like object which redirects output to the repl window."""
-    def __init__(self, is_stdout):
+    def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout
+        self.old_out = old_out
 
     def flush(self):
         pass
@@ -1387,8 +1388,8 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     attach_process(port_num, debug_id)
 
     if redirect_output:
-        sys.stdout = _DebuggerOutput(is_stdout = True)
-        sys.stderr = _DebuggerOutput(is_stdout = False)
+        sys.stdout = _DebuggerOutput(sys.stdout, is_stdout = True)
+        sys.stderr = _DebuggerOutput(sys.stderr, is_stdout = False)
 
     # setup the current thread
     cur_thread = new_thread()
