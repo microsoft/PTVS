@@ -318,6 +318,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     _activeSession.CompletionSets.Count == 1 &&
                     _activeSession.CompletionSets[0].Completions.Count == 1) {
                     _activeSession.Commit();
+                    _activeSession = null;
                 } else {
                     _activeSession.Dismissed += new EventHandler(OnCompletionSessionDismissedOrCommitted);
                     _activeSession.Committed += new EventHandler(OnCompletionSessionDismissedOrCommitted);
@@ -456,8 +457,11 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                             break;
                         case VSConstants.VSStd2KCmdID.TAB:
-                            _activeSession.Commit();
-                            return VSConstants.S_OK;                        
+                            if (!_activeSession.IsDismissed) {
+                                _activeSession.Commit();
+                                return VSConstants.S_OK;
+                            }
+                            break;
                     }
                 }
             } else if (_sigHelpSession != null) {
