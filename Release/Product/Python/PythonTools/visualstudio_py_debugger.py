@@ -988,8 +988,10 @@ class DebuggerLoop(object):
         conn.send(DETC)
         DETACHED = True
         if not _INTERCEPTING_FOR_ATTACH:
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
+            if isinstance(sys.stdout, _DebuggerOutput): 
+                sys.stdout = sys.stdout.old_out
+            if isinstance(sys.stderr, _DebuggerOutput):
+                sys.stderr = sys.stderr.old_out
 
         send_lock.release()
 
