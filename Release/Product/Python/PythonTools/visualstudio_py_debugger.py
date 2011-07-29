@@ -840,6 +840,8 @@ class DebuggerLoop(object):
             for file, id in cur_bp:
                 if id == brkpt_id:
                     del cur_bp[(file, id)]
+                    if not cur_bp:
+                        del BREAKPOINTS[lineNo]
                     break
 
     def command_break_all(self):
