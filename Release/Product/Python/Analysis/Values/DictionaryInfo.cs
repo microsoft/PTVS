@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         (keyName ?? "unknown") +
                         " : " +
                         (valueName ?? "unknown") +
-                        "}";
+                        "})";
                 }
 
                 return "dict";
