@@ -37,11 +37,10 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
 
@@ -1241,6 +1240,12 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        public IReplWindow Window {
+            get {
+                return _window;
+            }
+        }
+
         private static string FixEndingNewLine(string prevText) {
             if ((prevText.IndexOf('\n') == prevText.LastIndexOf('\n')) &&
                 (prevText.IndexOf('\r') == prevText.LastIndexOf('\r'))) {
@@ -1248,5 +1253,6 @@ namespace Microsoft.PythonTools.Repl {
             }
             return prevText;
         }
+
     }
 }

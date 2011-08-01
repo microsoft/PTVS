@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Refactoring;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -535,15 +536,21 @@ namespace Microsoft.PythonTools.Language {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
-                        string updated = RemoveReplPrompts(_textView.Options.GetNewLineCharacter());
-                        if (updated != null) {
-                            _editorOps.ReplaceSelection(updated);
+                        PythonReplEvaluator eval;
+                        if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
+                            string pasting = eval.FormatClipboard() ?? Clipboard.GetText();
+                            eval.Window.Submit(eval.SplitCode(pasting));
                             return VSConstants.S_OK;
+                        } else {
+                            string updated = RemoveReplPrompts(_textView.Options.GetNewLineCharacter());
+                            if (updated != null) {
+                                _editorOps.ReplaceSelection(updated);
+                                return VSConstants.S_OK;
+                            }
                         }
                         break;
                     case VSConstants.VSStd97CmdID.GotoDefn: return GotoDefinition();
                     case VSConstants.VSStd97CmdID.FindReferences: return FindAllReferences();
-                        
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
