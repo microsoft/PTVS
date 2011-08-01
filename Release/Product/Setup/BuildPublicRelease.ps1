@@ -21,6 +21,8 @@ $request += "Project=TechnicalComputing`n"
 $request += "Recursive=yes`n" 
 $request += "StatusMail=$env:username;dinov;smortaz`n" 
 $request += "UserName=$env:username`n" 
+$request += "SubmitToArchive=ALL`n" 
+$request += "SubmitToInternet=Yes`n" 
 
 mkdir -force requests
 [System.IO.File]::WriteAllText((get-location).Path + '\request.txt', $request)

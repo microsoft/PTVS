@@ -405,13 +405,13 @@ if __name__ == "__main__":
         if mod_name == builtin_name or mod_name == '__main__': continue
         
         res = generate_module(mod_name)
-        
-        try:
-            res = merge_with_baseline(mod_name, baselinepath, res)
+        if res is not None:
+            try:
+                res = merge_with_baseline(mod_name, baselinepath, res)
 
-            write_analysis(mod_name, outpath, res)
-        except ValueError:
-            pass
+                write_analysis(mod_name, outpath, res)
+            except ValueError:
+                pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
     f.write('3')
