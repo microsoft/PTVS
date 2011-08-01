@@ -988,8 +988,10 @@ class DebuggerLoop(object):
         conn.send(DETC)
         DETACHED = True
         if not _INTERCEPTING_FOR_ATTACH:
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
+            if isinstance(sys.stdout, _DebuggerOutput): 
+                sys.stdout = sys.stdout.old_out
+            if isinstance(sys.stderr, _DebuggerOutput):
+                sys.stderr = sys.stderr.old_out
 
         send_lock.release()
 
@@ -1292,8 +1294,9 @@ def do_wait():
 
 class _DebuggerOutput(object):
     """file like object which redirects output to the repl window."""
-    def __init__(self, is_stdout):
+    def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout
+        self.old_out = old_out
 
     def flush(self):
         pass
@@ -1314,10 +1317,7 @@ class _DebuggerOutput(object):
             conn.send(struct.pack('i', thread.get_ident()))
             write_string(value)
             send_lock.release()
-        if self.is_stdout:
-            sys.__stdout__.write(value)
-        else:
-            sys.__stderr__.write(value)
+        self.old_out.write(value)
     
     def isatty(self):
         return True
@@ -1381,8 +1381,8 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     attach_process(port_num, debug_id)
 
     if redirect_output:
-        sys.stdout = _DebuggerOutput(is_stdout = True)
-        sys.stderr = _DebuggerOutput(is_stdout = False)
+        sys.stdout = _DebuggerOutput(sys.stdout, is_stdout = True)
+        sys.stderr = _DebuggerOutput(sys.stderr, is_stdout = False)
 
     # setup the current thread
     cur_thread = new_thread()

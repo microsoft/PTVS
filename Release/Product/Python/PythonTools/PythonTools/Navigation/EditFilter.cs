@@ -539,8 +539,10 @@ namespace Microsoft.PythonTools.Language {
                         PythonReplEvaluator eval;
                         if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
                             string pasting = eval.FormatClipboard() ?? Clipboard.GetText();
-                            eval.Window.Submit(eval.SplitCode(pasting));
-                            return VSConstants.S_OK;
+                            if (pasting != null) {
+                                eval.Window.Submit(eval.SplitCode(pasting));
+                                return VSConstants.S_OK;
+                            }
                         } else {
                             string updated = RemoveReplPrompts(_textView.Options.GetNewLineCharacter());
                             if (updated != null) {

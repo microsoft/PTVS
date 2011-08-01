@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
-            if (locatedDef != null) {
+            if (locatedDef != null && locatedDef.Entry.Tree != null) {  // null tree if there are errors in the file
                 var start = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
                 yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, start.Line, start.Column));
             }

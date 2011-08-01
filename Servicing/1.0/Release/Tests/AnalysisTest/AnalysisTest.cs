@@ -677,6 +677,24 @@ def g():
         }
 
         [TestMethod]
+        public void TestDescriptorNoDescriptor() {
+            var text = @"
+class NoDescriptor:   
+       def nodesc_method(self): pass
+
+ class SomeClass:
+    foo = NoDescriptor()
+
+    def f(self):
+        self.foo
+        pass
+";
+
+            var entry = ProcessText(text);
+            AssertContains(entry.GetMembers("self.foo", GetLineNumber(text, "self.foo")).Select(x => x.Name), "nodesc_method");
+        }
+
+        [TestMethod]
         public void TestReferences() {
             // instance variables
             var text = @"

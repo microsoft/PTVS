@@ -170,8 +170,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
-            var get = _classInfo.GetMemberNoReferences(node, unit, "__get__").GetDescriptor(node, this, _classInfo, unit);
-            return get.Call(node, unit, new[] { instance, context }, ExpressionEvaluator.EmptyNames);
+            var getter = _classInfo.GetMemberNoReferences(node, unit, "__get__");
+            if (getter.Count > 0) {
+                var get = getter.GetDescriptor(node, this, _classInfo, unit);
+                return get.Call(node, unit, new[] { instance, context }, ExpressionEvaluator.EmptyNames);
+            }
+            return SelfSet;
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
