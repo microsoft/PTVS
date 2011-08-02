@@ -773,8 +773,6 @@ class BasicReplBackend(ReplBackend):
                         self.get_namespaces(name, module, res)
                     else:
                         filename = getattr(module, '__file__', '') or ''
-                        sys.__stdout__.write(repr(filename))
-                        sys.__stdout__.write('\n')
                         res.append((name, filename))
 
             except:
