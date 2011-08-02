@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
-    <Property Id="VSINSTALLPATH">
+    <Property Id="VSINSTALLPATH" Secure="yes">
       <RegistrySearch Id="VSInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)" Name="InstallDir" Type="directory" />
     </Property>
     
