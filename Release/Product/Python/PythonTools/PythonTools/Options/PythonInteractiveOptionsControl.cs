@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Options {
                 _startupScript.Enabled = false;
                 _executionMode.Enabled = false;
                 _completionModeGroup.Enabled = false;
+                _liveCompletionsOnly.Enabled = false;
                 EnableOrDisableOptions(false);
 
             }
@@ -79,6 +80,7 @@ namespace Microsoft.PythonTools.Options {
                 _startupScript.Enabled = true;
                 _executionMode.Enabled = true;
                 _completionModeGroup.Enabled = true;
+                _liveCompletionsOnly.Enabled = true;
                 EnableOrDisableOptions(true);
             }
 
@@ -113,6 +115,8 @@ When launching a project in the interactive window these are combined with any i
 import visualstudio_py_repl
 visualstudio_py_repl.BACKEND.attach()";
 
+            const string liveCompletionsToolTip = @"When offering completions don't use values that have come from analysis of the REPL buffer.  Instead, only use values from live objects.";
+
 
             _tooltips.SetToolTip(_inlinePrompts, inlinePromptsToolTip);
             _tooltips.SetToolTip(_useUserDefinedPrompts, useInterpreterPromptsToolTip);
@@ -122,6 +126,7 @@ visualstudio_py_repl.BACKEND.attach()";
             _tooltips.SetToolTip(_interpreterOptions, interpreterOptionsToolTip);
             _tooltips.SetToolTip(_smartReplHistory, smartReplHistoryToolTip);
             _tooltips.SetToolTip(_enableAttach, enableAttachToolTip);
+            _tooltips.SetToolTip(_liveCompletionsOnly, liveCompletionsToolTip);
         }
 
         private void RefreshOptions() {
@@ -142,6 +147,7 @@ visualstudio_py_repl.BACKEND.attach()";
                 _interpreterOptions.Text = CurrentOptions.InterpreterOptions;
                 _priPromptLabel.Enabled = _secPromptLabel.Enabled = _secPrompt.Enabled = _priPrompt.Enabled = _useUserDefinedPrompts.Checked;
                 _enableAttach.Checked = CurrentOptions.EnableAttach;
+                _liveCompletionsOnly.Checked = CurrentOptions.LiveCompletionsOnly;
 
                 int selectedExecutionMode = -1;
                 for (int i = 0; i < _executionModes.Length; i++) {
@@ -247,6 +253,10 @@ visualstudio_py_repl.BACKEND.attach()";
 
         private void EnableAttachCheckedChanged(object sender, EventArgs e) {
             CurrentOptions.EnableAttach = _enableAttach.Checked;
+        }
+
+        private void _liveCompletionsOnly_CheckedChanged(object sender, EventArgs e) {
+            CurrentOptions.LiveCompletionsOnly = _liveCompletionsOnly.Checked;
         }
     }
 }

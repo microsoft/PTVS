@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ExecutionModeSetting = "ExecutionMode";
         private const string InterpreterOptionsSetting = "InterpreterOptions";
         private const string EnableAttachSetting = "EnableAttach";
+        private const string LiveCompletionsOnlySetting = "LiveCompletionsOnly";
 
         public PythonInteractiveOptionsPage()
             : base("Interactive Windows") {
@@ -73,6 +74,7 @@ namespace Microsoft.PythonTools.Options {
                 options.ExecutionMode = "";
                 options.InterpreterOptions = "";
                 options.EnableAttach = false;
+                options.LiveCompletionsOnly = false;
             }
         }
 
@@ -100,7 +102,8 @@ namespace Microsoft.PythonTools.Options {
                 StartupScript = LoadString(interpreterId + StartupScriptSetting) ?? "",
                 ExecutionMode = LoadString(interpreterId + ExecutionModeSetting) ?? "",
                 InterpreterOptions = LoadString(interpreterId + InterpreterOptionsSetting) ?? "",
-                EnableAttach = LoadBool(interpreterId + EnableAttachSetting) ?? false
+                EnableAttach = LoadBool(interpreterId + EnableAttachSetting) ?? false,
+                LiveCompletionsOnly = LoadBool(interpreterId + LiveCompletionsOnlySetting) ?? false
             };
         }
 
@@ -124,6 +127,7 @@ namespace Microsoft.PythonTools.Options {
                     SaveString(interpreterId + ExecutionModeSetting, options.ExecutionMode ?? "");
                     SaveString(interpreterId + InterpreterOptionsSetting, options.InterpreterOptions ?? "");
                     SaveBool(interpreterId + EnableAttachSetting, options.EnableAttach);
+                    SaveBool(interpreterId + LiveCompletionsOnlySetting, options.LiveCompletionsOnly);
 
                     // propagate changed settings to existing REPL windows
                     foreach (var replWindow in replProvider.GetReplWindows()) {

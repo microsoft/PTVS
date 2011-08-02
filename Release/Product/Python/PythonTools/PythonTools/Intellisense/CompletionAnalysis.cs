@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             MemberResult[] modules = new MemberResult[0];
             if (path.Length == 0) {
-                if (analysis != null) {
+                if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     modules = analysis.GetModules(true);
                 }
                 if (replScopes != null) {
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     modules = allModules.ToArray();
                 }
             } else {
-                if (analysis != null) {
+                if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                     modules = analysis.GetModuleMembers(path, includeMembers);
                 }
 

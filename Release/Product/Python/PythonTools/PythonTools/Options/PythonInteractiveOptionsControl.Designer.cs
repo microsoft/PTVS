@@ -46,6 +46,7 @@
             this._interpOptionsLabel = new System.Windows.Forms.Label();
             this._interpreterOptions = new System.Windows.Forms.TextBox();
             this._enableAttach = new System.Windows.Forms.CheckBox();
+            this._liveCompletionsOnly = new System.Windows.Forms.CheckBox();
             this._completionModeGroup.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,7 +66,7 @@
             this._completionModeGroup.Controls.Add(this._evalAlways);
             this._completionModeGroup.Controls.Add(this._evalNoCalls);
             this._completionModeGroup.Controls.Add(this._evalNever);
-            this._completionModeGroup.Location = new System.Drawing.Point(6, 193);
+            this._completionModeGroup.Location = new System.Drawing.Point(6, 190);
             this._completionModeGroup.Name = "_completionModeGroup";
             this._completionModeGroup.Size = new System.Drawing.Size(377, 86);
             this._completionModeGroup.TabIndex = 3;
@@ -111,7 +112,7 @@
             // _inlinePrompts
             // 
             this._inlinePrompts.AutoSize = true;
-            this._inlinePrompts.Location = new System.Drawing.Point(6, 127);
+            this._inlinePrompts.Location = new System.Drawing.Point(6, 110);
             this._inlinePrompts.Name = "_inlinePrompts";
             this._inlinePrompts.Size = new System.Drawing.Size(112, 17);
             this._inlinePrompts.TabIndex = 0;
@@ -122,7 +123,7 @@
             // _useUserDefinedPrompts
             // 
             this._useUserDefinedPrompts.AutoSize = true;
-            this._useUserDefinedPrompts.Location = new System.Drawing.Point(6, 147);
+            this._useUserDefinedPrompts.Location = new System.Drawing.Point(6, 133);
             this._useUserDefinedPrompts.Name = "_useUserDefinedPrompts";
             this._useUserDefinedPrompts.Size = new System.Drawing.Size(146, 17);
             this._useUserDefinedPrompts.TabIndex = 1;
@@ -133,7 +134,7 @@
             // _priPromptLabel
             // 
             this._priPromptLabel.AutoSize = true;
-            this._priPromptLabel.Location = new System.Drawing.Point(23, 170);
+            this._priPromptLabel.Location = new System.Drawing.Point(23, 156);
             this._priPromptLabel.Name = "_priPromptLabel";
             this._priPromptLabel.Size = new System.Drawing.Size(77, 13);
             this._priPromptLabel.TabIndex = 2;
@@ -141,7 +142,7 @@
             // 
             // _priPrompt
             // 
-            this._priPrompt.Location = new System.Drawing.Point(120, 167);
+            this._priPrompt.Location = new System.Drawing.Point(120, 153);
             this._priPrompt.Name = "_priPrompt";
             this._priPrompt.Size = new System.Drawing.Size(54, 20);
             this._priPrompt.TabIndex = 4;
@@ -150,7 +151,7 @@
             // _secPromptLabel
             // 
             this._secPromptLabel.AutoSize = true;
-            this._secPromptLabel.Location = new System.Drawing.Point(184, 170);
+            this._secPromptLabel.Location = new System.Drawing.Point(184, 156);
             this._secPromptLabel.Name = "_secPromptLabel";
             this._secPromptLabel.Size = new System.Drawing.Size(94, 13);
             this._secPromptLabel.TabIndex = 3;
@@ -158,7 +159,7 @@
             // 
             // _secPrompt
             // 
-            this._secPrompt.Location = new System.Drawing.Point(284, 167);
+            this._secPrompt.Location = new System.Drawing.Point(284, 153);
             this._secPrompt.Name = "_secPrompt";
             this._secPrompt.Size = new System.Drawing.Size(54, 20);
             this._secPrompt.TabIndex = 5;
@@ -249,7 +250,7 @@
             // _enableAttach
             // 
             this._enableAttach.AutoSize = true;
-            this._enableAttach.Location = new System.Drawing.Point(6, 107);
+            this._enableAttach.Location = new System.Drawing.Point(172, 88);
             this._enableAttach.Name = "_enableAttach";
             this._enableAttach.Size = new System.Drawing.Size(209, 17);
             this._enableAttach.TabIndex = 14;
@@ -257,10 +258,22 @@
             this._enableAttach.UseVisualStyleBackColor = true;
             this._enableAttach.CheckedChanged += new System.EventHandler(this.EnableAttachCheckedChanged);
             // 
+            // _liveCompletionsOnly
+            // 
+            this._liveCompletionsOnly.AutoSize = true;
+            this._liveCompletionsOnly.Location = new System.Drawing.Point(172, 112);
+            this._liveCompletionsOnly.Name = "_liveCompletionsOnly";
+            this._liveCompletionsOnly.Size = new System.Drawing.Size(145, 17);
+            this._liveCompletionsOnly.TabIndex = 15;
+            this._liveCompletionsOnly.Text = "Only use live completions";
+            this._liveCompletionsOnly.UseVisualStyleBackColor = true;
+            this._liveCompletionsOnly.CheckedChanged += new System.EventHandler(this._liveCompletionsOnly_CheckedChanged);
+            // 
             // PythonInteractiveOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this._liveCompletionsOnly);
             this.Controls.Add(this._enableAttach);
             this.Controls.Add(this._inlinePrompts);
             this.Controls.Add(this._useUserDefinedPrompts);
@@ -312,5 +325,6 @@
         private System.Windows.Forms.Label _interpOptionsLabel;
         private System.Windows.Forms.TextBox _interpreterOptions;
         private System.Windows.Forms.CheckBox _enableAttach;
+        private System.Windows.Forms.CheckBox _liveCompletionsOnly;
     }
 }

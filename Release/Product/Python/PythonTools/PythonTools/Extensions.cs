@@ -216,10 +216,12 @@ namespace Microsoft.PythonTools {
                 if (socket.Receive(cmd_buffer) == 4) {
                     int filenameLen = BitConverter.ToInt32(cmd_buffer, 0);
                     byte[] buffer = new byte[filenameLen];
-                    int bytesRead = 0;
-                    do {
-                        bytesRead += socket.Receive(buffer, bytesRead, filenameLen - bytesRead, SocketFlags.None);
-                    } while (bytesRead != filenameLen);
+                    if (filenameLen != 0) {
+                        int bytesRead = 0;
+                        do {
+                            bytesRead += socket.Receive(buffer, bytesRead, filenameLen - bytesRead, SocketFlags.None);
+                        } while (bytesRead != filenameLen);
+                    }
 
                     if (isUnicode) {
                         return Encoding.UTF8.GetString(buffer);

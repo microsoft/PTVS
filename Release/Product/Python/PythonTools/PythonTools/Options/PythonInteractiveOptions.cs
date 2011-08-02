@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Options {
     /// Stores options related to the interactive window for a single Python interpreter instance.
     /// </summary>
     class PythonInteractiveOptions {
-        private bool _smartHistory, _interpreterPrompts, _inlinePrompts, _enableAttach;
+        private bool _smartHistory, _interpreterPrompts, _inlinePrompts, _enableAttach, _liveCompletionsOnly;
         private ReplIntellisenseMode _replIntellisenseMode;
         private string _priPrompt, _secPrompt, _startupScript, _executionMode, _interperterOptions;
 
@@ -71,6 +71,11 @@ namespace Microsoft.PythonTools.Options {
         public bool EnableAttach {
             get { return _enableAttach; }
             set { _enableAttach = value; }
+        }
+
+        public bool LiveCompletionsOnly {
+            get { return _liveCompletionsOnly; }
+            set { _liveCompletionsOnly = value; }
         }
     }
 }

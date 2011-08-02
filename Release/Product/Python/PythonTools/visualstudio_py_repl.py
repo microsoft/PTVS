@@ -768,13 +768,14 @@ class BasicReplBackend(ReplBackend):
         res = []
         for name, module in sys.modules.items():
             try:
-                if (name == '__main__' or 
-                   (name != 'visualstudio_py_repl' and module.__file__ is not None)):
-
+                if name != 'visualstudio_py_repl':
                     if sys.platform == 'cli' and type(module) is NamespaceType:
                         self.get_namespaces(name, module, res)
                     else:
-                        res.append((name, module.__file__))
+                        filename = getattr(module, '__file__', '') or ''
+                        sys.__stdout__.write(repr(filename))
+                        sys.__stdout__.write('\n')
+                        res.append((name, filename))
 
             except:
                 pass

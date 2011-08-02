@@ -747,7 +747,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public string GetScopeByFilename(string path) {
-                GetAvailableScopes();
+                GetAvailableScopesAndKind();
 
                 string res;
                 if (_fileToModuleName.TryGetValue(path, out res)) {
@@ -770,7 +770,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopes() {
+            public IEnumerable<string> GetAvailableUserScopes() {
                 if (_connected) {   // if startup's taking a long time we won't be connected yet
                     using (new SocketLock(this)) {
                         Socket.Send(GetModulesListCommandBytes);
@@ -779,6 +779,21 @@ namespace Microsoft.PythonTools.Repl {
                     _completionResultEvent.WaitOne(1000);
 
                     if (_fileToModuleName != null) {
+                        return _fileToModuleName.Values;
+                    }
+                }
+                return new string[0];
+            }
+
+            public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
+                if (_connected) {   // if startup's taking a long time we won't be connected yet
+                    using (new SocketLock(this)) {
+                        Socket.Send(GetModulesListCommandBytes);
+                    }
+
+                    _completionResultEvent.WaitOne(1000);
+
+                    if (_allModules != null) {
                         return _allModules;
                     }
                 }
@@ -1160,15 +1175,13 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
-            return _curListener.GetAvailableScopes();
+            return _curListener.GetAvailableScopesAndKind();
         }
 
         #region IMultipleScopeEvaluator Members
 
         public IEnumerable<string> GetAvailableScopes() {
-            foreach (var keyValue in _curListener.GetAvailableScopes()) {
-                yield return keyValue.Key;
-            }
+            return _curListener.GetAvailableUserScopes();
         }
 
         public event EventHandler<EventArgs> AvailableScopesChanged;
@@ -1254,5 +1267,11 @@ namespace Microsoft.PythonTools.Repl {
             return prevText;
         }
 
+
+        public bool LiveCompletionsOnly {
+            get {
+                return CurrentOptions.LiveCompletionsOnly;
+            }
+        }
     }
 }

@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var analysis = GetAnalysisEntry();
             string fixedText = FixupCompletionText(Text);
-            if (analysis != null && fixedText != null) {
+            if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 members = analysis.GetMembers(
                     fixedText, 
                     _snapshot.GetLineNumberFromPosition(_pos) + 1,
