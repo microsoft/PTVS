@@ -103,6 +103,16 @@ namespace AnalysisTest {
         }
 
         [TestMethod]
+        public void TestSpecialArgTypes() {
+            var code = @"def f(*foo, **bar):
+    pass";
+            var entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetTypesFromName("foo", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Tuple));
+            AssertContainsExactly(entry.GetTypesFromName("bar", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Dict));
+        }
+
+        [TestMethod]
         public void TestImportAs() {
             var entry = ProcessText(@"import sys as s, array as a");
 
