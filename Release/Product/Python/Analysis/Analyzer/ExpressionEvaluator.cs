@@ -363,9 +363,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             } else if (left is SequenceExpression) {
                 // list/tuple
                 var l = (SequenceExpression)left;
-                foreach (var value in values.ToArray()) {
-                    for (int i = 0; i < l.Items.Count; i++) {
-                        AssignTo(assignStmt, l.Items[i], value.GetIndex(assignStmt, _unit, ProjectState.GetConstant(i)));
+                var valuesArr = values.ToArray();
+                for (int i = 0; i < l.Items.Count; i++) {
+                    if (valuesArr.Length > 0) {
+                        foreach (var value in valuesArr) {
+                            AssignTo(assignStmt, l.Items[i], value.GetIndex(assignStmt, _unit, ProjectState.GetConstant(i)));
+                        }
+                    } else {
+                        AssignTo(assignStmt, l.Items[i], EmptySet<Namespace>.Instance);
                     }
                 }
             }

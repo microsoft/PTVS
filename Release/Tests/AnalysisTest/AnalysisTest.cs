@@ -2247,7 +2247,7 @@ d[0] = d
 ";
             var entry = ProcessText(text);
 
-            AssertContainsExactly(GetVariableDescriptions(entry, "d", 1), "dict({int : dict}");
+            AssertContainsExactly(GetVariableDescriptions(entry, "d", 1), "dict({int : dict})");
         }
 
         /// <summary>
