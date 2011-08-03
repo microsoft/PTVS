@@ -51,9 +51,9 @@ namespace Microsoft.PythonTools.Profiling {
     [Guid(GuidList.guidPythonProfilingPkgString)]
     // set the window to dock where Toolbox/Performance Explorer dock by default
     [ProvideToolWindow(typeof(PerfToolWindow), Orientation = ToolWindowOrientation.Left, Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindToolbox)]
-    [ProvideFileFilterAttribute("{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", "/1", "Python Performance Session (*.pyperf);*.pyperf", 100)]
+    [ProvideFileFilterAttribute("{81da0100-e6db-4783-91ea-c38c3fa1b81e}", "/1", "Python Performance Session (*.pyperf);*.pyperf", 100)]
     [ProvideEditorExtension(typeof(ProfilingSessionEditorFactory), ".pyperf", 50,
-          ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}",
+          ProjectGuid = "{81da0100-e6db-4783-91ea-c38c3fa1b81e}",
           NameResourceID = 105,         
           DefaultName = "PythonPerfSession")]
     [ProvideAutomationObject("PythonProfiling")]

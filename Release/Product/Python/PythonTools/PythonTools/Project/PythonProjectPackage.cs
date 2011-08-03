@@ -25,6 +25,8 @@ namespace Microsoft.PythonTools.Project {
     [ProvideObject(typeof(PythonGeneralPropertyPage))]
     [ProvideObject(typeof(PythonDebugPropertyPage))]
     [ProvideObject(typeof(PublishPropertyPage))]
+    // CLSID_MiscellaneousFilesProject == "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}"
+    [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", NameResourceID = 3006, DefaultName = "module", TemplateDir = "Templates\\NewItem")]
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3005, DefaultName = "module")]
     [ProvideFileFilter("{" + PythonConstants.EditorFactoryGuid + "}", "/1", "Python Files;*.py,*.pyw", 100)]
