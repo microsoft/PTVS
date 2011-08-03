@@ -331,26 +331,28 @@ namespace Microsoft.PythonTools.Debugger {
                 while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
                     Debug.WriteLine(String.Format("Received Debugger command: {0} ({1})", CommandtoString(cmd_buffer), _processGuid));
 
-                    switch (CommandtoString(cmd_buffer)) {
-                        case "EXCP": HandleException(socket); break;
-                        case "BRKH": HandleBreakPointHit(socket); break;
-                        case "NEWT": HandleThreadCreate(socket); break;
-                        case "EXTT": HandleThreadExit(socket); break;
-                        case "MODL": HandleModuleLoad(socket); break;
-                        case "STPD": HandleStepDone(socket); break;
-                        case "EXIT": HandleProcessExit(socket); return;
-                        case "BRKS": HandleBreakPointSet(socket); break;
-                        case "BRKF": HandleBreakPointFailed(socket); break;
-                        case "LOAD": HandleProcessLoad(socket); break;
-                        case "THRF": HandleThreadFrameList(socket); break;
-                        case "EXCR": HandleExecutionResult(socket); break;
-                        case "EXCE": HandleExecutionException(socket); break;
-                        case "ASBR": HandleAsyncBreak(socket); break;
-                        case "SETL": HandleSetLineResult(socket); break;
-                        case "CHLD": HandleEnumChildren(socket); break;
-                        case "OUTP": HandleDebuggerOutput(socket); break;
-                        case "REQH": HandleRequestHandlers(socket); break;
-                        case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
+                    lock (this) {
+                        switch (CommandtoString(cmd_buffer)) {
+                            case "EXCP": HandleException(socket); break;
+                            case "BRKH": HandleBreakPointHit(socket); break;
+                            case "NEWT": HandleThreadCreate(socket); break;
+                            case "EXTT": HandleThreadExit(socket); break;
+                            case "MODL": HandleModuleLoad(socket); break;
+                            case "STPD": HandleStepDone(socket); break;
+                            case "EXIT": HandleProcessExit(socket); return;
+                            case "BRKS": HandleBreakPointSet(socket); break;
+                            case "BRKF": HandleBreakPointFailed(socket); break;
+                            case "LOAD": HandleProcessLoad(socket); break;
+                            case "THRF": HandleThreadFrameList(socket); break;
+                            case "EXCR": HandleExecutionResult(socket); break;
+                            case "EXCE": HandleExecutionException(socket); break;
+                            case "ASBR": HandleAsyncBreak(socket); break;
+                            case "SETL": HandleSetLineResult(socket); break;
+                            case "CHLD": HandleEnumChildren(socket); break;
+                            case "OUTP": HandleDebuggerOutput(socket); break;
+                            case "REQH": HandleRequestHandlers(socket); break;
+                            case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
+                        }
                     }
                 }
             } catch (SocketException) {

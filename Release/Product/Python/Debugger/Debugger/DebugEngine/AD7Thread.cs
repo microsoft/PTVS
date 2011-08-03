@@ -29,7 +29,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private string GetCurrentLocation(bool fIncludeModuleName) {
-            return _debuggedThread.Frames[0].FunctionName;
+            if (_debuggedThread.Frames != null) {
+                return _debuggedThread.Frames[0].FunctionName;
+            }
+            return "<unknown location, not in Python code>";
         }
 
         internal PythonThread GetDebuggedThread() {
@@ -48,6 +51,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // We currently call into the process and get the frames.  We might want to cache the frame info.
         int IDebugThread2.EnumFrameInfo(enum_FRAMEINFO_FLAGS dwFieldSpec, uint nRadix, out IEnumDebugFrameInfo2 enumObject) {
             var stackFrames = _debuggedThread.Frames;
+            if (stackFrames == null) {
+                enumObject = null;
+                return VSConstants.E_FAIL;
+            }
+
             int numStackFrames = stackFrames.Count;
             FRAMEINFO[] frameInfoArray;
 

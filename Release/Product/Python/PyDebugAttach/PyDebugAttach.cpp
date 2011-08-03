@@ -680,7 +680,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
             bool foundThread;
             int processedThreads = 0;
-            bool firstThread = true;
             do {
                 foundThread = false;
                 for(auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
@@ -706,12 +705,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             frame = curThread->_25_27.frame;
                         }
 
-                        auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), firstThread ? pyTrue : pyFalse, frame, NULL));
+                        auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
                         if(threadObj.ToPython() == pyNone || *threadObj == nullptr) {
                             break;
                         }
 
-                        firstThread = false;
                         // switch to our new thread so we can call sys.settrace on it...
                         // all of the work here needs to be minimal - in particular we shouldn't
                         // ever evaluate user defined code as we could end up switching to this
