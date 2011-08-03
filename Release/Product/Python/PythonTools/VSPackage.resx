@@ -169,4 +169,34 @@
   <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\PythonProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="3006" xml:space="preserve">
+    <value>Python</value>
+  </data>
+  <data name="3007" xml:space="preserve">
+    <value>Python Class</value>
+  </data>
+  <data name="3008" xml:space="preserve">
+    <value>Python Class (.pyw)</value>
+  </data>
+  <data name="3009" xml:space="preserve">
+    <value>Empty Module</value>
+  </data>
+  <data name="3010" xml:space="preserve">
+    <value>Empty Module (.pyw)</value>
+  </data>
+  <data name="3011" xml:space="preserve">
+    <value>A Python file with a class declared</value>
+  </data>
+  <data name="3012" xml:space="preserve">
+    <value>An empty Python module</value>
+  </data>
+  <data name="3013" xml:space="preserve">
+    <value>class</value>
+  </data>
+  <data name="3014" xml:space="preserve">
+    <value>module</value>
+  </data>
+  <data name="500" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>pythonfile.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

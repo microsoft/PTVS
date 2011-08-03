@@ -100,6 +100,21 @@
             <Component Id="cmpE4E7569D005A40AFBA05AC770949CBEA" Directory="INSTALLLOCATION" Guid="{D2E99282-2257-4559-A6FD-F69DA8D155BE}">
                 <File Id="filBD705C5EB57C4F18BDAE120949DC2348" KeyPath="yes" Source="$(var.TargetDir)\BuiltinScraper.py" />
             </Component>
+            <Component Id="cmp281B78C80A994875BBA07772007F1561" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{685CE9DE-781F-4209-AB21-106F29425E80}">
+                <File Id="fil77FBA41B51724C4A994E90DBE3B887AD" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\class.py" />
+            </Component>
+            <Component Id="cmp81A02A35AD5741CFAD1EB249A2A9A450" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{A161D43D-2EB6-46BB-BE80-6506A3584174}">
+                <File Id="fil8462F52A3BD34CA4A8E8F2F70A792EDC" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\class.pyw" />
+            </Component>
+            <Component Id="cmp4E3790527B974A9C8DACBE8845DAEFE8" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{45F69668-4B8A-40B4-AA87-4C2B779966E0}">
+                <File Id="fil67AD59D3C84546DD884F86EEE6D1E4E6" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\module.py" />
+            </Component>
+            <Component Id="cmpB8B394D138D94605B7CA01E736510CB9" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{2D040B2C-2C4C-466C-8EDA-5D06AFB38081}">
+                <File Id="filB9593EF134F7497E966ACC7C35FEB7CA" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\module.pyw" />
+            </Component>
+            <Component Id="cmpB938B4EA7BB94D7F9FB6FB7650B0CA88" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{54547C3E-D86C-40C9-85C5-91A8CF3EDA93}">
+                <File Id="filADFBA8BEFE9E42CAB841543A6F84D7F1" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\NewPythonItems.vsdir" />
+            </Component>
             <Component Id="cmpEE3557B31D8245178251B6F1FFAD529D" Directory="dirD5195BC5D1C101171FEF8AD9B89AA866" Guid="{19DC2DB5-8303-40C3-8529-45FD843685CD}">
                 <File Id="fil0BA0EEA2FC68E80AD0214890CEC8F83F" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\EmptyPackage\EmptyPackage.zip" />
             </Component>
@@ -299,6 +314,11 @@
     <Fragment>
         <DirectoryRef Id="dir0D2EB39806B8FE87825F141262A782D4">
             <Directory Id="dir618B2AB2A5714E7090C606039F60C756" Name="Projects" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir0D2EB39806B8FE87825F141262A782D4">
+            <Directory Id="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Name="NewItem" />
         </DirectoryRef>
     </Fragment>
     <Fragment>

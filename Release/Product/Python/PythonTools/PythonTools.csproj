@@ -524,6 +524,22 @@
     </Content>
     <Content Include="Templates\Files\TextFile\textfile.txt" />
     <Content Include="Templates\Files\TextFile\textfile.vstemplate" />
+    <Content Include="Templates\NewItem\class.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Templates\NewItem\class.pyw">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Templates\NewItem\module.pyw">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Templates\NewItem\module.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="visualstudio_ipython_repl.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -555,6 +571,10 @@
     <Content Include="Templates\Projects\ImportProject\ImportWinApp.pyproj">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\NewItem\NewPythonItems.vsdir">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <VSCTCompile Include="PythonTools.vsct">
       <ResourceName>1000</ResourceName>
