@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			get
 			{
-				return Path.Combine(Path.GetDirectoryName(this.ProjectMgr.Url), this.VirtualNodeName) + "\\";
+                return GetAbsoluteUrlFromMsbuild();
 			}
 		}
 

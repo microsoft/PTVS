@@ -454,6 +454,20 @@ namespace AnalysisTest.ProjectSystem {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestRelativePaths() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\RelativePaths.sln");
+
+            var item = project.ProjectItems.Item("..");
+            Assert.AreEqual(2, project.ProjectItems.Count);
+            Assert.AreEqual(1, item.Collection.Count);
+            var helloWorld = item.Collection.Item("HelloWorld");
+            Assert.AreNotEqual(null, helloWorld);
+            var program = helloWorld.Collection.Item("Program.py");
+            Assert.AreNotEqual(null, program);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectConfiguration() {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\HelloWorld.sln");
             

@@ -180,12 +180,12 @@ namespace Microsoft.PythonTools.Project
 						// scenarios.
 						if(ErrorHandler.Succeeded(sccManager.GetSccGlyph(1, new string[] { this.GetMkDocument() }, statIcons, sccStatus)))
 						{
-                            return statIcons[0];
+							return statIcons[0];
 						}
 					}
 				}
 
-                return VsStateIcon.STATEICON_NOSTATEICON;
+				return VsStateIcon.STATEICON_NOSTATEICON;
 			}
 		}
 
@@ -343,6 +343,27 @@ namespace Microsoft.PythonTools.Project
 			}
 		}
 
+		protected string GetAbsoluteUrlFromMsbuild() 
+		{
+			string path = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
+			if (String.IsNullOrEmpty(path)) 
+			{
+				return String.Empty;
+			}
+
+			Url url;
+			if (Path.IsPathRooted(path)) 
+			{
+				// Use absolute path
+				url = new Microsoft.VisualStudio.Shell.Url(path);
+			} 
+			else 
+			{
+				// Path is relative, so make it relative to project path
+				url = new Url(this.ProjectMgr.BaseURI, path);
+			}
+			return url.AbsoluteUrl;
+		}
 
 		[System.ComponentModel.BrowsableAttribute(false)]
 		public bool HasDesigner
@@ -469,7 +490,7 @@ namespace Microsoft.PythonTools.Project
 
 		protected HierarchyNode(ProjectNode root, ProjectElement element)
 		{
-            Utilities.ArgumentNotNull("root", root);
+			Utilities.ArgumentNotNull("root", root);
 
 			this.projectMgr = root;
 			this.itemNode = element;
@@ -483,7 +504,7 @@ namespace Microsoft.PythonTools.Project
 		/// <param name="root"></param>
 		protected HierarchyNode(ProjectNode root)
 		{
-            Utilities.ArgumentNotNull("root", root);
+			Utilities.ArgumentNotNull("root", root);
 
 			this.projectMgr = root;
 			this.itemNode = new VirtualProjectElement(this.projectMgr);
@@ -544,7 +565,7 @@ namespace Microsoft.PythonTools.Project
 		/// <param name="node">The node to add.</param>
 		public virtual void AddChild(HierarchyNode node)
 		{
-            Utilities.ArgumentNotNull("node", node);
+			Utilities.ArgumentNotNull("node", node);
 
 			// make sure the node is in the map.
 			Object nodeWithSameID = this.projectMgr.ItemIdMap[node.hierarchyId];
@@ -595,7 +616,7 @@ namespace Microsoft.PythonTools.Project
 		/// <param name="node">The node to remove.</param>
 		public virtual void RemoveChild(HierarchyNode node)
 		{
-            Utilities.ArgumentNotNull("node", node);
+			Utilities.ArgumentNotNull("node", node);
 
 			this.projectMgr.ItemIdMap.Remove(node);
 
@@ -766,7 +787,7 @@ namespace Microsoft.PythonTools.Project
 			{
 				case __VSHPROPID2.VSHPROPID_NoDefaultNestedHierSorting:
 					return true; // We are doing the sorting ourselves through VSHPROPID_FirstChild and VSHPROPID_NextSibling
-                case __VSHPROPID2.VSHPROPID_CfgBrowseObjectCATID:
+				case __VSHPROPID2.VSHPROPID_CfgBrowseObjectCATID:
 				case __VSHPROPID2.VSHPROPID_BrowseObjectCATID:
 					{
 						// If there is a browse object and it is a NodeProperties, then get it's CATID
@@ -863,11 +884,11 @@ namespace Microsoft.PythonTools.Project
 			return VSConstants.S_OK;
 		}
 
-        public virtual bool CanAddFiles {
-            get {
-                return false;
-            }
-        }
+		public virtual bool CanAddFiles {
+			get {
+				return false;
+			}
+		}
 
 		/// <summary>
 		/// Set a guid property.
@@ -1008,15 +1029,15 @@ namespace Microsoft.PythonTools.Project
 		/// </summary> 
 		protected void CloseDocumentWindow(HierarchyNode node)
 		{
-            Utilities.ArgumentNotNull("node", node);
+			Utilities.ArgumentNotNull("node", node);
 
 			// We walk the RDT looking for all running documents attached to this hierarchy and itemid. There
 			// are cases where there may be two different editors (not views) open on the same document.
 			IEnumRunningDocuments pEnumRdt;
 			IVsRunningDocumentTable pRdt = this.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-            Utilities.CheckNotNull(pRdt);
+			Utilities.CheckNotNull(pRdt);
 
-            if(ErrorHandler.Succeeded(pRdt.GetRunningDocumentsEnum(out pEnumRdt)))
+			if(ErrorHandler.Succeeded(pRdt.GetRunningDocumentsEnum(out pEnumRdt)))
 			{
 				uint[] cookie = new uint[1];
 				uint fetched;
@@ -1714,22 +1735,22 @@ namespace Microsoft.PythonTools.Project
 		[SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "p")]
 		protected virtual int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
 		{
-            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
-                switch ((VsCommands)cmd) 
-                {
-                    case VsCommands.AddNewItem:
-                    case VsCommands.AddExistingItem:
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                        return VSConstants.S_OK;
-                }
-            }
-            else if(cmdGroup == VsMenus.guidStandardCommandSet2K)
+			if (cmdGroup == VsMenus.guidStandardCommandSet97) {
+				switch ((VsCommands)cmd) 
+				{
+					case VsCommands.AddNewItem:
+					case VsCommands.AddExistingItem:
+						result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+						return VSConstants.S_OK;
+				}
+			}
+			else if(cmdGroup == VsMenus.guidStandardCommandSet2K)
 			{
 				if((VsCommands2K)cmd == VsCommands2K.SHOWALLFILES)
 				{
-                    result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                    // When we implement this feature we should re-enable the option:
-                    // http://social.msdn.microsoft.com/Forums/en/vsx/thread/f348aaed-cdcc-4709-9118-c0fd8b9e154d
+					result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
+					// When we implement this feature we should re-enable the option:
+					// http://social.msdn.microsoft.com/Forums/en/vsx/thread/f348aaed-cdcc-4709-9118-c0fd8b9e154d
 					return VSConstants.S_OK;
 				}
 			}
@@ -1830,7 +1851,7 @@ namespace Microsoft.PythonTools.Project
 				return (int)OleConstants.OLECMDERR_E_UNKNOWNGROUP;
 			}
 
-            Utilities.ArgumentNotNull("prgCmds", prgCmds);
+			Utilities.ArgumentNotNull("prgCmds", prgCmds);
 
 			uint cmd = prgCmds[0].cmdID;
 			QueryStatusResult queryResult = QueryStatusResult.NOTSUPPORTED;
@@ -2099,8 +2120,8 @@ namespace Microsoft.PythonTools.Project
 			{
 				return;
 			}
-            Utilities.ArgumentNotNull("files", files);
-            Utilities.ArgumentNotNull("flags", flags);
+			Utilities.ArgumentNotNull("files", files);
+			Utilities.ArgumentNotNull("flags", flags);
 
 			files.Add(this.GetMkDocument());
 
@@ -2124,8 +2145,8 @@ namespace Microsoft.PythonTools.Project
 				return;
 			}
 
-            Utilities.ArgumentNotNull("files", files);
-            Utilities.ArgumentNotNull("flags", flags);
+			Utilities.ArgumentNotNull("files", files);
+			Utilities.ArgumentNotNull("flags", flags);
 		}
 
 		/// <summary>
@@ -2169,8 +2190,8 @@ namespace Microsoft.PythonTools.Project
 
 		public void OnItemAdded(HierarchyNode parent, HierarchyNode child)
 		{
-            Utilities.ArgumentNotNull("parent", parent);
-            Utilities.ArgumentNotNull("child", child);
+			Utilities.ArgumentNotNull("parent", parent);
+			Utilities.ArgumentNotNull("child", child);
 
 			
 			HierarchyNode foo;
@@ -2229,7 +2250,7 @@ namespace Microsoft.PythonTools.Project
 
 		public void OnItemsAppended(HierarchyNode parent)
 		{
-            Utilities.ArgumentNotNull("parent", parent);
+			Utilities.ArgumentNotNull("parent", parent);
 
 			HierarchyNode foo;
 			foo = this.projectMgr == null ? this : this.projectMgr;
@@ -2254,9 +2275,9 @@ namespace Microsoft.PythonTools.Project
 		[SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "propid")]
 		public void OnPropertyChanged(HierarchyNode node, int propid, uint flags)
 		{
-            Utilities.ArgumentNotNull("node", node);
+			Utilities.ArgumentNotNull("node", node);
 
-            HierarchyNode foo;
+			HierarchyNode foo;
 			foo = this.projectMgr == null ? this : this.projectMgr;
 			if(foo == this.projectMgr && (this.projectMgr.EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0)
 			{
@@ -2277,9 +2298,9 @@ namespace Microsoft.PythonTools.Project
 
 		public void OnInvalidateItems(HierarchyNode parent)
 		{
-            Utilities.ArgumentNotNull("parent", parent);
+			Utilities.ArgumentNotNull("parent", parent);
 
-            HierarchyNode foo;
+			HierarchyNode foo;
 			foo = this.projectMgr == null ? this : this.projectMgr;
 			if(foo == this.projectMgr && (this.projectMgr.EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0)
 			{
@@ -2332,7 +2353,7 @@ namespace Microsoft.PythonTools.Project
 
 		public object GetService(Type type)
 		{
-            Utilities.ArgumentNotNull("type", type);
+			Utilities.ArgumentNotNull("type", type);
 
 			if(this.projectMgr.Site == null) return null;
 			return this.projectMgr.Site.GetService(type);
@@ -2599,7 +2620,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			cancelled = 0;
 
-            if (InvalidProject())
+			if (InvalidProject())
 			{
 				return VSConstants.E_FAIL;
 			}
@@ -2630,7 +2651,7 @@ namespace Microsoft.PythonTools.Project
 			IPersistFileFormat ff = null;
 			IVsPersistDocData dd = null;
 			IVsUIShell shell = this.projectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            Utilities.CheckNotNull(shell);
+			Utilities.CheckNotNull(shell);
 
 			try
 			{
@@ -2639,18 +2660,18 @@ namespace Microsoft.PythonTools.Project
 				//In case of a save action and the file is readonly a dialog is also shown
 				//with a couple of options, SaveAs, Overwrite or Cancel.
 				ff = Marshal.GetObjectForIUnknown(docData) as IPersistFileFormat;
-                Utilities.CheckNotNull(ff);
+				Utilities.CheckNotNull(ff);
 
-                if(VSSAVEFLAGS.VSSAVE_SilentSave == saveFlag)
+				if(VSSAVEFLAGS.VSSAVE_SilentSave == saveFlag)
 				{
 					ErrorHandler.ThrowOnFailure(shell.SaveDocDataToFile(saveFlag, ff, silentSaveAsName, out docNew, out cancelled));
 				}
 				else
 				{
 					dd = Marshal.GetObjectForIUnknown(docData) as IVsPersistDocData;
-                    Utilities.CheckNotNull(dd);
+					Utilities.CheckNotNull(dd);
 
-                    ErrorHandler.ThrowOnFailure(dd.SaveDocData(saveFlag, out docNew, out cancelled));
+					ErrorHandler.ThrowOnFailure(dd.SaveDocData(saveFlag, out docNew, out cancelled));
 				}
 
 				// We can be unloaded after the SaveDocData() call if the save caused a designer to add a file and this caused
@@ -2713,8 +2734,8 @@ namespace Microsoft.PythonTools.Project
 				returnCode = e.ErrorCode;
 
 				// Try to recover
-                // changed from MPFProj:
-                // http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=6982
+				// changed from MPFProj:
+				// http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=6982
 				if(ff != null && cancelled == 0)
 				{
 					ErrorHandler.ThrowOnFailure(shell.SaveDocDataToFile(VSSAVEFLAGS.VSSAVE_SilentSave, ff, existingFileMoniker, out docNew, out cancelled));
@@ -2724,9 +2745,9 @@ namespace Microsoft.PythonTools.Project
 			return returnCode;
 		}
 
-        private bool InvalidProject() {
-            return this.projectMgr == null || this.projectMgr.IsClosed;
-        }
+		private bool InvalidProject() {
+			return this.projectMgr == null || this.projectMgr.IsClosed;
+		}
 
 		/// <summary>
 		/// Flag indicating that changes to a file can be ignored when item is saved or reloaded. 
@@ -2976,21 +2997,21 @@ namespace Microsoft.PythonTools.Project
 			}
 		}
 
-        /// <summary>
-        /// Recursively find all nodes of type T
-        /// </summary>
-        /// <typeparam name="T">The type of hierachy node being serched for</typeparam>
-        /// <param name="nodes">A list of nodes of type T</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal IEnumerable<T> EnumNodesOfType<T>()
-            where T : HierarchyNode {
-            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
-                if (n is T) {
-                    T nodeAsT = (T)n;
-                    yield return nodeAsT;
-                }
-            }
-        }
+		/// <summary>
+		/// Recursively find all nodes of type T
+		/// </summary>
+		/// <typeparam name="T">The type of hierachy node being serched for</typeparam>
+		/// <param name="nodes">A list of nodes of type T</param>
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+		internal IEnumerable<T> EnumNodesOfType<T>()
+			where T : HierarchyNode {
+			for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
+				if (n is T) {
+					T nodeAsT = (T)n;
+					yield return nodeAsT;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Adds an item from a project refererence to target node.
@@ -2999,48 +3020,48 @@ namespace Microsoft.PythonTools.Project
 		/// <param name="targetNode"></param>
 		internal bool AddFileToNodeFromProjectReference(string projectRef, HierarchyNode targetNode, bool drop)
 		{
-            Utilities.ArgumentNotNullOrEmpty("projectRef", projectRef);
-            Utilities.ArgumentNotNull("targetNode", targetNode);
+			Utilities.ArgumentNotNullOrEmpty("projectRef", projectRef);
+			Utilities.ArgumentNotNull("targetNode", targetNode);
 
-            var targetFolder = targetNode.GetDragTargetHandlerNode();
+			var targetFolder = targetNode.GetDragTargetHandlerNode();
 
 			IVsSolution solution = this.GetService(typeof(IVsSolution)) as IVsSolution;
-            Utilities.CheckNotNull(solution);
+			Utilities.CheckNotNull(solution);
 
 			uint itemidLoc;
 			IVsHierarchy hierarchy;
 			string str;
 			VSUPDATEPROJREFREASON[] reason = new VSUPDATEPROJREFREASON[1];
 			ErrorHandler.ThrowOnFailure(solution.GetItemOfProjref(projectRef, out hierarchy, out itemidLoc, out str, reason));
-            Utilities.CheckNotNull(hierarchy);
+			Utilities.CheckNotNull(hierarchy);
 
 			// This will throw invalid cast exception if the hierrachy is not a project.
 			IVsProject project = (IVsProject)hierarchy;
 
 			string moniker;
 			ErrorHandler.ThrowOnFailure(project.GetMkDocument(itemidLoc, out moniker));
-            string folderMoniker;
-            ErrorHandler.ThrowOnFailure(project.GetMkDocument(targetFolder.ID, out folderMoniker));
-            if (folderMoniker.EndsWith("\\")) {
-                folderMoniker = folderMoniker.Substring(0, folderMoniker.Length - 1);
-            }
-            if (drop &&
-                (Directory.Exists(folderMoniker) &&  Path.GetFullPath(Path.GetDirectoryName(moniker)) == Path.GetFullPath(folderMoniker) ||
-                File.Exists(folderMoniker) && Path.GetDirectoryName(moniker) == Path.GetDirectoryName(folderMoniker))) {
-                return false;
-            }
+			string folderMoniker;
+			ErrorHandler.ThrowOnFailure(project.GetMkDocument(targetFolder.ID, out folderMoniker));
+			if (folderMoniker.EndsWith("\\")) {
+				folderMoniker = folderMoniker.Substring(0, folderMoniker.Length - 1);
+			}
+			if (drop &&
+				(Directory.Exists(folderMoniker) &&  Path.GetFullPath(Path.GetDirectoryName(moniker)) == Path.GetFullPath(folderMoniker) ||
+				File.Exists(folderMoniker) && Path.GetDirectoryName(moniker) == Path.GetDirectoryName(folderMoniker))) {
+				return false;
+			}
 
 			string[] files = new String[1] { moniker };
 			VSADDRESULT[] vsaddresult = new VSADDRESULT[1];
 			vsaddresult[0] = VSADDRESULT.ADDRESULT_Failure;
-            Guid empty = Guid.Empty;
+			Guid empty = Guid.Empty;
 
-            if (drop && targetNode.GetMkDocument() == moniker) {
-                return false;
-            }
+			if (drop && targetNode.GetMkDocument() == moniker) {
+				return false;
+			}
 
-            int addResult = targetFolder.ProjectMgr.AddItemWithSpecificInternal(targetFolder.ID, VSADDITEMOPERATION.VSADDITEMOP_OPENFILE, null, 0, files, IntPtr.Zero, 0, ref empty, null, ref empty, vsaddresult, alwaysCopy: true);
-            if(addResult != VSConstants.S_OK && addResult != VSConstants.S_FALSE && addResult != (int)OleConstants.OLECMDERR_E_CANCELED)
+			int addResult = targetFolder.ProjectMgr.AddItemWithSpecificInternal(targetFolder.ID, VSADDITEMOPERATION.VSADDITEMOP_OPENFILE, null, 0, files, IntPtr.Zero, 0, ref empty, null, ref empty, vsaddresult, alwaysCopy: true);
+			if(addResult != VSConstants.S_OK && addResult != VSConstants.S_FALSE && addResult != (int)OleConstants.OLECMDERR_E_CANCELED)
 			{
 				ErrorHandler.ThrowOnFailure(addResult);
 				return false;

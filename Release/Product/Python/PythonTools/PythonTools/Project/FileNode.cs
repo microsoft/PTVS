@@ -94,25 +94,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                string path = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
-                if(String.IsNullOrEmpty(path))
-                {
-                    return String.Empty;
-                }
-
-                Url url;
-                if(Path.IsPathRooted(path))
-                {
-                    // Use absolute path
-                    url = new Microsoft.VisualStudio.Shell.Url(path);
-                }
-                else
-                {
-                    // Path is relative, so make it relative to project path
-                    url = new Url(this.ProjectMgr.BaseURI, path);
-                }
-                return url.AbsoluteUrl;
-
+                return GetAbsoluteUrlFromMsbuild();
             }
         }
         #endregion
