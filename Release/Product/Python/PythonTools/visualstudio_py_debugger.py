@@ -453,16 +453,16 @@ class Thread(object):
             attach_sent_break = True
             attach_lock.release()
     
-        if will_block_now:
-            probe_stack()
-            stepping = self.stepping
-            self.stepping = STEPPING_NONE
-            def block_cond():
+        probe_stack()
+        stepping = self.stepping
+        self.stepping = STEPPING_NONE
+        def block_cond():
+            if will_block_now:
                 if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
                     return report_step_finished(self.id)
                 else:
                     return report_process_loaded(self.id)
-            self.block(block_cond)
+        self.block(block_cond)
     
     def async_break(self):
         def async_break_send():

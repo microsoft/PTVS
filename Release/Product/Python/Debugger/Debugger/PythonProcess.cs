@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
         private readonly bool _delayUnregister;
+        private readonly object _socketLock = new object();
 
         private bool _sentExited;
         private Socket _socket;
@@ -226,7 +227,9 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         public void Break() {
             DebugWriteCommand("BreakAll");
-            _socket.Send(BreakAllCommandBytes);
+            lock(_socketLock) {
+                _socket.Send(BreakAllCommandBytes);
+            }
         }
 
         [Conditional("DEBUG")]
@@ -237,7 +240,9 @@ namespace Microsoft.PythonTools.Debugger {
         public void Resume() {
             _stoppedForException = false;
             DebugWriteCommand("ResumeAll");
-            _socket.Send(ResumeAllCommandBytes);
+            lock (_socketLock) {
+                _socket.Send(ResumeAllCommandBytes);
+            }
         }
 
         public bool StoppedForException {
@@ -275,12 +280,14 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void SendExceptionInfo(int defaultBreakOnMode, ICollection<KeyValuePair<string, int>> breakOn) {
-            _socket.Send(SetExceptionInfoCommandBytes);
-            _socket.Send(BitConverter.GetBytes(defaultBreakOnMode));
-            _socket.Send(BitConverter.GetBytes(breakOn.Count));
-            foreach (var item in breakOn) {
-                _socket.Send(BitConverter.GetBytes(item.Value));
-                SendString(_socket, item.Key);
+            lock (_socketLock) {
+                _socket.Send(SetExceptionInfoCommandBytes);
+                _socket.Send(BitConverter.GetBytes(defaultBreakOnMode));
+                _socket.Send(BitConverter.GetBytes(breakOn.Count));
+                foreach (var item in breakOn) {
+                    _socket.Send(BitConverter.GetBytes(item.Value));
+                    SendString(_socket, item.Key);
+                }
             }
         }
 
@@ -331,28 +338,26 @@ namespace Microsoft.PythonTools.Debugger {
                 while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
                     Debug.WriteLine(String.Format("Received Debugger command: {0} ({1})", CommandtoString(cmd_buffer), _processGuid));
 
-                    lock (this) {
-                        switch (CommandtoString(cmd_buffer)) {
-                            case "EXCP": HandleException(socket); break;
-                            case "BRKH": HandleBreakPointHit(socket); break;
-                            case "NEWT": HandleThreadCreate(socket); break;
-                            case "EXTT": HandleThreadExit(socket); break;
-                            case "MODL": HandleModuleLoad(socket); break;
-                            case "STPD": HandleStepDone(socket); break;
-                            case "EXIT": HandleProcessExit(socket); return;
-                            case "BRKS": HandleBreakPointSet(socket); break;
-                            case "BRKF": HandleBreakPointFailed(socket); break;
-                            case "LOAD": HandleProcessLoad(socket); break;
-                            case "THRF": HandleThreadFrameList(socket); break;
-                            case "EXCR": HandleExecutionResult(socket); break;
-                            case "EXCE": HandleExecutionException(socket); break;
-                            case "ASBR": HandleAsyncBreak(socket); break;
-                            case "SETL": HandleSetLineResult(socket); break;
-                            case "CHLD": HandleEnumChildren(socket); break;
-                            case "OUTP": HandleDebuggerOutput(socket); break;
-                            case "REQH": HandleRequestHandlers(socket); break;
-                            case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
-                        }
+                    switch (CommandtoString(cmd_buffer)) {
+                        case "EXCP": HandleException(socket); break;
+                        case "BRKH": HandleBreakPointHit(socket); break;
+                        case "NEWT": HandleThreadCreate(socket); break;
+                        case "EXTT": HandleThreadExit(socket); break;
+                        case "MODL": HandleModuleLoad(socket); break;
+                        case "STPD": HandleStepDone(socket); break;
+                        case "EXIT": HandleProcessExit(socket); return;
+                        case "BRKS": HandleBreakPointSet(socket); break;
+                        case "BRKF": HandleBreakPointFailed(socket); break;
+                        case "LOAD": HandleProcessLoad(socket); break;
+                        case "THRF": HandleThreadFrameList(socket); break;
+                        case "EXCR": HandleExecutionResult(socket); break;
+                        case "EXCE": HandleExecutionException(socket); break;
+                        case "ASBR": HandleAsyncBreak(socket); break;
+                        case "SETL": HandleSetLineResult(socket); break;
+                        case "CHLD": HandleEnumChildren(socket); break;
+                        case "OUTP": HandleDebuggerOutput(socket); break;
+                        case "REQH": HandleRequestHandlers(socket); break;
+                        case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
                     }
                 }
             } catch (SocketException) {
@@ -443,19 +448,21 @@ namespace Microsoft.PythonTools.Debugger {
             Debug.WriteLine("Exception handlers requested for: " + filename);
             var statements = GetHandledExceptionRanges(filename);
 
-            _socket.Send(SetExceptionHandlerInfoCommandBytes);
-            SendString(_socket, filename);
+            lock (_socketLock) {
+                _socket.Send(SetExceptionHandlerInfoCommandBytes);
+                SendString(_socket, filename);
 
-            _socket.Send(BitConverter.GetBytes(statements.Count));
+                _socket.Send(BitConverter.GetBytes(statements.Count));
 
-            foreach (var t in statements) {
-                _socket.Send(BitConverter.GetBytes(t.Item1));
-                _socket.Send(BitConverter.GetBytes(t.Item2));
+                foreach (var t in statements) {
+                    _socket.Send(BitConverter.GetBytes(t.Item1));
+                    _socket.Send(BitConverter.GetBytes(t.Item2));
 
-                foreach (var expr in t.Item3) {
-                    SendString(_socket, expr);
+                    foreach (var expr in t.Item3) {
+                        SendString(_socket, expr);
+                    }
+                    SendString(_socket, "-");
                 }
-                SendString(_socket, "-");
             }
         }
 
@@ -622,9 +629,11 @@ namespace Microsoft.PythonTools.Debugger {
                 _sentExited = true;
                 processExited(this, new ProcessExitedEventArgs(exitCode));
             }
-            _socket.Send(ExitCommandBytes);
-            _socket.Close();
-            _socket = null;
+            lock (_socketLock) {
+                _socket.Send(ExitCommandBytes);
+                _socket.Close();
+                _socket = null;
+            }
         }
 
         private void HandleStepDone(Socket socket) {
@@ -713,41 +722,53 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void SendStepOut(int identity) {
             DebugWriteCommand("StepOut");
-            _socket.Send(StepOutCommandBytes);
-            _socket.Send(BitConverter.GetBytes(identity));
+            lock (_socketLock) {
+                _socket.Send(StepOutCommandBytes);
+                _socket.Send(BitConverter.GetBytes(identity));
+            }
         }
 
         internal void SendStepOver(int identity) {
             DebugWriteCommand("StepOver");
-            _socket.Send(StepOverCommandBytes);
-            _socket.Send(BitConverter.GetBytes(identity));
+            lock (_socketLock) {
+                _socket.Send(StepOverCommandBytes);
+                _socket.Send(BitConverter.GetBytes(identity));
+            }
         }
 
         internal void SendStepInto(int identity) {
             DebugWriteCommand("StepInto");
-            _socket.Send(StepIntoCommandBytes);
-            _socket.Send(BitConverter.GetBytes(identity));
+            lock (_socketLock) {
+                _socket.Send(StepIntoCommandBytes);
+                _socket.Send(BitConverter.GetBytes(identity));
+            }
         }
 
         public void SendResumeThread(int threadId) {
             _stoppedForException = false;
             DebugWriteCommand("ResumeThread");
-            // race w/ removing the breakpoint, let the thread continue
-            _socket.Send(ResumeThreadCommandBytes);
-            _socket.Send(BitConverter.GetBytes(threadId));
+            lock (_socketLock) {
+                // race w/ removing the breakpoint, let the thread continue
+                _socket.Send(ResumeThreadCommandBytes);
+                _socket.Send(BitConverter.GetBytes(threadId));
+            }
         }
 
         public void SendClearStepping(int threadId) {
             DebugWriteCommand("ClearStepping");
-            // race w/ removing the breakpoint, let the thread continue
-            _socket.Send(ClearSteppingCommandBytes);
-            _socket.Send(BitConverter.GetBytes(threadId));
+            lock (_socketLock) {
+                // race w/ removing the breakpoint, let the thread continue
+                _socket.Send(ClearSteppingCommandBytes);
+                _socket.Send(BitConverter.GetBytes(threadId));
+            }
         }
 
         public void Detach() {
             DebugWriteCommand("Detach");
             try {
-                _socket.Send(DetachCommandBytes);
+                lock (_socketLock) {
+                    _socket.Send(DetachCommandBytes);
+                }
             } catch (SocketException) {
                 // socket is closed after we send detach
             }
@@ -758,11 +779,13 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void BindBreakpoint(PythonBreakpoint breakpoint) {
             DebugWriteCommand("Bind Breakpoint");
-            _socket.Send(SetBreakPointCommandBytes);
-            _socket.Send(BitConverter.GetBytes(breakpoint.Id));
-            _socket.Send(BitConverter.GetBytes(breakpoint.LineNo));
-            SendString(_socket, MapFile(breakpoint.Filename));
-            SendCondition(breakpoint);
+            lock (_socketLock) {
+                _socket.Send(SetBreakPointCommandBytes);
+                _socket.Send(BitConverter.GetBytes(breakpoint.Id));
+                _socket.Send(BitConverter.GetBytes(breakpoint.LineNo));
+                SendString(_socket, MapFile(breakpoint.Filename));
+                SendCondition(breakpoint);
+            }
         }
 
         /// <summary>
@@ -814,35 +837,43 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal void SetBreakPointCondition(PythonBreakpoint breakpoint) {
             DebugWriteCommand("Set BP Condition");
-            _socket.Send(SetBreakPointConditionCommandBytes);
-            _socket.Send(BitConverter.GetBytes(breakpoint.Id));
-            SendCondition(breakpoint);
+            lock (_socketLock) {
+                _socket.Send(SetBreakPointConditionCommandBytes);
+                _socket.Send(BitConverter.GetBytes(breakpoint.Id));
+                SendCondition(breakpoint);
+            }
         }
 
         internal void ExecuteText(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion) {
             DebugWriteCommand("ExecuteText");
-            _socket.Send(ExecuteTextCommandBytes);
-            SendString(_socket, text);
             int executeId = _ids.Allocate();
             lock (_pendingExecutes) {
+                _pendingExecutes[executeId] = new CompletionInfo(completion, text, pythonStackFrame);
+            }
+
+            lock (_socketLock) {
+                _socket.Send(ExecuteTextCommandBytes);
+                SendString(_socket, text);
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.Thread.Id));
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.FrameId));
                 _socket.Send(BitConverter.GetBytes(executeId));
-                _pendingExecutes[executeId] = new CompletionInfo(completion, text, pythonStackFrame);
             }
         }
 
         internal void EnumChildren(string text, PythonStackFrame pythonStackFrame, bool childIsEnumerate, Action<PythonEvaluationResult[]> completion) {
             DebugWriteCommand("Enum Children");
-            _socket.Send(GetChildrenCommandBytes);
-            SendString(_socket, text);
             int executeId = _ids.Allocate();
             lock (_pendingChildEnums) {
+                _pendingChildEnums[executeId] = new ChildrenInfo(completion, text, pythonStackFrame);
+            }
+
+            lock (_socketLock) {
+                _socket.Send(GetChildrenCommandBytes);
+                SendString(_socket, text);
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.Thread.Id));
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.FrameId));
                 _socket.Send(BitConverter.GetBytes(executeId));
                 _socket.Send(BitConverter.GetBytes(childIsEnumerate ? 1 : 0));
-                _pendingChildEnums[executeId] = new ChildrenInfo(completion, text, pythonStackFrame);
             }
         }
 
@@ -856,9 +887,11 @@ namespace Microsoft.PythonTools.Debugger {
         internal void DisableBreakPoint(PythonBreakpoint unboundBreakpoint) {
             if (_socket != null && _socket.Connected) {
                 DebugWriteCommand("Disable Breakpoint");
-                _socket.Send(RemoveBreakPointCommandBytes);
-                _socket.Send(BitConverter.GetBytes(unboundBreakpoint.LineNo));
-                _socket.Send(BitConverter.GetBytes(unboundBreakpoint.Id));
+                lock (_socketLock) {
+                    _socket.Send(RemoveBreakPointCommandBytes);
+                    _socket.Send(BitConverter.GetBytes(unboundBreakpoint.LineNo));
+                    _socket.Send(BitConverter.GetBytes(unboundBreakpoint.Id));
+                }
             }
         }
 
@@ -868,11 +901,13 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             DebugWriteCommand("Set Line Number");
-            _setLineResult = false;
-            _socket.Send(SetLineNumberCommand);
-            _socket.Send(BitConverter.GetBytes(pythonStackFrame.Thread.Id));
-            _socket.Send(BitConverter.GetBytes(pythonStackFrame.FrameId));
-            _socket.Send(BitConverter.GetBytes(lineNo));
+            lock (_socketLock) {
+                _setLineResult = false;
+                _socket.Send(SetLineNumberCommand);
+                _socket.Send(BitConverter.GetBytes(pythonStackFrame.Thread.Id));
+                _socket.Send(BitConverter.GetBytes(pythonStackFrame.FrameId));
+                _socket.Send(BitConverter.GetBytes(lineNo));
+            }
 
             // wait up to 2 seconds for line event...
             for (int i = 0; i < 20 &&
