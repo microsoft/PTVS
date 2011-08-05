@@ -3176,7 +3176,9 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
             Expression ret = MakeTupleOrExpr(l, listWhiteSpace, trailingComma, true);
-            ret.SetLoc(start0, GetEnd());
+            if (l.Count != 1 || ret != l[0]) {
+                ret.SetLoc(start0, GetEnd());
+            }
             return ret;
         }
 
