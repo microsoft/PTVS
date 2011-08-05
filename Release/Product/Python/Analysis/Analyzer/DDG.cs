@@ -631,5 +631,18 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             return false;
         }
+
+        public override bool Walk(ExecStatement node) {
+            if (node.Code != null) {
+                _eval.Evaluate(node.Code);
+            }
+            if (node.Locals != null) {
+                _eval.Evaluate(node.Locals);
+            }
+            if (node.Globals != null) {
+                _eval.Evaluate(node.Globals);
+            }
+            return false;
+        }        
     }
 }

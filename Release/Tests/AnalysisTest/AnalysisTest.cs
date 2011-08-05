@@ -352,6 +352,24 @@ def f(abc):
             VerifyReferences(UniqifyVariables(vars), new VariableLocation(2, 5, VariableType.Definition), new VariableLocation(5, 2, VariableType.Reference));
         }
 
+
+        [TestMethod]
+        public void TestExecReferences() {
+            string text = @"
+a = {}
+b = ""
+exec b in a
+";
+
+            var entry = ProcessText(text);
+
+            var vars = entry.GetVariables("a", GetLineNumber(text, "a = "));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(2, 1, VariableType.Definition), new VariableLocation(4, 11, VariableType.Reference));
+            
+            vars = entry.GetVariables("b", GetLineNumber(text, "b = "));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(3, 1, VariableType.Definition), new VariableLocation(4, 6, VariableType.Reference));
+        }
+
         [TestMethod]
         public void TestGeneratorComprehensions() {/*
             var entry = ProcessText(@"
