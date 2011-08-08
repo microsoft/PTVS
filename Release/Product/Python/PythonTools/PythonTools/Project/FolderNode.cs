@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			get
 			{
-                return GetAbsoluteUrlFromMsbuild();
+                return GetAbsoluteUrlFromMsbuild() + "\\";
 			}
 		}
 

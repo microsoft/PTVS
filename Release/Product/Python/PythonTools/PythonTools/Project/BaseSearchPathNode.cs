@@ -92,6 +92,12 @@ namespace Microsoft.PythonTools.Project {
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
+        public override string Url {
+            get {
+                return Path.Combine(Path.GetDirectoryName(this.ProjectMgr.Url), this.VirtualNodeName) + "\\";
+            }
+        }
+
         /// <summary>
         /// Defines whether this node is valid node for painting the Search Path icon.
         /// </summary>
