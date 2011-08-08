@@ -2536,7 +2536,7 @@ namespace Microsoft.PythonTools.Project
             Dictionary<String, MSBuild.ProjectItem> items = new Dictionary<String, MSBuild.ProjectItem>();
 
             // Process Files
-            foreach (MSBuild.ProjectItem item in this.buildProject.Items)
+            foreach (MSBuild.ProjectItem item in this.buildProject.Items.ToArray()) // copy the array, we could add folders while enumerating
             {
                 // Ignore the item if it is a reference or folder
                 if (this.FilterItemTypeToBeAddedToHierarchy(item.ItemType))
@@ -4386,7 +4386,7 @@ namespace Microsoft.PythonTools.Project
         {
             HierarchyNode currentParent = this;
             string strPath = item.EvaluatedInclude;
-
+            
             strPath = Path.GetDirectoryName(strPath);
             if (strPath.Length > 0)
             {

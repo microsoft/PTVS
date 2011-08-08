@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -268,7 +269,7 @@ namespace Microsoft.PythonTools.Debugger {
                 if (_socket != null) {
                     SendExceptionInfo(defaultBreakOnMode, breakOn);
                 } else {
-                    _breakOn = breakOn;
+                    _breakOn = breakOn.ToArray();
                     _defaultBreakMode = defaultBreakOnMode;
                 }
             }
