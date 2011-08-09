@@ -96,6 +96,27 @@ namespace AnalysisTest.ProjectSystem {
             );
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CompletionsCaseSensitive() {
+            // http://pytools.codeplex.com/workitem/457
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\Completions.sln");
+
+            var item = project.ProjectItems.Item("bar.py");
+            var window = item.Open();
+            window.Activate();
+
+            Keyboard.Type("from foo import ba\r");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+
+            doc.WaitForText("from foo import baz");
+            Keyboard.Type("\r");
+            
+            Keyboard.Type("from foo import Ba\r");
+            doc.WaitForText("from foo import baz\r\nfrom foo import Baz");
+        }
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]

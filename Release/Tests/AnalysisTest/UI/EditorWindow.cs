@@ -47,6 +47,18 @@ namespace AnalysisTest.UI {
             }
         }
 
+        public void WaitForText(string text) {
+            for (int i = 0; i < 10; i++) {
+                if (Text != text) {
+                    System.Threading.Thread.Sleep(1000);
+                } else {
+                    break;
+                }
+            }
+
+            Assert.AreEqual(text, Text);
+        }
+
         public T WaitForSession<T>() where T : IIntellisenseSession {
             var sessionStack = IntellisenseSessionStack;
             for (int i = 0; i < 100; i++) {

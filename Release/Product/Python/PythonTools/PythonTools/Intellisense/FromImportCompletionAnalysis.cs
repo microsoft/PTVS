@@ -130,7 +130,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override void SelectBestMatch() {
-            SelectBestMatch(CompletionMatchType.MatchInsertionText, false);
+            SelectBestMatch(CompletionMatchType.MatchInsertionText, true);
+            if (!SelectionStatus.IsSelected) {
+                SelectBestMatch(CompletionMatchType.MatchInsertionText, false);
+            }
         }
     }
 }
