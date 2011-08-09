@@ -47,7 +47,7 @@ namespace AnalysisTest.UI {
         private static ConditionalWeakTable<IReplWindow, ReplWindowInfo> _replWindows = new ConditionalWeakTable<IReplWindow, ReplWindowInfo>();
 
         private readonly string _title;
-        private readonly IReplWindow _replWindow;
+        private readonly ReplWindow _replWindow;
         private readonly ReplWindowInfo _replWindowInfo;
 
         public InteractiveWindow(string title, AutomationElement element)
@@ -56,7 +56,7 @@ namespace AnalysisTest.UI {
 
             var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
             var replWindowProvider = compModel.GetService<IReplWindowProvider>();
-            _replWindow = GetReplWindow(replWindowProvider);
+            _replWindow = (ReplWindow)GetReplWindow(replWindowProvider);
 
             _replWindowInfo = _replWindows.GetValue(_replWindow, window => {
                 var info = new ReplWindowInfo();
@@ -204,7 +204,7 @@ namespace AnalysisTest.UI {
             WaitForReadyState(10000);
         }
 
-        public IReplWindow ReplWindow {
+        public ReplWindow ReplWindow {
             get {
                 return _replWindow;
             }

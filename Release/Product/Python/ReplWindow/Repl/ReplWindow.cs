@@ -1012,6 +1012,91 @@ namespace Microsoft.VisualStudio.Repl {
             }
         }
 
+        private void SelectAll() {
+            SnapshotSpan? span = GetContainingRegion(TextView.Caret.Position.BufferPosition);
+
+            // if the span is already selected select all text in the projection buffer:
+            if (span == null || TextView.Selection.SelectedSpans.Count == 1 && TextView.Selection.SelectedSpans[0] == span.Value) {
+                span = new SnapshotSpan(TextBuffer.CurrentSnapshot, new Span(0, TextBuffer.CurrentSnapshot.Length));
+            }
+
+            TextView.Selection.Select(span.Value, isReversed: false);
+        }
+
+        /// <summary>
+        /// Given a point in projection buffer calculate a span that includes the point and comprises of 
+        /// subsequent projection spans forming a region, i.e. a sequence of output spans in between two subsequent submissions,
+        /// a language input block, or standard input block.
+        /// 
+        /// Internal for testing.
+        /// </summary>
+        internal SnapshotSpan? GetContainingRegion(SnapshotPoint point) {
+            if (_promptLineMapping == null || _promptLineMapping.Count == 0 || _projectionSpans.Count == 0) {
+                return null;
+            }
+
+            int closestPrecedingPrimaryPromptIndex = GetPromptMappingIndex(point.GetContainingLine().LineNumber);
+            ReplSpan projectionSpan = _projectionSpans[_promptLineMapping[closestPrecedingPrimaryPromptIndex].Value + 1];
+
+            Debug.Assert(projectionSpan.Kind == ReplSpanKind.Language || projectionSpan.Kind == ReplSpanKind.StandardInput);
+            var inputSnapshot = projectionSpan.TrackingSpan.TextBuffer.CurrentSnapshot;
+
+            // Language input block is a projection of the entire snapshot;
+            // std input block is a projection of a single span:
+            SnapshotPoint inputBufferEnd = (projectionSpan.Kind == ReplSpanKind.Language) ?
+                new SnapshotPoint(inputSnapshot, inputSnapshot.Length) :
+                projectionSpan.TrackingSpan.GetEndPoint(inputSnapshot);
+
+            SnapshotPoint projectedInputBufferEnd = TextView.BufferGraph.MapUpToBuffer(
+                inputBufferEnd,
+                PointTrackingMode.Positive,
+                PositionAffinity.Predecessor,
+                TextBuffer
+            ).Value;
+
+            // point is between the primary prompt (including) and the last character of the corresponding language/stdin buffer:
+            if (point <= projectedInputBufferEnd) {
+                var projectedLanguageBufferStart = TextView.BufferGraph.MapUpToBuffer(
+                    new SnapshotPoint(inputSnapshot, 0),
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Successor,
+                    TextBuffer
+                ).Value;
+
+                var promptProjectionSpan = _projectionSpans[_promptLineMapping[closestPrecedingPrimaryPromptIndex].Value];
+                if (point < projectedLanguageBufferStart - promptProjectionSpan.Length) {
+                    // cursor is before the first language buffer:
+                    return new SnapshotSpan(new SnapshotPoint(TextBuffer.CurrentSnapshot, 0), projectedLanguageBufferStart - promptProjectionSpan.Length);
+                }
+
+                // cursor is within the language buffer:
+                return new SnapshotSpan(projectedLanguageBufferStart, projectedInputBufferEnd);
+            }
+
+            // this was the last primary/stdin prompt - select the part of the projection buffer behind the end of the language/stdin buffer:
+            if (closestPrecedingPrimaryPromptIndex + 1 == _promptLineMapping.Count) {
+                return new SnapshotSpan(
+                    projectedInputBufferEnd,
+                    new SnapshotPoint(TextBuffer.CurrentSnapshot, TextBuffer.CurrentSnapshot.Length)
+                );
+            }
+
+            ReplSpan lastSpanBeforeNextPrompt = _projectionSpans[_promptLineMapping[closestPrecedingPrimaryPromptIndex + 1].Value - 1];
+            Debug.Assert(lastSpanBeforeNextPrompt.Kind == ReplSpanKind.Output);
+
+            // select all text in between the language buffer and the next prompt:
+            var trackingSpan = lastSpanBeforeNextPrompt.TrackingSpan;
+            return new SnapshotSpan(
+                projectedInputBufferEnd,
+                TextView.BufferGraph.MapUpToBuffer(
+                    trackingSpan.GetEndPoint(trackingSpan.TextBuffer.CurrentSnapshot),
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Predecessor,
+                    TextBuffer
+                ).Value
+            );
+        }
+        
         /// <summary>
         /// Pastes from the clipboard into the text view
         /// </summary>
@@ -1487,6 +1572,10 @@ namespace Microsoft.VisualStudio.Repl {
                             return VSConstants.S_OK;
                         }
                         break;
+
+                    case VSConstants.VSStd97CmdID.SelectAll:
+                        SelectAll();
+                        return VSConstants.S_OK;
                 }
             }
 
@@ -2412,6 +2501,9 @@ namespace Microsoft.VisualStudio.Repl {
             } while (promptMappingIndex < _promptLineMapping.Count);
         }
 
+        /// <summary>
+        /// Binary search for a prompt located on given line number. If there is no such span returns the closest preceding span.
+        /// </summary>
         internal int GetPromptMappingIndex(int lineNumber) {
             int start = 0;
             int end = _promptLineMapping.Count - 1;

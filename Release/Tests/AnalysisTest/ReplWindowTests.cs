@@ -1374,6 +1374,82 @@ $cls
             }
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void SelectAll() {
+            var interactive = Prepare();
+
+            // Python interactive window.  Type $help for a list of commands.
+            // >>> def foo():
+            // ...     print('hi')
+            // ...     return 123
+            // ... 
+            // >>> foo()
+            // hi
+            // 123
+            // >>> raw_input()
+            // blah
+            // 'blah'
+            // >>> 
+
+            Keyboard.Type("def foo():\rprint('hi')\rreturn 123\r\r");
+            interactive.WaitForIdleState();
+            Keyboard.Type("foo()\r");
+            interactive.WaitForIdleState();
+            Keyboard.Type(RawInput + "()\r");
+            interactive.WaitForIdleState();
+            Keyboard.Type("blah\r");
+            interactive.WaitForIdleState();
+
+            interactive.WaitForText(
+                ReplPrompt + "def foo():",
+                SecondPrompt + "    print('hi')",
+                SecondPrompt + "    return 123",
+                SecondPrompt,
+                ReplPrompt + "foo()",
+                "hi",
+                "123",
+                ReplPrompt + RawInput + "()",
+                "blah",
+                "'blah'",
+                ReplPrompt
+            );
+
+            var text = interactive.TextView.TextBuffer.CurrentSnapshot.GetText();
+            var firstPrimaryPrompt = text.IndexOf(">>>");
+            var hiLiteral = text.IndexOf("'hi'");
+            var firstSecondaryPrompt = text.IndexOf("...");
+            var fooCall = text.IndexOf("> foo()") + 2;
+            var hiOutput = text.IndexOf("hi", fooCall) + 1;
+            var oneTwoThreeOutput = text.IndexOf("123", fooCall) + 1;
+            var blahStdIn = text.IndexOf("blah") + 2;
+            var blahOutput = text.IndexOf("'blah'") + 2;
+
+            var firstSubmission = "def foo():\r\n...     print('hi')\r\n...     return 123\r\n... \r\n";
+            AssertContainingRegion(interactive, firstPrimaryPrompt + 0, firstSubmission);
+            AssertContainingRegion(interactive, firstPrimaryPrompt + 1, firstSubmission);
+            AssertContainingRegion(interactive, firstPrimaryPrompt + 2, firstSubmission);
+            AssertContainingRegion(interactive, firstPrimaryPrompt + 3, firstSubmission);
+            AssertContainingRegion(interactive, firstPrimaryPrompt + 4, firstSubmission);
+            AssertContainingRegion(interactive, hiLiteral, firstSubmission);
+            AssertContainingRegion(interactive, firstSecondaryPrompt + 0, firstSubmission);
+            AssertContainingRegion(interactive, firstSecondaryPrompt + 1, firstSubmission);
+            AssertContainingRegion(interactive, firstSecondaryPrompt + 2, firstSubmission);
+            AssertContainingRegion(interactive, firstSecondaryPrompt + 3, firstSubmission);
+            AssertContainingRegion(interactive, firstSecondaryPrompt + 4, firstSubmission);
+            AssertContainingRegion(interactive, fooCall, "foo()\r\n");
+            AssertContainingRegion(interactive, hiOutput, "hi\r\n123\r\n");
+            AssertContainingRegion(interactive, oneTwoThreeOutput, "hi\r\n123\r\n");
+            AssertContainingRegion(interactive, blahStdIn, "blah\r\n");
+            AssertContainingRegion(interactive, blahOutput, "'blah'\r\n");
+        }
+
+        private void AssertContainingRegion(InteractiveWindow interactive, int position, string expectedText) {
+            SnapshotSpan? span = interactive.ReplWindow.GetContainingRegion(new SnapshotPoint(interactive.TextView.TextBuffer.CurrentSnapshot, position));
+            Assert.IsNotNull(span);
+            Assert.AreEqual(expectedText, span.Value.GetText());
+        }
+
         /// <summary>
         /// Tests typing when the secondary prompt is highlighted as part of the selection
         /// </summary>
