@@ -207,24 +207,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (!enqueOnly) {
                 ((IGroupableAnalysisProject)_projectState).AnalyzeQueuedEntries();
-
-
-                List<string> toRemove = null;
-                foreach (var variableInfo in _myScope.Scope.Variables) {
-                    variableInfo.Value.ClearOldValues(this);
-                    if (variableInfo.Value._dependencies.Count == 0 &&
-                        variableInfo.Value.Types.Count == 0) {
-                        if (toRemove == null) {
-                            toRemove = new List<string>();
-                        }
-                        toRemove.Add(variableInfo.Key);
-                    }
-                }
-                if (toRemove != null) {
-                    foreach (var name in toRemove) {
-                        _myScope.Scope.Variables.Remove(name);
-                    }
-                }
             }
 
             // publish the analysis now that it's complete

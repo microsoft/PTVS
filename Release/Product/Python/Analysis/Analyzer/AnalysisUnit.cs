@@ -131,6 +131,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         protected virtual void AnalyzeWorker(DDG ddg) {
             ddg.SetCurrentUnit(this);
             Ast.Walk(ddg);
+
+            List<string> toRemove = null;
+            
+            foreach (var variableInfo in DeclaringModule.Scope.Variables) {
+                variableInfo.Value.ClearOldValues(ProjectEntry);
+                if (variableInfo.Value._dependencies.Count == 0 &&
+                    variableInfo.Value.Types.Count == 0) {
+                    if (toRemove == null) {
+                        toRemove = new List<string>();
+                    }
+                    toRemove.Add(variableInfo.Key);
+                }
+            }
+            if (toRemove != null) {
+                foreach (var name in toRemove) {
+                    DeclaringModule.Scope.Variables.Remove(name);
+                }
+            }
         }
 
         /// <summary>
