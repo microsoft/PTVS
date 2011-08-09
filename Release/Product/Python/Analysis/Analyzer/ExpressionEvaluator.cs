@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             _unit = unit;
             _currentScopes = scopes;
         }
-
+        
         #region Public APIs
 
         /// <summary>
@@ -129,6 +129,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             { typeof(ConstantExpression),  ExpressionEvaluator.EvaluateConstant},
             { typeof(DictionaryExpression),  ExpressionEvaluator.EvaluateDictionary},
             { typeof(SetExpression),  ExpressionEvaluator.EvaluateSet},
+            { typeof(DictionaryComprehension),  ExpressionEvaluator.EvaluateDictionaryComp},
+            { typeof(SetComprehension),  ExpressionEvaluator.EvaluateSetComp},
             { typeof(GeneratorExpression),  ExpressionEvaluator.EvaluateGenerator},
             { typeof(IndexExpression),  ExpressionEvaluator.EvaluateIndex},
             { typeof(LambdaExpression),  ExpressionEvaluator.EvaluateLambda},
@@ -196,6 +198,16 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return result;
         }
 
+        private static ISet<Namespace> EvaluateSetComp(ExpressionEvaluator ee, Node node) {
+            var n = (SetComprehension)node;
+
+            WalkComprehension(ee, n);
+
+            return ee.GlobalScope.GetOrMakeNodeVariable(
+                node,
+                (x) => new SetInfo(ee.Evaluate(n.Item), ee._unit.ProjectState, false).SelfSet);
+        }
+
         private static ISet<Namespace> EvaluateDictionary(ExpressionEvaluator ee, Node node) {
             var n = (DictionaryExpression)node;
             ISet<Namespace> result;
@@ -219,6 +231,16 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 ee.GlobalScope.NodeVariables[node] = result;
             }
             return result;
+        }
+
+        private static ISet<Namespace> EvaluateDictionaryComp(ExpressionEvaluator ee, Node node) {
+            var n = (DictionaryComprehension)node;
+
+            WalkComprehension(ee, n);    
+
+            return ee.GlobalScope.GetOrMakeNodeVariable(
+                node,
+                (x) => new DictionaryInfo(new HashSet<Namespace>(ee.Evaluate(n.Key)), new HashSet<Namespace>(ee.Evaluate(n.Value)), ee._unit.ProjectState).SelfSet);
         }
 
         private static ISet<Namespace> EvaluateConstant(ExpressionEvaluator ee, Node node) {
@@ -305,33 +327,34 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private static ISet<Namespace> EvaluateListComprehension(ExpressionEvaluator ee, Node node) {
             ListComprehension listComp = (ListComprehension)node;
-                       
-            for(int i = 0; i<listComp.Iterators.Count;i++) {
-                ComprehensionFor compFor = listComp.Iterators[i] as ComprehensionFor;
-                if (compFor != null) {
-                    foreach (var listType in ee.Evaluate(compFor.List)) {
-                        ee.AssignTo(node, compFor.Left, listType.GetEnumeratorTypes(node, ee._unit));
-                    }
-                }
-            }
+
+            WalkComprehension(ee, listComp);
 
             return ee.GlobalScope.GetOrMakeNodeVariable(
                 node,
                 (x) => new ListInfo(new [] { ee.Evaluate(listComp.Item) }, ee._unit.ProjectState._listType).SelfSet);
         }
 
+        private static void WalkComprehension(ExpressionEvaluator ee, Comprehension comp) {
+            for (int i = 0; i < comp.Iterators.Count; i++) {
+                ComprehensionFor compFor = comp.Iterators[i] as ComprehensionFor;
+                if (compFor != null) {
+                    foreach (var listType in ee.Evaluate(compFor.List)) {
+                        ee.AssignTo(comp, compFor.Left, listType.GetEnumeratorTypes(comp, ee._unit));
+                    }
+                }
+
+                ComprehensionIf compIf = comp.Iterators[i] as ComprehensionIf;
+                if (compIf != null) {
+                    ee.EvaluateMaybeNull(compIf.Test);
+                }
+            }
+        }
+
         private static ISet<Namespace> EvaluateGenerator(ExpressionEvaluator ee, Node node) {
             GeneratorExpression gen = (GeneratorExpression)node;
 
-            for (int i = 0; i < gen.Iterators.Count; i++) {
-                ComprehensionFor compFor = gen.Iterators[i] as ComprehensionFor;
-                if (compFor != null) {
-                    foreach (var listType in ee.Evaluate(compFor.List)) {
-                        ee.AssignTo(node, compFor.Left, listType.GetEnumeratorTypes(node, ee._unit));
-                    }
-                }
-            }
-
+            WalkComprehension(ee, gen);
 
             var res = (GeneratorInfo)ee.GlobalScope.GetOrMakeNodeVariable(
                 node,

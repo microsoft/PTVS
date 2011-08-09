@@ -1940,7 +1940,8 @@ namespace Microsoft.PythonTools.Parsing {
 
                 case TokenKind.Name:  // identifier
                     NextToken();
-                    var name = TokenToName((NameToken)t);                    
+                    var name = TokenToName((NameToken)t);
+                    var paramStart = GetStart();
                     parameter = new Parameter(name.RealName, kind);
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(parameter, _tokenWhiteSpace);
@@ -1958,7 +1959,7 @@ namespace Microsoft.PythonTools.Parsing {
                             ReportSyntaxError(start, parameter.Annotation.EndIndex, "invalid syntax, parameter annotations require 3.x");
                         }
                     }
-                    CompleteParameterName(parameter, name.RealName, names);
+                    CompleteParameterName(parameter, name.RealName, names, paramStart);
                     break;
 
                 default:
@@ -1971,9 +1972,9 @@ namespace Microsoft.PythonTools.Parsing {
             return parameter;
         }
 
-        private void CompleteParameterName(Node node, string name, HashSet<string> names) {
-            CheckUniqueParameter(GetStart(), names, name);
-            node.SetLoc(GetStart(), GetEnd());
+        private void CompleteParameterName(Node node, string name, HashSet<string> names, int paramStart) {
+            CheckUniqueParameter(paramStart, names, name);
+            node.SetLoc(paramStart, GetEnd());
         }
 
         //  parameter ::=
@@ -1997,7 +1998,7 @@ namespace Microsoft.PythonTools.Parsing {
                     if (_verbatim) {
                         AddPreceedingWhiteSpace(ne, _tokenWhiteSpace);
                     }
-                    CompleteParameterName(ne, name, names);
+                    CompleteParameterName(ne, name, names, GetStart());
                     return ne;
                 default:
                     ReportSyntaxError(_token);

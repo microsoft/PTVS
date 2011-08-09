@@ -438,10 +438,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     importing = curName.Names[0].Name;
                     if (asName != null) {
                         saveName = asName.Name;
+                        nameNode = asName;
                     } else {
                         saveName = importing;
+                        nameNode = curName.Names[0];
                     }
-                    nameNode = curName.Names[0];
                 }
 
                 ModuleReference modRef;
@@ -577,6 +578,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             _eval.EvaluateMaybeNull(node.Value);
             _eval.EvaluateMaybeNull(node.Traceback);
             _eval.EvaluateMaybeNull(node.ExceptType);
+            _eval.EvaluateMaybeNull(node.Cause);
             return false;
         }
 

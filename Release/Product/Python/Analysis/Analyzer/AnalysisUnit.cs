@@ -213,7 +213,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         v.AddTypes(p, this, val);
                     }
                 }
+                ddg._eval.EvaluateMaybeNull(p.Annotation);
             }
+            ddg._eval.EvaluateMaybeNull(Ast.ReturnAnnotation);
+
             var oldUnit = ddg._unit;
             ddg._unit = this;
             try {

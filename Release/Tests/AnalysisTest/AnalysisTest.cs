@@ -980,7 +980,7 @@ def f(abc):
                 new VariableLocation(3, 9, VariableType.Reference),
                 new VariableLocation(4, 13, VariableType.Reference),
 
-                new VariableLocation(5, 10, VariableType.Reference),        // BUGBUG: should be 5,11
+                new VariableLocation(5, 11, VariableType.Reference),
                 new VariableLocation(6, 9, VariableType.Reference),
                 new VariableLocation(7, 9, VariableType.Reference),
                 new VariableLocation(9, 7, VariableType.Reference),

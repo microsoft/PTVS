@@ -1730,7 +1730,7 @@ exec 'abc = 1' in abc, abc
 foo = { }
 exec 'abc = 1'
 exec 'abc = 1' in foo
-exec 'abc = 1' in abc, foo
+exec 'abc = 1' in foo, foo
 "                    )
                 }
             );
@@ -1894,7 +1894,7 @@ x = foo
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
-                    new ExpectedPreviewItem("import sys as abc"),
+                    new ExpectedPreviewItem("import os, sys as abc"),
                     new ExpectedPreviewItem("x = abc")
                 )
             );
@@ -1912,7 +1912,7 @@ x = foo
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
-                    new ExpectedPreviewItem("import sys as abc"),
+                    new ExpectedPreviewItem("import sys as abc, os"),
                     new ExpectedPreviewItem("x = abc")
                 )
             );
