@@ -443,7 +443,26 @@ public:
 
 class Py3kLongObject : public PyVarObject {
 public:
-	DWORD ob_digit[1];
+    DWORD ob_digit[1];
 };
+
+class PyOldStyleClassObject : public PyObject {
+public:
+    PyObject *cl_bases; /* A tuple of class objects */
+    PyObject *cl_dict; /* A dictionary */
+    PyObject *cl_name; /* A string */
+    /* The following three are functions or NULL */
+    PyObject *cl_getattr;
+    PyObject *cl_setattr;
+    PyObject *cl_delattr;
+};
+
+class PyInstanceObject : public PyObject {
+public:
+    PyOldStyleClassObject *in_class; /* The class object */
+    PyObject *in_dict; /* A dictionary */
+    PyObject *in_weakreflist; /* List of weak references */
+};
+
 
 #endif

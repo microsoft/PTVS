@@ -79,6 +79,7 @@ class VsPyProf {
 	PyObject* PyType_Type;
 	PyObject* PyFunction_Type;
 	PyObject* PyModule_Type;
+	PyObject* PyInstance_Type;
 
 	// profiler APIs
 	EnterFunctionFunc _enterFunction;
@@ -86,7 +87,7 @@ class VsPyProf {
 	NameTokenFunc _nameToken;
 	SourceLineFunc _sourceLine;
 
-	VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType);
+	VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType, PyObject* pyInstType);
 
 	// Extracts the function and module identifier from a user defined function
 	bool GetUserToken(PyFrameObject *frame, DWORD_PTR& func, DWORD_PTR& module);	

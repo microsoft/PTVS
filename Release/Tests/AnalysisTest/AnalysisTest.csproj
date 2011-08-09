@@ -375,6 +375,9 @@
     <Content Include="Python.VS.TestData\Completions.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\ProfileTest\OldStyleClassProfile.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\RelativePaths.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

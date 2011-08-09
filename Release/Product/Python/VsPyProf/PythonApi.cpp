@@ -61,7 +61,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
 	auto setProfileFunc = (PyEval_SetProfileFunc*)GetProcAddress(pythonModule, "PyEval_SetProfile");
 	auto getItemFromStringFunc = (PyDict_GetItemString*)GetProcAddress(pythonModule, "PyDict_GetItemString");
 	auto pyCFuncType = (PyObject*)GetProcAddress(pythonModule, "PyCFunction_Type");
-	
+	auto pyInstType = (PyObject*)GetProcAddress(pythonModule, "PyInstance_Type");
 
 	if (getVersion != NULL && pyCodeType != NULL && pyStrType != NULL && pyUniType != NULL && setProfileFunc != NULL &&
 		pyCFuncType != NULL && getItemFromStringFunc != NULL && pyDictType != NULL && pyTupleType != NULL && pyTypeType != NULL &&
@@ -81,7 +81,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
 
 			if((major == 2 && (minor == 4 || minor == 5 || minor == 6 || minor == 7)) ||
 				(major == 3 && (minor == 0 || minor == 1 || minor == 2))) {
-				return new VsPyProf(pythonModule, major, minor, enterFunction, exitFunction, nameToken, sourceLine, pyCodeType, pyStrType, pyUniType, setProfileFunc, pyCFuncType, getItemFromStringFunc, pyDictType, pyTupleType, pyTypeType, pyFuncType, pyModuleType);
+				return new VsPyProf(pythonModule, major, minor, enterFunction, exitFunction, nameToken, sourceLine, pyCodeType, pyStrType, pyUniType, setProfileFunc, pyCFuncType, getItemFromStringFunc, pyDictType, pyTupleType, pyTypeType, pyFuncType, pyModuleType, pyInstType);
 			}
 		}
 	}
@@ -233,7 +233,9 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
 wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
 	wstring res;
 	auto mro = (PyTupleObject*)self->ob_type->tp_mro;
-	if(mro->ob_type == PyTuple_Type) {
+	if(PyInstance_Type != nullptr && self->ob_type == PyInstance_Type) {		
+		GetName(((PyInstanceObject*)self)->in_class->cl_name, res);
+	} else if(mro != nullptr && mro->ob_type == PyTuple_Type) {
 		// get the name of our code object
 		string codeName;
 		PyObject* nameObj;
@@ -441,7 +443,7 @@ void VsPyProf::GetNameAscii(PyObject* object, string& name) {
 	}
 }
 
-VsPyProf::VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType) 
+VsPyProf::VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType, PyObject* pyInstType) 
 	: _pythonModule(pythonModule), 
 	  MajorVersion(majorVersion),
 	  MinorVersion(minorVersion),
@@ -459,7 +461,8 @@ VsPyProf::VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, Ent
 	  PyTuple_Type(pyTupleType),
 	  PyType_Type(pyTypeType),
 	  PyFunction_Type(pyFuncType),
-	  PyModule_Type(pyModuleType)
+	  PyModule_Type(pyModuleType),
+	  PyInstance_Type(pyInstType)
 {
 }
 

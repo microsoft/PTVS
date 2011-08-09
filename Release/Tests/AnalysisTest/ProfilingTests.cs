@@ -783,6 +783,43 @@ namespace AnalysisTest {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void OldClassProfile() {
+            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+
+            foreach (var version in new[] { "C:\\Python25\\python.exe", "C:\\Python26\\python.exe", "C:\\Python27\\python.exe" }) {
+                // no sessions yet
+                Assert.AreEqual(profiling.GetSession(1), null);
+
+                var session = profiling.LaunchProcess(version,
+                    Path.GetFullPath(@"Python.VS.TestData\ProfileTest\OldStyleClassProfile.py"),
+                    Path.GetFullPath(@"Python.VS.TestData\ProfileTest"),
+                    "",
+                    false
+                );
+                try {
+                    while (profiling.IsProfiling) {
+                        System.Threading.Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("OldStyleClassProfile"));
+
+                    Assert.AreEqual(session.GetReport(2), null);
+
+                    Assert.AreNotEqual(session.GetReport(report.Filename), null);
+                    Assert.IsTrue(File.Exists(filename));
+
+                    VerifyReport(report, "OldStyleClassProfile.C.f", "time.sleep");
+                } finally {
+                    profiling.RemoveSession(session, false);
+                }
+            }
+        }
+
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DerivedProfile() {
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
 
