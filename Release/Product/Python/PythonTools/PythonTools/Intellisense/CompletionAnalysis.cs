@@ -25,6 +25,10 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
 namespace Microsoft.PythonTools.Intellisense {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+
     /// <summary>
     /// Provides various completion services after the text around the current location has been
     /// processed. The completion services are specific to the current context

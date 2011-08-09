@@ -23,6 +23,10 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly int _paramIndex;
         private readonly ITextSnapshot _snapshot;

@@ -15,6 +15,10 @@
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+
     public static class ReplWindowExtensions {
         public static IReplEvaluator GetReplEvaluator(this ITextBuffer textBuffer) {
             IReplEvaluator res;

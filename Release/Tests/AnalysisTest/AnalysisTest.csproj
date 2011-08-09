@@ -40,6 +40,9 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(InteractiveWindow)' != ''">
+    <DefineConstants>INTERACTIVE_WINDOW</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="AnalysisSaveTest.cs" />
     <Compile Include="AnalysisTest.cs" />

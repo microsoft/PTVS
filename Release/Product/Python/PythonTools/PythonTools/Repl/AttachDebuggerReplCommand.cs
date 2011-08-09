@@ -21,6 +21,11 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplCommand = IInteractiveWindowCommand;
+    using IReplWindow = IInteractiveWindow;
+#endif
+    
     [Export(typeof(IReplCommand))]
     class AttachDebuggerReplCommand : IReplCommand {
         #region IReplCommand Members

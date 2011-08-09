@@ -23,6 +23,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Commands {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplCommand = IInteractiveWindowCommand;
+#endif
+
     /// <summary>
     /// Provides the command to send selected text from a buffer to the remote REPL window.
     /// </summary>

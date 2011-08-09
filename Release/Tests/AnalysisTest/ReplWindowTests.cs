@@ -1503,6 +1503,35 @@ $cls
         }
 
         /// <summary>
+        /// Calling input while executing user code.  This should let the user start typing.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DeleteSelectionInRawInput() {
+            var interactive = Prepare();
+
+            interactive.WithStandardInputPrompt("INPUT: ", stdInputPrompt => {
+                Keyboard.Type(RawInput + "()\r");
+                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
+                
+                Keyboard.Type("hel");
+                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hel");
+
+                // attempt to type in the previous submission should move the cursor back to the end of the stdin:
+                Keyboard.Type(Key.Up);
+                Keyboard.Type("lo");
+                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hello");
+                
+                Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                Keyboard.Press(Key.Delete);
+
+                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "he");
+            });
+        }
+
+        /// <summary>
         /// Replacing a snippet including a single line break with another snippet that also includes a single line break (line delta is zero).
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]

@@ -14,7 +14,15 @@
 
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+#endif
+
+#if INTERACTIVE_WINDOW
+    public interface IInteractiveWindowCreationListener {
+#else
     public interface IReplWindowCreationListener {
+#endif
         void ReplWindowCreated(IReplWindow window);
     }
 }

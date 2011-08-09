@@ -19,13 +19,21 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplCommand = IInteractiveWindowCommand;
+    using IReplEvaluator = IInteractiveEngine;
+#endif
 
     /// <summary>
     /// An implementation of a Read Eval Print Loop Window for iteratively developing code.
     /// 
     /// Instances of the repl window can be created by using MEF to import the IReplWindowProvider interface.
     /// </summary>
+#if INTERACTIVE_WINDOW
+    public interface IInteractiveWindow {
+#else
     public interface IReplWindow {
+#endif
         /// <summary>
         /// Gets the IWpfTextView in which the REPL window is executing.
         /// </summary>

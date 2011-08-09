@@ -19,6 +19,11 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplCommand = IInteractiveWindowCommand;
+    using IReplWindow = IInteractiveWindow;    
+#endif
+
     [Export(typeof(IReplCommand))]
     class ClearScreenReplCommand : IReplCommand {
         #region IReplCommand Members

@@ -20,6 +20,11 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Commands {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+
     /// <summary>
     /// Provides the command for starting the Python REPL window.
     /// </summary>

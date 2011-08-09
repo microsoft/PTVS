@@ -28,6 +28,11 @@ using Microsoft.VisualStudio.Text.Editor;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Commands {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplWindowProvider = IInteractiveWindowProvider;
+#endif
+
     /// <summary>
     /// Provides the command for starting a file or the start item of a project in the REPL window.
     /// </summary>

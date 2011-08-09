@@ -26,6 +26,12 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnalysisTest {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+    using IReplWindow = IInteractiveWindow;
+    using IReplWindowProvider = IInteractiveWindowProvider;
+#endif
+
     [TestClass]
     [DeploymentItem(@"..\\PythonTools\\CompletionDB\\", "CompletionDB")]
     [DeploymentItem(@"..\\PythonTools\\visualstudio_py_repl.py")]

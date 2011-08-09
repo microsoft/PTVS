@@ -17,6 +17,11 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplCommand = IInteractiveWindowCommand;
+#endif
+
     [Export(typeof(IReplCommand))]
     class SwitchModuleCommand : IReplCommand {
         #region IReplCommand Members

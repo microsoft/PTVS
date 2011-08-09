@@ -26,6 +26,11 @@ using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.VisualStudio.Repl {
+
+// An alternative implementation of prompt margin using GlyphMargin.
+// Unfortunately bug in GlyphMargin causes disappearance of the last REPL prompt under certain circumstances which deteriorates user experience.
+// We implement our own margin until this bug is fixed in VS.
+#if TAGGERS
     /// <summary>
     /// Any <see cref="ITextBuffer"/> with content type <see cref="ReplConstants.ReplContentTypeName"/>, role <see cref="ReplConstants.ReplTextViewRole"/> 
     /// and our ReplWindow object gets prompt glyphs in its glyph margin.
@@ -58,7 +63,7 @@ namespace Microsoft.VisualStudio.Repl {
             public IEnumerable<ITagSpan<ReplGlyphTag>>/*!*/ GetTags(NormalizedSnapshotSpanCollection/*!*/ spans) {
                 foreach (SnapshotSpan span in spans) {
                     foreach (var prompt in _promptProvider.GetOverlappingPrompts(span)) {
-                        var tagSpan = prompt.Value;
+                        var tagSpan = new SnapshotSpan(prompt.Value, 0);
                         switch (prompt.Key) {
                             case ReplSpanKind.Prompt:
                                 yield return new TagSpan<ReplGlyphTag>(tagSpan, ReplGlyphTag.MainPrompt);
@@ -128,4 +133,5 @@ namespace Microsoft.VisualStudio.Repl {
             }
         }
     }
+#endif
 }

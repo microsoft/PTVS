@@ -19,6 +19,11 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Adornments;
 
 namespace Microsoft.PythonTools.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+    using IReplEvaluatorProvider = IInteractiveEngineProvider;
+#endif
+    
     [Export(typeof(IReplEvaluatorProvider))]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         private readonly IPythonInterpreterFactoryProvider[] _interpreters;

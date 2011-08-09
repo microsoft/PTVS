@@ -19,8 +19,11 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudio.Repl
-{
+namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindowProvider = IInteractiveWindowProvider;
+#endif
+
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -34,7 +37,7 @@ namespace Microsoft.VisualStudio.Repl
     // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
     // a package.
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [Description("Visual Studio REPL Window")]
+    [Description("Visual Studio Interactive Window")]
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideKeyBindingTable(ReplWindow.TypeGuid, 200)]        // Resource ID: "Interactive Console"
     [ProvideToolWindow(typeof(ReplWindow), MultiInstances = true)]
@@ -42,8 +45,7 @@ namespace Microsoft.VisualStudio.Repl
     [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]
     [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
     [Guid(GuidList.guidReplWindowPkgString)]
-    internal sealed class ReplWindowPackage : Package, IVsToolWindowFactory
-    {
+    internal sealed class ReplWindowPackage : Package, IVsToolWindowFactory {
         int IVsToolWindowFactory.CreateToolWindow(ref Guid toolWindowType, uint id) {
             if (toolWindowType == typeof(ReplWindow).GUID) {
                 var model = (IComponentModel)GetService(typeof(SComponentModel));

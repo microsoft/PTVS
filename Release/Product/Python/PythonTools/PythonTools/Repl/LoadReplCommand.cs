@@ -20,6 +20,11 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplCommand = IInteractiveWindowCommand;
+#endif
+
     [Export(typeof(IReplCommand))]
     class LoadReplCommand : IReplCommand {
         #region IReplCommand Members

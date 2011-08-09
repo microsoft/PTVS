@@ -28,6 +28,11 @@ using Microsoft.VisualStudio.Text.Editor;
 using System.Diagnostics;
 
 namespace AnalysisTest.UI {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplWindowProvider = IInteractiveWindowProvider;
+#endif
+
     class InteractiveWindow : EditorWindow {
         private sealed class ReplWindowInfo {
             public readonly ManualResetEvent Idle = new ManualResetEvent(false);

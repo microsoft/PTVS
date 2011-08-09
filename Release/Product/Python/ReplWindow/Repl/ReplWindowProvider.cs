@@ -22,6 +22,12 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.Win32;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplWindowProvider = IInteractiveWindowProvider;
+    using IReplEvaluator = IInteractiveEngine;
+    using IReplEvaluatorProvider = IInteractiveEngineProvider;
+#endif
 
     [Export(typeof(IReplWindowProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]

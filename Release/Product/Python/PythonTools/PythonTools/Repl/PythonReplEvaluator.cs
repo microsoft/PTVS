@@ -45,6 +45,11 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
 
 namespace Microsoft.PythonTools.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+
     internal class PythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator {
         private readonly IErrorProviderFactory _errorProviderFactory;
         private readonly IPythonInterpreterFactoryProvider _factProvider;

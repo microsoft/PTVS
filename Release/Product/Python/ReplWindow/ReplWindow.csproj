@@ -10,7 +10,8 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.VisualStudio</RootNamespace>
-    <AssemblyName>Microsoft.VisualStudio.ReplWindow</AssemblyName>
+    <AssemblyName Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</AssemblyName>
+    <AssemblyName Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</AssemblyName>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -48,6 +49,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(VSTarget)' == '11.0'">
     <DefineConstants>DEV11</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(InteractiveWindow)' != ''">
+    <DefineConstants>INTERACTIVE_WINDOW</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -147,6 +151,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CommonConstants.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="Repl\Margin\GlyphPrompts.cs" />
+    <Compile Include="Repl\Margin\PromptMarginVisualManager.cs" />
+    <Compile Include="Repl\Margin\PromptMargin.cs" />
     <Compile Include="Repl\OutputBuffer.cs" />
     <Compile Include="Repl\OutputColors.cs" />
     <Compile Include="Repl\ReplOutputClassificationFormatDefinitions.cs" />
@@ -174,7 +181,6 @@
     <Compile Include="Repl\IReplEvaluatorProvider.cs" />
     <Compile Include="Repl\IReplWindow.cs" />
     <Compile Include="Repl\IReplWindowProvider.cs" />
-    <Compile Include="Repl\ReplGlyphPrompts.cs" />
     <Compile Include="Repl\ReplContentType.cs" />
     <Compile Include="Repl\ReplOptions.cs" />
     <Compile Include="Repl\ReplWindow.cs" />

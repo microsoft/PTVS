@@ -17,11 +17,19 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+#endif
+
     /// <summary>
     /// Implements an evaluator for a specific REPL implementation.  The evaluator is provided to the
     /// REPL implementation by the IReplEvaluatorProvider interface.
     /// </summary>
+#if INTERACTIVE_WINDOW
+    public interface IInteractiveEngine : IDisposable {
+#else
     public interface IReplEvaluator : IDisposable {
+#endif
         /// <summary>
         /// Initializes the interactive session. 
         /// </summary>

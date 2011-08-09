@@ -45,6 +45,9 @@
   <PropertyGroup Condition="'$(VSTarget)' == '11.0'">
     <DefineConstants>DEV11</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(InteractiveWindow)' != ''">
+    <DefineConstants>INTERACTIVE_WINDOW</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
@@ -73,7 +76,8 @@
     </ProjectReference>
     <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
-      <Name>Microsoft.VisualStudio.ReplWindow</Name>
+      <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
+      <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
       <Private>False</Private>
     </ProjectReference>
     <ProjectReference Include="..\PyDebugAttach\PyDebugAttach.vcxproj">

@@ -18,6 +18,11 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplCommand = IInteractiveWindowCommand;
+    using IReplWindow = IInteractiveWindow;
+#endif
+
     [Export(typeof(IReplCommand))]
     class WaitReplCommand : IReplCommand {
         #region IReplCommand Members

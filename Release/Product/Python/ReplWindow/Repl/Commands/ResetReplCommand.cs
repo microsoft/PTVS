@@ -19,6 +19,11 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplCommand = IInteractiveWindowCommand;
+#endif
+
     [Export(typeof(IReplCommand))]
     class ResetReplCommand : IReplCommand {
         #region IReplCommand Members

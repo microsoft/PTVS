@@ -16,6 +16,11 @@ using System.ComponentModel.Composition;
 using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplCommand = IInteractiveWindowCommand;
+    using IReplWindow = IInteractiveWindow;
+#endif
+
     [Export(typeof(IReplCommand))]
     class EchoReplCommand : IReplCommand {
         #region IReplCommand Members

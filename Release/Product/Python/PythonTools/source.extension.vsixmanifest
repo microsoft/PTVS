@@ -33,7 +33,7 @@
   </Identifier>
   <References>
     <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="1.0">
-      <Name>Microsoft.VisualStudio.ReplWindow</Name>
+      <Name>Microsoft.VisualStudio.InteractiveWindow</Name>
     </Reference>
   </References>
   <Content>

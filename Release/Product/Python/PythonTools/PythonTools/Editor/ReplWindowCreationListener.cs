@@ -24,6 +24,11 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Editor {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+    using IReplWindowCreationListener = IInteractiveWindowCreationListener;
+#endif
+
     [Export(typeof(IReplWindowCreationListener))]
     [ContentType(PythonCoreConstants.ContentType)]
     class ReplWindowCreationListener : IReplWindowCreationListener {

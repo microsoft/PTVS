@@ -38,6 +38,10 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 
 namespace Microsoft.PythonTools.Intellisense {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+    
     /// <summary>
     /// Performs centralized parsing and analysis of Python source code.
     /// </summary>

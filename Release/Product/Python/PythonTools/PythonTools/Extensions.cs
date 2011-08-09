@@ -32,6 +32,10 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+
     public static class Extensions {
         public static StandardGlyphGroup ToGlyphGroup(this PythonMemberType objectType) {
             StandardGlyphGroup group;

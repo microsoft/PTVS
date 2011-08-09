@@ -18,6 +18,10 @@ using System.Linq;
 using System.Text;
 
 namespace Microsoft.VisualStudio.Repl {
+#if INTERACTIVE_WINDOW
+    using IReplEvaluator = IInteractiveEngine;
+#endif
+
     /// <summary>
     /// Supports a REPL evaluator which enables the user to switch between
     /// multiple scopes of execution.
