@@ -274,6 +274,7 @@ class Thread(object):
         self.trace_func = self.trace_func # replace self.trace_func w/ a bound method so we don't need to re-create these regularly
         self.prev_trace_func = None
         self.trace_func_stack = []
+        self.reported_process_loaded = False
     
     def trace_func(self, frame, event, arg):
         
@@ -461,6 +462,8 @@ class Thread(object):
                 if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
                     return report_step_finished(self.id)
                 else:
+                    if stepping == STEPPING_ATTACH_BREAK:
+                        self.reported_process_loaded = True
                     return report_process_loaded(self.id)
         self.block(block_cond)
     
@@ -892,6 +895,10 @@ class DebuggerLoop(object):
         thread = THREADS[tid]
         thread.unblock()
         THREADS_LOCK.release()
+
+        if thread.reported_process_loaded:
+            thread.reported_process_loaded = False
+            self.command_resume_all()
     
     def command_set_exception_info(self):
         BREAK_ON.Clear()
