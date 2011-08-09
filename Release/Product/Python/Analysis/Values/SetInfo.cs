@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class SetInfo : BuiltinInstanceInfo {
         private readonly ISet<Namespace> _valueTypes;
 
-        public SetInfo(HashSet<Namespace> valueTypes, PythonAnalyzer projectState, bool showClr)
+        public SetInfo(ISet<Namespace> valueTypes, PythonAnalyzer projectState, bool showClr)
             : base(projectState._setType) {
             _valueTypes = valueTypes;
         }

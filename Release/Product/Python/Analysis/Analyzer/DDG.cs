@@ -29,10 +29,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             while (queue.Count > 0) {
                 _unit = queue.PopLeft();
                 _unit.IsInQueue = false;
-
-                _eval = new ExpressionEvaluator(_unit);
+                
                 _unit.Analyze(this);
             }
+        }
+
+        public void SetCurrentUnit(AnalysisUnit unit) {
+            _eval = new ExpressionEvaluator(unit);
+            _unit = unit;
         }
 
         public InterpreterScope[] Scopes {
@@ -131,8 +135,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public override bool Walk(ClassDefinition node) {
             return false;
         }
-
-
 
         public AnalysisUnit PushScope(AnalysisUnit unit) {
             var oldUnit = _unit;
