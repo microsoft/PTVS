@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         //
         // Command filter chain: 
-        // window -> pre-language -> language services -> post-language -> editor
+        // window -> VsTextView -> ... -> pre-language -> language services -> post-language -> editor
         //
         private IOleCommandTarget _preLanguageCommandFilter;
         private IOleCommandTarget _languageServiceCommandFilter;
@@ -1293,8 +1293,17 @@ namespace Microsoft.VisualStudio.Repl {
 
         #region Window IOleCommandTarget
 
+        private IOleCommandTarget TextViewCommandFilterChain {
+            get {
+                // Non-character command processing starts with WindowFrame which calls ReplWindow.Exec.
+                // We need to invoke the view's Exec method in order to invoke its full command chain 
+                // (features add their filters to the view).
+                return (IOleCommandTarget)_view;
+            }
+        }
+
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            var nextTarget = _preLanguageCommandFilter;
+            var nextTarget = TextViewCommandFilterChain;
 
             if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
                 switch (prgCmds[0].cmdID) {
@@ -1320,7 +1329,7 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            var nextTarget = _preLanguageCommandFilter;
+            var nextTarget = TextViewCommandFilterChain;
 
             if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
                 switch (nCmdID) {
@@ -1535,7 +1544,7 @@ namespace Microsoft.VisualStudio.Repl {
                     case VSConstants.VSStd2KCmdID.CANCEL:
                         _historySearch = null;
                         Cancel();
-                        return VSConstants.S_OK;
+                        break;
 
                     case VSConstants.VSStd2KCmdID.BOL:
                         Home(false);

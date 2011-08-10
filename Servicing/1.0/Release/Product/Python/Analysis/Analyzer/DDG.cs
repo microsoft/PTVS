@@ -29,10 +29,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             while (queue.Count > 0) {
                 _unit = queue.PopLeft();
                 _unit.IsInQueue = false;
-
-                _eval = new ExpressionEvaluator(_unit);
+                
                 _unit.Analyze(this);
             }
+        }
+
+        public void SetCurrentUnit(AnalysisUnit unit) {
+            _eval = new ExpressionEvaluator(unit);
+            _unit = unit;
         }
 
         public InterpreterScope[] Scopes {
@@ -131,8 +135,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public override bool Walk(ClassDefinition node) {
             return false;
         }
-
-
 
         public AnalysisUnit PushScope(AnalysisUnit unit) {
             var oldUnit = _unit;
@@ -438,10 +440,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     importing = curName.Names[0].Name;
                     if (asName != null) {
                         saveName = asName.Name;
+                        nameNode = asName;
                     } else {
                         saveName = importing;
+                        nameNode = curName.Names[0];
                     }
-                    nameNode = curName.Names[0];
                 }
 
                 ModuleReference modRef;
@@ -577,6 +580,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             _eval.EvaluateMaybeNull(node.Value);
             _eval.EvaluateMaybeNull(node.Traceback);
             _eval.EvaluateMaybeNull(node.ExceptType);
+            _eval.EvaluateMaybeNull(node.Cause);
             return false;
         }
 

@@ -53,6 +53,9 @@ namespace Microsoft.PythonTools.Navigation {
 
         public IEnumerable<IScopeNode> NestedScopes {
             get {
+                if (_ast == null) {
+                    return new IScopeNode[0];
+                }
                 return EnumerateBody(_ast, _ast.Body);
             }
         }

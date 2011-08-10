@@ -233,7 +233,7 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
 wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
 	wstring res;
 	auto mro = (PyTupleObject*)self->ob_type->tp_mro;
-	if(mro->ob_type == PyTuple_Type) {
+	if(mro != nullptr && mro->ob_type == PyTuple_Type) {
 		// get the name of our code object
 		string codeName;
 		PyObject* nameObj;

@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             get { return _ast; }
         }
 
-        public  void Analyze(DDG ddg) {
+        public void Analyze(DDG ddg) {
 #if DEBUG
             long startTime = _sw.ElapsedMilliseconds;
             try {
@@ -129,6 +129,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         protected virtual void AnalyzeWorker(DDG ddg) {
+            ddg.SetCurrentUnit(this);
             Ast.Walk(ddg);
         }
 
@@ -165,8 +166,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     }
 
     class FunctionAnalysisUnit : AnalysisUnit {
-        public FunctionAnalysisUnit(FunctionDefinition node, InterpreterScope[] scopes)
+        private readonly AnalysisUnit _outerUnit;
+        public FunctionAnalysisUnit(FunctionDefinition node, InterpreterScope[] scopes, AnalysisUnit outerUnit)
             : base(node, scopes) {
+            _outerUnit = outerUnit;
         }
 
         public new FunctionDefinition Ast {
@@ -178,8 +181,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         protected override void AnalyzeWorker(DDG ddg) {
             var newScope = (DeclaringModule.NodeScopes[Ast] as FunctionScope).Function;
             Debug.Assert(newScope != null);
-
             // TODO: __new__ in class should assign returnValue
+            ddg.SetCurrentUnit(_outerUnit);
 
             ClassScope curClass = null;
             for (int i = Scopes.Length - 1; i >= 0; i--) {
@@ -188,7 +191,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     break;
                 }
             }
-            
+
             if (curClass != null) {
                 // wire up information about the class
                 // TODO: Should follow MRO
@@ -213,20 +216,21 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         v.AddTypes(p, this, val);
                     }
                 }
+                ddg._eval.EvaluateMaybeNull(p.Annotation);
             }
-            var oldUnit = ddg._unit;
-            ddg._unit = this;
-            try {
-                Ast.Body.Walk(ddg);
-            } finally {
-                ddg._unit = oldUnit;
-            }
+            ddg._eval.EvaluateMaybeNull(Ast.ReturnAnnotation);
+
+            ddg.SetCurrentUnit(this);
+            Ast.Body.Walk(ddg);
         }
     }
 
     class ClassAnalysisUnit : AnalysisUnit {
-        public ClassAnalysisUnit(ClassDefinition node, InterpreterScope[] scopes)
+        private readonly AnalysisUnit _outerUnit;
+
+        public ClassAnalysisUnit(ClassDefinition node, InterpreterScope[] scopes, AnalysisUnit outerUnit)
             : base(node, scopes) {
+            _outerUnit = outerUnit;
         }
 
         public new ClassDefinition Ast {
@@ -237,6 +241,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
 
         protected override void AnalyzeWorker(DDG ddg) {
+
+
             var newScope = (DeclaringModule.NodeScopes[Ast] as ClassScope).Class;
 
             newScope.Bases.Clear();
@@ -246,6 +252,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     newScope.Bases.Add(ddg.ProjectState._objectSet);
                 }
             } else {
+                ddg.SetCurrentUnit(_outerUnit);
+
                 // Process base classes
                 foreach (var baseClassArg in Ast.Bases) {
                     if (baseClassArg.Name != null) {
@@ -269,6 +277,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
             }
 
+            ddg.SetCurrentUnit(this);
             ddg.WalkBody(Ast.Body, newScope._analysisUnit);
         }
     }

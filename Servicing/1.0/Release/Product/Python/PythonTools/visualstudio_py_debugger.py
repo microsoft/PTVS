@@ -242,6 +242,11 @@ def should_debug_code(code):
     return code.co_filename not in DONT_DEBUG
 
 
+attach_lock = thread.allocate()
+attach_sent_break = False
+
+
+
 class Thread(object):
     def __init__(self, id = None):
         if id is not None:
@@ -269,6 +274,7 @@ class Thread(object):
         self.trace_func = self.trace_func # replace self.trace_func w/ a bound method so we don't need to re-create these regularly
         self.prev_trace_func = None
         self.trace_func_stack = []
+        self.reported_process_loaded = False
     
     def trace_func(self, frame, event, arg):
         
@@ -350,15 +356,8 @@ class Thread(object):
                         not should_debug_code(frame.f_code)):  # don't break into our own debugger
                         # don't break into inital Python code needed to set things up
                         return self.trace_func
-            
-                    probe_stack()
-                    self.stepping = STEPPING_NONE
-                    def block_cond():
-                        if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
-                            return report_step_finished(self.id)
-                        else:
-                            return report_process_loaded(self.id)
-                    self.block(block_cond)
+                    
+                    self.block_maybe_attach()
 
             if BREAKPOINTS:
                 bp = BREAKPOINTS.get(frame.f_lineno)
@@ -419,6 +418,9 @@ class Thread(object):
         self.cur_frame = frame.f_back
         
     def handle_exception(self, frame, arg):
+        if self.stepping == STEPPING_ATTACH_BREAK:
+            self.block_maybe_attach()
+
         if not DETACHED and should_debug_code(frame.f_code) and BREAK_ON.ShouldBreak(self, *arg):
             self.block(lambda: report_exception(frame, arg, self.id))
 
@@ -441,6 +443,30 @@ class Thread(object):
     def handle_c_exception(self, frame, arg):
         pass
 
+    def block_maybe_attach(self):
+        will_block_now = True
+        if self.stepping == STEPPING_ATTACH_BREAK:
+            # only one thread should send the attach break in
+            attach_lock.acquire()
+            global attach_sent_break
+            if attach_sent_break:
+                will_block_now = False
+            attach_sent_break = True
+            attach_lock.release()
+    
+        probe_stack()
+        stepping = self.stepping
+        self.stepping = STEPPING_NONE
+        def block_cond():
+            if will_block_now:
+                if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
+                    return report_step_finished(self.id)
+                else:
+                    if stepping == STEPPING_ATTACH_BREAK:
+                        self.reported_process_loaded = True
+                    return report_process_loaded(self.id)
+        self.block(block_cond)
+    
     def async_break(self):
         def async_break_send():
             send_lock.acquire()
@@ -867,6 +893,10 @@ class DebuggerLoop(object):
         thread = THREADS[tid]
         thread.unblock()
         THREADS_LOCK.release()
+
+        if thread.reported_process_loaded:
+            thread.reported_process_loaded = False
+            self.command_resume_all()
     
     def command_set_exception_info(self):
         BREAK_ON.Clear()
@@ -1162,7 +1192,7 @@ def report_execution_result(execution_id, result):
     hex_repr = safe_hex_repr(result)
     res_type = type(result)
     type_name = type(result).__name__
-    
+
 
     send_lock.acquire()
     conn.send(EXCR)
@@ -1238,7 +1268,9 @@ def attach_process(port_num, debug_id, report_and_block = False):
         raise Exception('failed to attach')
 
     global DETACHED
+    global attach_sent_break
     DETACHED = False
+    attach_sent_break = False
 
     # start the debugging loop
     global debugger_thread_id

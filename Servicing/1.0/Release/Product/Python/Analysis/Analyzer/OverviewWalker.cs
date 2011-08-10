@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var scopes = new InterpreterScope[outerUnit.Scopes.Length + 1];
                 outerUnit.Scopes.CopyTo(scopes, 0);
 
-                var unit = new ClassAnalysisUnit(node, scopes);
+                var unit = new ClassAnalysisUnit(node, scopes, outerUnit);
                 var klass = new ClassInfo(unit, node);
                 var classScope = scope = klass.Scope;
 
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var scopes = new InterpreterScope[outerUnit.Scopes.Length + 1];
                 outerUnit.Scopes.CopyTo(scopes, 0);
 
-                var unit = new FunctionAnalysisUnit(node, scopes);
+                var unit = new FunctionAnalysisUnit(node, scopes, outerUnit);
                 var function = new FunctionInfo(unit);
 
                 if (node.Decorators != null) {

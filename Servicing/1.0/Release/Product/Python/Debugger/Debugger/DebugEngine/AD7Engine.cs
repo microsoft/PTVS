@@ -952,11 +952,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private void OnExceptionRaised(object sender, ExceptionRaisedEventArgs e) {
             // Exception events are sent when an exception occurs in the debuggee that the debugger was not expecting.
-            Send(
-                new AD7DebugExceptionEvent(e.Exception.TypeName + Environment.NewLine + e.Exception.Description),
-                AD7DebugExceptionEvent.IID,
-                _threads[e.Thread]
-            );
+            AD7Thread thread;
+            if (_threads.TryGetValue(e.Thread, out thread)) {
+                Send(
+                    new AD7DebugExceptionEvent(e.Exception.TypeName + Environment.NewLine + e.Exception.Description),
+                    AD7DebugExceptionEvent.IID,
+                    thread
+                );
+            }
         }
 
         private void OnBreakpointHit(object sender, BreakpointHitEventArgs e) {
