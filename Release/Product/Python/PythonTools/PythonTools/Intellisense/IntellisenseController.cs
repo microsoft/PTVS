@@ -142,6 +142,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             TriggerSignatureHelp();
                         }
                         break;
+                    case '=':
                     case ',':
                         if (_sigHelpSession == null) {
                             if (PythonToolsPackage.Instance.LangPrefs.AutoListParams) {
@@ -173,14 +174,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (caretPoint != null && caretPoint.Value.Position != 0) {
                     var deleting = caretPoint.Value.Snapshot[caretPoint.Value.Position - 1];
                     if (deleting == ',') {
-                        PythonSignature sig = _sigHelpSession.SelectedSignature as PythonSignature;
-                        if (sig != null) {
-                            int curParam = sig.Parameters.IndexOf(sig.CurrentParameter);
-
-                            if (curParam > 0) {
-                                sig.SetCurrentParameter(sig.Parameters[curParam - 1]);
-                            }
-                        }
+                        caretPoint.Value.Snapshot.TextBuffer.Delete(new Span(caretPoint.Value.Position - 1, 1));
+                        UpdateCurrentParameter();
+                        return true;
                     } else if (deleting == '(' || deleting == ')') {
                         _sigHelpSession.Dismiss();
                         // delete the ( before triggering help again
@@ -278,25 +274,49 @@ namespace Microsoft.PythonTools.Intellisense {
                         TriggerSignatureHelp();
                     } else {
                         int curParam = sigs.ParameterIndex;
+                        if (sigs.LastKeywordArgument != null) {
+                            curParam = Int32.MaxValue;
+                            for (int i = 0; i < sig.Parameters.Count; i++) {
+                                if (sig.Parameters[i].Name == sigs.LastKeywordArgument) {
+                                    curParam = i;
+                                    break;
+                                }
+                            }
+                        }
 
                         if (curParam < sig.Parameters.Count) {
                             sig.SetCurrentParameter(sig.Parameters[curParam]);
+                        }else if(sigs.LastKeywordArgument == "") {
+                            sig.SetCurrentParameter(null);
                         } else {
-                            CommaFindBestSignature(curParam);
+                            CommaFindBestSignature(curParam, sigs.LastKeywordArgument);
                         }
                     }
                 }
             }
         }
 
-        private void CommaFindBestSignature(int curParam) {
+        private void CommaFindBestSignature(int curParam, string lastKeywordArg) {
             // see if we have a signature which accomodates this...
 
             // TODO: We should also take into account param arrays
             // TODO: We should also get the types of the arguments and use that to
             // pick the best signature when the signature includes types.
             foreach (var availableSig in _sigHelpSession.Signatures) {
-                if (availableSig.Parameters.Count > curParam) {
+                if (lastKeywordArg != null) {
+                    for (int i = 0; i < availableSig.Parameters.Count; i++) {
+                        if (availableSig.Parameters[i].Name == lastKeywordArg) {
+                            _sigHelpSession.SelectedSignature = availableSig;
+
+                            PythonSignature sig = availableSig as PythonSignature;
+                            if (sig != null) {
+                                sig.SetCurrentParameter(sig.Parameters[i]);
+                            }
+                            break;
+
+                        }
+                    }
+                } else if (availableSig.Parameters.Count > curParam) {
                     _sigHelpSession.SelectedSignature = availableSig;
 
                     PythonSignature sig = availableSig as PythonSignature;

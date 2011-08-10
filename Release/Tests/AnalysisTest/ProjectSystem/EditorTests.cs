@@ -14,17 +14,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using AnalysisTest.UI;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
-using System.Diagnostics;
 
 namespace AnalysisTest.ProjectSystem {
     [TestClass]
@@ -94,6 +95,71 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("whitespace", 33, 35, "\r\n"),
                 new Classifcation("string", 35, 46, "'abc\\\r\ndef'")
             );
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void SignaturesTest() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\Signatures.sln");
+
+            var item = project.ProjectItems.Item("sigs.py");
+            var window = item.Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+
+
+            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                doc.TextView.Caret.MoveTo(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, doc.TextView.TextBuffer.CurrentSnapshot.Length));
+            }));
+
+            Keyboard.Type("f(");
+
+            var session = doc.WaitForSession<ISignatureHelpSession>();
+            Assert.AreEqual("a", session.SelectedSignature.CurrentParameter.Name);
+
+            Keyboard.Type("b=");
+
+            WaitForCurrentParameter(session, "b");
+            Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
+            window.Activate();
+            
+            Keyboard.Type("42,");
+
+            WaitForNoCurrentParameter(session);
+            Assert.AreEqual(null, session.SelectedSignature.CurrentParameter);
+
+            Keyboard.Backspace();
+            WaitForCurrentParameter(session);
+            Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
+        }
+
+        private static void WaitForCurrentParameter(ISignatureHelpSession session, string name) {
+            for (int i = 0; i < 10; i++) {
+                if (session.SelectedSignature.CurrentParameter != null && session.SelectedSignature.CurrentParameter.Name == name) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
+
+        private static void WaitForNoCurrentParameter(ISignatureHelpSession session) {
+            for (int i = 0; i < 10; i++) {
+                if (session.SelectedSignature.CurrentParameter == null) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
+
+        private static void WaitForCurrentParameter(ISignatureHelpSession session) {
+            for (int i = 0; i < 10; i++) {
+                if (session.SelectedSignature.CurrentParameter != null) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(1000);
+            }
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

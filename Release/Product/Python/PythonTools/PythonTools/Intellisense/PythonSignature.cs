@@ -27,9 +27,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private IParameter _currentParameter;
         private readonly IOverloadResult _overload;
 
-        public PythonSignature(ITrackingSpan span, IOverloadResult overload, int paramIndex) {
+        public PythonSignature(ITrackingSpan span, IOverloadResult overload, int paramIndex, string lastKeywordArg = null) {
             _span = span;
             _overload = overload;
+            if (lastKeywordArg != null) {
+                paramIndex = Int32.MaxValue;
+            }
 
             var content = new StringBuilder(overload.Name);
             content.Append('(');
@@ -55,6 +58,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 if (param.IsOptional) {
                     content.Append("]");
+                }
+
+                if (lastKeywordArg != null && param.Name == lastKeywordArg) {
+                    paramIndex = i;
                 }
 
                 parameters[i] = new PythonParameter(this, param, paramSpan);

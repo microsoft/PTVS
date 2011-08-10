@@ -54,7 +54,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public SnapshotSpan? GetExpressionRange(bool forCompletion = true) {
             int dummy;
             SnapshotPoint? dummyPoint;
-            return GetExpressionRange(0, out dummy, out dummyPoint, forCompletion);
+            string lastKeywordArg;
+            return GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, forCompletion);
         }        
 
         internal static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
@@ -87,12 +88,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="nesting">1 if we have an opening parenthesis for sig completion</param>
         /// <param name="paramIndex">The current parameter index.</param>
         /// <returns></returns>
-        public SnapshotSpan? GetExpressionRange(int nesting, out int paramIndex, out SnapshotPoint? sigStart, bool forCompletion = true) {
+        public SnapshotSpan? GetExpressionRange(int nesting, out int paramIndex, out SnapshotPoint? sigStart, out string lastKeywordArg, bool forCompletion = true) {
             SnapshotSpan? start = null;
             paramIndex = 0;
             sigStart = null;
-            bool nestingChanged = false, lastTokenWasCommaOrOperator = true;
+            bool nestingChanged = false, lastTokenWasCommaOrOperator = true, lastTokenWasKeywordArgAssignment = false;
             int otherNesting = 0;
+            bool isSigHelp = nesting != 0;
+            lastKeywordArg = null;
 
             ClassificationSpan lastToken = null;
             // Walks backwards over all the lines
@@ -142,6 +145,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         }
                         lastTokenWasCommaOrOperator = true;
+                        lastTokenWasKeywordArgAssignment = false;
                     } else if (token.IsOpenGrouping()) {
                         if (otherNesting != 0) {
                             otherNesting--;
@@ -156,16 +160,20 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         nestingChanged = true;
                         lastTokenWasCommaOrOperator = true;
+                        lastTokenWasKeywordArgAssignment = false;
                     } else if (text == ")") {
                         nesting++;
                         nestingChanged = true;
                         lastTokenWasCommaOrOperator = true;
+                        lastTokenWasKeywordArgAssignment = false;
                     } else if (token.IsCloseGrouping()) {
                         otherNesting++;
                         nestingChanged = true;
                         lastTokenWasCommaOrOperator = true;
+                        lastTokenWasKeywordArgAssignment = false;
                     } else if (token.ClassificationType == Classifier.Provider.Keyword ||
                                token.ClassificationType == Classifier.Provider.Operator) {
+                        lastTokenWasKeywordArgAssignment = false;
                         if (token.ClassificationType == Classifier.Provider.Keyword && text == "lambda") {
                             if (currentParamAtLastColon != -1) {
                                 paramIndex = currentParamAtLastColon;
@@ -190,10 +198,14 @@ namespace Microsoft.PythonTools.Intellisense {
                                 break;
                             } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
                                 (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
-                                if (start == null || (nestingChanged && nesting != 0)) {
+                                if (isSigHelp && text == "=") {
+                                    // keyword argument allowed in signatures
+                                    lastTokenWasKeywordArgAssignment = lastTokenWasCommaOrOperator = true;
+                                } else if (start == null || (nestingChanged && nesting != 0)) {
                                     return null;
+                                } else {
+                                    break;
                                 }
-                                break;
                             } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
                                 // if and else can be used in an expression context or a statement context
                                 if (currentParamAtLastColon != -1) {
@@ -208,8 +220,10 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                     } else if (token.ClassificationType == Classifier.Provider.DotClassification) {
                         lastTokenWasCommaOrOperator = true;
+                        lastTokenWasKeywordArgAssignment = false;
                     } else if (token.ClassificationType == Classifier.Provider.CommaClassification) {
                         lastTokenWasCommaOrOperator = true;
+                        lastTokenWasKeywordArgAssignment = false;
                         if (nesting == 0 && otherNesting == 0) {
                             if (start == null) {
                                 return null;
@@ -223,6 +237,15 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else if (!lastTokenWasCommaOrOperator) {
                         break;
                     } else {
+                        if (lastTokenWasKeywordArgAssignment && 
+                            token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) && 
+                            lastKeywordArg == null) {
+                                if (paramIndex == 0) {
+                                    lastKeywordArg = text;
+                                } else {
+                                    lastKeywordArg = "";
+                                }
+                        }
                         lastTokenWasCommaOrOperator = false;
                     }
 

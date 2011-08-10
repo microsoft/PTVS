@@ -317,7 +317,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             int paramIndex;
             SnapshotPoint? sigStart;
-            var exprRange = parser.GetExpressionRange(1, out paramIndex, out sigStart);
+            string lastKeywordArg;
+            var exprRange = parser.GetExpressionRange(1, out paramIndex, out sigStart, out lastKeywordArg);
             if (exprRange == null || sigStart == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
@@ -328,7 +329,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var applicableSpan = parser.Snapshot.CreateTrackingSpan(exprRange.Value.Span, SpanTrackingMode.EdgeInclusive);
 
             if (snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(text)) {
-                var liveSigs = TryGetLiveSignatures(snapshot, paramIndex, text, applicableSpan);
+                var liveSigs = TryGetLiveSignatures(snapshot, paramIndex, text, applicableSpan, lastKeywordArg);
                 if (liveSigs != null) {
                     return liveSigs;
                 }
@@ -352,13 +353,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     var result = new List<ISignature>();
                     foreach (var sig in sigs) {
-                        result.Add(new PythonSignature(applicableSpan, sig, paramIndex));
+                        result.Add(new PythonSignature(applicableSpan, sig, paramIndex, lastKeywordArg));
                     }
 
                     return new SignatureAnalysis(
                         text,
                         paramIndex,
-                        result
+                        result,
+                        lastKeywordArg
                     );
                 }
             }
@@ -664,7 +666,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan) {
+        private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             IReplEvaluator eval;
             PythonReplEvaluator dlrEval;
             if (snapshot.TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval) &&
@@ -675,13 +677,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 var liveSigs = dlrEval.GetSignatureDocumentation(snapshot.TextBuffer.GetAnalyzer(), text);
 
                 if (liveSigs != null && liveSigs.Length > 0) {
-                    return new SignatureAnalysis(text, paramIndex, GetLiveSignatures(text, liveSigs, paramIndex, applicableSpan));
+                    return new SignatureAnalysis(text, paramIndex, GetLiveSignatures(text, liveSigs, paramIndex, applicableSpan, lastKeywordArg), lastKeywordArg);
                 }
             }
             return null;
         }
 
-        private static ISignature[] GetLiveSignatures(string text, ICollection<OverloadDoc> liveSigs, int paramIndex, ITrackingSpan span) {
+        private static ISignature[] GetLiveSignatures(string text, ICollection<OverloadDoc> liveSigs, int paramIndex, ITrackingSpan span, string lastKeywordArg) {
             ISignature[] res = new ISignature[liveSigs.Count];
             int i = 0;
             foreach (var sig in liveSigs) {
@@ -694,7 +696,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 res[i++] = new PythonSignature(
                     span,
                     new LiveOverloadResult(text, sig.Documentation, parameters),
-                    paramIndex
+                    paramIndex,
+                    lastKeywordArg
                 );
             }
             return res;
