@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools {
     /// register itself and its components with the shell.
     /// </summary>    
     [PackageRegistration(UseManagedResourcesOnly = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
-    [InstalledProductRegistration("#110", "#112", "1.0",        // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
+    [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version,        // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
         IconResourceID = 400)]
     [ProvideMenuResource(1000, 1)]                              // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]

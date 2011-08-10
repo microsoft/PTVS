@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Hpc {
     [Description("Python HPC Support Package")]
     // This attribute is used to register the informations needed to show the this package
     // in the Help/About dialog of Visual Studio.
-    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)]
+    [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
     // This attribute is needed to let the shell know that this package exposes some menus.
     [Guid(GuidList.guidPythonHpcPkgString)]
     [ProvideAutoLoad("ADFC4E64-0397-11D1-9F4E-00A0C911004F")]

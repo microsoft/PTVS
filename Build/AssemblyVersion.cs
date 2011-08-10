@@ -13,3 +13,7 @@ using System.Runtime.InteropServices;
 // (See also AssemblyInfoCommon.cs in this same directory.)
 [assembly: AssemblyVersion("0.7.4100.000")]
 [assembly: AssemblyFileVersion("0.7.4100.000")]
+
+class AssemblyVersionInfo {
+    public const string Version = "0.7.4100.000";
+}
