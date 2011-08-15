@@ -48,14 +48,17 @@ namespace Microsoft.PythonTools.Navigation {
                 }));
                 return false;
             }
-            if (this.DialogResult != null) {
-                return false;
-            }
-
+            
+            bool? dialogResult = null;
             Dispatcher.Invoke((Action)(() => {
-                this._progress.Maximum = itemsLeft;
+                dialogResult = DialogResult;
+                if (dialogResult == null) {
+                    _progress.Maximum = itemsLeft;
+                }
             }));
-            return true;
+            
+
+            return dialogResult == null;
         }
     }
 }
