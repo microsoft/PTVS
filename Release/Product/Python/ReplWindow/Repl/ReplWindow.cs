@@ -91,11 +91,13 @@ namespace Microsoft.VisualStudio.Repl {
 
         //
         // Command filter chain: 
-        // window -> VsTextView -> ... -> pre-language -> language services -> post-language -> editor
+        // window -> VsTextView -> ... -> pre-language -> language services -> post-language -> editor services -> preEditor -> editor
         //
         private IOleCommandTarget _preLanguageCommandFilter;
         private IOleCommandTarget _languageServiceCommandFilter;
         private IOleCommandTarget _postLanguageCommandFilter;
+        private IOleCommandTarget _preEditorCommandFilter;
+        private IOleCommandTarget _editorServicesCommandFilter;
         private IOleCommandTarget _editorCommandFilter;
 
         //
@@ -196,8 +198,8 @@ namespace Microsoft.VisualStudio.Repl {
             _view = ComponentModel.GetService<IVsEditorAdaptersFactoryService>().GetViewAdapter(textView);
             _findTarget = _view as IVsFindTarget;
 
-            _postLanguageCommandFilter = new CommandFilter(this, preLanguage: false);
-            ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_postLanguageCommandFilter, out _editorCommandFilter));
+            _postLanguageCommandFilter = new CommandFilter(this, CommandFilterLayer.PostLanguage);
+            ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_postLanguageCommandFilter, out _editorServicesCommandFilter));
 
             // may add command filters
             foreach (var listener in GetCreationListeners(ComponentModel, _languageContentType.TypeName)) {
@@ -205,7 +207,7 @@ namespace Microsoft.VisualStudio.Repl {
             }
 
             // by this time all applicable language filters should be attached:
-            _preLanguageCommandFilter = new CommandFilter(this, preLanguage: true);
+            _preLanguageCommandFilter = new CommandFilter(this, CommandFilterLayer.PreLanguage);
             ErrorHandler.ThrowOnFailure(_view.AddCommandFilter(_preLanguageCommandFilter, out _languageServiceCommandFilter));
 
             textView.Options.SetOptionValue(DefaultTextViewHostOptions.HorizontalScrollBarId, false);
@@ -276,6 +278,10 @@ namespace Microsoft.VisualStudio.Repl {
             ErrorHandler.ThrowOnFailure(((IVsTextEditorPropertyCategoryContainer)textViewAdapter).GetPropertyCategory(Microsoft.VisualStudio.Editor.DefGuidList.guidEditPropCategoryViewMasterSettings, out propContainer));
             propContainer.SetProperty(VSEDITPROPID.VSEDITPROPID_ViewComposite_AllCodeWindowDefaults, true);
             propContainer.SetProperty(VSEDITPROPID.VSEDITPROPID_ViewGlobalOpt_AutoScrollCaretOnTextEntry, true);
+
+            // editor services are initialized in textViewAdapter.Initialize - hook underneath them:
+            _preEditorCommandFilter = new CommandFilter(this, CommandFilterLayer.PreEditor);
+            ErrorHandler.ThrowOnFailure(textViewAdapter.AddCommandFilter(_preEditorCommandFilter, out _editorCommandFilter));
 
             textViewAdapter.Initialize(
                 (IVsTextLines)bufferAdapter,
@@ -1265,29 +1271,49 @@ namespace Microsoft.VisualStudio.Repl {
         private const uint CommandDisabled = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
         private const uint CommandDisabledAndHidden = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
 
+        private enum CommandFilterLayer {
+            PreLanguage,
+            PostLanguage,
+            PreEditor
+        }
+
         private sealed class CommandFilter : IOleCommandTarget {
             private readonly ReplWindow _replWindow;
-            private readonly bool _preLanguage;
+            private readonly CommandFilterLayer _layer;
 
-            public CommandFilter(ReplWindow vsReplWindow, bool preLanguage) {
+            public CommandFilter(ReplWindow vsReplWindow, CommandFilterLayer layer) {
                 _replWindow = vsReplWindow;
-                _preLanguage = preLanguage;
+                _layer = layer;
             }
 
             public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-                if (_preLanguage) {
-                    return _replWindow.PreLanguageCommandFilterQueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
-                } else {
-                    return _replWindow.PostLanguageCommandFilterQueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+                switch (_layer) {
+                    case CommandFilterLayer.PreLanguage:
+                        return _replWindow.PreLanguageCommandFilterQueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+
+                    case CommandFilterLayer.PostLanguage:
+                        return _replWindow.PostLanguageCommandFilterQueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+
+                    case CommandFilterLayer.PreEditor:
+                        return _replWindow.PreEditorCommandFilterQueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
                 }
+
+                throw new InvalidOperationException();
             }
 
             public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-                if (_preLanguage) {
-                    return _replWindow.PreLanguageCommandFilterExec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                } else {
-                    return _replWindow.PostLanguageCommandFilterExec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                switch (_layer) {
+                    case CommandFilterLayer.PreLanguage:
+                        return _replWindow.PreLanguageCommandFilterExec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+                    case CommandFilterLayer.PostLanguage:
+                        return _replWindow.PostLanguageCommandFilterExec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+                    case CommandFilterLayer.PreEditor:
+                        return _replWindow.PreEditorCommandFilterExec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
                 }
+
+                throw new InvalidOperationException();
             }
         }
 
@@ -1462,10 +1488,23 @@ namespace Microsoft.VisualStudio.Repl {
         #region Post-language service IOleCommandTarget
 
         private int PostLanguageCommandFilterQueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            return _editorCommandFilter.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+            return _editorServicesCommandFilter.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
         private int PostLanguageCommandFilterExec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            var nextTarget = _editorServicesCommandFilter;
+            return nextTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        #endregion
+
+        #region Pre-Editor service IOleCommandTarget
+
+        private int PreEditorCommandFilterQueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            return _editorCommandFilter.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
+
+        private int PreEditorCommandFilterExec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             var nextTarget = _editorCommandFilter;
 
             if (pguidCmdGroup == VSConstants.VSStd2K) {
@@ -1479,7 +1518,7 @@ namespace Microsoft.VisualStudio.Repl {
                         bool trySubmit = !ReturnIsLineBreak;
                         ReturnIsLineBreak = false;
 
-                        // RETURN that is not handled by any language service is a "try submit" command
+                        // RETURN that is not handled by any language or editor service is a "try submit" command
 
                         var langCaret = TextView.BufferGraph.MapDownToBuffer(
                             Caret.Position.BufferPosition,
@@ -1538,7 +1577,7 @@ namespace Microsoft.VisualStudio.Repl {
                             HistoryNext();
                             return VSConstants.S_OK;
                         }
-                        
+
                         break;
 
                     case VSConstants.VSStd2KCmdID.CANCEL:
@@ -1592,7 +1631,7 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         #endregion
-
+        
         #endregion
 
         #region Caret and Cursor
