@@ -61,12 +61,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// further analysis.
         /// </summary>
         public void EnqueueDependents() {
-            foreach (var val in _dependencies.Values) {
-                if (val.DependentUnits != null) {
-                    foreach (var analysisUnit in val.DependentUnits) {
-                        analysisUnit.Enqueue();
+            bool hasOldValues = false;
+            foreach (var keyValue in _dependencies) {
+                if (keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
+                    var val = keyValue.Value;
+                    if (val.DependentUnits != null) {
+                        foreach (var analysisUnit in val.DependentUnits) {
+                            analysisUnit.Enqueue();
+                        }
                     }
+                } else {
+                    hasOldValues = true;
                 }
+            }
+
+            if (hasOldValues) {
+                ClearOldValues();
             }
         }
 
