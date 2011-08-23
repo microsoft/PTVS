@@ -7,6 +7,7 @@
     <StartupFile></StartupFile>
     <SearchPath></SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -16,4 +17,5 @@
     <DebugSymbols>true</DebugSymbols>    
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

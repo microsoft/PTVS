@@ -61,7 +61,20 @@ namespace Microsoft.PythonTools.Project
 		};
 		#endregion
 
-		#region static/const fields
+        #region Events
+        internal event EventHandler<HierarchyNodeEventArgs> OnChildAdded 
+        {
+            add { onChildAdded += value; }
+            remove { onChildAdded -= value; }
+        }
+        internal event EventHandler<HierarchyNodeEventArgs> OnChildRemoved 
+        {
+            add { onChildRemoved += value; }
+            remove { onChildRemoved -= value; }
+        }
+        #endregion
+
+        #region static/const fields
 		public static readonly Guid SolutionExplorer = new Guid(EnvDTE.Constants.vsWindowKindSolutionExplorer);
 		public const int NoImage = -1;
 #if DEBUG
@@ -87,7 +100,9 @@ namespace Microsoft.PythonTools.Project
 		private NodeProperties nodeProperties;
 		private OleServiceProvider oleServiceProvider = new OleServiceProvider();
 		private bool excludeNodeFromScc;
-		private bool hasParentNodeNameRelation;
+        private EventHandler<HierarchyNodeEventArgs> onChildAdded;
+        private EventHandler<HierarchyNodeEventArgs> onChildRemoved;
+        private bool hasParentNodeNameRelation;
 		private List<HierarchyNode> itemsDraggedOrCutOrCopied;
 		private bool sourceDraggedOrCutOrCopied;
 
@@ -958,35 +973,11 @@ namespace Microsoft.PythonTools.Project
 				}
 			}
 
-			// Check out the project file.
-			if(!this.ProjectMgr.QueryEditProjectFile(false))
-			{
-				throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-			}
-
-			// Notify hierarchy event listeners that the file is going to be removed.
-			OnItemDeleted();
-
-			// Remove child if any before removing from the hierarchy
-			for(HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling)
-			{
-				child.Remove(removeFromStorage);
-			}
-
-			// the project node has no parentNode
-			if(this.parentNode != null)
-			{
-				// Remove from the Hierarchy
-				this.parentNode.RemoveChild(this);
-			}
-
-			// We save here the path to delete since this.Url might call the Include which will be deleted by the RemoveFromProjectFile call.
-			string pathToDelete = this.GetMkDocument();
-			this.itemNode.RemoveFromProjectFile();
+            RemoveNonDocument(removeFromStorage);
 
 			if(removeFromStorage)
 			{
-				this.DeleteFromStorage(pathToDelete);
+                this.DeleteFromStorage(documentToRemove);
 			}
 
 			// Close the document window if opened.
@@ -1003,6 +994,33 @@ namespace Microsoft.PythonTools.Project
 			// Dispose the node now that is deleted.
 			this.Dispose(true);
 		}
+
+        internal void RemoveNonDocument(bool removeFromStorage) 
+        {
+            // Check out the project file.
+            if (!this.ProjectMgr.QueryEditProjectFile(false)) 
+            {
+                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+            }
+
+            // Notify hierarchy event listeners that the file is going to be removed.
+            OnItemDeleted();
+
+            // Remove child if any before removing from the hierarchy
+            for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) 
+            {
+                child.Remove(removeFromStorage);
+            }
+
+            // the project node has no parentNode
+            if (this.parentNode != null) 
+            {
+                // Remove from the Hierarchy
+                this.parentNode.RemoveChild(this);
+            }
+
+            this.itemNode.RemoveFromProjectFile();
+        }
 
 		/// <summary>
 		/// Returns the relational name which is defined as the first part of the caption until indexof NameRelationSeparator
@@ -1541,7 +1559,10 @@ namespace Microsoft.PythonTools.Project
 					case VsCommands2K.SHOWALLFILES:
 						handled = true;
 						return this.projectMgr.ShowAllFiles();
-				}
+                    case VsCommands2K.ADDREFERENCE:
+                        handled = true;
+                        return this.projectMgr.AddProjectReference();
+                }
 			}
 
 			return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;

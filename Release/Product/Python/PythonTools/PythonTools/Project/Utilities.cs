@@ -678,6 +678,29 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
+
+        /// <summary>
+        /// Canonicalizes a file name, including:
+        ///  - determines the full path to the file
+        ///  - casts to upper case
+        /// Canonicalizing a file name makes it possible to compare file names using simple simple string comparison.
+        /// 
+        /// Note: this method does not handle shared drives and UNC drives.
+        /// </summary>
+        /// <param name="anyFileName">A file name, which can be relative/absolute and contain lower-case/upper-case characters.</param>
+        /// <returns>Canonicalized file name.</returns>
+        internal static string CanonicalizeFileName(string anyFileName) {
+            // Get absolute path
+            // Note: this will not handle UNC paths
+            FileInfo fileInfo = new FileInfo(anyFileName);
+            string fullPath = fileInfo.FullName;
+
+            // Cast to upper-case
+            fullPath = fullPath.ToUpper(CultureInfo.CurrentCulture);
+
+            return fullPath;
+        }
+
         /// <summary>
         /// Determines if a file is a template.
         /// </summary>

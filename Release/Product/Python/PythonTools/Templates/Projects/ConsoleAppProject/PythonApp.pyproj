@@ -7,6 +7,7 @@
     <StartupFile>Program.py</StartupFile>
     <SearchPath></SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -19,4 +20,5 @@
   <ItemGroup>
     <Compile Include="Program.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

@@ -54,6 +54,28 @@ namespace Microsoft.PythonTools.Project
 
 	}
 
+    /// <summary>
+    /// Provides access to the reference data container.
+    /// </summary>
+    /// <remarks>Normally this should be an internal interface but since it should be available for
+    /// the aggregator it must be made public.</remarks>
+    [ComVisible(true)]
+    public interface IReferenceContainerProvider {
+        IReferenceContainer GetReferenceContainer();
+    }
+
+    /// <summary>
+    /// Defines a container for manipulating references
+    /// </summary>
+    /// <remarks>Normally this should be an internal interface but since it should be available for
+    /// the aggregator it must be made public.</remarks>
+    [ComVisible(true)]
+    public interface IReferenceContainer {
+        IList<ReferenceNode> EnumReferences();
+        ReferenceNode AddReferenceFromSelectorData(VSCOMPONENTSELECTORDATA selectorData);
+        void LoadReferencesFromBuildProject(MSBuild.Project buildProject);
+    }
+
 	/// <summary>
 	/// Defines the events that are internally defined for communication with other subsytems.
 	/// </summary>

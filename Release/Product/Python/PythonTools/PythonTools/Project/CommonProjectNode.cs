@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools.Project {
     public abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
         private CommonProjectPackage/*!*/ _package;
         private Guid _mruPageGuid = new Guid(CommonConstants.AddReferenceMRUPageGuid);
+        private VSLangProj.VSProject _vsProject = null;
         private static ImageList _imageList;
         private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;
         private static int _imageOffset;
@@ -104,6 +105,17 @@ namespace Microsoft.PythonTools.Project {
             get { return _imageOffset; }
         }
 
+        /// <summary>
+        /// Get the VSProject corresponding to this project
+        /// </summary>
+        protected internal VSLangProj.VSProject VSProject {
+            get {
+                if (_vsProject == null)
+                    _vsProject = new OAVSProject(this);
+                return _vsProject;
+            }
+        }
+        
         private IVsHierarchy InteropSafeHierarchy {
             get {
                 IntPtr unknownPtr = Utilities.QueryInterfaceIUnknown(this);
@@ -362,6 +374,10 @@ namespace Microsoft.PythonTools.Project {
             _watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
             _watcher.Renamed += new RenamedEventHandler(FileNameChanged);
             _watcher.EnableRaisingEvents = true;
+        }
+
+        protected override ReferenceContainerNode CreateReferenceContainerNode() {
+            return new CommonReferenceContainerNode(this);
         }
 
         private void FileNameChanged(object sender, RenamedEventArgs e) {
@@ -864,7 +880,9 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         private object CreateServices(Type serviceType) {
             object service = null;
-            if (typeof(EnvDTE.Project) == serviceType) {
+            if (typeof(VSLangProj.VSProject) == serviceType) {
+                service = VSProject;
+            }else if (typeof(EnvDTE.Project) == serviceType) {
                 service = GetAutomationObject();
 #if !DEV11
             } else if (typeof(DesignerContext) == serviceType) {

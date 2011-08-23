@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Project.Automation
 	/// </summary>
 	[SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
 	[ComVisible(true)]
-	public abstract class OANavigableProjectItems : EnvDTE.ProjectItems
+	public class OANavigableProjectItems : EnvDTE.ProjectItems
 	{
 		#region fields
 		private OAProject project;
@@ -153,42 +153,52 @@ namespace Microsoft.PythonTools.Project.Automation
 			}
 		}
 
-		/// <summary>
-		/// Adds one or more ProjectItem objects from a directory to the ProjectItems collection. 
-		/// </summary>
-		/// <param name="directory">The directory from which to add the project item.</param>
-		/// <returns>A ProjectItem object.</returns>
-		public abstract EnvDTE.ProjectItem AddFromDirectory(string directory);
+        /// <summary>
+        /// Adds one or more ProjectItem objects from a directory to the ProjectItems collection. 
+        /// </summary>
+        /// <param name="directory">The directory from which to add the project item.</param>
+        /// <returns>A ProjectItem object.</returns>
+        public virtual EnvDTE.ProjectItem AddFromDirectory(string directory) {
+            throw new NotImplementedException();
+        }
 
-		/// <summary>
-		/// Creates a new project item from an existing item template file and adds it to the project. 
-		/// </summary>
-		/// <param name="fileName">The full path and file name of the template project file.</param>
-		/// <param name="name">The file name to use for the new project item.</param>
-		/// <returns>A ProjectItem object. </returns>
-		public abstract EnvDTE.ProjectItem AddFromTemplate(string fileName, string name);
+        /// <summary>
+        /// Creates a new project item from an existing item template file and adds it to the project. 
+        /// </summary>
+        /// <param name="fileName">The full path and file name of the template project file.</param>
+        /// <param name="name">The file name to use for the new project item.</param>
+        /// <returns>A ProjectItem object. </returns>
+        public virtual EnvDTE.ProjectItem AddFromTemplate(string fileName, string name) {
+            throw new NotImplementedException();
+        }
 
-		/// <summary>
-		/// Creates a new folder in Solution Explorer. 
-		/// </summary>
-		/// <param name="name">The name of the folder node in Solution Explorer.</param>
-		/// <param name="kind">The type of folder to add. The available values are based on vsProjectItemsKindConstants and vsProjectItemKindConstants</param>
-		/// <returns>A ProjectItem object.</returns>
-		public abstract EnvDTE.ProjectItem AddFolder(string name, string kind);
+        /// <summary>
+        /// Creates a new folder in Solution Explorer. 
+        /// </summary>
+        /// <param name="name">The name of the folder node in Solution Explorer.</param>
+        /// <param name="kind">The type of folder to add. The available values are based on vsProjectItemsKindConstants and vsProjectItemKindConstants</param>
+        /// <returns>A ProjectItem object.</returns>
+        public virtual EnvDTE.ProjectItem AddFolder(string name, string kind) {
+            throw new NotImplementedException();
+        }
 
-		/// <summary>
-		/// Copies a source file and adds it to the project. 
-		/// </summary>
-		/// <param name="filePath">The path and file name of the project item to be added.</param>
-		/// <returns>A ProjectItem object. </returns>
-		public abstract EnvDTE.ProjectItem AddFromFileCopy(string filePath);
+        /// <summary>
+        /// Copies a source file and adds it to the project. 
+        /// </summary>
+        /// <param name="filePath">The path and file name of the project item to be added.</param>
+        /// <returns>A ProjectItem object. </returns>
+        public virtual EnvDTE.ProjectItem AddFromFileCopy(string filePath) {
+            throw new NotImplementedException();
+        }
 
-		/// <summary>
-		/// Adds a project item from a file that is installed in a project directory structure. 
-		/// </summary>
-		/// <param name="fileName">The file name of the item to add as a project item. </param>
-		/// <returns>A ProjectItem object. </returns>
-		public abstract EnvDTE.ProjectItem AddFromFile(string fileName);
+        /// <summary>
+        /// Adds a project item from a file that is installed in a project directory structure. 
+        /// </summary>
+        /// <param name="fileName">The file name of the item to add as a project item. </param>
+        /// <returns>A ProjectItem object. </returns>
+        public virtual EnvDTE.ProjectItem AddFromFile(string fileName) {
+            throw new NotImplementedException();
+        }
 
 		/// <summary>
 		/// Get Project Item from index

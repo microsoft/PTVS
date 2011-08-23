@@ -11,6 +11,7 @@
     <InterpreterId>80659ab7-4d53-4e0c-8588-a766116cbd46</InterpreterId>
     <LaunchProvider>IronPython (.NET) launcher</LaunchProvider>
     <InterpreterVersion>2.7</InterpreterVersion>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,4 +24,5 @@
   <ItemGroup>
     <None Include="Program.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

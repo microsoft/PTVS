@@ -9,6 +9,7 @@
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>MPI Cluster launcher</LaunchProvider>
     <ClusterRunEnvironment>localhost/1/Core/</ClusterRunEnvironment>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,4 +22,5 @@
   <ItemGroup>
     <Compile Include="Program.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

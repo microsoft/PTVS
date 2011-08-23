@@ -18,6 +18,7 @@ using System.IO;
 using System.Runtime.InteropServices; // Ambiguous with EnvDTE.Thread.
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -501,8 +502,22 @@ namespace AnalysisTest.ProjectSystem {
 
             Assert.AreNotEqual(null, project.ProjectItems.Item("Program.py").ProjectItems.Item("Program.xaml"));
             project.ProjectItems.Item("Program.py").Name = "NewProgram.py";
-
+            
             Assert.AreNotEqual(null, project.ProjectItems.Item("NewProgram.py").ProjectItems.Item("NewProgram.xaml"));
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DotNetReferences() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\XamlProject.sln");
+
+            var references = project.ProjectItems.Item("References");
+            foreach (var pf in new[] { references.ProjectItems.Item("PresentationFramework"), references.ProjectItems.Item(1) }) {
+                Assert.AreEqual("PresentationFramework", pf.Name);
+                Assert.AreEqual(typeof(OAReferenceItem), pf.GetType());
+                AssertError<InvalidOperationException>(() => pf.Delete());
+                AssertError<InvalidOperationException>(() => pf.Open(""));
+            }
         }
 
         private static void AssertNotImplemented(Action action) {

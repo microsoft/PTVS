@@ -278,32 +278,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
-
-                switch ((VsCommands2K)cmd) {
-                    case VsCommands2K.ADDREFERENCE:
-                        result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                        return VSConstants.S_OK;
-
-                }
-            }
-
-            return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
-        }
-
-        protected override QueryStatusResult QueryStatusCommandFromOleCommandTarget(Guid cmdGroup, uint cmd, out bool handled) {
-            if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
-                switch ((VsCommands2K)cmd) {
-                    case VsCommands2K.ADDREFERENCE:
-                        handled = true;
-                        return QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                }
-            }
-
-            return base.QueryStatusCommandFromOleCommandTarget(cmdGroup, cmd, out handled);
-        }
-
         internal IPythonInterpreterFactory GetInterpreterFactory() {
             var interpreterId = GetProjectProperty(PythonConstants.InterpreterId, false);
             var interpreterVersion = GetProjectProperty(PythonConstants.InterpreterVersion, false);

@@ -37,6 +37,7 @@ using MSBuildExecution = Microsoft.Build.Execution;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+using System.Collections.Specialized;
 
 namespace Microsoft.PythonTools.Project
 {
@@ -52,6 +53,7 @@ namespace Microsoft.PythonTools.Project
         IVsProjectFlavorCfgProvider,
         IPersistFileFormat,
         IVsBuildPropertyStorage,
+        IVsComponentUser,
         IVsDependencyProvider,
         IVsSccProject2,
         IBuildDependencyUpdate,
@@ -191,11 +193,17 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         private MSBuild.ProjectCollection buildEngine;
 
+        private Microsoft.Build.Utilities.Logger buildLogger;
+
+        private bool useProvidedLogger;
+
         private MSBuild.Project buildProject;
 
         private MSBuildExecution.ProjectInstance currentConfig;
 
         private ConfigProvider configProvider;
+
+        private TaskProvider taskProvider;
 
         private string filename;
 
@@ -205,8 +213,11 @@ namespace Microsoft.PythonTools.Project
 
         private bool projectOpened;
 
-        private ImageHandler imageHandler;
+        private string errorString;
 
+        private string warningString;
+
+        private ImageHandler imageHandler;
 
         private Guid projectIdGuid;
 
@@ -228,8 +239,9 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         private bool supportsProjectDesigner;
 
-        private bool showProjectInSolutionPage = true;
+        private bool buildInProcess;
 
+        private bool showProjectInSolutionPage = true;
 
         private string sccProjectName;
 
@@ -410,6 +422,32 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region virtual properties
+
+        public virtual string ErrorString
+        {
+            get
+            {
+                if (this.errorString == null)
+                {
+                    this.errorString = SR.GetString(SR.Error, CultureInfo.CurrentUICulture);
+                }
+
+                return this.errorString;
+            }
+        }
+
+        public virtual string WarningString
+        {
+            get
+            {
+                if (this.warningString == null)
+                {
+                    this.warningString = SR.GetString(SR.Warning, CultureInfo.CurrentUICulture);
+                }
+
+                return this.warningString;
+            }
+        }
 
         /// <summary>
         /// Override this property to specify when the project file is dirty.
@@ -611,6 +649,33 @@ namespace Microsoft.PythonTools.Project
             get
             {
                 return this.tracker;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the build logger.
+        /// </summary>
+        protected Microsoft.Build.Utilities.Logger BuildLogger
+        {
+            get
+            {
+                return this.buildLogger;
+            }
+            set
+            {
+                this.buildLogger = value;
+                this.useProvidedLogger = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the taskprovider.
+        /// </summary>
+        protected TaskProvider TaskProvider
+        {
+            get
+            {
+                return this.taskProvider;
             }
         }
 
@@ -849,6 +914,12 @@ namespace Microsoft.PythonTools.Project
         public override int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider site)
         {
             this.site = new ServiceProvider(site);
+
+            if (taskProvider != null)
+            {
+                taskProvider.Dispose();
+            }
+            taskProvider = new TaskProvider(this.site);
 
             return VSConstants.S_OK;
         }
@@ -1310,6 +1381,76 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// This overrides the base class method to show the VS 2005 style Add reference dialog. The ProjectNode implementation
+        /// shows the VS 2003 style Add Reference dialog.
+        /// </summary>
+        /// <returns>S_OK if succeeded. Failure other wise</returns>
+        public virtual int AddProjectReference()
+        {
+            IVsComponentSelectorDlg2 componentDialog;
+            Guid guidEmpty = Guid.Empty;
+            VSCOMPONENTSELECTORTABINIT[] tabInit = new VSCOMPONENTSELECTORTABINIT[3];
+            string strBrowseLocations = Path.GetDirectoryName(BaseURI.Uri.LocalPath);
+
+            //Add the Project page
+            tabInit[0].dwSize = (uint)Marshal.SizeOf(typeof(VSCOMPONENTSELECTORTABINIT));
+            // Tell the Add Reference dialog to call hierarchies GetProperty with the following
+            // propID to enable filtering out ourself from the Project to Project reference
+            tabInit[0].varTabInitInfo = (int)__VSHPROPID.VSHPROPID_ShowProjInSolutionPage;
+            tabInit[0].guidTab = VSConstants.GUID_SolutionPage;
+
+            // Add the Browse for file page            
+            tabInit[1].dwSize = (uint)Marshal.SizeOf(typeof(VSCOMPONENTSELECTORTABINIT));
+            tabInit[1].guidTab = VSConstants.GUID_COMPlusPage;
+            tabInit[1].varTabInitInfo = 0;
+
+            // Add the Browse for file page            
+            tabInit[2].dwSize = (uint)Marshal.SizeOf(typeof(VSCOMPONENTSELECTORTABINIT));
+            tabInit[2].guidTab = VSConstants.GUID_BrowseFilePage;
+            tabInit[2].varTabInitInfo = 0;
+
+            uint pX = 0, pY = 0;
+
+            componentDialog = GetService(typeof(SVsComponentSelectorDlg)) as IVsComponentSelectorDlg2;
+            try
+            {
+                // call the container to open the add reference dialog.
+                if (componentDialog != null)
+                {
+                    // Let the project know not to show itself in the Add Project Reference Dialog page
+                    ShowProjectInSolutionPage = false;
+
+                    // call the container to open the add reference dialog.
+                    ErrorHandler.ThrowOnFailure(componentDialog.ComponentSelectorDlg2(
+                        (System.UInt32)(__VSCOMPSELFLAGS.VSCOMSEL_MultiSelectMode | __VSCOMPSELFLAGS.VSCOMSEL_IgnoreMachineName),
+                        (IVsComponentUser)this,
+                        0,
+                        null,
+                DynamicProjectSR.GetString(Microsoft.PythonTools.Project.SR.AddReferenceDialogTitle),   // Title
+                        "VS.AddReference",						  // Help topic
+                        ref pX,
+                        ref pY,
+                        (uint)tabInit.Length,
+                        tabInit,
+                        ref guidEmpty,
+                        "*.dll",
+                        ref strBrowseLocations));
+                }
+            }
+            catch (COMException e)
+            {
+                Trace.WriteLine("Exception : " + e.Message);
+                return e.ErrorCode;
+            }
+            finally
+            {
+                // Let the project know it can show itself in the Add Project Reference Dialog page
+                ShowProjectInSolutionPage = true;
+            }
+            return VSConstants.S_OK;
+        }
+
+        /// <summary>
         /// Returns the Compiler associated to the project 
         /// </summary>
         /// <returns>Null</returns>
@@ -1317,6 +1458,16 @@ namespace Microsoft.PythonTools.Project
         {
 
             return null;
+        }
+
+        /// <summary>
+        /// Override this method if you have your own project specific
+        /// subclass of ProjectOptions
+        /// </summary>
+        /// <returns>This method returns a new instance of the ProjectOptions base class.</returns>
+        public virtual CompilerParameters CreateProjectOptions()
+        {
+            return new CompilerParameters();
         }
 
         /// <summary>
@@ -1607,6 +1758,136 @@ namespace Microsoft.PythonTools.Project
                 this.SetProjectFileDirty(true);
             }
             return;
+        }
+
+
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase")]
+        public virtual CompilerParameters GetProjectOptions(string config)
+        {
+            // This needs to be commented out because if you build for Debug the properties from the Debug 
+            // config are cached. When you change configurations the old props are still cached, and 
+            // building for release the properties from the Debug config are used. This may not be the best 
+            // fix as every time you get properties the objects are reloaded, so for perf it is bad, but 
+            // for making it work it is necessary (reload props when a config is changed?).
+            ////if(this.options != null)
+            ////    return this.options;
+
+            CompilerParameters options = CreateProjectOptions();
+
+            if (config == null)
+                return options;
+
+            options.GenerateExecutable = true;
+
+            this.SetConfiguration(config);
+
+            string outputPath = this.GetOutputPath(this.currentConfig);
+            if (!String.IsNullOrEmpty(outputPath))
+            {
+                // absolutize relative to project folder location
+                outputPath = Path.Combine(this.ProjectFolder, outputPath);
+            }
+
+            // Set some default values
+            options.OutputAssembly = outputPath + this.Caption + ".exe";
+
+            options.OutputAssembly = outputPath + this.GetAssemblyName(config);
+
+            string outputtype = GetProjectProperty(ProjectFileConstants.OutputType, false);
+            if (!string.IsNullOrEmpty(outputtype))
+            {
+                outputtype = outputtype.ToLower(CultureInfo.InvariantCulture);
+            }
+
+
+            options.MainClass = GetProjectProperty("StartupObject", false);
+
+            //    other settings from CSharp we may want to adopt at some point...
+            //    AssemblyKeyContainerName = ""  //This is the key file used to sign the interop assembly generated when importing a com object via add reference
+            //    AssemblyOriginatorKeyFile = ""
+            //    DelaySign = "false"
+            //    DefaultClientScript = "JScript"
+            //    DefaultHTMLPageLayout = "Grid"
+            //    DefaultTargetSchema = "IE50"
+            //    PreBuildEvent = ""
+            //    PostBuildEvent = ""
+            //    RunPostBuildEvent = "OnBuildSuccess"
+
+            if (GetBoolAttr(this.currentConfig, "DebugSymbols"))
+            {
+                options.IncludeDebugInformation = true;
+            }
+
+            if (GetBoolAttr(this.currentConfig, "RegisterForComInterop"))
+            {
+            }
+
+            if (GetBoolAttr(this.currentConfig, "RemoveIntegerChecks"))
+            {
+            }
+
+            if (GetBoolAttr(this.currentConfig, "TreatWarningsAsErrors"))
+            {
+                options.TreatWarningsAsErrors = true;
+            }
+
+            if (GetProjectProperty("WarningLevel", false) != null)
+            {
+                try
+                {
+                    options.WarningLevel = Int32.Parse(GetProjectProperty("WarningLevel", false), CultureInfo.InvariantCulture);
+                }
+                catch (ArgumentNullException e)
+                {
+                    Trace.WriteLine("Exception : " + e.Message);
+                }
+                catch (ArgumentException e)
+                {
+                    Trace.WriteLine("Exception : " + e.Message);
+                }
+                catch (FormatException e)
+                {
+                    Trace.WriteLine("Exception : " + e.Message);
+                }
+                catch (OverflowException e)
+                {
+                    Trace.WriteLine("Exception : " + e.Message);
+                }
+            }
+
+            return options;
+        }
+
+        private string GetOutputPath(MSBuildExecution.ProjectInstance properties) {
+            this.currentConfig = properties;
+            string outputPath = GetProjectProperty("OutputPath");
+
+            if (!String.IsNullOrEmpty(outputPath)) {
+                outputPath = outputPath.Replace('/', Path.DirectorySeparatorChar);
+                if (outputPath[outputPath.Length - 1] != Path.DirectorySeparatorChar)
+                    outputPath += Path.DirectorySeparatorChar;
+            }
+
+            return outputPath;
+        }
+
+        private bool GetBoolAttr(MSBuildExecution.ProjectInstance properties, string name) {
+            this.currentConfig = properties;
+            string s = GetProjectProperty(name);
+
+            return (s != null && s.ToUpperInvariant().Trim() == "TRUE");
+        }
+
+
+        public virtual void SetTargetPlatform(ProjectOptions options) {
+        }
+
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Attr")]
+        [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "bool")]
+        public virtual bool GetBoolAttr(string config, string name) {
+            this.SetConfiguration(config);
+            return this.GetBoolAttr(this.currentConfig, name);
         }
 
         /// <summary>
@@ -1956,6 +2237,8 @@ namespace Microsoft.PythonTools.Project
                 // Load the guid
                 this.SetProjectGuidFromProjectFile();
 
+                this.ProcessReferences();
+
                 this.ProcessFiles();
 
                 this.ProcessFolders();
@@ -2085,6 +2368,122 @@ namespace Microsoft.PythonTools.Project
                     || String.Compare(itemType, ProjectFileConstants.WebReferenceFolder, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
+
+        /// <summary>
+        /// Associate window output pane to the build logger
+        /// </summary>
+        /// <param name="output"></param>
+        protected virtual void SetOutputLogger(IVsOutputWindowPane output) {
+            // Create our logger, if it was not specified
+            if (!this.useProvidedLogger || this.buildLogger == null) {
+                // Because we may be aggregated, we need to make sure to get the outer IVsHierarchy
+                IntPtr unknown = IntPtr.Zero;
+                IVsHierarchy hierarchy = null;
+                try {
+                    unknown = Marshal.GetIUnknownForObject(this);
+                    hierarchy = Marshal.GetTypedObjectForIUnknown(unknown, typeof(IVsHierarchy)) as IVsHierarchy;
+                } finally {
+                    if (unknown != IntPtr.Zero)
+                        Marshal.Release(unknown);
+                }
+                // Create the logger
+                this.BuildLogger = new IDEBuildLogger(output, this.TaskProvider, hierarchy);
+
+                // To retrive the verbosity level, the build logger depends on the registry root 
+                // (otherwise it will used an hardcoded default)
+                ILocalRegistry2 registry = this.GetService(typeof(SLocalRegistry)) as ILocalRegistry2;
+                if (null != registry) {
+                    string registryRoot;
+                    ErrorHandler.ThrowOnFailure(registry.GetLocalRegistryRoot(out registryRoot));
+                    IDEBuildLogger logger = this.BuildLogger as IDEBuildLogger;
+                    if (!String.IsNullOrEmpty(registryRoot) && (null != logger)) {
+                        logger.BuildVerbosityRegistryRoot = registryRoot;
+                        logger.ErrorString = this.ErrorString;
+                        logger.WarningString = this.WarningString;
+                    }
+                }
+            } else {
+                ((IDEBuildLogger)this.BuildLogger).OutputWindowPane = output;
+            }
+        }
+
+        /// <summary>
+        /// Set configuration properties for a specific configuration
+        /// </summary>
+        /// <param name="config">configuration name</param>
+        protected virtual void SetBuildConfigurationProperties(string config) {
+            ProjectOptions options = null;
+
+            if (!String.IsNullOrEmpty(config)) {
+                options = this.GetProjectOptions(config);
+            }
+
+            if (options != null && this.buildProject != null) {
+                // Make sure the project configuration is set properly
+                this.SetConfiguration(config);
+            }
+        }
+
+
+        /// <summary>
+        /// This execute an MSBuild target for a design-time build.
+        /// </summary>
+        /// <param name="target">Name of the MSBuild target to execute</param>
+        /// <returns>Result from executing the target (success/failure)</returns>
+        /// <remarks>
+        /// If you depend on the items/properties generated by the target
+        /// you should be aware that any call to BuildTarget on any project
+        /// will reset the list of generated items/properties
+        /// </remarks>
+        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
+        protected virtual MSBuildResult InvokeMsBuild(string target)
+        {
+            MSBuildResult result = MSBuildResult.Failed;
+            const bool designTime = true;
+            bool requiresUIThread = UIThread.Instance.IsUIThread; // we don't run tasks that require calling the STA thread, so unless we're ON it, we don't need it.
+
+            IVsBuildManagerAccessor accessor = this.Site.GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor;
+            BuildSubmission submission = null;
+
+            try
+            {
+                // Do the actual Build
+                if (this.buildProject != null)
+                {
+                    if (!TryBeginBuild(designTime, requiresUIThread))
+                    {
+                        throw new InvalidOperationException("A build is already in progress.");
+                    }
+
+                    string[] targetsToBuild = new string[target != null ? 1 : 0];
+                    if (target != null)
+                    {
+                        targetsToBuild[0] = target;
+                    }
+
+                    currentConfig = BuildProject.CreateProjectInstance();
+
+                    BuildRequestData requestData = new BuildRequestData(currentConfig, targetsToBuild, this.BuildProject.ProjectCollection.HostServices, BuildRequestDataFlags.ReplaceExistingProjectInstance);
+                    submission = BuildManager.DefaultBuildManager.PendBuildRequest(requestData);
+                    if (accessor != null)
+                    {
+                        ErrorHandler.ThrowOnFailure(accessor.RegisterLogger(submission.SubmissionId, this.buildLogger));
+                    }
+
+                    BuildResult buildResult = submission.Execute();
+
+                    result = (buildResult.OverallResult == BuildResultCode.Success) ? MSBuildResult.Successful : MSBuildResult.Failed;
+                }
+            }
+            finally
+            {
+                EndBuild(submission, designTime, requiresUIThread);
+            }
+
+            return result;
+        }
+
+
         /// <summary>
         /// Initialize common project properties with default value if they are empty
         /// </summary>
@@ -2119,6 +2518,14 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <returns>Configuration provider created</returns>
         protected abstract ConfigProvider CreateConfigProvider();
+
+        /// <summary>
+        /// Factory method for reference container node
+        /// </summary>
+        /// <returns>ReferenceContainerNode created</returns>
+        protected virtual ReferenceContainerNode CreateReferenceContainerNode() {
+            return new ReferenceContainerNode(this);
+        }
 
         /// <summary>
         /// Saves the project file on a new name.
@@ -2509,6 +2916,31 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// Loads reference items from the project file into the hierarchy.
+        /// </summary>
+        protected internal virtual void ProcessReferences()
+        {
+            IReferenceContainer container = GetReferenceContainer();
+            if (null == container)
+            {
+                // Process References
+                ReferenceContainerNode referencesFolder = CreateReferenceContainerNode();
+                if (null == referencesFolder)
+                {
+                    // This project type does not support references or there is a problem
+                    // creating the reference container node.
+                    // In both cases there is no point to try to process references, so exit.
+                    return;
+                }
+                this.AddChild(referencesFolder);
+                container = referencesFolder;
+            }
+
+            // Load the referernces.
+            container.LoadReferencesFromBuildProject(buildProject);
+        }
+
+        /// <summary>
         /// Loads folders from the project file into the hierarchy.
         /// </summary>
         protected internal virtual void ProcessFolders()
@@ -2636,6 +3068,46 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region non-virtual methods
+
+        /// <summary>
+        /// Overloaded method. Invokes MSBuild using the default configuration and does without logging on the output window pane.
+        /// </summary>
+        public MSBuildResult Build(string target)
+        {
+            return this.Build(0, String.Empty, null, target);
+        }
+
+        /// <summary>
+        /// Do the build by invoking msbuild
+        /// </summary>
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "vsopts")]
+        public virtual MSBuildResult Build(uint vsopts, string config, IVsOutputWindowPane output, string target)
+        {
+            lock (ProjectNode.BuildLock)
+            {
+                bool engineLogOnlyCritical = this.BuildPrelude(output);
+
+                MSBuildResult result = MSBuildResult.Failed;
+
+                try
+                {
+                    this.SetBuildConfigurationProperties(config);
+
+                    result = this.InvokeMsBuild(target);
+                }
+                finally
+                {
+                    // Unless someone specifically request to use an output window pane, we should not output to it
+                    if (null != output)
+                    {
+                        this.SetOutputLogger(null);
+                        BuildEngine.OnlyLogCriticalEvents = engineLogOnlyCritical;
+                    }
+                }
+
+                return result;
+            }
+        }
 
         /// <summary>
         /// Get value of Project property
@@ -3863,6 +4335,52 @@ namespace Microsoft.PythonTools.Project
 
         #endregion
 
+        #region IVsComponentUser methods
+
+        /// <summary>
+        /// Add Components to the Project.
+        /// Used by the environment to add components specified by the user in the Component Selector dialog 
+        /// to the specified project
+        /// </summary>
+        /// <param name="dwAddCompOperation">The component operation to be performed.</param>
+        /// <param name="cComponents">Number of components to be added</param>
+        /// <param name="rgpcsdComponents">array of component selector data</param>
+        /// <param name="hwndDialog">Handle to the component picker dialog</param>
+        /// <param name="pResult">Result to be returned to the caller</param>
+        public virtual int AddComponent(VSADDCOMPOPERATION dwAddCompOperation, uint cComponents, System.IntPtr[] rgpcsdComponents, System.IntPtr hwndDialog, VSADDCOMPRESULT[] pResult)
+        {
+            if (rgpcsdComponents == null || pResult == null)
+            {
+                return VSConstants.E_FAIL;
+            }
+
+            //initalize the out parameter
+            pResult[0] = VSADDCOMPRESULT.ADDCOMPRESULT_Success;
+
+            IReferenceContainer references = GetReferenceContainer();
+            if (null == references)
+            {
+                // This project does not support references or the reference container was not created.
+                // In both cases this operation is not supported.
+                return VSConstants.E_NOTIMPL;
+            }
+            for (int cCount = 0; cCount < cComponents; cCount++)
+            {
+                VSCOMPONENTSELECTORDATA selectorData = new VSCOMPONENTSELECTORDATA();
+                IntPtr ptr = rgpcsdComponents[cCount];
+                selectorData = (VSCOMPONENTSELECTORDATA)Marshal.PtrToStructure(ptr, typeof(VSCOMPONENTSELECTORDATA));
+                if (null == references.AddReferenceFromSelectorData(selectorData))
+                {
+                    //Skip further proccessing since a reference has to be added
+                    pResult[0] = VSADDCOMPRESULT.ADDCOMPRESULT_Failure;
+                    return VSConstants.S_OK;
+                }
+            }
+            return VSConstants.S_OK;
+        }
+        
+        #endregion
+
         #region IVsSccProject2 Members
         /// <summary>
         /// This method is called to determine which files should be placed under source control for a given VSITEMID within this hierarchy.
@@ -4061,6 +4579,18 @@ namespace Microsoft.PythonTools.Project
         public virtual HierarchyNode GetInner()
         {
             return this;
+        }
+
+        #endregion
+
+        #region IReferenceDataProvider Members
+        /// <summary>
+        /// Returns the reference container node.
+        /// </summary>
+        /// <returns></returns>
+        public IReferenceContainer GetReferenceContainer()
+        {
+            return this.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as IReferenceContainer;
         }
 
         #endregion
@@ -4519,6 +5049,26 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// Helper for sharing common code between Build() and BuildAsync()
+        /// </summary>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        private bool BuildPrelude(IVsOutputWindowPane output)
+        {
+            bool engineLogOnlyCritical = false;
+            // If there is some output, then we can ask the build engine to log more than
+            // just the critical events.
+            if (null != output)
+            {
+                engineLogOnlyCritical = BuildEngine.OnlyLogCriticalEvents;
+                BuildEngine.OnlyLogCriticalEvents = false;
+            }
+
+            this.SetOutputLogger(output);
+            return engineLogOnlyCritical;
+        }
+
+        /// <summary>
         /// Recusively parses the tree and closes all nodes.
         /// </summary>
         /// <param name="node">The subtree to close.</param>
@@ -4621,6 +5171,169 @@ namespace Microsoft.PythonTools.Project
             }
 
             this.buildProject.SetGlobalProperty(GlobalProperty.DevEnvDir.ToString(), installDir);
+        }
+
+
+        /// <summary>
+        /// Attempts to lock in the privilege of running a build in Visual Studio.
+        /// </summary>
+        /// <param name="designTime"><c>false</c> if this build was called for by the Solution Build Manager; <c>true</c> otherwise.</param>
+        /// <param name="requiresUIThread">
+        /// Need to claim the UI thread for build under the following conditions:
+        /// 1. The build must use a resource that uses the UI thread, such as
+        /// - you set HostServices and you have a host object which requires (even indirectly) the UI thread (VB and C# compilers do this for instance.)
+        /// or,
+        /// 2. The build requires the in-proc node AND waits on the UI thread for the build to complete, such as:
+        /// - you use a ProjectInstance to build, or
+        /// - you have specified a host object, whether or not it requires the UI thread, or
+        /// - you set HostServices and you have specified a node affinity.
+        /// - In addition to the above you also call submission.Execute(), or you call submission.ExecuteAsync() and then also submission.WaitHandle.Wait*().
+        /// </param>
+        /// <returns>A value indicating whether a build may proceed.</returns>
+        /// <remarks>
+        /// This method must be called on the UI thread.
+        /// </remarks>
+        private bool TryBeginBuild(bool designTime, bool requiresUIThread = false)
+        {
+            IVsBuildManagerAccessor accessor = null;
+
+            if (this.Site != null)
+            {
+                accessor = this.Site.GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor;
+            }
+
+            bool releaseUIThread = false;
+
+            try
+            {
+                // If the SVsBuildManagerAccessor service is absent, we're not running within Visual Studio.
+                if (accessor != null)
+                {
+                    if (requiresUIThread)
+                    {
+                        int result = accessor.ClaimUIThreadForBuild();
+                        if (result < 0)
+                        {
+                            // Not allowed to claim the UI thread right now. Try again later.
+                            return false;
+                        }
+
+                        releaseUIThread = true; // assume we need to release this immediately until we get through the whole gauntlet.
+                    }
+
+                    if (designTime)
+                    {
+                        int result = accessor.BeginDesignTimeBuild();
+                        if (result < 0)
+                        {
+                            // Not allowed to begin a design-time build at this time. Try again later.
+                            return false;
+                        }
+                    }
+
+                    // We obtained all the resources we need.  So don't release the UI thread until after the build is finished.
+                    releaseUIThread = false;
+                }
+                else
+                {
+                    BuildParameters buildParameters = new BuildParameters(this.buildEngine);
+                    BuildManager.DefaultBuildManager.BeginBuild(buildParameters);
+                }
+
+                this.buildInProcess = true;
+                return true;
+            }
+            finally
+            {
+                // If we were denied the privilege of starting a design-time build,
+                // we need to release the UI thread.
+                if (releaseUIThread)
+                {
+                    Debug.Assert(accessor != null, "We think we need to release the UI thread for an accessor we don't have!");
+                    accessor.ReleaseUIThreadForBuild();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Lets Visual Studio know that we're done with our design-time build so others can use the build manager.
+        /// </summary>
+        /// <param name="submission">The build submission that built, if any.</param>
+        /// <param name="designTime">This must be the same value as the one passed to <see cref="TryBeginBuild"/>.</param>
+        /// <param name="requiresUIThread">This must be the same value as the one passed to <see cref="TryBeginBuild"/>.</param>
+        /// <remarks>
+        /// This method must be called on the UI thread.
+        /// </remarks>
+        private void EndBuild(BuildSubmission submission, bool designTime, bool requiresUIThread = false)
+        {
+            IVsBuildManagerAccessor accessor = null;
+
+            if (this.Site != null)
+            {
+                accessor = this.Site.GetService(typeof(SVsBuildManagerAccessor)) as IVsBuildManagerAccessor;
+            }
+
+            if (accessor != null)
+            {
+                // It's very important that we try executing all three end-build steps, even if errors occur partway through.
+                try
+                {
+                    if (submission != null)
+                    {
+                        Marshal.ThrowExceptionForHR(accessor.UnregisterLoggers(submission.SubmissionId));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ErrorHandler.IsCriticalException(ex))
+                    {
+                        throw;
+                    }
+
+                    Trace.TraceError(ex.ToString());
+                }
+
+                try
+                {
+                    if (designTime)
+                    {
+                        Marshal.ThrowExceptionForHR(accessor.EndDesignTimeBuild());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ErrorHandler.IsCriticalException(ex))
+                    {
+                        throw;
+                    }
+
+                    Trace.TraceError(ex.ToString());
+                }
+
+
+                try
+                {
+                    if (requiresUIThread)
+                    {
+                        Marshal.ThrowExceptionForHR(accessor.ReleaseUIThreadForBuild());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ErrorHandler.IsCriticalException(ex))
+                    {
+                        throw;
+                    }
+
+                    Trace.TraceError(ex.ToString());
+                }
+            }
+            else
+            {
+                BuildManager.DefaultBuildManager.EndBuild();
+            }
+
+            this.buildInProcess = false;
         }
 
         #endregion

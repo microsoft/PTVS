@@ -12,6 +12,7 @@
     <AssemblyName>HelloWorld</AssemblyName>
     <Name>HelloWorld</Name>
     <RootNamespace>HelloWorld</RootNamespace>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -27,4 +28,11 @@
       <DependentUpon>Program.py</DependentUpon>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PresentationFramework, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <Name>PresentationFramework</Name>
+      <AssemblyName>PresentationFramework.dll</AssemblyName>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
