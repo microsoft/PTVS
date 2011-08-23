@@ -1879,10 +1879,6 @@ namespace Microsoft.PythonTools.Project
             return (s != null && s.ToUpperInvariant().Trim() == "TRUE");
         }
 
-
-        public virtual void SetTargetPlatform(ProjectOptions options) {
-        }
-
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Attr")]
         [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "bool")]
         public virtual bool GetBoolAttr(string config, string name) {
