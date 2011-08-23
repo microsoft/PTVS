@@ -2408,7 +2408,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="config">configuration name</param>
         protected virtual void SetBuildConfigurationProperties(string config) {
-            ProjectOptions options = null;
+            CompilerParameters options = null;
 
             if (!String.IsNullOrEmpty(config)) {
                 options = this.GetProjectOptions(config);

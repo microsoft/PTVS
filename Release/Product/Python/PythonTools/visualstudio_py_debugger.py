@@ -153,7 +153,8 @@ class ExceptionBreakInfo(object):
         self.AddException('exceptions.KeyError', BREAK_MODE_NEVER)
         self.AddException('exceptions.AttributeError', BREAK_MODE_NEVER)
         self.AddException('exceptions.StopIteration', BREAK_MODE_NEVER)
-    
+        self.AddException('exceptions.GeneratorExit', BREAK_MODE_NEVER)
+
     def Clear(self):
         self.default_mode = BREAK_MODE_UNHANDLED
         self.break_on.clear()

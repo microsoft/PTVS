@@ -105,11 +105,53 @@ namespace AnalysisTest {
         [TestMethod]
         public void TestSpecialArgTypes() {
             var code = @"def f(*foo, **bar):
-    pass";
+    pass
+";
             var entry = ProcessText(code);
 
             AssertContainsExactly(entry.GetTypesFromName("foo", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Tuple));
             AssertContainsExactly(entry.GetTypesFromName("bar", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Dict));
+
+            code = @"def f(*foo):
+    pass
+
+f(42)
+";
+            entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetTypesFromName("foo", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Tuple));
+            AssertContainsExactly(entry.GetValues("foo[0]", GetLineNumber(code, "pass")).Select(x => x.PythonType), Interpreter.GetBuiltinType(BuiltinTypeId.Int));
+
+            code = @"def f(*foo):
+    pass
+
+f(42, 'abc')
+";
+            entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetTypesFromName("foo", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Tuple));
+            AssertContainsExactly(entry.GetValues("foo[0]", GetLineNumber(code, "pass")).Select(x => x.PythonType), Interpreter.GetBuiltinType(BuiltinTypeId.Int), Interpreter.GetBuiltinType(BuiltinTypeId.Bytes));
+
+            code = @"def f(**bar):
+    pass
+
+f(x=42)
+";
+            entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetTypesFromName("bar", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Dict));
+            AssertContainsExactly(entry.GetValues("bar['foo']", GetLineNumber(code, "pass")).Select(x => x.PythonType), Interpreter.GetBuiltinType(BuiltinTypeId.Int));
+
+
+            code = @"def f(**bar):
+    pass
+
+f(x=42, y = 'abc')
+";
+            entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetTypesFromName("bar", GetLineNumber(code, "pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Dict));
+            AssertContainsExactly(entry.GetValues("bar['foo']", GetLineNumber(code, "pass")).Select(x => x.PythonType), Interpreter.GetBuiltinType(BuiltinTypeId.Int), Interpreter.GetBuiltinType(BuiltinTypeId.Bytes));
         }
 
         [TestMethod]

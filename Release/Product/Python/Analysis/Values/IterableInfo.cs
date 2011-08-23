@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal void AddTypes(ISet<Namespace>[] types) {
+        internal bool AddTypes(ISet<Namespace>[] types) {
             if (_indexTypes.Length < types.Length) {
                 ISet<Namespace>[] newTypes = new ISet<Namespace>[types.Length];
                 for (int i = 0; i < _indexTypes.Length; i++) {
@@ -91,6 +91,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 ReturnValue.EnqueueDependents();
                 _unionType = null;
             }
+            return added;
         }
 
         public override string Description {

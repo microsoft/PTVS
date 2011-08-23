@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 foreach (var curType in b) {
                     BuiltinClassInfo klass = curType as BuiltinClassInfo;
                     if (klass != null) {
-                        var value = klass.GetMember(node, unit, "name"); // curType.GetVariable(name);
+                        var value = klass.GetMember(node, unit, name);
                         if (value != null) {
                             result.AddRange(value);
                         }
@@ -328,18 +328,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return result;
         }
 
-        internal void PropagateBaseParams(FunctionInfo newScope, Namespace method) {
-            foreach (var overload in method.Overloads) {
-                var p = overload.Parameters;
-                if (p.Length == newScope.ParameterTypes.Length) {
-                    for (int i = 1; i < p.Length; i++) {
+        internal void PropagateBaseParams(FunctionInfo newScope, BuiltinMethodInfo method) {
+            foreach (var overload in method.Function.Overloads) {
+                var p = overload.GetParameters();
+                if (p.Length + 1 == newScope.ParameterTypes.Length) {
+                    for (int i = 0; i < p.Length; i++) {
                         var baseParam = p[i];
-                        var newParam = newScope.ParameterTypes[i];
-                        // TODO: baseParam.Type isn't right, it's a string, not a type object
-                        var baseType = ProjectState.GetNamespaceFromObjects(baseParam.Type);
-                        if (baseType != null) {
-                            newParam.Types.Add(baseType);
-                        }
+                        var newParam = newScope.ParameterTypes[i + 1];
+                        var baseType = ProjectState.GetNamespaceFromObjects(baseParam.ParameterType);
+                        newScope.AddParameterType(_unit, baseType, i);
                     }
                 }
             }
@@ -364,7 +361,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             if (newScope.IsClassMethod) {
                 if (newScope.ParameterTypes.Length > 0) {
-                    newScope.ParameterTypes[0].AddTypes(funcdef.Parameters[0], _unit, ProjectState._typeObj.SelfSet);
+                    newScope.AddParameterType(_unit, ProjectState._typeObj.SelfSet, 0);
                 }
             } else if (!newScope.IsStatic) {
                 // self is always an instance of the class
@@ -378,7 +375,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     }
                 }
                 if (selfInst != null && newScope.ParameterTypes.Length > 0) {
-                    newScope.ParameterTypes[0].AddTypes(funcdef.Parameters[0], _unit, selfInst.SelfSet);
+                    newScope.AddParameterType(_unit, selfInst.SelfSet, 0);
                 }
             }
         }

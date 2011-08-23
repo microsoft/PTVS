@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
@@ -120,12 +122,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             // TODO: Handle keyword argument splatting
                             break;
                         default:
+                            bool found = false;
                             for (int j = 0; j < ParameterTypes.Length; j++) {
                                 string paramName = GetParameterName(j);
                                 if (paramName == curArg.Name) {
                                     ParameterTypes[j].AddReference(curArg, unit);
-                                    if (ParameterTypes[j].AddTypes(FunctionDefinition.Parameters[j], unit, args[i])) {
-                                        added = true;
+                                    added = AddParameterType(unit, args[i], j) || added;
+                                    found = true;
+                                    break;
+                                }
+                            }
+
+                            if (!found) {
+                                for (int j = ParameterTypes.Length - 1; j >= 0; j--) {
+                                    var curFuncArg = FunctionDefinition.Parameters[j];
+                                    if (curFuncArg.IsDictionary) {
+                                        AddParameterType(unit, args[i], j);
+                                        break;
+                                    } else if (!curFuncArg.IsKeywordOnly) {
                                         break;
                                     }
                                 }
@@ -136,13 +150,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 } else if (i < ParameterTypes.Length) {
                     // positional argument
-                    if (ParameterTypes[i].AddTypes(FunctionDefinition.Parameters[i], unit, args[i])) {
-                        added = true;
+                    added = AddParameterType(unit, args[i], i) || added;
+                } else {
+                    for (int j = ParameterTypes.Length - 1; j >= 0; j--) {
+                        var curArg = FunctionDefinition.Parameters[j];
+                        if (curArg.IsList) {
+                            AddParameterType(unit, args[i], j);
+                            break;
+                        } else if (!curArg.IsDictionary && !curArg.IsKeywordOnly) {
+                            break;
+                        }
                     }
-
-                } // else we should warn too many arguments
+                }
             }
             return added;
+        }
+
+        internal bool AddParameterType(AnalysisUnit unit, ISet<Namespace> arg, int parameterIndex) {
+            switch (FunctionDefinition.Parameters[parameterIndex].Kind) {
+                case ParameterKind.Dictionary:
+                    Debug.Assert(ParameterTypes[parameterIndex].Types.Count == 1);
+                    Debug.Assert(ParameterTypes[parameterIndex].Types.First() is DictionaryInfo);
+
+                    return ((DictionaryInfo)ParameterTypes[parameterIndex].Types.First()).AddValueTypes(arg);
+                case ParameterKind.List:
+                    Debug.Assert(ParameterTypes[parameterIndex].Types.Count == 1);
+                    Debug.Assert(ParameterTypes[parameterIndex].Types.First() is SequenceInfo);
+
+                    return ((SequenceInfo)ParameterTypes[parameterIndex].Types.First()).AddTypes(new[] { arg });
+                case ParameterKind.Normal:
+                    if (ParameterTypes[parameterIndex].AddTypes(FunctionDefinition.Parameters[parameterIndex], unit, arg)) {
+                        return true;
+                    }
+                    break;
+            }
+            return false;
         }
 
         public override string Description {

@@ -33,15 +33,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal bool _hasReturn;
         private int _headerIndex;
 
-        private static int _lambdaId;
-
         public FunctionDefinition(NameExpression name, Parameter[] parameters)
             : this(name, parameters, (Statement)null) {            
         }
         
         public FunctionDefinition(NameExpression name, Parameter[] parameters, Statement body, DecoratorStatement decorators = null) {
             if (name == null) {
-                _name = new NameExpression("<lambda$" + Interlocked.Increment(ref _lambdaId) + ">");
+                _name = new NameExpression("<lambda>");
                 _isLambda = true;
             } else {
                 _name = name;

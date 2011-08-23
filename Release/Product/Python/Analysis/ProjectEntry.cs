@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// To analyze a file the tree should be updated with a call to UpdateTree and then PreParse
     /// should be called on all files.  Finally Parse should then be called on all files.
     /// </summary>
-    internal sealed class ProjectEntry : IPythonProjectEntry {
+    internal sealed class ProjectEntry : IPythonProjectEntry, IProjectEntry2 {
         private readonly PythonAnalyzer _projectState;
         private readonly string _moduleName;
         private readonly string _filePath;
@@ -290,6 +290,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+
+        #region IProjectEntry2 Members
+
+        public void RemovedFromProject() {
+            _analysisVersion = -1;
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -332,6 +340,16 @@ namespace Microsoft.PythonTools.Analysis {
         Dictionary<object, object> Properties {
             get;
         }
+    }
+
+    /// <summary>
+    /// Implements support for project entry features.  New in PTVS 1.1.
+    /// </summary>
+    public interface IProjectEntry2 {
+        /// <summary>
+        /// Called when the project entry is removed from the project.
+        /// </summary>
+        void RemovedFromProject();
     }
 
     /// <summary>

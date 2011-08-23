@@ -215,8 +215,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 // TODO: Should follow MRO
                 var bases = ddg.LookupBaseMethods(Ast.Name, curClass.Class.Bases, Ast, this);
                 foreach (var ns in bases) {
-                    if (ns is BuiltinMethodInfo) {
-                        ddg.PropagateBaseParams(newScope, ns);
+                    BuiltinMethodInfo methodInfo = ns as BuiltinMethodInfo;
+                    if(methodInfo != null) {
+                        ddg.PropagateBaseParams(newScope, methodInfo);
                     }
                 }
             }

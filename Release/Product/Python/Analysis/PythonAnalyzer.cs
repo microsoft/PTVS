@@ -155,6 +155,10 @@ namespace Microsoft.PythonTools.Analysis {
         public void RemoveModule(IProjectEntry entry) {
             _modulesByFilename.Remove(entry.FilePath);
             Modules.Remove(PathToModuleName(entry.FilePath));
+            var projEntry2 = entry as IProjectEntry2;
+            if (projEntry2 != null) {
+                projEntry2.RemovedFromProject();
+            }
         }
 
         public IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {

@@ -31,7 +31,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(projectState._dictType) {
             _keyTypes = keyTypes;
             _valueTypes = valueTypes;
-            _getMethod = null;
         }
         
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
@@ -41,6 +40,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
             _keyTypes.UnionWith(index);
             _valueTypes.UnionWith(value);
+        }
+
+        public bool AddValueTypes(ISet<Namespace> value) {
+            int count = _valueTypes.Count;
+            _valueTypes.UnionWith(value);
+            return count != _valueTypes.Count;
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {

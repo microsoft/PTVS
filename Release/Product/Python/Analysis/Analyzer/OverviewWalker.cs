@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 var scopes = new InterpreterScope[outerUnit.Scopes.Length + 1];
                 outerUnit.Scopes.CopyTo(scopes, 0);
-
+                
                 var unit = new FunctionAnalysisUnit(node, scopes, outerUnit);
                 var function = new FunctionInfo(unit);
 
@@ -152,9 +152,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 foreach (var param in node.Parameters) {
                     var variable = newParams[index++] = funcScope.AddLocatedVariable(param.Name, param, unit);
                     if (param.IsList) {
-                        variable.AddTypes(param, unit, outerUnit.ProjectState._tupleType);
+                        variable.AddTypes(param, unit, new SequenceInfo(new ISet<Namespace>[0], outerUnit.ProjectState._tupleType));
                     } else if (param.IsDictionary) {
-                        variable.AddTypes(param, unit, outerUnit.ProjectState._dictType);
+                        variable.AddTypes(param, unit, new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), outerUnit.ProjectState));
                     }
                 }
 

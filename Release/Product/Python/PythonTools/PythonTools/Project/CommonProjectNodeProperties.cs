@@ -78,6 +78,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Gets the command line arguments for the project.
         /// </summary>
+        [Browsable(false)]
         public string CommandLineArguments {
             get {
                 return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.CommandLineArguments, true);
@@ -87,7 +88,9 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Gets the override for the interpreter path to used for launching the project.
         /// </summary>
-        public string InterpreterPath {
+        [Browsable(false)]
+        public string InterpreterPath
+        {
             get {
                 return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
             }
