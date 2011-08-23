@@ -210,7 +210,6 @@
     <Compile Include="PythonTools\Project\CommonReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\CommonReferenceNode.cs" />
     <Compile Include="PythonTools\Project\FileChangeManager.cs" />
-    <Compile Include="PythonTools\Project\ProjectOptions.cs" />
     <Compile Include="PythonTools\Project\ProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceNode.cs" />
