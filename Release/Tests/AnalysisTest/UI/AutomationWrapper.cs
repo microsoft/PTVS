@@ -95,6 +95,36 @@ namespace AnalysisTest.UI {
                 )
             );
         }
+        
+        /// <summary>
+        /// Finds the first child element of a given control type.
+        /// </summary>
+        /// <param name="ctlType">The ControlType you wish to find</param>
+        /// <returns></returns>
+        internal AutomationElement FindFirstByControlType(ControlType ctlType) {
+            return Element.FindFirst(
+                TreeScope.Descendants,
+                new PropertyCondition(
+                    AutomationElement.ControlTypeProperty,
+                    ctlType
+                )
+            );
+        }
+
+        /// <summary>
+        /// Finds all the children with a given control type.
+        /// </summary>
+        /// <param name="ctlType">The ControlType you wish to find</param>
+        /// <returns></returns>
+        internal AutomationElementCollection FindAllByControlType(ControlType ctlType) {
+            return Element.FindAll(
+                TreeScope.Descendants,
+                new PropertyCondition(
+                    AutomationElement.ControlTypeProperty,
+                    ctlType
+                )
+            );
+        }
 
         #region Pattern Helpers
 

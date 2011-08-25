@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public Expression GetEvaluatedExpression() {
-            return _analysis.GetExpressionFromText(_expr);
+            return _analysis.GetExpressionFromText(_expr, _lineNo);
         }
     }
 }

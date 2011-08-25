@@ -413,6 +413,23 @@ exec b in a
         }
 
         [TestMethod]
+        public void TestPrivateMemberReferences() {
+            string text = @"
+class C:
+    def __x(self):
+        pass
+
+    def y(self):
+        self.__x()
+";
+
+            var entry = ProcessText(text);
+
+            var vars = entry.GetVariables("self.__x", GetLineNumber(text, "self.__"));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(3, 9, VariableType.Definition), new VariableLocation(7, 14, VariableType.Reference));
+        }
+
+        [TestMethod]
         public void TestGeneratorComprehensions() {/*
             var entry = ProcessText(@"
 x = [2,3,4]

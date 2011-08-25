@@ -51,8 +51,10 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="exprText">The expression to determine the result of.</param>
         /// <param name="lineNumber">The line number to evaluate at within the module.</param>
         public IEnumerable<IAnalysisValue> GetValues(string exprText, int lineNumber) {
-            var expr = GetExpressionFromText(exprText);
             var scopes = FindScopes(lineNumber);
+            var privatePrefix = GetPrivatePrefixClassName(scopes);
+            var expr = GetExpressionFromText(exprText, privatePrefix);
+
             var eval = new ExpressionEvaluator(_unit.CopyForEval(), scopes.ToArray());
 
             var res = eval.Evaluate(expr);
@@ -102,6 +104,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        
         /// <summary>
         /// Gets the variables the given expression evaluates to.  Variables include parameters, locals, and fields assigned on classes, modules and instances.
         /// 
@@ -109,8 +112,10 @@ namespace Microsoft.PythonTools.Analysis {
         /// have only one or more references.
         /// </summary>
         public IEnumerable<IAnalysisVariable> GetVariables(string exprText, int lineNumber) {
-            var expr = GetExpressionFromText(exprText);
             var scopes = FindScopes(lineNumber);
+            string privatePrefix = GetPrivatePrefixClassName(scopes);
+            var expr = GetExpressionFromText(exprText, privatePrefix);            
+
             var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray());
             NameExpression name = expr as NameExpression;
             if (name != null) {
@@ -244,13 +249,15 @@ namespace Microsoft.PythonTools.Analysis {
                 return GetAllAvailableMembers(lineNumber);
             }
 
-            var expr = GetExpressionFromText(exprText);
+            var scopes = FindScopes(lineNumber).ToArray();
+            var privatePrefix = GetPrivatePrefixClassName(scopes);
+
+            var expr = GetExpressionFromText(exprText, privatePrefix);
             if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
                 // no completions on integer ., the user is typing a float
                 return new MemberResult[0];
             }
 
-            var scopes = FindScopes(lineNumber).ToArray();
             var lookup = new ExpressionEvaluator(_unit.CopyForEval(), scopes).Evaluate(expr);
             return GetMemberResults(lookup, scopes, options);
         }
@@ -473,8 +480,36 @@ namespace Microsoft.PythonTools.Analysis {
             return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict);
         }
 
+        /// <summary>
+        /// Gets the expression for the given text.  
+        /// 
+        /// This overload shipped in v1 but does not take into account private members 
+        /// prefixed with __'s.   Calling the GetExpressionFromText(string exprText, int lineNumber)
+        /// overload will take into account the current class and therefore will
+        /// work properly with name mangled private members.  
+        /// </summary>
         public Expression GetExpressionFromText(string exprText) {
-            using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
+            return GetExpressionFromText(exprText, null);
+        }
+
+        /// <summary>
+        /// Gets the expression for the given text as if it appeared at the specified line number.
+        /// 
+        /// If the expression is a member expression such as "foo.__bar" and the line number is
+        /// inside of a class definition this will return a MemberExpression with the mangled name
+        /// like "foo.__ClassName_Bar".
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public Expression GetExpressionFromText(string exprText, int lineNumber) {
+            var scopes = FindScopes(lineNumber);
+            var privatePrefix = GetPrivatePrefixClassName(scopes);
+
+            return GetExpressionFromText(exprText, privatePrefix);
+        }
+
+        private Expression GetExpressionFromText(string exprText, string privatePrefix) {
+            using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix })) {
                 return GetExpression(parser.ParseTopExpression().Body);
             }
         }
@@ -559,15 +594,21 @@ namespace Microsoft.PythonTools.Analysis {
             return null;
         }
 
-        private static string GetPrivatePrefix(IList<InterpreterScope> scopes) {
-            string classScopePrefix = null;
+        private static string GetPrivatePrefixClassName(IList<InterpreterScope> scopes) {
             for (int scope = scopes.Count - 1; scope >= 0; scope--) {
                 if (scopes[scope] is ClassScope) {
-                    classScopePrefix = "_" + scopes[scope].Name + "__";
-                    break;
+                    return scopes[scope].Name;
                 }
             }
-            return classScopePrefix;
+            return null;
+        }
+
+        private static string GetPrivatePrefix(IList<InterpreterScope> scopes) {
+            string classScopePrefix = GetPrivatePrefixClassName(scopes);
+            if (classScopePrefix != null) {
+                return "_" + classScopePrefix + "__";
+            }
+            return null;
         }
 
     }

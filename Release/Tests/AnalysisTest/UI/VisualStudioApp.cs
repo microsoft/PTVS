@@ -163,21 +163,36 @@ namespace AnalysisTest.UI {
             return new NewProjectDialog(AutomationElement.FromHandle(dialog));
         }
 
+        public AttachToProcessDialog OpenDebugAttach() {
+            ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Debug.AttachtoProcess"));
+            return new AttachToProcessDialog(WaitForDialog());
+        }
+
         /// <summary>
         /// Waits for a modal dialog to take over VS's main window and returns the HWND for the dialog.
         /// </summary>
         /// <returns></returns>
         public IntPtr WaitForDialog() {
+            return WaitForDialogToReplace(Dte.MainWindow.HWnd);
+        }
+
+        /// <summary>
+        /// Waits for a modal dialog to take over a given window and returns the HWND for the new dialog.
+        /// </summary>
+        /// <returns>An IntPtr which should be interpreted as an HWND</returns>
+
+        public static IntPtr WaitForDialogToReplace(int originalHwndasInt) {
             IVsUIShell uiShell = VsIdeTestHostContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
             IntPtr hwnd;
             uiShell.GetDialogOwnerHwnd(out hwnd);
 
-            for (int i = 0; i < 100 && hwnd.ToInt32() == Dte.MainWindow.HWnd; i++) {
+            for (int i = 0; i < 100 && hwnd.ToInt32() == originalHwndasInt; i++) {
                 System.Threading.Thread.Sleep(100);
                 uiShell.GetDialogOwnerHwnd(out hwnd);
             }
 
-            Assert.AreNotEqual(hwnd.ToInt32(), Dte.MainWindow.HWnd);
+            Assert.AreNotEqual(hwnd, IntPtr.Zero);
+            Assert.AreNotEqual(hwnd.ToInt32(), originalHwndasInt);
             return hwnd;
         }
 

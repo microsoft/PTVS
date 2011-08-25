@@ -53,7 +53,7 @@ foreach ($targetVs in ("11.0", "10.0")) {
     
 
     if ($targetVs -eq "10.0") {
-        $version = "1.0." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
+        $version = "1.1." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
         $outDir = $prevOutDir
     } else {
         $version = "1.8." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"

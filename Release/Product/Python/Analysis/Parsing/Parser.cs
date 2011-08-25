@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         #region Construction
 
-        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim, bool bindRefs) {
+        private Parser(Tokenizer tokenizer, ErrorSink errorSink, PythonLanguageVersion langVersion, bool verbatim, bool bindRefs, string privatePrefix) {
             Contract.Assert(tokenizer != null);
             Contract.Assert(errorSink != null);
 
@@ -71,12 +71,15 @@ namespace Microsoft.PythonTools.Parsing {
             _langVersion = langVersion;
             _verbatim = verbatim;
             _bindReferences = bindRefs;
+            
             if (langVersion.Is3x()) {
                 // 3.x always does true division
                 _languageFeatures |= FutureOptions.TrueDivision;
             }
 
             Reset(FutureOptions.None);
+
+            _privatePrefix = privatePrefix;
         }
 
         public static Parser CreateParser(TextReader reader, PythonLanguageVersion version) {
@@ -93,13 +96,14 @@ namespace Microsoft.PythonTools.Parsing {
             Tokenizer tokenizer = new Tokenizer(version, options.ErrorSink, options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None);
 
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
-            tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;
+            tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;            
 
             Parser result = new Parser(tokenizer, 
                 options.ErrorSink ?? ErrorSink.Null, 
                 version, 
                 options.Verbatim,
-                options.BindReferences
+                options.BindReferences,
+                options.PrivatePrefix
             );
 
             result._sourceReader = reader;

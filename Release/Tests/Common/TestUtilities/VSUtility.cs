@@ -24,7 +24,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using EnvDTE;
-using EnvDTE80;
+//using EnvDTE80;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TestTools.Common;

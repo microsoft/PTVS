@@ -29,5 +29,13 @@ namespace Microsoft.PythonTools.Parsing {
         /// nodes which reference variables.
         /// </summary>
         public bool BindReferences { get; set; }
+
+        /// <summary>
+        /// Specifies the class name the parser starts off with for name mangling name expressions.
+        /// 
+        /// For example __foo would turn into _C__foo if PrivatePrefix is set to C.
+        /// </summary>
+        public string PrivatePrefix { get; set; }
+
     }
 }

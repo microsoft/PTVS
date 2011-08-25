@@ -81,6 +81,7 @@
     <Compile Include="ObjectBrowerTest.cs" />
     <Compile Include="ParserTests.cs" />
     <Compile Include="ProfilingTests.cs" />
+    <Compile Include="ProjectSystem\AttachTest.cs" />
     <Compile Include="ProjectSystem\DebugProject.cs" />
     <Compile Include="ProjectSystem\BasicProjectTests.cs" />
     <Compile Include="ProjectSystem\EditorTests.cs" />
@@ -89,15 +90,21 @@
     <Compile Include="RefactorRenameTests.cs" />
     <Compile Include="ReplWindowTests.cs" />
     <Compile Include="TokenizerRoundTripTest.cs" />
+    <Compile Include="UI\AttachToProcessDialog.cs" />
     <Compile Include="UI\Button.cs" />
+    <Compile Include="UI\CheckListView.cs" />
     <Compile Include="UI\ChooseLocationDialog.cs" />
     <Compile Include="UI\ComboBox.cs" />
+    <Compile Include="UI\CheckBox.cs" />
     <Compile Include="UI\CredentialsDialog.cs" />
     <Compile Include="UI\DetailPane.cs" />
     <Compile Include="UI\EditorWindow.cs" />
     <Compile Include="UI\ExceptionButton.cs" />
     <Compile Include="UI\InteractiveWindow.cs" />
     <Compile Include="UI\Keyboard.cs" />
+    <Compile Include="UI\ListView.cs" />
+    <Compile Include="UI\Header.cs" />
+    <Compile Include="UI\ListItem.cs" />
     <Compile Include="UI\Menu.cs" />
     <Compile Include="UI\MenuItem.cs" />
     <Compile Include="UI\MessageBoxButton.cs" />
@@ -118,6 +125,7 @@
     <Compile Include="UI\Python\PythonPerfExplorer.cs" />
     <Compile Include="UI\RemoveItemDialog.cs" />
     <Compile Include="UI\SaveDialog.cs" />
+    <Compile Include="UI\SelectCodeTypeDialog.cs" />
     <Compile Include="UI\SolutionExplorerTree.cs" />
     <Compile Include="UI\Table.cs" />
     <Compile Include="UI\TextBox.cs" />
@@ -159,6 +167,9 @@
     <Reference Include="Microsoft.VisualStudio.Editor, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.CodedUITestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -168,6 +179,15 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Common, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestTools.UITest.Extension, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestTools.UITesting, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -213,22 +233,27 @@
     <ProjectReference Include="..\..\Product\Python\IronPython\IronPython.csproj">
       <Project>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</Project>
       <Name>Microsoft.PythonTools.IronPython</Name>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Python\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Python\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Microsoft.PythonTools.Attacher</Name>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Python\Profiling\Profiling.csproj">
       <Project>{C42B194E-3333-45E8-BB26-D69D1A51EF0B}</Project>
       <Name>Microsoft.PythonTools.Profiling</Name>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\Python\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>Microsoft.PythonTools</Name>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\Common\TestUtilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
@@ -246,10 +271,11 @@
       <Project>{AC19CAA0-5C69-4B20-8A18-D4B6B65F22B8}</Project>
       <Name>PyDebugAttach</Name>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Private>False</Private>
+      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="empty_dict.pickle">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -378,6 +404,25 @@
     <None Include="Python.VS.TestData\Signatures\Signatures.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python.VS.TestData\DebugAttach\DebugAttach.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DebugAttach\DebugAttach.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DebugAttach\fg.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DebugAttach\Program.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DebugAttach\Simple.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DebugAttach\ThreadJoin.py" />
+    <Content Include="Python.VS.TestData\DebugAttach\VerySimple.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\Signatures.sln">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1005,6 +1050,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\..\Product\Python\Python.settings" />
   <Import Project="$(TargetsPath)\TCWB.CSharp.targets" />
   <PropertyGroup>
