@@ -12,6 +12,7 @@
     <AssemblyName>Inheritance</AssemblyName>
     <Name>Inheritance</Name>
     <RootNamespace>Inheritance</RootNamespace>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,4 +25,5 @@
   <ItemGroup>
     <Compile Include="Program.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

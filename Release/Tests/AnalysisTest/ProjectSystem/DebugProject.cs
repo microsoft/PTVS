@@ -35,6 +35,10 @@ using Thread = System.Threading.Thread;
 namespace AnalysisTest.ProjectSystem {
     [TestClass]
     [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
+    [DeploymentItem("Binaries\\Win32\\Debug\\PyDebugAttach.dll")]
+    [DeploymentItem("Binaries\\Win32\\Debug\\x64\\PyDebugAttach.dll", "x64")]
+    [DeploymentItem(@"..\\PythonTools\\visualstudio_py_debugger.py")]
+    [DeploymentItem(@"..\\PythonTools\\visualstudio_py_launcher.py")]
     public class DebugProject {
         [TestCleanup]
         public void MyTestCleanup() {
@@ -199,7 +203,7 @@ namespace AnalysisTest.ProjectSystem {
             StartHelloWorldAndBreak();
 
             var thread = ((Thread2)VsIdeTestHostContext.Dte.Debugger.CurrentThread);
-            Assert.AreEqual("Python Thread", thread.Name);
+            Assert.AreEqual("MainThread", thread.Name);
             Assert.AreEqual(0, thread.SuspendCount);
             Assert.AreEqual("", thread.Priority);
             Assert.AreEqual("", thread.DisplayName);

@@ -12,6 +12,7 @@
     <AssemblyName>MultiModule</AssemblyName>
     <Name>MultiModule</Name>
     <RootNamespace>MultiModule</RootNamespace>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,4 +26,5 @@
     <Compile Include="MyModule.py" />
     <Compile Include="Program.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

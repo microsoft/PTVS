@@ -12,6 +12,7 @@
     <AssemblyName>HelloWorld</AssemblyName>
     <Name>HelloWorld</Name>
     <RootNamespace>HelloWorld</RootNamespace>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -30,4 +31,5 @@
     <None Include="ProgramDelete.py" />
     <None Include="SubFolder\SubItem.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

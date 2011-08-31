@@ -247,6 +247,29 @@ attach_lock = thread.allocate()
 attach_sent_break = False
 
 
+def update_all_thread_stacks(blocking_thread):
+    THREADS_LOCK.acquire()
+    all_threads = list(THREADS.values())
+    THREADS_LOCK.release()
+    
+    for cur_thread in all_threads:
+        if cur_thread is blocking_thread:
+            continue
+            
+        cur_thread._block_starting_lock.acquire()
+        if not cur_thread._is_blocked:
+            # release the lock, we're going to run user code to evaluate the frames
+            cur_thread._block_starting_lock.release()        
+                            
+            frames = cur_thread.get_frame_list()
+    
+            # re-acquire the lock and make sure we're still not blocked.  If so send
+            # the frame list.
+            cur_thread._block_starting_lock.acquire()
+            if not cur_thread._is_blocked:
+                cur_thread.send_frame_list(frames)
+    
+        cur_thread._block_starting_lock.release()
 
 class Thread(object):
     def __init__(self, id = None):
@@ -380,7 +403,7 @@ class Thread(object):
 
                             if block:
                                 probe_stack()
-                                self.block(lambda: report_breakpoint_hit(bp_id, self.id))
+                                self.block(lambda: (report_breakpoint_hit(bp_id, self.id), mark_all_threads_for_break()))
                             break
 
         # forward call to previous trace function, if any, updating trace function appropriately
@@ -471,13 +494,22 @@ class Thread(object):
     def async_break(self):
         def async_break_send():
             send_lock.acquire()
+            sent_break_complete = False
             global SEND_BREAK_COMPLETE
             if SEND_BREAK_COMPLETE:
                 # multiple threads could be sending this...
                 SEND_BREAK_COMPLETE = False
+                sent_break_complete = True
                 conn.send(ASBR)
                 conn.send(struct.pack('i', self.id))
             send_lock.release()
+
+            if sent_break_complete:
+                # if we have threads which have not broken yet capture their frame list and 
+                # send it now.  If they block we'll send an updated (and possibly more accurate - if
+                # there are any thread locals) list of frames.
+                update_all_thread_stacks(self)
+
         self.stepping = STEPPING_NONE
         self.block(async_break_send)
 
@@ -631,11 +663,10 @@ class Thread(object):
         except:
             report_children(execution_id, [], False, False)
 
-    def enum_thread_frames_locally(self):
-        # first gather all the frames (which can run user code)
+    def get_frame_list(self):
         frames = []
         cur_frame = self.cur_frame
-    
+        
         while should_send_frame(cur_frame):
             # calculate the ending line number
             lineno = cur_frame.f_code.co_firstlineno
@@ -674,7 +705,7 @@ class Thread(object):
                     
                 vars.append((var_name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
                 
-
+        
             frames.append((cur_frame.f_code.co_firstlineno,
                            lineno, 
                            cur_frame.f_lineno, 
@@ -682,16 +713,17 @@ class Thread(object):
                            get_code_filename(cur_frame.f_code),
                            cur_frame.f_code.co_argcount,
                            vars))
-
+        
             cur_frame = cur_frame.f_back
+                        
+        return frames
 
-
-
-        # then send them
+    def send_frame_list(self, frames, thread_name = None):
         send_lock.acquire()
         conn.send(THRF)
         conn.send(struct.pack('i',self.id))
-    
+        write_string(thread_name)
+        
         # send the frame count
         conn.send(struct.pack('i', len(frames)))
         for firstlineno, lineno, curlineno, name, filename, argcount, variables in frames:
@@ -699,7 +731,7 @@ class Thread(object):
             conn.send(struct.pack('i', firstlineno))
             conn.send(struct.pack('i', lineno))
             conn.send(struct.pack('i', curlineno))
-    
+        
             write_string(name)
             write_string(filename)
             conn.send(struct.pack('i', argcount))
@@ -712,6 +744,15 @@ class Thread(object):
         
         send_lock.release()
 
+    def enum_thread_frames_locally(self):
+        global threading
+        if threading is None:
+            import threading
+        self.send_frame_list(self.get_frame_list(), threading.currentThread().name)
+
+
+
+threading = None
 
 class Module(object):
     """tracks information about a loaded module"""
@@ -766,6 +807,12 @@ class PendingBreakPoint(object):
 
 PENDING_BREAKPOINTS = set()
 
+def mark_all_threads_for_break():
+    THREADS_LOCK.acquire()
+    for thread in THREADS.values():
+        thread.stepping = STEPPING_BREAK
+    THREADS_LOCK.release()
+
 class DebuggerLoop(object):    
     def __init__(self, conn):
         self.conn = conn
@@ -815,14 +862,14 @@ class DebuggerLoop(object):
         thread = get_thread_from_id(tid)
         if thread is not None:
             thread.stepping = STEPPING_INTO
-            thread.unblock()
+            self.command_resume_all()
 
     def command_step_out(self):
         tid = read_int(self.conn)
         thread = get_thread_from_id(tid)
         if thread is not None:
             thread.stepping = STEPPING_OUT
-            thread.unblock()    
+            self.command_resume_all()
     
     def command_step_over(self):
         # set step over
@@ -830,7 +877,7 @@ class DebuggerLoop(object):
         thread = get_thread_from_id(tid)
         if thread is not None:
             thread.stepping = STEPPING_OVER
-            thread.unblock()
+            self.command_resume_all()
 
     def command_set_breakpoint(self):
         brkpt_id = read_int(self.conn)
@@ -874,32 +921,32 @@ class DebuggerLoop(object):
     def command_break_all(self):
         global SEND_BREAK_COMPLETE
         SEND_BREAK_COMPLETE = True
-        THREADS_LOCK.acquire()
-        for thread in THREADS.values():
-            thread.stepping = STEPPING_BREAK
-        THREADS_LOCK.release()
+        mark_all_threads_for_break()
 
     def command_resume_all(self):
         # resume all
         THREADS_LOCK.acquire()
-        for thread in THREADS.values():
+        all_threads = list(THREADS.values())
+        THREADS_LOCK.release()
+        for thread in all_threads:
             thread._block_starting_lock.acquire()
             if thread._is_blocked:
+                if thread.stepping == STEPPING_BREAK:
+                    thread.stepping = STEPPING_NONE
                 thread.unblock()
             thread._block_starting_lock.release()
-        THREADS_LOCK.release()
     
     def command_resume_thread(self):
         tid = read_int(self.conn)
-
         THREADS_LOCK.acquire()
         thread = THREADS[tid]
-        thread.unblock()
         THREADS_LOCK.release()
 
         if thread.reported_process_loaded:
             thread.reported_process_loaded = False
             self.command_resume_all()
+        else:
+            thread.unblock()
     
     def command_set_exception_info(self):
         BREAK_ON.Clear()
@@ -1077,11 +1124,13 @@ def read_string(conn):
 def read_int(conn):
     return struct.unpack('i', conn.recv(4))[0]
 
+
 def report_new_thread(new_thread):
     ident = new_thread.id
     send_lock.acquire()
     conn.send(NEWT)
     conn.send(struct.pack('i', ident))
+
     send_lock.release()
 
 def report_thread_exit(old_thread):
@@ -1302,7 +1351,12 @@ def attach_process(port_num, debug_id, report_and_block = False):
         try:
             filename = getattr(mod_value, '__file__', None)
             if filename is not None:
-                MODULES.append((filename, Module(path.abspath(filename))))
+                try:
+                    fullpath = path.abspath(filename)
+                except:
+                    pass
+                else:
+                    MODULES.append((filename, Module(fullpath)))
         except:
             traceback.print_exc()
 

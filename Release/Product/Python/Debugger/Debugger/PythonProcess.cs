@@ -564,6 +564,7 @@ namespace Microsoft.PythonTools.Debugger {
             var frames = new List<PythonStackFrame>();
             int tid = socket.ReadInt();
             var thread = _threads[tid];
+            var threadName = socket.ReadString();
 
             int frameCount = socket.ReadInt();
             for (int i = 0; i < frameCount; i++) {
@@ -586,6 +587,9 @@ namespace Microsoft.PythonTools.Debugger {
 
             Debug.WriteLine("Received frames for thread {0}", tid);
             thread.Frames = frames;
+            if (threadName != null) {
+                thread.Name = threadName;
+            }
         }
 
         private void HandleProcessLoad(Socket socket) {

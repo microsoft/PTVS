@@ -19,12 +19,14 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly int _identity;
         private readonly PythonProcess _process;
         private readonly bool _isWorkerThread;
+        private string _name;
         private IList<PythonStackFrame> _frames;
 
         internal PythonThread(PythonProcess process, int identity, bool isWorkerThread) {
             _process = process;
             _identity = identity;
             _isWorkerThread = isWorkerThread;
+            _name = "";
         }
 
         public void StepInto() {
@@ -65,6 +67,15 @@ namespace Microsoft.PythonTools.Debugger {
         public PythonProcess Process {
             get {
                 return _process;
+            }
+        }
+
+        public string Name {
+            get {
+                return _name;
+            }
+            set {
+                _name = value;
             }
         }
 

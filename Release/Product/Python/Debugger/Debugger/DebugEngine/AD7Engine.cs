@@ -758,6 +758,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // This method is deprecated. Use the IDebugProcess3::Step method instead.
+
+        /// <summary>
+        /// Performs a step. 
+        /// 
+        /// In case there is any thread synchronization or communication between threads, other threads in the program should run when a particular thread is stepping.
+        /// </summary>
         public int Step(IDebugThread2 pThread, enum_STEPKIND sk, enum_STEPUNIT Step) {
             var thread = ((AD7Thread)pThread).GetDebuggedThread();
             switch (sk) {

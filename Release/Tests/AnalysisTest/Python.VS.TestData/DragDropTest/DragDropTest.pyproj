@@ -12,6 +12,7 @@
     <AssemblyName>DragDropTest</AssemblyName>
     <Name>HelloWorld</Name>
     <RootNamespace>DragDropTest</RootNamespace>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,4 +33,5 @@
     <None Include="TestFolder\SubItem2.py" />
     <None Include="TestFolder\SubItem3.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

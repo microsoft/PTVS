@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Get the name of the thread. For the sample engine, the name of the thread is always "Sample Engine Thread"
         int IDebugThread2.GetName(out string threadName) {
-            threadName = ThreadNameString;
+            threadName = _debuggedThread.Name;
             return VSConstants.S_OK;
         }
 
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_PRIORITY;
             }
             if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_NAME) != 0) {
-                props.bstrName = ThreadNameString;
+                props.bstrName = _debuggedThread.Name;
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_NAME;
             }
             if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_LOCATION) != 0) {
@@ -117,6 +117,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_LOCATION;
             }
 
+            propertiesArray[0] = props;
             return VSConstants.S_OK;
         }
 
@@ -206,7 +207,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (hRes == VSConstants.S_OK && dwFields != (uint)dwFields90) {
                 if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_DISPLAY_NAME) != 0) {
                     // Thread display name is being requested
-                    props[0].bstrDisplayName = "";
+                    props[0].bstrDisplayName = _debuggedThread.Name;
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_DISPLAY_NAME;
 
                     // Give this display name a higher priority than the default (0)

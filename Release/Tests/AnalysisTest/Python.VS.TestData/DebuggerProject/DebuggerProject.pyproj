@@ -12,6 +12,7 @@
     <AssemblyName>DebuggerProject</AssemblyName>
     <Name>HelloWorld</Name>
     <RootNamespace>DebuggerProject</RootNamespace>
+    <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -47,4 +48,5 @@
     <None Include="SysExit.py" />
     <None Include="UnicodeException.py" />
   </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
