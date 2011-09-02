@@ -4527,6 +4527,23 @@ namespace Microsoft.PythonTools.Parsing {
 
         #region Encoding support (PEP 263)
 
+        /// <summary>
+        /// Returns the Encoding that a Python file is written in.  This inspects the BOM and looks for a #coding line.
+        /// 
+        /// Returns null if the encoding could not be detected for any reason.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public static Encoding GetEncodingFromFile(string filename) {
+            try {
+                using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read)) {
+                    return GetStreamReaderWithEncoding(fs, PythonAsciiEncoding.Instance, ErrorSink.Null).CurrentEncoding;
+                }
+            } catch(IOException) {
+                return null;
+            }
+        }
+
         private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {
             // we choose ASCII by default, if the file has a Unicode pheader though
             // we'll automatically get it as unicode.
@@ -4847,6 +4864,12 @@ namespace Microsoft.PythonTools.Parsing {
 
             private void SetDecoderFallback() {
                 _encoding.DecoderFallback = DecoderFallback;
+            }
+
+            public override int CodePage {
+                get {
+                    return _encoding.CodePage;
+                }
             }
 
             public override string EncodingName {

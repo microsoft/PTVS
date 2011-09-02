@@ -15,6 +15,7 @@
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Designer.Interfaces;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -30,13 +31,17 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>    
     public abstract class CommonEditorFactory : IVsEditorFactory {        
         private CommonProjectPackage _package;
-        private ServiceProvider _serviceProvider;       
+        private ServiceProvider _serviceProvider;
+        private readonly bool _promptEncodingOnLoad;
 
-        #region ctors
         public CommonEditorFactory(CommonProjectPackage package) {
             _package = package;
         }
-        #endregion
+
+        public CommonEditorFactory(CommonProjectPackage package, bool promptEncodingOnLoad) {
+            _package = package;
+            _promptEncodingOnLoad = promptEncodingOnLoad;
+        }
 
         #region IVsEditorFactory Members
 
@@ -158,7 +163,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             try {
-                docView = CreateDocumentView(physicalView, hierarchy, itemid, textLines, out editorCaption, out commandUIGuid);
+                docView = CreateDocumentView(documentMoniker, physicalView, hierarchy, itemid, textLines, out editorCaption, out commandUIGuid);
             } finally {
                 if (docView == IntPtr.Zero) {
                     if (docDataExisting != docData && docData != IntPtr.Zero) {
@@ -206,14 +211,14 @@ namespace Microsoft.PythonTools.Project {
             return textLines;
         }
 
-        private IntPtr CreateDocumentView(string physicalView, IVsHierarchy hierarchy, uint itemid, IVsTextLines textLines, out string editorCaption, out Guid cmdUI) {
+        private IntPtr CreateDocumentView(string documentMoniker, string physicalView, IVsHierarchy hierarchy, uint itemid, IVsTextLines textLines, out string editorCaption, out Guid cmdUI) {
             //Init out params
             editorCaption = string.Empty;
             cmdUI = Guid.Empty;
 
             if (string.IsNullOrEmpty(physicalView)) {
                 // create code window as default physical view
-                return CreateCodeView(textLines, ref editorCaption, ref cmdUI);
+                return CreateCodeView(documentMoniker, textLines, ref editorCaption, ref cmdUI);
             } else if (string.Compare(physicalView, "design", true, CultureInfo.InvariantCulture) == 0) {
                 // Create Form view
                 return CreateFormView(hierarchy, itemid, textLines, ref editorCaption, ref cmdUI);
@@ -265,7 +270,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private IntPtr CreateCodeView(IVsTextLines textLines, ref string editorCaption, ref Guid cmdUI) {
+        private IntPtr CreateCodeView(string documentMoniker, IVsTextLines textLines, ref string editorCaption, ref Guid cmdUI) {
             Type codeWindowType = typeof(IVsCodeWindow);
             Guid riid = codeWindowType.GUID;
             Guid clsid = typeof(VsCodeWindowClass).GUID;
@@ -273,6 +278,31 @@ namespace Microsoft.PythonTools.Project {
             ErrorHandler.ThrowOnFailure(window.SetBuffer(textLines));
             ErrorHandler.ThrowOnFailure(window.SetBaseEditorCaption(null));
             ErrorHandler.ThrowOnFailure(window.GetEditorCaption(READONLYSTATUS.ROSTATUS_Unknown, out editorCaption));
+
+            IVsUserData userData = textLines as IVsUserData;
+            if (userData != null) {
+                if (_promptEncodingOnLoad) {
+                    var guid = VSConstants.VsTextBufferUserDataGuid.VsBufferEncodingPromptOnLoad_guid;
+                    userData.SetData(ref guid, (uint)1);
+                } else {
+                    var encoding = Parser.GetEncodingFromFile(documentMoniker);
+                    var guid = VSConstants.VsTextBufferUserDataGuid.VsBufferEncodingVSTFF_guid;
+                    uint value;
+                    if (encoding != null && encoding.CodePage != 0) {
+                        // code page is stored in lower 16 bits of the mask.
+                        value = (uint)encoding.CodePage;
+                    } else {
+                        // code page is stored in lower 16 bits of the mask.
+                        value = (uint)PythonToolsPackage.Instance.OptionsPage.DefaultCodePage;
+                    }
+
+                    // if the code page is zero fall back to VS's default behavior
+                    if (value != 0) {
+                        userData.SetData(ref guid, value);
+                    }
+                }
+            }
+
             cmdUI = VSConstants.GUID_TextEditorFactory;
             return Marshal.GetIUnknownForObject(window);
         }

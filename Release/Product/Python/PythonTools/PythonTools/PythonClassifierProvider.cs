@@ -168,7 +168,6 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class OperatorFormat : ClassificationFormatDefinition {
         public OperatorFormat() {
-            ForegroundColor = Colors.Black;
         }
     }
 
@@ -180,7 +179,6 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class GroupingFormat : ClassificationFormatDefinition {
         public GroupingFormat() {
-            ForegroundColor = Colors.Black;
         }
     }
 
@@ -192,7 +190,6 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class CommaFormat : ClassificationFormatDefinition {
         public CommaFormat() {
-            ForegroundColor = Colors.Black;
         }
     }
 

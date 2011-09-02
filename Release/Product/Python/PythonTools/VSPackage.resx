@@ -160,7 +160,7 @@
     <value>Python Project</value>
   </data>
   <data name="3004" xml:space="preserve">
-    <value>Python source file</value>
+    <value>Python Editor</value>
   </data>
   <data name="3005" xml:space="preserve">
     <value>Python windows source file</value>
@@ -198,5 +198,8 @@
   </data>
   <data name="500" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>pythonfile.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="3015" xml:space="preserve">
+    <value>Python Editor with Encoding</value>
   </data>
 </root>

@@ -22,6 +22,9 @@ namespace Microsoft.PythonTools.Project {
     public abstract class CommonProjectPackage : ProjectPackage, IVsInstalledProduct {
         public abstract ProjectFactory CreateProjectFactory();
         public abstract CommonEditorFactory CreateEditorFactory();
+        public virtual CommonEditorFactory CreateEditorFactoryPromptForEncoding() {
+            return null;
+        }
         /// <summary>
         /// This method is called to get the icon that will be displayed in the
         /// Help About dialog when this package is selected.
@@ -54,6 +57,10 @@ namespace Microsoft.PythonTools.Project {
             base.Initialize();
             this.RegisterProjectFactory(CreateProjectFactory());
             this.RegisterEditorFactory(CreateEditorFactory());
+            var encodingEditorFactory = CreateEditorFactoryPromptForEncoding();
+            if (encodingEditorFactory != null) {
+                RegisterEditorFactory(encodingEditorFactory);
+            }
         }
 
         /// <summary>

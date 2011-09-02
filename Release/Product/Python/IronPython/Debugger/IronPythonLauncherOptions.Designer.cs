@@ -25,7 +25,6 @@
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             this._debugGroup = new System.Windows.Forms.GroupBox();
-            this._debugStdLib = new System.Windows.Forms.CheckBox();
             this._interpreterPath = new System.Windows.Forms.TextBox();
             this._interpreterPathLabel = new System.Windows.Forms.Label();
             this._interpArgsLabel = new System.Windows.Forms.Label();
@@ -34,6 +33,7 @@
             this._argumentsLabel = new System.Windows.Forms.Label();
             this._searchPaths = new System.Windows.Forms.TextBox();
             this._searchPathLabel = new System.Windows.Forms.Label();
+            this._debugStdLib = new System.Windows.Forms.CheckBox();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._debugGroup.SuspendLayout();
             this.SuspendLayout();
@@ -56,23 +56,13 @@
             this._debugGroup.TabStop = false;
             this._debugGroup.Text = "Debug";
             // 
-            // _debugStdLib
-            // 
-            this._debugStdLib.AutoSize = true;
-            this._debugStdLib.Location = new System.Drawing.Point(12, 121);
-            this._debugStdLib.Name = "_debugStdLib";
-            this._debugStdLib.Size = new System.Drawing.Size(138, 17);
-            this._debugStdLib.TabIndex = 20;
-            this._debugStdLib.Text = "Debug Standard Library";
-            this._debugStdLib.UseVisualStyleBackColor = true;
-            this._debugStdLib.CheckedChanged += new System.EventHandler(this.DebugStdLibCheckedChanged);
-            // 
             // _interpreterPath
             // 
             this._interpreterPath.Location = new System.Drawing.Point(142, 95);
             this._interpreterPath.Name = "_interpreterPath";
             this._interpreterPath.Size = new System.Drawing.Size(286, 20);
             this._interpreterPath.TabIndex = 30;
+            this._interpreterPath.TextChanged += new System.EventHandler(this.InterpreterPathTextChanged);
             // 
             // _interpreterPathLabel
             // 
@@ -106,6 +96,7 @@
             this._arguments.Name = "_arguments";
             this._arguments.Size = new System.Drawing.Size(286, 20);
             this._arguments.TabIndex = 25;
+            this._arguments.TextChanged += new System.EventHandler(this.ArgumentsTextChanged);
             // 
             // _argumentsLabel
             // 
@@ -122,6 +113,7 @@
             this._searchPaths.Name = "_searchPaths";
             this._searchPaths.Size = new System.Drawing.Size(286, 20);
             this._searchPaths.TabIndex = 24;
+            this._searchPaths.TextChanged += new System.EventHandler(this.SearchPathsTextChanged);
             // 
             // _searchPathLabel
             // 
@@ -131,6 +123,17 @@
             this._searchPathLabel.Size = new System.Drawing.Size(74, 13);
             this._searchPathLabel.TabIndex = 26;
             this._searchPathLabel.Text = "Search Paths:";
+            // 
+            // _debugStdLib
+            // 
+            this._debugStdLib.AutoSize = true;
+            this._debugStdLib.Location = new System.Drawing.Point(12, 121);
+            this._debugStdLib.Name = "_debugStdLib";
+            this._debugStdLib.Size = new System.Drawing.Size(138, 17);
+            this._debugStdLib.TabIndex = 20;
+            this._debugStdLib.Text = "Debug Standard Library";
+            this._debugStdLib.UseVisualStyleBackColor = true;
+            this._debugStdLib.CheckedChanged += new System.EventHandler(this.DebugStdLibCheckedChanged);
             // 
             // IronPythonLauncherOptions
             // 

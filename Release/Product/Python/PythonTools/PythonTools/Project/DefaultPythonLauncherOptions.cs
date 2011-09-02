@@ -127,5 +127,6 @@ namespace Microsoft.PythonTools.Project {
         private void InterpreterArgumentsTextChanged(object sender, EventArgs e) {
             RaiseIsDirty();
         }
+
     }
 }

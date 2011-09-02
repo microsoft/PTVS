@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools {
         public const string GeneralPropertyPageGuid = "888888fd-3c4a-40da-aefb-5ac10f5e8b30";
         public const string DebugPropertyPageGuid = "9A46BC86-34CB-4597-83E5-498E3BDBA20A";
         public const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
+        public const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
 
         // Do not change below info without re-requesting PLK:
         public const string ProjectSystemPackageGuid = "15490272-3C6B-4129-8E1D-795C8B6D8E9F"; //matches PLK
