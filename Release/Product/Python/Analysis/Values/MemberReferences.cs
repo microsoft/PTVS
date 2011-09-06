@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
@@ -36,11 +37,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<IReferenceable> GetDefinitions(string name) {
+        public IEnumerable<IReferenceable> GetDefinitions(string name, IMemberContainer innerContainer, IModuleContext context) {
+            IEnumerable<IReferenceable> refs = null;
             ReferenceDict references;
             if (_references != null && _references.TryGetValue(name, out references)) {
-                return references.Values;
+                refs = references.Values;
             }
+
+            var member = innerContainer.GetMember(context, name);
+            if (member != null) {
+                List<IReferenceable> res;
+                if (refs == null) {
+                    res = new List<IReferenceable>();
+                } else {
+                    res = new List<IReferenceable>(refs);
+                }
+
+                ILocatedMember locatedMember = member as ILocatedMember;
+                if (locatedMember != null) {
+                    res.Add(new DefinitionList(locatedMember.Location));
+                }
+                return res;
+            }
+
             return new IReferenceable[0];
         }
     }
@@ -102,6 +121,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
             }
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// A list of references as stored for a single project entry.
+    /// </summary>
+    class DefinitionList : IReferenceable {
+        public readonly LocationInfo _location;
+
+        public DefinitionList(LocationInfo location) {
+            _location = location;
+        }
+
+        #region IReferenceable Members
+
+        public IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> Definitions {
+            get { yield return new KeyValuePair<IProjectEntry, SimpleSrcLocation>(_location.ProjectEntry, new SimpleSrcLocation(_location.Line, _location.Column)); }
+        }
+
+        IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> IReferenceable.References {
+            get { yield break; }
         }
 
         #endregion

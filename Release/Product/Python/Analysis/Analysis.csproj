@@ -59,6 +59,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
+    <Compile Include="Interpreter\ILocatedMember.cs" />
     <Compile Include="Interpreter\Default\CPythonBuiltinModule.cs" />
     <Compile Include="Interpreter\IBuiltinPythonModule.cs" />
     <Compile Include="Interpreter\PythonTypeDatabaseCreationRequest.cs" />

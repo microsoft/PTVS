@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #region IReferenceableContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
-            return _references.GetDefinitions(name);
+            return _references.GetDefinitions(name, _interpreterModule, ProjectState._defaultContext);
         }
 
         #endregion
@@ -91,6 +91,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             foreach (var name in _type.GetChildrenModules()) {
                 yield return new KeyValuePair<string, Namespace>(name, ProjectState.GetNamespaceFromObjects(_type.GetMember(context, name)));
             }
+        }
+
+        public override ILocatedMember GetLocatedMember() {
+            return _interpreterModule as ILocatedMember;
         }
     }
 }

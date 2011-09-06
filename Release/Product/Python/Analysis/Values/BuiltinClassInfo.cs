@@ -239,7 +239,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #region IReferenceableContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
-            return _referencedMembers.GetDefinitions(name);
+            return _referencedMembers.GetDefinitions(name, PythonType, ProjectState._defaultContext);
         }
 
         #endregion
@@ -265,5 +265,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return new LocationInfo[0];
             }
         }
+
+        public override ILocatedMember GetLocatedMember() {
+            return _type as ILocatedMember;
+        }
+
     }
 }

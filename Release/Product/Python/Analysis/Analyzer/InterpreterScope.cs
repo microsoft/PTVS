@@ -63,12 +63,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit) {
+        public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit, ParameterKind paramKind = ParameterKind.Normal) {
             VariableDef value;
             if (!Variables.TryGetValue(name, out value)) {
-                return Variables[name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location);
+                VariableDef def;
+                switch (paramKind) {
+                    case ParameterKind.List: def = new ListParameterVariableDef(unit, location); break;
+                    case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location); break;
+                    default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location); break;
+                }
+                return Variables[name] = def;
             } else if (!(value is LocatedVariableDef)) {
-                return Variables[name] = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value);
+                VariableDef def;
+                switch (paramKind) {
+                    case ParameterKind.List: def = new ListParameterVariableDef(unit, location, value); break;
+                    case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location, value); break;
+                    default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value); break;
+                }
+                return Variables[name] = def;
             } else {
                 ((LocatedVariableDef)value).Node = location;
             }

@@ -66,5 +66,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _doc;
             }
         }
+
+        public override ILocatedMember GetLocatedMember() {
+            return _value as ILocatedMember;
+        }
     }
 }

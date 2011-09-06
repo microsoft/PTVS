@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #region IReferenceableContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
-            return _references.GetDefinitions(name);
+            return _references.GetDefinitions(name, _container, ProjectState._defaultContext);
         }
 
         #endregion

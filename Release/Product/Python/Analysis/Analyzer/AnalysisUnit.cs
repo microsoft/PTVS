@@ -228,11 +228,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             int len = Math.Min(Ast.Parameters.Count, newScope.ParameterTypes.Length);
             for (int i = 0; i < len; i++) {
                 var p = Ast.Parameters[i];
-                var v = newScope.ParameterTypes[i];
                 if (p.DefaultValue != null) {
                     var val = ddg._eval.Evaluate(p.DefaultValue);
                     if (val != null) {
-                        v.AddTypes(p, this, val);
+                        newScope.AddParameterType(this, val, i);
                     }
                 }
                 ddg._eval.EvaluateMaybeNull(p.Annotation);

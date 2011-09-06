@@ -150,7 +150,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var newParams = new VariableDef[node.Parameters.Count];
                 int index = 0;
                 foreach (var param in node.Parameters) {
-                    var variable = newParams[index++] = funcScope.AddLocatedVariable(param.Name, param, unit);
+                    var variable = newParams[index++] = funcScope.AddLocatedVariable(param.Name, param, unit, param.Kind);
+                    
                     if (param.IsList) {
                         variable.AddTypes(param, unit, new SequenceInfo(new ISet<Namespace>[0], outerUnit.ProjectState._tupleType));
                     } else if (param.IsDictionary) {

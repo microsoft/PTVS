@@ -14,12 +14,13 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonFunction : IPythonFunction {
+    class CPythonFunction : IPythonFunction, ILocatedMember {
         private readonly string _name;
         private readonly string _doc;
+        private readonly int _line, _column;
         private readonly IPythonType _declaringType;
         private readonly CPythonModule _declaringModule;
         private readonly CPythonFunctionOverload[] _overloads;
@@ -47,7 +48,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _isStatic = true;
             }
 
-            _declaringModule = (declaringType as CPythonModule) ?? (CPythonModule)((CPythonType)declaringType).DeclaringModule;
+            PythonTypeDatabase.GetLocation(functionTable, ref _line, ref _column);
+
+            _declaringModule = CPythonModule.GetDeclaringModuleFromContainer(declaringType);
             object overloads;
             functionTable.TryGetValue("overloads", out overloads);
             _overloads = LoadOverloads(typeDb, overloads, isMethod);
@@ -111,6 +114,16 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public PythonMemberType MemberType {
             get { return PythonMemberType.Function; }
+        }
+
+        #endregion
+
+        #region ILocatedMember Members
+
+        public LocationInfo Location {
+            get {
+                return new LocationInfo(_declaringModule, _line, _column);
+            }
         }
 
         #endregion

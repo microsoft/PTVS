@@ -334,7 +334,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (p.Length + 1 == newScope.ParameterTypes.Length) {
                     for (int i = 0; i < p.Length; i++) {
                         var baseParam = p[i];
-                        var newParam = newScope.ParameterTypes[i + 1];
                         var baseType = ProjectState.GetNamespaceFromObjects(baseParam.ParameterType);
                         newScope.AddParameterType(_unit, baseType, i);
                     }

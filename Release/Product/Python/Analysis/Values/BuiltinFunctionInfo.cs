@@ -98,5 +98,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _function.MemberType;
             }
         }
+
+        public override ILocatedMember GetLocatedMember() {
+            return _function as ILocatedMember;
+        }
     }
 }

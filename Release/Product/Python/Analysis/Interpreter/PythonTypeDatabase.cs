@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 3;
+        public static readonly int CurrentVersion = 4;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _dbDir = databaseDirectory;
@@ -375,7 +375,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         assign(memberName, new CPythonMethodDescriptor(this, memberName, valueDict, container));
                         break;
                     case "property":
-                        assign(memberName, new CPythonProperty(this, valueDict));
+                        assign(memberName, new CPythonProperty(this, valueDict, container));
                         break;
                     case "data":
                         object typeInfo;
@@ -515,5 +515,17 @@ namespace Microsoft.PythonTools.Interpreter {
 #endif
             }
         }
+
+        internal static void GetLocation(Dictionary<string, object> table, ref int line, ref int column) {
+            object value;
+            if (table.TryGetValue("location", out value)) {
+                object[] locationInfo = value as object[];
+                if (locationInfo != null && locationInfo.Length == 2 && locationInfo[0] is int && locationInfo[1] is int) {
+                    line = (int)locationInfo[0];
+                    column = (int)locationInfo[1];
+                }
+            }
+        }
+
     }
 }

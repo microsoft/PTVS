@@ -237,7 +237,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// A variable def which has a specific location where it is defined (currently just function parameters).
     /// </summary>
-    sealed class LocatedVariableDef : VariableDef {
+    class LocatedVariableDef : VariableDef {
         private readonly ProjectEntry _entry;
         private Node _location;
         
@@ -265,6 +265,46 @@ namespace Microsoft.PythonTools.Analysis.Values {
             set {
                 _location = value;
             }
+        }
+    }
+
+    /// <summary>
+    /// Represents a *args parameter for a function definition.  Holds onto a SequenceInfo which
+    /// includes all of the types passed in via splatting or extra position arguments.
+    /// </summary>
+    sealed class ListParameterVariableDef : LocatedVariableDef {
+        public readonly SequenceInfo List;
+
+        public ListParameterVariableDef(AnalysisUnit unit, Node location)
+            : base(unit.DeclaringModule.ProjectEntry, location) {            
+            List = new SequenceInfo(new ISet<Namespace>[0], unit.ProjectState._tupleType);
+            AddTypes(location, unit, List.SelfSet);
+        }
+
+        public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
+            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
+            List = new SequenceInfo(new ISet<Namespace>[0], unit.ProjectState._tupleType);
+            AddTypes(location, unit, List.SelfSet);
+        }
+    }
+
+    /// <summary>
+    /// Represents a **args parameter for a function definition.  Holds onto a DictionaryInfo
+    /// which includes all of the types passed in via splatting or unused keyword arguments.
+    /// </summary>
+    sealed class DictParameterVariableDef : LocatedVariableDef {
+        public readonly DictionaryInfo Dict;
+
+        public DictParameterVariableDef(AnalysisUnit unit, Node location)
+            : base(unit.DeclaringModule.ProjectEntry, location) {
+            Dict = new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), unit.ProjectState);
+            AddTypes(location, unit, Dict.SelfSet);
+        }
+
+        public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
+            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
+            Dict = new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), unit.ProjectState);
+            AddTypes(location, unit, Dict.SelfSet);
         }
     }
 }

@@ -23,9 +23,9 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     class SaveAnalysis {
-        List<string> _errors = new List<string>();
+        private List<string> _errors = new List<string>();
         private Dictionary<Namespace, string> _classNames = new Dictionary<Namespace, string>();
-        List<Namespace> _path = new List<Namespace>();
+        private List<Namespace> _path = new List<Namespace>();
 
         public void Save(PythonAnalyzer state, string outDir) {
 
@@ -52,7 +52,8 @@ namespace Microsoft.PythonTools.Analysis {
             return new Dictionary<string, object>() {
                 { "members", GenerateMembers(moduleInfo) },
                 { "doc", moduleInfo.Documentation },
-                { "children", GenerateChildModules(moduleInfo) }
+                { "children", GenerateChildModules(moduleInfo) },
+                { "filename", moduleInfo.ProjectEntry.FilePath }
             };
         }
 
@@ -236,7 +237,8 @@ namespace Microsoft.PythonTools.Analysis {
         private object GenerateProperty(FunctionInfo prop) {
             return new Dictionary<string, object>() {
                 {"doc", prop.Documentation },
-                {"type", GenerateTypeName(prop.ReturnValue.Types) }
+                {"type", GenerateTypeName(prop.ReturnValue.Types) },
+                {"location", GenerateLocation(prop.Location) }
             };
         }
 
@@ -252,7 +254,8 @@ namespace Microsoft.PythonTools.Analysis {
                 { "bases", GetClassBases(ci) },
                 { "members" , GetClassMembers(ci) },
                 { "doc", ci.Documentation },
-                { "builtin", false }
+                { "builtin", false },
+                { "location", GenerateLocation(ci.Location) }
             };
         }
 
@@ -331,18 +334,14 @@ namespace Microsoft.PythonTools.Analysis {
                 {"doc", fi.Documentation },
                 {"overloads", new object[] { GenerateOverload(fi) } },
                 {"builtin", false},
-                {"static", fi.IsStatic}
+                {"static", fi.IsStatic},
+                {"location", GenerateLocation(fi.Location) }
             };
         }
-        /*
-        private object[] GenerateOverloads(ICollection<OverloadResult> overloads, ISet<Namespace> returnTypes) {
-            object[] res = new object[overloads.Count];
-            int i = 0;
-            foreach (var overload in overloads) {
-                res[i++] = GenerateOverload(overload, returnTypes);
-            }
-            return res;
-        }*/
+
+        private static object[] GenerateLocation(LocationInfo location) {
+            return new object[] { location.Line, location.Column };
+        }
 
         private Dictionary<string, object> GenerateOverload(FunctionInfo fi) {
             return new Dictionary<string, object>() {

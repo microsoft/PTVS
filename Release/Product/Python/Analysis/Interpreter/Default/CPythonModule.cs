@@ -15,24 +15,27 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonModule : IPythonModule {
+    class CPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
         private readonly string _modName;
         private readonly string _dbFile;
         private readonly PythonTypeDatabase _typeDb;
         private readonly bool _isBuiltin;
         internal readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
+        private Dictionary<object, object> _properties;
         internal Dictionary<string, IMember> _hiddenMembers;
-        private string _docString;
+        private string _docString, _filename;
         private object[] _children;
         private bool _loaded;
         [ThreadStatic] private static int _loadDepth;
 
-        public CPythonModule(PythonTypeDatabase typeDb, string moduleName, string filename, bool isBuiltin) {
+        public CPythonModule(PythonTypeDatabase typeDb, string moduleName, string databaseFilename, bool isBuiltin) {
             _modName = moduleName;
-            _dbFile = filename;
+            _dbFile = databaseFilename;
             _typeDb = typeDb;
             _isBuiltin = isBuiltin;
         }
@@ -71,6 +74,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _docString = doc as string;
             }
 
+            object filename;
+            if (data.TryGetValue("filename", out filename)) {
+                _filename = filename as string;
+            }
+
             object children;
             if (data.TryGetValue("children", out children)) {
                 _children = children as object[];
@@ -105,7 +113,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return _typeDb;
             }
         }
-        
+
         #region IPythonModule Members
 
         public IEnumerable<string> GetChildrenModules() {
@@ -152,5 +160,57 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         #endregion
+
+        #region IProjectEntry Members
+
+        public bool IsAnalyzed {
+            get { return true; }
+        }
+
+        public int AnalysisVersion {
+            get { return 1; }
+        }
+
+        public string FilePath {
+            get { return _filename; }
+        }
+
+        public string GetLine(int lineNo) {
+            string[] lines = File.ReadAllLines(_filename);
+            if (lineNo < lines.Length) {
+                return lines[lineNo];
+            }
+            return null;
+        }
+
+        public Dictionary<object, object> Properties {
+            get {
+                if (_properties == null) {
+                    Interlocked.CompareExchange(ref _properties, new Dictionary<object, object>(), null);
+                }
+                return _properties;
+            }
+        }
+
+        #endregion
+
+        #region IAnalyzable Members
+
+        public void Analyze() {
+        }
+
+        #endregion
+
+        #region ILocatedMember Members
+
+        public LocationInfo Location {
+            get { return new LocationInfo(this, 1, 1); }
+        }
+
+        #endregion
+
+        internal static CPythonModule GetDeclaringModuleFromContainer(IMemberContainer declaringType) {
+            return (declaringType as CPythonModule) ?? (CPythonModule)((CPythonType)declaringType).DeclaringModule;
+        }
     }
 }

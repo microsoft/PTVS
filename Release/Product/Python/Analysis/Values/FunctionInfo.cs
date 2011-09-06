@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                         int paramIndex = lastPos + j;
                                         if (paramIndex >= ParameterTypes.Length) {
                                             break;
-                                        } else if (ParameterTypes[lastPos + j].AddTypes(FunctionDefinition.Parameters[lastPos + j], unit, indexType)) {
+                                        } else if (AddParameterType(unit, indexType, lastPos + j)) {
                                             added = true;
                                         }
                                     }
@@ -169,15 +169,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal bool AddParameterType(AnalysisUnit unit, ISet<Namespace> arg, int parameterIndex) {
             switch (FunctionDefinition.Parameters[parameterIndex].Kind) {
                 case ParameterKind.Dictionary:
-                    Debug.Assert(ParameterTypes[parameterIndex].Types.Count == 1);
-                    Debug.Assert(ParameterTypes[parameterIndex].Types.First() is DictionaryInfo);
+                    Debug.Assert(ParameterTypes[parameterIndex] is DictParameterVariableDef);
 
-                    return ((DictionaryInfo)ParameterTypes[parameterIndex].Types.First()).AddValueTypes(arg);
+                    return ((DictParameterVariableDef)ParameterTypes[parameterIndex]).Dict.AddValueTypes(arg);
                 case ParameterKind.List:
-                    Debug.Assert(ParameterTypes[parameterIndex].Types.Count == 1);
-                    Debug.Assert(ParameterTypes[parameterIndex].Types.First() is SequenceInfo);
+                    Debug.Assert(ParameterTypes[parameterIndex] is ListParameterVariableDef);
 
-                    return ((SequenceInfo)ParameterTypes[parameterIndex].Types.First()).AddTypes(new[] { arg });
+                    return ((ListParameterVariableDef)ParameterTypes[parameterIndex]).List.AddTypes(new[] { arg });
                 case ParameterKind.Normal:
                     if (ParameterTypes[parameterIndex].AddTypes(FunctionDefinition.Parameters[parameterIndex], unit, arg)) {
                         return true;

@@ -414,7 +414,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('3')
+    f.write('4')
     f.close()
 
     # inspect extension modules installed into site-packages

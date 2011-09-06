@@ -16,11 +16,15 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonProperty : IBuiltinProperty {
+    class CPythonProperty : IBuiltinProperty, ILocatedMember {
         private readonly string _doc;
         private IPythonType _type;
+        private readonly CPythonModule _declaringModule;
+        private readonly int _line, _column;
         
-        public CPythonProperty(PythonTypeDatabase typeDb, Dictionary<string, object> valueDict) {
+        public CPythonProperty(PythonTypeDatabase typeDb, Dictionary<string, object> valueDict, IMemberContainer container) {
+            _declaringModule = CPythonModule.GetDeclaringModuleFromContainer(container);
+
             object value;
             if (valueDict.TryGetValue("doc", out value)) {
                 _doc = value as string;
@@ -28,6 +32,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             object type;
             valueDict.TryGetValue("type", out type);
+
+            PythonTypeDatabase.GetLocation(valueDict, ref _line, ref _column);
 
             typeDb.LookupType(type, (typeValue) => _type = typeValue);
         }
@@ -58,6 +64,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public PythonMemberType MemberType {
             get { return PythonMemberType.Property; }
+        }
+
+        #endregion
+
+        #region ILocatedMember Members
+
+        public Analysis.LocationInfo Location {
+            get { return new Analysis.LocationInfo(_declaringModule, _line, _column); }
         }
 
         #endregion

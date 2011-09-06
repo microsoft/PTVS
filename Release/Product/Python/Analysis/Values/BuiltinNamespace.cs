@@ -91,5 +91,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _type;
             }
         }
+
+        public virtual ILocatedMember GetLocatedMember() {
+            return null;
+        }
+
+        public override LocationInfo Location {
+            get {
+                ILocatedMember locatedMem = GetLocatedMember();
+                if (locatedMem != null) {
+                    return locatedMem.Location;
+                }
+                return null;
+            }
+        }
     }
 }

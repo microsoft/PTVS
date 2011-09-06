@@ -15,15 +15,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonType : IPythonType {
+    class CPythonType : IPythonType, ILocatedMember {
         private readonly string _typeName, _doc;
         private readonly bool _includeInModule;
         private readonly BuiltinTypeId _typeId;
         private readonly CPythonModule _module;
         private readonly bool _isBuiltin;
         private readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
+        private readonly int _line, _column;
 
         public CPythonType(IMemberContainer parent, PythonTypeDatabase typeDb, string typeName, Dictionary<string, object> typeTable, BuiltinTypeId typeId) {
             Debug.Assert(parent is CPythonType || parent is CPythonModule);
@@ -56,6 +58,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     LoadMembers(typeDb, membersTable);
                 }
             }
+
+            PythonTypeDatabase.GetLocation(typeTable, ref _line, ref _column);
         }
 
         private CPythonModule GetDeclaringModule(IMemberContainer parent) {
@@ -158,5 +162,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public override string ToString() {
             return String.Format("CPythonType('{0}')", Name);
         }
+
+        #region ILocatedMember Members
+
+        public LocationInfo Location {
+            get { return new LocationInfo(_module, _line, _column); }
+        }
+
+        #endregion
     }
 }
