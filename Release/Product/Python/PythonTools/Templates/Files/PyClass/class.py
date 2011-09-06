@@ -1,4 +1,4 @@
-class $safeitemname$:
+class $safeitemname$(object):
     """description of class"""
 
 

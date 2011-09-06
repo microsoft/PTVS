@@ -33,7 +33,6 @@ namespace Microsoft.VisualStudio.Repl {
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
         
         public InteractiveBlackFormatDefinition() {
-            ForegroundColor = Color.FromRgb(0, 0, 0);
         }
     }
 

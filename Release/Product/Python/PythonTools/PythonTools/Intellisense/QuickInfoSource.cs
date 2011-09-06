@@ -85,8 +85,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             if (multiline) {
                 result.Insert(0, expr + ": " + Environment.NewLine);
-            } else {
+            } else if (result.Length > 0) {
                 result.Insert(0, expr + ": ");
+            } else {
+                result.Append(expr);
+                result.Append(": ");
+                result.Append("<no type information available>");
             }
 
             quickInfoContent.Add(result.ToString());

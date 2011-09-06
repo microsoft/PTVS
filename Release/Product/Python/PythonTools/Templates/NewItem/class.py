@@ -1,4 +1,4 @@
-class my_class:
+class my_class(object):
     pass
 
 

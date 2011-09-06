@@ -207,9 +207,13 @@ namespace Microsoft.PythonTools.Profiling {
             ProcessorArchitecture arch;
             string searchPathEnvVarName;
             if (!Guid.TryParse(interpreterId, out intGuid) ||
-                !Version.TryParse(interpreterVersion, out intVersion) ||
-                !TryGetInterpreter(intVersion, intGuid, out interpreter, out searchPathEnvVarName, out arch)) {
-                MessageBox.Show(String.Format("Could not find interpreter for project {0}", projectToProfile.Name));
+                !Version.TryParse(interpreterVersion, out intVersion)) {
+                MessageBox.Show(String.Format("Could not find interpreter for project {0}", projectToProfile.Name), "Python Tools for Visual Studio");
+                return;
+            }
+
+            if (!TryGetInterpreter(intVersion, intGuid, out interpreter, out searchPathEnvVarName, out arch)) {
+                // message already displayed.
                 return;
             }
 

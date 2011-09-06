@@ -16,6 +16,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Project {
     //Set the projectsTemplatesDirectory to a non-existant path to prevent VS from including the working directory as a valid template path
@@ -31,14 +32,14 @@ namespace Microsoft.PythonTools.Project {
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtensionWithLinkedEditorAttribute(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryPromptForEncodingGuid + "}", NameResourceID = 3015, LinkedEditorGuid = "{" + PythonConstants.EditorFactoryGuid + "}")]
     [ProvideFileFilter("{" + PythonConstants.EditorFactoryGuid + "}", "/1", "Python Files;*.py,*.pyw", 100)]
-    [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a703-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_TextView
-    [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a702-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Designer
-    [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651a701-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Code
-    [ProvideEditorLogicalView(typeof(PythonEditorFactory), "{7651A700-06E5-11D1-8EBD-00A0C90F26EA}")]  //LOGVIEWID_Debugging
-    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), "{7651a703-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_TextView
-    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), "{7651a702-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Designer
-    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), "{7651a701-06e5-11d1-8ebd-00a0c90f26ea}")]  //LOGVIEWID_Code
-    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), "{7651A700-06E5-11D1-8EBD-00A0C90F26EA}")]  //LOGVIEWID_Debugging
+    [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
+    [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Designer_string)]
+    [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Code_string)]
+    [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Debugging_string)]
+    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.TextView_string)]
+    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.Designer_string)]
+    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.Code_string)]
+    [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.Debugging_string)]  
     [ProvideImportTemplates("#111", PythonConstants.ProjectFactoryGuid, "$PackageFolder$\\Templates\\Projects\\ImportProject", "ImportWinApp.pyproj", "ImportConApp.pyproj", "ImportConApp.pyproj")]
     [Guid(PythonConstants.ProjectSystemPackageGuid)]
     [DeveloperActivity("Python", typeof(PythonProjectPackage))]

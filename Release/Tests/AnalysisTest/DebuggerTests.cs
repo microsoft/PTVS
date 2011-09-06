@@ -511,6 +511,32 @@ namespace AnalysisTest {
 
         [TestMethod]
         public void StepTest() {
+            // Bug 503: http://pytools.codeplex.com/workitem/503
+            StepTest(DebuggerTestPath + @"SteppingTestBug503.py",
+                new []  { 6, 12 },
+                new Action<PythonProcess>[] { 
+                    (x) => {},
+                    (x) => {},
+                },
+                new ExpectedStep(StepKind.Resume, 1),     // continue from def x1(y):
+                new ExpectedStep(StepKind.Out, 6),     // step out after hitting breakpoint at return y
+                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
+
+                new ExpectedStep(StepKind.Out, 15),     // step out after stepping out to x2(5)
+                new ExpectedStep(StepKind.Out, 12),     // step out after hitting breakpoint at return y
+                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
+                
+                new ExpectedStep(StepKind.Resume, 15)     // let the program exit
+            );
+
             if (Version.Version < PythonLanguageVersion.V30) {  // step into print on 3.x runs more Python code
                 StepTest(DebuggerTestPath + @"SteppingTest7.py",
                     new ExpectedStep(StepKind.Over, 1),     // step over def f():
@@ -588,6 +614,7 @@ namespace AnalysisTest {
                 new ExpectedStep(StepKind.Over, 2),     // step over print "goodbye"
                 new ExpectedStep(StepKind.Resume, 2)   // let the program exit
             );
+
         }
 
         enum StepKind {
@@ -608,6 +635,10 @@ namespace AnalysisTest {
         }
 
         private void StepTest(string filename, params ExpectedStep[] kinds) {
+            StepTest(filename, new int[0], new Action<PythonProcess>[0], kinds);
+        }
+
+        private void StepTest(string filename, int[] breakLines, Action<PythonProcess>[] breakAction, params ExpectedStep[] kinds) {
             var debugger = new PythonDebugger();
 
             string fullPath = Path.GetFullPath(filename);
@@ -623,11 +654,23 @@ namespace AnalysisTest {
 
             bool processLoad = false, stepComplete = false;
             process.ProcessLoaded += (sender, args) => {
+                foreach (var breakLine in breakLines) {
+                    var bp = process.AddBreakPoint(fullPath, breakLine);
+                    bp.Add();
+                }
+
                 processLoad = true;
-                processEvent.Set();
+                processEvent.Set();                
             };
 
             process.StepComplete += (sender, args) => {
+                stepComplete = true;
+                processEvent.Set();
+            };
+
+            int breakHits = 0;
+            process.BreakpointHit += (sender, args) => {
+                breakAction[breakHits++](process);
                 stepComplete = true;
                 processEvent.Set();
             };
@@ -1083,10 +1126,10 @@ namespace AnalysisTest {
             Assert.IsTrue(exited);
         }
 
-        private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null) {
+        private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
             string fullPath = Path.GetFullPath(filename);
             string dir = Path.GetFullPath(Path.GetDirectoryName(filename));
-            var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions);
+            var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
             process.ProcessLoaded += (sender, args) => {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);
@@ -1196,6 +1239,31 @@ namespace AnalysisTest {
                 }
 
                 p.Kill();
+            }
+        }
+
+        #endregion
+
+        #region Output Tests
+
+        [TestMethod]
+        public void Test3xStdoutBuffer() {
+            if (Version.Version.Is3x()) {
+                var debugger = new PythonDebugger();
+
+                bool gotOutput = false;
+                var process = DebugProcess(debugger, DebuggerTestPath + @"StdoutBuffer3x.py", (processObj, threadObj) => {
+                    processObj.DebuggerOutput += (sender, args) => {
+                        Assert.IsTrue(!gotOutput);
+                        gotOutput = true;
+                        Assert.AreEqual(args.Output, "foo");
+                    };
+                }, debugOptions: PythonDebugOptions.RedirectOutput);
+
+                process.Start();
+                process.WaitForExit();
+
+                Assert.IsTrue(gotOutput);
             }
         }
 

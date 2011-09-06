@@ -421,6 +421,9 @@ class Thread(object):
                 if stepping == STEPPING_OUT:
                     # break at the next line
                     self.stepping = STEPPING_OVER
+                    # empty stopped_on_line so that we will break even if it is
+                    # the same line
+                    self.stopped_on_line = None
                 elif stepping == STEPPING_OVER:
                     if frame.f_code.co_name == "<module>" and should_debug_code(frame.f_code):
                         self.stepping = STEPPING_NONE
@@ -748,7 +751,7 @@ class Thread(object):
         global threading
         if threading is None:
             import threading
-        self.send_frame_list(self.get_frame_list(), threading.currentThread().name)
+        self.send_frame_list(self.get_frame_list(), getattr(threading.currentThread(), 'name', 'Python Thread'))
 
 
 
@@ -1392,9 +1395,11 @@ class _DebuggerOutput(object):
     def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout
         self.old_out = old_out
+        if sys.version >= '3.':
+            self.buffer = DebuggerBuffer(old_out.buffer)
 
     def flush(self):
-        pass
+        self.old_out.flush()
     
     def writelines(self, lines):
         for line in lines:
@@ -1426,6 +1431,33 @@ class _DebuggerOutput(object):
             return "<stdout>"
         else:
             return "<stderr>"
+
+class DebuggerBuffer(object):
+    def __init__(self, old_buffer):
+        self.buffer = old_buffer
+
+    def write(self, data):
+        if not DETACHED:
+            probe_stack(3)
+            str_data = data.decode('utf8')
+            send_lock.acquire()
+            conn.send(OUTP)
+            conn.send(struct.pack('i', thread.get_ident()))
+            write_string(str_data)
+            send_lock.release()
+        self.buffer.write(data)
+
+    def flush(self): 
+        self.buffer.flush()
+
+    def truncate(self, pos = None):
+        return self.buffer.truncate(pos)
+
+    def tell(self):
+        return self.buffer.tell()
+
+    def seek(self, pos, whence = 0):
+        return self.buffer.seek(pos, whence)
 
 
 def is_same_py_file(file1, file2):
