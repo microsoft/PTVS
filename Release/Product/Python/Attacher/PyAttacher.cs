@@ -367,85 +367,89 @@ namespace Microsoft.PythonTools.Debugger {
         private static DebugAttach InjectDebugger(string dllPath, IntPtr hProcess, IntPtr curMod, int portNum, int pid, Guid debugId, EventWaitHandle attachDoneEvent) {
             // create our our shared memory region so that we can read the port number from the other side and we can indicate when
             // the attach has completed
-            using (MemoryMappedFile sharedMemoryComm = MemoryMappedFile.CreateNew("PythonDebuggerMemory" + pid, 1000, MemoryMappedFileAccess.ReadWrite)) {
-                using (var viewStream = sharedMemoryComm.CreateViewStream()) {
-                    // write the information the process needs to communicate with us.  This includes:
-                    //      the port number it should connect to for communicating with us
-                    //      two auto reset events.  
-                    //          The first signals with the attach is ready to start (the port is open)
-                    //          The second signals when the attach is completely finished
-                    //      space for reporting back an error and the version of the Python interpreter attached to.
+            try {
+                using (MemoryMappedFile sharedMemoryComm = MemoryMappedFile.CreateNew("PythonDebuggerMemory" + pid, 1000, MemoryMappedFileAccess.ReadWrite)) {
+                    using (var viewStream = sharedMemoryComm.CreateViewStream()) {
+                        // write the information the process needs to communicate with us.  This includes:
+                        //      the port number it should connect to for communicating with us
+                        //      two auto reset events.  
+                        //          The first signals with the attach is ready to start (the port is open)
+                        //          The second signals when the attach is completely finished
+                        //      space for reporting back an error and the version of the Python interpreter attached to.
 
-                    viewStream.Write(BitConverter.GetBytes(portNum), 0, 4);
-                    viewStream.WriteByte(0);
-                    viewStream.WriteByte(0);
-                    viewStream.WriteByte(0);
-                    viewStream.WriteByte(0);
+                        viewStream.Write(BitConverter.GetBytes(portNum), 0, 4);
+                        viewStream.WriteByte(0);
+                        viewStream.WriteByte(0);
+                        viewStream.WriteByte(0);
+                        viewStream.WriteByte(0);
 
-                    // write a handle for shared process communication
-                    AutoResetEvent attachStarting = new AutoResetEvent(false);
-                    EventWaitHandle attachDone = attachDoneEvent ?? new AutoResetEvent(false);
-                    try {
+                        // write a handle for shared process communication
+                        AutoResetEvent attachStarting = new AutoResetEvent(false);
+                        EventWaitHandle attachDone = attachDoneEvent ?? new AutoResetEvent(false);
+                        try {
 #pragma warning disable 618
-                        IntPtr attachStartingSourceHandle = attachStarting.Handle, attachDoneSourceHandle = attachDone.Handle;
+                            IntPtr attachStartingSourceHandle = attachStarting.Handle, attachDoneSourceHandle = attachDone.Handle;
 #pragma warning restore 618
-                        IntPtr attachStartingTargetHandle, attachDoneTargetHandle;
+                            IntPtr attachStartingTargetHandle, attachDoneTargetHandle;
 
-                        bool res = DuplicateHandle(GetCurrentProcess(), attachStartingSourceHandle, hProcess, out attachStartingTargetHandle, 0, false, (uint)DuplicateOptions.DUPLICATE_SAME_ACCESS);
-                        if (!res) {
-                            throw new Win32Exception(Marshal.GetLastWin32Error());
-                        }
-                        res = DuplicateHandle(GetCurrentProcess(), attachDoneSourceHandle, hProcess, out attachDoneTargetHandle, 0, false, (uint)DuplicateOptions.DUPLICATE_SAME_ACCESS);
-                        if (!res) {
-                            throw new Win32Exception(Marshal.GetLastWin32Error());
-                        }
+                            bool res = DuplicateHandle(GetCurrentProcess(), attachStartingSourceHandle, hProcess, out attachStartingTargetHandle, 0, false, (uint)DuplicateOptions.DUPLICATE_SAME_ACCESS);
+                            if (!res) {
+                                throw new Win32Exception(Marshal.GetLastWin32Error());
+                            }
+                            res = DuplicateHandle(GetCurrentProcess(), attachDoneSourceHandle, hProcess, out attachDoneTargetHandle, 0, false, (uint)DuplicateOptions.DUPLICATE_SAME_ACCESS);
+                            if (!res) {
+                                throw new Win32Exception(Marshal.GetLastWin32Error());
+                            }
 
-                        viewStream.Write(BitConverter.GetBytes(attachStartingTargetHandle.ToInt64()), 0, 8);
-                        viewStream.Write(BitConverter.GetBytes(attachDoneTargetHandle.ToInt64()), 0, 8);
+                            viewStream.Write(BitConverter.GetBytes(attachStartingTargetHandle.ToInt64()), 0, 8);
+                            viewStream.Write(BitConverter.GetBytes(attachDoneTargetHandle.ToInt64()), 0, 8);
 
-                        var errorCodePosition = viewStream.Position;
+                            var errorCodePosition = viewStream.Position;
 
-                        viewStream.Write(new byte[8], 0, 8); // write null bytes for error code and version
-                        string guid = debugId.ToString();
-                        for (int i = 0; i < guid.Length; i++) {
-                            viewStream.WriteByte((byte)guid[i]);
-                        }
+                            viewStream.Write(new byte[8], 0, 8); // write null bytes for error code and version
+                            string guid = debugId.ToString();
+                            for (int i = 0; i < guid.Length; i++) {
+                                viewStream.WriteByte((byte)guid[i]);
+                            }
 
-                        var ourLibName = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)dllPath.Length, AllocationType.Commit, MemoryProtection.ReadWrite);
-                        if (ourLibName == IntPtr.Zero) {
-                            return new DebugAttach(ConnErrorMessages.OutOfMemory);
-                        }
+                            var ourLibName = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)dllPath.Length, AllocationType.Commit, MemoryProtection.ReadWrite);
+                            if (ourLibName == IntPtr.Zero) {
+                                return new DebugAttach(ConnErrorMessages.OutOfMemory);
+                            }
 
-                        int bytesWritten;
-                        if (!WriteProcessMemory(hProcess, ourLibName, dllPath, dllPath.Length * 2, out bytesWritten)) {
-                            throw new Win32Exception(Marshal.GetLastWin32Error());
-                        }
+                            int bytesWritten;
+                            if (!WriteProcessMemory(hProcess, ourLibName, dllPath, dllPath.Length * 2, out bytesWritten)) {
+                                throw new Win32Exception(Marshal.GetLastWin32Error());
+                            }
 
-                        var hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, GetProcAddress(curMod, "LoadLibraryW"), ourLibName, 0, IntPtr.Zero);
-                        if (hThread == IntPtr.Zero) {
-                            throw new Win32Exception(Marshal.GetLastWin32Error());
-                        }
+                            var hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, GetProcAddress(curMod, "LoadLibraryW"), ourLibName, 0, IntPtr.Zero);
+                            if (hThread == IntPtr.Zero) {
+                                throw new Win32Exception(Marshal.GetLastWin32Error());
+                            }
 
-                        viewStream.Position = errorCodePosition;
-                        byte[] buffer = new byte[4];
+                            viewStream.Position = errorCodePosition;
+                            byte[] buffer = new byte[4];
 
-                        if (!attachStarting.WaitOne(10000)) {
+                            if (!attachStarting.WaitOne(10000)) {
+                                viewStream.Read(buffer, 0, 4);
+                                var errorMsg = (ConnErrorMessages)BitConverter.ToInt32(buffer, 0);
+                                return new DebugAttach(errorMsg != ConnErrorMessages.None ? errorMsg : ConnErrorMessages.TimeOut);
+                            }
+
                             viewStream.Read(buffer, 0, 4);
-                            var errorMsg = (ConnErrorMessages)BitConverter.ToInt32(buffer, 0);
-                            return new DebugAttach(errorMsg != ConnErrorMessages.None ? errorMsg : ConnErrorMessages.TimeOut);
+
+                            byte[] versionBuffer = new byte[4];
+                            viewStream.Read(versionBuffer, 0, 4);
+                            int version = BitConverter.ToInt32(versionBuffer, 0);
+
+                            return new DebugAttach(attachDone, (ConnErrorMessages)BitConverter.ToInt32(buffer, 0), version);
+                        } finally {
+                            attachStarting.Close();
                         }
-
-                        viewStream.Read(buffer, 0, 4);
-
-                        byte[] versionBuffer = new byte[4];
-                        viewStream.Read(versionBuffer, 0, 4);
-                        int version = BitConverter.ToInt32(versionBuffer, 0);
-
-                        return new DebugAttach(attachDone, (ConnErrorMessages)BitConverter.ToInt32(buffer, 0), version);
-                    } finally {
-                        attachStarting.Close();
                     }
                 }
+            } catch (IOException) {
+                return new DebugAttach(ConnErrorMessages.CannotOpenProcess);
             }
         }
 

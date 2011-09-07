@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 Debug.Fail("Python debugging only supports one program in a process");
                 throw new ArgumentException();
             }
-
+            
             int processId = EngineUtils.GetProcessId(rgpPrograms[0]);
             if (processId == 0) {
                 // engine only supports system processes

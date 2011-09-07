@@ -423,6 +423,9 @@
     <Content Include="Python.VS.TestData\DebugAttach\VerySimple.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\DebuggerProject\SteppingTestBug509.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\DebuggerProject\StdoutBuffer3x.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import sys
 try:
     import thread
@@ -48,15 +49,27 @@ BREAK_WHEN_CHANGED_DUMMY = object()
 # lock for calling .send on the socket
 send_lock = thread.allocate_lock()
 
-class LockWrapper(object):
-    def __init__(self, lock):
-        self.lock = lock
-    def acquire(self):
-        self.lock.acquire()
-    def release(self):
-        self.lock.release()
+class _SendLockContextManager(object):
+    """context manager for send lock.  Handles both acquiring/releasing the 
+       send lock as well as detaching the debugger if the remote process 
+       is disconnected"""
 
-send_lock = LockWrapper(send_lock)
+    def __enter__(self):
+        send_lock.acquire()
+
+    def __exit__(self, exc_type, exc_value, tb):        
+        send_lock.release()
+        
+        if exc_type is not None:
+            detach_threads()
+            
+            detach_process()
+
+            # swallow the exception, we're no longer debugging
+            return True 
+        
+
+_SendLockCtx = _SendLockContextManager()
 
 SEND_BREAK_COMPLETE = False
 
@@ -140,9 +153,11 @@ def lookup_local(frame, name):
         obj = getattr(obj, bits.pop(0), None)
     return obj
         
+# These constants come from Visual Studio - enum_EXCEPTION_STATE
 BREAK_MODE_NEVER = 0
 BREAK_MODE_ALWAYS = 1
 BREAK_MODE_UNHANDLED = 32
+
 class ExceptionBreakInfo(object):
     def __init__(self):
         self.default_mode = BREAK_MODE_UNHANDLED
@@ -186,10 +201,9 @@ class ExceptionBreakInfo(object):
                     # req handlers for this file from the debug engine
                     self.handler_lock.acquire()
                 
-                    send_lock.acquire()
-                    conn.send(REQH)
-                    write_string(cur_frame.f_code.co_filename)
-                    send_lock.release()
+                    with _SendLockCtx:
+                        conn.send(REQH)
+                        write_string(cur_frame.f_code.co_filename)
 
                     # wait for the handler data to be received
                     self.handler_lock.acquire()
@@ -341,6 +355,9 @@ class Thread(object):
             if stepping == STEPPING_INTO:
                 # block when we hit the 1st line, not when we're on the function def
                 self.stepping = STEPPING_OVER
+                # empty stopped_on_line so that we will break even if it is
+                # the same line
+                self.stopped_on_line = None            
             elif stepping >= STEPPING_OVER:
                 self.stepping += 1
             elif stepping <= STEPPING_OUT:
@@ -496,16 +513,15 @@ class Thread(object):
     
     def async_break(self):
         def async_break_send():
-            send_lock.acquire()
-            sent_break_complete = False
-            global SEND_BREAK_COMPLETE
-            if SEND_BREAK_COMPLETE:
-                # multiple threads could be sending this...
-                SEND_BREAK_COMPLETE = False
-                sent_break_complete = True
-                conn.send(ASBR)
-                conn.send(struct.pack('i', self.id))
-            send_lock.release()
+            with _SendLockCtx:
+                sent_break_complete = False
+                global SEND_BREAK_COMPLETE
+                if SEND_BREAK_COMPLETE:
+                    # multiple threads could be sending this...
+                    SEND_BREAK_COMPLETE = False
+                    sent_break_complete = True
+                    conn.send(ASBR)
+                    conn.send(struct.pack('i', self.id))
 
             if sent_break_complete:
                 # if we have threads which have not broken yet capture their frame list and 
@@ -531,7 +547,7 @@ class Thread(object):
         block_lambda()
         self._block_starting_lock.release()
 
-        while 1:
+        while not DETACHED:
             self._block_lock.acquire()
             if self.unblock_work is None:
                 break
@@ -722,30 +738,28 @@ class Thread(object):
         return frames
 
     def send_frame_list(self, frames, thread_name = None):
-        send_lock.acquire()
-        conn.send(THRF)
-        conn.send(struct.pack('i',self.id))
-        write_string(thread_name)
+        with _SendLockCtx:
+            conn.send(THRF)
+            conn.send(struct.pack('i',self.id))
+            write_string(thread_name)
         
-        # send the frame count
-        conn.send(struct.pack('i', len(frames)))
-        for firstlineno, lineno, curlineno, name, filename, argcount, variables in frames:
-            # send each frame    
-            conn.send(struct.pack('i', firstlineno))
-            conn.send(struct.pack('i', lineno))
-            conn.send(struct.pack('i', curlineno))
+            # send the frame count
+            conn.send(struct.pack('i', len(frames)))
+            for firstlineno, lineno, curlineno, name, filename, argcount, variables in frames:
+                # send each frame    
+                conn.send(struct.pack('i', firstlineno))
+                conn.send(struct.pack('i', lineno))
+                conn.send(struct.pack('i', curlineno))
         
-            write_string(name)
-            write_string(filename)
-            conn.send(struct.pack('i', argcount))
-                
-            conn.send(struct.pack('i', len(variables)))
-            for name, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len in variables:
                 write_string(name)
+                write_string(filename)
+                conn.send(struct.pack('i', argcount))
+                
+                conn.send(struct.pack('i', len(variables)))
+                for name, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len in variables:
+                    write_string(name)
                     
-                write_object(type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
-        
-        send_lock.release()
+                    write_object(type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
 
     def enum_thread_frames_locally(self):
         global threading
@@ -1001,19 +1015,17 @@ class DebuggerLoop(object):
             THREADS[tid].cur_frame.f_lineno = lineno
             newline = THREADS[tid].cur_frame.f_lineno
             THREADS_LOCK.release()
-            send_lock.acquire()
-            self.conn.send(SETL)
-            self.conn.send(struct.pack('i', 1))
-            self.conn.send(struct.pack('i', tid))
-            self.conn.send(struct.pack('i', newline))
-            send_lock.release()
+            with _SendLockCtx:
+                self.conn.send(SETL)
+                self.conn.send(struct.pack('i', 1))
+                self.conn.send(struct.pack('i', tid))
+                self.conn.send(struct.pack('i', newline))
         except:
-            send_lock.acquire()
-            self.conn.send(SETL)
-            self.conn.send(struct.pack('i', 0))
-            self.conn.send(struct.pack('i', tid))
-            self.conn.send(struct.pack('i', 0))
-            send_lock.release()
+            with _SendLockCtx:
+                self.conn.send(SETL)
+                self.conn.send(struct.pack('i', 0))
+                self.conn.send(struct.pack('i', tid))
+                self.conn.send(struct.pack('i', 0))
 
     def command_execute_code(self):
         # execute given text in specified frame
@@ -1047,40 +1059,12 @@ class DebuggerLoop(object):
             thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate)
     
     def command_detach(self):
-        global conn
+        detach_threads()
 
-        # tell all threads to stop tracing...
-        THREADS_LOCK.acquire()
-        for tid, pyThread in THREADS.items():
-            if not _INTERCEPTING_FOR_ATTACH:
-                pyThread.detach = True
-                pyThread.stepping = STEPPING_BREAK
+        with _SendLockCtx:
+            conn.send(DETC)
 
-            if pyThread._is_blocked:
-                pyThread.unblock()
-
-        if not _INTERCEPTING_FOR_ATTACH:
-            THREADS.clear()
-        
-        BREAKPOINTS.clear()
-
-        THREADS_LOCK.release()
-
-        global DETACHED
-        send_lock.acquire()
-        conn.send(DETC)
-        DETACHED = True
-        if not _INTERCEPTING_FOR_ATTACH:
-            if isinstance(sys.stdout, _DebuggerOutput): 
-                sys.stdout = sys.stdout.old_out
-            if isinstance(sys.stderr, _DebuggerOutput):
-                sys.stderr = sys.stderr.old_out
-
-        send_lock.release()
-
-        if not _INTERCEPTING_FOR_ATTACH:
-            thread.start_new_thread = _start_new_thread
-            thread.start_new = _start_new_thread
+            detach_process()        
 
         for callback in DETACH_CALLBACKS:
             callback()
@@ -1130,24 +1114,20 @@ def read_int(conn):
 
 def report_new_thread(new_thread):
     ident = new_thread.id
-    send_lock.acquire()
-    conn.send(NEWT)
-    conn.send(struct.pack('i', ident))
-
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(NEWT)
+        conn.send(struct.pack('i', ident))
 
 def report_thread_exit(old_thread):
     ident = old_thread.id
-    send_lock.acquire()
-    conn.send(EXTT)
-    conn.send(struct.pack('i', ident))
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(EXTT)
+        conn.send(struct.pack('i', ident))
 
 def report_process_exit(exit_code):
-    send_lock.acquire()
-    conn.send(EXIT)
-    conn.send(struct.pack('i', exit_code))
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(EXIT)
+        conn.send(struct.pack('i', exit_code))
 
     # wait for exit event to be received
     exit_lock.acquire()
@@ -1164,12 +1144,11 @@ def report_exception(frame, exc_info, tid):
     else:
         excp_text = ''.join(traceback.format_exception(exc_type, exc_value, tb_value))
 
-    send_lock.acquire()
-    conn.send(EXCP)
-    write_string(exc_name)
-    conn.send(struct.pack('i', tid))
-    write_string(excp_text)
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(EXCP)
+        write_string(exc_name)
+        conn.send(struct.pack('i', tid))
+        write_string(excp_text)
 
 def new_module(frame):
     mod = Module(get_code_filename(frame.f_code))
@@ -1178,49 +1157,42 @@ def new_module(frame):
     return frame.f_code, mod
 
 def report_module_load(mod):
-    send_lock.acquire()
-    conn.send(MODL)
-    conn.send(struct.pack('i', mod.module_id))
-    write_string(mod.filename)
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(MODL)
+        conn.send(struct.pack('i', mod.module_id))
+        write_string(mod.filename)
 
 def report_step_finished(tid):
-    send_lock.acquire()
-    conn.send(STPD)
-    conn.send(struct.pack('i', tid))
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(STPD)
+        conn.send(struct.pack('i', tid))
 
 def report_breakpoint_bound(id):
-    send_lock.acquire()
-    conn.send(BRKS)
-    conn.send(struct.pack('i', id))
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(BRKS)
+        conn.send(struct.pack('i', id))
 
 def report_breakpoint_failed(id):
-    send_lock.acquire()
-    conn.send(BRKF)
-    conn.send(struct.pack('i', id))
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(BRKF)
+        conn.send(struct.pack('i', id))
 
 def report_breakpoint_hit(id, tid):    
-    send_lock.acquire()
-    conn.send(BRKH)
-    conn.send(struct.pack('i', id))
-    conn.send(struct.pack('i', tid))
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(BRKH)
+        conn.send(struct.pack('i', id))
+        conn.send(struct.pack('i', tid))
 
 def report_process_loaded(tid):
-    send_lock.acquire()
-    conn.send(LOAD)
-    conn.send(struct.pack('i', tid))
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(LOAD)
+        conn.send(struct.pack('i', tid))
 
 def report_execution_error(exc_text, execution_id):
-    send_lock.acquire()    
-    conn.send(EXCE)
-    conn.send(struct.pack('i', execution_id))
-    write_string(exc_text)
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(EXCE)
+        conn.send(struct.pack('i', execution_id))
+        write_string(exc_text)
 
 def report_execution_exception(execution_id, exc_info):
     try:
@@ -1255,26 +1227,23 @@ def report_execution_result(execution_id, result):
     type_name = type(result).__name__
     obj_len = get_object_len(result)
 
-    send_lock.acquire()
-    conn.send(EXCR)
-    conn.send(struct.pack('i', execution_id))
-    write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(EXCR)
+        conn.send(struct.pack('i', execution_id))
+        write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
 
 def report_children(execution_id, children, is_index, is_enumerate):
     children = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in children]
 
-    send_lock.acquire()
-    conn.send(CHLD)
-    conn.send(struct.pack('i', execution_id))
-    conn.send(struct.pack('i', len(children)))
-    conn.send(struct.pack('i', is_index))
-    conn.send(struct.pack('i', is_enumerate))
-    for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in children:
-        write_string(child_name)
-        write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
-
-    send_lock.release()
+    with _SendLockCtx:
+        conn.send(CHLD)
+        conn.send(struct.pack('i', execution_id))
+        conn.send(struct.pack('i', len(children)))
+        conn.send(struct.pack('i', is_index))
+        conn.send(struct.pack('i', is_enumerate))
+        for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in children:
+            write_string(child_name)
+            write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
 
 def get_code_filename(code):
     return path.abspath(code.co_filename)
@@ -1367,6 +1336,36 @@ def attach_process(port_num, debug_id, report_and_block = False):
     if not _INTERCEPTING_FOR_ATTACH:
         intercept_threads()
 
+def detach_process():
+    global DETACHED
+    DETACHED = True
+    if not _INTERCEPTING_FOR_ATTACH:
+        if isinstance(sys.stdout, _DebuggerOutput): 
+            sys.stdout = sys.stdout.old_out
+        if isinstance(sys.stderr, _DebuggerOutput):
+            sys.stderr = sys.stderr.old_out
+
+    if not _INTERCEPTING_FOR_ATTACH:
+        thread.start_new_thread = _start_new_thread
+        thread.start_new = _start_new_thread
+
+def detach_threads():
+    # tell all threads to stop tracing...
+    THREADS_LOCK.acquire()
+    for tid, pyThread in THREADS.items():
+        if not _INTERCEPTING_FOR_ATTACH:
+            pyThread.detach = True
+            pyThread.stepping = STEPPING_BREAK
+
+        if pyThread._is_blocked:
+            pyThread.unblock()
+
+    if not _INTERCEPTING_FOR_ATTACH:
+        THREADS.clear()
+        
+    BREAKPOINTS.clear()
+
+    THREADS_LOCK.release()
 
 def new_thread(tid = None, set_break = False, frame = None):
     # called during attach w/ a thread ID provided.
@@ -1412,11 +1411,10 @@ class _DebuggerOutput(object):
     def write(self, value):
         if not DETACHED:
             probe_stack(3)
-            send_lock.acquire()
-            conn.send(OUTP)
-            conn.send(struct.pack('i', thread.get_ident()))
-            write_string(value)
-            send_lock.release()
+            with _SendLockCtx:
+                conn.send(OUTP)
+                conn.send(struct.pack('i', thread.get_ident()))
+                write_string(value)
         self.old_out.write(value)
     
     def isatty(self):
@@ -1440,11 +1438,10 @@ class DebuggerBuffer(object):
         if not DETACHED:
             probe_stack(3)
             str_data = data.decode('utf8')
-            send_lock.acquire()
-            conn.send(OUTP)
-            conn.send(struct.pack('i', thread.get_ident()))
-            write_string(str_data)
-            send_lock.release()
+            with _SendLockCtx:
+                conn.send(OUTP)
+                conn.send(struct.pack('i', thread.get_ident()))
+                write_string(str_data)
         self.buffer.write(data)
 
     def flush(self): 

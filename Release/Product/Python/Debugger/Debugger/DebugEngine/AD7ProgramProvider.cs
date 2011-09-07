@@ -24,8 +24,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     [ComVisible(true)]
     [Guid("FF3E23A2-DA7E-4fa7-AF47-6EDEDE4E922E")]
     public class AD7ProgramProvider : IDebugProgramProvider2 {
-        private static readonly string[] _pythonMods = new [] { "python24.dll", "python25.dll", "python26.dll", "python27.dll", "python30.dll", "python31.dll" };
-        
         public AD7ProgramProvider() {
         }
 
@@ -63,10 +61,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     }
                 }
             } else if ((Flags & enum_PROVIDER_FLAGS.PFLAG_GET_PROGRAM_NODES) != 0 ) {
-                // The debugger is asking the engine to return the program nodes it can debug. The 
-                // sample engine claims that it can debug all processes, and returns exsactly one
-                // program node for each process. A full-featured debugger may wish to examine the
-                // target process and determine if it understands how to debug it.\
+                // The debugger is asking the engine to return the program nodes it can debug. We check
+                // each process if it has a python##.dll or python##_d.dll loaded and if it does
+                // then we report the program as being a Python process.
 
                 if (DebugAttach.IsPythonProcess((int)ProcessId.dwProcessId)) {
                     IDebugProgramNode2 node = new AD7ProgramNode((int)ProcessId.dwProcessId);

@@ -511,6 +511,16 @@ namespace AnalysisTest {
 
         [TestMethod]
         public void StepTest() {
+            // Bug 509: http://pytools.codeplex.com/workitem/509
+            StepTest(DebuggerTestPath + @"SteppingTestBug509.py",
+                    new ExpectedStep(StepKind.Over, 1),     // step over def triangular_number
+                    new ExpectedStep(StepKind.Into, 3),     // step into triangular_number
+                    new ExpectedStep(StepKind.Into, 1),     // step over triangular_number
+                    new ExpectedStep(StepKind.Into, 1),     // step into triangular_number
+                    new ExpectedStep(StepKind.Into, 1),     // step into triangular_number
+                    new ExpectedStep(StepKind.Resume, 1)    // let program exit
+                );
+
             // Bug 503: http://pytools.codeplex.com/workitem/503
             StepTest(DebuggerTestPath + @"SteppingTestBug503.py",
                 new []  { 6, 12 },

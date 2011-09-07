@@ -486,13 +486,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             (version[0] == '2' && (version[2] < '4' || version[2] > '7'))  ||  // not v2.4 - v2.7
             (version[0] == '3' && (version[2] < '0' || version[2] > '2'))      // not v3.0 - 3.2
             ) {
-
             connInfo.ReportError(ConnError_UnknownVersion);
             return false;
         } else if(version[0] == '3' || (version[0] == '2' && version[2] >= '7')) {
             threadSafeAddPendingCall = true;
         }
         connInfo.SetVersion(version[0] - '0', version[2] - '0');
+
+        // we know everything we need for VS to continue the attach.
+        connInfo.ReportError(ConnError_None);
+        SetEvent(connInfo.Buffer->AttachStartingEvent);
 
         if(!threadsInited()) {
             int saveIntervalCheck;
@@ -541,6 +544,10 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 addedPendingCall = true;
             }
 
+            #define TICKS_DIFF(prev, cur) ((cur) >= (prev)) ? ((cur)-(prev)) : ((0xFFFFFFFF-(prev))+(cur)) 
+            const int ticksPerSecond = 1000;
+
+            long startTickCount = GetTickCount();
             do {
                 SuspendThreads(suspendedThreads, addPendingCall, threadsInited);
 
@@ -556,9 +563,14 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         addedPendingCall = true;
                     }
                 }
+                printf("%ld %ld %d\r\n", TICKS_DIFF(startTickCount, GetTickCount()), ticksPerSecond * 20, (TICKS_DIFF(startTickCount, GetTickCount())) < (ticksPerSecond * 20));
+                ResumeThreads(suspendedThreads);               
+            }while(!threadsInited() && (TICKS_DIFF(startTickCount, GetTickCount())) < (ticksPerSecond * 20)); 
 
-                ResumeThreads(suspendedThreads);
-            }while(!threadsInited());
+            if(!threadsInited()) {
+                connInfo.ReportError(ConnError_TimeOut);
+                return false;
+            }
 
             if (intervalCheck != nullptr) {
                 *intervalCheck = saveIntervalCheck;
@@ -622,10 +634,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         }
 
         auto pyPortNum = PyObjectHolder(isDebug, intFromLong(connInfo.Buffer->PortNumber));
-
-        // we are about to open our socket and wait for the connection, let VS know.
-        connInfo.ReportError(ConnError_None);
-        SetEvent(connInfo.Buffer->AttachStartingEvent);   
 
         auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
         
@@ -793,26 +801,39 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
     {
         // scoped to clean connection info before we unload
         auto connInfo = GetConnectionInfo();
+        bool attached = false, pythonFound = false;
         if(connInfo.Succeeded) {
             for(size_t i = 0; i<modsNeeded/sizeof(HMODULE); i++) {
                 wchar_t mod_name[MAX_PATH];
                 if(GetModuleBaseName(hProcess, hMods[i], mod_name, MAX_PATH)) {            
                     if(_wcsnicmp(mod_name, L"python", 6) == 0) {
-
                         bool isDebug = false;
                         if(wcslen(mod_name) >= 10 && _wcsnicmp(mod_name + 8, L"_d", 2) == 0) {
                             isDebug = true;
                         }
-
+                        pythonFound = true;
                         if(DoAttach(hMods[i], connInfo, isDebug)) {
                             // we've successfully attached the debugger
+                            attached = true;
                             break;
                         }
                     }
                 }
             }
         }
+
+        if(!attached) {
+            if(connInfo.Buffer->ErrorNumber == 0) {
+                if(pythonFound) {
+                    connInfo.ReportError(ConnError_PythonNotFound);
+                }else{
+                    connInfo.ReportError(ConnError_InterpreterNotInitialized);
+                }
+            }
+            SetEvent(connInfo.Buffer->AttachStartingEvent);   
+        }
     }
+
 
     HMODULE hModule = NULL;
     if(GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCTSTR)GetCurrentModuleFilename, &hModule)!=0) {
