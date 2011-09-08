@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var types = kvp.Value.Types;
                     var key = kvp.Key;
                     kvp.Value.ClearOldValues();
-                    if (kvp.Value._dependencies.Count > 0 || kvp.Value.Types.Count > 0) {
+                    if (kvp.Value.VariableStillExists) {
                         MergeTypes(res, key, types);
                     }
                 }
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 baseClass.Instance._instanceAttrs != null) {
                                 foreach (var kvp in baseClass.Instance._instanceAttrs) {
                                     kvp.Value.ClearOldValues();
-                                    if (kvp.Value._dependencies.Count > 0 || kvp.Value.Types.Count > 0) {
+                                    if (kvp.Value.VariableStillExists) {
                                         MergeTypes(res, kvp.Key, kvp.Value.Types);
                                     }
                                 }
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             } else {
                 // if the class gets a value later we need to be re-analyzed
-                _classInfo.Scope.CreateVariable(node, unit, name, false).AddDependency(unit);
+                _classInfo.Scope.CreateEphemeralVariable(node, unit, name, false).AddDependency(unit);
             }
            
             // ok, it most be an instance member...
@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             VariableDef def;
             if (!_instanceAttrs.TryGetValue(name, out def)) {
-                _instanceAttrs[name] = def = new VariableDef();
+                _instanceAttrs[name] = def = new EphemeralVariableDef();
             }
             def.AddReference(node, unit);
             def.AddDependency(unit);

@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             ModuleDefinition.AddDependency(unit);
 
-            return Scope.CreateVariable(node, unit, name).Types;
+            return Scope.CreateEphemeralVariable(node, unit, name).Types;
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {

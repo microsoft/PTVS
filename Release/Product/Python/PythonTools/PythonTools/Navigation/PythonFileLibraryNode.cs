@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
@@ -29,7 +30,14 @@ namespace Microsoft.PythonTools.Navigation {
         public override string Name {
             get {
                 if (DuplicatedByName) {
-                    return _hierarchy.Caption + " [" + _hierarchy.ProjectMgr.Caption + "]";
+                    StringBuilder sb = new StringBuilder(_hierarchy.Caption);
+                    sb.Append(" (");
+                    sb.Append(_hierarchy.ProjectMgr.Caption);
+                    sb.Append(", ");
+                    PythonFileNode.GetPackageName(_hierarchy, sb);
+                    sb.Append(')');
+
+                    return sb.ToString();
                 }
                 return base.Name;
             }

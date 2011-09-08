@@ -118,6 +118,17 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return res;
         }
 
+        public VariableDef CreateEphemeralVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            var res = GetVariable(node, unit, name, addRef);
+            if (res == null) {
+                _variables[name] = res = new EphemeralVariableDef();
+                if (addRef) {
+                    res.AddReference(node, unit);
+                }
+            }
+            return res;
+        }
+
         protected VariableDef CreateVariableWorker(Node node, AnalysisUnit unit, string name) {
             VariableDef res;
             if (!_variables.TryGetValue(name, out res)) {

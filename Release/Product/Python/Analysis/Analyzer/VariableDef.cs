@@ -232,6 +232,35 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     class VariableDef : VariableDef<Namespace> {
+        public virtual bool IsEphemeral {
+            get {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Checks to see if a variable still exists.  This depends upon the variable not
+        /// being ephemeral and that we still have valid type information for dependents.
+        /// </summary>
+        public bool VariableStillExists {
+            get {
+                return !IsEphemeral && (_dependencies.Count > 0 || Types.Count > 0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// A variable def which was created on a read.  We need to create a variable def when
+    /// we read from a class/instance where the member isn't defined yet - that lets us successfully
+    /// get all of the references back if there is later an assignment.  But if there are
+    /// no assignments then the variable doesn't really exist and we won't list it in the available members.
+    /// </summary>
+    sealed class EphemeralVariableDef : VariableDef {
+        public override bool IsEphemeral {
+            get {
+                return Types.Count == 0;
+            }
+        }
     }
 
     /// <summary>

@@ -32,25 +32,28 @@ namespace Microsoft.PythonTools.Project {
                     StringBuilder fullName = new StringBuilder(res);
                     fullName.Append(" (");
 
-                    List<HierarchyNode> nodes = new List<HierarchyNode>();
-                    var curNode = Parent;
-                    do {
-                        nodes.Add(curNode);
-                        curNode = curNode.Parent;
-                    } while (curNode != null && curNode.FindChild(Path.Combine(curNode.GetMkDocument(), "__init__.py")) != null);
-
-                    for (int i = nodes.Count - 1; i >= 0; i--) {
-                        fullName.Append(nodes[i].Caption);
-                        if (i != 0) {
-                            fullName.Append('.');
-                        }
-                    }
+                    GetPackageName(this, fullName);
 
                     fullName.Append(")");
                     res = fullName.ToString();
-                    //res += " (" + Parent.Caption + ")";
                 }
                 return res;
+            }
+        }
+
+        internal static void GetPackageName(HierarchyNode self, StringBuilder fullName) {
+            List<HierarchyNode> nodes = new List<HierarchyNode>();
+            var curNode = self.Parent;
+            do {
+                nodes.Add(curNode);
+                curNode = curNode.Parent;
+            } while (curNode != null && curNode.FindChild(Path.Combine(curNode.GetMkDocument(), "__init__.py")) != null);
+
+            for (int i = nodes.Count - 1; i >= 0; i--) {
+                fullName.Append(nodes[i].Caption);
+                if (i != 0) {
+                    fullName.Append('.');
+                }
             }
         }
 

@@ -176,6 +176,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public string GetLine(int lineNo) {
+            lineNo--; // line is 1 based
             string[] lines = File.ReadAllLines(_filename);
             if (lineNo < lines.Length) {
                 return lines[lineNo];

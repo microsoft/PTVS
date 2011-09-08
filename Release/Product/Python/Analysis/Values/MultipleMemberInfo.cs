@@ -72,7 +72,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IDictionary<string, ISet<Namespace>> GetAllMembers(PythonTools.Interpreter.IModuleContext moduleContext) {
-            return base.GetAllMembers(moduleContext);
+            Dictionary<string, ISet<Namespace>> res = new Dictionary<string, ISet<Namespace>>();
+            foreach(var mem in _members) {
+                foreach (var keyValue in mem.GetAllMembers(moduleContext)) {
+                    res[keyValue.Key] = keyValue.Value;
+                }
+            }
+
+            return res;
         }
 
         public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
@@ -92,7 +99,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             return res;
         }
-
+        
         public override void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
             foreach (var member in _members) {
                 member.SetIndex(node, unit, index, value);

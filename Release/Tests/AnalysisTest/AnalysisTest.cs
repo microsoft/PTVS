@@ -969,7 +969,10 @@ def f(abc):
                 
                 new VariableLocation(16, 14, VariableType.Reference),
 
-                new VariableLocation(18, 12, VariableType.Reference), 
+                new VariableLocation(18, 12, VariableType.Reference),
+                new VariableLocation(19, 21, VariableType.Definition),
+                new VariableLocation(20, 28, VariableType.Definition),
+
                 new VariableLocation(19, 21, VariableType.Reference), 
                 new VariableLocation(20, 28, VariableType.Reference),
 
@@ -2509,6 +2512,26 @@ x.bar(100)
             var entry = ProcessText(text);
 
             AssertContainsExactly(entry.GetTypesFromName("a", GetLineNumber(text, "foo") - 1), IntType);
+        }
+
+        [TestMethod]
+        public void TypeIntersectionUserDefinedTypes() {
+            string text = @"
+class C1(object):
+    def foo(self): pass
+
+class C2(object):
+    def bar(self): pass
+
+c = C1()
+c.foo()
+c = C2()
+
+";
+
+            var entry = ProcessText(text);
+            var members = entry.GetMembers("a", GetLineNumber(text, "c = C2()"), GetMemberOptions.IntersectMultipleResults);
+            AssertDoesntContain(members.Select(x => x.Name), "foo");
         }
 
         [TestMethod]

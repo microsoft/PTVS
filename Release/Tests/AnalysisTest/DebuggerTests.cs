@@ -455,6 +455,27 @@ namespace AnalysisTest {
 
         #region Local Tests
 
+        /// <summary>
+        /// Verify it takes more than just an items() method for us to treat something like a dictionary.
+        /// </summary>
+        [TestMethod]
+        public void CloseToDictExpansionBug484() {
+            PythonThread thread = RunAndBreak("LocalsTestBug484.py", 7);
+            
+            var frames = thread.Frames;
+
+            var obj = frames[0].Locals.First(x => x.Expression == "x");
+            var children = obj.GetChildren(2000);
+            Assert.AreEqual(children.Length, 3);
+            Assert.AreEqual(children[0].StringRepr, "2");
+            Assert.AreEqual(children[1].StringRepr, "3");
+            Assert.AreEqual(children[2].StringRepr, "4");
+
+            thread.Process.Continue();
+
+            thread.Process.WaitForExit();
+        }
+
         [TestMethod]
         public void LocalsTest() {
             LocalsTest("LocalsTest.py", 3, new string[] { }, new string[] { "x" });
@@ -476,22 +497,8 @@ namespace AnalysisTest {
         }
 
         private void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames) {
-            var debugger = new PythonDebugger();
-            PythonThread thread = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
-                var breakPoint = newproc.AddBreakPoint(filename, lineNo);
-                breakPoint.Add();
-                thread = newthread;
-            });
-
-            AutoResetEvent brkHit = new AutoResetEvent(false);
-            process.BreakpointHit += (sender, args) => {
-                brkHit.Set();
-            };
-
-            process.Start();
-
-            AssertWaited(brkHit);
+            PythonThread thread = RunAndBreak(filename, lineNo);
+            PythonProcess process = thread.Process;
 
             var frames = thread.Frames;
             var localsExpected = new HashSet<string>(localsNames);
@@ -505,12 +512,50 @@ namespace AnalysisTest {
             process.WaitForExit();
         }
 
+        private PythonThread RunAndBreak(string filename, int lineNo) {
+            PythonThread thread;
+            
+            var debugger = new PythonDebugger();
+            thread = null;
+            PythonProcess process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
+                var breakPoint = newproc.AddBreakPoint(filename, lineNo);
+                breakPoint.Add();
+                thread = newthread;
+            });
+
+            AutoResetEvent brkHit = new AutoResetEvent(false);
+            process.BreakpointHit += (sender, args) => {
+                brkHit.Set();
+            };
+
+            process.Start();
+
+            AssertWaited(brkHit);
+            return thread;
+        }
+
         #endregion
 
         #region Stepping Tests
 
         [TestMethod]
         public void StepTest() {
+            // Bug 507: http://pytools.codeplex.com/workitem/507
+            StepTest(DebuggerTestPath + @"SteppingTestBug507.py",
+                    new ExpectedStep(StepKind.Over, 1),     // step over def add_two_numbers(x, y):
+                    new ExpectedStep(StepKind.Over, 4),     // step over class Z(object):
+                    new ExpectedStep(StepKind.Over, 9),     // step over p = Z()
+                    new ExpectedStep(StepKind.Into, 10),     // step into print add_two_numbers(p.foo, 3)
+                    new ExpectedStep(StepKind.Out, 7),     // step out return 7
+                    new ExpectedStep(StepKind.Into, 10),     // step into add_two_numbers(p.foo, 3)
+                    new ExpectedStep(StepKind.Resume, 2)     // wait for exit after return x + y
+                );
+
+            // Bug 508: http://pytools.codeplex.com/workitem/508
+            StepTest(DebuggerTestPath + @"SteppingTestBug508.py",
+                    new ExpectedStep(StepKind.Into, 1)     // step print (should step over)
+                );
+
             // Bug 509: http://pytools.codeplex.com/workitem/509
             StepTest(DebuggerTestPath + @"SteppingTestBug509.py",
                     new ExpectedStep(StepKind.Over, 1),     // step over def triangular_number
@@ -530,19 +575,19 @@ namespace AnalysisTest {
                 },
                 new ExpectedStep(StepKind.Resume, 1),     // continue from def x1(y):
                 new ExpectedStep(StepKind.Out, 6),     // step out after hitting breakpoint at return y
-                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
-                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
-                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
-                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
-                new ExpectedStep(StepKind.Out, 4),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 3),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 3),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 3),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 3),     // step out z += 1
+                new ExpectedStep(StepKind.Out, 3),     // step out z += 1
 
-                new ExpectedStep(StepKind.Out, 15),     // step out after stepping out to x2(5)
+                new ExpectedStep(StepKind.Out, 14),     // step out after stepping out to x2(5)
                 new ExpectedStep(StepKind.Out, 12),     // step out after hitting breakpoint at return y
-                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
-                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
-                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
-                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
-                new ExpectedStep(StepKind.Out, 11),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
+                new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
                 
                 new ExpectedStep(StepKind.Resume, 15)     // let the program exit
             );

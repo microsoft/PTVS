@@ -202,6 +202,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             variable.AddTypes(node, _unit, newTypes);
+            variable.AddAssignment(node, _unit);
         }
 
         public override bool Walk(FromImportStatement node) {
@@ -453,6 +454,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
 
                         def.AddTypes(nameNode, _unit, builtinModule.SelfSet);
+                        def.AddAssignment(nameNode, _unit);
                         continue;
                     }
                 }
@@ -470,6 +472,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         }
 
                         def.AddTypes(nameNode, _unit, modRef.Module.SelfSet);
+                        def.AddAssignment(nameNode, _unit);
                         continue;
                     } else {
                         modRef.AddEphemeralReference(_unit.DeclaringModule);

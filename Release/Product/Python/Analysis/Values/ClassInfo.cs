@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var result = new Dictionary<string, ISet<Namespace>>(Scope.Variables.Count);
             foreach (var v in Scope.Variables) {
                 v.Value.ClearOldValues();
-                if (v.Value._dependencies.Count > 0 || v.Value.Types.Count > 0) {
+                if (v.Value.VariableStillExists) {
                     result[v.Key] = v.Value.Types;
                 }
             }

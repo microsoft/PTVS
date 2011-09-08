@@ -194,7 +194,7 @@ class ExceptionBreakInfo(object):
         cur_frame = trace.tb_frame
         
         while should_send_frame(cur_frame) and cur_frame.f_code.co_filename is not None:
-            if cur_frame.f_code.co_filename != __file__:
+            if not is_same_py_file(cur_frame.f_code.co_filename, __file__):
                 handlers = self.handler_cache.get(cur_frame.f_code.co_filename)
             
                 if handlers is None:
@@ -249,12 +249,8 @@ def probe_stack(depth = 10):
   probe_stack(depth - 1)
 
 
-# list of files that we shouldn't be debugging
-DONT_DEBUG = [__file__]
-
-
 def should_debug_code(code):
-    return code.co_filename not in DONT_DEBUG
+    return not is_same_py_file(code.co_filename, __file__)
 
 
 attach_lock = thread.allocate()
@@ -315,7 +311,6 @@ class Thread(object):
         self.reported_process_loaded = False
     
     def trace_func(self, frame, event, arg):
-        
         try:
             if self.stepping == STEPPING_BREAK and should_debug_code(frame.f_code):
                 if self.cur_frame is None:
@@ -432,19 +427,21 @@ class Thread(object):
         return self.trace_func
     
     def handle_return(self, frame, arg):
+        self.cur_frame = frame.f_back
+
         if not DETACHED:
             stepping = self.stepping
             if stepping is not STEPPING_NONE:
                 if stepping == STEPPING_OUT:
-                    # break at the next line
-                    self.stepping = STEPPING_OVER
-                    # empty stopped_on_line so that we will break even if it is
-                    # the same line
-                    self.stopped_on_line = None
+                    self.stepping = STEPPING_NONE
+                    self.block(lambda: report_step_finished(self.id))
                 elif stepping == STEPPING_OVER:
                     if frame.f_code.co_name == "<module>" and should_debug_code(frame.f_code):
+                        # restore back the module frame for the step out of a module
+                        self.cur_frame = frame
                         self.stepping = STEPPING_NONE
                         self.block(lambda: report_step_finished(self.id))
+                        self.cur_frame = frame.f_back
                 elif stepping > STEPPING_OVER:
                     self.stepping -= 1
                 elif stepping < STEPPING_OUT:
@@ -458,8 +455,6 @@ class Thread(object):
         # restore previous frames trace function if there is one
         if self.trace_func_stack:
             self.prev_trace_func = self.trace_func_stack.pop()
-
-        self.cur_frame = frame.f_back
         
     def handle_exception(self, frame, arg):
         if self.stepping == STEPPING_ATTACH_BREAK:
@@ -634,7 +629,7 @@ class Thread(object):
                 if isinstance(res, types.GeneratorType):
                     # go to the except block
                     raise Exception('generator')
-                elif hasattr(res, 'items'):
+                elif hasattr(res, 'items') and hasattr(res, 'has_key'):
                     # dictionary-like object
                     enum = res.items()
                 else:
@@ -1459,11 +1454,11 @@ class DebuggerBuffer(object):
 
 def is_same_py_file(file1, file2):
     """compares 2 filenames accounting for .pyc files"""
-    if file1.endswith('.pyc'):
-        if file2.endswith('.pyc'):
+    if file1.endswith('.pyc') or file1.endswith('.pyo'):
+        if file2.endswith('.pyc') or file2.endswith('.pyo'):
             return file1 == file2
         return file1[:-1] == file2
-    elif file2.endswith('.pyc'):
+    elif file2.endswith('.pyc') or file2.endswith('.pyo'):
         return file1 == file2[:-1]
     else:
         return file1 == file2
