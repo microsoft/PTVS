@@ -309,13 +309,33 @@ class Thread(object):
         self.prev_trace_func = None
         self.trace_func_stack = []
         self.reported_process_loaded = False
+        if sys.platform == 'cli':
+            self.frames = []
     
+    if sys.platform == 'cli':
+        # workaround an IronPython bug where we're sometimes missing the back frames
+        # http://ironpython.codeplex.com/workitem/31437
+        def push_frame(self, frame):
+            self.cur_frame = frame
+            self.frames.append(frame)
+
+        def pop_frame(self):
+            self.frames.pop()
+            self.cur_frame = self.frames[-1]
+    else:
+        def push_frame(self, frame):
+            self.cur_frame = frame
+
+        def pop_frame(self):
+            self.cur_frame = self.cur_frame.f_back
+
+
     def trace_func(self, frame, event, arg):
         try:
             if self.stepping == STEPPING_BREAK and should_debug_code(frame.f_code):
                 if self.cur_frame is None:
                     # happens during attach, we need frame for blocking
-                    self.cur_frame = frame
+                    self.push_frame(frame)
 
                 if self.detach:
                     sys.settrace(None)
@@ -329,7 +349,7 @@ class Thread(object):
             return self.trace_func
     
     def handle_call(self, frame, arg):
-        self.cur_frame = frame
+        self.push_frame(frame)
 
         if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
             probe_stack()
@@ -427,7 +447,7 @@ class Thread(object):
         return self.trace_func
     
     def handle_return(self, frame, arg):
-        self.cur_frame = frame.f_back
+        self.pop_frame()
 
         if not DETACHED:
             stepping = self.stepping
@@ -438,10 +458,10 @@ class Thread(object):
                 elif stepping == STEPPING_OVER:
                     if frame.f_code.co_name == "<module>" and should_debug_code(frame.f_code):
                         # restore back the module frame for the step out of a module
-                        self.cur_frame = frame
+                        self.push_frame(frame)
                         self.stepping = STEPPING_NONE
                         self.block(lambda: report_step_finished(self.id))
-                        self.cur_frame = frame.f_back
+                        self.pop_frame()
                 elif stepping > STEPPING_OVER:
                     self.stepping -= 1
                 elif stepping < STEPPING_OUT:
@@ -1371,7 +1391,7 @@ def new_thread(tid = None, set_break = False, frame = None):
     THREADS_LOCK.acquire()
     THREADS[cur_thread.id] = cur_thread
     THREADS_LOCK.release()
-    cur_thread.cur_frame = frame
+    cur_thread.push_frame(frame)
     if set_break:
         cur_thread.stepping = STEPPING_ATTACH_BREAK
     if not DETACHED:
