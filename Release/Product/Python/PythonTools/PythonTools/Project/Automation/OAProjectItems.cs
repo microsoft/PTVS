@@ -40,33 +40,33 @@ namespace Microsoft.PythonTools.Project.Automation
 
 		#region EnvDTE.ProjectItems
 
-        /// <summary>
-        /// Creates a new project item from an existing directory and all files and subdirectories
-        /// contained within it.
-        /// </summary>
-        /// <param name="directory">The full path of the directory to add.</param>
-        /// <returns>A ProjectItem object.</returns>
-        public override ProjectItem AddFromDirectory(string directory) {
-            CheckProjectIsValid();
-            
-            ProjectItem result = AddFolder(directory, null);
-            
-            foreach (string subdirectory in Directory.EnumerateDirectories(directory)) {
-                // Assuming this should only import packages
-                if (File.Exists(Path.Combine(directory, subdirectory, "__init__.py"))) {
-                    result.ProjectItems.AddFromDirectory(Path.Combine(directory, subdirectory));
-                }
-            }
+		/// <summary>
+		/// Creates a new project item from an existing directory and all files and subdirectories
+		/// contained within it.
+		/// </summary>
+		/// <param name="directory">The full path of the directory to add.</param>
+		/// <returns>A ProjectItem object.</returns>
+		public override ProjectItem AddFromDirectory(string directory)
+		{
+			CheckProjectIsValid();
 
-            foreach (string filename in Directory.EnumerateFiles(directory, "*" + PythonConstants.FileExtension)) {
-                result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
-            }
-            foreach (string filename in Directory.EnumerateFiles(directory, "*" + PythonConstants.WindowsFileExtension))
-            {
-                result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
-            }
-            return result;
-        }
+			ProjectItem result = AddFolder(directory, null);
+
+			foreach (string subdirectory in Directory.EnumerateDirectories(directory))
+			{
+				result.ProjectItems.AddFromDirectory(Path.Combine(directory, subdirectory));
+			}
+
+			foreach (string filename in Directory.EnumerateFiles(directory, "*" + PythonConstants.FileExtension))
+			{
+				result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
+			}
+			foreach (string filename in Directory.EnumerateFiles(directory, "*" + PythonConstants.WindowsFileExtension))
+			{
+				result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
+			}
+			return result;
+		}
 
 		/// <summary>
 		/// Creates a new project item from an existing item template file and adds it to the project. 
@@ -76,19 +76,19 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <returns>A ProjectItem object. </returns>
 		public override EnvDTE.ProjectItem AddFromTemplate(string fileName, string name)
 		{
-            CheckProjectIsValid();
+			CheckProjectIsValid();
 
 			ProjectNode proj = this.Project.Project;
 			EnvDTE.ProjectItem itemAdded = null;
 
-			using(AutomationScope scope = new AutomationScope(this.Project.Project.Site))
+			using (AutomationScope scope = new AutomationScope(this.Project.Project.Site))
 			{
 				// Determine the operation based on the extension of the filename.
 				// We should run the wizard only if the extension is vstemplate
 				// otherwise it's a clone operation
 				VSADDITEMOPERATION op;
 
-				if(Utilities.IsTemplateFile(fileName))
+				if (Utilities.IsTemplateFile(fileName))
 				{
 					op = VSADDITEMOPERATION.VSADDITEMOP_RUNWIZARD;
 				}
@@ -112,11 +112,13 @@ namespace Microsoft.PythonTools.Project.Automation
 			return itemAdded;
 		}
 
-        private void CheckProjectIsValid() {
-            if (this.Project == null || this.Project.Project == null || this.Project.Project.Site == null || this.Project.Project.IsClosed) {
-                throw new InvalidOperationException();
-            }
-        }
+		private void CheckProjectIsValid()
+		{
+			if (this.Project == null || this.Project.Project == null || this.Project.Project.Site == null || this.Project.Project.IsClosed)
+			{
+				throw new InvalidOperationException();
+			}
+		}
 
 		/// <summary>
 		/// Adds a folder to the collection of ProjectItems with the given name.
@@ -129,20 +131,20 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <returns>A ProjectItem representing the newly added folder.</returns>
 		public override ProjectItem AddFolder(string name, string kind)
 		{
-            Project.CheckProjectIsValid();
+			Project.CheckProjectIsValid();
 
-            //Verify name is not null or empty
+			//Verify name is not null or empty
 			Utilities.ValidateFileName(this.Project.Project.Site, name);
 
 			//Verify that kind is null, empty, or a physical folder
-			if(!(string.IsNullOrEmpty(kind) || kind.Equals(EnvDTE.Constants.vsProjectItemKindPhysicalFolder)))
+			if (!(string.IsNullOrEmpty(kind) || kind.Equals(EnvDTE.Constants.vsProjectItemKindPhysicalFolder)))
 			{
 				throw new ArgumentException("Parameter specification for AddFolder was not meet", "kind");
 			}
 
-			for(HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
+			for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
 			{
-				if(child.Caption.Equals(name, StringComparison.OrdinalIgnoreCase))
+				if (child.Caption.Equals(name, StringComparison.OrdinalIgnoreCase))
 				{
 					throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Folder already exists with the name '{0}'", name));
 				}
@@ -151,7 +153,7 @@ namespace Microsoft.PythonTools.Project.Automation
 			ProjectNode proj = this.Project.Project;
 
 			HierarchyNode newFolder = null;
-			using(AutomationScope scope = new AutomationScope(this.Project.Project.Site))
+			using (AutomationScope scope = new AutomationScope(this.Project.Project.Site))
 			{
 
 				//In the case that we are adding a folder to a folder, we need to build up
@@ -196,12 +198,12 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <returns>A ProjectItem object. </returns>
 		protected virtual EnvDTE.ProjectItem AddItem(string path, VSADDITEMOPERATION op)
 		{
-            CheckProjectIsValid();
+			CheckProjectIsValid();
 
 			ProjectNode proj = this.Project.Project;
 
 			EnvDTE.ProjectItem itemAdded = null;
-			using(AutomationScope scope = new AutomationScope(this.Project.Project.Site))
+			using (AutomationScope scope = new AutomationScope(this.Project.Project.Site))
 			{
 				VSADDRESULT[] result = new VSADDRESULT[1];
 				ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
@@ -225,14 +227,14 @@ namespace Microsoft.PythonTools.Project.Automation
 		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
 		protected virtual EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path)
 		{
-			if(result == VSADDRESULT.ADDRESULT_Success)
+			if (result == VSADDRESULT.ADDRESULT_Success)
 			{
 				HierarchyNode nodeAdded = this.NodeWithItems.FindChild(path);
 				Debug.Assert(nodeAdded != null, "We should have been able to find the new element in the hierarchy");
-				if(nodeAdded != null)
+				if (nodeAdded != null)
 				{
 					EnvDTE.ProjectItem item = null;
-					if(nodeAdded is FileNode)
+					if (nodeAdded is FileNode)
 					{
 						item = new OAFileItem(this.Project, nodeAdded as FileNode);
 					}
@@ -249,5 +251,5 @@ namespace Microsoft.PythonTools.Project.Automation
 		}
 		#endregion
 
-    }
+	}
 }

@@ -47,9 +47,17 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
                 _loadDepth++;
                 using (var stream = new FileStream(_dbFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                    var contents = (Dictionary<string, object>)Unpickle.Load(stream);
+                    Dictionary<string, object> contents = null;
+                    try {
+                        contents = (Dictionary<string, object>)Unpickle.Load(stream);
+                    } catch (InvalidOperationException) {
+                        // Bug 511 - http://pytools.codeplex.com/workitem/511
+                        // Ignore a corrupt database file.
+                    }
 
-                    LoadModule((Dictionary<string, object>)contents);
+                    if (contents != null) {
+                        LoadModule(contents);
+                    }
                 }
                 _loadDepth--;
 

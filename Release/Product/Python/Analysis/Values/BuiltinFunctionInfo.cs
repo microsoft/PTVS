@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
-            if (_function.IsStatic || instance == unit.ProjectState._noneInst) {
+            if (_function.IsStatic || instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             } else if (_method == null) {
                 _method = new BuiltinMethodInfo(_function, PythonMemberType.Method, ProjectState);

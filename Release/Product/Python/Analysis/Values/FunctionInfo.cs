@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
-            if ((instance == unit.ProjectState._noneInst && !IsClassMethod) || IsStatic) {
+            if ((instance == ProjectState._noneInst && !IsClassMethod) || IsStatic) {
                 return SelfSet;
             }
             if (IsProperty) {

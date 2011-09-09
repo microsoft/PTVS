@@ -45,6 +45,7 @@ namespace Microsoft.PythonTools.Analysis {
         private KnownTypes _types;
         internal readonly IModuleContext _defaultContext;
         private readonly PythonLanguageVersion _langVersion;
+        internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         private int? _crossModuleLimit;
@@ -71,6 +72,8 @@ namespace Microsoft.PythonTools.Analysis {
             pythonInterpreter.Initialize(this);
 
             _defaultContext = pythonInterpreter.CreateModuleContext();
+
+            _evalUnit = new AnalysisUnit(null, new InterpreterScope[] { new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope }, true);
         }
 
         private void LoadKnownTypes() {

@@ -2967,31 +2967,40 @@ namespace Microsoft.PythonTools.Project
 		#endregion
 
 		#region helper methods
+
 		internal HierarchyNode FindChild(string name)
 		{
-			if(String.IsNullOrEmpty(name))
+			return FindChild(name, true);
+		}
+
+		internal HierarchyNode FindChild(string name, bool recurse)
+		{
+			if (String.IsNullOrEmpty(name))
 			{
 				return null;
 			}
 
 			HierarchyNode result;
-			for(HierarchyNode child = this.firstChild; child != null; child = child.NextSibling)
+			for (HierarchyNode child = this.firstChild; child != null; child = child.NextSibling)
 			{
-				if(!String.IsNullOrEmpty(child.VirtualNodeName) && String.Compare(child.VirtualNodeName, name, StringComparison.OrdinalIgnoreCase) == 0)
+				if (!String.IsNullOrEmpty(child.VirtualNodeName) && String.Compare(child.VirtualNodeName, name, StringComparison.OrdinalIgnoreCase) == 0)
 				{
 					return child;
 				}
 				// If it is a foldernode then it has a virtual name but we want to find folder nodes by the document moniker or url
-				else if((String.IsNullOrEmpty(child.VirtualNodeName) || (child is FolderNode)) &&
+				else if ((String.IsNullOrEmpty(child.VirtualNodeName) || (child is FolderNode)) &&
 						(NativeMethods.IsSamePath(child.GetMkDocument(), name) || NativeMethods.IsSamePath(child.Url, name)))
 				{
 					return child;
 				}
 
-				result = child.FindChild(name);
-				if(result != null)
+				if (recurse)
 				{
-					return result;
+					result = child.FindChild(name);
+					if (result != null)
+					{
+						return result;
+					}
 				}
 			}
 			return null;

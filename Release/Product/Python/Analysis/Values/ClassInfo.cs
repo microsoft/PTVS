@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly InstanceInfo _instanceInfo;
         private readonly ClassScope _scope;
         private readonly int _declVersion;
+        private VariableDef _metaclass;
         private ReferenceDict _references;
         private VariableDef<ClassInfo> _subclasses;
 
@@ -88,6 +89,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 return _subclasses;
             }
+        }
+
+        public VariableDef MetaclassVariable {
+            get {
+                return _metaclass;
+            }            
+        }
+
+        public VariableDef GetOrCreateMetaclassVariable() {
+            if (_metaclass == null) {
+                _metaclass = new VariableDef();
+            }
+            return _metaclass;
         }
 
         public override string Documentation {
@@ -233,6 +247,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
+            if (_metaclass != null) {
+                foreach (var type in _metaclass.Types) {
+                    if (type.Push()) {
+                        try {
+                            foreach (var nameValue in type.GetAllMembers(moduleContext)) {
+                                result[nameValue.Key] = nameValue.Value.GetDescriptor(null, this, type, Instance.ProjectState._evalUnit);
+                            }
+                        } finally {
+                            type.Pop();
+                        }
+                    }
+                }
+            }
 
             if (!result.ContainsKey("__doc__")) {
                 result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
@@ -290,6 +317,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             AddNewMembers(ref result, ref ownResult, baseMembers);
                         } finally {
                             baseRef.Pop();
+                        }
+                    }
+                }
+            }
+
+            if ((result == null || result.Count == 0) && _metaclass != null) {
+                foreach (var type in _metaclass.Types) {
+                    if (type.Push()) {
+                        try {
+                            foreach (var metaValue in type.GetMember(node, unit, name)) {
+                                foreach (var boundValue in metaValue.GetDescriptor(node, this, type, unit)) {
+                                    result = result.Union(boundValue, ref ownResult);
+                                }
+                            }
+                        } finally {
+                            type.Pop();
                         }
                     }
                 }

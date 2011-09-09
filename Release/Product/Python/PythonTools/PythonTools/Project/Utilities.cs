@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.Project
             string errorMessage = String.Empty;
             if(String.IsNullOrEmpty(filePath))
             {
-                errorMessage = SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture);
+                errorMessage = String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), filePath);
             }
             else if(filePath.Length > NativeMethods.MAX_PATH)
             {
@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Project
             }
             else if(ContainsInvalidFileNameChars(filePath))
             {
-                errorMessage = SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture);
+                errorMessage = String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), filePath);
             }
 
             if(errorMessage.Length == 0)
@@ -181,17 +181,7 @@ namespace Microsoft.PythonTools.Project
                 string fileName = Path.GetFileName(filePath);
                 if(String.IsNullOrEmpty(fileName) || IsFileNameInvalid(fileName))
                 {
-                    errorMessage = SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture);
-                }
-                else
-                {
-                    string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
-
-                    // If there is no filename or it starts with a leading dot issue an error message and quit.
-                    if(String.IsNullOrEmpty(fileNameWithoutExtension) || fileNameWithoutExtension[0] == '.')
-                    {
-                        errorMessage = SR.GetString(SR.FileNameCannotContainALeadingPeriod, CultureInfo.CurrentUICulture);
-                    }
+                    errorMessage = String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), filePath);
                 }
             }
 
@@ -459,7 +449,8 @@ namespace Microsoft.PythonTools.Project
                     // Now the last segment should be specially taken care, since that cannot be all dots or spaces.
                     string lastSegment = segments[segments.Length - 1];
                     string filePart = Path.GetFileNameWithoutExtension(lastSegment);
-                    if(IsFileNameAllGivenCharacter('.', filePart) || IsFileNameAllGivenCharacter(' ', filePart))
+                    // if the file is only an extension (.foo) then it's ok, otherwise we need to do the special checks.
+                    if(filePart.Length != 0 && (IsFileNameAllGivenCharacter('.', filePart) || IsFileNameAllGivenCharacter(' ', filePart)))
                     {
                         return true;
                     }
@@ -589,6 +580,12 @@ namespace Microsoft.PythonTools.Project
             return false;
         }
 
+        private const string _reservedName = "(\\b(nul|con|aux|prn)\\b)|(\\b((com|lpt)[0-9])\\b)";
+        private const string _invalidChars = "([\\/:*?\"<>|#%])";
+        private const string _regexToUseForFileName = _reservedName + "|" + _invalidChars;
+        private static Regex _unsafeFileNameCharactersRegex = new Regex(_regexToUseForFileName, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static Regex _unsafeCharactersRegex = new Regex(_invalidChars, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
         /// <summary>
         /// Checks whether a file part contains valid characters. The file part can be any part of a non rooted path.
         /// </summary>
@@ -600,9 +597,6 @@ namespace Microsoft.PythonTools.Project
             {
                 return true;
             }
-            String reservedName = "(\\b(nul|con|aux|prn)\\b)|(\\b((com|lpt)[0-9])\\b)";
-            String invalidChars = @"([/?:&\\*<>|#%" + '\"' + "])";
-            String regexToUseForFileName = reservedName + "|" + invalidChars;
             String fileNameToVerify = filePart;
 
             // Define a regular expression that covers all characters that are not in the safe character sets.
@@ -623,21 +617,20 @@ namespace Microsoft.PythonTools.Project
             if(!String.IsNullOrEmpty(extension))
             {
                 // Check the extension first
-                String regexToUseForExtension = invalidChars;
-                Regex unsafeCharactersRegex = new Regex(regexToUseForExtension, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-                bool isMatch = unsafeCharactersRegex.IsMatch(extension);
+                bool isMatch = _unsafeCharactersRegex.IsMatch(extension);
                 if(isMatch)
                 {
                     return isMatch;
                 }
 
                 // We want to verify here everything but the extension.
-                // We cannot use GetFileNameWithoutExtension because it might be that for example (..\\filename.txt) is passed in asnd that should fail, since that is not a valid filename.
+                // We cannot use GetFileNameWithoutExtension because it might be that for example (..\\filename.txt) is passed in and that should fail, since that is not a valid filename.
                 fileNameToVerify = filePart.Substring(0, filePart.Length - extension.Length);
 
                 if(String.IsNullOrEmpty(fileNameToVerify))
                 {
-                    return true;
+                    // .foo is ok
+                    return false;
                 }
             }
 
@@ -646,9 +639,8 @@ namespace Microsoft.PythonTools.Project
             {
                 return true;
             }
-
-            Regex unsafeFileNameCharactersRegex = new Regex(regexToUseForFileName, RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
-            return unsafeFileNameCharactersRegex.IsMatch(fileNameToVerify);
+            
+            return _unsafeFileNameCharactersRegex.IsMatch(fileNameToVerify);
         }
 
         /// <summary>

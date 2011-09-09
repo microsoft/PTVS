@@ -414,7 +414,7 @@ namespace Microsoft.PythonTools.Project.Automation
 					// We want to be consistent in the error message and exception we throw. fileName could be for example #¤&%"¤&"%  and that would trigger an ArgumentException on Path.IsRooted.
 					catch(ArgumentException)
 					{
-						throw new InvalidOperationException(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture));
+						throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), fileName));
 					}
 
 					// It might be redundant but we validate the file and the full path of the file being valid. The SaveAs would also validate the path.

@@ -193,7 +193,9 @@
     <value>error</value>
   </data>
   <data name="ErrorInvalidFileName" xml:space="preserve">
-    <value>Files and folders cannot be:
+    <value>Invalid filename: {0}
+      
+Files and folders cannot be:
 - Empty strings 
 - System reserved names, including 'CON', 'AUX', PRN', 'COM1' or 'LPT2' 
 - contain only '.'

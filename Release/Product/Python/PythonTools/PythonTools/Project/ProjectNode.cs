@@ -825,7 +825,7 @@ namespace Microsoft.PythonTools.Project
             // Validate the filename. 
             if (Utilities.IsFileNameInvalid(label))
             {
-                throw new InvalidOperationException(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture));
+                throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
             }
             else if (this.ProjectFolder.Length + label.Length + 1 > NativeMethods.MAX_PATH)
             {
@@ -2552,7 +2552,7 @@ namespace Microsoft.PythonTools.Project
                 // We want to be consistent in the error message and exception we throw. fileName could be for example #¤&%"¤&"%  and that would trigger an ArgumentException on Path.IsRooted.
                 catch (ArgumentException)
                 {
-                    errorMessage = SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture);
+                    errorMessage = String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), newFileName);
                 }
 
                 if (errorMessage.Length == 0)
@@ -2565,7 +2565,7 @@ namespace Microsoft.PythonTools.Project
                     }
                     else if (Utilities.ContainsInvalidFileNameChars(newFileName))
                     {
-                        errorMessage = SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture);
+                        errorMessage = String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), newFileName);
                     }
                     else
                     {

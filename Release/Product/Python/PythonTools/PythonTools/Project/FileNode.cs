@@ -216,7 +216,7 @@ namespace Microsoft.PythonTools.Project
             // Validate the filename. 
             if(String.IsNullOrEmpty(label))
             {
-                throw new InvalidOperationException(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture));
+                throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
             }
             else if(label.Length > NativeMethods.MAX_PATH)
             {
@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools.Project
             }
             else if(Utilities.IsFileNameInvalid(label))
             {
-                throw new InvalidOperationException(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture));
+                throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
             }
 
             for(HierarchyNode n = this.Parent.FirstChild; n != null; n = n.NextSibling)

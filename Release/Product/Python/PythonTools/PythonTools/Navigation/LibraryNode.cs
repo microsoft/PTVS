@@ -156,7 +156,14 @@ namespace Microsoft.PythonTools.Navigation {
 
         public override uint CategoryField(LIB_CATEGORY category) {
             uint fieldValue = 0;
+            
             switch (category) {
+                case (LIB_CATEGORY)_LIB_CATEGORY2.LC_PHYSICALCONTAINERTYPE:
+                    fieldValue = (uint)_LIBCAT_PHYSICALCONTAINERTYPE.LCPT_PROJECT;
+                    break;
+                case LIB_CATEGORY.LC_NODETYPE:
+                    fieldValue = (uint)_LIBCAT_NODETYPE.LCNT_HIERARCHY;
+                    break;
                 case LIB_CATEGORY.LC_LISTTYPE: {
                         LibraryNodeType subTypes = LibraryNodeType.None;
                         foreach (LibraryNode node in Children) {

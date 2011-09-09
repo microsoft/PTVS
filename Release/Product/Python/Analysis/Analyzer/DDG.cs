@@ -361,7 +361,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             if (newScope.IsClassMethod) {
                 if (newScope.ParameterTypes.Length > 0) {
-                    newScope.AddParameterType(_unit, ProjectState._typeObj.SelfSet, 0);
+                    var outerScope = _unit.Scopes[Scopes.Length - 1] as ClassScope;
+                    if (outerScope != null) {
+                        newScope.AddParameterType(_unit, outerScope.Class.SelfSet, 0);
+                    } else {
+                        newScope.AddParameterType(_unit, ProjectState._typeObj.SelfSet, 0);
+                    }
                 }
             } else if (!newScope.IsStatic) {
                 // self is always an instance of the class

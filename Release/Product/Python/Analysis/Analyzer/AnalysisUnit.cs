@@ -40,12 +40,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 #endif
 
+        public static AnalysisUnit EvalUnit = new AnalysisUnit(null, null, true);
+
         public AnalysisUnit(ScopeStatement node, InterpreterScope[] scopes) {
             _ast = node;
             _scopes = scopes;
         }
 
-        private AnalysisUnit(ScopeStatement ast, InterpreterScope[] scopes, bool forEval) {
+        public AnalysisUnit(ScopeStatement ast, InterpreterScope[] scopes, bool forEval) {
             _ast = ast;
             _scopes = scopes;
             _forEval = forEval;
@@ -275,9 +277,17 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 // Process base classes
                 foreach (var baseClassArg in Ast.Bases) {
                     if (baseClassArg.Name != null) {
-                        // TODO: support namaed args to user defined meta classes and metaclass arg.
+                        if (baseClassArg.Name == "metaclass") {
+                            var metaClass = baseClassArg.Expression;
+                            metaClass.Walk(ddg);
+                            var metaClassValue = ddg._eval.Evaluate(metaClass);
+                            if (metaClassValue.Count > 0) {
+                                newScope.GetOrCreateMetaclassVariable().AddTypes(metaClass, _outerUnit, metaClassValue);
+                            }
+                        }
                         continue;
                     }
+
                     var baseClass = baseClassArg.Expression;
 
                     baseClass.Walk(ddg);

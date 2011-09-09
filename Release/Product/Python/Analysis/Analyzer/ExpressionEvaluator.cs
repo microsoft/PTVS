@@ -372,6 +372,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     
                 vars.AddAssignment(left, _unit);
                 vars.AddTypes(l, _unit, values);
+
+                if (Scopes[Scopes.Length - 1] is ClassScope && l.Name == "__metaclass__") {
+                    // assignment to __metaclass__, save it in our metaclass variable
+                    ((ClassScope)Scopes[Scopes.Length - 1]).Class.GetOrCreateMetaclassVariable().AddTypes(l, _unit, values);
+                }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
                 foreach (var obj in Evaluate(l.Target)) {
@@ -415,15 +420,17 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private static ISet<Namespace> EvaluateSlice(ExpressionEvaluator ee, Node node) {
             SliceExpression se = node as SliceExpression;
+            ee.EvaluateMaybeNull(se.SliceStart);
+            ee.EvaluateMaybeNull(se.SliceStop);
+            if (se.StepProvided) {
+                ee.EvaluateMaybeNull(se.SliceStep);
+            }
 
+            return SliceInfo.Instance;/*
             return ee.GlobalScope.GetOrMakeNodeVariable(
                 node, 
-                (n) => new SliceInfo(
-                    ee.EvaluateMaybeNull(se.SliceStart),
-                    ee.EvaluateMaybeNull(se.SliceStop),
-                    se.StepProvided ? ee.EvaluateMaybeNull(se.SliceStep) : null
-                )
-            );
+                x=> SliceInfo.Instance
+            );*/
         }
 
         private ISet<Namespace> MakeSequence(ExpressionEvaluator ee, Node node) {

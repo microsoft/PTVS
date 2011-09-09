@@ -2567,6 +2567,91 @@ mod1.f(42)
             AssertContainsExactly(entry1.Analysis.GetTypesFromName("abc", GetLineNumber(text1, "pass") ), IntType);
         }
 
+        [TestMethod]
+        public void TestMetaClasses() {
+            
+            string text = @"class C(type):
+    def f(self):
+        print('C.f')
+
+    def x(self, var):
+        pass
+
+
+class D(object):
+    __metaclass__ = C
+    @classmethod
+    def g(cls):
+        print cls.g
+
+
+    def inst_method(self):
+        pass
+    ";
+            
+            var entry = ProcessText(text);
+            Assert.AreEqual(entry.GetSignatures("cls.f", GetLineNumber(text, "print cls.g")).First().Parameters.Length, 0);
+            Assert.AreEqual(entry.GetSignatures("cls.g", GetLineNumber(text, "print cls.g")).First().Parameters.Length, 0);
+            Assert.AreEqual(entry.GetSignatures("cls.x", GetLineNumber(text, "print cls.g")).First().Parameters.Length, 1);
+            Assert.AreEqual(entry.GetSignatures("cls.inst_method", GetLineNumber(text, "print cls.g")).First().Parameters.Length, 1);
+
+            text = @"class C(type):
+    def f(self):
+        print('C.f')
+
+    def x(self, var):
+        pass
+
+
+class D(object, metaclass = C):
+    @classmethod
+    def g(cls):
+        print(cls.g)
+
+
+    def inst_method(self):
+        pass
+    ";
+
+            entry = ProcessText(text, PythonLanguageVersion.V32);
+            Assert.AreEqual(entry.GetSignatures("cls.f", GetLineNumber(text, "print(cls.g)")).First().Parameters.Length, 0);
+            Assert.AreEqual(entry.GetSignatures("cls.g", GetLineNumber(text, "print(cls.g)")).First().Parameters.Length, 0);
+            Assert.AreEqual(entry.GetSignatures("cls.x", GetLineNumber(text, "print(cls.g)")).First().Parameters.Length, 1);
+            Assert.AreEqual(entry.GetSignatures("cls.inst_method", GetLineNumber(text, "print(cls.g)")).First().Parameters.Length, 1);
+
+
+
+        }
+
+        /// <summary>
+        /// Tests assigning odd things to the metaclass variable.
+        /// </summary>
+        [TestMethod]
+        public void TestMethodClassNegative() {
+            var assigns = new[] { "[1,2,3]", "(1,2)", "1", "abc", "1.0", "lambda x: 42", "C.f", "C().f", "f", "{2:3}" };
+
+            foreach (var assign in assigns) {
+                string text = @"
+class C(object): 
+    def f(self): pass
+
+def f():  pass
+
+class D(object):
+    __metaclass__ = " + assign + @"
+    @classmethod
+    def g(cls):
+        print cls.g
+
+
+    def inst_method(self):
+        pass
+    ";
+
+                ProcessText(text);
+            }
+        }
+
         protected IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
             Dictionary<LocationInfo, IAnalysisVariable> res = new Dictionary<LocationInfo,IAnalysisVariable>();
             foreach (var v in vars) {

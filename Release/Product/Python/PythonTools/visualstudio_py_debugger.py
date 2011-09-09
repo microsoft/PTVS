@@ -1454,14 +1454,12 @@ class DebuggerBuffer(object):
 
 def is_same_py_file(file1, file2):
     """compares 2 filenames accounting for .pyc files"""
-    if file1.endswith('.pyc') or file1.endswith('.pyo'):
-        if file2.endswith('.pyc') or file2.endswith('.pyo'):
-            return file1 == file2
-        return file1[:-1] == file2
-    elif file2.endswith('.pyc') or file2.endswith('.pyo'):
-        return file1 == file2[:-1]
-    else:
-        return file1 == file2
+    if file1.endswith('.pyc') or file1.endswith('.pyo'): 
+        file1 = file1[:-1]
+    if file2.endswith('.pyc') or file2.endswith('.pyo'): 
+        file2 = file2[:-1]
+
+    return file1 == file2
 
 
 def print_exception():

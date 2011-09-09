@@ -16,14 +16,18 @@ using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class SliceInfo : Namespace {
-        private ISet<Namespace> _start;
+        /*private ISet<Namespace> _start;
         private ISet<Namespace> _stop;
-        private ISet<Namespace> _step;
+        private ISet<Namespace> _step;*/
+        public static SliceInfo Instance = new SliceInfo();
 
+        public SliceInfo() { }
+        /*
         public SliceInfo(ISet<Namespace> start, ISet<Namespace> stop, ISet<Namespace> step) {
             _start = start;
             _stop = stop;
             _step = step;
         }
+        */
     }
 }

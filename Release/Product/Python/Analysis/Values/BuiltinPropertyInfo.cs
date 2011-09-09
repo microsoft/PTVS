@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
-            if (instance == unit.ProjectState._noneInst) {
+            if (instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             }
 

@@ -48,9 +48,6 @@ namespace Microsoft.PythonTools.Project {
                         ((Bitmap)_imageList.Images[1]).GetHicon();
                 }
             }
-            if(this.FindChild(Path.Combine(VirtualNodeName, "__init__.py")) != null) {
-//            if (File.Exists(Path.Combine(VirtualNodeName, "__init__.py"))) {
-            }
 
             return base.GetIconHandle(open);
         }
