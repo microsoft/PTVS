@@ -15,7 +15,6 @@
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Designer.Interfaces;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -86,7 +85,7 @@ namespace Microsoft.PythonTools.Project {
         public virtual int MapLogicalView(ref Guid logicalView, out string physicalView) {
             // initialize out parameter
             physicalView = null;
-
+            
             bool isSupportedView = false;
             // Determine the physical view
             if (VSConstants.LOGVIEWID_Primary == logicalView ||
@@ -285,26 +284,30 @@ namespace Microsoft.PythonTools.Project {
                     var guid = VSConstants.VsTextBufferUserDataGuid.VsBufferEncodingPromptOnLoad_guid;
                     userData.SetData(ref guid, (uint)1);
                 } else {
-                    var encoding = Parser.GetEncodingFromFile(documentMoniker);
-                    var guid = VSConstants.VsTextBufferUserDataGuid.VsBufferEncodingVSTFF_guid;
-                    uint value;
-                    if (encoding != null && encoding.CodePage != 0) {
-                        // code page is stored in lower 16 bits of the mask.
-                        value = (uint)encoding.CodePage;
-                    } else {
-                        // code page is stored in lower 16 bits of the mask.
-                        value = (uint)PythonToolsPackage.Instance.OptionsPage.DefaultCodePage;
-                    }
-
-                    // if the code page is zero fall back to VS's default behavior
-                    if (value != 0) {
-                        userData.SetData(ref guid, value);
-                    }
+                    InitializeFileEncoding(documentMoniker, userData);
                 }
             }
 
+            InitializeLanguageService(textLines);
+
             cmdUI = VSConstants.GUID_TextEditorFactory;
             return Marshal.GetIUnknownForObject(window);
+        }
+
+        /// <summary>
+        /// Initializes the language service for the given file.  This allows files with different
+        /// extensions to be opened by the editor type and get correct highlighting and intellisense
+        /// controllers.
+        /// </summary>
+        /// <param name="textLines"></param>
+        protected virtual void InitializeLanguageService(IVsTextLines textLines) {            
+        }
+
+        /// <summary>
+        /// Initializes the file encoding based upon the contents of the file.  If this function does
+        /// nothing VS will use it's default behavior for determing the encoding of the file.
+        /// </summary>
+        protected virtual void InitializeFileEncoding(string documentMoniker, IVsUserData userData) {            
         }
 
         #endregion

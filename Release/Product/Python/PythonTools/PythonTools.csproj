@@ -176,7 +176,7 @@
     <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ProvideEditorExtensionWithLinkedEditorAttribute.cs" />
+    <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="ProvideImportTemplatesAttribute.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />

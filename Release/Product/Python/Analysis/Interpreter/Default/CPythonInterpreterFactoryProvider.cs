@@ -57,6 +57,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             foreach (var key in python.GetSubKeyNames()) {
                 Version version;
                 if (Version.TryParse(key, out version)) {
+                    if (version.Major == 2 && version.Minor <= 4) {
+                        // 2.4 and below not supported.
+                        continue;
+                    }
+
                     var installPath = python.OpenSubKey(key + "\\InstallPath");
                     if (installPath != null) {
                         string basePath = installPath.GetValue("").ToString();

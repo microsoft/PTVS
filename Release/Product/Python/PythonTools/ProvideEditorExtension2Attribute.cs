@@ -23,9 +23,12 @@ namespace Microsoft.PythonTools {
     ///     This attribute associates a file extension to a given editor factory.  
     ///     The editor factory may be specified as either a GUID or a type and 
     ///     is placed on a package.
+    ///     
+    /// This differs from the normal one in that more than one extension can be supplied and
+    /// a linked editor GUID can be supplied.
     /// </devdoc>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    internal sealed class ProvideEditorExtensionWithLinkedEditorAttribute : RegistrationAttribute {
+    internal sealed class ProvideEditorExtension2Attribute : RegistrationAttribute {
         private Guid _factory;
         private string _extension;
         private int _priority;
@@ -35,12 +38,13 @@ namespace Microsoft.PythonTools {
         private bool _editorFactoryNotify;
         private string _editorName;
         private Guid _linkedEditorGuid;
+        private readonly string[] _extensions;
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.ProvideEditorExtensionAttribute"]' />
         /// <devdoc>
         ///     Creates a new attribute.
         /// </devdoc>
-        public ProvideEditorExtensionWithLinkedEditorAttribute(object factoryType, string extension, int priority) {
+        public ProvideEditorExtension2Attribute(object factoryType, string extension, int priority, params string[] extensions) {
             // figure out what type of object they passed in and get the GUID from it
             if (factoryType is string)
                 this._factory = new Guid((string)factoryType);
@@ -51,12 +55,13 @@ namespace Microsoft.PythonTools {
             else
                 throw new ArgumentException(string.Format(Resources.Culture, "invalid factory type", factoryType));
 
-            this._extension = extension;
-            this._priority = priority;
-            this._project = Guid.Empty;
-            this._templateDir = "";
-            this._resId = 0;
-            this._editorFactoryNotify = false;
+            _extension = extension;
+            _priority = priority;
+            _project = Guid.Empty;
+            _templateDir = "";
+            _resId = 0;
+            _editorFactoryNotify = false;
+            _extensions = extensions;
         }
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.Extension"]' />
@@ -167,12 +172,26 @@ namespace Microsoft.PythonTools {
                 }
                 if (0 != _resId)
                     editorKey.SetValue("DisplayName", "#" + _resId.ToString(CultureInfo.InvariantCulture));
-                editorKey.SetValue("LinkedEditorGuid", _linkedEditorGuid.ToString("B"));
+                if (_linkedEditorGuid != Guid.Empty) {
+                    editorKey.SetValue("LinkedEditorGuid", _linkedEditorGuid.ToString("B"));
+                }
                 editorKey.SetValue("Package", context.ComponentType.GUID.ToString("B"));
             }
 
             using (Key extensionKey = context.CreateKey(RegKeyName + "\\Extensions")) {
                 extensionKey.SetValue(Extension.Substring(1), Priority);
+
+                if (_extensions != null && _extensions.Length > 0) {
+                    foreach (var extension in _extensions) {
+                        var extensionAndPri = extension.Split(':');
+                        int pri;
+                        if (extensionAndPri.Length != 2 || !Int32.TryParse(extensionAndPri[1], out pri)) {
+                            throw new InvalidOperationException("Expected extension:priority");
+                        }
+
+                        extensionKey.SetValue(extensionAndPri[0], pri);
+                    }
+                }
             }
 
             // Build the path of the registry key for the "Add file to project" entry

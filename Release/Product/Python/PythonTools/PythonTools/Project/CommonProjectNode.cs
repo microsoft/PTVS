@@ -968,12 +968,12 @@ namespace Microsoft.PythonTools.Project {
 
             switch (propid) {
                 case (int)__VSPSEPROPID.VSPSEPROPID_UseGlobalEditorByDefault:
-                    // we do not want to use global editor for form files
-                    result = true;
-                    break;
-                //case (int)__VSPSEPROPID.VSPSEPROPID_ProjectDefaultEditorName:
-                //    result = "Python Form Editor";
-                //    break;
+                    // don't show project default editor, every file supports Python.
+                    result = false;
+                    return VSConstants.E_FAIL;
+                /*case (int)__VSPSEPROPID.VSPSEPROPID_ProjectDefaultEditorName:
+                    result = "Python Editor";
+                    break;*/
             }
 
             return VSConstants.S_OK;
