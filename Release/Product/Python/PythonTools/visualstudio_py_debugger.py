@@ -81,6 +81,8 @@ STEPPING_ATTACH_BREAK = 3
 STEPPING_INTO = 4
 STEPPING_OVER = 5     # last value, we increment past this.
 
+USER_STEPPING = (STEPPING_OUT, STEPPING_INTO, STEPPING_OVER)
+
 def cmd(cmd_str):
     if sys.version >= '3.0':
         return bytes(cmd_str, 'ascii')
@@ -249,9 +251,17 @@ def probe_stack(depth = 10):
   probe_stack(depth - 1)
 
 
+# specifies list of files not to debug, can be added to externally (the REPL does this
+# for $attach support and not stepping into the REPL)
+ 
+DONT_DEBUG = [__file__]
 def should_debug_code(code):
-    return not is_same_py_file(code.co_filename, __file__)
+    filename = code.co_filename
+    for dont_debug_file in DONT_DEBUG:
+        if is_same_py_file(filename, dont_debug_file):
+            return False
 
+    return True
 
 attach_lock = thread.allocate()
 attach_sent_break = False
@@ -452,20 +462,20 @@ class Thread(object):
         if not DETACHED:
             stepping = self.stepping
             if stepping is not STEPPING_NONE:
-                if stepping == STEPPING_OUT:
-                    self.stepping = STEPPING_NONE
-                    self.block(lambda: report_step_finished(self.id))
-                elif stepping == STEPPING_OVER:
-                    if frame.f_code.co_name == "<module>" and should_debug_code(frame.f_code):
+                if stepping > STEPPING_OVER:
+                    self.stepping -= 1
+                elif stepping < STEPPING_OUT:
+                    self.stepping += 1
+                elif stepping in USER_STEPPING and should_debug_code(frame.f_code):
+                    if frame.f_code.co_name == "<module>":
                         # restore back the module frame for the step out of a module
                         self.push_frame(frame)
                         self.stepping = STEPPING_NONE
                         self.block(lambda: report_step_finished(self.id))
                         self.pop_frame()
-                elif stepping > STEPPING_OVER:
-                    self.stepping -= 1
-                elif stepping < STEPPING_OUT:
-                    self.stepping += 1
+                    else:
+                        self.stepping = STEPPING_NONE
+                        self.block(lambda: report_step_finished(self.id))
 
         # forward call to previous trace function, if any
         old_trace_func = self.prev_trace_func

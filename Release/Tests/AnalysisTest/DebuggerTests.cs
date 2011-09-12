@@ -553,7 +553,8 @@ namespace AnalysisTest {
 
             // Bug 508: http://pytools.codeplex.com/workitem/508
             StepTest(DebuggerTestPath + @"SteppingTestBug508.py",
-                    new ExpectedStep(StepKind.Into, 1)     // step print (should step over)
+                    new ExpectedStep(StepKind.Into, 1),     // step print (should step over)
+                    new ExpectedStep(StepKind.Resume, 1)     // step print (should step over)
                 );
 
             // Bug 509: http://pytools.codeplex.com/workitem/509
@@ -601,11 +602,14 @@ namespace AnalysisTest {
                     new ExpectedStep(StepKind.Into, 2),     // step into print 'abc'
                     new ExpectedStep(StepKind.Into, 3),     // step into print 'def'
                     new ExpectedStep(StepKind.Into, 4),     // step into print 'baz'
+                    new ExpectedStep(StepKind.Into, 13),     // step into g()
                     new ExpectedStep(StepKind.Into, 14),     // step into g()
                     new ExpectedStep(StepKind.Into, 7),     // step into dict assign
                     new ExpectedStep(StepKind.Into, 8),     // step into print 'hello'
+                    new ExpectedStep(StepKind.Into, 14),     // step into h()
                     new ExpectedStep(StepKind.Into, 15),     // step into h()
-                    new ExpectedStep(StepKind.Into, 11)    // step into h() return
+                    new ExpectedStep(StepKind.Into, 11),    // step into h() return
+                    new ExpectedStep(StepKind.Resume, 15)    // step into h() return
                 );
             }
 
@@ -661,7 +665,7 @@ namespace AnalysisTest {
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 4),     // step into f()
                 new ExpectedStep(StepKind.Over, 2),     // step over print 'hi'
-                new ExpectedStep(StepKind.Over, 4)      // let the program exit
+                new ExpectedStep(StepKind.Resume, 4)      // let the program exit
             );
 
             StepTest(DebuggerTestPath + @"SteppingTest.py",
