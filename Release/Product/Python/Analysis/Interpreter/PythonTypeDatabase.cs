@@ -132,11 +132,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     psi.CreateNoWindow = true;
                     psi.UseShellExecute = false;
                     psi.FileName = Path.Combine(GetPythonToolsInstallPath(), "Microsoft.PythonTools.Analyzer.exe");
+                    string libDir;
+                    string virtualEnvPackages;
+                    GetLibDirs(request, out libDir, out virtualEnvPackages);
+
                     if (File.Exists(psi.FileName)) {
-                        psi.Arguments = "/dir " + "\"" + Path.Combine(Path.GetDirectoryName(request.Factory.Configuration.InterpreterPath), "Lib") + "\"" +
-                            " /version V" + request.Factory.Configuration.Version.ToString().Replace(".", "") +
-                            " /outdir " + "\"" + outPath + "\"" +
-                            " /indir " + "\"" + outPath + "\"";
+                        psi.Arguments = BuildArguments(request, outPath, libDir, virtualEnvPackages);
 
                         proc = new Process();
                         proc.StartInfo = psi;
@@ -166,6 +167,50 @@ namespace Microsoft.PythonTools.Interpreter {
                 databaseGenerationCompleted();
             }
             return false;
+        }
+
+        private static string BuildArguments(PythonTypeDatabaseCreationRequest request, string outPath, string libDir, string virtualEnvPackages) {
+            string args = "/dir " + "\"" + libDir + "\"" +
+                " /version V" + request.Factory.Configuration.Version.ToString().Replace(".", "") +
+                " /outdir " + "\"" + outPath + "\"" +
+                " /indir " + "\"" + outPath + "\"";
+
+            if (virtualEnvPackages != null) {
+                args += " /dir \"" + virtualEnvPackages + "\"";
+            }
+
+
+            return args;
+        }
+
+        private static void GetLibDirs(PythonTypeDatabaseCreationRequest request, out string libDir, out string virtualEnvPackages) {
+            libDir = Path.Combine(Path.GetDirectoryName(request.Factory.Configuration.InterpreterPath), "Lib");
+            virtualEnvPackages = null;
+            if (!Directory.Exists(libDir)) {
+                string virtualEnvLibDir = Path.Combine(Path.GetDirectoryName(request.Factory.Configuration.InterpreterPath), "..\\Lib");
+                string prefixFile = Path.Combine(virtualEnvLibDir, "orig-prefix.txt");
+                if (Directory.Exists(virtualEnvLibDir) && File.Exists(prefixFile)) {
+                    // virtual env is setup differently.  The EXE is in a Scripts directory with the Lib dir being at ..\Lib 
+                    // relative to the EXEs dir.  There is alos an orig-prefix.txt which points at the normal full Python
+                    // install.  Parse that file and include the normal Python install in the analysis.
+                    try {
+                        var lines = File.ReadAllLines(Path.Combine(prefixFile));
+                        if (lines.Length >= 1 && lines[0].IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+
+                            string origLibDir = Path.Combine(lines[0], "Lib");
+                            if (Directory.Exists(origLibDir)) {
+                                // virtual env install
+                                libDir = origLibDir;
+
+                                virtualEnvPackages = Path.Combine(virtualEnvLibDir, "site-packages");
+                            }
+                        }
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    } catch (System.Security.SecurityException) {
+                    }
+                }
+            }
         }
 
         private static bool DatabaseExists(string path) {

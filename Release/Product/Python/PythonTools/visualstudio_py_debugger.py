@@ -467,7 +467,7 @@ class Thread(object):
                 elif stepping < STEPPING_OUT:
                     self.stepping += 1
                 elif stepping in USER_STEPPING and should_debug_code(frame.f_code):
-                    if frame.f_code.co_name == "<module>":
+                    if self.cur_frame is None or frame.f_code.co_name == "<module>" :
                         # restore back the module frame for the step out of a module
                         self.push_frame(frame)
                         self.stepping = STEPPING_NONE

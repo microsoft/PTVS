@@ -78,7 +78,18 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public Expression GetEvaluatedExpression() {
-            return _analysis.GetExpressionFromText(_expr, _lineNo);
+            return Statement.GetExpression(_analysis.GetAstFromText(_expr, _lineNo).Body);
+        }
+
+        /// <summary>
+        /// Returns the complete PythonAst for the evaluated expression.  Calling Statement.GetExpression on the Body
+        /// of the AST will return the same expression as GetEvaluatedExpression.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        /// <returns></returns>
+        public PythonAst GetEvaluatedAst() {
+            return _analysis.GetAstFromText(_expr, _lineNo);
         }
     }
 }

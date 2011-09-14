@@ -175,8 +175,9 @@ namespace Microsoft.PythonTools.Repl {
                 var startupProj = PythonToolsPackage.GetStartupProject();
                 if (startupProj != null) {
                     string searchPath = startupProj.GetProjectProperty(CommonConstants.SearchPath, true);
-                    if (!string.IsNullOrEmpty(searchPath)) {
-                        processInfo.EnvironmentVariables[Interpreter.Configuration.PathEnvironmentVariable] = searchPath;
+                    string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable;
+                    if (!string.IsNullOrEmpty(searchPath) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
+                        processInfo.EnvironmentVariables[pathEnvVar] = searchPath;
                     }
 
                     string interpArgs = startupProj.GetProjectProperty(CommonConstants.InterpreterArguments, true);

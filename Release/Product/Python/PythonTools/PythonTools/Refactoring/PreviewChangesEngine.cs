@@ -30,14 +30,15 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly PreviewList _list;
         internal readonly IRenameVariableInput _input;
         internal readonly ProjectAnalyzer _analayzer;
-        private readonly string _originalName;
+        private readonly string _originalName, _privatePrefix;
         private readonly IEnumerable<IAnalysisVariable> _variables;
 
-        public PreviewChangesEngine(IRenameVariableInput input, ExpressionAnalysis analysis, RenameVariableRequest request, string originalName, ProjectAnalyzer analyzer, IEnumerable<IAnalysisVariable> variables) {
+        public PreviewChangesEngine(IRenameVariableInput input, ExpressionAnalysis analysis, RenameVariableRequest request, string originalName, string privatePrefix, ProjectAnalyzer analyzer, IEnumerable<IAnalysisVariable> variables) {
             _analysis = analysis;
             _analayzer = analyzer;
             _renameReq = request;
             _originalName = originalName;
+            _privatePrefix = privatePrefix;
             _variables = variables;
             _input = input;
             _list = new PreviewList(CreatePreviewItems().ToArray());
@@ -87,6 +88,15 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
+        /// <summary>
+        /// Gets the private prefix class name minus the leading underscore.
+        /// </summary>
+        public string PrivatePrefix {
+            get {
+                return _privatePrefix;
+            }
+        }
+
         public RenameVariableRequest Request {
             get {
                 return _renameReq;
@@ -101,11 +111,11 @@ namespace Microsoft.PythonTools.Refactoring {
             var left = (LocationPreviewItem)leftItem;
             var right = (LocationPreviewItem)rightItem;
 
-            if (left.Location.Line != right.Location.Line) {
-                return left.Location.Line - right.Location.Line;
+            if (left.Line != right.Line) {
+                return left.Line - right.Line;
             }
 
-            return left.Location.Column - right.Location.Column;
+            return left.Column - right.Column;
         }
 
         public int ApplyChanges() {

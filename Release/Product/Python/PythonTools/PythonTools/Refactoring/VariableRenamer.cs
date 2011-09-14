@@ -40,13 +40,24 @@ namespace Microsoft.PythonTools.Refactoring {
             var analysis = _view.GetExpressionAnalysis();
             
             string originalName = null;
+            string privatePrefix = null;
             Expression expr = null;
             if (analysis != ExpressionAnalysis.Empty) {
-                expr = analysis.GetEvaluatedExpression();
-                if (expr is NameExpression) {
-                    originalName = ((NameExpression)expr).Name;
-                } else if (expr is MemberExpression) {
-                    originalName = ((MemberExpression)expr).Name;
+                PythonAst ast = analysis.GetEvaluatedAst();
+                
+                expr = Statement.GetExpression(ast.Body);
+
+                NameExpression ne = expr as NameExpression;
+                MemberExpression me;
+                if (ne != null) {
+                    originalName = ne.Name;
+                } else if ((me = expr as MemberExpression) != null) {
+                    originalName = me.Name;
+                }
+
+                if (ast.PrivatePrefix != null && originalName.StartsWith("_" + ast.PrivatePrefix)) {
+                    originalName = originalName.Substring(ast.PrivatePrefix.Length + 1);
+                    privatePrefix = ast.PrivatePrefix;
                 }
 
                 if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty) {
@@ -87,7 +98,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var info = input.GetRenameInfo(originalName);
             if (info != null) {
-                var engine = new PreviewChangesEngine(input, analysis, info, originalName, _view.GetAnalyzer(), variables);
+                var engine = new PreviewChangesEngine(input, analysis, info, originalName, privatePrefix, _view.GetAnalyzer(), variables);
                 if (info.Preview) {
                     previewChanges.PreviewChanges(engine);
                 } else {

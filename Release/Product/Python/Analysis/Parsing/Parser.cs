@@ -193,6 +193,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         private PythonAst CreateAst(Statement ret) {
             var ast = new PythonAst(ret, _tokenizer.GetLineLocations());
+            ast.PrivatePrefix = _privatePrefix;
             if (_token.Token != null) {
                 ast.SetLoc(0, GetEnd());
             }
@@ -204,6 +205,7 @@ namespace Microsoft.PythonTools.Parsing {
                     ast.SetAttribute(keyValue.Key, nodeAttr.Key, nodeAttr.Value);
                 }
             }
+            
             PythonNameBinder.BindAst(_langVersion, ast, _errors, _bindReferences);
 
             return ast;

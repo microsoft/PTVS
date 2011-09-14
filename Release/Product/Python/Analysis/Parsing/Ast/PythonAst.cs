@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private readonly Statement _body;
         internal readonly int[] _lineLocations;
         private readonly Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();
+        private string _privatePrefix;
 
         public PythonAst(Statement body, int[] lineLocations) {
             if (body == null) {
@@ -37,6 +38,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override string Name {
             get {
                 return "<module>";
+            }
+        }
+
+        /// <summary>
+        /// Gets the class name which this AST was parsed under.  The class name is appended to any member
+        /// accesses that occur.
+        /// </summary>
+        public string PrivatePrefix {
+            get {
+                return _privatePrefix;
+            }
+            internal set {
+                _privatePrefix = value;
             }
         }
 

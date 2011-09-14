@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -24,27 +25,54 @@ namespace Microsoft.PythonTools.Refactoring {
     /// Represents an individual rename location within a file in the refactor preview window.
     /// </summary>
     class LocationPreviewItem : IPreviewItem {
-        private readonly LocationInfo _location;
         private readonly FilePreviewItem _parent;
         private readonly string _text;
         private readonly VariableType _type;
+        private readonly int _lineNo, _columnNo;
         private Span _span;
         private bool _checked = true;
         private static readonly char[] _whitespace = new[] { ' ', '\t', '\f' };
 
         public LocationPreviewItem(FilePreviewItem parent, LocationInfo locationInfo, VariableType type) {
-            _location = locationInfo;
+            _lineNo = locationInfo.Line;
+            _columnNo = locationInfo.Column;            
             _parent = parent;
-            string text = _location.ProjectEntry.GetLine(_location.Line);
+            string text = locationInfo.ProjectEntry.GetLine(locationInfo.Line);
             string trimmed = text.TrimStart(_whitespace);
             _text = trimmed;
             _type = type;
-            _span = new Span(_location.Column - (text.Length - trimmed.Length) - 1, parent.Engine.OriginalName.Length);
+            _span = new Span(_columnNo - (text.Length - trimmed.Length) - 1, parent.Engine.OriginalName.Length);
+            if (String.Compare(_text, _span.Start, parent.Engine.OriginalName, 0, parent.Engine.OriginalName.Length) != 0) {
+                // we are renaming a name mangled name (or we have a bug where the names aren't lining up).
+                Debug.Assert(_text.Substring(_span.Start, _span.Length + 1 + parent.Engine.PrivatePrefix.Length) == "_" + parent.Engine.PrivatePrefix + parent.Engine.OriginalName);
+
+
+                if (parent.Engine.Request.Name.StartsWith("__")) {
+                    // if we're renaming to a private prefix name then we just rename the non-prefixed portion
+                    _span = new Span(_span.Start + 1 + parent.Engine.PrivatePrefix.Length, _span.Length);
+                    _columnNo += 1 + parent.Engine.PrivatePrefix.Length;
+                } else {
+                    // otherwise we renmae the prefixed and non-prefixed portion
+                    _span = new Span(_span.Start, _span.Length + 1 + parent.Engine.PrivatePrefix.Length);
+                }
+            }
         }
 
-        public LocationInfo Location {
+        public int Line {
             get {
-                return _location;
+                return _lineNo;
+            }
+        }
+
+        public int Column {
+            get {
+                return _columnNo;
+            }
+        }
+
+        public int Length {
+            get {
+                return _span.Length;
             }
         }
 
@@ -98,9 +126,9 @@ namespace Microsoft.PythonTools.Refactoring {
             _parent.DisplayPreview(view);
 
             var span = new TextSpan();
-            span.iEndLine = span.iStartLine = _location.Line - 1;
-            span.iStartIndex = _location.Column - 1;
-            span.iEndIndex = _location.Column - 1 + _parent.Engine.Request.Name.Length;
+            span.iEndLine = span.iStartLine = Line - 1;
+            span.iStartIndex = Column - 1;
+            span.iEndIndex = Column - 1 + _parent.Engine.Request.Name.Length;
 
             view.EnsureSpanVisible(span);
         }

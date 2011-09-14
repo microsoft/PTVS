@@ -323,6 +323,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             if ((result == null || result.Count == 0) && _metaclass != null) {
+                result = EmptySet<Namespace>.Instance;
                 foreach (var type in _metaclass.Types) {
                     if (type.Push()) {
                         try {

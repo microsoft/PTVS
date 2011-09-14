@@ -33,6 +33,181 @@ namespace AnalysisTest {
         private const string ErrorModuleName = "Cannot rename a module name";
 
         [TestMethod]
+        public void PrivateMemberMangling() {
+            RefactorTest("foo", "__f",
+                new[] { 
+                    new FileInput(
+@"class C:
+    def __f(self):
+        pass
+
+    def g(self):
+        self.__f()
+
+    def x(self):
+        self._C__f()
+    ",
+@"class C:
+    def foo(self):
+        pass
+
+    def g(self):
+        self.foo()
+
+    def x(self):
+        self.foo()
+    "
+
+                    )
+                },
+                new ExpectedPreviewItem("test.py",
+                    new ExpectedPreviewItem("def __f(self):"),
+                    new ExpectedPreviewItem("self.__f()"),
+                    new ExpectedPreviewItem("self._C__f()")
+                )
+            );
+
+            RefactorTest("foo", "_C__f",
+                new[] { 
+                    new FileInput(
+@"class C:
+    def __f(self):
+        pass
+
+    def g(self):
+        self.__f()
+
+    def x(self):
+        self._C__f()
+    ",
+@"class C:
+    def foo(self):
+        pass
+
+    def g(self):
+        self.foo()
+
+    def x(self):
+        self.foo()
+    "
+
+                    )
+                },
+                new ExpectedPreviewItem("test.py",
+                    new ExpectedPreviewItem("def __f(self):"),
+                    new ExpectedPreviewItem("self.__f()"),
+                    new ExpectedPreviewItem("self._C__f()")
+                )
+            );
+
+
+            RefactorTest("__y", "__f",
+                new[] { 
+                    new FileInput(
+@"class C:
+    def __f(self):
+        pass
+
+    def g(self):
+        self.__f()
+
+    def x(self):
+        self._C__f()
+    ",
+@"class C:
+    def __y(self):
+        pass
+
+    def g(self):
+        self.__y()
+
+    def x(self):
+        self._C__y()
+    "
+
+                    )
+                },
+                false,
+                null,
+                new ExpectedPreviewItem("test.py",
+                    new ExpectedPreviewItem("def __f(self):"),
+                    new ExpectedPreviewItem("self.__f()"),
+                    new ExpectedPreviewItem("self._C__f()")
+                )
+            );
+
+            RefactorTest("__longname", "__f",
+                new[] { 
+                    new FileInput(
+@"class C:
+    def __f(self):
+        pass
+
+    def g(self):
+        self.__f()
+
+    def x(self):
+        self._C__f()
+    ",
+@"class C:
+    def __longname(self):
+        pass
+
+    def g(self):
+        self.__longname()
+
+    def x(self):
+        self._C__longname()
+    "
+
+                    )
+                },
+                false,
+                null,
+                new ExpectedPreviewItem("test.py",
+                    new ExpectedPreviewItem("def __f(self):"),
+                    new ExpectedPreviewItem("self.__f()"),
+                    new ExpectedPreviewItem("self._C__f()")
+                )
+            );
+
+            RefactorTest("__f", "__longname",
+                new[] { 
+                    new FileInput(
+@"class C:
+    def __longname(self):
+        pass
+
+    def g(self):
+        self.__longname()
+
+    def x(self):
+        self._C__longname()
+    ",
+@"class C:
+    def __f(self):
+        pass
+
+    def g(self):
+        self.__f()
+
+    def x(self):
+        self._C__f()
+    "
+
+                    )
+                },
+                false,
+                null,
+                new ExpectedPreviewItem("test.py",
+                    new ExpectedPreviewItem("def __longname(self):"),
+                    new ExpectedPreviewItem("self.__longname()"),
+                    new ExpectedPreviewItem("self._C__longname()")
+                )
+            );
+        }
+
+        [TestMethod]
         public void SanityClassField() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -2105,18 +2280,20 @@ def g(a, b, c):
         }
 
         private void RefactorTest(string newName, string caretText, FileInput[] inputs, params ExpectedPreviewItem[] items) {
-            RefactorTest(newName, caretText, inputs, null, items);
+            RefactorTest(newName, caretText, inputs, true, null, items);
         }
 
-        private void RefactorTest(string newName, string caretText, FileInput[] inputs, Version version = null, params ExpectedPreviewItem[] items) {
+        private void RefactorTest(string newName, string caretText, FileInput[] inputs, bool mutateTest = true, Version version = null, params ExpectedPreviewItem[] items) {
             foreach(bool preview in new[] { true, false } ) {
                 OneRefactorTest(newName, caretText, inputs, version, preview, null, items);
 
-                // try again w/ a longer name
-                MutateTest(newName, caretText, inputs, version, newName + newName, preview);
+                if (mutateTest) {
+                    // try again w/ a longer name
+                    MutateTest(newName, caretText, inputs, version, newName + newName, preview);
 
-                // and a shorter name
-                MutateTest(newName, caretText, inputs, version, new string(newName[0], 1), preview);
+                    // and a shorter name
+                    MutateTest(newName, caretText, inputs, version, new string(newName[0], 1), preview);
+                }
             }
         }
 

@@ -219,8 +219,9 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         private void SetupEnvironment(StringDictionary environment) {
             string searchPath = _project.GetProperty(CommonConstants.SearchPath);
-            if (!String.IsNullOrWhiteSpace(searchPath)) {
-                environment[this._project.GetInterpreterFactory().Configuration.PathEnvironmentVariable] = searchPath;
+            string pathEnvVar = _project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
+            if (!String.IsNullOrWhiteSpace(searchPath) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
+                environment[pathEnvVar] = searchPath;
             }
         }
 

@@ -305,6 +305,13 @@ actual inspection and introspection."""
         self.conn.send(ReplBackend._DETC)
         self.send_lock.release()
 
+    def init_debugger(self):
+        import visualstudio_py_debugger
+        visualstudio_py_debugger.DONT_DEBUG.append(__file__)
+        new_thread = visualstudio_py_debugger.new_thread()
+        sys.settrace(new_thread.trace_func)
+        visualstudio_py_debugger.intercept_threads(True)
+
     def send_image(self, filename):
         self.send_lock.acquire()
         self.conn.send(ReplBackend._IMGD)
@@ -970,14 +977,6 @@ def _run_repl():
     global __name__
     __name__ = 'visualstudio_py_repl'
     
-    if options.enable_attach:
-        # importing this hooks start_new_thread
-        import visualstudio_py_debugger
-        visualstudio_py_debugger.DONT_DEBUG.append(__file__)
-        new_thread = visualstudio_py_debugger.new_thread()
-        sys.settrace(new_thread.trace_func)
-        visualstudio_py_debugger.intercept_threads(True)
-
     backend_type = BasicReplBackend
     backend_error = None
     if options.backend is not None and options.backend.lower() != 'standard':
@@ -999,6 +998,8 @@ def _run_repl():
     global BACKEND
     BACKEND = backend_type(launch_file=options.launch_file)
     BACKEND.connect(int(options.port))
+
+    BACKEND.init_debugger()
 
     if backend_error is not None:
         sys.stderr.write('Error using selected REPL back-end:\n')

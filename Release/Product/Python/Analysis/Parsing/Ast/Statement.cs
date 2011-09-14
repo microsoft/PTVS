@@ -31,5 +31,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal abstract void AppendCodeStringStmt(StringBuilder res, PythonAst ast);
+
+        /// <summary>
+        /// Returns the expression contained by the statement.
+        /// 
+        /// Returns null if it's not an expression statement or return statement.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public static Expression GetExpression(Statement statement) {
+            if (statement is ExpressionStatement) {
+                return ((ExpressionStatement)statement).Expression;
+            } else if (statement is ReturnStatement) {
+                return ((ReturnStatement)statement).Expression;
+            } else {
+                return null;
+            }
+        }
     }
 }

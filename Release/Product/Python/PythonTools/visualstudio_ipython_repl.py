@@ -191,6 +191,38 @@ class IPythonBackend(ReplBackend):
     def flush(self):
         pass
 
+    def init_debugger(self):
+        import visualstudio_py_debugger
+        from os import path
+
+        self.run_command('''
+def __visualstudio_debugger_init():    
+    import sys
+    sys.path.append(''' + repr(path.dirname(visualstudio_py_debugger.__file__)) + ''')
+    import visualstudio_py_debugger
+    new_thread = visualstudio_py_debugger.new_thread()
+    sys.settrace(new_thread.trace_func)
+    visualstudio_py_debugger.intercept_threads(True)
+
+__visualstudio_debugger_init()
+del __visualstudio_debugger_init
+''')
+
+    def attach_process(self, port, debugger_id):
+        self.run_command('''
+def __visualstudio_debugger_attach():
+    import visualstudio_py_debugger
+
+    def do_detach():
+        visualstudio_py_debugger.DETACH_CALLBACKS.remove(self.do_detach)
+
+    visualstudio_py_debugger.DETACH_CALLBACKS.append(do_detach)
+    visualstudio_py_debugger.attach_process(''' + str(port) + ''', ''' + repr(debugger_id) + ''', True)        
+
+__visualstudio_debugger_attach()
+del __visualstudio_debugger_attach
+''')
+
 #
 if __name__ == '__main__':
     km = VsKernelManager()

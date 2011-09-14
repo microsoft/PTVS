@@ -259,10 +259,9 @@ namespace Microsoft.PythonTools.Refactoring {
                 LocationPreviewItem item = (LocationPreviewItem)Items[i];
                 if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Checked) {
                     // change is applied
-                    var location = item.Location;
-                    updater.Replace(location.Line - 1, location.Column - 1, Engine.OriginalName.Length, Engine.Request.Name);
+                    updater.Replace(item.Line - 1, item.Column - 1, item.Length, Engine.Request.Name);
 
-                    updater.Log(String.Format("{0}({1},{2}): updated {3}", Filename, location.Line, location.Column, item.Type == Analysis.VariableType.Definition ? "definition" : "reference"));
+                    updater.Log(String.Format("{0}({1},{2}): updated {3}", Filename, item.Line, item.Column, item.Type == Analysis.VariableType.Definition ? "definition" : "reference"));
                 }
             }
 
@@ -289,21 +288,20 @@ namespace Microsoft.PythonTools.Refactoring {
             foreach (LocationPreviewItem item in Items) {
 
                 if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Checked) {
-                    var location = item.Location;
-                    if (item.Location.Line != curLine) {
+                    if (item.Line != curLine) {
                         columnDelta = 0;
                     }
-                    curLine = item.Location.Line;
+                    curLine = item.Line;
 
                     IVsTextLineMarker[] marker = new IVsTextLineMarker[1];
 
                     ErrorHandler.ThrowOnFailure(
                         _buffer.CreateLineMarker(
                             (int)MARKERTYPE2.MARKER_REFACTORING_FIELD,
-                            location.Line - 1,
-                            location.Column - 1 + columnDelta,
-                            location.Line - 1,
-                            location.Column - 1 + Engine.Request.Name.Length + columnDelta,
+                            item.Line - 1,
+                            item.Column - 1 + columnDelta,
+                            item.Line - 1,
+                            item.Column - 1 + Engine.Request.Name.Length + columnDelta,
                             null,
                             marker
                         )

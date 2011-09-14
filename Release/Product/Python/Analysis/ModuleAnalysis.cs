@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis {
         public IEnumerable<IAnalysisValue> GetValues(string exprText, int lineNumber) {
             var scopes = FindScopes(lineNumber);
             var privatePrefix = GetPrivatePrefixClassName(scopes);
-            var expr = GetExpressionFromText(exprText, privatePrefix);
+            var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
             var eval = new ExpressionEvaluator(_unit.CopyForEval(), scopes.ToArray());
 
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Analysis {
         public IEnumerable<IAnalysisVariable> GetVariables(string exprText, int lineNumber) {
             var scopes = FindScopes(lineNumber);
             string privatePrefix = GetPrivatePrefixClassName(scopes);
-            var expr = GetExpressionFromText(exprText, privatePrefix);            
+            var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
             var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray());
             NameExpression name = expr as NameExpression;
@@ -252,7 +252,7 @@ namespace Microsoft.PythonTools.Analysis {
             var scopes = FindScopes(lineNumber).ToArray();
             var privatePrefix = GetPrivatePrefixClassName(scopes);
 
-            var expr = GetExpressionFromText(exprText, privatePrefix);
+            var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
             if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
                 // no completions on integer ., the user is typing a float
                 return new MemberResult[0];
@@ -489,11 +489,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// work properly with name mangled private members.  
         /// </summary>
         public Expression GetExpressionFromText(string exprText) {
-            return GetExpressionFromText(exprText, null);
+            return Statement.GetExpression(GetAstFromText(exprText, null).Body);
         }
 
         /// <summary>
-        /// Gets the expression for the given text as if it appeared at the specified line number.
+        /// Gets the AST for the given text as if it appeared at the specified line number.
         /// 
         /// If the expression is a member expression such as "foo.__bar" and the line number is
         /// inside of a class definition this will return a MemberExpression with the mangled name
@@ -501,16 +501,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// New in 1.1.
         /// </summary>
-        public Expression GetExpressionFromText(string exprText, int lineNumber) {
+        public PythonAst GetAstFromText(string exprText, int lineNumber) {
             var scopes = FindScopes(lineNumber);
             var privatePrefix = GetPrivatePrefixClassName(scopes);
 
-            return GetExpressionFromText(exprText, privatePrefix);
+            return GetAstFromText(exprText, privatePrefix);
         }
 
-        private Expression GetExpressionFromText(string exprText, string privatePrefix) {
-            using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix })) {
-                return GetExpression(parser.ParseTopExpression().Body);
+        private PythonAst GetAstFromText(string exprText, string privatePrefix) {
+            using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true })) {
+                return parser.ParseTopExpression();
             }
         }
 
@@ -518,7 +518,7 @@ namespace Microsoft.PythonTools.Analysis {
             return new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray()).Evaluate(expr);
         }
 
-        private Expression GetExpression(Statement statement) {
+        internal static Expression GetExpression(Statement statement) {
             if (statement is ExpressionStatement) {
                 return ((ExpressionStatement)statement).Expression;
             } else if (statement is ReturnStatement) {
