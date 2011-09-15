@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 					(null == BaseReferenceNode.ResolvedAssembly.Version))
 				{
 					return 0;
@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 					(null == BaseReferenceNode.ResolvedAssembly.CultureInfo))
 				{
 					return string.Empty;
@@ -61,18 +61,19 @@ namespace Microsoft.PythonTools.Project.Automation
 				// Note that in this function we use the assembly name instead of the resolved one
 				// because the identity of this reference is the assembly name needed by the project,
 				// not the specific instance found in this machine / environment.
-				if(null == BaseReferenceNode.AssemblyName)
+				if (null == BaseReferenceNode.AssemblyName)
 				{
 					return null;
 				}
-				return BaseReferenceNode.AssemblyName.FullName;
+				// changed from MPFProj, http://mpfproj10.codeplex.com/workitem/11274
+				return BaseReferenceNode.AssemblyName.Name;
 			}
 		}
 		public override int MajorVersion
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 					(null == BaseReferenceNode.ResolvedAssembly.Version))
 				{
 					return 0;
@@ -84,7 +85,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 					(null == BaseReferenceNode.ResolvedAssembly.Version))
 				{
 					return 0;
@@ -97,17 +98,17 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 				(null == BaseReferenceNode.ResolvedAssembly.GetPublicKeyToken()))
 				{
 					return null;
 				}
 				StringBuilder builder = new StringBuilder();
 				byte[] publicKeyToken = BaseReferenceNode.ResolvedAssembly.GetPublicKeyToken();
-				for(int i = 0; i < publicKeyToken.Length; i++)
+				for (int i = 0; i < publicKeyToken.Length; i++)
 				{
-                    // changed from MPFProj:
-                    // http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=8257
+					// changed from MPFProj:
+					// http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=8257
 					builder.AppendFormat("{0:x2}", publicKeyToken[i]);
 				}
 				return builder.ToString();
@@ -118,11 +119,11 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if(null != BaseReferenceNode.ResolvedAssembly)
+				if (null != BaseReferenceNode.ResolvedAssembly)
 				{
 					return BaseReferenceNode.ResolvedAssembly.Name;
 				}
-				if(null != BaseReferenceNode.AssemblyName)
+				if (null != BaseReferenceNode.AssemblyName)
 				{
 					return BaseReferenceNode.AssemblyName.Name;
 				}
@@ -133,7 +134,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 					(null == BaseReferenceNode.ResolvedAssembly.Version))
 				{
 					return 0;
@@ -145,7 +146,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 					(0 == (BaseReferenceNode.ResolvedAssembly.Flags & AssemblyNameFlags.PublicKey)))
 				{
 					return false;
@@ -164,7 +165,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if((null == BaseReferenceNode.ResolvedAssembly) ||
+				if ((null == BaseReferenceNode.ResolvedAssembly) ||
 					(null == BaseReferenceNode.ResolvedAssembly.Version))
 				{
 					return string.Empty;

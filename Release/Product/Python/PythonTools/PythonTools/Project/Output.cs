@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.Build.Execution;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -31,7 +32,6 @@ namespace Microsoft.PythonTools.Project {
         /// <param name="outputAssembly">MSBuild generated item corresponding to the output assembly (by default, these would be of type MainAssembly</param>
         public Output(ProjectNode projectManager, ProjectItemInstance outputAssembly) {
             Utilities.ArgumentNotNull("projectManager", projectManager);
-            Utilities.ArgumentNotNull("outputAssembly", outputAssembly);
 
             project = projectManager;
             output = outputAssembly;
@@ -40,6 +40,11 @@ namespace Microsoft.PythonTools.Project {
         #region IVsOutput2 Members
 
         public int get_CanonicalName(out string pbstrCanonicalName) {
+            if (output == null) {
+                pbstrCanonicalName = project.Url;
+                return VSConstants.S_OK;
+            }
+
             // Get the output assembly path (including the name)
             pbstrCanonicalName = output.GetMetadataValue("FullPath");
             Debug.Assert(!String.IsNullOrEmpty(pbstrCanonicalName), "Output Assembly not defined");
@@ -58,6 +63,11 @@ namespace Microsoft.PythonTools.Project {
         /// apply as other projects probably don't know how to access it.
         /// </summary>
         public virtual int get_DeploySourceURL(out string pbstrDeploySourceURL) {
+            if (output == null) {
+                pbstrDeploySourceURL = null;
+                return VSConstants.E_FAIL;
+            }
+
             string path = output.GetMetadataValue(ProjectFileConstants.FinalOutputPath);
             if (string.IsNullOrEmpty(path)) {
                 pbstrDeploySourceURL = new Url(output.GetMetadataValue("FullPath")).Uri.AbsoluteUri;
@@ -74,6 +84,15 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public virtual int get_Property(string szProperty, out object pvar) {
+            if (output == null) {
+                switch (szProperty) {
+                    case "FinalOutputPath":
+                        pvar = GetType().Assembly.CodeBase;
+                        return VSConstants.S_OK;
+                }
+                pvar = null;
+                return VSConstants.E_NOTIMPL;
+            }
             String value = output.GetMetadataValue(szProperty);
             pvar = value;
 
@@ -82,6 +101,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public int get_RootRelativeURL(out string pbstrRelativePath) {
+            if (output == null) {
+                pbstrRelativePath = Path.GetDirectoryName(project.Url);
+                return VSConstants.E_FAIL;
+            }
+
             pbstrRelativePath = String.Empty;
             object variant;
             // get the corresponding property

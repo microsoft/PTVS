@@ -306,6 +306,8 @@ actual inspection and introspection."""
         self.send_lock.release()
 
     def init_debugger(self):
+        from os import path
+        sys.path.append(path.dirname(__file__))
         import visualstudio_py_debugger
         visualstudio_py_debugger.DONT_DEBUG.append(__file__)
         new_thread = visualstudio_py_debugger.new_thread()

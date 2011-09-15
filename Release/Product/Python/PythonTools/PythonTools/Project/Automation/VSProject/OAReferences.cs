@@ -71,7 +71,8 @@ namespace Microsoft.PythonTools.Project.Automation
 
 		public Reference Add(string bstrPath)
 		{
-			if(string.IsNullOrEmpty(bstrPath))
+			// ignore requests from the designer which are framework assemblies and start w/ a *.
+			if (string.IsNullOrEmpty(bstrPath) || bstrPath.StartsWith("*"))
 			{
 				return null;
 			}

@@ -176,8 +176,15 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public virtual int get_KeyOutputObject(out IVsOutput2 ppKeyOutput) {
-            if (_keyOutput == null)
+            if (_keyOutput == null) {
                 Refresh();
+                if (_keyOutput == null) {
+                    // horrible hack: we don't really have outputs but the Cider designer insists 
+                    // that we have an output so it can figure out our output assembly name.  So we
+                    // lie here, and then lie again to give a path in Output.get_Property
+                    _keyOutput = new Output(_project, null);
+                }
+            }
             ppKeyOutput = _keyOutput;
             if (ppKeyOutput == null)
                 return VSConstants.S_FALSE;

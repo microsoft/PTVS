@@ -337,26 +337,27 @@ namespace Microsoft.PythonTools.Project
 			string privateValue = this.ItemNode.GetMetadata(ProjectFileConstants.Private);
 
 			// Get the list of items which require HintPath
-            IEnumerable<MSBuild.ProjectItem> references = this.ProjectMgr.BuildProject.GetItems(MsBuildGeneratedItemType.ReferenceCopyLocalPaths);
+			var references = this.ProjectMgr.CurrentConfig.GetItems(MsBuildGeneratedItemType.ReferenceCopyLocalPaths);
 
-			// Remove the HintPath, we will re-add it below if it is needed
-			if(!String.IsNullOrEmpty(this.assemblyPath))
-			{
-				this.ItemNode.SetMetadata(ProjectFileConstants.HintPath, null);
-			}
 
 			// Now loop through the generated References to find the corresponding one
-            foreach (MSBuild.ProjectItem reference in references)
+			foreach (var reference in references)
 			{
 				string fileName = Path.GetFileNameWithoutExtension(reference.EvaluatedInclude);
-				if(String.Compare(fileName, this.assemblyName.Name, StringComparison.OrdinalIgnoreCase) == 0)
+				if (String.Compare(fileName, this.assemblyName.Name, StringComparison.OrdinalIgnoreCase) == 0)
 				{
 					// We found it, now set some properties based on this.
 
-					string hintPath = reference.GetMetadataValue(ProjectFileConstants.HintPath);
-					if(!String.IsNullOrEmpty(hintPath))
+					// Remove the HintPath, we will re-add it below if it is needed
+					if (!String.IsNullOrEmpty(this.assemblyPath))
 					{
-						if(Path.IsPathRooted(hintPath))
+						this.ItemNode.SetMetadata(ProjectFileConstants.HintPath, null);
+					}
+
+					string hintPath = reference.GetMetadataValue(ProjectFileConstants.HintPath);
+					if (!String.IsNullOrEmpty(hintPath))
+					{
+						if (Path.IsPathRooted(hintPath))
 						{
 							hintPath = PackageUtilities.GetPathDistance(this.ProjectMgr.BaseURI.Uri, new Uri(hintPath));
 						}
