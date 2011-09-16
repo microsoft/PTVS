@@ -13,9 +13,9 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Input;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -69,11 +69,30 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            _bufferParser.AddBuffer(subjectBuffer);
+            PropagateAnalyzer(subjectBuffer);
+
+            BufferParser parser;
+            if (!subjectBuffer.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
+                _bufferParser.AddBuffer(subjectBuffer);
+            } else {
+                // already connected to a buffer parser, we should have the same project entry
+                Debug.Assert(_bufferParser._currentProjEntry == parser._currentProjEntry);
+            }
+        }
+
+        public void PropagateAnalyzer(ITextBuffer subjectBuffer) {
+            PythonReplEvaluator replEvaluator;
+            if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
+                subjectBuffer.Properties.AddProperty(typeof(ProjectAnalyzer), replEvaluator.ReplAnalyzer);
+            }
         }
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            _bufferParser.RemoveBuffer(subjectBuffer);
+            // only disconnect if we own the buffer parser
+            BufferParser parser;
+            if (subjectBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser) && parser == _bufferParser) {
+                _bufferParser.RemoveBuffer(subjectBuffer);
+            }
         }
 
         /// <summary>

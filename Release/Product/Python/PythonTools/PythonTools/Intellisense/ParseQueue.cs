@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows;
+using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
@@ -50,8 +52,13 @@ namespace Microsoft.PythonTools.Intellisense {
             // only attach one parser to each buffer, we can get multiple enqueue's
             // for example if a document is already open when loading a project.
             BufferParser bufferParser;
-            if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
-                bufferParser = new BufferParser(textView, projEntry, _parser, new[] { buffer });
+            if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {                
+                Dispatcher dispatcher = null;
+                var uiElement = textView as UIElement;
+                if (uiElement != null) {
+                    dispatcher = uiElement.Dispatcher;
+                }
+                bufferParser = new BufferParser(dispatcher, projEntry, _parser, buffer);
                 
                 var curSnapshot = buffer.CurrentSnapshot;
                 var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
@@ -134,31 +141,30 @@ namespace Microsoft.PythonTools.Intellisense {
     class BufferParser {
         internal ProjectAnalyzer _parser;
         private readonly Timer _timer;
-        private readonly ITextView _textView;
+        private readonly Dispatcher _dispatcher;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         internal IProjectEntry _currentProjEntry;
-        private Severity _indentationInconsistencySeverity;
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(ITextView textView, IProjectEntry initialProjectEntry, ProjectAnalyzer parser, IList<ITextBuffer> buffers) {
+        public BufferParser(Dispatcher dispatcher, IProjectEntry initialProjectEntry, ProjectAnalyzer parser, ITextBuffer buffer) {
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
-            _buffers = buffers;
+            _buffers = new[] { buffer };
             _currentProjEntry = initialProjectEntry;
-            if (PythonToolsPackage.Instance != null) {
-                _indentationInconsistencySeverity = PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity;
-                PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged += OptionsPage_IndentationInconsistencyChanged;
-            }
-            _textView = textView;
-            foreach (var buffer in buffers) {
-                InitBuffer(buffer);
-            }
+            _dispatcher = dispatcher;
+            
+            InitBuffer(buffer);
         }
 
-        private void OptionsPage_IndentationInconsistencyChanged(object sender, EventArgs e) {
-            _indentationInconsistencySeverity = PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity;
+        private Severity IndentationInconsistencySeverity {
+            get {
+                if (PythonToolsPackage.Instance != null) {
+                    return PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity;
+                }
+                return Severity.Ignore;
+            }
         }
 
         public void StopMonitoring() {
@@ -170,16 +176,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     doc.EncodingChanged -= EncodingChanged;
                 }
             }
-            
-
-            if (PythonToolsPackage.Instance != null) {
-                PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencyChanged -= OptionsPage_IndentationInconsistencyChanged;
-            }
         }
 
-        public ITextView TextView {
+        public Dispatcher Dispatcher {
             get {
-                return _textView;
+                return _dispatcher;
             }
         }
 
@@ -213,17 +214,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void UninitBuffer(ITextBuffer subjectBuffer) {
             subjectBuffer.Properties.RemoveProperty(typeof(IProjectEntry));
+            subjectBuffer.Properties.RemoveProperty(typeof(BufferParser));
             subjectBuffer.ChangedLowPriority -= BufferChangedLowPriority;
         }
 
         private void InitBuffer(ITextBuffer buffer) {
-            PythonReplEvaluator replEvaluator;
-            if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
-                buffer.Properties.AddProperty(typeof(ProjectAnalyzer), replEvaluator.ReplAnalyzer);
-            }
             buffer.Properties.AddProperty(typeof(BufferParser), this);
             buffer.ChangedHighPriority += BufferChangedLowPriority;
-            buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
+            buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);            
             ITextDocument doc;
             if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out doc)) {
                 doc.EncodingChanged += EncodingChanged;
@@ -258,7 +256,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            _parser.ParseBuffers(this, _indentationInconsistencySeverity, snapshots);
+            _parser.ParseBuffers(this, IndentationInconsistencySeverity, snapshots);
 
             lock (this) {
                 _parsing = false;

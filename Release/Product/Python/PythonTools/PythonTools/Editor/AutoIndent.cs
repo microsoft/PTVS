@@ -256,14 +256,27 @@ namespace Microsoft.PythonTools.Editor {
             baseline = line;
         }
 
+        private static bool PythonContentTypePrediciate(ITextSnapshot snapshot) {
+            return snapshot.ContentType.IsOfType(PythonCoreConstants.ContentType);
+        }
+
         internal static int GetLineIndentation(ITextSnapshotLine line, ITextView textView) {
             var options = textView.Options;
 
             ITextSnapshotLine baseline;
             string baselineText;
             SkipPreceedingBlankLines(line, out baselineText, out baseline);
-            
-            var classifier = line.Snapshot.TextBuffer.GetPythonClassifier();
+
+            ITextBuffer targetBuffer = textView.TextBuffer;
+            if (!targetBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                var match = textView.BufferGraph.MapDownToFirstMatch(line.Start, PointTrackingMode.Positive, PythonContentTypePrediciate, PositionAffinity.Successor);
+                if (match == null) {
+                    return 0;
+                }
+                targetBuffer = match.Value.Snapshot.TextBuffer;
+            }
+
+            var classifier = targetBuffer.GetPythonClassifier();
             var desiredIndentation = CalculateIndentation(baselineText, baseline, options, classifier);
 
             var caretLine = textView.Caret.Position.BufferPosition.GetContainingLine();

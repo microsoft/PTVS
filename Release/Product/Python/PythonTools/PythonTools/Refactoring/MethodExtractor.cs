@@ -428,7 +428,9 @@ namespace Microsoft.PythonTools.Refactoring {
                 get { return _define; }
             }
 
-            public override bool Walk(FunctionDefinition node) {
+            public override bool Walk(FunctionDefinition node) {                
+                _define.WalkName(node.NameExpression, node.GetVariableReference(_root));
+
                 bool oldInLoop = _inLoop;
                 _inLoop = false;
                 var res = base.Walk(node);
@@ -437,6 +439,8 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             public override bool Walk(ClassDefinition node) {
+                _define.WalkName(node.NameExpression, node.GetVariableReference(_root));
+
                 bool oldInLoop = _inLoop;
                 _inLoop = false;
                 var res = base.Walk(node);
@@ -525,6 +529,10 @@ namespace Microsoft.PythonTools.Refactoring {
                 public override bool Walk(NameExpression node) {
                     var reference = node.GetVariableReference(_collector._root);
 
+                    return WalkName(node, reference);
+                }
+
+                internal bool WalkName(NameExpression node, PythonReference reference) {
                     if (_collector.ReadFromExtractedCode(reference.Variable)) {
                         if ((!_collector._inputCollector._allReads.Contains(reference) &&
                             !_collector._inputCollector._allWrites.Contains(reference))) {

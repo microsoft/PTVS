@@ -34,6 +34,55 @@ namespace AnalysisTest {
         private const string ErrorExtractParameter = "Cannot extract parameter name";
 
         [TestMethod]
+        public void TestDefinitions() {
+            SuccessTest("x = .. = h()",
+@"def f():
+    def g():
+        return 42
+    def h():
+        return 23
+
+    x = g() 
+    z = h()
+",
+@"def g(g, h):
+    x = g() 
+    z = h()
+
+def f():
+    def g():
+        return 42
+    def h():
+        return 23
+
+    g(g, h)
+");
+
+            SuccessTest("x = .. = h()",
+@"def f():
+    class g():
+        pass
+    class h():
+        pass
+
+    x = g() 
+    z = h()
+",
+@"def g(g, h):
+    x = g() 
+    z = h()
+
+def f():
+    class g():
+        pass
+    class h():
+        pass
+
+    g(g, h)
+");
+        }
+
+        [TestMethod]
         public void TestFromImportStar() {
             ExtractMethodTest(
 @"def f():

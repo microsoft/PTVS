@@ -487,9 +487,10 @@ namespace Microsoft.PythonTools.Intellisense {
                         // SimpleTagger says it's thread safe (http://msdn.microsoft.com/en-us/library/dd885186.aspx), but it's buggy...  
                         // Post the removing of squiggles to the UI thread so that we don't crash when we're racing with 
                         // updates to the buffer.  http://pytools.codeplex.com/workitem/142
-                        var uiTextView = bufferParser.TextView as UIElement;
-                        if (uiTextView != null) {   // not a UI element in completion context tests w/ mocks.
-                            uiTextView.Dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, bufferParser._currentProjEntry.FilePath, provider).DoUpdate);
+                        
+                        var dispatcher = bufferParser.Dispatcher;
+                        if (dispatcher != null) {   // not a UI element in completion context tests w/ mocks.                            
+                            dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, bufferParser._currentProjEntry.FilePath, provider).DoUpdate);
                         }
 
                         string path = bufferParser._currentProjEntry.FilePath;
