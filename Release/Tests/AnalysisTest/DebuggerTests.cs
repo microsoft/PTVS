@@ -776,6 +776,20 @@ namespace AnalysisTest {
         #region Breakpoint Tests
 
         [TestMethod]
+        public void TestBreakpointsSimpleFilename() {
+            // http://pytools.codeplex.com/workitem/522
+
+            string cwd = Path.GetFullPath(Path.Combine(Path.GetDirectoryName("SimpleFilenameBreakpoint.py"), ".."));
+            BreakpointTest(
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "SimpleFilenameBreakpoint.py"), 
+                new [] { 4, 10 }, 
+                new[] { 4, 10 }, 
+                cwd: cwd, 
+                breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "CompiledCodeFile.py"),
+                checkBound: false);
+        }
+
+        [TestMethod]
         public void TestBreakpoints() {
             BreakpointTest("BreakpointTest.py", new[] { 1 }, new[] { 1 });
         }
@@ -835,10 +849,15 @@ namespace AnalysisTest {
         /// in lineHits as break points in the order provided in lineHits.  If lineHits is negative
         /// expects to hit the positive number and then removes the break point.
         /// </summary>
-        private void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null) {
+        private void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, string cwd = null, string breakFilename = null, bool checkBound = true) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
+            string rootedFilename = filename;
+            if (!Path.IsPathRooted(filename)) {
+                rootedFilename = DebuggerTestPath + filename;
+            }
+
+            var process = DebugProcess(debugger, rootedFilename, (newproc, newthread) => {
                 for (int i = 0; i < linenos.Length; i++) {
                     var line = linenos[i];
 
@@ -850,21 +869,23 @@ namespace AnalysisTest {
                     PythonBreakpoint breakPoint;
                     if (conditions != null) {
                         if (breakWhenChanged != null) {
-                            breakPoint = newproc.AddBreakPoint(filename, line, conditions[i], breakWhenChanged[i]);
+                            breakPoint = newproc.AddBreakPoint(breakFilename ?? filename, line, conditions[i], breakWhenChanged[i]);
                         } else {
-                            breakPoint = newproc.AddBreakPoint(filename, line, conditions[i]);
+                            breakPoint = newproc.AddBreakPoint(breakFilename ?? filename, line, conditions[i]);
                         }
                     } else {
-                        breakPoint = newproc.AddBreakPoint(filename, line);
+                        breakPoint = newproc.AddBreakPoint(breakFilename ?? filename, line);
                     }
 
                     breakPoint.Add();
                 }
                 thread = newthread;
-            });
+            }, cwd: cwd);
 
             process.BreakpointBindFailed += (sender, args) => {
-                Assert.Fail("unexpected bind failure");
+                if (checkBound) {
+                    Assert.Fail("unexpected bind failure");
+                }
             };
 
             var lineList = new List<int>(linenos);
@@ -899,7 +920,9 @@ namespace AnalysisTest {
             process.WaitForExit();
 
             Assert.AreEqual(breakpointHit, lineHits.Length);
-            Assert.AreEqual(breakpointBound, linenos.Length);
+            if (checkBound) {
+                Assert.AreEqual(breakpointBound, linenos.Length);
+            }
         }
 
         #endregion
@@ -1185,9 +1208,9 @@ namespace AnalysisTest {
             Assert.IsTrue(exited);
         }
 
-        private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+        private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null) {
             string fullPath = Path.GetFullPath(filename);
-            string dir = Path.GetFullPath(Path.GetDirectoryName(filename));
+            string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
             var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
             process.ProcessLoaded += (sender, args) => {
                 if (onLoaded != null) {

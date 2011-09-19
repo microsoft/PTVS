@@ -267,6 +267,10 @@ attach_lock = thread.allocate()
 attach_sent_break = False
 
 
+def filename_is_same(filename1, filename2):
+    return path.normcase(path.basename(filename1)) == path.normcase(path.basename(filename2))
+
+
 def update_all_thread_stacks(blocking_thread):
     THREADS_LOCK.acquire()
     all_threads = list(THREADS.values())
@@ -428,8 +432,8 @@ class Thread(object):
             if BREAKPOINTS:
                 bp = BREAKPOINTS.get(frame.f_lineno)
                 if bp is not None:
-                    for (filename, bp_id), condition in bp.items():
-                        if filename == frame.f_code.co_filename:   
+                    for (filename, bp_id, bound), condition in bp.items():
+                        if filename == frame.f_code.co_filename or (not bound and filename_is_same(filename, frame.f_code.co_filename)):   
                             if condition:                            
                                 try:
                                     res = eval(condition.condition, frame.f_globals, frame.f_locals)
@@ -821,7 +825,7 @@ def get_code(func):
 
 class DebuggerExitException(Exception): pass
 
-def add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id):
+def add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id, bound = True):
     cur_bp = BREAKPOINTS.get(lineNo)
     if cur_bp is None:
         cur_bp = BREAKPOINTS[lineNo] = dict()
@@ -829,7 +833,7 @@ def add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id
     cond_info = None
     if condition:
         cond_info = ConditionInfo(condition, break_when_changed)
-    cur_bp[(modFilename, brkpt_id)] = cond_info
+    cur_bp[(modFilename, brkpt_id, bound)] = cond_info
 
 def check_break_point(modFilename, module, brkpt_id, lineNo, filename, condition, break_when_changed):
     if module.filename.lower() == path.abspath(filename).lower():
@@ -933,7 +937,7 @@ class DebuggerLoop(object):
                 break
         else:
             # failed to set break point
-            add_break_point(filename, break_when_changed, condition, lineNo, brkpt_id)
+            add_break_point(filename, break_when_changed, condition, lineNo, brkpt_id, False)
             PENDING_BREAKPOINTS.add(PendingBreakPoint(brkpt_id, lineNo, filename, condition, break_when_changed))
             report_breakpoint_failed(brkpt_id)
 
@@ -943,9 +947,9 @@ class DebuggerLoop(object):
         break_when_changed = read_int(self.conn)
         
         for line, bp_dict in BREAKPOINTS.items():
-            for filename, id in bp_dict:
+            for filename, id, bound in bp_dict:
                 if id == brkpt_id:
-                    bp_dict[filename, id] = ConditionInfo(condition, break_when_changed)
+                    bp_dict[filename, id, bound] = ConditionInfo(condition, break_when_changed)
                     break
 
     def command_remove_breakpoint(self):
@@ -953,9 +957,9 @@ class DebuggerLoop(object):
         brkpt_id = read_int(self.conn)
         cur_bp = BREAKPOINTS.get(lineNo)
         if cur_bp is not None:
-            for file, id in cur_bp:
+            for file, id, bound in cur_bp:
                 if id == brkpt_id:
-                    del cur_bp[(file, id)]
+                    del cur_bp[(file, id, bound)]
                     if not cur_bp:
                         del BREAKPOINTS[lineNo]
                     break
