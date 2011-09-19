@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         class DictionaryItemsBoundMethod : BoundBuiltinMethodInfo {
             private readonly DictionaryInfo _myDict;
-            private SequenceInfo _tuple, _list;
+            private SequenceInfo _list;
 
             internal DictionaryItemsBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
                 : base(method) {

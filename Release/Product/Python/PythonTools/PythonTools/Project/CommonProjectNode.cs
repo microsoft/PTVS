@@ -1014,7 +1014,7 @@ namespace Microsoft.PythonTools.Project {
 
             IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
             IVsSolution vsSolution = (IVsSolution)this.GetService(typeof(SVsSolution));
-
+            
             int canContinue;
             vsSolution.QueryRenameProject(this, basePath, pszProjectFilename, 0, out canContinue);
             if (canContinue == 0) {
@@ -1045,9 +1045,17 @@ namespace Microsoft.PythonTools.Project {
             this.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);
 
             // Update solution
-            ErrorHandler.ThrowOnFailure(vsSolution.OnAfterRenameProject((IVsProject)this, oldName, pszProjectFilename, 0));
+            // Note we ignore the errors here because reporting them to the user isn't really helpful.
+            // We've already completed all of the work to rename everything here.  If OnAfterNameProject
+            // fails for some reason then telling the user it failed is just confusing because all of
+            // the work is done.  And if someone wanted to prevent us from renaming the project file they
+            // should have responded to QueryRenameProject.  Likewise if we can't refresh the property browser 
+            // for any reason then that's not too interesting either - the users project has been saved to 
+            // the new location.
+            // http://pytools.codeplex.com/workitem/489
+            vsSolution.OnAfterRenameProject((IVsProject)this, oldName, pszProjectFilename, 0);
 
-            ErrorHandler.ThrowOnFailure(shell.RefreshPropertyBrowser(0));
+            shell.RefreshPropertyBrowser(0);
 
             return VSConstants.S_OK;
         }
