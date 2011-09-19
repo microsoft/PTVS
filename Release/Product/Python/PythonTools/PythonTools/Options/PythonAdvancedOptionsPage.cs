@@ -22,7 +22,6 @@ namespace Microsoft.PythonTools.Options {
     public class PythonAdvancedOptionsPage : PythonDialogPage {
         private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut;
         private int? _crossModuleAnalysisLimit; // not exposed via the UI
-        private int _defaultCodePage;
         private Severity _indentationInconsistencySeverity;
         private PythonAdvancedOptionsControl _window;
 
@@ -83,18 +82,6 @@ namespace Microsoft.PythonTools.Options {
             set { _crossModuleAnalysisLimit = value; }
         }
 
-        /// <summary>
-        /// Specifies the default code page when opening a Python file without specifying
-        /// an encoding.  Can be zero to keep Visual Studio's default behavior of using
-        /// the current locale.
-        /// 
-        /// New in 1.1.
-        /// </summary>
-        public int DefaultCodePage {
-            get { return _defaultCodePage; }
-            set { _defaultCodePage = value; }
-        }
-
         public event EventHandler IndentationInconsistencyChanged;
 
         #endregion
@@ -106,7 +93,6 @@ namespace Microsoft.PythonTools.Options {
             _waitOnNormalExit = false;
             _autoAnalysis = true;
             _teeStdOut = true;
-            _defaultCodePage = Encoding.ASCII.CodePage;
         }
 
         private const string DontPromptBeforeRunningWithBuildErrorSetting = "DontPromptBeforeRunningWithBuildError";
@@ -124,7 +110,6 @@ namespace Microsoft.PythonTools.Options {
             _waitOnNormalExit = LoadBool(WaitOnNormalExitSetting) ?? false;
             _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
             _teeStdOut = LoadBool(TeeStandardOutSetting) ?? true;
-            _defaultCodePage = LoadInt(DefaultCodePageSetting) ?? Encoding.ASCII.CodePage;
             _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
             var analysisLimit = LoadString(CrossModulAnalysisLimitSetting);
             if (analysisLimit == null) {
@@ -143,7 +128,6 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(AutoAnalysisSetting, _autoAnalysis);
             SaveBool(TeeStandardOutSetting, _teeStdOut);
             SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
-            SaveInt(DefaultCodePageSetting, _defaultCodePage);
             if (_crossModuleAnalysisLimit != null) {
                 SaveInt(CrossModulAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);
             } else {

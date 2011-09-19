@@ -1011,6 +1011,15 @@ namespace Microsoft.PythonTools.Project {
             string oldName = Url;
             string basePath = Path.GetDirectoryName(this.FileName) + Path.DirectorySeparatorChar;
             string newName = Path.GetDirectoryName(pszProjectFilename);
+
+            IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            IVsSolution vsSolution = (IVsSolution)this.GetService(typeof(SVsSolution));
+
+            int canContinue;
+            vsSolution.QueryRenameProject(this, basePath, pszProjectFilename, 0, out canContinue);
+            if (canContinue == 0) {
+                return VSConstants.OLE_E_PROMPTSAVECANCELLED;
+            }
             
             // we don't use RenameProjectFile because it sends the OnAfterRenameProject event too soon
             // and causes VS to think the solution has changed on disk.  We need to send it after all 
@@ -1019,21 +1028,22 @@ namespace Microsoft.PythonTools.Project {
             // save the new project to to disk
             SaveMSBuildProjectFileAs(pszProjectFilename);
 
+            _projectDir = newName;
+
+
+            // save the project again w/ updated file info
+            BuildProjectLocationChanged();
+
             // remove all the children, saving any dirty files, and collecting the list of open files
             MoveFilesForDeferredSave(this, basePath, newName);
 
-            _projectDir = newName;
-
-            // save the project again w/ updated file info
             BuildProject.Save();
-                
+
             SetProjectFileDirty(false);
 
             // update VS that we've changed the project
             this.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);
 
-            IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            IVsSolution vsSolution = (IVsSolution)this.GetService(typeof(SVsSolution));
             // Update solution
             ErrorHandler.ThrowOnFailure(vsSolution.OnAfterRenameProject((IVsProject)this, oldName, pszProjectFilename, 0));
 
@@ -1043,8 +1053,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static string GetNewFilePathForDeferredSave(string baseOldPath, string baseNewPath, string itemPath) {
-            var relativeName = itemPath.Substring(baseOldPath.Length);
-            return Path.Combine(baseNewPath, relativeName);
+            if (!baseNewPath.EndsWith("\\", StringComparison.Ordinal) && !baseNewPath.EndsWith("/", StringComparison.Ordinal))
+                baseNewPath += "\\";
+
+            return new Url(new Url(baseNewPath), itemPath).AbsoluteUrl;
         }
 
         private void MoveFilesForDeferredSave(HierarchyNode node, string basePath, string baseNewPath) {
@@ -1063,16 +1075,18 @@ namespace Microsoft.PythonTools.Project {
                                                 
                         FileNode fn = child as FileNode;
                         if (fn != null) {
-                            string newLoc = GetNewFilePathForDeferredSave(basePath, baseNewPath, child.Url);
+                            string newLoc = GetNewFilePathForDeferredSave(basePath, baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
                             
                             // make sure the directory is there
                             Directory.CreateDirectory(Path.GetDirectoryName(newLoc));
-                            fn.RenameDocument(child.Url, newLoc);
+                            fn.RenameDocument(GetNewFilePathForDeferredSave(baseNewPath, basePath, child.ItemNode.GetMetadata(ProjectFileConstants.Include)), newLoc);
                         }
 
                         FolderNode folder = child as FolderNode;
                         if (folder != null) {
-                            folder.VirtualNodeName = GetNewFilePathForDeferredSave(basePath, baseNewPath, child.Url);
+
+
+                            folder.VirtualNodeName = GetNewFilePathForDeferredSave(basePath, baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
                         }
                     }
 

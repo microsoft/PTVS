@@ -283,8 +283,6 @@ namespace Microsoft.PythonTools.Project {
                 if (_promptEncodingOnLoad) {
                     var guid = VSConstants.VsTextBufferUserDataGuid.VsBufferEncodingPromptOnLoad_guid;
                     userData.SetData(ref guid, (uint)1);
-                } else {
-                    InitializeFileEncoding(documentMoniker, userData);
                 }
             }
 
@@ -298,16 +296,10 @@ namespace Microsoft.PythonTools.Project {
         /// Initializes the language service for the given file.  This allows files with different
         /// extensions to be opened by the editor type and get correct highlighting and intellisense
         /// controllers.
+        /// 
+        /// New in 1.1
         /// </summary>
-        /// <param name="textLines"></param>
         protected virtual void InitializeLanguageService(IVsTextLines textLines) {            
-        }
-
-        /// <summary>
-        /// Initializes the file encoding based upon the contents of the file.  If this function does
-        /// nothing VS will use it's default behavior for determing the encoding of the file.
-        /// </summary>
-        protected virtual void InitializeFileEncoding(string documentMoniker, IVsUserData userData) {            
         }
 
         #endregion

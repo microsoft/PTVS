@@ -98,6 +98,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private void InitializeWithNoInterpreters() {
+            _loadingOptions = true;
             _removeInterpreter.Enabled = _path.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _pathEnvVar.Enabled = false;
             _generateCompletionDb.Enabled = false;
             _showSettingsFor.Items.Add("No Python Interpreters Installed");
@@ -105,6 +106,15 @@ namespace Microsoft.PythonTools.Options {
             _showSettingsFor.SelectedIndex = _defaultInterpreter.SelectedIndex = 0;
             _defaultInterpreter.Enabled = false;
             _showSettingsFor.Enabled = false;
+            _browsePath.Enabled = false;
+            _browseWindowsPath.Enabled = false;
+
+            _path.Text = "";
+            _windowsPath.Text = "";
+            _version.Text = "";
+            _pathEnvVar.Text = "";
+            _arch.SelectedIndex = 0;
+            _loadingOptions = false;
         }
 
         private void ShowSettingsForSelectedIndexChanged(object sender, EventArgs e) {

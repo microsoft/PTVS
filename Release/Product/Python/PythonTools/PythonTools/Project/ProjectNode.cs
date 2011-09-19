@@ -599,6 +599,10 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
+        protected void BuildProjectLocationChanged() {
+            baseUri = null;
+        }
+
         /// <summary>
         /// Gets whether or not the project is closed.
         /// </summary>

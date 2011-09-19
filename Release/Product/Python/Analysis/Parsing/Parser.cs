@@ -4530,20 +4530,15 @@ namespace Microsoft.PythonTools.Parsing {
         #region Encoding support (PEP 263)
 
         /// <summary>
-        /// Returns the Encoding that a Python file is written in.  This inspects the BOM and looks for a #coding line.
+        /// Returns the Encoding that a Python file is written in.  This inspects the BOM and looks for a #coding line
+        /// in the provided stream.
         /// 
         /// Returns null if the encoding could not be detected for any reason.
         /// 
         /// New in 1.1.
         /// </summary>
-        public static Encoding GetEncodingFromFile(string filename) {
-            try {
-                using (var fs = new FileStream(filename, FileMode.Open, FileAccess.Read)) {
-                    return GetStreamReaderWithEncoding(fs, PythonAsciiEncoding.Instance, ErrorSink.Null).CurrentEncoding;
-                }
-            } catch(IOException) {
-                return null;
-            }
+        public static Encoding GetEncodingFromStream(Stream stream) {
+            return GetStreamReaderWithEncoding(stream, PythonAsciiEncoding.Instance, ErrorSink.Null).CurrentEncoding;
         }
 
         private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {

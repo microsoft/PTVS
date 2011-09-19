@@ -212,6 +212,7 @@
     <Compile Include="PythonTools\Project\CommonReferenceNode.cs" />
     <Compile Include="PythonTools\Project\FileChangeManager.cs" />
     <Compile Include="PythonTools\Project\ProjectReferenceNode.cs" />
+    <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
     <Compile Include="PythonTools\Project\ReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceNode.cs" />
     <Compile Include="PythonTools\Project\UIThread.cs" />

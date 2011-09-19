@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Interop;
 using Microsoft.PythonTools.Analysis;
@@ -27,14 +26,19 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Language {
+#if INTERACTIVE_WINDOW
+    using IReplWindow = IInteractiveWindow;
+#endif
     /// <summary>
     /// IOleCommandTarget implementation for interacting with various editor commands.  This enables
     /// wiring up most of our features to the VisualStudio editor.  We currently support:
@@ -646,62 +650,57 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private static void PasteReplCode(PythonReplEvaluator eval, string pasting) {
-            if (eval.Window.CurrentLanguageBuffer.CurrentSnapshot.Length == 0) {
-                // no current input, just split the code and submit it.
-                eval.Window.Submit(eval.SplitCode(pasting));
+            // there's some text in the buffer...
+            var view = eval.Window.TextView;
+            var caret = view.Caret;
+            var curBuffer = eval.Window.CurrentLanguageBuffer;
+            var inputPoint = view.BufferGraph.MapDownToBuffer(
+                caret.Position.BufferPosition,
+                PointTrackingMode.Positive,
+                curBuffer,
+                PositionAffinity.Successor
+            );
+
+            if (inputPoint == null) {
+                // if the caret's not in the current input insert at the beginning
+                inputPoint = new SnapshotPoint(curBuffer.CurrentSnapshot, 0);
+            }
+
+            // we want to insert the pasted code at the caret, but we also want to
+            // respect the stepping.  So first grab the code before and after the caret.
+            string startText = curBuffer.CurrentSnapshot.GetText(0, inputPoint.Value);
+
+            string endText = curBuffer.CurrentSnapshot.GetText(
+                inputPoint.Value,
+                curBuffer.CurrentSnapshot.Length - inputPoint.Value);
+
+
+            var splitCode = new List<string>(eval.SplitCode(startText + pasting + endText));
+            curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
+
+            if (splitCode.Count == 1) {
+                curBuffer.Insert(0, splitCode[0]);
             } else {
-                // there's some text in the buffer...
-                var view = eval.Window.TextView;
-                var caret = view.Caret;
-                var curBuffer = eval.Window.CurrentLanguageBuffer;
-                var inputPoint = view.BufferGraph.MapDownToBuffer(
-                    caret.Position.BufferPosition,
-                    VisualStudio.Text.PointTrackingMode.Positive,
-                    curBuffer,
-                    VisualStudio.Text.PositionAffinity.Successor
-                );
+                var lastCode = splitCode[splitCode.Count - 1];
+                splitCode.RemoveAt(splitCode.Count - 1);
 
-                if (inputPoint == null) {
-                    // if the caret's not in the current input insert at the beginning
-                    inputPoint = new VisualStudio.Text.SnapshotPoint(curBuffer.CurrentSnapshot, 0);
-                }
+                eval.Window.ReadyForInput += new PendLastSplitCode(eval.Window, lastCode).AppendCode;
+                eval.Window.Submit(splitCode);
+            }
+        }
 
-                var splitCode = new List<string>(eval.SplitCode(pasting));
-                if (splitCode.Count == 1) {
-                    // single input, just insert it at the caret
-                    curBuffer.Insert(inputPoint.Value, splitCode[0]);
-                } else {
-                    // we want to insert the pasted code at the caret, but we also want to
-                    // respect the stepping.  So first grab the code before and after the caret.
-                    string startText = curBuffer.CurrentSnapshot.GetText(0, inputPoint.Value);
+        class PendLastSplitCode {
+            public readonly IReplWindow Window;
+            public readonly string Text;
 
-                    string endText = curBuffer.CurrentSnapshot.GetText(
-                        inputPoint.Value,
-                        curBuffer.CurrentSnapshot.Length - inputPoint.Value);
+            public PendLastSplitCode(IReplWindow window, string text) {
+                Window = window;
+                Text = text;
+            }
 
-                    // and then clear the buffer, we'll submit everything at once.
-                    curBuffer.Delete(new VisualStudio.Text.Span(0, curBuffer.CurrentSnapshot.Length));
-
-                    // the first input is easy, it's just the text before the caret + what the first
-                    // split input.
-                    splitCode[0] = startText + splitCode[0];
-
-                    // the end text is more difficult as after combining we might need to split.
-                    string combinedEnd = splitCode[splitCode.Count - 1] + endText;
-                    var splitEnd = eval.SplitCode(combinedEnd).ToArray();
-                    if (splitEnd.Length == 1) {
-                        // we don't need to split
-                        splitCode[splitCode.Count - 1] = splitCode[splitCode.Count - 1] + endText;
-                    } else {
-                        // we do need to split
-                        splitCode[splitCode.Count - 1] = splitEnd[0];
-                        for (int i = 1; i < splitEnd.Length; i++) {
-                            splitCode.Add(splitEnd[i]);
-                        }
-                    }
-
-                    eval.Window.Submit(splitCode);
-                }
+            public void AppendCode() {
+                Window.CurrentLanguageBuffer.Insert(0, Text);
+                Window.ReadyForInput -= AppendCode;
             }
         }
 

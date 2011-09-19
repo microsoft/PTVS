@@ -54,24 +54,6 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
         }
-
-        protected override void InitializeFileEncoding(string documentMoniker, IVsUserData userData) {
-            var encoding = Parser.GetEncodingFromFile(documentMoniker);
-            var guid = VSConstants.VsTextBufferUserDataGuid.VsBufferEncodingVSTFF_guid;
-            uint value;
-            if (encoding != null && encoding.CodePage != 0) {
-                // code page is stored in lower 16 bits of the mask.
-                value = (uint)encoding.CodePage;
-            } else {
-                // code page is stored in lower 16 bits of the mask.
-                value = (uint)PythonToolsPackage.Instance.OptionsPage.DefaultCodePage;
-            }
-
-            // if the code page is zero fall back to VS's default behavior
-            if (value != 0) {
-                userData.SetData(ref guid, value);
-            }
-        }
     }
 
     [Guid(PythonConstants.EditorFactoryPromptForEncodingGuid)]
