@@ -333,6 +333,7 @@ namespace Microsoft.PythonTools.Repl {
                                 case "PRPC": HandlePromptChanged(); break;
                                 case "RDLN": HandleReadLine(); break;
                                 case "DETC": HandleDebuggerDetach(); break;
+                                case "DPNG": DisplayPng(); break;
                                 case "EXIT":
                                     // REPL has exited
                                     return;
@@ -428,6 +429,19 @@ namespace Microsoft.PythonTools.Repl {
                 _eval._attached = false;
             }
 
+            private void DisplayPng() {
+                int len = _socket.ReadInt();
+                byte[] buffer = new byte[len];
+                if (len != 0) {
+                    int bytesRead = 0;
+                    do {
+                        bytesRead += _socket.Receive(buffer, bytesRead, len - bytesRead, SocketFlags.None);
+                    } while (bytesRead != len);
+                }
+
+                DisplayImage(buffer);
+            }
+
             internal string DoDebugAttach() {
                 if (_eval._attached) {
                     return "Cannot attach to debugger when already attached.";
@@ -514,19 +528,26 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandleImageDisplay() {
                 string filename = Socket.ReadString();
+                try {
+                    DisplayImage(File.ReadAllBytes(filename));
+                } catch (IOException) {
+                    // can't read the file
+                    Window.WriteError("Unable to read image file " + filename);
+                }
 
+            }
+
+            private void DisplayImage(byte[] bytes) {
                 using (new SocketUnlock(this)) {
                     ((System.Windows.UIElement)Window.TextView).Dispatcher.BeginInvoke((Action)(() => {
                         try {
                             var imageSrc = new BitmapImage();
                             imageSrc.BeginInit();
-                            imageSrc.StreamSource = new MemoryStream(File.ReadAllBytes(filename));
+                            imageSrc.StreamSource = new MemoryStream(bytes);
                             imageSrc.EndInit();
 
                             Window.WriteOutput(new Image() { Source = imageSrc });
                         } catch (IOException) {
-                            // can't read the file
-                            Window.WriteError("Unable to read image file " + filename);
                         }
                     }));
                 }

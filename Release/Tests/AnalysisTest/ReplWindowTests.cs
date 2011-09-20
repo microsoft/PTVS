@@ -2029,6 +2029,41 @@ $cls
             }
         }
 
+        /// <summary>
+        /// Simple test case of Ipython execution mode.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestIPythonInlineGraph() {
+            if (!IPythonSupported) {
+                return;
+            }
+
+            GetInteractiveOptions().ExecutionMode = "IPython";
+            InteractiveWindow interactive = null;
+            try {
+                interactive = Prepare(true);                
+
+                var replWindow = interactive.ReplWindow;
+                replWindow.Submit(new[] { "from pylab import *", "from scipy.special import jn", "x = linspace(0, 4*pi)", "plot(x, jn(0, x))" });
+                interactive.WaitForText(new[] { ReplPrompt + "from pylab import *", ReplPrompt + "from scipy.special import jn", ReplPrompt + "x = linspace(0, 4*pi)", ReplPrompt + "plot(x, jn(0, x))", ReplPrompt });
+
+                System.Threading.Thread.Sleep(2000);
+
+                var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var aggFact = compModel.GetService<IViewTagAggregatorFactoryService>();
+                var textview = interactive.ReplWindow.TextView;
+                var aggregator = aggFact.CreateTagAggregator<IntraTextAdornmentTag>(textview);
+                var snapshot = textview.TextBuffer.CurrentSnapshot;
+                var tags = WaitForTags(textview, aggregator, snapshot);
+                Assert.AreEqual(1, tags.Length);
+
+            } finally {
+                GetInteractiveOptions().ExecutionMode = "Standard";
+                ForceReset();
+            }
+        }
+
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgv() {

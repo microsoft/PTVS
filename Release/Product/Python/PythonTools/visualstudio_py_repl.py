@@ -85,6 +85,7 @@ actual inspection and introspection."""
     _STDE = _cmd('STDE')
     _DBGA = _cmd('DBGA')
     _DETC = _cmd('DETC')
+    _DPNG = _cmd('DPNG')
     _UNICODE_PREFIX = _cmd('U')
     _ASCII_PREFIX = _cmd('A')
     
@@ -318,6 +319,13 @@ actual inspection and introspection."""
         self.send_lock.acquire()
         self.conn.send(ReplBackend._IMGD)
         self._write_string(filename)
+        self.send_lock.release()
+
+    def write_png(self, image_bytes):
+        self.send_lock.acquire()
+        self.conn.send(ReplBackend._DPNG)
+        self.conn.send(struct.pack('i', len(image_bytes)))
+        self.conn.send(image_bytes)
         self.send_lock.release()
 
     def send_prompt(self, ps1, ps2):

@@ -9,10 +9,9 @@ except ImportError:
     raise UnsupportedReplException('IPython mode requires IPython 0.11 or later.')
 
 import thread
+from base64 import decodestring
 
 # TODO: SystemExit exceptions come back to us as strings, can we automatically exit when ones raised somehow?
-
-x = []
 
 #####
 # Channels which forward events
@@ -31,8 +30,6 @@ class DefaultHandler(object):
         msg_type = 'handle_' + msg['msg_type']
         
         getattr(self, msg_type, unknown_command)(msg['content'])
-
-        x.append((self.__class__.__name__, msg))
     
 class VsShellSocketChannel(DefaultHandler, ShellSocketChannel):    
     
@@ -59,8 +56,13 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
         
         getattr(self, msg_type, unknown_command)(msg['content'])
         
-        x.append(('sub', msg))
+    def handle_display_data(self, content):
+        # called when user calls display()
+        data = content.get('data', None)
         
+        if data is not None:
+            self.write_data(data)
+    
     def handle_stream(self, content):
         stream_name = content['name']
         output = content['data']
@@ -74,11 +76,25 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
         # called when an expression statement is printed, we treat 
         # identical to stream output but it always goes to stdout
         output = content['data']
-        output_str = output.get('text/plain', None)
-        if output_str is not None:
-          self._vs_backend.write_stdout(output_str)        
-          self._vs_backend.write_stdout('\n') 
+        self.write_data(output)
         
+    def write_data(self, data):
+        
+        output_png = data.get('image/png', None)
+        if output_png is not None:
+            try:            
+                self._vs_backend.write_png(decodestring(output_png))
+                self._vs_backend.write_stdout('\n') 
+                return
+            except:
+                pass
+            
+        output_str = data.get('text/plain', None)
+        if output_str is not None:
+            self._vs_backend.write_stdout(output_str)        
+            self._vs_backend.write_stdout('\n') 
+            return
+
     def handle_pyerr(self, content):
         # TODO: this includes escape sequences w/ color, we need to unescape that
         ename = content['ename']
@@ -123,7 +139,7 @@ class IPythonBackend(ReplBackend):
         self.launch_file = launch_file
         self.mod_name = mod_name
         self.km = VsKernelManager()
-        self.km.start_kernel()
+        self.km.start_kernel(**{'ipython': True, 'extra_arguments': [u'--pylab=inline']})
         self.km.start_channels()
         self.exit_lock = thread.allocate_lock()
         self.exit_lock.acquire()     # used as an event
@@ -192,13 +208,11 @@ class IPythonBackend(ReplBackend):
         pass
 
     def init_debugger(self):
-        import visualstudio_py_debugger
         from os import path
-
         self.run_command('''
 def __visualstudio_debugger_init():    
     import sys
-    sys.path.append(''' + repr(path.dirname(visualstudio_py_debugger.__file__)) + ''')
+    sys.path.append(''' + repr(path.dirname(__file__)) + ''')
     import visualstudio_py_debugger
     new_thread = visualstudio_py_debugger.new_thread()
     sys.settrace(new_thread.trace_func)
@@ -214,7 +228,7 @@ def __visualstudio_debugger_attach():
     import visualstudio_py_debugger
 
     def do_detach():
-        visualstudio_py_debugger.DETACH_CALLBACKS.remove(self.do_detach)
+        visualstudio_py_debugger.DETACH_CALLBACKS.remove(do_detach)
 
     visualstudio_py_debugger.DETACH_CALLBACKS.append(do_detach)
     visualstudio_py_debugger.attach_process(''' + str(port) + ''', ''' + repr(debugger_id) + ''', True)        
@@ -223,8 +237,3 @@ __visualstudio_debugger_attach()
 del __visualstudio_debugger_attach
 ''')
 
-#
-if __name__ == '__main__':
-    km = VsKernelManager()
-    km.start_kernel()
-    km.start_channels()
