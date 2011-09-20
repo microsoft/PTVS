@@ -790,6 +790,44 @@ namespace AnalysisTest {
         }
 
         [TestMethod]
+        public void TestBreakpointHitOtherThreadStackTrace() {
+            // http://pytools.codeplex.com/workitem/483
+
+            var debugger = new PythonDebugger();
+            string filename = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "ThreadJoin.py");
+            PythonThread thread = null;
+            var process = DebugProcess(debugger, filename, (newproc, newthread) => {
+                    thread = newthread;
+                    var bp = newproc.AddBreakPoint(filename, 5);
+                    bp.Add();
+                },
+                debugOptions: PythonDebugOptions.WaitOnAbnormalExit | PythonDebugOptions.WaitOnNormalExit
+            );
+
+            AutoResetEvent bpHit = new AutoResetEvent(false);
+            
+            process.BreakpointHit += (sender, args) => {
+                Assert.AreNotEqual(args.Thread, thread, "breakpoint shouldn't be on main thread");
+
+                Assert.IsTrue(thread.Frames.Count > 1);
+                foreach (var frame in thread.Frames) {
+                    Console.WriteLine(frame.FileName);
+                    Console.WriteLine(frame.LineNo);
+                }
+                process.Continue();
+                bpHit.Set();
+            };
+
+            process.Start();
+
+            if (!bpHit.WaitOne(10000)) {
+                Assert.Fail("Failed to hit breakpoint");
+            }
+
+            process.Terminate();
+        }
+
+        [TestMethod]
         public void TestBreakpoints() {
             BreakpointTest("BreakpointTest.py", new[] { 1 }, new[] { 1 });
         }

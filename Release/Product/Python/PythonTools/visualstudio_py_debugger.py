@@ -449,6 +449,7 @@ class Thread(object):
 
                             if block:
                                 probe_stack()
+                                update_all_thread_stacks(self)
                                 self.block(lambda: (report_breakpoint_hit(bp_id, self.id), mark_all_threads_for_break()))
                             break
 
@@ -475,10 +476,12 @@ class Thread(object):
                         # restore back the module frame for the step out of a module
                         self.push_frame(frame)
                         self.stepping = STEPPING_NONE
+                        update_all_thread_stacks(self)
                         self.block(lambda: report_step_finished(self.id))
                         self.pop_frame()
                     else:
                         self.stepping = STEPPING_NONE
+                        update_all_thread_stacks(self)
                         self.block(lambda: report_step_finished(self.id))
 
         # forward call to previous trace function, if any
@@ -495,6 +498,7 @@ class Thread(object):
             self.block_maybe_attach()
 
         if not DETACHED and should_debug_code(frame.f_code) and BREAK_ON.ShouldBreak(self, *arg):
+            update_all_thread_stacks(self)
             self.block(lambda: report_exception(frame, arg, self.id))
 
         # forward call to previous trace function, if any, updating the current trace function
@@ -538,6 +542,7 @@ class Thread(object):
                     if stepping == STEPPING_ATTACH_BREAK:
                         self.reported_process_loaded = True
                     return report_process_loaded(self.id)
+        update_all_thread_stacks(self)
         self.block(block_cond)
     
     def async_break(self):
