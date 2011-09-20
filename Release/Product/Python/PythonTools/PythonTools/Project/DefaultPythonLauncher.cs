@@ -184,6 +184,9 @@ namespace Microsoft.PythonTools.Project {
             if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
                 dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
             }
+            if (PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero) {
+                dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero  + "=True";
+            }
             if (!String.IsNullOrWhiteSpace(interpArgs)) {
                 dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
             }

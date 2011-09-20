@@ -65,6 +65,11 @@ namespace Microsoft.PythonTools.Hpc {
         private const string RedirectOutputSetting = "REDIRECT_OUTPUT";
 
         /// <summary>
+        /// Specifies if the debugger should break on SystemExit exceptions with an exit code of zero.
+        /// </summary>
+        public const string BreakSystemExitZero = "BREAK_SYSTEMEXIT_ZERO";
+
+        /// <summary>
         /// Specifies options which should be passed to the Python interpreter before the script.  If
         /// the interpreter options should include a semicolon then it should be escaped as a double
         /// semi-colon.
@@ -632,6 +637,13 @@ namespace Microsoft.PythonTools.Hpc {
             if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
                 options = RedirectOutputSetting + "=True";
             }
+            if (PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero) {
+                if (!String.IsNullOrEmpty(options)) {
+                    options += ";";
+                }
+                options += BreakSystemExitZero + "=True";
+            }
+
             if (clusterEnv.HeadNode == "localhost") { // don't wait on the cluster, there's no one to press enter.
                 if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
                     if (!String.IsNullOrEmpty(options)) {

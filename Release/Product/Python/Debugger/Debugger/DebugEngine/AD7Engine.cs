@@ -84,6 +84,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string RedirectOutputSetting = "REDIRECT_OUTPUT";
 
         /// <summary>
+        /// Specifies if the debugger should break on SystemExit exceptions with an exit code of zero.
+        /// </summary>
+        public const string BreakSystemExitZero = "BREAK_SYSTEMEXIT_ZERO";
+
+        /// <summary>
         /// Specifies options which should be passed to the Python interpreter before the script.  If
         /// the interpreter options should include a semicolon then it should be escaped as a double
         /// semi-colon.
@@ -441,8 +446,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                                 }
                                 break;
                             case RedirectOutputSetting:
-                                if (Boolean.TryParse(setting[1], out value)) {
+                                if (Boolean.TryParse(setting[1], out value) && value) {
                                     debugOptions |= PythonDebugOptions.RedirectOutput;
+                                }
+                                break;
+                            case BreakSystemExitZero:
+                                if (Boolean.TryParse(setting[1], out value) && value) {
+                                    debugOptions |= PythonDebugOptions.BreakOnSystemExitZero;
                                 }
                                 break;
                             case DirMappingSetting:

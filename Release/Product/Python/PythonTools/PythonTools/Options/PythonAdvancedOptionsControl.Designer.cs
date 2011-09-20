@@ -30,12 +30,17 @@
             this._autoAnalysis = new System.Windows.Forms.CheckBox();
             this._waitOnNormalExit = new System.Windows.Forms.CheckBox();
             this._teeStdOut = new System.Windows.Forms.CheckBox();
+            this._breakOnSystemExitZero = new System.Windows.Forms.CheckBox();
+            this._debuggingGroupBox = new System.Windows.Forms.GroupBox();
+            this._miscOptions = new System.Windows.Forms.GroupBox();
+            this._debuggingGroupBox.SuspendLayout();
+            this._miscOptions.SuspendLayout();
             this.SuspendLayout();
             // 
             // _promptOnBuildError
             // 
             this._promptOnBuildError.AutoSize = true;
-            this._promptOnBuildError.Location = new System.Drawing.Point(7, 12);
+            this._promptOnBuildError.Location = new System.Drawing.Point(6, 19);
             this._promptOnBuildError.Name = "_promptOnBuildError";
             this._promptOnBuildError.Size = new System.Drawing.Size(244, 17);
             this._promptOnBuildError.TabIndex = 3;
@@ -51,7 +56,7 @@
             "Errors",
             "Warnings",
             "Don\'t"});
-            this._indentationInconsistentCombo.Location = new System.Drawing.Point(188, 124);
+            this._indentationInconsistentCombo.Location = new System.Drawing.Point(179, 39);
             this._indentationInconsistentCombo.Name = "_indentationInconsistentCombo";
             this._indentationInconsistentCombo.Size = new System.Drawing.Size(121, 21);
             this._indentationInconsistentCombo.TabIndex = 5;
@@ -60,7 +65,7 @@
             // _indentationInconsistentLabel
             // 
             this._indentationInconsistentLabel.AutoSize = true;
-            this._indentationInconsistentLabel.Location = new System.Drawing.Point(6, 127);
+            this._indentationInconsistentLabel.Location = new System.Drawing.Point(6, 42);
             this._indentationInconsistentLabel.Name = "_indentationInconsistentLabel";
             this._indentationInconsistentLabel.Size = new System.Drawing.Size(167, 13);
             this._indentationInconsistentLabel.TabIndex = 6;
@@ -69,7 +74,7 @@
             // _waitOnAbnormalExit
             // 
             this._waitOnAbnormalExit.AutoSize = true;
-            this._waitOnAbnormalExit.Location = new System.Drawing.Point(7, 35);
+            this._waitOnAbnormalExit.Location = new System.Drawing.Point(6, 42);
             this._waitOnAbnormalExit.Name = "_waitOnAbnormalExit";
             this._waitOnAbnormalExit.Size = new System.Drawing.Size(235, 17);
             this._waitOnAbnormalExit.TabIndex = 7;
@@ -80,7 +85,7 @@
             // _autoAnalysis
             // 
             this._autoAnalysis.AutoSize = true;
-            this._autoAnalysis.Location = new System.Drawing.Point(7, 104);
+            this._autoAnalysis.Location = new System.Drawing.Point(6, 19);
             this._autoAnalysis.Name = "_autoAnalysis";
             this._autoAnalysis.Size = new System.Drawing.Size(272, 17);
             this._autoAnalysis.TabIndex = 8;
@@ -91,7 +96,7 @@
             // _waitOnNormalExit
             // 
             this._waitOnNormalExit.AutoSize = true;
-            this._waitOnNormalExit.Location = new System.Drawing.Point(7, 58);
+            this._waitOnNormalExit.Location = new System.Drawing.Point(6, 65);
             this._waitOnNormalExit.Name = "_waitOnNormalExit";
             this._waitOnNormalExit.Size = new System.Drawing.Size(223, 17);
             this._waitOnNormalExit.TabIndex = 9;
@@ -102,7 +107,7 @@
             // _teeStdOut
             // 
             this._teeStdOut.AutoSize = true;
-            this._teeStdOut.Location = new System.Drawing.Point(7, 81);
+            this._teeStdOut.Location = new System.Drawing.Point(6, 88);
             this._teeStdOut.Name = "_teeStdOut";
             this._teeStdOut.Size = new System.Drawing.Size(240, 17);
             this._teeStdOut.TabIndex = 10;
@@ -110,21 +115,56 @@
             this._teeStdOut.UseVisualStyleBackColor = true;
             this._teeStdOut.CheckedChanged += new System.EventHandler(this._redirectOutputToVs_CheckedChanged);
             // 
+            // _breakOnSystemExitZero
+            // 
+            this._breakOnSystemExitZero.AutoSize = true;
+            this._breakOnSystemExitZero.Location = new System.Drawing.Point(6, 111);
+            this._breakOnSystemExitZero.Name = "_breakOnSystemExitZero";
+            this._breakOnSystemExitZero.Size = new System.Drawing.Size(275, 17);
+            this._breakOnSystemExitZero.TabIndex = 11;
+            this._breakOnSystemExitZero.Text = "Break on SystemExit exception with exit code of &zero";
+            this._breakOnSystemExitZero.UseVisualStyleBackColor = true;
+            this._breakOnSystemExitZero.CheckedChanged += new System.EventHandler(this._breakOnSystemExitZero_CheckedChanged);
+            // 
+            // _debuggingGroupBox
+            // 
+            this._debuggingGroupBox.Controls.Add(this._promptOnBuildError);
+            this._debuggingGroupBox.Controls.Add(this._waitOnAbnormalExit);
+            this._debuggingGroupBox.Controls.Add(this._waitOnNormalExit);
+            this._debuggingGroupBox.Controls.Add(this._teeStdOut);
+            this._debuggingGroupBox.Controls.Add(this._breakOnSystemExitZero);
+            this._debuggingGroupBox.Location = new System.Drawing.Point(10, 3);
+            this._debuggingGroupBox.Name = "_debuggingGroupBox";
+            this._debuggingGroupBox.Size = new System.Drawing.Size(382, 132);
+            this._debuggingGroupBox.TabIndex = 12;
+            this._debuggingGroupBox.TabStop = false;
+            this._debuggingGroupBox.Text = "Debugging";
+            // 
+            // _miscOptions
+            // 
+            this._miscOptions.Controls.Add(this._autoAnalysis);
+            this._miscOptions.Controls.Add(this._indentationInconsistentCombo);
+            this._miscOptions.Controls.Add(this._indentationInconsistentLabel);
+            this._miscOptions.Location = new System.Drawing.Point(10, 141);
+            this._miscOptions.Name = "_miscOptions";
+            this._miscOptions.Size = new System.Drawing.Size(382, 100);
+            this._miscOptions.TabIndex = 13;
+            this._miscOptions.TabStop = false;
+            this._miscOptions.Text = "Miscellaneous";
+            // 
             // PythonAdvancedOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this._promptOnBuildError);
-            this.Controls.Add(this._waitOnAbnormalExit);
-            this.Controls.Add(this._waitOnNormalExit);
-            this.Controls.Add(this._teeStdOut);
-            this.Controls.Add(this._autoAnalysis);
-            this.Controls.Add(this._indentationInconsistentLabel);
-            this.Controls.Add(this._indentationInconsistentCombo);
+            this.Controls.Add(this._debuggingGroupBox);
+            this.Controls.Add(this._miscOptions);
             this.Name = "PythonAdvancedOptionsControl";
             this.Size = new System.Drawing.Size(395, 317);
+            this._debuggingGroupBox.ResumeLayout(false);
+            this._debuggingGroupBox.PerformLayout();
+            this._miscOptions.ResumeLayout(false);
+            this._miscOptions.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -137,5 +177,8 @@
         private System.Windows.Forms.CheckBox _autoAnalysis;
         private System.Windows.Forms.CheckBox _waitOnNormalExit;
         private System.Windows.Forms.CheckBox _teeStdOut;
+        private System.Windows.Forms.CheckBox _breakOnSystemExitZero;
+        private System.Windows.Forms.GroupBox _debuggingGroupBox;
+        private System.Windows.Forms.GroupBox _miscOptions;
     }
 }

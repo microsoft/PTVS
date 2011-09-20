@@ -36,6 +36,8 @@ THREADS = {}
 THREADS_LOCK = thread.allocate_lock()
 MODULES = []
 
+BREAK_ON_SYSTEMEXIT_ZERO = False
+
 # Py3k compat - alias unicode to str
 try:
     unicode
@@ -181,8 +183,16 @@ class ExceptionBreakInfo(object):
         probe_stack()
         name = ex_type.__module__ + '.' + ex_type.__name__
         mode = self.break_on.get(name, self.default_mode)
-        return (bool(mode & BREAK_MODE_ALWAYS) or
-                (bool(mode & BREAK_MODE_UNHANDLED) and not self.IsHandled(thread, ex_type, ex_value, trace)))
+        if (bool(mode & BREAK_MODE_ALWAYS) or (bool(mode & BREAK_MODE_UNHANDLED) and not self.IsHandled(thread, ex_type, ex_value, trace))):
+            if issubclass(ex_type, SystemExit):
+                if not BREAK_ON_SYSTEMEXIT_ZERO:
+                    if isinstance(ex_value, int) and not ex_value:
+                        return False
+                    elif isinstance(ex_value, SystemExit) and not ex_value.code:
+                        return False                    
+            return True
+
+        return False
     
     def IsHandled(self, thread, ex_type, ex_value, trace):
         if trace is None:
@@ -1522,7 +1532,7 @@ def print_exception():
         sys.stdout.write(out)
     
 
-def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit):
+def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit, break_on_systemexit_zero = False):
     # remove us from modules so there's no trace of us
     sys.modules['$visualstudio_py_debugger'] = sys.modules['visualstudio_py_debugger']
     __name__ = '$visualstudio_py_debugger'
@@ -1533,6 +1543,10 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     del globals_obj['redirect_output']
     del globals_obj['wait_on_exit']
     del globals_obj['debug_id']
+    del globals_obj['break_on_systemexit_zero']
+
+    global BREAK_ON_SYSTEMEXIT_ZERO
+    BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
 
     attach_process(port_num, debug_id)
 
@@ -1562,7 +1576,7 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
             do_wait()
     except SystemExit:
         report_process_exit(sys.exc_info()[1].code)
-        if wait_on_exception and sys.exc_info()[1].code != 0:
+        if (wait_on_exception and sys.exc_info()[1].code != 0) or (wait_on_exit and sys.exc_info()[1].code == 0):
             print_exception()
             do_wait()
         raise

@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Parsing;
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonAdvancedOptionsPage : PythonDialogPage {
-        private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut;
+        private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut, _breakOnSystemExitZero;
         private int? _crossModuleAnalysisLimit; // not exposed via the UI
         private Severity _indentationInconsistencySeverity;
         private PythonAdvancedOptionsControl _window;
@@ -82,6 +82,18 @@ namespace Microsoft.PythonTools.Options {
             set { _crossModuleAnalysisLimit = value; }
         }
 
+        /// <summary>
+        /// Gets or sets whether or not the debugger will break on a SystemExit exception with
+        /// an exit code is zero.  This is only used if we would otherwise break on a SystemExit
+        /// exception as configured by the Debug->Exceptions window.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public bool BreakOnSystemExitZero {
+            get { return _breakOnSystemExitZero; }
+            set { _breakOnSystemExitZero = value; }
+        }
+
         public event EventHandler IndentationInconsistencyChanged;
 
         #endregion
@@ -93,6 +105,7 @@ namespace Microsoft.PythonTools.Options {
             _waitOnNormalExit = false;
             _autoAnalysis = true;
             _teeStdOut = true;
+            _breakOnSystemExitZero = false;
         }
 
         private const string DontPromptBeforeRunningWithBuildErrorSetting = "DontPromptBeforeRunningWithBuildError";
@@ -102,7 +115,7 @@ namespace Microsoft.PythonTools.Options {
         private const string AutoAnalysisSetting = "AutoAnalysis";
         private const string TeeStandardOutSetting = "TeeStandardOut";
         private const string CrossModulAnalysisLimitSetting = "CrossModulAnalysisLimit";
-        private const string DefaultCodePageSetting = "DefaultCodePage";
+        private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
 
         public override void LoadSettingsFromStorage() {
             _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
@@ -110,6 +123,7 @@ namespace Microsoft.PythonTools.Options {
             _waitOnNormalExit = LoadBool(WaitOnNormalExitSetting) ?? false;
             _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
             _teeStdOut = LoadBool(TeeStandardOutSetting) ?? true;
+            _breakOnSystemExitZero = LoadBool(BreakOnSystemExitZeroSetting) ?? false;
             _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
             var analysisLimit = LoadString(CrossModulAnalysisLimitSetting);
             if (analysisLimit == null) {
@@ -127,6 +141,7 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(WaitOnNormalExitSetting, _waitOnNormalExit);
             SaveBool(AutoAnalysisSetting, _autoAnalysis);
             SaveBool(TeeStandardOutSetting, _teeStdOut);
+            SaveBool(BreakOnSystemExitZeroSetting, _breakOnSystemExitZero);
             SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
             if (_crossModuleAnalysisLimit != null) {
                 SaveInt(CrossModulAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);

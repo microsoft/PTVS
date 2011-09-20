@@ -22,6 +22,7 @@ try:
     wait_on_exception = False
     redirect_output = False
     wait_on_exit = False
+    break_on_systemexit_zero = False
     if len(sys.argv) >= 1 and sys.argv[0] == '--wait-on-exception':
         wait_on_exception = True
         del sys.argv[0]
@@ -34,7 +35,11 @@ try:
         redirect_output = True
         del sys.argv[0]
 
-    # set file appropriately, fix up sys.argv...
+    if len(sys.argv) >= 1 and sys.argv[0] == '--break-on-systemexit-zero':
+        break_on_systemexit_zero = True
+        del sys.argv[0]
+        # set file appropriately, fix up sys.argv...
+    
     __file__ = sys.argv[0]
 
     # remove all state we imported
@@ -48,7 +53,8 @@ try:
                                    locals(), 
                                    wait_on_exception, 
                                    redirect_output, 
-                                   wait_on_exit)    
+                                   wait_on_exit,
+                                   break_on_systemexit_zero)    
     #input()
 except:
     #input()

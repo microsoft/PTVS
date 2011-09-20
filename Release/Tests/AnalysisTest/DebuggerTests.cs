@@ -1082,13 +1082,18 @@ namespace AnalysisTest {
             }
         }
 
-        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess, 
+        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess,
             int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, params ExceptionInfo[] exceptions) {
+                TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.None, exceptions);
+        }
+
+        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess, 
+            int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, PythonDebugOptions debugOptions, params ExceptionInfo[] exceptions) {
             bool loaded = false;
             var process = DebugProcess(debugger, filename, (processObj, threadObj) => {
                 loaded = true;
                 processObj.SetExceptionInfo(defaultExceptionMode, exceptionModes);
-            });
+            }, debugOptions: debugOptions);
 
             int curException = 0;
             process.ExceptionRaised += (sender, args) => {
@@ -1121,6 +1126,44 @@ namespace AnalysisTest {
             process.WaitForExit();
 
             Assert.AreEqual(exceptions.Length, curException);
+        }
+
+        /// <summary>
+        /// Test cases for http://pytools.codeplex.com/workitem/367
+        /// </summary>
+        [TestMethod]
+        public void TestExceptionsSysExitZero() {
+            var debugger = new PythonDebugger();
+
+            TestException(debugger, 
+                DebuggerTestPath + @"SysExitZeroRaise.py", 
+                true, 32, 
+                new KeyValuePair<string, int>[0],
+                PythonDebugOptions.BreakOnSystemExitZero,
+                new ExceptionInfo(ExceptionModule + ".SystemExit", 1)
+            );
+
+            TestException(debugger,
+                DebuggerTestPath + @"SysExitZero.py",
+                true, 32,
+                new KeyValuePair<string, int>[0],
+                PythonDebugOptions.BreakOnSystemExitZero,
+                new ExceptionInfo(ExceptionModule + ".SystemExit", 2)
+            );
+
+            TestException(debugger,
+                DebuggerTestPath + @"SysExitZeroRaise.py",
+                true, 32,
+                new KeyValuePair<string, int>[0],
+                PythonDebugOptions.None
+            );
+
+            TestException(debugger,
+                DebuggerTestPath + @"SysExitZero.py",
+                true, 32,
+                new KeyValuePair<string, int>[0],
+                PythonDebugOptions.None
+            );
         }
 
         [TestMethod]

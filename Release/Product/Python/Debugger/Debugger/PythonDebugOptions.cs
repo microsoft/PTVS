@@ -13,16 +13,29 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Microsoft.PythonTools.Debugger {
     [Flags]
     enum PythonDebugOptions {
         None,
+        /// <summary>
+        /// Passing this flag to the debugger will cause it to wait for input on an abnormal (non-zero)
+        /// exit code.
+        /// </summary>
         WaitOnAbnormalExit = 0x01,
-        WaitOnNormalExit   = 0x02,
-        RedirectOutput     = 0x04
+        /// <summary>
+        /// Passing this flag to the debugger will cause it to wait for input on a normal (zero) exit code.
+        /// </summary>
+        WaitOnNormalExit = 0x02,
+        /// <summary>
+        /// Passing this flag will cause output to standard out to be redirected via the debugger
+        /// so it can be outputted in the Visual Studio debug output window.
+        /// </summary>
+        RedirectOutput = 0x04,
+        /// <summary>
+        /// Passing this flags will enable breaking on a SystemExit exception with a code of 0 if
+        /// we would otherwise break on a SystemExit exception.
+        /// </summary>
+        BreakOnSystemExitZero = 0x08
     }
 }

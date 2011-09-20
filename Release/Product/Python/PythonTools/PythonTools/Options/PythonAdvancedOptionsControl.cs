@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Options {
             _waitOnNormalExit.Checked = PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit;
             _teeStdOut.Checked = PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput;
             _autoAnalysis.Checked = PythonToolsPackage.Instance.OptionsPage.AutoAnalyzeStandardLibrary;
+            _breakOnSystemExitZero.Checked = PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero;
         }
 
         private void _promptOnBuildError_CheckedChanged(object sender, EventArgs e) {
@@ -64,6 +65,10 @@ namespace Microsoft.PythonTools.Options {
 
         private void _redirectOutputToVs_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput = _teeStdOut.Checked;
+        }
+
+        private void _breakOnSystemExitZero_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
         }
     }
 }
