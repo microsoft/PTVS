@@ -64,17 +64,33 @@ namespace Microsoft.PythonTools {
 
         internal static ITrackingSpan CreateTrackingSpan(this IIntellisenseSession session, ITextBuffer buffer) {
             var triggerPoint = session.GetTriggerPoint(buffer);
-            
-            var position = session.GetTriggerPoint(buffer).GetPosition(buffer.CurrentSnapshot);
+
+            var position = triggerPoint.GetPosition(buffer.CurrentSnapshot);
 
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
         }
 
         internal static ITrackingSpan CreateTrackingSpan(this IQuickInfoSession session, ITextBuffer buffer) {
             var triggerPoint = session.GetTriggerPoint(buffer);
-            var position = session.GetTriggerPoint(buffer).GetPosition(buffer.CurrentSnapshot);
+            var position = triggerPoint.GetPosition(buffer.CurrentSnapshot);
             if (position == buffer.CurrentSnapshot.Length) {
                 return ((IIntellisenseSession)session).CreateTrackingSpan(buffer);
+            }
+
+            return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
+        }
+
+        internal static ITrackingSpan CreateTrackingSpan(this ISmartTagSession session, ITextBuffer buffer) {
+            var triggerPoint = session.GetTriggerPoint(buffer);
+            var position = triggerPoint.GetPosition(buffer.CurrentSnapshot);
+            if (position == buffer.CurrentSnapshot.Length) {
+                return ((IIntellisenseSession)session).CreateTrackingSpan(buffer);
+            }
+
+            var triggerChar = triggerPoint.GetCharacter(buffer.CurrentSnapshot);
+            if (position != 0 && (triggerChar == '\r' || triggerChar == '\n' || triggerChar == '[' || triggerChar =='(' || triggerChar == '.')) {
+                // end of line, back up one char as we may have an identifier
+                return buffer.CurrentSnapshot.CreateTrackingSpan(position - 1, 1, SpanTrackingMode.EdgeInclusive);
             }
 
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);

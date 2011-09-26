@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Language {
         public EditFilter(ITextView textView, IEditorOperations editorOps) {
             _textView = textView;
             _editorOps = editorOps;
-
+            
             BraceMatcher.WatchBraceHighlights(textView, PythonToolsPackage.ComponentModel);
         }
 
@@ -563,6 +563,11 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
+                    case (VSConstants.VSStd2KCmdID)147: // ECMD_SMARTTASKS  defined in stdidcmd.h, but not in MPF
+                        // if the user is typing to fast for us to update the smart tags on the idle event
+                        // then we want to update them before VS pops them up.
+                        UpdateSmartTags();
+                        break;
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
                         var controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
@@ -653,6 +658,13 @@ namespace Microsoft.PythonTools.Language {
             // there's some text in the buffer...
             var view = eval.Window.TextView;
             var caret = view.Caret;
+
+            if (view.Selection.IsActive && !view.Selection.IsEmpty) {
+                foreach (var span in view.Selection.SelectedSpans) {
+                    view.TextBuffer.Delete(span);
+                }
+            }
+
             var curBuffer = eval.Window.CurrentLanguageBuffer;
             var inputPoint = view.BufferGraph.MapDownToBuffer(
                 caret.Position.BufferPosition,
@@ -661,11 +673,12 @@ namespace Microsoft.PythonTools.Language {
                 PositionAffinity.Successor
             );
 
+            
             if (inputPoint == null) {
                 // if the caret's not in the current input insert at the beginning
                 inputPoint = new SnapshotPoint(curBuffer.CurrentSnapshot, 0);
             }
-
+            
             // we want to insert the pasted code at the caret, but we also want to
             // respect the stepping.  So first grab the code before and after the caret.
             string startText = curBuffer.CurrentSnapshot.GetText(0, inputPoint.Value);
@@ -680,6 +693,16 @@ namespace Microsoft.PythonTools.Language {
 
             if (splitCode.Count == 1) {
                 curBuffer.Insert(0, splitCode[0]);
+                var viewPoint = view.BufferGraph.MapUpToBuffer(
+                    new SnapshotPoint(curBuffer.CurrentSnapshot, inputPoint.Value.Position + pasting.Length),
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Successor,
+                    view.TextBuffer
+                );
+
+                if (viewPoint != null) {
+                    view.Caret.MoveTo(viewPoint.Value);
+                }
             } else {
                 var lastCode = splitCode[splitCode.Count - 1];
                 splitCode.RemoveAt(splitCode.Count - 1);
@@ -818,6 +841,17 @@ namespace Microsoft.PythonTools.Language {
                 }
             }
             return null;
+        }
+
+        internal void DoIdle(IOleComponentManager compMgr) {
+            UpdateSmartTags(compMgr);
+        }
+
+        private void UpdateSmartTags(IOleComponentManager compMgr = null) {
+            SmartTagController controller;
+            if (_textView.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagController), out controller)) {
+                controller.ShowSmartTag(compMgr);
+            }
         }
     }
 }

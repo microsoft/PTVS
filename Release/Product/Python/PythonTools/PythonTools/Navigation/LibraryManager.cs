@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -65,7 +66,7 @@ namespace Microsoft.PythonTools.Navigation {
        
 
         private object GetPackageService(Type/*!*/ type) {
-            return ((IServiceProvider)_package).GetService(type);
+            return ((System.IServiceProvider)_package).GetService(type);
         }
 
         private void RegisterForRDTEvents() {
@@ -415,8 +416,12 @@ namespace Microsoft.PythonTools.Navigation {
 
         #endregion
 
-        public void OnIdle() {
+        public void OnIdle(IOleComponentManager compMgr) {
             foreach (TextLineEventListener listener in _documents.Values) {
+                if (compMgr.FContinueIdle() == 0) {
+                    break;
+                }
+
                 listener.OnIdle();
             }
         }

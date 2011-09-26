@@ -14,28 +14,23 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
-namespace Microsoft.PythonTools.Commands {
-    public partial class DiagnosticsForm : Form {
-        public DiagnosticsForm(string content) {
-            InitializeComponent();
-            _textBox.Text = content;
-        }
-
-        public TextBox TextBox {
-            get {
-                return _textBox;
-            }
-        }
-
-        private void _ok_Click(object sender, EventArgs e) {
-            Close();
-        }
+namespace Microsoft.PythonTools.Intellisense {
+    /// <summary>
+    /// Corresponds to IDBMP_REFACTOR_IMAGES bitmap defined in SharedCmdDef.vsct 
+    /// </summary>
+    enum RefactoringIconKind {
+        ExtractMethod,
+        EncapsulateField,
+        ExtractInterface,
+        Rename,
+        ReorderParameters,
+        RemoveParameters,
+        AddUsing,
+        GenerateMethod,
+        PromoteLocal,
+        Snippet
     }
 }

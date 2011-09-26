@@ -13,12 +13,12 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Text;
-using System.Windows;
+using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
-using System.IO;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -26,31 +26,45 @@ namespace Microsoft.PythonTools.Commands {
     /// </summary>
     internal sealed class DiagnosticsCommand : Command {
         public override void DoCommand(object sender, EventArgs args) {
+            var dlg = new DiagnosticsForm("Gathering data...");
+
+            ThreadPool.QueueUserWorkItem(x => {
+                var data = GetData();
+                dlg.BeginInvoke((Action)(() => {
+                    dlg.TextBox.Text = data;
+                    dlg.TextBox.SelectAll();
+                }));
+            });
+            dlg.ShowDialog();
+        }
+
+        private string GetData() {
+
             StringBuilder res = new StringBuilder();
             res.AppendLine("Use Ctrl-C to copy contents");
             res.AppendLine();
 
             var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
             res.AppendLine("Projects: ");
-            
+
             var projects = dte.Solution.Projects;
             var pyProjectKind = ("{" + PythonConstants.ProjectFactoryGuid + "}").ToLower();
-            var interestingDteProperties = new[] { "InterpreterId", "InterpreterVersion", "StartupFile", "WorkingDirectory", "PublishUrl", "SearchPath", "CommandLineArguments", "InterpreterPath"};
+            var interestingDteProperties = new[] { "InterpreterId", "InterpreterVersion", "StartupFile", "WorkingDirectory", "PublishUrl", "SearchPath", "CommandLineArguments", "InterpreterPath" };
             var interestingProjectProperties = new[] { "ClusterRunEnvironment", "ClusterPublishBeforeRun", "ClusterWorkingDir", "ClusterMpiExecCommand", "ClusterAppCommand", "ClusterAppArguments", "ClusterDeploymentDir", "ClusterTargetPlatform" };
 
             foreach (EnvDTE.Project project in projects) {
                 res.AppendLine("    Project: " + project.UniqueName);
-                
+
                 if (project.Kind.ToLower() == pyProjectKind) {
                     res.AppendLine("        Kind: Python");
 
-                    foreach (var prop in interestingDteProperties ) {
+                    foreach (var prop in interestingDteProperties) {
                         res.AppendLine("        " + prop + ": " + GetProjectProperty(project, prop));
                     }
 
                     var pyProj = project.GetPythonProject();
                     if (pyProj != null) {
-                        foreach(var prop in interestingProjectProperties) {
+                        foreach (var prop in interestingProjectProperties) {
                             var propValue = pyProj.GetProjectProperty(prop);
                             if (propValue != null) {
                                 res.AppendLine("        " + prop + ": " + propValue);
@@ -68,7 +82,7 @@ namespace Microsoft.PythonTools.Commands {
             var compModel = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
             var factoryProviders = compModel.GetExtensions<IPythonInterpreterFactoryProvider>();
             foreach (var provider in factoryProviders) {
-                res.AppendLine("    " + provider.GetType().FullName);                
+                res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var factory in provider.GetInterpreterFactories()) {
                     res.AppendLine("        Id: " + factory.Id);
                     res.AppendLine("        Factory: " + factory.Description);
@@ -83,7 +97,7 @@ namespace Microsoft.PythonTools.Commands {
                     if (File.Exists(analysisLog)) {
                         try {
                             res.AppendLine(File.ReadAllText(analysisLog));
-                        } catch(Exception e) {
+                        } catch (Exception e) {
                             res.AppendLine("Error reading: " + e);
                         }
                     }
@@ -108,8 +122,7 @@ namespace Microsoft.PythonTools.Commands {
                     res.AppendLine("Error reading: " + e);
                 }
             }
-
-            new DiagnosticsForm(res.ToString()).ShowDialog();
+            return res.ToString();
         }
 
         private string GetCompletionDatabaseDirPath() {

@@ -37,5 +37,15 @@ namespace Microsoft.PythonTools.Intellisense {
         public static CompletionAnalysis GetCompletions(this ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
             return ProjectAnalyzer.GetCompletions(snapshot, span, intersectMembers, hideAdvancedMembers);
         }
+
+        /// <summary>
+        /// Gets a ImportAnalysis providing a list of imports for the selected identifer if the identifier is 
+        /// currently undefined.
+        /// 
+        /// New in v1.1.
+        /// </summary>
+        public static MissingImportAnalysis GetMissingImports(this ITextSnapshot snapshot, ITrackingSpan span) {
+            return ProjectAnalyzer.GetMissingImports(snapshot, span);
+        }
     }
 }

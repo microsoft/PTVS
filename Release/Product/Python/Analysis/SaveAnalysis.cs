@@ -38,6 +38,12 @@ namespace Microsoft.PythonTools.Analysis {
                     using (var writer = new FileStream(Path.Combine(outDir, name + ".idb"), FileMode.Create, FileAccess.ReadWrite)) {
                         new Pickler(writer).Dump(info);
                     }
+
+                    using (var writer = new StreamWriter(new FileStream(Path.Combine(outDir, name + ".idb.$memlist"), FileMode.Create, FileAccess.ReadWrite))) {
+                        foreach (var keyValue in moduleInfo.Scope.Variables) {
+                            writer.WriteLine(keyValue.Key);
+                        }
+                    }
                 }
             }
 

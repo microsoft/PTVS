@@ -197,6 +197,14 @@
     <Compile Include="PythonTools\CommonUtils.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactory.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\ImportSmartTagAction.cs" />
+    <Compile Include="PythonTools\Intellisense\SmartTagAction.cs" />
+    <Compile Include="PythonTools\Intellisense\SmartTagSource.cs" />
+    <Compile Include="PythonTools\Intellisense\SmartTagSourceProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\RefactoringIconKind.cs" />
+    <Compile Include="PythonTools\Intellisense\SmartTagController.cs" />
+    <Compile Include="PythonTools\Intellisense\SmartTagControllerProvider.cs" />
     <Compile Include="PythonTools\Project\AssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceFolderItem.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />

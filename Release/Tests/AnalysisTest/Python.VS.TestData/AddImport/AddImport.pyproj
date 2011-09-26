@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{12535e18-06da-4f15-b99e-8f492fe721e2}</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>Program.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <AssemblyName>HelloWorld</AssemblyName>
+    <Name>HelloWorld</Name>
+    <RootNamespace>HelloWorld</RootNamespace>
+    <OutputPath>.</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="DocString.py" />
+    <Compile Include="UnicodeDocString.py" />
+    <Compile Include="ImportFunctionFrom.py" />
+    <Compile Include="test_package\__init__.py" />
+    <Compile Include="test_package\package_module.py" />
+    <Compile Include="test_package\sub_package\__init__.py" />
+    <Compile Include="test_module.py" />
+    <Compile Include="ImportFunctionFromExistingFromImport.py" />
+    <Compile Include="ImportFunctionFromExistingFromImportAsName.py" />
+    <Compile Include="ImportFunctionFromExistingFromImportParens.py" />
+    <Compile Include="ImportFunctionFromExistingFromImportParensAsName.py" />
+    <Compile Include="ImportFunctionFromExistingFromImportParensAsNameTrailingComma.py" />
+    <Compile Include="ImportFunctionFromExistingFromImportParensTrailingComma.py" />
+    <Compile Include="ImportSubPackage.py" />
+    <Compile Include="ImportPackage.py" />
+    <Compile Include="ImportFunctionFromSubpackage.py" />
+    <Compile Include="ImportBuiltinFunction.py" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>

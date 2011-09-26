@@ -12,23 +12,22 @@
  *
  * ***************************************************************************/
 
-using System.Linq;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Navigation {
     class CodeWindowManager : IVsCodeWindowManager {
         private readonly IVsCodeWindow _window;
         private readonly IWpfTextView _textView;
+        private readonly EditFilter _filter;
         private static readonly Dictionary<IWpfTextView, CodeWindowManager> _windows = new Dictionary<IWpfTextView, CodeWindowManager>();
         private DropDownBarClient _client;
 
@@ -40,11 +39,21 @@ namespace Microsoft.PythonTools.Navigation {
             var adaptersFactory = model.GetService<IVsEditorAdaptersFactoryService>();
             IEditorOperationsFactoryService factory = model.GetService<IEditorOperationsFactoryService>();
 
-            EditFilter editFilter = new EditFilter(textView, factory.GetEditorOperations(textView));
+            EditFilter editFilter = _filter = new EditFilter(textView, factory.GetEditorOperations(textView));
             IntellisenseController intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);
 
             editFilter.AttachKeyboardFilter(adaptersFactory.GetViewAdapter(textView));
             intellisenseController.AttachKeyboardFilter();
+        }
+
+        public static void OnIdle(IOleComponentManager compMgr) {
+            foreach (var window in _windows) {
+                if (compMgr.FContinueIdle() == 0) {
+                    break;
+                }
+
+                window.Value._filter.DoIdle(compMgr);
+            }
         }
 
         #region IVsCodeWindowManager Members

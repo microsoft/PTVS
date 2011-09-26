@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools {
     public abstract class CommonPackage : Package, IOleComponent {
         private uint _componentID;
         private LibraryManager _libraryManager;
+        private IOleComponentManager _compMgr;
 
         #region Language-specific abstracts
 
@@ -132,6 +133,18 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
+        protected override void Initialize() {
+            var componentManager = _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
+            OLECRINFO[] crinfo = new OLECRINFO[1];
+            crinfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));
+            crinfo[0].grfcrf = (uint)_OLECRF.olecrfNeedIdleTime;
+            crinfo[0].grfcadvf = (uint)_OLECADVF.olecadvfModal | (uint)_OLECADVF.olecadvfRedrawOff | (uint)_OLECADVF.olecadvfWarningsOff;
+            crinfo[0].uIdleTimeInterval = 0;
+            ErrorHandler.ThrowOnFailure(componentManager.FRegisterComponent(this, crinfo, out _componentID));
+
+            base.Initialize();
+        }
+
         #region IOleComponent Members
 
         public int FContinueMessageLoop(uint uReason, IntPtr pvLoopData, MSG[] pMsgPeeked) {
@@ -140,8 +153,10 @@ namespace Microsoft.PythonTools {
 
         public int FDoIdle(uint grfidlef) {
             if (null != _libraryManager) {
-                _libraryManager.OnIdle();
+                _libraryManager.OnIdle(_compMgr);
             }
+
+            CodeWindowManager.OnIdle(_compMgr);
             return 0;
         }
 

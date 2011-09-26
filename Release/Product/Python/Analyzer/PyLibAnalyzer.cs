@@ -226,10 +226,10 @@ namespace Microsoft.PythonTools.Analysis {
                     foreach (var sitePackageDir in Directory.GetDirectories(subdir)) {
                         var list = new List<string>();
                         files.Add(list);
-                        CollectFilesWorker(sitePackageDir, list, allFiles);
+                        CollectPackage(sitePackageDir, list, allFiles);
                     }
                 } else {
-                    CollectFilesWorker(subdir, libFiles, allFiles);
+                    CollectPackage(subdir, libFiles, allFiles);
                 }
             }
 
@@ -256,7 +256,10 @@ namespace Microsoft.PythonTools.Analysis {
 
         private static char[] _invalidPathChars = Path.GetInvalidPathChars();
 
-        private static void CollectFilesWorker(string dir, List<string> files, HashSet<string> allFiles) {
+        /// <summary>
+        /// Collects a package and all sub-packages
+        /// </summary>
+        private static void CollectPackage(string dir, List<string> files, HashSet<string> allFiles) {
             foreach (string file in Directory.GetFiles(dir)) {
                 if (IsPythonFile(file) && !allFiles.Contains(file)) { 
                     files.Add(file);
@@ -264,7 +267,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             foreach (string nestedDir in Directory.GetDirectories(dir)) {
-                CollectFilesWorker(nestedDir, files, allFiles);
+                // only include packages and subpackages, don't look in random dirs (it's CollectFiles
+                // responsibility to know dirs to look in that aren't packages)
+                if (File.Exists(Path.Combine(nestedDir, "__init__.py"))) {
+                    CollectPackage(nestedDir, files, allFiles);
+                }
             }
         }
         

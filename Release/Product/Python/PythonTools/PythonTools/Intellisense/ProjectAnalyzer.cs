@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
@@ -41,7 +42,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #if INTERACTIVE_WINDOW
     using IReplEvaluator = IInteractiveEngine;
 #endif
-    
+
     /// <summary>
     /// Performs centralized parsing and analysis of Python source code.
     /// </summary>
@@ -367,6 +368,40 @@ namespace Microsoft.PythonTools.Intellisense {
             return new SignatureAnalysis(text, paramIndex, new ISignature[0]);
         }
 
+        public static MissingImportAnalysis GetMissingImports(ITextSnapshot snapshot, ITrackingSpan span) {
+            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
+            var loc = span.GetSpan(snapshot.Version);
+            var exprRange = parser.GetExpressionRange();
+            if (exprRange == null) {
+                return MissingImportAnalysis.Empty;
+            }
+
+            var analysis = ((IPythonProjectEntry)snapshot.TextBuffer.GetAnalysis()).Analysis;
+            var text = exprRange.Value.GetText();
+            var analyzer = analysis.ProjectState;
+            var lineNo = span.GetStartPoint(snapshot).GetContainingLine().LineNumber;
+
+            var expr = Statement.GetExpression(analysis.GetAstFromText(text, lineNo).Body);
+
+            if (expr != null && expr is NameExpression) {
+                var applicableSpan = parser.Snapshot.CreateTrackingSpan(
+                    exprRange.Value.Span,
+                    SpanTrackingMode.EdgeExclusive
+                );
+
+                var values = analysis.GetValues(text, lineNo).ToArray();
+                if (values.Length == 0) {
+                    string name = ((NameExpression)expr).Name;
+                    var imports = analysis.ProjectState.FindNameInAllModules(name);
+
+                    return new MissingImportAnalysis(imports, applicableSpan);
+                }
+            }
+
+            // if we have type information don't offer to add imports
+            return MissingImportAnalysis.Empty;
+        }
+
         public bool IsAnalyzing {
             get {
                 return _queue.IsParsing || _analysisQueue.IsAnalyzing;
@@ -419,6 +454,20 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal PythonAst ParseFile(ITextSnapshot snapshot) {
+            var parser = Parser.CreateParser(
+                new SnapshotSpanSourceCodeReader(
+                    new SnapshotSpan(snapshot, 0, snapshot.Length)
+                ),
+                Project.LanguageVersion,
+                new ParserOptions() { Verbatim = true, BindReferences = true }
+            );
+
+            var ast = parser.ParseFile();
+            return ast;
+
+        }
+
         public void ParseFile(IProjectEntry projectEntry, string filename, FileStream content, Severity indentationSeverity) {
             IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
@@ -469,7 +518,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         var reader = new SnapshotSpanSourceCodeStream(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
                         ParsePythonCode(reader, indentationSeverity, out ast, out errorSink);
-                        
+
                         if (ast != null) {
                             asts.Add(ast);
                         }
@@ -487,7 +536,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         // SimpleTagger says it's thread safe (http://msdn.microsoft.com/en-us/library/dd885186.aspx), but it's buggy...  
                         // Post the removing of squiggles to the UI thread so that we don't crash when we're racing with 
                         // updates to the buffer.  http://pytools.codeplex.com/workitem/142
-                        
+
                         var dispatcher = bufferParser.Dispatcher;
                         if (dispatcher != null) {   // not a UI element in completion context tests w/ mocks.                            
                             dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, bufferParser._currentProjEntry.FilePath, provider).DoUpdate);
@@ -496,7 +545,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         string path = bufferParser._currentProjEntry.FilePath;
                         if (path != null) {
                             UpdateErrorList(errorSink, path, provider);
-                        }                        
+                        }
                     }
                 } else {
                     // other file such as XAML
@@ -543,7 +592,7 @@ namespace Microsoft.PythonTools.Intellisense {
             private SimpleTagger<ErrorTag> _squiggles;
             private TaskProvider _provider;
             private readonly string _filename;
-            
+
             public SquiggleUpdater(CollectingErrorSink errorSink, ITextSnapshot snapshot, SimpleTagger<ErrorTag> squiggles, string filename, TaskProvider provider) {
                 _errorSink = errorSink;
                 _snapshot = snapshot;
@@ -887,8 +936,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         class TaskProvider : IVsTaskProvider {
-            private readonly Dictionary<string, List<ErrorResult>> _warnings = new Dictionary<string,List<ErrorResult>>();
-            private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string,List<ErrorResult>>();
+            private readonly Dictionary<string, List<ErrorResult>> _warnings = new Dictionary<string, List<ErrorResult>>();
+            private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string, List<ErrorResult>>();
             private uint _cookie;
             private readonly IVsErrorList _errorList;
 
@@ -1014,7 +1063,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         foreach (var error in fileAndErrorList.Value) {
                             yield return new ErrorInfo(fileAndErrorList.Key, error, true);
                         }
-                    }                    
+                    }
                 }
 
                 #region IVsEnumTaskItems Members

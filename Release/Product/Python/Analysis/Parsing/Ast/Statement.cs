@@ -48,5 +48,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 return null;
             }
         }
+
+        /// <summary>
+        /// Returns the trailing whitespace (newlines and comments) that
+        /// follow this node but have been persisted for round tripping.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public string GetTrailingWhitespace(PythonAst ast) {
+            return NodeAttributes.GetTrailingNewLine(this, ast);
+        }
     }
 }

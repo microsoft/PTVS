@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (!d.TryGetValue(modName, out l)) {
                         d[modName] = l = new HashSet<Namespace>();
                     }
-                    if (moduleRef != null && moduleRef.Module != null) {
+                    if (moduleRef.Module != null) {
                         // The REPL shows up here with value=None
                         l.Add(moduleRef.Module);
                     }
@@ -204,6 +204,108 @@ namespace Microsoft.PythonTools.Analysis {
                 result[pos++] = new MemberResult(kvp.Key, kvp.Value);
             }
             return result;
+        }
+
+        /// <summary>
+        /// Searches all modules which match the given name and searches in the modules
+        /// for top-level items which match the given name.  Returns a list of all the
+        /// available names fully qualified to their name.  
+        /// </summary>
+        /// <param name="name"></param>
+        public IEnumerable<string> FindNameInAllModules(string name) {
+            // provide module names first
+            foreach (var keyValue in Modules) {
+                var modName = keyValue.Key;
+                var moduleRef = keyValue.Value;
+
+                if (moduleRef.Module != null || moduleRef.HasEphemeralReferences) {
+                    // include modules which can be imported
+                    if (modName == name || PackageNameMatches(name, modName)) {
+                        yield return modName;
+                    }
+                }
+            }
+
+            // then include module members
+            foreach (var keyValue in Modules) {
+                var modName = keyValue.Key;
+                var moduleRef = keyValue.Value;
+
+                if (moduleRef.Module != null || moduleRef.HasEphemeralReferences) {
+                    if (moduleRef.Module != null) {
+                        // then check for members within the module.
+                        if (ModuleContainsMember(name, moduleRef)) {
+                            yield return modName + "." + name;
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool ModuleContainsMember(string name, ModuleReference moduleRef) {
+            BuiltinModule builtin = moduleRef.Module as BuiltinModule;
+            if (builtin != null) {
+                var mem = builtin.InterpreterModule.GetMember(_defaultContext, name);
+                if (mem != null) {
+                    if (IsExcludedBuiltin(builtin, mem)) {
+                        // if a module imports a builtin and exposes it don't report it for purposes of adding imports
+                        return false;
+                    }
+
+                    IPythonMultipleMembers multiMem = mem as IPythonMultipleMembers;
+                    if (multiMem != null) {
+                        foreach (var innerMem in multiMem.Members) {
+                            if (IsExcludedBuiltin(builtin, innerMem)) {
+                                // if something non-excludable aliased w/ something excluable we probably
+                                // only care about the excluable (for example a module and None - timeit.py
+                                // does this in the std lib)
+                                return false;
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+            }
+
+            ModuleInfo modInfo = moduleRef.Module as ModuleInfo;
+            if (modInfo != null) {
+                VariableDef varDef;
+                if (modInfo.Scope.Variables.TryGetValue(name, out varDef) &&
+                    varDef.VariableStillExists &&
+                    varDef.Types.Count > 0) {
+
+                    foreach (var type in varDef.Types) {
+                        if (type is ModuleInfo || type is BuiltinModule) {
+                            // we find modules via our modules list, dont duplicate these
+                            return false;
+                        }
+
+                        if (type.Location != null && type.Location.ProjectEntry != modInfo.ProjectEntry) {
+                            // declared in another module
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool IsExcludedBuiltin(BuiltinModule builtin, IMember mem) {
+            IPythonFunction func;
+            IPythonType type;
+            return mem is IPythonModule ||
+                                    ((func = mem as IPythonFunction) != null && func.DeclaringModule != builtin.InterpreterModule) ||
+                                    ((type = mem as IPythonType) != null && type.DeclaringModule != builtin.InterpreterModule);
+        }
+
+        private static bool PackageNameMatches(string name, string modName) {
+            int lastDot;
+            return (lastDot = modName.LastIndexOf('.')) != -1 &&
+                modName.Length == lastDot + 1 + name.Length &&
+                String.Compare(modName, lastDot + 1, name, 0, name.Length) == 0;
         }
 
         public IPythonInterpreter Interpreter {

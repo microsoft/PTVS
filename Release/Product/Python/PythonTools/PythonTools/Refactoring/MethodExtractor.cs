@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -30,7 +29,7 @@ namespace Microsoft.PythonTools.Refactoring {
             _view = textView;
             var snapshot = _view.TextBuffer.CurrentSnapshot;
 
-            _ast = ParseFile(snapshot);
+            _ast = _view.GetAnalyzer().ParseFile(snapshot);
         }
 
         public bool ExtractMethod(IExtractMethodInput input) {
@@ -209,19 +208,6 @@ namespace Microsoft.PythonTools.Refactoring {
             target.ContainsReturn = returnWalker.ContainsReturn;
 
             return true;
-        }
-
-        private PythonAst ParseFile(ITextSnapshot snapshot) {
-            var parser = Parser.CreateParser(
-                new SnapshotSpanSourceCodeReader(
-                    new SnapshotSpan(snapshot, 0, snapshot.Length)
-                ),
-                _view.GetAnalyzer().Project.LanguageVersion,
-                new ParserOptions() { Verbatim = true, BindReferences = true }
-            );
-
-            var ast = parser.ParseFile();
-            return ast;
         }
 
         class ReturnWalker : PythonWalker {

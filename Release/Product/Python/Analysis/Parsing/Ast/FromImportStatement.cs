@@ -43,6 +43,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return _fromFuture; }
         }
 
+        public bool ForceAbsolute {
+            get {
+                return _forceAbsolute;
+            }
+        }
+
         public IList<NameExpression/*!*/> Names {
             get { return _names; }
         }
@@ -87,24 +93,26 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 int asIndex = 0;
                 for (int i = 0, verbatimIndex = 0; i < _names.Length; i++) {
                     if (i > 0) {
-                        if (asNameWhiteSpace != null) {
+                        if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                             res.Append(asNameWhiteSpace[asIndex++]);
                         }
                         res.Append(',');
                     }
 
-                    if (asNameWhiteSpace != null) {
+                    if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                         res.Append(asNameWhiteSpace[asIndex++]);
+                    } else {
+                        res.Append(' ');
                     }
 
                     _names[i].AppendCodeString(res, ast);
                     if (AsNames != null && AsNames[i] != null) {
-                        if (asNameWhiteSpace != null) {
+                        if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                             res.Append(asNameWhiteSpace[asIndex++]);
                         }
                         res.Append("as");
                         if (_asNames[i].Name.Length != 0) {
-                            if (asNameWhiteSpace != null) {
+                            if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                                 res.Append(asNameWhiteSpace[asIndex++]);
                             }
                             _asNames[i].AppendCodeString(res, ast);
@@ -116,7 +124,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     }
                 }
 
-                if (asIndex < asNameWhiteSpace.Length) {
+                if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                     // trailing comma
                     res.Append(asNameWhiteSpace[asNameWhiteSpace.Length - 1]);
                     res.Append(",");

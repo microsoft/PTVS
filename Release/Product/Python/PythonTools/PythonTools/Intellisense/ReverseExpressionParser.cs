@@ -248,8 +248,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         lastTokenWasCommaOrOperator = false;
                     }
-
-                    start = token.Span;
+                    
+                    start = token.Span;                    
                 } while (enumerator.MoveNext());
             }
 

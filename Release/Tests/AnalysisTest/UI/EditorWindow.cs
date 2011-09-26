@@ -25,6 +25,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
+using System.Threading;
+using System.Windows;
 
 namespace AnalysisTest.UI {
     class EditorWindow : AutomationWrapper {
@@ -32,7 +34,7 @@ namespace AnalysisTest.UI {
 
         public EditorWindow(string filename, AutomationElement element)
             : base(element) {
-                _filename = filename;
+            _filename = filename;
         }
 
         public string Text {
@@ -57,6 +59,11 @@ namespace AnalysisTest.UI {
             }
 
             Assert.AreEqual(text, Text);
+        }
+
+        public ISmartTagSession StartSmartTagSession() {
+            ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("View.ShowSmartTag"));
+            return WaitForSession<ISmartTagSession>();
         }
 
         public T WaitForSession<T>() where T : IIntellisenseSession {
@@ -85,7 +92,7 @@ namespace AnalysisTest.UI {
             get {
 
                 var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-                
+
                 var provider = compModel.GetService<IClassifierAggregatorService>();
                 return provider.GetClassifier(TextView.TextBuffer);
             }
@@ -101,7 +108,7 @@ namespace AnalysisTest.UI {
             IVsUIHierarchy uiHierarchy;
             uint itemID;
             IVsWindowFrame windowFrame;
-            
+
             if (VsShellUtilities.IsDocumentOpen(VsIdeTestHostContext.ServiceProvider, filePath, Guid.Empty, out uiHierarchy, out itemID, out windowFrame)) {
                 var textView = VsShellUtilities.GetTextView(windowFrame);
                 IComponentModel compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
@@ -112,5 +119,22 @@ namespace AnalysisTest.UI {
             return null;
         }
 
+        public void Invoke(Action action) {
+            Exception excep = null;
+            ((UIElement)TextView).Dispatcher.Invoke(
+                (Action)(() => {
+                    try {
+                        action();
+                    } catch (Exception e) {
+                        excep = e;
+                        
+                    }
+                })
+            );
+
+            if (excep != null) {
+                Assert.Fail("Exception on UI thread: " + excep.ToString());
+            }
+        }
     }
 }

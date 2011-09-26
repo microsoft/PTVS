@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private Dictionary<object, object> _properties;
         internal Dictionary<string, IMember> _hiddenMembers;
         private string _docString, _filename;
-        private object[] _children;
+        private object[] _children;        
         private bool _loaded;
         [ThreadStatic] private static int _loadDepth;
 
@@ -144,7 +144,26 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region IMemberContainer Members
 
         public IMember GetMember(IModuleContext context, string name) {
-            EnsureLoaded();
+            if (!_loaded) {
+                // avoid deserializing all of the member list if we're just checking if
+                // a member exists.
+                if (_members.Count > 0 || File.Exists(_dbFile + ".$memlist")) {
+                    if (_members.Count == 0) {
+                        // populate members dict w/ list of members
+                        foreach (var line in File.ReadLines(_dbFile + ".$memlist")) {
+                            _members[line] = null;
+                        }
+                    }
+
+                    if (!_members.ContainsKey(name)) {
+                        // the member doesn't exist, no need to load all of the data
+                        return null;
+                    }
+                }
+
+                // the member exists, or we don't have a $memlist file, read everything.
+                EnsureLoaded();
+            }
 
             IMember res;
             if (_members.TryGetValue(name, out res)) {

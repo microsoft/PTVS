@@ -83,6 +83,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             nodeAttrs[key] = value;
         }
 
+        /// <summary>
+        /// Copies attributes that apply to one node and makes them available for the other node.
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        public void CopyAttributes(Node from, Node to) {
+            Dictionary<object, object> nodeAttrs;
+            if (_attributes.TryGetValue(from, out nodeAttrs)) {
+                _attributes[to] = new Dictionary<object, object>(nodeAttrs);
+            }
+        }
+
         internal SourceLocation IndexToLocation(int index) {
             if (index == -1) {
                 return SourceLocation.Invalid;

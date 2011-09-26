@@ -12,30 +12,23 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+using System.ComponentModel.Composition;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.PythonTools.Commands {
-    public partial class DiagnosticsForm : Form {
-        public DiagnosticsForm(string content) {
-            InitializeComponent();
-            _textBox.Text = content;
+namespace Microsoft.PythonTools.Intellisense {
+    [Export(typeof(ISmartTagSourceProvider))]
+    [Order(Before = Priority.Default)]
+    [Name("Python Smart Tag Source Provider")]
+    [ContentType(PythonCoreConstants.ContentType)]
+    class SmartTagSourceProvider : ISmartTagSourceProvider {
+        public SmartTagSourceProvider() {
         }
 
-        public TextBox TextBox {
-            get {
-                return _textBox;
-            }
-        }
-
-        private void _ok_Click(object sender, EventArgs e) {
-            Close();
+        public ISmartTagSource TryCreateSmartTagSource(ITextBuffer textBuffer) {
+            return new SmartTagSource(textBuffer);
         }
     }
 }

@@ -48,6 +48,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="CompletionContextTests.cs" />
+    <Compile Include="AddImportTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ExtractMethodTests.cs" />
     <Compile Include="Mocks\MockBufferGraph.cs" />
@@ -368,6 +369,54 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Python.VS.TestData\AddImport\ImportBuiltinFunction.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFromSubpackage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportSubPackage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportPackage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFromExistingFromImportParensAsNameTrailingComma.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFromExistingFromImportParensTrailingComma.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFromExistingFromImportParensAsName.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFromExistingFromImportAsName.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFromExistingFromImportParens.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFromExistingFromImport.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportFunctionFrom.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\test_module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\test_package\package_,module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\test_package\sub_package\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\test_package\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\UnicodeDocString.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\AutoIndent\ClassAndFunc.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -404,6 +453,15 @@
     <None Include="Python.VS.TestData\Signatures\Signatures.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python.VS.TestData\AddImport.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Python.VS.TestData\AddImport\AddImport.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="Python.VS.TestData\AddImport\DocString.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\DebugAttach\DebugAttach.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
