@@ -328,12 +328,13 @@ actual inspection and introspection."""
         self.conn.send(image_bytes)
         self.send_lock.release()
 
-    def send_prompt(self, ps1, ps2):
+    def send_prompt(self, ps1, ps2, update_all = True):
         """sends the current prompt to the interactive window"""
         self.send_lock.acquire()
         self.conn.send(ReplBackend._PRPC)
         self._write_string(ps1)
         self._write_string(ps2)
+        self.conn.send(struct.pack('i', update_all))
         self.send_lock.release()
     
     def send_error(self):
@@ -657,7 +658,10 @@ class BasicReplBackend(ReplBackend):
 
     def exit_process(self):
         self.execute_item = exit_work_item
-        self.execute_item_lock.release()
+        try:
+            self.execute_item_lock.release()
+        except:
+            pass
         sys.exit(0)
 
     def get_members(self, expression):

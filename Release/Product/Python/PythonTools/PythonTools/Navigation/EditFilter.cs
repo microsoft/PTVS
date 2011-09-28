@@ -661,7 +661,9 @@ namespace Microsoft.PythonTools.Language {
 
             if (view.Selection.IsActive && !view.Selection.IsEmpty) {
                 foreach (var span in view.Selection.SelectedSpans) {
-                    view.TextBuffer.Delete(span);
+                    foreach (var normalizedSpan in view.BufferGraph.MapDownToBuffer(span, SpanTrackingMode.EdgeInclusive, eval.Window.CurrentLanguageBuffer)) {
+                        normalizedSpan.Snapshot.TextBuffer.Delete(normalizedSpan);
+                    }
                 }
             }
 

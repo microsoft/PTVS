@@ -723,11 +723,27 @@ namespace Microsoft.VisualStudio.Repl {
                             }
                             break;
 
+                        case ReplOptions.CurrentPrimaryPrompt:
+                            string oldPrompt = _prompt;
+                            _prompt = CheckOption<string>(option, value);
+                            if (!_isRunning && !_displayPromptInMargin) {
+                                // we need to update the current prompt though
+                                UpdatePrompts(ReplSpanKind.Prompt, oldPrompt, _prompt, currentOnly: true);
+                            }
+                            break;
+                        case ReplOptions.CurrentSecondaryPrompt:
+                            oldPrompt = _secondPrompt;
+                            _secondPrompt = CheckOption<string>(option, value) ?? "";
+                            if (!_isRunning && !_displayPromptInMargin) {
+                                // we need to update the current prompt though
+                                UpdatePrompts(ReplSpanKind.SecondaryPrompt, oldPrompt, _secondPrompt, currentOnly: true);
+                            }
+                            break;
                         case ReplOptions.PrimaryPrompt:
                             if (value == null) {
                                 throw new InvalidOperationException("Primary prompt cannot be null");
                             }
-                            string oldPrompt = _prompt;
+                            oldPrompt = _prompt;
                             _prompt = CheckOption<string>(option, value);
                             if (!_displayPromptInMargin) {
                                 // update the prompts
@@ -811,7 +827,9 @@ namespace Microsoft.VisualStudio.Repl {
             switch (option) {
                 case ReplOptions.CommandPrefix: return _commandPrefix;
                 case ReplOptions.DisplayPromptInMargin: return _displayPromptInMargin;
+                case ReplOptions.CurrentPrimaryPrompt:
                 case ReplOptions.PrimaryPrompt: return _prompt;
+                case ReplOptions.CurrentSecondaryPrompt:
                 case ReplOptions.SecondaryPrompt: return _secondPrompt;
                 case ReplOptions.StandardInputPrompt: return _stdInputPrompt;
                 case ReplOptions.ShowOutput: return _showOutput;
@@ -2435,13 +2453,13 @@ namespace Microsoft.VisualStudio.Repl {
             return new ReplSpan(secondPrompt, ReplSpanKind.SecondaryPrompt);
         }
         
-        private void UpdatePrompts(ReplSpanKind promptKind, string oldPrompt, string newPrompt) {
+        private void UpdatePrompts(ReplSpanKind promptKind, string oldPrompt, string newPrompt, bool currentOnly = false) {
             if ((oldPrompt != newPrompt || oldPrompt == null) && _projectionSpans.Count > 0)  {
                 // TODO (tomat): build the entire replacement upfront and perform a single projection edit
 
                 // find and replace all the prompts
                 int curInput = 1;
-                for (int i = 0; i < _projectionSpans.Count; i++) {
+                for (int i = _projectionSpans.Count - 1; i >= 0 ; i--) {
                     if (_projectionSpans[i].Kind == promptKind) {
                         string prompt = FormatPrompt(newPrompt, promptKind == ReplSpanKind.Prompt ? curInput : curInput - 1);
                         ReplaceProjectionSpan(i, new ReplSpan(prompt, promptKind));
@@ -2449,6 +2467,9 @@ namespace Microsoft.VisualStudio.Repl {
 
                     if (_projectionSpans[i].Kind == ReplSpanKind.Prompt) {
                         curInput++;
+                        if (currentOnly) {
+                            break;
+                        }
                     }
                 }
             }

@@ -36,6 +36,7 @@ class VsShellSocketChannel(DefaultHandler, ShellSocketChannel):
     def handle_execute_reply(self, content):
         # we could have a payload here...
         payload = content['payload']
+        
         for item in payload:
             output = item.get('text', None)
             if output is not None:
@@ -53,7 +54,6 @@ class VsShellSocketChannel(DefaultHandler, ShellSocketChannel):
 class VsSubSocketChannel(DefaultHandler, SubSocketChannel):    
     def call_handlers(self, msg):
         msg_type = 'handle_' + msg['msg_type']
-        
         getattr(self, msg_type, unknown_command)(msg['content'])
         
     def handle_display_data(self, content):
@@ -76,9 +76,12 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
         # called when an expression statement is printed, we treat 
         # identical to stream output but it always goes to stdout
         output = content['data']
-        self.write_data(output)
+        execution_count = content['execution_count']
+        self._vs_backend.execution_count = execution_count + 1
+        self._vs_backend.send_prompt('\r\nIn [%d]: ' % (execution_count + 1), '   ' + ('.' * (len(str(execution_count + 1)) + 2)) + ': ', False)
+        self.write_data(output, execution_count)
         
-    def write_data(self, data):
+    def write_data(self, data, execution_count = None):
         
         output_png = data.get('image/png', None)
         if output_png is not None:
@@ -91,6 +94,9 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
             
         output_str = data.get('text/plain', None)
         if output_str is not None:
+            if execution_count is not None:
+                output_str = 'Out[' + str(execution_count) + ']: ' + output_str
+
             self._vs_backend.write_stdout(output_str)        
             self._vs_backend.write_stdout('\n') 
             return
@@ -105,6 +111,8 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
     
     def handle_pyin(self, content):
         # just a rebroadcast of the command to be executed, can be ignored
+        self._vs_backend.execution_count += 1
+        self._vs_backend.send_prompt('\r\nIn [%d]: ' % (self._vs_backend.execution_count), '   ' + ('.' * (len(str(self._vs_backend.execution_count)) + 2)) + ': ', False)
         pass
         
     def handle_status(self, content):
@@ -150,15 +158,17 @@ class IPythonBackend(ReplBackend):
         self.km.stdin_channel._vs_backend = self
         self.km.sub_channel._vs_backend = self
         self.km.hb_channel._vs_backend = self        
+        self.execution_count = 1
         
 
     def execution_loop(self):
         # we've got a bunch of threads setup for communication, we just block
-        # here until we're requested to exit.    
+        # here until we're requested to exit.  
+        self.send_prompt('\r\nIn [1]: ', '   ...: ', False)
         self.exit_lock.acquire()
     
-    def run_command(self, command):
-        self.km.shell_channel.execute(command, False)
+    def run_command(self, command, silent = False):
+        self.km.shell_channel.execute(command, silent)
         
     def execute_file(self, filename):
         self.km.shell_channel.execute(file(filename).read(), False)
@@ -220,7 +230,7 @@ def __visualstudio_debugger_init():
 
 __visualstudio_debugger_init()
 del __visualstudio_debugger_init
-''')
+''', True)
 
     def attach_process(self, port, debugger_id):
         self.run_command('''
@@ -235,5 +245,5 @@ def __visualstudio_debugger_attach():
 
 __visualstudio_debugger_attach()
 del __visualstudio_debugger_attach
-''')
+''', True)
 

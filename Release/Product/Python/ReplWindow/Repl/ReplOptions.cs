@@ -64,6 +64,25 @@ namespace Microsoft.VisualStudio.Repl {
         ///     \D  - Insert the date into the prompt string
         ///     \T  - Insert the time into the prompt string
         /// </summary>
-        FormattedPrompts
+        FormattedPrompts,
+
+        /// <summary>
+        /// String, the prompt to be displayed for input.  Defaults to "» "
+        /// 
+        /// When setting using the Current prompt the previous prompts in the buffer are not changed.
+        /// If there is a current input executing then the next prompt will reflect the value set.
+        /// Otherwise only the currently active input prompt will be updated.
+        /// </summary>
+        CurrentPrimaryPrompt,
+        /// <summary>
+        /// String, the secondary prompt to be displayed when an input spans more than one line.
+        /// 
+        /// Defaults to empty string - no secondary prompt is enabled.
+        /// 
+        /// When setting using the Current option the previous prompts in the buffer are not changed.
+        /// If there is a current input executing then the next prompt will reflect the value set.
+        /// Otherwise only the currently active input prompt will be updated.
+        /// </summary>
+        CurrentSecondaryPrompt,
     }
 }

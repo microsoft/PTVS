@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Repl {
             _window.SetOptionValue(ReplOptions.CommandPrefix, "$");
 
             window.SetOptionValue(ReplOptions.UseSmartUpDown, CurrentOptions.ReplSmartHistory);
-            UpdatePrompts();
+            UpdatePrompts(true);
             window.SetOptionValue(ReplOptions.DisplayPromptInMargin, !CurrentOptions.InlinePrompts);
             window.SetOptionValue(ReplOptions.SupportAnsiColors, true);
             window.SetOptionValue(ReplOptions.FormattedPrompts, true);
@@ -308,6 +308,7 @@ namespace Microsoft.PythonTools.Repl {
                         }
 
                         if (_executionText != null) {
+                            Debug.WriteLine("Executing delayed text: " + _executionText);
                             SendExecuteText(_executionText);
                             _executionText = null;
                         } 
@@ -509,9 +510,10 @@ namespace Microsoft.PythonTools.Repl {
                 // prompt change
                 _prompt1 = Socket.ReadString();
                 _prompt2 = Socket.ReadString();
+                bool updateAll = Socket.ReadInt() == 1;
                 if (Window != null) {
                     using (new SocketUnlock(this)) {
-                        _eval.UpdatePrompts();
+                        _eval.UpdatePrompts(updateAll);
                     }
                 }
             }
@@ -652,22 +654,29 @@ namespace Microsoft.PythonTools.Repl {
                     _eval._window.WriteError(String.Format("Unknown command '{0}', use \"$help\" for help" + Environment.NewLine, text.Substring(1).Trim()));
                     return ExecutionResult.Failed;
                 }
-
+                
+                Debug.WriteLine("Executing text: " + text);
                 using (new SocketLock(this)) {
                     if (!_connected) {
                         // delay executing the text until we're connected
+                        Debug.WriteLine("Delayed executing text");
                         _completion = new TaskCompletionSource<ExecutionResult>();
                         _executionText = text;
                         return _completion.Task;
-                    } else if (!Socket.Connected) {
-                        _eval._window.WriteError(_noReplProcess);
-                        return ExecutionResult.Failed;
                     }
 
                     try {
+                        if (!Socket.Connected) {
+                            _eval._window.WriteError(_noReplProcess);
+                            return ExecutionResult.Failed;
+                        }
+
                         _completion = new TaskCompletionSource<ExecutionResult>();
 
                         SendExecuteText(text);
+                    } catch (DisconnectedException) {
+                        _eval._window.WriteError(_noReplProcess);
+                        return ExecutionResult.Failed;
                     } catch (SocketException) {
                         _eval._window.WriteError(_noReplProcess);
                         return ExecutionResult.Failed;
@@ -950,13 +959,13 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        private void UpdatePrompts() {
+        private void UpdatePrompts(bool updateAll) {
             if (CurrentOptions.UseInterpreterPrompts && _curListener != null) {
-                _window.SetOptionValue(ReplOptions.PrimaryPrompt, _curListener._prompt1);
-                _window.SetOptionValue(ReplOptions.SecondaryPrompt, _curListener._prompt2);
+                _window.SetOptionValue(updateAll ? ReplOptions.PrimaryPrompt : ReplOptions.CurrentPrimaryPrompt, _curListener._prompt1);
+                _window.SetOptionValue(updateAll ? ReplOptions.SecondaryPrompt : ReplOptions.CurrentSecondaryPrompt, _curListener._prompt2);
             } else {
-                _window.SetOptionValue(ReplOptions.PrimaryPrompt, CurrentOptions.PrimaryPrompt);
-                _window.SetOptionValue(ReplOptions.SecondaryPrompt, CurrentOptions.SecondaryPrompt);
+                _window.SetOptionValue(updateAll ? ReplOptions.PrimaryPrompt : ReplOptions.CurrentPrimaryPrompt, CurrentOptions.PrimaryPrompt);
+                _window.SetOptionValue(updateAll ? ReplOptions.SecondaryPrompt : ReplOptions.CurrentSecondaryPrompt, CurrentOptions.SecondaryPrompt);
             }
         }
 
@@ -1257,14 +1266,26 @@ namespace Microsoft.PythonTools.Repl {
             var lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             StringBuilder temp = new StringBuilder();
             string prevText = null;
-            foreach (var line in lines) {
-                temp.AppendLine(line);
+            ParseResult? prevParseResult = null;
+            for (int i = 0; i < lines.Length; i++) {
+                var line = lines[i];
+
+                if (i == lines.Length - 1) {
+                    temp.Append(line);
+                } else {
+                    temp.AppendLine(line);
+                }
                 string newCode = temp.ToString();
 
                 var parser = Parser.CreateParser(new StringReader(newCode), Interpreter.GetLanguageVersion());
                 ParseResult result;
                 parser.ParseInteractiveCode(out result);
-                if (result != ParseResult.Invalid) {
+
+                // if this parse is invalid then we need more text to be valid.
+                // But if this text is invalid and the previous parse was incomplete
+                // then appending more text won't fix things - the code in invalid, the user
+                // needs to fix it, so let's not break it up which would prevent that from happening.
+                if (result != ParseResult.Invalid || prevParseResult == ParseResult.IncompleteStatement) {
                     prevText = newCode;
                 } else if (prevText != null) {
                     // we have a complete input
@@ -1273,6 +1294,7 @@ namespace Microsoft.PythonTools.Repl {
                     temp.AppendLine(line);
                     prevText = temp.ToString();
                 }
+                prevParseResult = result;
             }
 
             if (temp.Length > 0) {
