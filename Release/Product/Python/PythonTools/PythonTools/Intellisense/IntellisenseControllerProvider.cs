@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var intellisenseControllerProvider = (
                    from export in model.DefaultExportProvider.GetExports<IIntellisenseControllerProvider, IContentTypeMetadata>()
                    from exportedContentType in export.Metadata.ContentTypes
-                   where exportedContentType == PythonCoreConstants.ContentType
+                   where exportedContentType == PythonCoreConstants.ContentType && export.Value.GetType() == typeof(IntellisenseControllerProvider)
                    select export.Value
                 ).First();
                 controller = new IntellisenseController((IntellisenseControllerProvider)intellisenseControllerProvider, textView);

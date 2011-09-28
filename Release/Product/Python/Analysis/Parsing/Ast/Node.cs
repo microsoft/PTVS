@@ -76,6 +76,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             parentNode.SetAttribute(toNode, NodeAttributes.TrailingNewLine, fromNode.GetTrailingNewLine(parentNode));
         }
 
+        /// <summary>
+        /// Returns the proceeeding whitespace (newlines and comments) that
+        /// shows up before this node.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public string GetProceedingWhitespace(PythonAst ast) {
+            return NodeAttributes.GetProceedingWhiteSpaceDefaultNull(this, ast);
+        }
+
         public string GetIndentationLevel(PythonAst parentNode) {
             var leading = GetLeadingWhiteSpace(parentNode);
             // we only want the trailing leading space for the current line...

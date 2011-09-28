@@ -180,6 +180,8 @@
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="ProvideImportTemplatesAttribute.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
+    <Compile Include="PythonTools\Commands\RemoveImportsCurrentScopeCommand.cs" />
+    <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
     <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
     <Compile Include="PythonTools\Commands\DiagnosticsForm.cs">
       <SubType>Form</SubType>
@@ -224,6 +226,8 @@
     <Compile Include="PythonTools\Project\ReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceNode.cs" />
     <Compile Include="PythonTools\Project\UIThread.cs" />
+    <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
+    <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\ImpersonationHelper.cs" />
@@ -554,6 +558,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Resources\Refactoring_Commands.bmp" />
     <Content Include="Templates\Files\TextFile\textfile.txt" />
     <Content Include="Templates\Files\TextFile\textfile.vstemplate" />
     <Content Include="Templates\NewItem\class.py">

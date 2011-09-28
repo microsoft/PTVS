@@ -25,6 +25,8 @@ namespace Microsoft.PythonTools
         public const uint cmdidSendToDefiningModule = 0x104;
         public const uint cmdidFillParagraph = 0x105;
         public const uint cmdidDiagnostics = 0x106;
+        public const uint cmdidRemoveImports = 0x107;
+        public const uint cmdidRemoveImportsCurrentScope = 0x108;
 
         public const uint cmdidReplWindow = 0x201;
         public const uint cmdidReplWindow2 = 0x202;

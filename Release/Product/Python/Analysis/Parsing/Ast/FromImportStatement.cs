@@ -12,11 +12,12 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
-    
+
     public class FromImportStatement : Statement {
         private static readonly string[] _star = new[] { "*" };
         private readonly ModuleName _root;
@@ -37,7 +38,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public DottedName Root {
             get { return _root; }
-        } 
+        }
 
         public bool IsFromFuture {
             get { return _fromFuture; }
@@ -75,6 +76,105 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
+        /// <summary>
+        /// Returns a new FromImport statement that is identical to this one but has
+        /// removed the specified import statement.  Otherwise preserves any attributes
+        /// for the statement.
+        /// 
+        /// New in 1.1.
+        /// <param name="ast">The parent AST whose attributes should be updated for the new node.</param>
+        /// <param name="index">The index in Names of the import to be removed.</param>
+        /// </summary>
+        public FromImportStatement RemoveImport(PythonAst ast, int index) {
+            if (index < 0 || index >= _names.Length) {
+                throw new ArgumentOutOfRangeException("index");
+            }
+            if (ast == null) {
+                throw new ArgumentNullException("ast");
+            }
+
+            NameExpression[] names = new NameExpression[_names.Length - 1];
+            NameExpression[] asNames = _asNames == null ? null : new NameExpression[_asNames.Length - 1];
+            var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
+            List<string> newAsNameWhiteSpace = new List<string>();
+            int asIndex = 0;
+            for (int i = 0, write = 0; i < _names.Length; i++) {
+                bool includingCurrentName = i != index;
+
+                // track the white space, this needs to be kept in sync w/ ToCodeString and how the
+                // parser creates the white space.
+
+                if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
+                    if (write > 0) {
+                        if (includingCurrentName) {
+                            newAsNameWhiteSpace.Add(asNameWhiteSpace[asIndex++]);
+                        } else {
+                            asIndex++;
+                        }
+                    } else if (i > 0) {
+                        asIndex++;
+                    }
+                }
+
+                if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
+                    if (includingCurrentName) {
+                        if (newAsNameWhiteSpace.Count == 0) {
+                            // no matter what we want the 1st entry to have the whitespace after the import keyword
+                            newAsNameWhiteSpace.Add(asNameWhiteSpace[0]);
+                            asIndex++;
+                        } else {
+                            newAsNameWhiteSpace.Add(asNameWhiteSpace[asIndex++]);
+                        }
+                    } else {
+                        asIndex++;
+                    }
+                }
+
+                if (includingCurrentName) {
+                    names[write] = _names[i];
+
+                    if (_asNames != null) {
+                        asNames[write] = _asNames[i];
+                    }
+
+                    write++;
+                }
+
+                if (AsNames != null && AsNames[i] != null) {
+                    if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
+                        if (i != index) {
+                            newAsNameWhiteSpace.Add(asNameWhiteSpace[asIndex++]);
+                        } else {
+                            asIndex++;
+                        }
+                    }
+
+                    if (_asNames[i].Name.Length != 0) {
+                        if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
+                            if (i != index) {
+                                newAsNameWhiteSpace.Add(asNameWhiteSpace[asIndex++]);
+                            } else {
+                                asIndex++;
+                            }
+                        }
+                    } else {
+                        asIndex++;
+                    }
+                }
+            }
+
+            if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
+                // trailing comma
+                newAsNameWhiteSpace.Add(asNameWhiteSpace[asNameWhiteSpace.Length - 1]);
+            }
+
+            var res = new FromImportStatement(_root, names, asNames, IsFromFuture, ForceAbsolute);
+            ast.CopyAttributes(this, res);
+            ast.SetAttribute(res, NodeAttributes.NamesWhiteSpace, newAsNameWhiteSpace.ToArray());
+
+            return res;
+        }
+
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("from");
@@ -89,9 +189,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
 
                 var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
-                var verbatimNames = this.GetVerbatimNames(ast);
                 int asIndex = 0;
-                for (int i = 0, verbatimIndex = 0; i < _names.Length; i++) {
+                for (int i = 0; i < _names.Length; i++) {
                     if (i > 0) {
                         if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                             res.Append(asNameWhiteSpace[asIndex++]);
@@ -119,8 +218,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         } else {
                             asIndex++;
                         }
-                    } else {
-                        verbatimIndex++;
                     }
                 }
 

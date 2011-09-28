@@ -20,6 +20,7 @@
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" key1="K" mod1="Control" key2="7" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" key1="K" mod1="Control" key2="8" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" key1="K" mod1="Control" key2="9" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="O" mod2="Control" editor="guidVSStd97"/>    
   </KeyBindings>
 
   <!--The Commands section is where we the commands, menus and menu groups are defined.
@@ -57,6 +58,11 @@
       <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
       </Group>
+
+      <!-- Group for the Remove Imports context menu -->
+      <Group guid="guidPythonToolsCmdSet" id="RemoveImportsGroup" priority="0x0000">
+        <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsMenu"/>
+      </Group>
     </Groups>
 
     <Menus>
@@ -65,9 +71,16 @@
         <Strings>
           <ButtonText>Python Tools</ButtonText>
           <CommandName>P&amp;ython Tools</CommandName>
-        </Strings>
+        </Strings>;
       </Menu>
 
+      <Menu guid="guidPythonToolsCmdSet" id="RemoveImportsMenu" priority="0x0400" type="Context">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CODEWIN_LANGUAGE"/>
+        <Strings>
+          <ButtonText>Rem&amp;ove Imports</ButtonText>
+          <CommandName>Rem&amp;ove Imports</CommandName>
+        </Strings>;
+      </Menu>
     </Menus>
 
     <!--Buttons section: buttons include both buttons on toolbars as well as individual menu items -->
@@ -80,6 +93,28 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImportsCurrentScope" priority="0x200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
+        <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Current &amp;Scope</ButtonText>
+          <CommandName>Edit.RemoveImportsCurrentScope</CommandName>
+        </Strings>
+      </Button>
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" priority="0x200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
+        <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;All Scopes</ButtonText>
+          <CommandName>Edit.RemoveImports</CommandName>
+        </Strings>
+      </Button>
+      
       <Button guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="EditMenuGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -365,6 +400,7 @@
             inside a button definition. An important aspect of this declaration is that the element id 
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
       <Bitmap guid="guidImages" href="Resources\Images_32bit.bmp" usedList="ipyReplPic, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, ipyDebugRepl"/>
+      <Bitmap guid="guidImagesRefactoring" href="Resources\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
 
     </Bitmaps>
   </Commands>
@@ -479,6 +515,8 @@
       <IDSymbol name="cmdidSendToDefiningModule" value="0x0104"/>
       <IDSymbol name="cmdidFillParagraph" value="0x0105"/>
       <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
+      <IDSymbol name="cmdidRemoveImports" value ="0x0107" />
+      <IDSymbol name="cmdidRemoveImportsCurrentScope" value ="0x0108" />
       
       <IDSymbol name="cmdidReplWindow" value="0x0201" />
       <IDSymbol name="cmdidReplWindow2" value="0x0202" />
@@ -506,8 +544,10 @@
       <IDSymbol name="EditMenuGroup" value="0x1011" />
       <IDSymbol name="ToolsMenuItemsGroup" value="0x1012" />
       <IDSymbol name="CodeFileGroup" value="0x1053" />
+      <IDSymbol name="RemoveImportsGroup" value ="0x1054" />
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value ="0x2001" />
+      <IDSymbol name="RemoveImportsMenu" value ="0x2002" />
 
 
     </GuidSymbol>
@@ -519,6 +559,11 @@
       <IDSymbol name="bmpPicX" value="4" />
       <IDSymbol name="bmpPicArrows" value="5" />
       <IDSymbol name="ipyDebugRepl" value="6" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidImagesRefactoring" value="{6EE47620-9481-4D89-A56F-104CBD7ED3D2}" >
+      <IDSymbol name="imgRemoveUsing" value="1" />
+      <IDSymbol name="imgSortUsings" value="2" />
     </GuidSymbol>
   </Symbols>
 
