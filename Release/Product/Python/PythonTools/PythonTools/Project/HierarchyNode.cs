@@ -204,6 +204,22 @@ namespace Microsoft.PythonTools.Project
 			}
 		}
 
+		public virtual bool IsLinkFile
+		{
+			get
+			{
+				return false;
+			}
+		}
+
+		protected virtual VSOVERLAYICON OverlayIconIndex
+		{
+			get
+			{
+				return VSOVERLAYICON.OVERLAYICON_NONE;
+			}
+		}
+
 		/// <summary>
 		/// Defines whether a node can execute a command if in selection.
 		/// </summary>
@@ -719,6 +735,10 @@ namespace Microsoft.PythonTools.Project
 					result = (int)this.StateIconIndex;
 					break;
 
+				case __VSHPROPID.VSHPROPID_OverlayIconIndex:
+					result = (int)this.OverlayIconIndex;
+					break;
+
 				case __VSHPROPID.VSHPROPID_IconHandle:
 					result = GetIconHandle(false);
 					break;
@@ -798,8 +818,12 @@ namespace Microsoft.PythonTools.Project
 			}
 
 			__VSHPROPID2 id2 = (__VSHPROPID2)propId;
-			switch(id2)
+			switch (id2)
 			{
+				case __VSHPROPID2.VSHPROPID_IsLinkFile:
+					result = IsLinkFile;
+					break;
+
 				case __VSHPROPID2.VSHPROPID_NoDefaultNestedHierSorting:
 					return true; // We are doing the sorting ourselves through VSHPROPID_FirstChild and VSHPROPID_NextSibling
 				case __VSHPROPID2.VSHPROPID_CfgBrowseObjectCATID:
@@ -1201,14 +1225,12 @@ namespace Microsoft.PythonTools.Project
 
 			addItemDialog = this.GetService(typeof(IVsAddProjectItemDlg)) as IVsAddProjectItemDlg;
 
-			if(addType == HierarchyAddType.AddNewItem)
+			if (addType == HierarchyAddType.AddNewItem)
 				uiFlags = (uint)(__VSADDITEMFLAGS.VSADDITEM_AddNewItems | __VSADDITEMFLAGS.VSADDITEM_SuggestTemplateName | __VSADDITEMFLAGS.VSADDITEM_AllowHiddenTreeView);
 			else
-				uiFlags = (uint)(__VSADDITEMFLAGS.VSADDITEM_AddExistingItems | __VSADDITEMFLAGS.VSADDITEM_AllowMultiSelect | __VSADDITEMFLAGS.VSADDITEM_AllowStickyFilter);
+				uiFlags = (uint)(__VSADDITEMFLAGS.VSADDITEM_AddExistingItems | __VSADDITEMFLAGS.VSADDITEM_ProjectHandlesLinks | __VSADDITEMFLAGS.VSADDITEM_AllowMultiSelect | __VSADDITEMFLAGS.VSADDITEM_AllowStickyFilter);
 
-			ErrorHandler.ThrowOnFailure(addItemDialog.AddProjectItemDlg(this.hierarchyId, ref projectGuid, project, uiFlags, null, null, ref strBrowseLocations, ref strFilter, out iDontShowAgain)); /*&fDontShowAgain*/
-
-			return VSConstants.S_OK;
+			return addItemDialog.AddProjectItemDlg(this.hierarchyId, ref projectGuid, project, uiFlags, null, null, ref strBrowseLocations, ref strFilter, out iDontShowAgain); /*&fDontShowAgain*/
 		}
 
 		/// <summary>

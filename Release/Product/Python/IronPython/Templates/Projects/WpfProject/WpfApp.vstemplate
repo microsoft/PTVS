@@ -5,7 +5,7 @@
     <ProjectType>Python</ProjectType>
     <ProjectSubType>
     </ProjectSubType>
-    <SortOrder>1000</SortOrder>
+    <SortOrder>120</SortOrder>
     <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>WpfApplication</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>

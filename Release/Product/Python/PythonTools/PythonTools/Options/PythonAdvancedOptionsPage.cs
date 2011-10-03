@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Parsing;
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonAdvancedOptionsPage : PythonDialogPage {
-        private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut, _breakOnSystemExitZero;
+        private bool _promptBeforeRunningWithBuildError, _waitOnAbnormalExit, _autoAnalysis, _waitOnNormalExit, _teeStdOut, _breakOnSystemExitZero, _updateSearchPathsWhenAddingLinkedFiles;
         private int? _crossModuleAnalysisLimit; // not exposed via the UI
         private Severity _indentationInconsistencySeverity;
         private PythonAdvancedOptionsControl _window;
@@ -94,6 +94,16 @@ namespace Microsoft.PythonTools.Options {
             set { _breakOnSystemExitZero = value; }
         }
 
+        /// <summary>
+        /// Gets or sets whether search paths are updated when adding linked files.
+        /// 
+        /// New in v1.1.
+        /// </summary>
+        public bool UpdateSearchPathsWhenAddingLinkedFiles {
+            get{ return _updateSearchPathsWhenAddingLinkedFiles;}
+            set { _updateSearchPathsWhenAddingLinkedFiles = value; }
+        }
+
         public event EventHandler IndentationInconsistencyChanged;
 
         #endregion
@@ -106,6 +116,7 @@ namespace Microsoft.PythonTools.Options {
             _autoAnalysis = true;
             _teeStdOut = true;
             _breakOnSystemExitZero = false;
+            _updateSearchPathsWhenAddingLinkedFiles = true;
         }
 
         private const string DontPromptBeforeRunningWithBuildErrorSetting = "DontPromptBeforeRunningWithBuildError";
@@ -116,6 +127,7 @@ namespace Microsoft.PythonTools.Options {
         private const string TeeStandardOutSetting = "TeeStandardOut";
         private const string CrossModulAnalysisLimitSetting = "CrossModulAnalysisLimit";
         private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
+        private const string UpdateSearchPathsWhenAddingLinkedFilesSetting = "UpdateSearchPathsWhenAddingLinkedFiles";
 
         public override void LoadSettingsFromStorage() {
             _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
@@ -125,6 +137,7 @@ namespace Microsoft.PythonTools.Options {
             _teeStdOut = LoadBool(TeeStandardOutSetting) ?? true;
             _breakOnSystemExitZero = LoadBool(BreakOnSystemExitZeroSetting) ?? false;
             _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
+            _updateSearchPathsWhenAddingLinkedFiles = LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting) ?? true;
             var analysisLimit = LoadString(CrossModulAnalysisLimitSetting);
             if (analysisLimit == null) {
                 _crossModuleAnalysisLimit = 300;    // default analysis limit
@@ -142,6 +155,7 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(AutoAnalysisSetting, _autoAnalysis);
             SaveBool(TeeStandardOutSetting, _teeStdOut);
             SaveBool(BreakOnSystemExitZeroSetting, _breakOnSystemExitZero);
+            SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, _updateSearchPathsWhenAddingLinkedFiles);
             SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
             if (_crossModuleAnalysisLimit != null) {
                 SaveInt(CrossModulAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);

@@ -4,6 +4,7 @@
     <Description>A project for creating a command-line IronPython application</Description>
     <Icon>__TemplateIcon.ico</Icon>
     <ProjectType>Python</ProjectType>
+    <SortOrder>100</SortOrder>
     <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>IronPythonApplication</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>

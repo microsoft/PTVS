@@ -5,6 +5,7 @@
     <Icon>__TemplateIcon.ico</Icon>
     <ProjectType>Python</ProjectType>
     <CreateNewFolder>true</CreateNewFolder>
+    <SortOrder>150</SortOrder>
     <DefaultName>SilverlightPage</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -39,6 +40,7 @@ namespace Microsoft.PythonTools.Navigation {
             : this(name, fullname, type, LibraryNodeCapabilities.None, null) { }
 
         public LibraryNode(string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities, CommandID contextMenuID) {
+            Debug.Assert(name != null);
             _capabilities = capabilities;
             _contextMenuID = contextMenuID;
             _name = name;

@@ -1695,7 +1695,7 @@ namespace Microsoft.PythonTools.Project
             if (parent != null)
                 newNode = this.AddDependentFileNodeToNode(item, parent);
             else
-                newNode = this.AddIndependentFileNode(item);
+                newNode = this.AddIndependentFileNode(item, GetItemParentNode(item));
 
             return newNode;
         }        
@@ -2988,11 +2988,63 @@ namespace Microsoft.PythonTools.Project
                 // Make sure that we do not want to add the item, dependent, or independent twice to the ui hierarchy
                 items.Add(item.EvaluatedInclude.ToUpperInvariant(), item);
 
+
                 string dependentOf = item.GetMetadataValue(ProjectFileConstants.DependentUpon);
+                string link = item.GetMetadataValue(ProjectFileConstants.Link);
+                if (!String.IsNullOrWhiteSpace(link)) {
+                    if (Path.IsPathRooted(link)) {
+                        // ignore fully rooted link paths.
+                        continue;
+                    }
+                    if (Path.IsPathRooted(item.UnevaluatedInclude)) {
+                        continue;
+                    }
+
+                    if (!Path.IsPathRooted(item.EvaluatedInclude)) {
+                        var itemPath = Path.Combine(ProjectFolder, item.EvaluatedInclude);
+                        var itemCanonicalPath = new Uri(itemPath).LocalPath;
+                        if (String.Compare(ProjectFolder + Path.DirectorySeparatorChar, 0, itemCanonicalPath, 0, ProjectFolder.Length + 1, StringComparison.OrdinalIgnoreCase) == 0) {
+                            // linked file which lives in our directory, don't allow that.
+                            continue;
+                        }
+                    }
+
+                    var relPath = Path.Combine(ProjectFolder, link);
+                    var url = new Uri(relPath).LocalPath;
+                    if (String.Compare(ProjectFolder, 0, url, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) != 0) {
+                        // relative path outside of project, don't allow that.
+                        continue;
+                    }
+                } 
 
                 if (!this.CanFileNodesHaveChilds || String.IsNullOrEmpty(dependentOf))
                 {
-                    AddIndependentFileNode(item);
+                    var parent = GetItemParentNode(item);
+                    string filename = Path.GetFileName(item.EvaluatedInclude);
+                    HierarchyNode existingChild = null;
+                    for (HierarchyNode child = parent.FirstChild; child != null; child = child.NextSibling) {
+                        if (Path.GetFileName(child.Url) == filename) {
+                            existingChild = child;
+                            break;
+                        }
+                    }
+
+                    if (existingChild != null) {
+                        if (existingChild.IsLinkFile) {
+                            // remove link node.
+                            existingChild.Parent.RemoveChild(existingChild);
+                        } else {
+                            // we have duplicate entries, or this is a link file.
+                            continue;
+                        }
+                    }
+                    var duplicatedChild = FindChild(item.EvaluatedInclude);
+                    if (duplicatedChild != null) {
+                        // don't add duplicate files/links
+                        continue;
+                    }
+
+                    AddIndependentFileNode(item, parent);
                 }
                 else
                 {
@@ -3838,10 +3890,12 @@ namespace Microsoft.PythonTools.Project
             Debug.Assert(n != null, "We should at this point have either a ProjectNode or FolderNode or a FileNode as a container for the new filenodes");
 
             // handle link and runwizard operations at this point
+            bool isLink = false;
             switch (op) {
                 case VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE:
                     // we do not support this right now
-                    throw new NotImplementedException("VSADDITEMOP_LINKTOFILE");
+                    isLink = true;
+                    break;
 
                 case VSADDITEMOPERATION.VSADDITEMOP_RUNWIZARD:
                     result[0] = this.RunWizard(n, itemName, files[0], dlgOwner);
@@ -3872,9 +3926,19 @@ namespace Microsoft.PythonTools.Project
                             newFileName = Path.Combine(baseDir, fileName);
                         }
                         break;
+                    case VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE:
                     case VSADDITEMOPERATION.VSADDITEMOP_OPENFILE: {
                             string fileName = Path.GetFileName(file);
                             newFileName = Path.Combine(baseDir, fileName);
+
+                            var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, file);
+
+                            if (isLink && String.Compare(ProjectFolder, 0, file, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) == 0) {
+                                // creating a link to a file that's actually in the project, it's not really a link.
+                                isLink = false;
+                                newFileName = file;
+                                n = this.CreateFolderNodes(Path.GetDirectoryName(file));
+                            }
                         }
                         break;
                 }
@@ -3896,6 +3960,7 @@ namespace Microsoft.PythonTools.Project
             for (int index = 0; index < filesToAdd.Count; index++) {
                 HierarchyNode child;
                 bool overwrite = false;
+                MsBuildProjectElement linkedFile = null;
                 string newFileName = filesToAdd[index];
 
                 string file = files[index];
@@ -3920,6 +3985,17 @@ namespace Microsoft.PythonTools.Project
                                 newFileName = tmpName;
                             }
                         }
+                    } else if (isLink) {
+                        string message = "There is already a file of the same name in this folder.";
+                        string title = string.Empty;
+                        OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
+                        OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
+                        OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
+
+                        VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
+
+                        result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                        return (int)OleConstants.OLECMDERR_E_CANCELED;
                     } else {
                         int canOverWriteExistingItem = this.CanOverwriteExistingItem(file, newFileName);
 
@@ -3932,43 +4008,117 @@ namespace Microsoft.PythonTools.Project
                             return canOverWriteExistingItem;
                         }
                     }
-                }
+                } else {
+                    if (isLink) {
+                        child = this.FindChild(file);
+                        if (child != null) {
+                            string message = String.Format("There is already a link to '{0}'. A project cannot have more than one link to the same file.", file);
+                            string title = string.Empty;
+                            OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
+                            OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
+                            OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
 
-                // If the file to be added is not in the same path copy it.
-                if (NativeMethods.IsSamePath(file, newFileName) == false) {
-                    if (!overwrite && File.Exists(newFileName)) {
-                        string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileAlreadyExists, CultureInfo.CurrentUICulture), newFileName);
-                        string title = string.Empty;
-                        OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
-                        OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNO;
-                        OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-                        int messageboxResult = VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
-                        if (messageboxResult == NativeMethods.IDNO) {
+                            VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
+
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
                             return (int)OleConstants.OLECMDERR_E_CANCELED;
                         }
                     }
 
-                    // Copy the file to the correct location.
-                    // We will suppress the file change events to be triggered to this item, since we are going to copy over the existing file and thus we will trigger a file change event. 
-                    // We do not want the filechange event to ocur in this case, similar that we do not want a file change event to occur when saving a file.
-                    IVsFileChangeEx fileChange = this.site.GetService(typeof(SVsFileChangeEx)) as IVsFileChangeEx;
-                    Utilities.CheckNotNull(fileChange);
+                    // we need to figure out where this file would be added and make sure there's
+                    // not an existing link node at the same location
+                    var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, newFileName);
+                    var dirName = Path.GetDirectoryName(friendlyPath);
+                    string filename = Path.GetFileName(newFileName);
+                    var folder = this.FindChild(dirName);
+                    if (folder != null) {
+                        for (var folderChild = folder.FirstChild; folderChild != null; folderChild = folderChild.NextSibling) {
+                            if (Path.GetFileName(folderChild.Url) == filename) {
+                                string message = "There is already a file of the same name in this folder.";
+                                string title = string.Empty;
+                                OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
+                                OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
+                                OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
 
-                    try {
-                        ErrorHandler.ThrowOnFailure(fileChange.IgnoreFile(VSConstants.VSCOOKIE_NIL, newFileName, 1));
-                        if (op == VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE) {
-                            this.AddFileFromTemplate(file, newFileName);
-                        } else {
-                            PackageUtilities.CopyUrlToLocal(new Uri(file), newFileName);
+                                VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
+
+                                result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                                return (int)OleConstants.OLECMDERR_E_CANCELED;
+                            }
                         }
-                    } finally {
-                        ErrorHandler.ThrowOnFailure(fileChange.IgnoreFile(VSConstants.VSCOOKIE_NIL, newFileName, 0));
+                    }
+
+                }
+
+                // If the file to be added is not in the same path copy it.
+                if (NativeMethods.IsSamePath(file, newFileName) == false) {
+                    if (!overwrite && File.Exists(newFileName)) {
+                        var existingChild = this.FindChild(file);
+                        if (existingChild == null || !existingChild.IsLinkFile) {
+                            string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileAlreadyExists, CultureInfo.CurrentUICulture), newFileName);
+                            string title = string.Empty;
+                            OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
+                            OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNO;
+                            OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
+                            if (isLink) {
+                                message = "There is already a file of the same name in this folder.";
+                                buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
+                            }
+
+                            int messageboxResult = VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
+                            if (messageboxResult != NativeMethods.IDYES) {
+                                result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                                return (int)OleConstants.OLECMDERR_E_CANCELED;
+                            }
+                        }
+                    }
+
+                    var updatingNode = this.FindChild(file);
+                    if (updatingNode != null && updatingNode.IsLinkFile) {
+                        // we just need to update the link to the new path.
+                        linkedFile = updatingNode.ItemNode as MsBuildProjectElement;
+                    } else if (!isLink) {
+                        // Copy the file to the correct location.
+                        // We will suppress the file change events to be triggered to this item, since we are going to copy over the existing file and thus we will trigger a file change event. 
+                        // We do not want the filechange event to ocur in this case, similar that we do not want a file change event to occur when saving a file.
+                        IVsFileChangeEx fileChange = this.site.GetService(typeof(SVsFileChangeEx)) as IVsFileChangeEx;
+                        Utilities.CheckNotNull(fileChange);
+
+                        try {
+                            ErrorHandler.ThrowOnFailure(fileChange.IgnoreFile(VSConstants.VSCOOKIE_NIL, newFileName, 1));
+                            if (op == VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE) {
+                                this.AddFileFromTemplate(file, newFileName);
+                            } else {
+                                PackageUtilities.CopyUrlToLocal(new Uri(file), newFileName);
+                            }
+                        } finally {
+                            ErrorHandler.ThrowOnFailure(fileChange.IgnoreFile(VSConstants.VSCOOKIE_NIL, newFileName, 0));
+                        }
                     }
                 }
 
                 if (overwrite) {
                     this.OverwriteExistingItem(child);
+                } else if (linkedFile != null || isLink) {
+                    // files not moving, add the old name, and set the link.
+                    var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, file);
+                    FileNode newChild;
+                    if (linkedFile == null) {
+                        Debug.Assert(String.Compare(ProjectFolder, 0, file, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) != 0, "Should have cleared isLink above for file in project dir");
+                        newChild = CreateFileNode(file);
+                    } else {
+                        newChild = CreateFileNode(linkedFile);
+                    }
+                    
+                    newChild.SetIsLinkFile(true);
+                    newChild.ItemNode.SetMetadata(ProjectFileConstants.Link, CommonUtils.CreateFriendlyFilePath(ProjectFolder, newFileName));
+                    n.AddChild(newChild);
+
+                    DocumentManager.RenameDocument(site, file, file, n.ID);
+
+                    LinkFileAdded(file);
+
+                    SetProjectFileDirty(true);
                 } else {
                     //Add new filenode/dependentfilenode
                     this.AddNewFileNodeToHierarchy(n, newFileName);
@@ -4009,6 +4159,9 @@ namespace Microsoft.PythonTools.Project
             }
 
             return VSConstants.S_OK;
+        }
+
+        protected virtual void LinkFileAdded(string filename) {
         }
 
         private static string GetIncrementedFileName(string newFileName, int count) {
@@ -4868,10 +5021,9 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="item">Item to add</param>
         /// <returns>Added node</returns>
-        private HierarchyNode AddIndependentFileNode(MSBuild.ProjectItem item)
+        private HierarchyNode AddIndependentFileNode(MSBuild.ProjectItem item, HierarchyNode parent)
         {
-            HierarchyNode currentParent = GetItemParentNode(item);
-            return AddFileNodeToNode(item, currentParent);
+            return AddFileNodeToNode(item, parent);
         }
 
         /// <summary>
@@ -4914,10 +5066,25 @@ namespace Microsoft.PythonTools.Project
         /// <returns>parent node</returns>
         private HierarchyNode GetItemParentNode(MSBuild.ProjectItem item)
         {
+            var link = item.GetMetadataValue(ProjectFileConstants.Link);
             HierarchyNode currentParent = this;
             string strPath = item.EvaluatedInclude;
-            
-            strPath = Path.GetDirectoryName(strPath);
+
+            if (!String.IsNullOrWhiteSpace(link)) {
+                strPath = Path.GetDirectoryName(link);
+            } else {
+                if (!Path.IsPathRooted(strPath)) {
+                    var itemPath = Path.Combine(ProjectFolder, item.EvaluatedInclude);
+                    var itemCanonicalPath = new Uri(itemPath).LocalPath;
+                    if (String.Compare(ProjectFolder, 0, itemCanonicalPath, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) == 0) {
+                        strPath = Path.GetDirectoryName(strPath);
+                    } else {
+                        // file lives outside of the project, w/o a link it's just at the top level.
+                        return this;
+                    }
+                }
+            }
+
             if (strPath.Length > 0)
             {
                 // Use the relative to verify the folders...

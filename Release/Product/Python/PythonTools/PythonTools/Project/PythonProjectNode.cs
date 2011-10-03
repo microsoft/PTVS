@@ -53,6 +53,20 @@ namespace Microsoft.PythonTools.Project {
             return new PythonNonCodeFileNode(this, item);
         }
 
+        protected override void LinkFileAdded(string filename) {
+            if (PythonToolsPackage.Instance.OptionsPage.UpdateSearchPathsWhenAddingLinkedFiles) {
+                // update our search paths.
+                string dirToAdd = Path.GetDirectoryName(filename);
+                while (!String.IsNullOrEmpty(dirToAdd) && File.Exists(Path.Combine(dirToAdd, "__init__.py"))) {
+                    dirToAdd = Path.GetDirectoryName(dirToAdd);
+                }
+
+                AddSearchPathEntry(CommonUtils.CreateFriendlyDirectoryPath(ProjectFolder, dirToAdd));
+            }
+
+            base.LinkFileAdded(filename);
+        }
+
         /// <summary>
         /// Evaluates if a file is a current language code file based on is extension
         /// </summary>

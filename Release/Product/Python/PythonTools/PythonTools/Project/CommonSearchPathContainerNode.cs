@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override NodeProperties CreatePropertiesObject() {
-            return new NodeProperties(this);
+            return new CommonSearchPathContainerNodeProperties(this);
         }
 
         /// <summary>

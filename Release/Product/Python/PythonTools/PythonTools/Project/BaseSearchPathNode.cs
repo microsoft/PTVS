@@ -31,7 +31,11 @@ namespace Microsoft.PythonTools.Project {
         public BaseSearchPathNode(CommonProjectNode project, string path, ProjectElement element)
             : base(project, path, element) {
             _project = project;
-            this.VirtualNodeName = path;
+            if (path.EndsWith("\\")) {
+                this.VirtualNodeName = path.Substring(0, path.Length - 1);
+            } else {
+                this.VirtualNodeName = path;
+            }
             this.ExcludeNodeFromScc = true;
         }
 

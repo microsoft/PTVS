@@ -212,6 +212,7 @@
     <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
     <Compile Include="PythonTools\Project\BuildDependency.cs" />
+    <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
     <Compile Include="PythonTools\Project\IDEBuildLogger.cs" />
     <Compile Include="PythonTools\Project\Misc\ConnectionPointContainer.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAAssemblyReference.cs" />

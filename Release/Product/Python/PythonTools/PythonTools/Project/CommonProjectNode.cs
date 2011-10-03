@@ -491,6 +491,13 @@ namespace Microsoft.PythonTools.Project {
             } else {
                 newNode = CreateNonCodeFileNode(item);
             }
+
+            string link = item.GetMetadata(ProjectFileConstants.Link);
+            if (!String.IsNullOrWhiteSpace(link) || 
+                String.Compare(ProjectDir, 0, item.GetFullPathForElement(), 0, ProjectDir.Length, StringComparison.OrdinalIgnoreCase) != 0) {
+                newNode.SetIsLinkFile(true);
+            }
+
             string include = item.GetMetadata(ProjectFileConstants.Include);
 
             newNode.OleServiceProvider.AddService(typeof(EnvDTE.Project),
@@ -854,7 +861,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Adds new search path to the SearchPath project property.
         /// </summary>
-        private void AddSearchPathEntry(string newpath) {
+        internal void AddSearchPathEntry(string newpath) {
             Utilities.ArgumentNotNull("newpath", newpath);
 
             IList<string> searchPath = ParseSearchPath();

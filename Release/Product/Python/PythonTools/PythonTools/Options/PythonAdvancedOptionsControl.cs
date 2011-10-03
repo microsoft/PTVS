@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Options {
             _teeStdOut.Checked = PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput;
             _autoAnalysis.Checked = PythonToolsPackage.Instance.OptionsPage.AutoAnalyzeStandardLibrary;
             _breakOnSystemExitZero.Checked = PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero;
+            _updateSearchPathsForLinkedFiles.Checked = PythonToolsPackage.Instance.OptionsPage.UpdateSearchPathsWhenAddingLinkedFiles;
         }
 
         private void _promptOnBuildError_CheckedChanged(object sender, EventArgs e) {
@@ -69,6 +70,10 @@ namespace Microsoft.PythonTools.Options {
 
         private void _breakOnSystemExitZero_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
+        }
+
+        private void _updateSearchPathsForLinkedFiles_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.OptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
         }
     }
 }

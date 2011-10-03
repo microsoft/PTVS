@@ -32,7 +32,9 @@ namespace Microsoft.PythonTools.Project
     [ComVisible(true)]
     public class FileNode : HierarchyNode
     {
-        #region static fiels
+        private bool _isLinkFile;
+
+        #region static fields
         private static Dictionary<string, int> extensionIcons;
         #endregion
 
@@ -56,6 +58,15 @@ namespace Microsoft.PythonTools.Project
                 return caption;
             }
         }
+
+        public override string GetEditLabel() {
+            if (IsLinkFile) {
+                // cannot rename link files
+                return null;
+            }
+            return Caption;
+        }
+
         public override int ImageIndex
         {
             get
@@ -77,6 +88,30 @@ namespace Microsoft.PythonTools.Project
 
                 // The file type is known and there is an image for it in the image list.
                 return imageIndex;
+            }
+        }
+
+        public override bool IsLinkFile
+        {
+            get 
+            {
+                return _isLinkFile;
+            }
+        }
+
+        internal void SetIsLinkFile(bool value) 
+        {
+            _isLinkFile = value;
+        }
+
+        protected override VSOVERLAYICON OverlayIconIndex {
+            get 
+            {
+                if (IsLinkFile) 
+                {
+                    return VSOVERLAYICON.OVERLAYICON_SHORTCUT;
+                }
+                return VSOVERLAYICON.OVERLAYICON_NONE;
             }
         }
 
@@ -162,6 +197,9 @@ namespace Microsoft.PythonTools.Project
         #region overridden methods
         protected override NodeProperties CreatePropertiesObject()
         {
+            if (IsLinkFile) {
+                return new LinkFileNodeProperties(this);
+            }
             return new FileNodeProperties(this);
         }
 
@@ -518,15 +556,14 @@ namespace Microsoft.PythonTools.Project
             // Currently we do not support if the new directory is located outside the project cone
             string projectCannonicalDirecoryName = new Uri(this.ProjectMgr.ProjectFolder).LocalPath;
             projectCannonicalDirecoryName = projectCannonicalDirecoryName.TrimEnd(Path.DirectorySeparatorChar);
-            if(!isSamePath && newCanonicalDirectoryName.IndexOf(projectCannonicalDirecoryName, StringComparison.OrdinalIgnoreCase) == -1)
-            {
-                errorMessage = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.LinkedItemsAreNotSupported, CultureInfo.CurrentUICulture), Path.GetFileNameWithoutExtension(newFilePath));
-                throw new InvalidOperationException(errorMessage);
-            }
-
             //Get target container
             HierarchyNode targetContainer = null;
-            if(isSamePath)
+            bool isLink = false;
+            if(!isSamePath && newCanonicalDirectoryName.IndexOf(projectCannonicalDirecoryName, StringComparison.OrdinalIgnoreCase) == -1)
+            {
+                targetContainer = this.Parent;
+                isLink = true;
+            } else if(isSamePath)
             {
                 targetContainer = this.Parent;
             }
@@ -573,6 +610,20 @@ namespace Microsoft.PythonTools.Project
                 {
                     // The path of the file is changed or its parent is changed; in both cases we have
                     // to rename the item.
+                    if (isLink != IsLinkFile) {
+                        if (isLink) {
+                            var newPath = CommonUtils.CreateFriendlyFilePath(
+                                this.ProjectMgr.ProjectFolder,
+                                Path.Combine(Path.GetDirectoryName(Url), Path.GetFileName(newFilePath))
+                            );
+
+                            ItemNode.SetMetadata(ProjectFileConstants.Link, newPath);
+                        } else {
+                            ItemNode.SetMetadata(ProjectFileConstants.Link, null);
+                        }
+                        SetIsLinkFile(isLink);
+                    }
+
                     this.RenameFileNode(oldName, newFilePath, targetContainer.ID);
                     OnInvalidateItems(this.Parent);
                 }
@@ -673,12 +724,18 @@ namespace Microsoft.PythonTools.Project
 
             this.OnItemDeleted();
             this.Parent.RemoveChild(this);
-            this.ProjectMgr.ItemIdMap.Add(this);
+            this.ID = this.ProjectMgr.ItemIdMap.Add(this);
             this.ItemNode.Item.Xml.Include = CommonUtils.CreateFriendlyFilePath(ProjectMgr.BaseURI.Uri.LocalPath, newFileName);
             this.ItemNode.RefreshProperties();
             this.ProjectMgr.SetProjectFileDirty(true);
-
-            this.Parent.AddChild(this);
+            HierarchyNode newParent;
+            if (newParentId == VSConstants.VSITEMID_ROOT) {
+                newParent = ProjectMgr;
+            } else {
+                newParent = ((HierarchyNode)this.ProjectMgr.ItemIdMap[newParentId]);
+            }
+            newParent.AddChild(this);
+            this.Parent = newParent;
 
             this.ReDraw(UIHierarchyElement.Caption);
 

@@ -63,6 +63,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override string GetEditLabel() {
+            if (IsLinkFile) {
+                // cannot rename link files
+                return null;
+            }
+            // dispatch to base class which doesn't include package name, just filename.
             return base.Caption;
         }
 

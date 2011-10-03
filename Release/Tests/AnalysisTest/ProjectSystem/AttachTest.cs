@@ -174,7 +174,7 @@ namespace AnalysisTest.ProjectSystem {
 
             try {
                 Process2 proc = AttachAndWaitForMode(processToAttach, "Python Debugging", dbgDebugMode.dbgRunMode);
-                dbg2.Break(false);
+                dbg2.Break(WaitForBreakMode: false);
                 DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
 
                 var x = proc.Threads.Cast<Thread2>()
@@ -187,7 +187,7 @@ namespace AnalysisTest.ProjectSystem {
 
                 x.Value = "True";
 
-                dbg2.Go(false);
+                dbg2.Go(WaitForBreakOrEnd: false);
                 DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
 
             } finally {
@@ -210,7 +210,7 @@ namespace AnalysisTest.ProjectSystem {
                 Process2 proc = AttachAndWaitForMode(processToAttach, "Python Debugging", dbgDebugMode.dbgRunMode);
                 dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
                 DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
-                VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Delete();
+                dbg2.BreakpointLastHit.Delete();
 
                 var x = proc.Threads.Cast<Thread2>()
                     .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
@@ -222,7 +222,7 @@ namespace AnalysisTest.ProjectSystem {
 
                 x.Value = "True";
 
-                dbg2.Go(false);
+                dbg2.Go(WaitForBreakOrEnd: false);
                 DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
 
             } finally {
@@ -230,6 +230,34 @@ namespace AnalysisTest.ProjectSystem {
             }
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestAttachLotsOfThreads() {
+            string debugSolution = @"Python.VS.TestData\DebugAttach\DebugAttach.sln";
+            string startFile = "LotsOfThreads.py";
+
+            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
+
+            SD.Process processToAttach = OpenSolutionAndLaunchFile(debugSolution, startFile, "", "");
+            System.Threading.Thread.Sleep(2000);
+
+            try {
+                Process2 proc = AttachAndWaitForMode(processToAttach, "Python Debugging", dbgDebugMode.dbgRunMode);
+                
+            } finally {
+                if (!processToAttach.HasExited) processToAttach.Kill();
+            }
+        }
+
+        ///TODO: TestAttachThreadsMakingProgress
+        /// <summary>
+        /// See workitem http://pytools.codeplex.com/workitem/456 
+        /// </summary>
+        /// <param name="debugSolution"></param>
+        /// <param name="startFile"></param>
+        /// <param name="interpreterArgs"></param>
+        /// <param name="programArgs"></param>
+        /// <returns></returns>
 
         #endregion
 

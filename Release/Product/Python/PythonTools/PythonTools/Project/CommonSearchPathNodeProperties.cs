@@ -17,11 +17,13 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Project {
-    [ComVisible(true)]
-    [Guid(CommonConstants.SearchPathsPropertiesGuid)]
-    public class CommonSearchPathNodeProperties : NodeProperties {
-        #region properties
+namespace Microsoft.PythonTools.Project
+{
+	[ComVisible(true)]
+	[Guid(CommonConstants.SearchPathsPropertiesGuid)]
+	public class CommonSearchPathNodeProperties : NodeProperties
+	{
+		#region properties
 		[SRCategoryAttribute(SR.Misc)]
 		[LocDisplayName(SR.FolderName)]
 		[SRDescriptionAttribute(SR.FolderNameDescription)]
@@ -30,19 +32,21 @@ namespace Microsoft.PythonTools.Project {
 		{
 			get
 			{
-                return new DirectoryInfo(this.Node.Url).Name;
-			}			
+				return new DirectoryInfo(this.Node.Url).Name;
+			}
 		}
 
-        [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.FullPath)]
-        [SRDescriptionAttribute(SR.FullPathDescription)]
-        [AutomationBrowsable(true)]
-        public string FullPath {
-            get {
-                return this.Node.VirtualNodeName;
-            }
-        }
+		[SRCategoryAttribute(SR.Misc)]
+		[LocDisplayName(SR.FullPath)]
+		[SRDescriptionAttribute(SR.FullPathDescription)]
+		[AutomationBrowsable(true)]
+		public string FullPath
+		{
+			get
+			{
+				return this.Node.VirtualNodeName;
+			}
+		}
 
 		#region properties - used for automation only
 		[Browsable(false)]
@@ -52,16 +56,21 @@ namespace Microsoft.PythonTools.Project {
 			get
 			{
 				return this.Node.VirtualNodeName;
-			}		
+			}
 		}
-		
+
 		#endregion
 
 		#endregion
 
 		#region ctors
-        public CommonSearchPathNodeProperties(HierarchyNode node)
+		public CommonSearchPathNodeProperties(HierarchyNode node)
 			: base(node) { }
-		#endregion		
-    }    
+		#endregion
+
+		public override string GetClassName()
+		{
+			return "Search Path Properties";
+		}
+	}
 }

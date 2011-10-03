@@ -224,7 +224,14 @@ namespace Microsoft.PythonTools.Project {
             string searchPath = _project.GetProperty(CommonConstants.SearchPath);
             string pathEnvVar = _project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
             if (!String.IsNullOrWhiteSpace(searchPath) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
-                environment[pathEnvVar] = searchPath;
+                var paths = searchPath.Split(';');
+                for (int i = 0; i < paths.Length; i++) {
+                    if (!Path.IsPathRooted(paths[i])) {
+                        paths[i] = Path.Combine(_project.ProjectDirectory, paths[i]);
+                    }
+                }
+
+                environment[pathEnvVar] = string.Join(";", paths);
             }
         }
 

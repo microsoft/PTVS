@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Diagnostics;
 using System.Windows.Automation;
 
@@ -176,5 +177,23 @@ namespace AnalysisTest.UI {
         }
 
         #endregion
+
+        public static void DumpElement(AutomationElement element) {
+            Debug.WriteLine("Name    ClassName      ControlType");
+            DumpElement(element, 0);
+        }
+
+        private static void DumpElement(AutomationElement element, int depth) {
+            Debug.WriteLine(String.Format("{0} {1} {2} {3}", 
+                new string(' ', depth * 4), 
+                element.Current.Name, 
+                element.Current.ControlType.ProgrammaticName, 
+                element.Current.ClassName));
+
+            var children = element.FindAll(TreeScope.Children, Condition.TrueCondition);
+            foreach (AutomationElement child in children) {
+                DumpElement(child, depth + 1);
+            }
+        }
     }
-}
+} 

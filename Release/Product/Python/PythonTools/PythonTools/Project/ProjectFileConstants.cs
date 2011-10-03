@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Project
 		[SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "SubType")]
 		public const string SubType = "SubType";
 		public const string DependentUpon = "DependentUpon";
+		public const string Link = "Link";
 		public const string Compile = "Compile";
 		public const string ReferencePath = "ReferencePath";
 		public const string ResolvedProjectReferencePaths = "ResolvedProjectReferencePaths";

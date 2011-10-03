@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Project
 
         #region properties
         [Browsable(false)]
-        [AutomationBrowsable(false)]
+        [AutomationBrowsable(true)]
         public HierarchyNode Node
         {
             get { return this.node; }
@@ -304,7 +304,7 @@ namespace Microsoft.PythonTools.Project
         [SRCategoryAttribute(SR.Misc)]
         [LocDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
-        public string FileName
+        public virtual string FileName
         {
             get
             {
@@ -408,7 +408,34 @@ namespace Microsoft.PythonTools.Project
         {
         }
         #endregion
+
+        public override string GetClassName() {
+            return SR.GetString(SR.FileProperties, CultureInfo.CurrentUICulture);
+        }
     }
+
+    [ComVisible(true)]
+    public class LinkFileNodeProperties : FileNodeProperties {
+        public LinkFileNodeProperties(HierarchyNode node)
+            : base(node)
+        {
+
+        }
+
+        [SRCategoryAttribute(SR.Misc)]
+        [LocDisplayName(SR.FileName)]
+        [SRDescriptionAttribute(SR.FileNameDescription)]
+        [ReadOnly(true)]
+        public override string FileName {
+            get {
+                return this.Node.Caption;
+            }
+            set {
+                throw new InvalidOperationException();
+            }
+        }
+    }
+
 
     [ComVisible(true)]
     public class DependentFileNodeProperties : NodeProperties
@@ -445,6 +472,10 @@ namespace Microsoft.PythonTools.Project
         }
 
         #endregion
+
+        public override string GetClassName() {
+            return SR.GetString(SR.FileProperties, CultureInfo.CurrentUICulture);
+        }
     }
 
     class BuildActionTypeConverter : StringConverter
@@ -673,6 +704,11 @@ namespace Microsoft.PythonTools.Project
 
             return base.GetCfgProvider(out p);
         }
+
+        public override string GetClassName() {
+            return SR.GetString(SR.ProjectProperties, CultureInfo.CurrentUICulture);
+        }
+
         #endregion
     }
 
@@ -738,6 +774,10 @@ namespace Microsoft.PythonTools.Project
         {
         }
         #endregion
+
+        public override string GetClassName() {
+            return SR.GetString(SR.FolderProperties, CultureInfo.CurrentUICulture);
+        }
     }
 
     [CLSCompliant(false), ComVisible(true)]

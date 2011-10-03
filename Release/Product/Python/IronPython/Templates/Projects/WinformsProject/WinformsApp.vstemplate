@@ -4,7 +4,7 @@
     <Description>A project for creating a WinForms based application</Description>
     <Icon>__TemplateIcon.ico</Icon>
     <ProjectType>Python</ProjectType>
-    <SortOrder>50</SortOrder>
+    <SortOrder>200</SortOrder>
     <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>WindowsApplication</DefaultName>

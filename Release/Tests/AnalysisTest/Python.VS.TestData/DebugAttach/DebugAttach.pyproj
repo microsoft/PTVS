@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5aa7ed80-5f9d-4148-891a-44d9c852acd5}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>fg.py</StartupFile>
+    <StartupFile>ThreadJoin.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -27,6 +27,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="fg.py" />
+    <Compile Include="LotsOfThreads.py" />
+    <Compile Include="c1c2.py" />
     <Compile Include="ThreadJoin.py" />
     <Compile Include="Simple.py" />
     <Compile Include="Program.py" />

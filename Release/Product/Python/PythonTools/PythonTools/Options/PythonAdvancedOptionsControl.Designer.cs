@@ -33,6 +33,7 @@
             this._breakOnSystemExitZero = new System.Windows.Forms.CheckBox();
             this._debuggingGroupBox = new System.Windows.Forms.GroupBox();
             this._miscOptions = new System.Windows.Forms.GroupBox();
+            this._updateSearchPathsForLinkedFiles = new System.Windows.Forms.CheckBox();
             this._debuggingGroupBox.SuspendLayout();
             this._miscOptions.SuspendLayout();
             this.SuspendLayout();
@@ -56,7 +57,7 @@
             "Errors",
             "Warnings",
             "Don\'t"});
-            this._indentationInconsistentCombo.Location = new System.Drawing.Point(179, 39);
+            this._indentationInconsistentCombo.Location = new System.Drawing.Point(178, 62);
             this._indentationInconsistentCombo.Name = "_indentationInconsistentCombo";
             this._indentationInconsistentCombo.Size = new System.Drawing.Size(121, 21);
             this._indentationInconsistentCombo.TabIndex = 5;
@@ -65,7 +66,7 @@
             // _indentationInconsistentLabel
             // 
             this._indentationInconsistentLabel.AutoSize = true;
-            this._indentationInconsistentLabel.Location = new System.Drawing.Point(6, 42);
+            this._indentationInconsistentLabel.Location = new System.Drawing.Point(5, 65);
             this._indentationInconsistentLabel.Name = "_indentationInconsistentLabel";
             this._indentationInconsistentLabel.Size = new System.Drawing.Size(167, 13);
             this._indentationInconsistentLabel.TabIndex = 6;
@@ -142,6 +143,7 @@
             // 
             // _miscOptions
             // 
+            this._miscOptions.Controls.Add(this._updateSearchPathsForLinkedFiles);
             this._miscOptions.Controls.Add(this._autoAnalysis);
             this._miscOptions.Controls.Add(this._indentationInconsistentCombo);
             this._miscOptions.Controls.Add(this._indentationInconsistentLabel);
@@ -151,6 +153,17 @@
             this._miscOptions.TabIndex = 13;
             this._miscOptions.TabStop = false;
             this._miscOptions.Text = "Miscellaneous";
+            // 
+            // _updateSearchPathsForLinkedFiles
+            // 
+            this._updateSearchPathsForLinkedFiles.AutoSize = true;
+            this._updateSearchPathsForLinkedFiles.Location = new System.Drawing.Point(6, 42);
+            this._updateSearchPathsForLinkedFiles.Name = "_updateSearchPathsForLinkedFiles";
+            this._updateSearchPathsForLinkedFiles.Size = new System.Drawing.Size(241, 17);
+            this._updateSearchPathsForLinkedFiles.TabIndex = 9;
+            this._updateSearchPathsForLinkedFiles.Text = "&Update search paths when adding linked files";
+            this._updateSearchPathsForLinkedFiles.UseVisualStyleBackColor = true;
+            this._updateSearchPathsForLinkedFiles.CheckedChanged += new System.EventHandler(this._updateSearchPathsForLinkedFiles_CheckedChanged);
             // 
             // PythonAdvancedOptionsControl
             // 
@@ -180,5 +193,6 @@
         private System.Windows.Forms.CheckBox _breakOnSystemExitZero;
         private System.Windows.Forms.GroupBox _debuggingGroupBox;
         private System.Windows.Forms.GroupBox _miscOptions;
+        private System.Windows.Forms.CheckBox _updateSearchPathsForLinkedFiles;
     }
 }

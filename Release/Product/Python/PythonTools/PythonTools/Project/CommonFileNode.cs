@@ -270,6 +270,12 @@ namespace Microsoft.PythonTools.Project {
         /// Common File Node can only be deleted from file system.
         /// </summary>        
         protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+            if (IsLinkFile) {
+                // we don't delete link items, we only remove them from the project.  If we were
+                // to return true when queried for both delete from storage and remove from project
+                // the user would be prompted about which they would like to do.
+                return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
+            }
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage;
         }
         #endregion

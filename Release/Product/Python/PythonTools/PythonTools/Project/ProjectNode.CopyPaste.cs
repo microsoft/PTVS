@@ -260,6 +260,10 @@ namespace Microsoft.PythonTools.Project
 				uint docCookie;
 				IVsPersistDocData ppIVsPersistDocData;
 				DocumentManager manager = node.GetDocumentManager();
+				if (node.IsLinkFile)
+				{
+					continue;
+				}
 				if(manager != null)
 				{
 					manager.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out ppIVsPersistDocData);
@@ -982,19 +986,27 @@ namespace Microsoft.PythonTools.Project
 						if(manager != null)
 						{
 							manager.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out ppIVsPersistDocData);
-							if(isDirty || (isOpen && !isOpenedByUs))
+							if(!node.IsLinkFile && (isDirty || (isOpen && !isOpenedByUs)))
 							{
 								continue;
 							}
 
 							// close it if opened
-							if(isOpen)
+							if(isOpen && !node.IsLinkFile)
 							{
 								manager.Close(__FRAMECLOSE.FRAMECLOSE_NoSave);
 							}
 						}
 
-						node.Remove(true);
+						if (!node.IsLinkFile)
+						{
+							node.Remove(true);
+						}
+						else
+						{
+							node.Parent.RemoveChild(node);
+							OnInvalidateItems(node.Parent);
+						}
 					}
 					else if(w != null)
 					{
