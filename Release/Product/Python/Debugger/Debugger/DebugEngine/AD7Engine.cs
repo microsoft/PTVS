@@ -89,6 +89,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string BreakSystemExitZero = "BREAK_SYSTEMEXIT_ZERO";
 
         /// <summary>
+        /// Specifies if the debugger should step/break into std lib code.
+        /// </summary>
+        public const string DebugStdLib = "DEBUG_STDLIB";
+
+        /// <summary>
         /// Specifies options which should be passed to the Python interpreter before the script.  If
         /// the interpreter options should include a semicolon then it should be escaped as a double
         /// semi-colon.
@@ -453,6 +458,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             case BreakSystemExitZero:
                                 if (Boolean.TryParse(setting[1], out value) && value) {
                                     debugOptions |= PythonDebugOptions.BreakOnSystemExitZero;
+                                }
+                                break;
+                            case DebugStdLib:
+                                if (Boolean.TryParse(setting[1], out value) && value) {
+                                    debugOptions |= PythonDebugOptions.DebugStdLib;
                                 }
                                 break;
                             case DirMappingSetting:

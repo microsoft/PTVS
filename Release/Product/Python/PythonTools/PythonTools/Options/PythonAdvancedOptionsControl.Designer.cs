@@ -34,6 +34,7 @@
             this._debuggingGroupBox = new System.Windows.Forms.GroupBox();
             this._miscOptions = new System.Windows.Forms.GroupBox();
             this._updateSearchPathsForLinkedFiles = new System.Windows.Forms.CheckBox();
+            this._debugStdLib = new System.Windows.Forms.CheckBox();
             this._debuggingGroupBox.SuspendLayout();
             this._miscOptions.SuspendLayout();
             this.SuspendLayout();
@@ -134,20 +135,21 @@
             this._debuggingGroupBox.Controls.Add(this._waitOnNormalExit);
             this._debuggingGroupBox.Controls.Add(this._teeStdOut);
             this._debuggingGroupBox.Controls.Add(this._breakOnSystemExitZero);
+            this._debuggingGroupBox.Controls.Add(this._debugStdLib);
             this._debuggingGroupBox.Location = new System.Drawing.Point(10, 3);
             this._debuggingGroupBox.Name = "_debuggingGroupBox";
-            this._debuggingGroupBox.Size = new System.Drawing.Size(382, 132);
+            this._debuggingGroupBox.Size = new System.Drawing.Size(382, 159);
             this._debuggingGroupBox.TabIndex = 12;
             this._debuggingGroupBox.TabStop = false;
             this._debuggingGroupBox.Text = "Debugging";
             // 
             // _miscOptions
             // 
-            this._miscOptions.Controls.Add(this._updateSearchPathsForLinkedFiles);
             this._miscOptions.Controls.Add(this._autoAnalysis);
+            this._miscOptions.Controls.Add(this._updateSearchPathsForLinkedFiles);
             this._miscOptions.Controls.Add(this._indentationInconsistentCombo);
             this._miscOptions.Controls.Add(this._indentationInconsistentLabel);
-            this._miscOptions.Location = new System.Drawing.Point(10, 141);
+            this._miscOptions.Location = new System.Drawing.Point(10, 168);
             this._miscOptions.Name = "_miscOptions";
             this._miscOptions.Size = new System.Drawing.Size(382, 100);
             this._miscOptions.TabIndex = 13;
@@ -164,6 +166,17 @@
             this._updateSearchPathsForLinkedFiles.Text = "&Update search paths when adding linked files";
             this._updateSearchPathsForLinkedFiles.UseVisualStyleBackColor = true;
             this._updateSearchPathsForLinkedFiles.CheckedChanged += new System.EventHandler(this._updateSearchPathsForLinkedFiles_CheckedChanged);
+            // 
+            // _debugStdLib
+            // 
+            this._debugStdLib.AutoSize = true;
+            this._debugStdLib.Location = new System.Drawing.Point(6, 134);
+            this._debugStdLib.Name = "_debugStdLib";
+            this._debugStdLib.Size = new System.Drawing.Size(252, 17);
+            this._debugStdLib.TabIndex = 12;
+            this._debugStdLib.Text = "Enable debugging of the Python standard library";
+            this._debugStdLib.UseVisualStyleBackColor = true;
+            this._debugStdLib.CheckedChanged += new System.EventHandler(this._debugStdLib_CheckedChanged);
             // 
             // PythonAdvancedOptionsControl
             // 
@@ -194,5 +207,6 @@
         private System.Windows.Forms.GroupBox _debuggingGroupBox;
         private System.Windows.Forms.GroupBox _miscOptions;
         private System.Windows.Forms.CheckBox _updateSearchPathsForLinkedFiles;
+        private System.Windows.Forms.CheckBox _debugStdLib;
     }
 }

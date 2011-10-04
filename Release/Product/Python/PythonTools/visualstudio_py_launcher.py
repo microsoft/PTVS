@@ -23,6 +23,7 @@ try:
     redirect_output = False
     wait_on_exit = False
     break_on_systemexit_zero = False
+    debug_stdlib = False
     if len(sys.argv) >= 1 and sys.argv[0] == '--wait-on-exception':
         wait_on_exception = True
         del sys.argv[0]
@@ -40,6 +41,10 @@ try:
         del sys.argv[0]
         # set file appropriately, fix up sys.argv...
     
+    if len(sys.argv) >= 1 and sys.argv[0] == '--debug-stdlib':
+        debug_stdlib = True
+        del sys.argv[0]
+
     __file__ = sys.argv[0]
 
     # remove all state we imported
@@ -54,7 +59,8 @@ try:
                                    wait_on_exception, 
                                    redirect_output, 
                                    wait_on_exit,
-                                   break_on_systemexit_zero)    
+                                   break_on_systemexit_zero,
+                                   debug_stdlib)
     #input()
 except:
     #input()

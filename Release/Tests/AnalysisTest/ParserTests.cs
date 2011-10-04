@@ -389,6 +389,16 @@ namespace AnalysisTest {
         }
 
         [TestMethod]
+        public void DedentError() {
+            foreach (var version in AllVersions) {
+                ParseErrors("DedentError.py",
+                    version,
+                    new ErrorInfo("unindent does not match any outer indentation level", 63, 4, 1, 68, 4, 6)
+                );
+            }
+        }
+
+        [TestMethod]
         public void Literals() {
             foreach (var version in AllVersions) {
                 CheckAst(

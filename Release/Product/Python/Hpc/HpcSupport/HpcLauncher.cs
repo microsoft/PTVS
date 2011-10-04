@@ -70,6 +70,11 @@ namespace Microsoft.PythonTools.Hpc {
         public const string BreakSystemExitZero = "BREAK_SYSTEMEXIT_ZERO";
 
         /// <summary>
+        /// Specifies if the debugger should step/break into std lib code.
+        /// </summary>
+        public const string DebugStdLib = "DEBUG_STDLIB";
+
+        /// <summary>
         /// Specifies options which should be passed to the Python interpreter before the script.  If
         /// the interpreter options should include a semicolon then it should be escaped as a double
         /// semi-colon.
@@ -642,6 +647,12 @@ namespace Microsoft.PythonTools.Hpc {
                     options += ";";
                 }
                 options += BreakSystemExitZero + "=True";
+            }
+            if (PythonToolsPackage.Instance.OptionsPage.DebugStdLib) {
+                if (!String.IsNullOrEmpty(options)) {
+                    options += ";";
+                }
+                options += DebugStdLib + "=True";
             }
 
             if (clusterEnv.HeadNode == "localhost") { // don't wait on the cluster, there's no one to press enter.

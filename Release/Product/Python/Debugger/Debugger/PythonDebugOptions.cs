@@ -33,9 +33,14 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         RedirectOutput = 0x04,
         /// <summary>
-        /// Passing this flags will enable breaking on a SystemExit exception with a code of 0 if
+        /// Passing this flag will enable breaking on a SystemExit exception with a code of 0 if
         /// we would otherwise break on a SystemExit exception.
         /// </summary>
-        BreakOnSystemExitZero = 0x08
+        BreakOnSystemExitZero = 0x08,
+        /// <summary>
+        /// Passing this flag will enable stepping into and breaking into exceptions thrown inside
+        /// of std lib code.
+        /// </summary>
+        DebugStdLib = 0x10,
     }
 }

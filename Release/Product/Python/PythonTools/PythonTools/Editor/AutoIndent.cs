@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Editor {
             return snapshot.ContentType.IsOfType(PythonCoreConstants.ContentType);
         }
 
-        internal static int GetLineIndentation(ITextSnapshotLine line, ITextView textView) {
+        internal static int? GetLineIndentation(ITextSnapshotLine line, ITextView textView) {
             var options = textView.Options;
 
             ITextSnapshotLine baseline;
@@ -277,6 +277,13 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             var classifier = targetBuffer.GetPythonClassifier();
+            if (classifier == null) {
+                // workaround debugger canvas bug - they wire our auto-indent provider up to a C# buffer
+                // (they query MEF for extensions by hand and filter incorrectly) and we don't have a Python classifier.  
+                // So now the user's auto-indent is broken in C# but returning null is better than crashing.
+                return null;
+            }
+
             var desiredIndentation = CalculateIndentation(baselineText, baseline, options, classifier);
 
             var caretLine = textView.Caret.Position.BufferPosition.GetContainingLine();

@@ -266,6 +266,10 @@ def probe_stack(depth = 10):
  
 DONT_DEBUG = [__file__]
 def should_debug_code(code):
+    if not DEBUG_STDLIB and code.co_filename.startswith(sys.prefix):
+        sys.__stdout__.write('not debugging std lib code\n')
+        return False
+
     filename = code.co_filename
     for dont_debug_file in DONT_DEBUG:
         if is_same_py_file(filename, dont_debug_file):
@@ -418,12 +422,6 @@ class Thread(object):
 
         return self.trace_func
         
-    def not_our_code(self, code_obj):
-        if sys.version >= '3':
-            return code_obj == execfile.__code__ or code_obj.co_filename.startswith(sys.prefix)
-        else:
-            return code_obj.co_filename.startswith(sys.prefix)
-
     def handle_line(self, frame, arg):
         if not DETACHED:
             stepping = self.stepping
@@ -431,9 +429,8 @@ class Thread(object):
                 if (((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
                     or stepping == STEPPING_LAUNCH_BREAK 
                     or stepping == STEPPING_ATTACH_BREAK):
-                    if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
-                        (self.not_our_code(frame.f_code)) or
-                        not should_debug_code(frame.f_code)):  # don't break into our own debugger
+                    if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or                        
+                        not should_debug_code(frame.f_code)):  # don't break into our own debugger / non-user code
                         # don't break into inital Python code needed to set things up
                         return self.trace_func
                     
@@ -1532,7 +1529,7 @@ def print_exception():
         sys.stdout.write(out)
     
 
-def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit, break_on_systemexit_zero = False):
+def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit, break_on_systemexit_zero = False, debug_stdlib = False):
     # remove us from modules so there's no trace of us
     sys.modules['$visualstudio_py_debugger'] = sys.modules['visualstudio_py_debugger']
     __name__ = '$visualstudio_py_debugger'
@@ -1543,10 +1540,14 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     del globals_obj['redirect_output']
     del globals_obj['wait_on_exit']
     del globals_obj['debug_id']
-    del globals_obj['break_on_systemexit_zero']
+    if 'break_on_systemexit_zero' in globals_obj: 
+        del globals_obj['break_on_systemexit_zero']
+    if 'debug_stdlib' in globals_obj: 
+        del globals_obj['debug_stdlib']
 
-    global BREAK_ON_SYSTEMEXIT_ZERO
+    global BREAK_ON_SYSTEMEXIT_ZERO, DEBUG_STDLIB
     BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
+    DEBUG_STDLIB = debug_stdlib
 
     attach_process(port_num, debug_id)
 

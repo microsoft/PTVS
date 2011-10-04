@@ -771,6 +771,77 @@ namespace AnalysisTest {
             process.WaitForExit();
         }
 
+        [TestMethod]
+        public void StepStdLib() {
+            // http://pytools.codeplex.com/workitem/504 - test option for stepping into std lib.
+            var debugger = new PythonDebugger();
+
+            string fullPath = Path.GetFullPath(DebuggerTestPath + "StepStdLib.py");
+            string dir = Path.GetDirectoryName(DebuggerTestPath + "StepStdLib.py");
+            foreach (var steppingStdLib in new[] { false, true}) {
+                var process = debugger.CreateProcess(
+                    Version.Version,
+                    Version.Path,
+                    "\"" + fullPath + "\"",
+                    dir,
+                    "",
+                    debugOptions: steppingStdLib ? PythonDebugOptions.DebugStdLib : PythonDebugOptions.None);
+
+                PythonThread thread = null;
+                process.ThreadCreated += (sender, args) => {
+                    thread = args.Thread;
+                };
+
+                AutoResetEvent processEvent = new AutoResetEvent(false);
+
+                bool processLoad = false, stepComplete = false;
+                PythonBreakpoint bp = null;
+                process.ProcessLoaded += (sender, args) => {
+                    bp = process.AddBreakPoint(fullPath, 2);
+                    bp.Add();
+
+                    processLoad = true;
+                    processEvent.Set();
+                };
+
+                process.StepComplete += (sender, args) => {
+                    stepComplete = true;
+                    processEvent.Set();
+                };
+
+                bool breakHit = false;
+                process.BreakpointHit += (sender, args) => {
+                    breakHit = true;
+                    bp.Disable();
+                    processEvent.Set();
+                };
+
+                process.Start();
+                AssertWaited(processEvent);
+                Assert.IsTrue(processLoad);
+                Assert.IsFalse(stepComplete);
+                process.Resume();
+
+                AssertWaited(processEvent);
+                Assert.IsTrue(breakHit);
+
+                thread.StepInto();
+                AssertWaited(processEvent);
+                Assert.IsTrue(stepComplete);
+
+                Debug.WriteLine(thread.Frames[thread.Frames.Count - 1].FileName);
+
+                if (steppingStdLib) {
+                    Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\os.py"));
+                } else {
+                    Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\StepStdLib.py"));
+                }
+
+                process.Resume();
+            }
+        }
+
+
         #endregion
 
         #region Breakpoint Tests

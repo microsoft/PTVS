@@ -115,6 +115,7 @@ namespace Microsoft.PythonTools.Debugger {
                 (((options & PythonDebugOptions.WaitOnNormalExit) != 0) ? " --wait-on-exit " : "") +
                 (((options & PythonDebugOptions.RedirectOutput) != 0) ? " --redirect-output " : "") +
                 (((options & PythonDebugOptions.BreakOnSystemExitZero) != 0) ? " --break-on-systemexit-zero " : "") +
+                (((options & PythonDebugOptions.DebugStdLib) != 0) ? " --debug-stdlib " : "") +
                 args;
 
             if (env != null) {

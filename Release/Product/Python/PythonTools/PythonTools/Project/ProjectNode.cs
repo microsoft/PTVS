@@ -239,8 +239,6 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         private bool supportsProjectDesigner;
 
-        private bool buildInProcess;
-
         private bool showProjectInSolutionPage = true;
 
         private string sccProjectName;
@@ -5407,7 +5405,7 @@ namespace Microsoft.PythonTools.Project
                     BuildManager.DefaultBuildManager.BeginBuild(buildParameters);
                 }
 
-                this.buildInProcess = true;
+                //this.buildInProcess = true;
                 return true;
             }
             finally
@@ -5500,7 +5498,7 @@ namespace Microsoft.PythonTools.Project
                 BuildManager.DefaultBuildManager.EndBuild();
             }
 
-            this.buildInProcess = false;
+            //this.buildInProcess = false;
         }
 
         #endregion

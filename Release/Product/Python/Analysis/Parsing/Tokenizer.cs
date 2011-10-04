@@ -629,7 +629,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
 
                 // and then go ahead and imply the dedents.
-                SetIndent(0, null, null);
+                SetIndent(0, null, null, _position);
                 _state.PendingDedents--;
                 return Tokens.DedentToken;
             }
@@ -1534,6 +1534,7 @@ namespace Microsoft.PythonTools.Parsing {
             bool? isSpace = null;                       // the current mix of whitespace, null = nothing yet, true = space, false = tab
 
             int spaces = 0;
+			int indentStart = _position;
             while (true) {
                 int ch = NextChar();
 
@@ -1616,13 +1617,13 @@ namespace Microsoft.PythonTools.Parsing {
                             if (spaces < _state.Indent[_state.IndentLevel]) {
                                 if (_kind == SourceCodeKind.InteractiveCode ||
                                     _kind == SourceCodeKind.Statements) {
-                                    SetIndent(spaces, sb, noAllocWhiteSpace);
+										SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
                                 } else {
                                     DoDedent(spaces, _state.Indent[_state.IndentLevel]);
                                 }
                             }
                         } else if (ch != '\n' && ch != '\r') {
-                            SetIndent(spaces, sb, noAllocWhiteSpace);
+							SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
                         }
 
                         return true;
@@ -1670,7 +1671,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private void SetIndent(int spaces, StringBuilder chars, string noAllocWhiteSpace) {
+        private void SetIndent(int spaces, StringBuilder chars, string noAllocWhiteSpace, int indentStart) {
             int current = _state.Indent[_state.IndentLevel];
             if (spaces == current) {
                 return;
@@ -1690,7 +1691,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 if (spaces != current) {
                     ReportSyntaxError(
-                        new IndexSpan(_tokenEndIndex, 0),
+						new IndexSpan(indentStart, spaces),
                         "unindent does not match any outer indentation level", ErrorCodes.IndentationError);
                 }
             }
