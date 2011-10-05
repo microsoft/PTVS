@@ -282,7 +282,7 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
 
                 default:
-                    if (token.Kind >= TokenKind.FirstKeyword && token.Kind <= TokenKind.LastKeyword) {
+                    if (token.Kind >= TokenKind.FirstKeyword && token.Kind <= TokenKind.KeywordNonlocal) {
                         result.Category = TokenCategory.Keyword;
                         break;
                     }

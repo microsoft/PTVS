@@ -18,16 +18,20 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
-    class StatementScope : InterpreterScope {
+    sealed class IsInstanceScope : InterpreterScope {
         public int _startIndex, _endIndex;
+        public SuiteStatement _effectiveSuite;
+        private Dictionary<string, VariableDef> _outerVariables;
 
-        public StatementScope(int index)
+        public IsInstanceScope(int startIndex, SuiteStatement effectiveSuite)
             : base(null) {
-            _startIndex = _endIndex = index;
+            _startIndex = _endIndex = startIndex;
+            _effectiveSuite = effectiveSuite;
+            _outerVariables = new Dictionary<string, VariableDef>();
         }
 
         public override string Name {
-            get { return "<statements>"; }
+            get { return "<isinstance scope>"; }
         }
 
         public override int GetStart(PythonAst ast) {
@@ -36,6 +40,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override int GetStop(PythonAst ast) {
             return ast.IndexToLocation(_endIndex).Line;
+        }
+
+        public Dictionary<string, VariableDef> OuterVariables {
+            get {
+                return _outerVariables;
+            }
         }
 
         public int EndIndex {

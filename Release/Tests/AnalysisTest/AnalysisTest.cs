@@ -1079,6 +1079,30 @@ def f(abc):
 
                 new VariableLocation(31, 14, VariableType.Reference)
             );
+
+            // parameters
+            text = @"
+def f(a):
+    def g():
+        print(a)
+        assert isinstance(a, int)
+        a = 200
+";
+            entry = ProcessText(text);
+            VerifyReferences(
+                entry.GetVariables("a", GetLineNumber(text, "print(a)")),
+                new VariableLocation(6, 9, VariableType.Definition),
+                new VariableLocation(4, 15, VariableType.Reference),
+                new VariableLocation(5, 27, VariableType.Reference)
+            );
+
+
+            entry = ProcessText(text);
+            VerifyReferences(
+                entry.GetVariables("a", GetLineNumber(text, "f(a)")),
+                new VariableLocation(2, 7, VariableType.Definition)
+            );
+
         }
 
         public void VerifyReferences(IEnumerable<IAnalysisVariable> variables, params VariableLocation[] variableType) {
@@ -2174,6 +2198,142 @@ a = X(2)
 
         public static IEnumerable<string> GetVariableShortDescriptions(ModuleAnalysis entry, string variable, int position) {
             return entry.GetValues(variable, position).Select(m => m.ShortDescription);
+        }
+
+        [TestMethod]
+        public void TestIsInstance() {
+            var text = @"
+x = None
+
+
+if True:
+    pass
+    assert isinstance(x, int)
+    z = 100      
+    pass    
+else:
+    pass
+    assert isinstance(x, str)
+    y = 200
+    pass
+    
+
+
+
+
+if isinstance(x, tuple):    
+    foo = 300
+    pass
+";
+
+            var entry = ProcessText(text);
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "z =")), "int");
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "z =") + 1), "int");
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "z =") - 2), "None");
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "y =")), "str");
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "y =") + 1), "str");
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "y =") - 2), "None");
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "foo =")), "tuple");
+            AssertContainsExactly(GetVariableDescriptions(entry, "x", GetLineNumber(text, "foo =") + 1), "tuple");
+
+            VerifyReferences(
+                entry.GetVariables("x", 1),
+                new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(7, 23, VariableType.Reference),
+                new VariableLocation(12, 23, VariableType.Reference),
+                new VariableLocation(20, 15, VariableType.Reference)
+            );
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("x", GetLineNumber(text, "z ="))),
+                new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(7, 23, VariableType.Reference),
+                new VariableLocation(12, 23, VariableType.Reference),
+                new VariableLocation(20, 15, VariableType.Reference)
+            );
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("x", GetLineNumber(text, "z =") + 1)),
+                new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(7, 23, VariableType.Reference),
+                new VariableLocation(12, 23, VariableType.Reference),
+                new VariableLocation(20, 15, VariableType.Reference)
+            );
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("x", GetLineNumber(text, "z =") - 2)),
+                new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(7, 23, VariableType.Reference),
+                new VariableLocation(12, 23, VariableType.Reference),
+                new VariableLocation(20, 15, VariableType.Reference)
+            );
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("x", GetLineNumber(text, "y ="))),
+                new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(7, 23, VariableType.Reference),
+                new VariableLocation(12, 23, VariableType.Reference),
+                new VariableLocation(20, 15, VariableType.Reference)
+            );
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("x", GetLineNumber(text, "y =") + 1)),
+                new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(7, 23, VariableType.Reference),
+                new VariableLocation(12, 23, VariableType.Reference),
+                new VariableLocation(20, 15, VariableType.Reference)
+            );
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("x", GetLineNumber(text, "y =") - 2)),
+                new VariableLocation(2, 1, VariableType.Definition),
+                new VariableLocation(7, 23, VariableType.Reference),
+                new VariableLocation(12, 23, VariableType.Reference),
+                new VariableLocation(20, 15, VariableType.Reference)
+            );
+
+            text = @"
+def f(a):    
+    def g():
+        nonlocal a
+        print(a)
+        assert isinstance(a, int)
+        pass
+";
+
+            entry = ProcessText(text, PythonLanguageVersion.V32);
+            AssertContainsExactly(GetVariableDescriptions(entry, "a", GetLineNumber(text, "f(a)")));
+            AssertContainsExactly(GetVariableDescriptions(entry, "a", GetLineNumber(text, "pass")), "int");
+            AssertContainsExactly(GetVariableDescriptions(entry, "a", GetLineNumber(text, "pass") - 2));
+
+            text = @"x = None
+
+
+if True:
+    pass
+    assert isinstance(x, int)
+    z = 100      
+    
+    pass    
+
+print(z)";
+
+            entry = ProcessText(text);
+            AssertContainsExactly(GetVariableDescriptions(entry, "z", GetLineNumber(text, "z =")), "int");
+            AssertContainsExactly(GetVariableDescriptions(entry, "z", 1), "int");
+            AssertContainsExactly(GetVariableDescriptions(entry, "z", GetLineNumber(text, "print(z)") - 2), "int");
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("z", GetLineNumber(text, "print(z)"))),
+                new VariableLocation(7, 5, VariableType.Definition),
+                new VariableLocation(11, 7, VariableType.Reference)
+            );
+
+            VerifyReferences(
+                UniqifyVariables(entry.GetVariables("z", GetLineNumber(text, "z ="))),
+                new VariableLocation(7, 5, VariableType.Definition),
+                new VariableLocation(11, 7, VariableType.Reference)
+            );
         }
 
         [TestMethod]

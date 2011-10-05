@@ -22,23 +22,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class SequenceInfo : IterableInfo {
-        private DependentData _returnValue;
-
         public SequenceInfo(ISet<Namespace>[] indexTypes, BuiltinClassInfo seqType)
             : base(indexTypes, seqType) {
         }
 
         public override int? GetLength() {
             return IndexTypes.Length;
-        }
-
-        public DependentData ReturnValue {
-            get {
-                if (_returnValue == null) {
-                    _returnValue = new DependentData();
-                }
-                return _returnValue;
-            }
         }
 
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {

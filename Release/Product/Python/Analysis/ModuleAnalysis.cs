@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Analysis {
             string privatePrefix = GetPrivatePrefixClassName(scopes);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
-            var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray());
+            var eval = new ExpressionEvaluator(_unit.CopyForEval(), scopes.ToArray());
             NameExpression name = expr as NameExpression;
             if (name != null) {
                 for (int i = scopes.Count - 1; i >= 0; i--) {
@@ -133,6 +133,16 @@ namespace Microsoft.PythonTools.Analysis {
                             if (linked != null) {
                                 foreach (var linkedVar in linked) {
                                     foreach (var res in ToVariables(linkedVar)) {
+                                        yield return res;
+                                    }
+                                }
+                            }
+
+                            IsInstanceScope isInstScope = scopes[i] as IsInstanceScope;
+                            if (isInstScope != null) {
+                                VariableDef outerVar;
+                                if (isInstScope.OuterVariables.TryGetValue(name.Name, out outerVar)) {
+                                    foreach (var res in ToVariables(outerVar)) {
                                         yield return res;
                                     }
                                 }
@@ -553,12 +563,19 @@ namespace Microsoft.PythonTools.Analysis {
                 for (int i = curScope.Children.Count - 1; i >= 0; i--) {
                     var scope = curScope.Children[i];
                     var curStart = scope.GetStart(parent);
-                    if (curStart <= lineNumber && (scope.GetStop(parent) >= lineNumber || lineNumber < lastStart)) {
-                        if (!(scope is StatementScope)) {
-                            curScope = scope;
-                            chain.Add(curScope);
+                    
+                    if (curStart <= lineNumber) {
+                        var curEnd = scope.GetStop(parent);
+
+                        if (curEnd >= lineNumber ||                                      // we fit in this scope
+                            (i == curScope.Children.Count - 1 && curEnd < lineNumber) || // last scope, we're implicitly in it
+                            lineNumber < lastStart) {                                    // gap in scopes, we are in this one.
+                            if (!(scope is StatementScope)) {
+                                curScope = scope;
+                                chain.Add(curScope);
+                            }
+                            break;
                         }
-                        break;
                     }
                     lastStart = curStart;
                 }

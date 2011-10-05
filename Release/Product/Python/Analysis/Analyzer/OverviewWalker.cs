@@ -12,8 +12,9 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -27,6 +28,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private readonly ProjectEntry _entry;
         private readonly Stack<AnalysisUnit> _analysisStack = new Stack<AnalysisUnit>();
         private AnalysisUnit _curUnit;
+        private SuiteStatement _curSuite;
 
         public OverviewWalker(ProjectEntry entry, AnalysisUnit topAnalysis) {
             _entry = entry;
@@ -41,19 +43,20 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return WalkMember(AddClass(node, _curUnit));
         }
 
-        internal static ClassInfo AddClass(ClassDefinition node, AnalysisUnit outerUnit) {
+        internal ClassInfo AddClass(ClassDefinition node, AnalysisUnit outerUnit) {
             InterpreterScope scope;
             if (!outerUnit.DeclaringModule.NodeScopes.TryGetValue(node, out scope)) {
                 if (node.Body == null || node.Name == null) {
                     return null;
                 }
 
-                var scopes = new InterpreterScope[outerUnit.Scopes.Length + 1];
-                outerUnit.Scopes.CopyTo(scopes, 0);
+                var scopes = new InterpreterScope[_scopes.Count + 1];
+                _scopes.CopyTo(scopes, 0);
 
                 var unit = new ClassAnalysisUnit(node, scopes, outerUnit);
                 var klass = new ClassInfo(unit, node);
                 var classScope = scope = klass.Scope;
+                
 
                 var declScope = outerUnit.Scopes[outerUnit.Scopes.Length - 1];
                 var classVar = declScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
@@ -92,27 +95,46 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public override bool Walk(NonlocalStatement node) {
             foreach (var name in node.Names) {
                 if (name.Name != null) {
-                    var reference = name.GetVariableReference(_entry.Tree);
-                    var declScope = reference.Variable.Scope;
-                    foreach (var scope in _scopes) {
-                        if (scope.Node == declScope || (declScope is PythonAst && scope == null)) {
-                            _scopes[_scopes.Count - 1].Variables[name.Name] = scope.CreateVariable(node, _curUnit, name.Name, false);
-                        }
-                    }
+                    CreateVariable(name);
                 }
             }
             return false;
         }
 
-        internal static FunctionInfo AddFunction(FunctionDefinition node, AnalysisUnit outerUnit) {
+        private VariableDef CreateVariable(NameExpression name) {
+            var reference = name.GetVariableReference(_entry.Tree);
+            
+            if (reference.Variable != null) {
+                var declScope = reference.Variable.Scope;
+                foreach (var scope in _scopes) {
+                    if (scope.Node == declScope || (declScope is PythonAst && scope == null)) {
+                        return _scopes[_scopes.Count - 1].Variables[name.Name] = scope.CreateVariable(name, _curUnit, name.Name, false);
+                    }
+                }
+            }
+
+            int curScope = _scopes.Count - 1;
+
+            while (_scopes[curScope] is IsInstanceScope) {
+                curScope--;
+            }
+
+            return _scopes[curScope].CreateVariable(name, _curUnit, name.Name, false);
+        }
+
+        internal FunctionInfo AddFunction(FunctionDefinition node, AnalysisUnit outerUnit) {
+            return AddFunction(node, outerUnit, _scopes);
+        }
+
+        internal static FunctionInfo AddFunction(FunctionDefinition node, AnalysisUnit outerUnit, IList<InterpreterScope> prevScopes) {
             InterpreterScope scope;
             if (!outerUnit.DeclaringModule.NodeScopes.TryGetValue(node, out scope)) {
                 if (node.Body == null || node.Name == null) {
                     return null;
                 }
 
-                var scopes = new InterpreterScope[outerUnit.Scopes.Length + 1];
-                outerUnit.Scopes.CopyTo(scopes, 0);
+                var scopes = new InterpreterScope[prevScopes.Count + 1];
+                prevScopes.CopyTo(scopes, 0);
                 
                 var unit = new FunctionAnalysisUnit(node, scopes, outerUnit);
                 var function = new FunctionInfo(unit);
@@ -189,22 +211,107 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 prevScope = declScope.Children[declScope.Children.Count - 1];
                 StatementScope prevStmtScope = prevScope as StatementScope;
                 if (prevStmtScope != null) {
-                    prevStmtScope.EndNode = node;
+                    prevStmtScope.EndIndex = node.EndIndex;
                 } else {
-                    declScope.Children.Add(new StatementScope(node));
+                    IsInstanceScope prevInstanceScope = prevScope as IsInstanceScope;
+                    if (prevInstanceScope != null) {
+                        prevInstanceScope.EndIndex = node.EndIndex;
+                    } else {
+                        declScope.Children.Add(new StatementScope(node.StartIndex));
+                    }
                 }
             } else {
-                declScope.Children.Add(new StatementScope(node));
+                declScope.Children.Add(new StatementScope(node.StartIndex));
             }
         }
 
-        public override bool Walk(AssertStatement node) {
-            UpdateChildRanges(node);
+        internal static KeyValuePair<string, Expression>[] GetIsInstanceNamesAndExpressions(Expression node) {
+            List<KeyValuePair<string, Expression>> names = null;
+            GetIsInstanceNamesAndExpressions(ref names, node);
+            if (names != null) {
+                return names.ToArray();
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the names which should be in a new scope for isinstance(...) checks.  We don't
+        /// use a walker here because we only support a very limited set of assertions (e.g. isinstance(x, type) and ...
+        /// or a bare isinstance(...).
+        /// </summary>
+        internal static void GetIsInstanceNamesAndExpressions(ref List<KeyValuePair<string, Expression>> names, Expression node) {
+            CallExpression callExpr = node as CallExpression;
+            if (callExpr != null) {
+                NameExpression nameExpr = callExpr.Target as NameExpression;
+                if (nameExpr != null && nameExpr.Name == "isinstance") {
+                    if (callExpr.Args.Count == 2 && callExpr.Args[0].Expression is NameExpression) {
+                        if (names == null) {
+                            names = new List<KeyValuePair<string, Expression>>();
+                        }
+                        var name = ((NameExpression)callExpr.Args[0].Expression).Name;
+                        var type = callExpr.Args[1].Expression;
+                        names.Add(new KeyValuePair<string, Expression>(name, type));
+                    }
+                }
+            }
+
+            AndExpression andExpr = node as AndExpression;
+            if (andExpr != null) {
+                GetIsInstanceNamesAndExpressions(ref names, andExpr.Left);
+                GetIsInstanceNamesAndExpressions(ref names, andExpr.Right);
+            }
+        }
+
+        public override bool Walk(AssertStatement node)  {
+            // check if the assert statement contains any isinstance calls.
+            CallExpression callExpr = node.Test as CallExpression;
+
+            var isInstanceNames = GetIsInstanceNamesAndExpressions(node.Test);
+            if (isInstanceNames != null) {
+                // we need to introduce a new scope
+                PushIsInstanceScope(node, isInstanceNames, _curSuite);
+            } else {
+                UpdateChildRanges(node);
+            }
             return base.Walk(node);
+        }
+
+        private void PushIsInstanceScope(Node node, KeyValuePair<string, Expression>[] isInstanceNames, SuiteStatement effectiveSuite) {
+            InterpreterScope scope;
+            if (!_curUnit.DeclaringModule.NodeScopes.TryGetValue(node, out scope)) {
+                scope = new IsInstanceScope(node.StartIndex, effectiveSuite);
+                var declScope = _curUnit.Scopes[_curUnit.Scopes.Length - 1];
+                declScope.Children.Add(scope);
+                _scopes.Add(scope);
+                _curUnit.DeclaringModule.NodeScopes[node] = scope;
+            }
         }
 
         public override bool Walk(AssignmentStatement node) {
             UpdateChildRanges(node);
+            foreach (var left in node.Left) {
+                if (left is NameExpression) {
+                    var nameExpr = ((NameExpression)left);
+                    var variable = CreateVariable(nameExpr);
+                    _scopes[_scopes.Count - 1].Variables[nameExpr.Name] = variable;
+                    /*
+                    var name = nameExpr.Name;
+                    int curScope = _scopes.Count - 1;
+                    var varRef = nameExpr.GetVariableReference(_entry.Tree);
+
+                    foreach (var scope in _scopes) {
+                        if (scope.Node == declScope || (declScope is PythonAst && scope == null)) {
+                            _scopes[_scopes.Count - 1].Variables[name.Name] = scope.CreateVariable(node, _curUnit, name.Name, false);
+                        }
+                    }
+
+                    while (_scopes[curScope] is IsInstanceScope) {
+                        curScope--;
+                    }
+                    
+                    _scopes[curScope].CreateVariable(node, _curUnit, name, false);*/
+                }
+            }
             return base.Walk(node);
         }
 
@@ -260,7 +367,30 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override bool Walk(IfStatement node) {
             UpdateChildRanges(node);
-            return base.Walk(node);
+            if (node.Tests != null) {
+                foreach (var test in node.Tests) {
+                    var isInstanceNames = GetIsInstanceNamesAndExpressions(test.Test);
+                    if (isInstanceNames != null) {
+                        if (test.Test != null) {
+                            test.Test.Walk(this);
+                        }
+                        
+                        if (test.Body != null) {
+                            Debug.Assert(test.Body is SuiteStatement);
+
+                            PushIsInstanceScope(test, isInstanceNames, (SuiteStatement)test.Body);
+
+                            test.Body.Walk(this);
+                        }
+                    } else {
+                        test.Walk(this);
+                    }
+                }
+            }
+            if (node.ElseStatement != null) {
+                node.ElseStatement.Walk(this);
+            }
+            return false;
         }
 
         public override bool Walk(ImportStatement node) {
@@ -297,5 +427,41 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             UpdateChildRanges(node);
             return base.Walk(node);
         }
+
+        public override bool Walk(SuiteStatement node) {
+            var prevSuite = _curSuite;
+            _curSuite = node;
+            
+            // recursively walk the statements in the suite
+            if (node.Statements != null) {
+                foreach (var innerNode in node.Statements) {
+                    innerNode.Walk(this);
+                }
+            }
+
+            _curSuite = prevSuite;
+
+            // then check if we encountered an assert which added an isinstance scope.
+            IsInstanceScope isInstanceScope = _scopes[_scopes.Count - 1] as IsInstanceScope;
+            if (isInstanceScope != null && isInstanceScope._effectiveSuite == node) {
+                // pop the isinstance scope
+                _scopes.Pop();
+                var declScope = _curUnit.Scopes[_curUnit.Scopes.Length - 1];
+                // transform back into a line number and start the new statement scope on the line
+                // after the suite statement.
+                var lineNo = _entry.Tree.IndexToLocation(node.EndIndex).Line;
+                
+                var offset = lineNo < _entry.Tree._lineLocations.Length ? _entry.Tree._lineLocations[lineNo] : _entry.Tree._lineLocations[_entry.Tree._lineLocations.Length - 1];
+                var closingScope = new StatementScope(offset);
+                _scopes.Add(closingScope);
+                declScope.Children.Add(closingScope);
+            }
+            return false;
+        }
+
+        public override void PostWalk(SuiteStatement node) {
+            base.PostWalk(node);
+        }
+
     }
 }

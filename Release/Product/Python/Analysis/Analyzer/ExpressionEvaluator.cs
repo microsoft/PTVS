@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     internal class ExpressionEvaluator {
         private readonly AnalysisUnit _unit;
-        private readonly InterpreterScope[] _currentScopes;
+        internal InterpreterScope[] _currentScopes;
 
         internal static NameExpression[] EmptyNames = new NameExpression[0];
 
@@ -72,6 +72,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                                 foreach (var linkedVar in linkedVars) {
                                     linkedVar.AddReference(node, _unit);
                                 }
+                            }
+
+                            IsInstanceScope isInstScope = Scopes[Scopes.Length - 1] as IsInstanceScope;
+                            VariableDef outerVar;
+                            if (isInstScope != null && isInstScope.OuterVariables.TryGetValue(name, out outerVar)) {
+                                outerVar.AddReference(node, _unit);
                             }
                         }
                         return refs.Types;
@@ -369,6 +375,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (left is NameExpression) {
                 var l = (NameExpression)left;
                 var vars = Scopes[Scopes.Length - 1].CreateVariable(l, _unit, l.Name, false);
+
+                IsInstanceScope isInstScope = Scopes[Scopes.Length - 1] as IsInstanceScope;
+                VariableDef outerVar;
+                if (isInstScope != null && isInstScope.OuterVariables.TryGetValue(l.Name, out outerVar)) {
+                    outerVar.AddAssignment(left, _unit);
+                }
                     
                 vars.AddAssignment(left, _unit);
                 vars.AddTypes(l, _unit, values);
@@ -411,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private static ISet<Namespace> MakeLambdaFunction(LambdaExpression node, ExpressionEvaluator ee) {
-            var res = OverviewWalker.AddFunction(node.Function, ee._unit);
+            var res = OverviewWalker.AddFunction(node.Function, ee._unit, ee.Scopes);
             if (res != null) {
                 return res.SelfSet;
             }

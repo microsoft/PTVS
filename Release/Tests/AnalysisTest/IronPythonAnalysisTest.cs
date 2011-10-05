@@ -194,7 +194,7 @@ Environment.GetCommandLineArgs()
         }
 
         [TestMethod]
-        public void TestImportAs() {
+        public void TestImportAsIpy() {
             var text = @"
 import System.Collections as coll
 ";

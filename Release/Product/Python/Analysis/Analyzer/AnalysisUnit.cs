@@ -259,10 +259,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-
         protected override void AnalyzeWorker(DDG ddg) {
-
-
             var newScope = (DeclaringModule.NodeScopes[Ast] as ClassScope).Class;
 
             newScope.Bases.Clear();

@@ -81,7 +81,7 @@ namespace AnalysisTest {
         }
 
         public static void Prepare(IPythonProjectEntry entry, TextReader sourceUnit, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            using (var parser = Parser.CreateParser(sourceUnit, version)) {
+            using (var parser = Parser.CreateParser(sourceUnit, version, new ParserOptions() { BindReferences = true })) {
                 entry.UpdateTree(parser.ParseFile(), null);
             }
         }
