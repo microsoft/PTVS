@@ -48,7 +48,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override string Description {
             get {
-                return _description();
+                string res = _description();
+                if (String.IsNullOrWhiteSpace(res)) {
+                    return "<no information available>";
+                }
+                return res;
             }
         }
     }

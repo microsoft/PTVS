@@ -599,12 +599,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     variable.AddTypes(node, _unit, builtinClassInfo.Instance);
                 } else {
                     SequenceInfo seqInfo = typeObj as SequenceInfo;
-                    if (seqInfo.Push()) {
+                    if (seqInfo != null && seqInfo.Push()) {
                         try {
-                            if (seqInfo != null) {
-                                foreach (var type in seqInfo.IndexTypes) {
-                                    PropagateIsInstanceTypes(node, type, variable);
-                                }
+                            foreach (var type in seqInfo.IndexTypes) {
+                                PropagateIsInstanceTypes(node, type, variable);
                             }
                         } finally {
                             seqInfo.Pop();

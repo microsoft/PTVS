@@ -1,0 +1,11 @@
+﻿<UserControl x:Class="Microsoft.PythonTools.Intellisense.CompletionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:ptvs="clr-namespace:Microsoft.PythonTools" 
+             mc:Ignorable="d" >
+    <StackPanel Name="_panel">
+        <TextBlock Name="_warning" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextWrapping="Wrap" Margin="2,5,2,2"/>
+    </StackPanel>
+</UserControl>

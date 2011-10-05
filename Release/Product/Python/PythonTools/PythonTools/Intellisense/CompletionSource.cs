@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Intellisense {
     class CompletionSource : ICompletionSource {
@@ -40,6 +41,12 @@ namespace Microsoft.PythonTools.Intellisense {
             var completions = provider.GetCompletions(_provider._glyphService);
            
             if (completions == null || completions.Completions.Count == 0) {
+                if (PythonToolsPackage.Instance != null && 
+                    !session.TextView.GetAnalyzer().InterpreterFactory.IsAnalysisCurrent()) {
+                    // no completions, inform the user via the status bar that the analysis is not yet complete.
+                    var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+                    statusBar.SetText(Resources.WarningAnalysisNotCurrent);
+                }
                 return;
             }
 

@@ -318,6 +318,15 @@ namespace Microsoft.PythonTools {
             return interpreters.ToArray();
         }
 
+        internal static bool IsAnalysisCurrent(this IPythonInterpreterFactory factory) {
+            var interpFact = factory as IInterpreterWithCompletionDatabase2;
+            if (interpFact != null) {
+                return interpFact.IsCurrent;
+            }
+
+            return true;
+        }
+
         internal static T[] Append<T>(this T[] list, T item) {
             T[] res = new T[list.Length + 1];
             list.CopyTo(res, 0);

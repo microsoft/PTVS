@@ -20,7 +20,7 @@ using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
+    class IronPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase2 {
         private static readonly Guid _ipyInterpreterGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
         private static readonly Guid _ipy64InterpreterGuid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
         private readonly InterpreterConfiguration _config;
@@ -105,21 +105,31 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
+            _generating = true;
             string outPath = GetConfiguredDatabasePath();
 
-            return PythonTypeDatabase.Generate(
+            if (!PythonTypeDatabase.Generate(
                 new PythonTypeDatabaseCreationRequest() { DatabaseOptions = options, Factory = this, OutputPath = outPath },
                 () => {
                     OnNewDatabaseAvailable();
                     databaseGenerationCompleted();
                     _generating = false;
                 }
-            );
+            )) {
+                _generating = false;
+                return false;
+            }
+            return true;
+        }
+
+        public bool IsCurrent {
+            get {
+                return !_generating;
+            }
         }
 
         void IInterpreterWithCompletionDatabase.AutoGenerateCompletionDatabase() {
             if (!ConfigurableDatabaseExists() && !_generating) {
-                _generating = true;
                 ThreadPool.QueueUserWorkItem(x => GenerateCompletionDatabaseWorker(GenerateDatabaseOptions.StdLibDatabase, () => { }));
             }
         }

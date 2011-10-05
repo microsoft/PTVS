@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Analysis {
                             var sourceUnit = new FileStream(files[i], FileMode.Open, FileAccess.Read, FileShare.Read);
 
                             Log(writer, "PARSE START: \"" + modules[i].FilePath + "\"");
-                            ast = Parser.CreateParser(sourceUnit, PythonLanguageVersion.V27).ParseFile();
+                            ast = Parser.CreateParser(sourceUnit, PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true }).ParseFile();
                             Log(writer, "PARSE END: \"" + modules[i].FilePath + "\"");
                         } catch (Exception ex) {
                             Log(writer, "PARSE ERROR: \"" + modules[i].FilePath + "\" \"" + ex.ToString().Replace("\r\n", " -- ") + "\"");

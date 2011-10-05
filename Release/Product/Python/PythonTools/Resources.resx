@@ -141,4 +141,7 @@
   <data name="UpdatingSearchPath" xml:space="preserve">
     <value />
   </data>
+  <data name="WarningAnalysisNotCurrent" xml:space="preserve">
+    <value>Warning: the intellisense database is currently not up to date and completions may be missing.</value>
+  </data>
 </root>

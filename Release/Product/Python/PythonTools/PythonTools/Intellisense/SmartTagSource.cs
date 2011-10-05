@@ -12,11 +12,14 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
     class SmartTagSource : ISmartTagSource {
@@ -49,7 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // through the same enumerator so we make progress over time.   So we'll read the AbortedAugment
                 // here and continue working, and if we run out of idletime we'll add or update the aborted augment.
                 List<ISmartTagAction> actions;
-                IEnumerator<string> importsEnum;
+                IEnumerator<ExportedMemberInfo> importsEnum;
                 AbortedAugmentInfo prevAugInfo;
                 if (!session.Properties.TryGetProperty<AbortedAugmentInfo>(AbortedAugment, out prevAugInfo)) {
                     actions = new List<ISmartTagAction>();
@@ -63,14 +66,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 while (importsEnum.MoveNext()) {
                     var import = importsEnum.Current;
 
-                    int lastDot;
+                    if (import.IsDefinedInModule) {
+                        int lastDot;
 
-                    if ((lastDot = import.LastIndexOf('.')) == -1) {
-                        // simple import
-                        actions.Add(new ImportSmartTagAction(import, _textBuffer, session.TextView));
-                    } else {
-                        // importing a package or member of a module
-                        actions.Add(new ImportSmartTagAction(import.Substring(0, lastDot), import.Substring(lastDot + 1), _textBuffer, session.TextView));
+                        if ((lastDot = import.Name.LastIndexOf('.')) == -1) {
+                            // simple import
+                            actions.Add(new ImportSmartTagAction(import.Name, _textBuffer, session.TextView));
+                        } else {
+                            // importing a package or member of a module
+                            actions.Add(new ImportSmartTagAction(import.Name.Substring(0, lastDot), import.Name.Substring(lastDot + 1), _textBuffer, session.TextView));
+                        }
                     }
 
                     if (compMgr != null && compMgr.FContinueIdle() == 0) {
@@ -90,10 +95,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal class AbortedAugmentInfo {
-            public readonly IEnumerator<string> Imports;
+            public readonly IEnumerator<ExportedMemberInfo> Imports;
             public readonly List<ISmartTagAction> Actions;
 
-            public AbortedAugmentInfo(IEnumerator<string> importsEnum, List<ISmartTagAction> actions) {
+            public AbortedAugmentInfo(IEnumerator<ExportedMemberInfo> importsEnum, List<ISmartTagAction> actions) {
                 Imports = importsEnum;
                 Actions  = actions;
             }

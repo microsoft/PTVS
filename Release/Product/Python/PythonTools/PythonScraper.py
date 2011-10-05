@@ -386,7 +386,11 @@ def write_analysis(mod_name, outpath, analysis):
     # write a list of members which we can load to check for member existance
     out_file = open(os.path.join(outpath, mod_name + '.idb.$memlist'), 'wb')
     for member in analysis['members']:
-        out_file.write(member + '\n')
+        if sys.version >= '3.':
+            out_file.write((member + '\n').encode('utf8'))
+        else:
+            out_file.write(member + '\n')
+
     out_file.close()
 
 

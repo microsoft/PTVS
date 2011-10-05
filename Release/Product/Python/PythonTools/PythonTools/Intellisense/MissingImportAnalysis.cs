@@ -13,8 +13,8 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
-using System.Collections.ObjectModel;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -24,11 +24,11 @@ namespace Microsoft.PythonTools.Intellisense {
     /// New in 1.1.
     /// </summary>
     public sealed class MissingImportAnalysis {
-        internal static MissingImportAnalysis Empty = new MissingImportAnalysis(new string[0], null);
+        internal static MissingImportAnalysis Empty = new MissingImportAnalysis(new ExportedMemberInfo[0], null);
         private readonly ITrackingSpan _span;
-        private readonly IEnumerable<string> _names;
+        private readonly IEnumerable<ExportedMemberInfo> _names;
 
-        internal MissingImportAnalysis(IEnumerable<string> names, ITrackingSpan span) {
+        internal MissingImportAnalysis(IEnumerable<ExportedMemberInfo> names, ITrackingSpan span) {
             _span = span;
             _names = names;
         }
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ///  module the name here is bar.foo.  This list is lazily calculated (including loading of cached intellisense data) 
         ///  so that you can break from the enumeration early and save significant work.
         /// </summary>
-        public IEnumerable<string> AvailableImports {
+        public IEnumerable<ExportedMemberInfo> AvailableImports {
             get {
                 return _names;
             }

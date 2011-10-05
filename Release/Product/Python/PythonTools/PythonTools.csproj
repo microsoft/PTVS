@@ -129,6 +129,10 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Platform.VSEditor, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\CommonExtensions\Microsoft\Editor\Microsoft.VisualStudio.Platform.VSEditor.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Aliases>global</Aliases>
     </Reference>
@@ -199,6 +203,10 @@
     <Compile Include="PythonTools\CommonUtils.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactory.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
+      <DependentUpon>CompletionControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
     <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ImportSmartTagAction.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagAction.cs" />
@@ -949,6 +957,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="PythonTools\Intellisense\CompletionControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -22,7 +22,7 @@ using System.Threading;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
+    class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase2 {
         private readonly string _description;
         private readonly Guid _id;
         private readonly InterpreterConfiguration _config;
@@ -110,9 +110,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
+            _generating = true;
             string outPath = GetConfiguredDatabasePath();
 
-            return PythonTypeDatabase.Generate(
+            if (!PythonTypeDatabase.Generate(
                 new PythonTypeDatabaseCreationRequest() { DatabaseOptions = options, Factory = this, OutputPath = outPath },
                 () => {
                     lock (_interpreters) {
@@ -125,8 +126,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     databaseGenerationCompleted();
 
                     _generating = false;
-                }
-            );
+                })) {
+                _generating = false;
+                return false;
+            }
+
+            return true;
         }
 
         private void OnNewDatabaseAvailable() {
@@ -141,8 +146,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         void IInterpreterWithCompletionDatabase.AutoGenerateCompletionDatabase() {
             if (!ConfigurableDatabaseExists() && !_generating) {
-                _generating = true;
                 ThreadPool.QueueUserWorkItem(x => GenerateCompletionDatabaseWorker(GenerateDatabaseOptions.StdLibDatabase, () => { }));
+            }
+        }
+
+        public bool IsCurrent {
+            get {
+                return !_generating;
             }
         }
 

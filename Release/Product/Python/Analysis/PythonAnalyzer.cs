@@ -212,7 +212,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// available names fully qualified to their name.  
         /// </summary>
         /// <param name="name"></param>
-        public IEnumerable<string> FindNameInAllModules(string name) {
+        public IEnumerable<ExportedMemberInfo> FindNameInAllModules(string name) {
             // provide module names first
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (moduleRef.Module != null || moduleRef.HasEphemeralReferences) {
                     // include modules which can be imported
                     if (modName == name || PackageNameMatches(name, modName)) {
-                        yield return modName;
+                        yield return new ExportedMemberInfo(modName, true);
                     }
                 }
             }
@@ -235,7 +235,9 @@ namespace Microsoft.PythonTools.Analysis {
                     if (moduleRef.Module != null) {
                         // then check for members within the module.
                         if (ModuleContainsMember(name, moduleRef)) {
-                            yield return modName + "." + name;
+                            yield return new ExportedMemberInfo(modName + "." + name, true);
+                        } else {
+                            yield return new ExportedMemberInfo(modName + "." + name, false);
                         }
                     }
                 }
