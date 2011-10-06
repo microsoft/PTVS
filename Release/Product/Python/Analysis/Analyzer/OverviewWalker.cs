@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private VariableDef CreateVariable(NameExpression name) {
             var reference = name.GetVariableReference(_entry.Tree);
             
-            if (reference.Variable != null) {
+            if (reference != null && reference.Variable != null) {
                 var declScope = reference.Variable.Scope;
                 foreach (var scope in _scopes) {
                     if (scope.Node == declScope || (declScope is PythonAst && scope == null)) {
@@ -293,23 +293,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (left is NameExpression) {
                     var nameExpr = ((NameExpression)left);
                     var variable = CreateVariable(nameExpr);
-                    _scopes[_scopes.Count - 1].Variables[nameExpr.Name] = variable;
-                    /*
-                    var name = nameExpr.Name;
-                    int curScope = _scopes.Count - 1;
-                    var varRef = nameExpr.GetVariableReference(_entry.Tree);
-
-                    foreach (var scope in _scopes) {
-                        if (scope.Node == declScope || (declScope is PythonAst && scope == null)) {
-                            _scopes[_scopes.Count - 1].Variables[name.Name] = scope.CreateVariable(node, _curUnit, name.Name, false);
-                        }
-                    }
-
-                    while (_scopes[curScope] is IsInstanceScope) {
-                        curScope--;
-                    }
-                    
-                    _scopes[curScope].CreateVariable(node, _curUnit, name, false);*/
+                    _scopes[_scopes.Count - 1].Variables[nameExpr.Name] = variable;                    
                 }
             }
             return base.Walk(node);
