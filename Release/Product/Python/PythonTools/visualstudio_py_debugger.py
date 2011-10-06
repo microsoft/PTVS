@@ -267,7 +267,6 @@ def probe_stack(depth = 10):
 DONT_DEBUG = [__file__]
 def should_debug_code(code):
     if not DEBUG_STDLIB and code.co_filename.startswith(sys.prefix):
-        sys.__stdout__.write('not debugging std lib code\n')
         return False
 
     filename = code.co_filename
