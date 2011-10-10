@@ -1,3 +1,17 @@
+ # ############################################################################
+ #
+ # Copyright (c) Microsoft Corporation. 
+ #
+ # This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ # copy of the license can be found in the License.html file at the root of this distribution. If 
+ # you cannot locate the Apache License, Version 2.0, please send an email to 
+ # vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ # by the terms of the Apache License, Version 2.0.
+ #
+ # You must not remove this notice, or any other, from this software.
+ #
+ # ###########################################################################
+
 """
 Generates information for supporting completion and analysis of Python code.
 
@@ -103,12 +117,22 @@ else:
 	import BuiltinScraper
 
 
+TYPE_NAMES = {}
+
 def type_to_name(type):
     if hasattr(type, '__module__'):
-        return type.__module__, type.__name__
+        name = type.__module__, type.__name__
+    else:
+        name = '', type.__name__
+    # memoize so when we pickle we can share refs
+    return memoize_type_name(name)
 
-    return '', type.__name__
-    
+def memoize_type_name(name):
+    if name in TYPE_NAMES:
+        return TYPE_NAMES[name]
+    TYPE_NAMES[name] = name
+    return name
+
 def generate_builtin_function(function):
     function_table = {}
     
@@ -174,7 +198,6 @@ def generate_type_new(type_obj, obj):
             # replace overloads with better version if available
             function_info['overloads'] = new_overloads
             return member_table
-
     return generate_member(obj)
 
 def oldstyle_mro(type_obj, res):
@@ -203,15 +226,20 @@ def generate_type(type_obj, is_hidden=False):
     if is_hidden:
         type_table['is_hidden'] = True
     
+    found_new = False        
     for member in type_obj.__dict__:
         if member == '__new__':
+            found_new = True
             if type_obj is object:
                 members_table[member] = {'kind' : 'function', 'value': { 'overloads': ({'args': [{'name': 'cls', 'type': (builtin_name, 'type'), 'ret_type': (builtin_name, 'object')}]})}}
             else:
                 members_table[member] = generate_type_new(type_obj, type_obj.__dict__[member])
         else:
             members_table[member] = generate_member(type_obj.__dict__[member])
-    
+
+    if not found_new:
+        members_table['__new__'] = generate_type_new(type_obj, type_obj.__new__)
+
     return type_table
 
 def generate_data(data_value):
@@ -245,7 +273,6 @@ def generate_module(module_name):
 
     for attr in module.__dict__:
         attr_value = module.__dict__[attr]
-        
         all_members[attr] = generate_member(attr_value)
             
     return module_table
@@ -424,7 +451,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('5')
+    f.write('6')
     f.close()
 
     # inspect extension modules installed into site-packages

@@ -247,7 +247,8 @@ namespace Microsoft.PythonTools.Project
 
                 bool isAssemblyReference = referenceType == ProjectFileConstants.Reference;
                 // If the project was loaded for browsing we should still create the nodes but as not resolved.
-                if(isAssemblyReference && this.ProjectMgr.Build(MsBuildTarget.ResolveAssemblyReferences) != MSBuildResult.Successful)
+                if(isAssemblyReference && 
+                    (!ProjectMgr.BuildProject.Targets.ContainsKey(MsBuildTarget.ResolveAssemblyReferences) || this.ProjectMgr.Build(MsBuildTarget.ResolveAssemblyReferences) != MSBuildResult.Successful))
                 {
                     continue;
                 }

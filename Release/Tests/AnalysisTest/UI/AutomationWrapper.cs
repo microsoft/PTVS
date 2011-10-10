@@ -179,16 +179,17 @@ namespace AnalysisTest.UI {
         #endregion
 
         public static void DumpElement(AutomationElement element) {
-            Debug.WriteLine("Name    ClassName      ControlType");
+            Debug.WriteLine("Name    ClassName      ControlType    AutomationID");
             DumpElement(element, 0);
         }
 
         private static void DumpElement(AutomationElement element, int depth) {
-            Debug.WriteLine(String.Format("{0} {1} {2} {3}", 
+            Debug.WriteLine(String.Format("{0} {1}\t{2}\t{3}\t{4}", 
                 new string(' ', depth * 4), 
                 element.Current.Name, 
                 element.Current.ControlType.ProgrammaticName, 
-                element.Current.ClassName));
+                element.Current.ClassName,
+                element.Current.AutomationId));
 
             var children = element.FindAll(TreeScope.Children, Condition.TrueCondition);
             foreach (AutomationElement child in children) {

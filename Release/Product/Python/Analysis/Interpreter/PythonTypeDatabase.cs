@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 5;
+        public static readonly int CurrentVersion = 6;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _dbDir = databaseDirectory;
@@ -96,38 +96,41 @@ namespace Microsoft.PythonTools.Interpreter {
 
             string outPath = request.OutputPath;
 
-            if (!Directory.Exists(outPath)) {
-                Directory.CreateDirectory(outPath);
-            }
+            Thread t = new Thread(x => {
+                if (!Directory.Exists(outPath)) {
+                    Directory.CreateDirectory(outPath);
+                }
 
-            var psi = new ProcessStartInfo();
-            psi.CreateNoWindow = true;
-            psi.UseShellExecute = false;
-            psi.FileName = request.Factory.Configuration.InterpreterPath;
-            psi.Arguments =
-                "\"" + Path.Combine(GetPythonToolsInstallPath(), "PythonScraper.py") + "\"" +       // script to run
-                " \"" + outPath + "\"" +                                                // output dir
-                " \"" + GetBaselineDatabasePath() + "\"";           // baseline file
+                var psi = new ProcessStartInfo();
+                psi.CreateNoWindow = true;
+                psi.UseShellExecute = false;
+                psi.FileName = request.Factory.Configuration.InterpreterPath;
+                psi.Arguments =
+                    "\"" + Path.Combine(GetPythonToolsInstallPath(), "PythonScraper.py") + "\"" +       // script to run
+                    " \"" + outPath + "\"" +                                                // output dir
+                    " \"" + GetBaselineDatabasePath() + "\"";           // baseline file
 
-            var proc = new Process();
-            proc.StartInfo = psi;
-            try {
-                LogEvent(request, "START_SCRAPE");
+                var proc = new Process();
+                proc.StartInfo = psi;
+                try {
+                    LogEvent(request, "START_SCRAPE");
 
-                proc.Start();
-                proc.WaitForExit();
-            } catch (Win32Exception ex) {
-                // failed to start process, interpreter doesn't exist?           
-                LogEvent(request, "FAIL_SCRAPE " + ex.ToString().Replace("\r\n", " -- "));
-                return false;
-            }
+                    proc.Start();
+                    proc.WaitForExit();
+                } catch (Win32Exception ex) {
+                    // failed to start process, interpreter doesn't exist?           
+                    LogEvent(request, "FAIL_SCRAPE " + ex.ToString().Replace("\r\n", " -- "));
+                    databaseGenerationCompleted();
+                    return;
+                }
 
-            if (proc.ExitCode != 0) {
-                LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);
-            }
+                if (proc.ExitCode != 0) {
+                    LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);
+                } else {
+                    LogEvent(request, "DONE (SCRAPE)");
+                }
 
-            if ((proc.ExitCode == 0 || DatabaseExists(outPath)) && (request.DatabaseOptions & GenerateDatabaseOptions.StdLibDatabase) != 0) {
-                Thread t = new Thread(x => {
+                if ((request.DatabaseOptions & GenerateDatabaseOptions.StdLibDatabase) != 0) {
                     psi = new ProcessStartInfo();
                     psi.CreateNoWindow = true;
                     psi.UseShellExecute = false;
@@ -159,14 +162,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
                         databaseGenerationCompleted();
                     }
-                });
-                t.Start();
-                return true;
-            } else if (proc.ExitCode == 0) {
-                LogEvent(request, "DONE (SCRAPE)");
-                databaseGenerationCompleted();
-            }
-            return false;
+                } else {
+                    databaseGenerationCompleted();
+                }
+            });
+            t.Start();
+            return true;
         }
 
         private static string BuildArguments(PythonTypeDatabaseCreationRequest request, string outPath, string libDir, string virtualEnvPackages) {

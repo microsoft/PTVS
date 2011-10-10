@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Windows.Automation;
 using AnalysisTest.UI;
 using AnalysisTest.UI.Python;
 using EnvDTE;
@@ -261,32 +262,53 @@ namespace AnalysisTest.ProjectSystem {
             Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
         }
 
-
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestException() {
-            OpenDebuggerProject("SimpleException.py");
+            ExceptionTest("SimpleException.py", "Exception occurred", "", "exceptions.Exception");
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestException2() {
+            ExceptionTest("SimpleException2.py", "ValueError occurred", "bad value", "exceptions.ValueError");
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestExceptionUnhandled() {
+            ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "exceptions.ValueError");
+        }
+
+        private static void ExceptionTest(string filename, string expectedTitle, string expectedDescription, string exceptionType) {
+            OpenDebuggerProject(filename);
             var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
             var exceptionSettings = debug3.ExceptionGroups.Item("Python Exceptions");
-            
-            exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item("exceptions.Exception"));
 
+            exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
 
             VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
             WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            exceptionSettings.SetBreakWhenThrown(false, exceptionSettings.Item("exceptions.Exception"));
-            exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item("exceptions.Exception"));
-            debug3.ExceptionGroups.ResetAll();            
-            
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)3);
+            exceptionSettings.SetBreakWhenThrown(false, exceptionSettings.Item(exceptionType));
+            exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
+            debug3.ExceptionGroups.ResetAll();
 
-            VisualStudioApp.HandleException(ExceptionButton.Break, "exceptions.Exception", "line 3");
+            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)2);
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var excepDialog = new ExceptionHelperDialog(AutomationElement.FromHandle(app.WaitForDialog()));
+            AutomationWrapper.DumpElement(excepDialog.Element);
+
+            Assert.AreEqual(excepDialog.Description, expectedDescription);
+            Assert.AreEqual(excepDialog.Title, expectedTitle);
+
+            excepDialog.Ok();
 
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
 
             WaitForMode(dbgDebugMode.dbgDesignMode);
-        }        
+        }
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]

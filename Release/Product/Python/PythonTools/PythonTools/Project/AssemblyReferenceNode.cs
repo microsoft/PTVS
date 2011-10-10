@@ -386,6 +386,11 @@ namespace Microsoft.PythonTools.Project
 
 			// Resolve assembly referernces. This is needed to make sure that properties like the full path
 			// to the assembly or the hint path are set.
+			if (!ProjectMgr.BuildProject.Targets.ContainsKey(MsBuildTarget.ResolveAssemblyReferences)) 
+			{
+				return;
+			}
+
 			if(this.ProjectMgr.Build(MsBuildTarget.ResolveAssemblyReferences) != MSBuildResult.Successful)
 			{
 				return;

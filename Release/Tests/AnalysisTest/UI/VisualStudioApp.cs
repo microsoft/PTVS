@@ -214,12 +214,6 @@ namespace AnalysisTest.UI {
             return hwnd;
         }
 
-        public static void HandleException(ExceptionButton button, params string[] text) {
-            CheckAndDismissDialog(text,
-                NativeMethods.IDC_EXCEPTION_TEXT,
-                button == ExceptionButton.Break ? NativeMethods.IDC_BREAK : NativeMethods.IDC_CONTINUE);
-        }
-
         internal static void CheckMessageBox(params string[] text) {
             CheckMessageBox(MessageBoxButton.Cancel, text);
         }
@@ -245,6 +239,7 @@ namespace AnalysisTest.UI {
             }
 
             Assert.IsTrue(hwnd.ToInt32() != VsIdeTestHostContext.Dte.MainWindow.HWnd && hwnd != IntPtr.Zero);
+            AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
             StringBuilder title = new StringBuilder(4096);
             Assert.AreNotEqual(NativeMethods.GetDlgItemText(hwnd, dlgField, title, title.Capacity), (uint)0);
 

@@ -26,6 +26,11 @@ namespace Microsoft.PythonTools.Analysis {
         private List<string> _errors = new List<string>();
         private Dictionary<Namespace, string> _classNames = new Dictionary<Namespace, string>();
         private List<Namespace> _path = new List<Namespace>();
+        private Dictionary<string, Dictionary<string, object[]>> _typeNames = new Dictionary<string, Dictionary<string, object[]>>();
+        private Dictionary<string, string> _MemoizedStrings = new Dictionary<string, string>();
+        private Dictionary<string, Dictionary<string, object>> _moduleNames = new Dictionary<string, Dictionary<string, object>>();
+        private static readonly List<object> _EmptyMro = new List<object>();
+        private static object[] _objectType = new object[] { "__builtin__", "object" };
 
         public void Save(PythonAnalyzer state, string outDir) {
 
@@ -57,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<string, object> SerializeModule(ModuleInfo moduleInfo) {
             return new Dictionary<string, object>() {
                 { "members", GenerateMembers(moduleInfo) },
-                { "doc", moduleInfo.Documentation },
+                { "doc", MemoizeString(moduleInfo.Documentation) },
                 { "children", GenerateChildModules(moduleInfo) },
                 { "filename", moduleInfo.ProjectEntry.FilePath }
             };
@@ -98,7 +103,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return res;
             } else if (variableDef.Types.Count == 0) {
                 return new Dictionary<string, object>() {
-                    { "type", new object[] { "__builtin__", "object" } }
+                    { "type",  _objectType }
                 };
             } else {
                 List<object> res = new List<object>();
@@ -164,13 +169,9 @@ namespace Microsoft.PythonTools.Analysis {
                     break;
                 case PythonMemberType.Module:
                     if (type is ModuleInfo) {
-                        return new Dictionary<string, object>() {
-                        { "module_name" , ((ModuleInfo)type).Name }
-                    };
+                        return GetModuleName(((ModuleInfo)type).Name);
                     } else if (type is BuiltinModule) {
-                        return new Dictionary<string, object>() {
-                            { "module_name" , ((BuiltinModule)type).Name }
-                        };
+                        return GetModuleName(((BuiltinModule)type).Name);
                     }
                     break;
                 case PythonMemberType.Instance:
@@ -204,7 +205,7 @@ namespace Microsoft.PythonTools.Analysis {
             name += "." + bfi.Function.Name;
 
             return new Dictionary<string, object>() {
-                { "func_name", name }
+                { "func_name", MemoizeString(name) }
             };
         }
 
@@ -242,7 +243,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object GenerateProperty(FunctionInfo prop) {
             return new Dictionary<string, object>() {
-                {"doc", prop.Documentation },
+                {"doc", MemoizeString(prop.Documentation) },
                 {"type", GenerateTypeName(prop.ReturnValue.Types) },
                 {"location", GenerateLocation(prop.Location) }
             };
@@ -259,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis {
                 { "mro", GetClassMro(ci) },
                 { "bases", GetClassBases(ci) },
                 { "members" , GetClassMembers(ci) },
-                { "doc", ci.Documentation },
+                { "doc", MemoizeString(ci.Documentation) },
                 { "builtin", false },
                 { "location", GenerateLocation(ci.Location) }
             };
@@ -267,13 +268,36 @@ namespace Microsoft.PythonTools.Analysis {
 
         private Dictionary<string, object> GenerateClassRef(ClassInfo ci) {
             return new Dictionary<string, object>() {
-                { "type_name", new object[] { ci.DeclaringModule.ModuleName, ci.ClassDefinition.Name } },
+                { "type_name",  GetTypeName(ci.DeclaringModule.ModuleName, ci.ClassDefinition.Name) },
             };
+        }
+
+        private object[] GetTypeName(string moduleName, string className) {
+            // memoize types names for a more efficient on disk representation.
+            object[] typeName;
+            Dictionary<string, object[]> typeNames;
+            if (!_typeNames.TryGetValue(moduleName, out typeNames)) {
+                _typeNames[moduleName] = typeNames = new Dictionary<string, object[]>();
+            }
+
+            if (!typeNames.TryGetValue(className, out typeName)) {
+                typeNames[className] = typeName = new object[] { MemoizeString(moduleName), MemoizeString(className) };
+            }
+            return typeName;
+        }
+
+        private Dictionary<string, object> GetModuleName(string moduleName) {
+            // memoize types names for a more efficient on disk representation.
+            Dictionary<string, object> name;
+            if (!_moduleNames.TryGetValue(moduleName, out name)) {
+                _moduleNames[moduleName] = name = new Dictionary<string, object>() { { "module_name", MemoizeString(moduleName) } };
+            }
+            return name;
         }
 
         private Dictionary<string, object> GenerateClassRef(BuiltinClassInfo ci) {
             return new Dictionary<string, object>() {
-                { "type_name", new object[] { ci._type.DeclaringModule.Name, ci._type.Name } },
+                { "type_name", GetTypeName(ci._type.DeclaringModule.Name, ci._type.Name) },
             };
         }
 
@@ -311,7 +335,7 @@ namespace Microsoft.PythonTools.Analysis {
         private object[] GenerateTypeName(Namespace baseClass) {
             ClassInfo ci = baseClass as ClassInfo;
             if (ci != null) {
-                return new object[] { ci.DeclaringModule.MyScope.Name, ci.ClassDefinition.Name };
+                return GetTypeName(ci.DeclaringModule.MyScope.Name, ci.ClassDefinition.Name );
             }
 
             BuiltinClassInfo bci = baseClass as BuiltinClassInfo;
@@ -324,18 +348,18 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object[] GenerateTypeName(IPythonType type) {
             if (type != null) {
-                return new object[] { type.DeclaringModule.Name, type.Name };
+                return GetTypeName(type.DeclaringModule.Name, type.Name);
             }
             return null;
         }
 
+        
         private object GetClassMro(ClassInfo ci) {
             // TODO: return correct mro
-            return new List<object>();
+            return _EmptyMro;
         }
 
         private Dictionary<string, object> GenerateFunction(FunctionInfo fi) {
-
             return new Dictionary<string, object>() {
                 {"doc", fi.Documentation },
                 {"overloads", new object[] { GenerateOverload(fi) } },
@@ -364,19 +388,27 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
+        private string MemoizeString(string input) {
+            string res;
+            if (!_MemoizedStrings.TryGetValue(input, out res)) {
+                _MemoizedStrings[input] = res = input;
+            }
+            return res;
+        }
+
         private object GenerateParameter(Parameter param, VariableDef typeInfo) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             // TODO: Serialize default values and type name
             if (param.Name.StartsWith("**")) {
-                res["name"] = param.Name.Substring(2);
+                res["name"] = MemoizeString(param.Name.Substring(2));
                 res["arg_format"] = "**";
                 res["type"] = GenerateTypeName(typeInfo.Types);
             } else if (param.Name.StartsWith("*")) {
-                res["name"] = param.Name.Substring(1);
+                res["name"] = MemoizeString(param.Name.Substring(1));
                 res["arg_format"] = "*";
                 res["type"] = GenerateTypeName(typeInfo.Types);
             } else {
-                res["name"] = param.Name;
+                res["name"] = MemoizeString(param.Name);
                 res["type"] = GenerateTypeName(typeInfo.Types);
             }
             return res;

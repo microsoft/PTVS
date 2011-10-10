@@ -162,6 +162,10 @@ BREAK_MODE_NEVER = 0
 BREAK_MODE_ALWAYS = 1
 BREAK_MODE_UNHANDLED = 32
 
+BREAK_TYPE_NONE = 0
+BREAK_TYPE_UNHANLDED = 1
+BREAK_TYPE_HANDLED = 2
+
 class ExceptionBreakInfo(object):
     def __init__(self):
         self.default_mode = BREAK_MODE_UNHANDLED
@@ -183,16 +187,23 @@ class ExceptionBreakInfo(object):
         probe_stack()
         name = ex_type.__module__ + '.' + ex_type.__name__
         mode = self.break_on.get(name, self.default_mode)
-        if (bool(mode & BREAK_MODE_ALWAYS) or (bool(mode & BREAK_MODE_UNHANDLED) and not self.IsHandled(thread, ex_type, ex_value, trace))):
+        break_type = BREAK_TYPE_NONE
+        if mode & BREAK_MODE_ALWAYS:
+            if self.IsHandled(thread, ex_type, ex_value, trace):
+                break_type = BREAK_TYPE_HANDLED
+            else:
+                break_type = BREAK_TYPE_UNHANLDED
+        elif (mode & BREAK_MODE_UNHANDLED) and not self.IsHandled(thread, ex_type, ex_value, trace):
+            break_type = BREAK_TYPE_HANDLED
+
+        if break_type:
             if issubclass(ex_type, SystemExit):
                 if not BREAK_ON_SYSTEMEXIT_ZERO:
-                    if isinstance(ex_value, int) and not ex_value:
-                        return False
-                    elif isinstance(ex_value, SystemExit) and not ex_value.code:
-                        return False                    
-            return True
+                    if ((isinstance(ex_value, int) and not ex_value) or 
+                        (isinstance(ex_value, SystemExit) and not ex_value.code)):
+                        break_type = BREAK_TYPE_NONE
 
-        return False
+        return break_type
     
     def IsHandled(self, thread, ex_type, ex_value, trace):
         if trace is None:
@@ -503,9 +514,11 @@ class Thread(object):
         if self.stepping == STEPPING_ATTACH_BREAK:
             self.block_maybe_attach()
 
-        if not DETACHED and should_debug_code(frame.f_code) and BREAK_ON.ShouldBreak(self, *arg):
-            update_all_thread_stacks(self)
-            self.block(lambda: report_exception(frame, arg, self.id))
+        if not DETACHED and should_debug_code(frame.f_code):
+            break_type = BREAK_ON.ShouldBreak(self, *arg)
+            if break_type:
+                update_all_thread_stacks(self)
+                self.block(lambda: report_exception(frame, arg, self.id, break_type))
 
         # forward call to previous trace function, if any, updating the current trace function
         # with a new one if available
@@ -1173,21 +1186,24 @@ def report_process_exit(exit_code):
     exit_lock.acquire()
 
 
-def report_exception(frame, exc_info, tid):
+def report_exception(frame, exc_info, tid, break_type):
     exc_type = exc_info[0]
     exc_value = exc_info[1]
     tb_value = exc_info[2]
     exc_name = exc_type.__module__ + '.' + exc_type.__name__
-
-    if sys.version >= '3':
-        excp_text = ''.join(traceback.format_exception(exc_type, exc_value, tb_value, chain = False))
-    else:
-        excp_text = ''.join(traceback.format_exception(exc_type, exc_value, tb_value))
+    
+    if type(exc_value) is tuple:
+        # exception object hasn't been created yet, create it now 
+        # so we can get the correct msg.
+        exc_value = exc_type(*exc_value)
+    
+    excp_text = str(exc_value)
 
     with _SendLockCtx:
         conn.send(EXCP)
         write_string(exc_name)
         conn.send(struct.pack('i', tid))
+        conn.send(struct.pack('i', break_type))
         write_string(excp_text)
 
 def new_module(frame):

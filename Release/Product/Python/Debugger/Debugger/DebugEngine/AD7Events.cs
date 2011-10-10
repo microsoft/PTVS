@@ -254,10 +254,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
     sealed class AD7DebugExceptionEvent : AD7StoppingEvent, IDebugExceptionEvent2 {
         public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
-        private readonly string _exception;
+        private readonly string _exception, _description;
+        private readonly bool _isUnhandled;
 
-        public AD7DebugExceptionEvent(string description) {
-            _exception = description;
+        public AD7DebugExceptionEvent(string typeName, string description, bool isUnhandled) {
+            _exception = typeName;
+            _description = description;
+            _isUnhandled = isUnhandled;
         }
 
         #region IDebugExceptionEvent2 Members
@@ -268,11 +271,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         public int GetException(EXCEPTION_INFO[] pExceptionInfo) {
             pExceptionInfo[0].bstrExceptionName = _exception;
+            if (_isUnhandled) {
+                pExceptionInfo[0].dwState = enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
+            } else {
+                pExceptionInfo[0].dwState = enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE;
+            }
             return VSConstants.S_OK;
         }
 
         public int GetExceptionDescription(out string pbstrDescription) {
-            pbstrDescription = _exception;
+            pbstrDescription = _description;
             return VSConstants.S_OK;
         }
 

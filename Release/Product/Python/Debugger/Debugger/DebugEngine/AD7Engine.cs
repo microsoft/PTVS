@@ -981,7 +981,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AD7Thread thread;
             if (_threads.TryGetValue(e.Thread, out thread)) {
                 Send(
-                    new AD7DebugExceptionEvent(e.Exception.TypeName + Environment.NewLine + e.Exception.Description),
+                    new AD7DebugExceptionEvent(e.Exception.TypeName, e.Exception.Description, e.IsUnhandled),
                     AD7DebugExceptionEvent.IID,
                     thread
                 );

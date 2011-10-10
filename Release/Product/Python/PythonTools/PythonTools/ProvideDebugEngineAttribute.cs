@@ -79,6 +79,10 @@ namespace Microsoft.PythonTools {
             clsidGuidKey.SetValue("InprocServer32", context.InprocServerPath);
             clsidGuidKey.SetValue("CodeBase", Path.Combine(context.ComponentPath, _debugEngine.Module.Name));
             clsidGuidKey.SetValue("ThreadingModel", "Free");
+
+            using (var exceptionAssistantKey = context.CreateKey("ExceptionAssistant\\KnownEngines\\" + _id)) {
+                exceptionAssistantKey.SetValue("", _name);
+            }
         }
 
         public override void Unregister(RegistrationContext context) {

@@ -127,7 +127,7 @@ namespace AnalysisTest.UI {
                         action();
                     } catch (Exception e) {
                         excep = e;
-                        
+
                     }
                 })
             );

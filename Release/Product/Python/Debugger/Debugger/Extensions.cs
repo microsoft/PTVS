@@ -39,9 +39,9 @@ namespace Microsoft.PythonTools.Debugger {
                     int filenameLen = BitConverter.ToInt32(cmd_buffer, 0);
                     byte[] buffer = new byte[filenameLen];
                     int bytesRead = 0;
-                    do {
+                    while (bytesRead != filenameLen) {
                         bytesRead += socket.Receive(buffer, bytesRead, filenameLen - bytesRead, SocketFlags.None);
-                    } while (bytesRead != filenameLen);
+                    } 
 
                     if (isUnicode) {
                         return Encoding.UTF8.GetString(buffer);

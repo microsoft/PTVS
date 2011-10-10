@@ -712,12 +712,13 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleException(Socket socket) {
             string typeName = socket.ReadString();
             int tid = socket.ReadInt();
+            int breakType = socket.ReadInt();
             string desc = socket.ReadString();
             if (typeName != null && desc != null) {
                 Debug.WriteLine("Exception: " + desc);
                 var excepRaised = ExceptionRaised;
                 if (excepRaised != null) {
-                    excepRaised(this, new ExceptionRaisedEventArgs(_threads[tid], new PythonException(typeName, desc)));
+                    excepRaised(this, new ExceptionRaisedEventArgs(_threads[tid], new PythonException(typeName, desc), breakType == 1 /* BREAK_TYPE_UNHANLDED */));
                 }
             }
             _stoppedForException = true;

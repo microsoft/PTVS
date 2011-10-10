@@ -18,10 +18,12 @@ namespace Microsoft.PythonTools.Debugger {
     class ExceptionRaisedEventArgs : EventArgs {
         private readonly PythonException _exception;
         private readonly PythonThread _thread;
+        private readonly bool _isUnhandled;
 
-        public ExceptionRaisedEventArgs(PythonThread thread, PythonException exception) {
+        public ExceptionRaisedEventArgs(PythonThread thread, PythonException exception, bool isUnhandled) {
             _thread = thread;
             _exception = exception;
+            _isUnhandled = isUnhandled;
         }
 
         public PythonException Exception {
@@ -33,6 +35,12 @@ namespace Microsoft.PythonTools.Debugger {
         public PythonThread Thread {
             get {
                 return _thread;
+            }
+        }
+
+        public bool IsUnhandled {
+            get {
+                return _isUnhandled;
             }
         }
     }
