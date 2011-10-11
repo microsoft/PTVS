@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public class PythonAnalyzer : IInterpreterState, IGroupableAnalysisProject {
         private readonly IPythonInterpreter _interpreter;
-        private readonly Dictionary<string, ModuleReference> _modules;
+        private readonly ConcurrentDictionary<string, ModuleReference> _modules;
         private readonly Dictionary<string, ModuleInfo> _modulesByFilename;
         private readonly Dictionary<object, object> _itemCache;
         private BuiltinModule _builtinModule;
@@ -58,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis {
         public PythonAnalyzer(IPythonInterpreter pythonInterpreter, PythonLanguageVersion langVersion) {
             _langVersion = langVersion;
             _interpreter = pythonInterpreter;
-            _modules = new Dictionary<string, ModuleReference>();
+            _modules = new ConcurrentDictionary<string, ModuleReference>();
             _modulesByFilename = new Dictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _itemCache = new Dictionary<object, object>();
 
@@ -157,7 +158,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void RemoveModule(IProjectEntry entry) {
             _modulesByFilename.Remove(entry.FilePath);
-            Modules.Remove(PathToModuleName(entry.FilePath));
+            ModuleReference modRef;
+            Modules.TryRemove(PathToModuleName(entry.FilePath), out modRef);
             var projEntry2 = entry as IProjectEntry2;
             if (projEntry2 != null) {
                 projEntry2.RemovedFromProject();
@@ -721,7 +723,7 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        internal Dictionary<string, ModuleReference> Modules {
+        internal ConcurrentDictionary<string, ModuleReference> Modules {
             get { return _modules; }
         }
 

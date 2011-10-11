@@ -37,6 +37,7 @@ THREADS_LOCK = thread.allocate_lock()
 MODULES = []
 
 BREAK_ON_SYSTEMEXIT_ZERO = False
+DEBUG_STDLIB = False
 
 # Py3k compat - alias unicode to str
 try:

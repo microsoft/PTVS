@@ -33,7 +33,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public ISet<Namespace>[] IndexTypes {
             get { return _indexTypes; }
-            protected set { _indexTypes = value; }
         }
 
         public ISet<Namespace> UnionType {

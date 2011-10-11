@@ -24,6 +24,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public static IEqualityComparer<T> UnionComparer = new UnionEqualityComparer();
         private static HashSet<T> Empty = new HashSet<T>();
 
+        public TypeUnion() {
+        }
+
+        public TypeUnion(HashSet<T> set) {
+            _ns = set;
+        }
+
         public bool Add(T ns, PythonAnalyzer state) {
             if (_ns == Empty) {
                 return false;
@@ -71,6 +78,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return new HashSet<T>(this);
         }
 
+        public ISet<T> ToSetNoCopy() {
+            if (Count == 0) {
+                return EmptySet<T>.Instance;
+            }
+
+            return _ns;
+        }
+
         #region IEnumerable<T> Members
 
         public IEnumerator<T> GetEnumerator() {
@@ -110,5 +125,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     }
 
     class TypeUnion : TypeUnion<Namespace> {
+        public TypeUnion() {
+        }
+
+        public TypeUnion(HashSet<Namespace> set)
+            : base(set) {
+        }
     }
 }

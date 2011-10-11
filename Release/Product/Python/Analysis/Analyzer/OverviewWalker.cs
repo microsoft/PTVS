@@ -73,7 +73,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override void PostWalk(ClassDefinition node) {
             if (node.Body != null && node.Name != null) {
-                _scopes.Pop();
+                InterpreterScope prevScope;
+                do {
+                    prevScope = _scopes.Pop();
+                } while (prevScope.Node != node);
                 _curUnit = _analysisStack.Pop();
             }
         }
@@ -199,7 +202,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override void PostWalk(FunctionDefinition node) {
             if (node.Body != null && node.Name != null) {
-                _scopes.Pop();
+                InterpreterScope prevScope;
+                do {
+                    prevScope = _scopes.Pop();
+                } while (prevScope.Node != node);                
                 _curUnit = _analysisStack.Pop();
             }
         }

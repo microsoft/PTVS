@@ -188,6 +188,38 @@ from nt import *
         }
 
         [TestMethod]
+        public void ImportStarCorrectRefs() {
+            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+
+            var text1 = @"
+from mod2 import *
+
+a = D()
+";
+
+            var text2 = @"
+class D(object):
+    pass
+";
+
+            var mod1 = state.AddModule("mod1", "mod1", null);
+            Prepare(mod1, GetSourceUnit(text1, "mod1"));
+            var mod2 = state.AddModule("mod2", "mod2", null);
+            Prepare(mod2, GetSourceUnit(text2, "mod2"));
+
+            mod1.Analyze(true);
+            mod2.Analyze(true);
+            mod1.AnalysisGroup.AnalyzeQueuedEntries();
+
+            VerifyReferences(
+                UniqifyVariables(mod2.Analysis.GetVariables("D", GetLineNumber(text2, "class D"))),
+                new VariableLocation(2, 7, VariableType.Definition),
+                new VariableLocation(4, 5, VariableType.Reference)
+            );
+        }
+
+
+        [TestMethod]
         public void TestMutatingReferences() {
             var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
 
@@ -1132,7 +1164,7 @@ def f(a):
                     }
 
                     if (!found) {
-                        StringBuilder error = new StringBuilder(String.Format("Failed to find location: {0} {1} {2}" + Environment.NewLine, expected.StartLine, expected.StartCol, expected.Type));
+                        StringBuilder error = new StringBuilder(String.Format("Failed to find location: new VariableLocation({0}, {1} VariableType.{2})," + Environment.NewLine, expected.StartLine, expected.StartCol, expected.Type));
                         LocationNames(vars, error);
 
                         Assert.Fail(error.ToString());
@@ -1176,7 +1208,7 @@ abc()
 
         private static void LocationNames(List<IAnalysisVariable> vars, StringBuilder error) {
             foreach (var var in vars) {
-                error.AppendFormat("   {0} {1} {2}", var.Location.Line, var.Location.Column, var.Type);
+                error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.Line, var.Location.Column, var.Type);
                 error.AppendLine();
             }
         }

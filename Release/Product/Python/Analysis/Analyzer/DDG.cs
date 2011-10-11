@@ -195,7 +195,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             variable.AddTypes(node, _unit, newTypes);
-            variable.AddAssignment(node, _unit);
+            if (node.Name != "*") {
+                variable.AddAssignment(node, _unit);
+            }
         }
 
         public override bool Walk(FromImportStatement node) {

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -22,29 +23,35 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class DictionaryInfo : BuiltinInstanceInfo {
-        private readonly ISet<Namespace> _keyTypes;
-        private readonly ISet<Namespace> _valueTypes;
+        private readonly TypeUnion _keyTypes;
+        private readonly TypeUnion _valueTypes;
         private SequenceInfo _keyValueTuple;
         private ISet<Namespace> _getMethod, _itemsMethod, _keysMethod, _valuesMethod, _iterKeysMethod, _iterValuesMethod, _popMethod, _popItemMethod, _iterItemsMethod;
 
         public DictionaryInfo(HashSet<Namespace> keyTypes, HashSet<Namespace> valueTypes, PythonAnalyzer projectState)
             : base(projectState._dictType) {
-            _keyTypes = keyTypes;
-            _valueTypes = valueTypes;
+            _keyTypes = new TypeUnion(keyTypes);
+            _valueTypes = new TypeUnion(valueTypes);
         }
         
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            return _valueTypes;
+            return _valueTypes.ToSetNoCopy();
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
-            _keyTypes.UnionWith(index);
-            _valueTypes.UnionWith(value);
+            foreach (var indexVal in index) {
+                _keyTypes.Add(indexVal, unit.ProjectState);
+            }
+            foreach (var valueVal in value) {
+                _valueTypes.Add(valueVal, unit.ProjectState);
+            }
         }
 
         public bool AddValueTypes(ISet<Namespace> value) {
             int count = _valueTypes.Count;
-            _valueTypes.UnionWith(value);
+            foreach (var valueVal in value) {
+                _valueTypes.Add(valueVal, ProjectState);
+            }
             return count != _valueTypes.Count;
         }
 
@@ -116,9 +123,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Description {
             get {
                 // dict({k : v})
-                Namespace keyType = _keyTypes.GetUnionType();
+                Namespace keyType = _keyTypes.ToSetNoCopy().GetUnionType();
                 string keyName = keyType == null ? null : keyType.ShortDescription;
-                Namespace valueType = _valueTypes.GetUnionType();
+                Namespace valueType = _valueTypes.ToSetNoCopy().GetUnionType();
                 string valueName = valueType == null ? null : valueType.ShortDescription;
 
                 if (keyName != null || valueName != null) {
@@ -154,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_keyValueTuple == null) {
                     _keyValueTuple = new SequenceInfo(
-                        new[] { _keyTypes, _valueTypes },
+                        new[] { _keyTypes.ToSetNoCopy(), _valueTypes.ToSetNoCopy() },
                         ProjectState._tupleType
                     );
                 }
@@ -195,10 +202,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
                 if (args.Length <= 1) {
-                    return _myDict._valueTypes;
+                    return _myDict._valueTypes.ToSetNoCopy();
                 }
 
-                return _myDict._valueTypes.Union(args[1]);
+                return _myDict._valueTypes.ToSetNoCopy().Union(args[1]);
             }
         }
 
@@ -214,7 +221,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
                 if (_list == null) {
-                    _list = new ListInfo(new[] { _myDict._keyTypes }, unit.ProjectState._listType);
+                    _list = new ListInfo(new[] { _myDict._keyTypes.ToSetNoCopy() }, unit.ProjectState._listType);
                 }
                 return _list;
             }
@@ -231,7 +238,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
                 if (_list == null) {
-                    _list = new ListInfo(new[] { _myDict._valueTypes }, unit.ProjectState._listType);
+                    _list = new ListInfo(new[] { _myDict._valueTypes.ToSetNoCopy() }, unit.ProjectState._listType);
                 }
                 return _list;
             }
@@ -249,7 +256,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict._keyTypes }, unit.ProjectState._dictKeysType);
+                    _list = new IteratorInfo(new[] { _myDict._keyTypes.ToSetNoCopy() }, unit.ProjectState._dictKeysType);
                 }
                 return _list;
             }
@@ -266,7 +273,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict._valueTypes }, unit.ProjectState._dictValuesType);
+                    _list = new IteratorInfo(new[] { _myDict._valueTypes.ToSetNoCopy() }, unit.ProjectState._dictValuesType);
                 }
                 return _list;
             }
@@ -298,7 +305,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
-                return _myDict._valueTypes;
+                return _myDict._valueTypes.ToSetNoCopy();
             }
         }
 
@@ -316,5 +323,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         #endregion
+
+        public override string ToString() {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("dict(keys=(");
+            foreach (var type in _keyTypes) {
+                if (type.Push()) {
+                    sb.Append(type.ToString());
+                    sb.Append(", ");
+                    type.Pop();
+                }
+            }
+            sb.Append("), values = (");
+            foreach (var type in _valueTypes) {
+                if (type.Push()) {
+                    sb.Append(type.ToString());
+                    sb.Append(", ");
+                    type.Pop();
+                }
+            }
+            sb.Append(")");
+            return sb.ToString();
+        }
     }
 }
