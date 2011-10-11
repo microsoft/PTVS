@@ -2141,7 +2141,7 @@ abc = 42
             Directory.CreateDirectory(Path.Combine(tempPath, "foo"));
 
             var files = new[] { 
-                new { Content = "",                   FullPath = Path.Combine(tempPath, "foo\\__init__.py") },
+                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "foo\\__init__.py") },
                 new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "foo\\x.py") } ,
                 new { Content = "abc = 42",           FullPath = Path.Combine(tempPath, "foo\\y.py") } 
             };
@@ -2171,6 +2171,7 @@ abc = 42
             y.Analyze();
 
             AssertContainsExactly(x.Analysis.GetTypesFromName("abc", 1), IntType);
+            AssertContainsExactly(package.Analysis.GetTypesFromName("abc", 1), IntType);
         }
 
         /// <summary>

@@ -207,7 +207,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (relativeName != null) {
                 // attempt relative import...
                 var curPackage = GlobalScope;
-                for (int i = 0; i < relativeName.DotCount && curPackage != null; i++) {
+                int dotCount = relativeName.DotCount;
+                if (curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.py") || 
+                    curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.pyw")) {
+                    // relative import from inside of a package definition, we don't go out
+                    // of our own package.
+                    dotCount--;
+                }
+
+                for (int i = 0; i < dotCount && curPackage != null; i++) {
                     curPackage = curPackage.ParentPackage;
                 }
 
