@@ -21,6 +21,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class BuiltinMethodInfo : BuiltinNamespace<IPythonType> {
         private readonly IPythonFunction _function;
         private readonly PythonMemberType _memberType;
+        internal readonly bool _fromFunction;
         private string _doc;
         private readonly ISet<Namespace> _returnTypes;
         private BoundBuiltinMethodInfo _boundMethod;
@@ -38,7 +39,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(projectState.Types.BuiltinMethodDescriptor, projectState) {
             _memberType = memType;
             _function = function;
-            _returnTypes = Utils.GetReturnTypes(function, projectState);            
+            _returnTypes = Utils.GetReturnTypes(function, projectState);
+            _fromFunction = true;
         }
 
         public override IPythonType PythonType {

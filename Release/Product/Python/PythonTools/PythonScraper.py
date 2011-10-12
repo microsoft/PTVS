@@ -133,13 +133,13 @@ def memoize_type_name(name):
     TYPE_NAMES[name] = name
     return name
 
-def generate_builtin_function(function):
+def generate_builtin_function(function, is_method = False):
     function_table = {}
     
     if isinstance(function.__doc__, str):
         function_table['doc'] = function.__doc__
 
-    function_table['overloads'] = BuiltinScraper.get_overloads(function)
+    function_table['overloads'] = BuiltinScraper.get_overloads(function, True)
     
     return function_table
     
@@ -177,7 +177,7 @@ def generate_member(obj, is_hidden=False):
         member_table['value'] = generate_type(obj, is_hidden=is_hidden)
     elif isinstance(obj, (types.BuiltinMethodType, slot_wrapper_type, method_descriptor_type)):
         member_table['kind'] = 'method'        
-        member_table['value'] = generate_builtin_function(obj)
+        member_table['value'] = generate_builtin_function(obj, True)
     elif isinstance(obj, (getset_descriptor_type, member_descriptor_type)):
         member_table['kind'] = 'property'        
         member_table['value'] = generate_getset_descriptor(obj)
@@ -451,7 +451,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('7')
+    f.write('8')
     f.close()
 
     # inspect extension modules installed into site-packages

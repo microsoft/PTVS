@@ -118,7 +118,7 @@ def get_function_overloads(targets):
     
     return tuple(res)
 
-def get_overloads(func):
+def get_overloads(func, is_method = False):
     if type(func) == type(list.append):
         func = PythonOps.GetBuiltinMethodDescriptorTemplate(func)
 

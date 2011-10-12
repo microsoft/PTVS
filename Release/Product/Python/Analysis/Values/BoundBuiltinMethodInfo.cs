@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var overloads = _method.Function.Overloads;
                     var result = new OverloadResult[overloads.Count];
                     for (int i = 0; i < result.Length; i++) {
-                        result[i] = new BuiltinFunctionOverloadResult(_method.ProjectState, _method.Name, overloads[i], 0);
+                        result[i] = new BuiltinFunctionOverloadResult(_method.ProjectState, _method.Name, overloads[i], _method._fromFunction ? 1 : 0);
                     }
                     _overloads = result;
                 }

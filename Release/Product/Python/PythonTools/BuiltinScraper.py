@@ -175,7 +175,7 @@ DOC_REGEX_CFUNC = ('([a-zA-Z_][\\w]*\\.)?'                                    # 
             '(\s*[[]?\s*,\s*(?:[a-zA-Z_]+\s+)?(?:(?:(?:\\*)|(?:\\*\\*))?\s*[a-zA-Z_][\\w]*)\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*\\)'    # additional args, accepts ", foo", [, foo]"
             '(\s*->\s*[a-zA-Z_][\\w]*)?')                               # return type
 
-def get_overloads_from_doc_string(doc_str, mod, obj_class):
+def get_overloads_from_doc_string(doc_str, mod, obj_class, is_method = False):
     decl_mod = None
     if mod is not None:
         decl_mod = sys.modules.get(mod, None)
@@ -204,6 +204,9 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class):
             else:
                 ret_type = PythonScraper.type_to_name(type(None))
     
+            if is_method:
+                args = [{'type': PythonScraper.type_to_name(object), 'name': 'self'}] + args
+
             overload = {
                 'args': args,
                 'ret_type' : ret_type
@@ -216,10 +219,11 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class):
     
     return tuple(res)
 
-def get_overloads(func):
+def get_overloads(func, is_method = False):
     return get_overloads_from_doc_string(func.__doc__, 
                                          getattr(func, '__module__', None), 
-                                         getattr(func, '__objclass__', None))
+                                         getattr(func, '__objclass__', None),
+                                         is_method)
 
 def get_descriptor_type(descriptor):
 	return object
