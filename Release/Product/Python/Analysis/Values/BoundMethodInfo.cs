@@ -52,9 +52,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override LocationInfo Location {
+        public override IEnumerable<LocationInfo> Locations {
             get {
-                return _function.Location;
+                return _function.Locations;
             }
         }
 

@@ -12,12 +12,13 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonModule : PythonObject<PythonModule>, IPythonModule {
+    class IronPythonModule : PythonObject<PythonModule>, IPythonModule2 {
         private readonly string _name;
 
         public IronPythonModule(IronPythonInterpreter interpreter, PythonModule mod, string name)
@@ -56,6 +57,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
             Interpreter.AddAssembly(typeof(System.Xaml.XamlReader).Assembly);               // System.Xaml
         }
 
+
+        #endregion
+
+        #region IPythonModule2 Members
+
+        public string Documentation {
+            get { 
+                object docValue;
+                if (!Value.Get__dict__().TryGetValue("__doc__", out docValue) || !(docValue is string)) {
+                    return String.Empty;
+                }
+                return (string)docValue;
+            }
+        }
 
         #endregion
     }

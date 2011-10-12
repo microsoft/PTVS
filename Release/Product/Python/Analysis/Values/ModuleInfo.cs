@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 var result = new StringBuilder("Python module ");
                 result.Append(Name);
-                var doc = ProjectEntry.Tree.Documentation.TrimDocumentation();
+                var doc = ProjectEntry.Tree.Body.Documentation.TrimDocumentation();
                 if (doc != null) {
                     result.Append("\n\n");
                     result.Append(doc);
@@ -187,9 +187,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override LocationInfo Location {
+        public override string Documentation {
             get {
-                return new LocationInfo(ProjectEntry, 1, 1);
+                return ProjectEntry.Tree.Body.Documentation.TrimDocumentation() ?? String.Empty;
+            }
+        }
+
+        public override IEnumerable<LocationInfo> Locations {
+            get {
+                return new[] { new LocationInfo(ProjectEntry, 1, 1) };
             }
         }
 

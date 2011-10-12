@@ -747,6 +747,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                         return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
                     } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
+                        _newLineLocations.Add(CurrentIndex);
 
                         // skip \<eoln> unless followed by EOF:
                         if (Peek() == EOF) {

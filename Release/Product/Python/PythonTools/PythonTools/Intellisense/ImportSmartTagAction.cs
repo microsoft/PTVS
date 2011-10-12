@@ -70,18 +70,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     firstStatement = false;
 
-                    if (statement is ImportStatement) {
-                        // we insert after this
-                        continue;
-                    } else if (statement is FromImportStatement) {
-                        // we might update this, we might insert after
-                        FromImportStatement fromImport = statement as FromImportStatement;
-                        if (fromImport.Root.MakeString() == _fromName) {
-                            // update the existing from ... import statement to include the new name.
-                            UpdateFromImport(curAst, fromImport);
-                            return;
+                    // __future__ imports go first
+                    if (_fromName == null || _fromName != "__future__") {
+                        if (statement is ImportStatement) {
+                            // we insert after this
+                            continue;
+                        } else if (statement is FromImportStatement) {
+                            // we might update this, we might insert after
+                            FromImportStatement fromImport = statement as FromImportStatement;
+                            if (fromImport.Root.MakeString() == _fromName) {
+                                // update the existing from ... import statement to include the new name.
+                                UpdateFromImport(curAst, fromImport);
+                                return;
+                            }
+                            continue;
                         }
-                        continue;
                     }
 
                     // this isn't an import, we insert before this statement

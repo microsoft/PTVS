@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -29,6 +30,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public Namespace[] Members {
             get {
                 return _members;
+            }
+        }
+
+        public override PythonMemberType ResultType {
+            get { return PythonMemberType.Multiple; }
+        }
+
+        public override ICollection<OverloadResult> Overloads {
+            get {
+                List<OverloadResult> res = new List<OverloadResult>();
+                foreach (var member in _members) {
+                    res.AddRange(member.Overloads);
+                }
+                return res.ToArray();
             }
         }
 

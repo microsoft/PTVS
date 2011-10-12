@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonProperty : IBuiltinProperty, ILocatedMember {
@@ -70,8 +71,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         #region ILocatedMember Members
 
-        public Analysis.LocationInfo Location {
-            get { return new Analysis.LocationInfo(_declaringModule, _line, _column); }
+        public IEnumerable<LocationInfo> Locations {
+            get { yield return new LocationInfo(_declaringModule, _line, _column); }
         }
 
         #endregion

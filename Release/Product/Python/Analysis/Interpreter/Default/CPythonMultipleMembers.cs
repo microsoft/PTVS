@@ -12,13 +12,11 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonMultipleMembers : IPythonMultipleMembers {
+    class CPythonMultipleMembers : IPythonMultipleMembers, ILocatedMember {
         private readonly IMember[] _members;
 
         public CPythonMultipleMembers(IMember[] members) {
@@ -39,6 +37,23 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public PythonMemberType MemberType {
             get { return PythonMemberType.Multiple; }
+        }
+
+        #endregion
+
+        #region ILocatedMember Members
+
+        public IEnumerable<LocationInfo> Locations {
+            get {
+                foreach (var member in _members) {
+                    ILocatedMember locatedMember = member as ILocatedMember;
+                    if (locatedMember != null) {
+                        foreach (var location in locatedMember.Locations) {
+                            yield return location;
+                        }
+                    }
+                }
+            }
         }
 
         #endregion

@@ -384,22 +384,33 @@ namespace Microsoft.PythonTools.Intellisense {
             var expr = Statement.GetExpression(analysis.GetAstFromText(text, lineNo).Body);
 
             if (expr != null && expr is NameExpression) {
-                var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                    exprRange.Value.Span,
-                    SpanTrackingMode.EdgeExclusive
-                );
+                var nameExpr = (NameExpression)expr;
 
-                var values = analysis.GetValues(text, lineNo).ToArray();
-                if (values.Length == 0) {
-                    string name = ((NameExpression)expr).Name;
-                    var imports = analysis.ProjectState.FindNameInAllModules(name);
+                if (!IsImplicitlyDefinedName(nameExpr)) {
+                    var applicableSpan = parser.Snapshot.CreateTrackingSpan(
+                        exprRange.Value.Span,
+                        SpanTrackingMode.EdgeExclusive
+                    );
 
-                    return new MissingImportAnalysis(imports, applicableSpan);
+                    var values = analysis.GetValues(text, lineNo).ToArray();
+                    if (values.Length == 0) {
+                        string name = nameExpr.Name;
+                        var imports = analysis.ProjectState.FindNameInAllModules(name);
+
+                        return new MissingImportAnalysis(imports, applicableSpan);
+                    }
                 }
             }
 
             // if we have type information don't offer to add imports
             return MissingImportAnalysis.Empty;
+        }
+
+        private static bool IsImplicitlyDefinedName(NameExpression nameExpr) {
+            return nameExpr.Name == "__all__" ||
+                nameExpr.Name == "__file__" ||
+                nameExpr.Name == "__doc__" ||
+                nameExpr.Name == "__name__";
         }
 
         public bool IsAnalyzing {

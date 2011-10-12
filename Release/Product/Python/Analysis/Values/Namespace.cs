@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -39,9 +40,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         #region Namespace Information
+        /*
+        public LocationInfo Location {
+            get {
+            }
+        }*/
 
-        public virtual LocationInfo Location {
-            get { return null; }
+        public virtual IEnumerable<LocationInfo> Locations {
+            get { return LocationInfo.Empty; }
+        }
+
+        public LocationInfo Location {
+            get {
+                return Locations.FirstOrDefault();
+            }
         }
 
         private static OverloadResult[] EmptyOverloadResult = new OverloadResult[0];

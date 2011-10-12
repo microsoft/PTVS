@@ -79,24 +79,24 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             foreach (var keyValue in moduleInfo.Scope.Variables) {
-                res[keyValue.Key] = GenerateMember(keyValue.Value);
+                res[keyValue.Key] = GenerateMember(keyValue.Value, moduleInfo);
             }
             return res;
         }
 
-        private object GenerateMember(VariableDef variableDef, bool isRef = false) {
+        private object GenerateMember(VariableDef variableDef, ModuleInfo declModule, bool isRef = false) {
             Dictionary<string, object> memberEntry = new Dictionary<string, object>() {
-                {"kind", GetMemberKind(variableDef, isRef) },
-                {"value", GetMemberValue(variableDef, isRef) }
+                {"kind", GetMemberKind(variableDef, declModule, isRef) },
+                {"value", GetMemberValue(variableDef, declModule, isRef) }
             };
 
             return memberEntry;
         }
 
-        private object GetMemberValue(VariableDef variableDef, bool isRef) {
+        private object GetMemberValue(VariableDef variableDef, ModuleInfo declModule, bool isRef) {
             if (variableDef.Types.Count == 1) {
                 var type = variableDef.Types.First();
-                var res = GetMemberValue(type, isRef);
+                var res = GetMemberValue(type, declModule, isRef);
                 if (res == null) {
                     _errors.Add(String.Format("Cannot save single member: {0}", variableDef.Types.First()));
                 }
@@ -110,8 +110,8 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var type in variableDef.Types) {
                     res.Add(
                         new Dictionary<string, object>() { 
-                            { "kind", GetMemberKind(type, isRef) }, 
-                            { "value", GetMemberValue(type, isRef) }
+                            { "kind", GetMemberKind(type, declModule, isRef) }, 
+                            { "value", GetMemberValue(type, declModule, isRef) }
                         }
                     );
                 }
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private object GetMemberValue(Namespace type, bool isRef) {
+        private object GetMemberValue(Namespace type, ModuleInfo declModule, bool isRef) {
             switch (type.ResultType) {
                 case PythonMemberType.Function:
                     FunctionInfo fi = type as FunctionInfo;
@@ -149,10 +149,10 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Class:
                     ClassInfo ci = type as ClassInfo;
                     if (ci != null) {
-                        if (isRef) {
+                        if (isRef || ci.DeclaringModule.MyScope != declModule) {
                             return GenerateClassRef(ci);
                         } else {
-                            return GenerateClass(ci);
+                            return GenerateClass(ci, declModule);
                         }
                     }
 
@@ -179,6 +179,13 @@ namespace Microsoft.PythonTools.Analysis {
                     if (instInfo != null) {
                         return new Dictionary<string, object>() {
                             { "type" , GenerateTypeName(instInfo.ClassInfo) }
+                        };
+                    }
+
+                    BuiltinInstanceInfo builtinInst = type as BuiltinInstanceInfo;
+                    if (builtinInst != null) {
+                        return new Dictionary<string, object>() {
+                            { "type" , GenerateTypeName(builtinInst.ClassInfo) }
                         };
                     }
 
@@ -209,9 +216,9 @@ namespace Microsoft.PythonTools.Analysis {
             };
         }
 
-        private string GetMemberKind(VariableDef variableDef, bool isRef) {
+        private string GetMemberKind(VariableDef variableDef, ModuleInfo declModule, bool isRef) {
             if (variableDef.Types.Count == 1) {
-                return GetMemberKind(variableDef.Types.First(), isRef);
+                return GetMemberKind(variableDef.Types.First(), declModule, isRef);
             } else if (variableDef.Types.Count == 0) {
                 // typed to object
                 return "data";
@@ -220,7 +227,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private static string GetMemberKind(Namespace type, bool isRef) {
+        private static string GetMemberKind(Namespace type, ModuleInfo declModule, bool isRef) {
             switch (type.ResultType) {
                 case PythonMemberType.Function:
                     if (type is BuiltinFunctionInfo) {
@@ -230,7 +237,7 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Method: return "method";
                 case PythonMemberType.Property: return "property";
                 case PythonMemberType.Class:
-                    if (isRef || type is BuiltinClassInfo) {
+                    if (isRef || type is BuiltinClassInfo || (type is ClassInfo && ((ClassInfo)type).DeclaringModule.MyScope != declModule)) {
                         return "typeref";
                     }
                     return "type";
@@ -255,11 +262,11 @@ namespace Microsoft.PythonTools.Analysis {
             };
         }
 
-        private Dictionary<string, object> GenerateClass(ClassInfo ci) {
+        private Dictionary<string, object> GenerateClass(ClassInfo ci, ModuleInfo declModule) {
             return new Dictionary<string, object>() {
                 { "mro", GetClassMro(ci) },
                 { "bases", GetClassBases(ci) },
-                { "members" , GetClassMembers(ci) },
+                { "members" , GetClassMembers(ci, declModule) },
                 { "doc", MemoizeString(ci.Documentation) },
                 { "builtin", false },
                 { "location", GenerateLocation(ci.Location) }
@@ -301,10 +308,10 @@ namespace Microsoft.PythonTools.Analysis {
             };
         }
 
-        private object GetClassMembers(ClassInfo ci) {
+        private object GetClassMembers(ClassInfo ci, ModuleInfo declModule) {
             Dictionary<string, object> memTable = new Dictionary<string, object>();
             foreach (var keyValue in ci.Scope.Variables) {
-                memTable[keyValue.Key] = GenerateMember(keyValue.Value, true);
+                memTable[keyValue.Key] = GenerateMember(keyValue.Value, declModule, true);
             }
 
             return memTable;
@@ -389,6 +396,9 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private string MemoizeString(string input) {
+            if (input == null) {
+                return null;
+            }
             string res;
             if (!_MemoizedStrings.TryGetValue(input, out res)) {
                 _MemoizedStrings[input] = res = input;

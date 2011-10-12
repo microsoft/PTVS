@@ -20,7 +20,7 @@
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" key1="K" mod1="Control" key2="7" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" key1="K" mod1="Control" key2="8" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" key1="K" mod1="Control" key2="9" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="O" mod2="Control" editor="guidVSStd97"/>    
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>    
   </KeyBindings>
 
   <!--The Commands section is where we the commands, menus and menu groups are defined.

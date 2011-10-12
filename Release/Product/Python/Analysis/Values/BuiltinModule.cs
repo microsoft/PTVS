@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
@@ -45,11 +46,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = ProjectState.GetAllMembers(_interpreterModule, moduleContext);
             if (_specializedValues != null) {
                 foreach (var value in _specializedValues) {
-                    res[value.Key] = value.Value;
+                    ISet<Namespace> existing;
+                    if(!res.TryGetValue(value.Key, out existing)) {
+                        res[value.Key] = value.Value;
+                    } else {
+                        HashSet<Namespace> newSet = new HashSet<Namespace>(existing);
+                        newSet.UnionWith(value.Value);
+                        res[value.Key] = newSet;
+                    }
                 }
             }
             return res;
-        }        
+        }
+
+        public override string Documentation {
+            get {
+                IPythonModule2 mod2 = _type as IPythonModule2;
+                if (mod2 != null) {
+                    return mod2.Documentation;
+                }
+
+                return String.Empty;
+            }
+        }
 
         public override string Description {
             get {

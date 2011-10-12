@@ -303,13 +303,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return "FunctionInfo " + _analysisUnit.FullName + " (" + _declVersion + ")";
         }
 
-        public override LocationInfo Location {
+        public override IEnumerable<LocationInfo> Locations {
             get {
                 var start = FunctionDefinition.NameExpression.GetStart(FunctionDefinition.GlobalParent);
-                return new LocationInfo(
+                return new[] { new LocationInfo(
                     ProjectEntry,
                     start.Line,
-                    start.Column);
+                    start.Column)
+                };
             }
         }
 

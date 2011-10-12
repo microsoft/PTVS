@@ -61,6 +61,7 @@
     <Compile Include="ExportedMemberInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
+    <Compile Include="Interpreter\IPythonModule2.cs" />
     <Compile Include="Interpreter\IInterpreterWithCompletionDatabase2.cs" />
     <Compile Include="Interpreter\ILocatedMember.cs" />
     <Compile Include="Interpreter\Default\CPythonBuiltinModule.cs" />

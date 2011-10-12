@@ -19,6 +19,7 @@ namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo> {
         private readonly int _line, _column;
         private readonly IProjectEntry _entry;
+        internal static LocationInfo[] Empty = new LocationInfo[0];
 
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
 

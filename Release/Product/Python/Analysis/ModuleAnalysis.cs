@@ -89,8 +89,8 @@ namespace Microsoft.PythonTools.Analysis {
             VariableDef def = referenceable as VariableDef;
             if (def != null) {
                 foreach (var type in def.Types) {
-                    if (type.Location != null) {
-                        yield return new AnalysisVariable(VariableType.Value, type.Location);
+                    foreach (var location in type.Locations) {
+                        yield return new AnalysisVariable(VariableType.Value, location);
                     }
                 }
             }

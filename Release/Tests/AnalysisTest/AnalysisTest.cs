@@ -836,6 +836,31 @@ class NoDescriptor:
             AssertContains(entry.GetMembers("self.foo", GetLineNumber(text, "self.foo")).Select(x => x.Name), "nodesc_method");
         }
 
+        /// <summary>
+        /// Verifies that a line in triple quoted string which ends with a \ (eating the newline) doesn't throw
+        /// off our newline tracking.
+        /// </summary>
+        [TestMethod]
+        public void TestReferencesTripleQuotedStringWithBackslash() {
+            // instance variables
+            var text = @"
+'''this is a triple quoted string\
+that ends with a backslash on a line\
+and our line info should remain correct'''
+
+# add ref w/o type info
+class C(object):
+    def __init__(self, foo):
+        self.abc = foo
+        del self.abc
+        print self.abc
+
+";
+            var entry = ProcessText(text);
+            VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(9, 14, VariableType.Definition), new VariableLocation(10, 18, VariableType.Reference), new VariableLocation(11, 20, VariableType.Reference));
+            VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "foo")), new VariableLocation(8, 24, VariableType.Definition), new VariableLocation(9, 20, VariableType.Reference));
+        }
+
         [TestMethod]
         public void TestReferences() {
             // instance variables
@@ -2173,6 +2198,42 @@ abc = 42
             AssertContainsExactly(x.Analysis.GetTypesFromName("abc", 1), IntType);
             AssertContainsExactly(package.Analysis.GetTypesFromName("abc", 1), IntType);
         }
+
+        [TestMethod]
+        public void TestPackageRelativeImportAliasedMember() {
+            // similar to unittest package which has unittest.main which contains a function called "main".
+            // Make sure we see the function, not the module.
+            string tempPath = Path.GetTempPath();
+            Directory.CreateDirectory(Path.Combine(tempPath, "foo"));
+
+            var files = new[] { 
+                new { Content = "from .y import y", FullPath = Path.Combine(tempPath, "foo\\__init__.py") },
+                new { Content = "def y(): pass",    FullPath = Path.Combine(tempPath, "foo\\y.py") } 
+            };
+
+            var srcs = new TextReader[files.Length];
+            for (int i = 0; i < files.Length; i++) {
+                srcs[i] = GetSourceUnit(files[i].Content, files[i].FullPath);
+                File.WriteAllText(files[i].FullPath, files[i].Content);
+            }
+
+            var src1 = srcs[0];
+            var src2 = srcs[1];
+
+            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+
+            var package = state.AddModule("foo", files[0].FullPath, EmptyAnalysisCookie.Instance);
+            var y = state.AddModule("foo.y", files[1].FullPath, EmptyAnalysisCookie.Instance);
+
+            Prepare(package, src1);
+            Prepare(y, src2);
+
+            package.Analyze();
+            y.Analyze();
+
+            AssertContainsExactly(package.Analysis.GetTypesFromName("y", 1), FunctionType);
+        }
+
 
         /// <summary>
         /// Verify that the analyzer has the proper algorithm for turning a filename into a package name

@@ -63,12 +63,14 @@ namespace Microsoft.PythonTools.Analysis {
             _modulesByFilename = new Dictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _itemCache = new Dictionary<object, object>();
 
-            InitializeBuiltinModules();
+            var allBuiltins = InitializeBuiltinModules();
             pythonInterpreter.ModuleNamesChanged += new EventHandler(ModuleNamesChanged);
 
             _queue = new Deque<AnalysisUnit>();
 
             LoadKnownTypes();
+
+            FinishBuiltinsInit(allBuiltins);
 
             pythonInterpreter.Initialize(this);
 
@@ -126,7 +128,7 @@ namespace Microsoft.PythonTools.Analysis {
         void ModuleNamesChanged(object sender, EventArgs e) {
             LoadKnownTypes();
 
-            InitializeBuiltinModules();
+            FinishBuiltinsInit(InitializeBuiltinModules());
         }
 
         #region Public API
@@ -285,9 +287,11 @@ namespace Microsoft.PythonTools.Analysis {
                             return false;
                         }
 
-                        if (type.Location != null && type.Location.ProjectEntry != modInfo.ProjectEntry) {
-                            // declared in another module
-                            return false;
+                        foreach (var location in type.Locations) {
+                            if (location.ProjectEntry != modInfo.ProjectEntry) {
+                                // declared in another module
+                                return false;
+                            }
                         }
                     }
 
@@ -300,9 +304,24 @@ namespace Microsoft.PythonTools.Analysis {
         private static bool IsExcludedBuiltin(BuiltinModule builtin, IMember mem) {
             IPythonFunction func;
             IPythonType type;
-            return mem is IPythonModule ||
-                                    ((func = mem as IPythonFunction) != null && func.DeclaringModule != builtin.InterpreterModule) ||
-                                    ((type = mem as IPythonType) != null && type.DeclaringModule != builtin.InterpreterModule);
+            IPythonConstant constant;
+            if (mem is IPythonModule || // modules are handled specially
+                ((func = mem as IPythonFunction) != null && func.DeclaringModule != builtin.InterpreterModule) ||   // function imported into another module
+                ((type = mem as IPythonType) != null && type.DeclaringModule != builtin.InterpreterModule) ||   // type imported into another module
+                ((constant = mem as IPythonConstant) != null && constant.Type.TypeId == BuiltinTypeId.Object)) {    // constant which we have no real type info for.
+                return true;
+            }
+
+            if (constant != null) {
+                if (constant.Type.DeclaringModule.Name == "__future__" && 
+                    constant.Type.Name == "_Feature" && 
+                    builtin.Name != "__future__") {
+                    // someone has done a from __future__ import blah, don't include import in another
+                    // module in the list of places where you can import this from.
+                    return true;
+                }
+            }
+            return false;
         }
 
         private static bool PackageNameMatches(string name, string modName) {
@@ -540,7 +559,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private void InitializeBuiltinModules() {
+        private Dictionary<string, BuiltinModule> InitializeBuiltinModules() {
             var names = _interpreter.GetModuleNames();
             Dictionary<string, BuiltinModule> allBuiltins = new Dictionary<string, BuiltinModule>();
             foreach (string modName in names) {
@@ -563,6 +582,10 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            return allBuiltins;
+       }
+
+        private void FinishBuiltinsInit(Dictionary<string, BuiltinModule> allBuiltins) {
             // now make sure children modules are listed in their parents...
             foreach (var nameModule in allBuiltins) {
                 var modName = nameModule.Key;
@@ -587,7 +610,15 @@ namespace Microsoft.PythonTools.Analysis {
                     } else {
                         curModName = modName.Substring(dotStart + 1, dotEnd - dotStart - 1);
                     }
-                    parentModule[curModName] = module;
+                    ISet<Namespace> existing;
+                    if (parentModule.TryGetMember(curModName, out existing)) {
+                        // module is aliased w/ a member, merge it in...
+                        var newSet = new HashSet<Namespace>(existing);
+                        newSet.Add(module);
+                        parentModule[curModName] = newSet;
+                    } else {
+                        parentModule[curModName] = module;
+                    }
                     module = parentModule;
                 } while (dotStart != 0 && (dotStart = parentName.LastIndexOf('.', dotStart - 1)) != -1);
             }

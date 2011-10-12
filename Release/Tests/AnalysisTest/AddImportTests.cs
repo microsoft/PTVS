@@ -60,6 +60,22 @@ itertools";
         }
 
         /// <summary>
+        /// Future import gets added after doc string, but before other imports.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DocStringFuture() {
+            string expectedText = @"'''foo'''
+from __future__ import with_statement
+import itertools
+
+with_statement";
+
+            AddSmartTagTest("DocStringFuture.py", 4, 10, new[] { "from __future__ import with_statement" }, 0, expectedText);
+        }
+
+
+        /// <summary>
         /// Add a from .. import for a function in another module
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]

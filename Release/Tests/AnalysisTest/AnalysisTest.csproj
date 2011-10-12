@@ -380,6 +380,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Python.VS.TestData\AddImport\DocStringFuture.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\AddImport\ImportBuiltinFunction.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

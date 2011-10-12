@@ -120,9 +120,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         #region ILocatedMember Members
 
-        public LocationInfo Location {
+        public IEnumerable<LocationInfo> Locations {
             get {
-                return new LocationInfo(_declaringModule, _line, _column);
+                yield return new LocationInfo(_declaringModule, _line, _column);
             }
         }
 

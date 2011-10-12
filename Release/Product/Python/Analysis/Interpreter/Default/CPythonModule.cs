@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
+    class CPythonModule : IPythonModule2, IProjectEntry, ILocatedMember {
         private readonly string _modName;
         private readonly string _dbFile;
         private readonly PythonTypeDatabase _typeDb;
@@ -46,19 +46,26 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _loaded = true;
 
                 _loadDepth++;
-                using (var stream = new FileStream(_dbFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                    Dictionary<string, object> contents = null;
-                    try {
-                        contents = (Dictionary<string, object>)Unpickle.Load(stream);
-                    } catch (InvalidOperationException) {
-                        // Bug 511 - http://pytools.codeplex.com/workitem/511
-                        // Ignore a corrupt database file.
-                    }
+                try {
+                    using (var stream = new FileStream(_dbFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                        Dictionary<string, object> contents = null;
+                        try {
+                            contents = (Dictionary<string, object>)Unpickle.Load(stream);
+                        } catch (InvalidOperationException) {
+                            // Bug 511 - http://pytools.codeplex.com/workitem/511
+                            // Ignore a corrupt database file.
+                        }
 
-                    if (contents != null) {
-                        LoadModule(contents);
+                        if (contents != null) {
+                            LoadModule(contents);
+                        }
                     }
+                } catch (FileNotFoundException) {
+                    // if the file got deleted before we've loaded it don't crash...
+                } catch (IOException) {
+                    // or if someone has locked the file for some reason, also don't crash...
                 }
+
                 _loadDepth--;
 
                 // don't run fixups until we've processed all of the inter-dependent modules.
@@ -137,6 +144,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public void Imported(IModuleContext context) {
+        }
+
+        #endregion
+
+        #region IPythonModule2 Members
+
+        public string Documentation {
+            get { return _docString; }
         }
 
         #endregion
@@ -231,8 +246,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         #region ILocatedMember Members
 
-        public LocationInfo Location {
-            get { return new LocationInfo(this, 1, 1); }
+        public IEnumerable<LocationInfo> Locations {
+            get { yield return new LocationInfo(this, 1, 1); }
         }
 
         #endregion
@@ -240,5 +255,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         internal static CPythonModule GetDeclaringModuleFromContainer(IMemberContainer declaringType) {
             return (declaringType as CPythonModule) ?? (CPythonModule)((CPythonType)declaringType).DeclaringModule;
         }
+
     }
 }

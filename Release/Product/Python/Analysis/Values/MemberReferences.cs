@@ -55,7 +55,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 ILocatedMember locatedMember = member as ILocatedMember;
                 if (locatedMember != null) {
-                    res.Add(new DefinitionList(locatedMember.Location));
+                    foreach(var location in locatedMember.Locations) {
+                        res.Add(new DefinitionList(location));
+                    }
                 }
                 return res;
             }

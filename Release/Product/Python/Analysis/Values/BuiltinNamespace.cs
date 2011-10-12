@@ -96,14 +96,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        public override LocationInfo Location {
+        public override IEnumerable<LocationInfo> Locations {
             get {
                 ILocatedMember locatedMem = GetLocatedMember();
                 if (locatedMem != null) {
-                    return locatedMem.Location;
+                    return locatedMem.Locations;
                 }
-                return null;
+                return LocationInfo.Empty;
             }
         }
+
     }
 }

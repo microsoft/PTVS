@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 6;
+        public static readonly int CurrentVersion = 7;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _dbDir = databaseDirectory;

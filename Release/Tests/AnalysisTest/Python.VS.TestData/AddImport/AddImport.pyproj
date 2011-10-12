@@ -25,6 +25,7 @@
   <ItemGroup>
     <Compile Include="DocString.py" />
     <Compile Include="UnicodeDocString.py" />
+    <Compile Include="DocStringFuture.py" />
     <Compile Include="ImportFunctionFrom.py" />
     <Compile Include="test_package\__init__.py" />
     <Compile Include="test_package\package_module.py" />

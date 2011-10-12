@@ -165,8 +165,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         #region ILocatedMember Members
 
-        public LocationInfo Location {
-            get { return new LocationInfo(_module, _line, _column); }
+        public IEnumerable<LocationInfo> Locations {
+            get { yield return new LocationInfo(_module, _line, _column); }
         }
 
         #endregion
