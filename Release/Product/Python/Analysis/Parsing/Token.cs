@@ -273,6 +273,12 @@ namespace Microsoft.PythonTools.Parsing {
         }
     }
 
+    internal sealed class StatementSymbolToken : SymbolToken {
+        public StatementSymbolToken(TokenKind kind, String image)
+            : base(kind, image) {
+        }
+    }
+
     internal class VerbatimToken : SymbolToken {
         private readonly string _verbatimImage;
 

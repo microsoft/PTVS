@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             var options = parserOptions ?? ParserOptions.Default;
 
-            Tokenizer tokenizer = new Tokenizer(version, options.ErrorSink, options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None);
+            Tokenizer tokenizer = new Tokenizer(version, options.ErrorSink, (options.Verbatim ? TokenizerOptions.Verbatim : TokenizerOptions.None) | TokenizerOptions.GroupingRecovery);
 
             tokenizer.Initialize(null, reader, SourceLocation.MinValue);
             tokenizer.IndentationInconsistencySeverity = options.IndentationInconsistencySeverity;            
@@ -2945,10 +2945,13 @@ namespace Microsoft.PythonTools.Parsing {
                     return Error(_verbatim ? "" : null);
                 default:
                     ReportSyntaxError(_lookahead.Token, _lookahead.Span, ErrorCodes.SyntaxError, _allowIncomplete || _tokenizer.EndContinues);
-                    NextToken();
+                    if (_lookahead.Token.Kind != TokenKind.NewLine) {
+                        NextToken();
+                        return Error(_verbatim ? (_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
+                    }
 
                     // error node
-                    return Error(_verbatim ? (_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
+                    return Error("");
             }
         }
 

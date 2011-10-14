@@ -31,7 +31,7 @@ namespace AnalysisTest {
     /// </summary>
     public class BaseAnalysisTest {
         public IPythonInterpreter Interpreter;
-        public IPythonType PyObjectType, IntType, StringType, FloatType, TypeType, ListType, TupleType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType;
+        public IPythonType PyObjectType, IntType, StringType, FloatType, TypeType, ListType, TupleType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
         public string[] _objectMembers, _functionMembers;
         public string[] _strMembers;
         public string[] _listMembers, _intMembers;
@@ -54,6 +54,7 @@ namespace AnalysisTest {
             FunctionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             GeneratorType = Interpreter.GetBuiltinType(BuiltinTypeId.Generator);
             NoneType = Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
+            ModuleType = Interpreter.GetBuiltinType(BuiltinTypeId.Module);
 
             _objectMembers = PyObjectType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
             _strMembers = StringType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();

@@ -294,6 +294,38 @@ namespace Microsoft.PythonTools.Parsing {
             return result;
         }
 
+        private Token TransformStatementToken(Token token) {
+            if (GroupingLevel > 0 && 
+                (_options & TokenizerOptions.GroupingRecovery) != 0 && 
+                _state.GroupingRecovery != null &&
+                _state.GroupingRecovery.BufferStart == _start) {
+
+                _state.ParenLevel = _state.BraceLevel = _state.BracketLevel = 0;
+
+                // we can't possibly be in a grouping for real if we saw this token, bail...
+                int prevStart = _tokenStartIndex;
+                _position = _start;
+                SetIndent(_state.GroupingRecovery.Spaces, _state.GroupingRecovery.Whitespace, _state.GroupingRecovery.NoAllocWhiteSpace);
+                _tokenStartIndex = _state.GroupingRecovery.NewlineStart;
+                _tokenEndIndex = _state.GroupingRecovery.NewlineStart + _state.GroupingRecovery.NewLineKind.GetSize();
+
+                if (Verbatim) {
+                    // fixup our white space, remove the newline + any indentation from the current whitespace, add the whitespace minus the
+                    // newline to the next whitespace
+                    int nextWhiteSpaceStart = _state.GroupingRecovery.VerbatimWhiteSpaceLength + _state.GroupingRecovery.NewLineKind.GetSize();
+                    _state.NextWhiteSpace.Insert(0, _state.CurWhiteSpace.ToString(nextWhiteSpaceStart, _state.CurWhiteSpace.Length - nextWhiteSpaceStart));
+                    _state.CurWhiteSpace.Remove(_state.GroupingRecovery.VerbatimWhiteSpaceLength, _state.CurWhiteSpace.Length - nextWhiteSpaceStart + _state.GroupingRecovery.NewLineKind.GetSize());
+                }
+                
+                var nlKind = _state.GroupingRecovery.NewLineKind;
+                _state.GroupingRecovery = null;
+                return NewLineKindToToken(nlKind);
+            }
+
+            MarkTokenEnd();
+            return token;
+        }
+
         internal bool TryGetTokenString(int len, out string tokenString) {
             if (len != TokenLength) {
                 tokenString = null;
@@ -512,20 +544,7 @@ namespace Microsoft.PythonTools.Parsing {
                             _newLineLocations.Add(CurrentIndex);
                             // token marked by the callee:
                             if (ReadIndentationAfterNewLine(nlKind)) {
-                                if (_state.LastNewLine) {
-                                    switch (nlKind) {
-                                        case NewLineKind.CarriageReturn: return Tokens.NLTokenCR;
-                                        case NewLineKind.CarriageReturnLineFeed: return Tokens.NLTokenCRLF;
-                                        case NewLineKind.LineFeed: return Tokens.NLToken;
-                                    }
-                                } else {
-                                    _state.LastNewLine = true;
-                                    switch (nlKind) {
-                                        case NewLineKind.CarriageReturn: return Tokens.NewLineTokenCR;
-                                        case NewLineKind.CarriageReturnLineFeed: return Tokens.NewLineTokenCRLF;
-                                        case NewLineKind.LineFeed: return Tokens.NewLineToken;
-                                    }
-                                }
+                                return NewLineKindToToken(nlKind, _state.LastNewLine);
                             }
 
                             // we're in a grouping, white space is ignored
@@ -537,6 +556,9 @@ namespace Microsoft.PythonTools.Parsing {
                         _state.LastNewLine = false;
                         Token res = NextOperator(ch);
                         if (res != null) {
+                            if (res is StatementSymbolToken) {
+                                return TransformStatementToken(res);
+                            }
                             MarkTokenEnd();
                             return res;
                         }
@@ -547,6 +569,24 @@ namespace Microsoft.PythonTools.Parsing {
                         return BadChar(ch);
                 }
             }
+        }
+
+        private Token NewLineKindToToken(NewLineKind nlKind, bool lastNewLine = false) {
+            if (lastNewLine) {
+                switch (nlKind) {
+                    case NewLineKind.CarriageReturn: return Tokens.NLTokenCR;
+                    case NewLineKind.CarriageReturnLineFeed: return Tokens.NLTokenCRLF;
+                    case NewLineKind.LineFeed: return Tokens.NLToken;
+                }
+            } else {
+                _state.LastNewLine = true;
+                switch (nlKind) {
+                    case NewLineKind.CarriageReturn: return Tokens.NewLineTokenCR;
+                    case NewLineKind.CarriageReturnLineFeed: return Tokens.NewLineTokenCRLF;
+                    case NewLineKind.LineFeed: return Tokens.NewLineToken;
+                }
+            }
+            throw new InvalidOperationException();
         }
 
         private int SkipWhiteSpace(int ch, bool atBeginning) {
@@ -1186,52 +1226,44 @@ namespace Microsoft.PythonTools.Parsing {
                 if (ch == 'i') {
                     if ((_langVersion >= PythonLanguageVersion.V26 || _withStatement) && NextChar() == 't' && NextChar() == 'h' && !IsNamePart(Peek())) {
                         // with is a keyword in 2.6 and up
-                        MarkTokenEnd();
-                        return Tokens.KeywordWithToken;
+                        return TransformStatementToken(Tokens.KeywordWithToken);
                     }
                 } else if (ch == 'h') {
                     if (NextChar() == 'i' && NextChar() == 'l' && NextChar() == 'e' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordWhileToken;
+                        return TransformStatementToken(Tokens.KeywordWhileToken);
                     }
                 }
             } else if (ch == 't') {
                 if (NextChar() == 'r' && NextChar() == 'y' && !IsNamePart(Peek())) {
-                    MarkTokenEnd();
-                    return Tokens.KeywordTryToken;
+                    return TransformStatementToken(Tokens.KeywordTryToken);
                 }
             } else if (ch == 'r') {
                 ch = NextChar();
                 if (ch == 'e') {
                     if (NextChar() == 't' && NextChar() == 'u' && NextChar() == 'r' && NextChar() == 'n' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordReturnToken;
+                        return TransformStatementToken(Tokens.KeywordReturnToken);
                     }
                 } else if (ch == 'a') {
                     if (NextChar() == 'i' && NextChar() == 's' && NextChar() == 'e' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordRaiseToken;
+                        return TransformStatementToken(Tokens.KeywordRaiseToken);
                     }
                 }
             } else if (ch == 'p') {
                 ch = NextChar();
                 if (ch == 'a') {
                     if (NextChar() == 's' && NextChar() == 's' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordPassToken;
+                        return TransformStatementToken(Tokens.KeywordPassToken);
                     }
                 } else if (ch == 'r') {
                     if (NextChar() == 'i' && NextChar() == 'n' && NextChar() == 't' && !IsNamePart(Peek())) {
                         if (!_printFunction && !_langVersion.Is3x()) {
-                            MarkTokenEnd();
-                            return Tokens.KeywordPrintToken;
+                            return TransformStatementToken(Tokens.KeywordPrintToken);
                         }
                     }
                 }
             } else if (ch == 'g') {
                 if (NextChar() == 'l' && NextChar() == 'o' && NextChar() == 'b' && NextChar() == 'a' && NextChar() == 'l' && !IsNamePart(Peek())) {
-                    MarkTokenEnd();
-                    return Tokens.KeywordGlobalToken;
+                    return TransformStatementToken(Tokens.KeywordGlobalToken);
                 }
             } else if (ch == 'f') {
                 ch = NextChar();
@@ -1242,8 +1274,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 } else if (ch == 'i') {
                     if (NextChar() == 'n' && NextChar() == 'a' && NextChar() == 'l' && NextChar() == 'l' && NextChar() == 'y' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordFinallyToken;
+                        return TransformStatementToken(Tokens.KeywordFinallyToken);
                     }
                 } else if (ch == 'o') {
                     if (NextChar() == 'r' && !IsNamePart(Peek())) {
@@ -1258,14 +1289,12 @@ namespace Microsoft.PythonTools.Parsing {
                     if (ch == 'e') {
                         if (NextChar() == 'c' && !IsNamePart(Peek())) {
                             if (_langVersion.Is2x()) {
-                                MarkTokenEnd();
-                                return Tokens.KeywordExecToken;
+                                return TransformStatementToken(Tokens.KeywordExecToken);
                             }
                         }
                     } else if (ch == 'c') {
                         if (NextChar() == 'e' && NextChar() == 'p' && NextChar() == 't' && !IsNamePart(Peek())) {
-                            MarkTokenEnd();
-                            return Tokens.KeywordExceptToken;
+                            return TransformStatementToken(Tokens.KeywordExceptToken);
                         }
                     }
                 } else if (ch == 'l') {
@@ -1277,8 +1306,7 @@ namespace Microsoft.PythonTools.Parsing {
                         }
                     } else if (ch == 'i') {
                         if (NextChar() == 'f' && !IsNamePart(Peek())) {
-                            MarkTokenEnd();
-                            return Tokens.KeywordElseIfToken;
+                            return TransformStatementToken(Tokens.KeywordElseIfToken);
                         }
                     }
                 }
@@ -1288,13 +1316,11 @@ namespace Microsoft.PythonTools.Parsing {
                     ch = NextChar();
                     if (ch == 'l') {
                         if (!IsNamePart(Peek())) {
-                            MarkTokenEnd();
-                            return Tokens.KeywordDelToken;
+                            return TransformStatementToken(Tokens.KeywordDelToken);
                         }
                     } else if (ch == 'f') {
                         if (!IsNamePart(Peek())) {
-                            MarkTokenEnd();
-                            return Tokens.KeywordDefToken;
+                            return TransformStatementToken(Tokens.KeywordDefToken);
                         }
                     }
                 }
@@ -1302,19 +1328,16 @@ namespace Microsoft.PythonTools.Parsing {
                 ch = NextChar();
                 if (ch == 'l') {
                     if (NextChar() == 'a' && NextChar() == 's' && NextChar() == 's' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordClassToken;
+                        return TransformStatementToken(Tokens.KeywordClassToken);
                     }
                 } else if (ch == 'o') {
                     if (NextChar() == 'n' && NextChar() == 't' && NextChar() == 'i' && NextChar() == 'n' && NextChar() == 'u' && NextChar() == 'e' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordContinueToken;
+                        return TransformStatementToken(Tokens.KeywordContinueToken);
                     }
                 }
             } else if (ch == 'b') {
                 if (NextChar() == 'r' && NextChar() == 'e' && NextChar() == 'a' && NextChar() == 'k' && !IsNamePart(Peek())) {
-                    MarkTokenEnd();
-                    return Tokens.KeywordBreakToken;
+                    return TransformStatementToken(Tokens.KeywordBreakToken);
                 }
             } else if (ch == 'a') {
                 ch = NextChar();
@@ -1330,8 +1353,7 @@ namespace Microsoft.PythonTools.Parsing {
                         return Tokens.KeywordAsToken;
                     }
                     if (NextChar() == 's' && NextChar() == 'e' && NextChar() == 'r' && NextChar() == 't' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordAssertToken;
+                        return TransformStatementToken(Tokens.KeywordAssertToken);
                     }
                 }
             } else if (ch == 'y') {
@@ -1351,8 +1373,7 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
                         return Tokens.KeywordNotToken;
                     } else if (_langVersion.Is3x() && ch == 'n' && NextChar() == 'l' && NextChar() == 'o' && NextChar() == 'c' && NextChar() == 'a' && NextChar() == 'l' && !IsNamePart(Peek())) {
-                        MarkTokenEnd();
-                        return Tokens.KeywordNonlocalToken;
+                        return TransformStatementToken(Tokens.KeywordNonlocalToken);
                     }
                 }
             } else if (ch == 'N') {
@@ -1396,8 +1417,152 @@ namespace Microsoft.PythonTools.Parsing {
                 string name = GetTokenString();
                 token = _names[name] = new NameToken(name);
             }
-
+            
             return token;
+        }
+
+        private Token NextOperator(int ch) {
+            switch (ch) {
+                #region Generated Tokenize Ops
+
+                // *** BEGIN GENERATED CODE ***
+                // generated by function: tokenize_generator from: generate_ops.py
+
+                case '+':
+                    if (NextChar('=')) {
+                        return Tokens.AddEqualToken;
+                    }
+                    return Tokens.AddToken;
+                case '-':
+                    if (NextChar('=')) {
+                        return Tokens.SubtractEqualToken;
+                    } else if (_langVersion.Is3x() && NextChar('>')) {
+                        return Tokens.ArrowToken;
+                    }
+                    return Tokens.SubtractToken;
+                case '*':
+                    if (NextChar('=')) {
+                        return Tokens.MultiplyEqualToken;
+                    }
+                    if (NextChar('*')) {
+                        if (NextChar('=')) {
+                            return Tokens.PowerEqualToken;
+                        }
+                        return Tokens.PowerToken;
+                    }
+                    return Tokens.MultiplyToken;
+                case '/':
+                    if (NextChar('=')) {
+                        return Tokens.DivideEqualToken;
+                    }
+                    if (NextChar('/')) {
+                        if (NextChar('=')) {
+                            return Tokens.FloorDivideEqualToken;
+                        }
+                        return Tokens.FloorDivideToken;
+                    }
+                    return Tokens.DivideToken;
+                case '%':
+                    if (NextChar('=')) {
+                        return Tokens.ModEqualToken;
+                    }
+                    return Tokens.ModToken;
+                case '<':
+                    if (_langVersion.Is2x() && NextChar('>')) {
+                        return Tokens.LessThanGreaterThanToken;
+                    }
+                    if (NextChar('=')) {
+                        return Tokens.LessThanOrEqualToken;
+                    }
+                    if (NextChar('<')) {
+                        if (NextChar('=')) {
+                            return Tokens.LeftShiftEqualToken;
+                        }
+                        return Tokens.LeftShiftToken;
+                    }
+                    return Tokens.LessThanToken;
+                case '>':
+                    if (NextChar('>')) {
+                        if (NextChar('=')) {
+                            return Tokens.RightShiftEqualToken;
+                        }
+                        return Tokens.RightShiftToken;
+                    }
+                    if (NextChar('=')) {
+                        return Tokens.GreaterThanOrEqualToken;
+                    }
+                    return Tokens.GreaterThanToken;
+                case '&':
+                    if (NextChar('=')) {
+                        return Tokens.BitwiseAndEqualToken;
+                    }
+                    return Tokens.BitwiseAndToken;
+                case '|':
+                    if (NextChar('=')) {
+                        return Tokens.BitwiseOrEqualToken;
+                    }
+                    return Tokens.BitwiseOrToken;
+                case '^':
+                    if (NextChar('=')) {
+                        return Tokens.ExclusiveOrEqualToken;
+                    }
+                    return Tokens.ExclusiveOrToken;
+                case '=':
+                    if (NextChar('=')) {
+                        return Tokens.EqualsToken;
+                    }
+                    return Tokens.AssignToken;
+                case '!':
+                    if (NextChar('=')) {
+                        return Tokens.NotEqualsToken;
+                    }
+                    return BadChar(ch);
+                case '(':
+                    _state.ParenLevel++;
+                    return Tokens.LeftParenthesisToken;
+                case ')':
+                    if (_state.ParenLevel != 0) {
+                        _state.ParenLevel--;
+                    }
+                    return Tokens.RightParenthesisToken;
+                case '[':
+                    _state.BracketLevel++;
+                    return Tokens.LeftBracketToken;
+                case ']':
+                    if (_state.BracketLevel != 0) {
+                        _state.BracketLevel--;
+                    }
+                    return Tokens.RightBracketToken;
+                case '{':
+                    _state.BraceLevel++;
+                    return Tokens.LeftBraceToken;
+                case '}':
+                    if (_state.BraceLevel != 0) {
+                        _state.BraceLevel--;
+                    }
+                    return Tokens.RightBraceToken;
+                case ',':
+                    return Tokens.CommaToken;
+                case ':':
+                    return Tokens.ColonToken;
+                case '`':
+                    if (_langVersion.Is2x()) {
+                        return Tokens.BackQuoteToken;
+                    }
+                    break;
+                case ';':
+                    return Tokens.SemicolonToken;
+                case '~':
+                    return Tokens.TwiddleToken;
+                case '@':
+                    return Tokens.AtToken;
+
+                // *** END GENERATED CODE ***
+
+                #endregion
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -1589,17 +1754,33 @@ namespace Microsoft.PythonTools.Parsing {
                         BufferBack();
 
                         if (GroupingLevel > 0) {
+                            int startingWhiteSpace = 0;
                             if (Verbatim) {
                                 // we're not producing a new line after all...  All of the white space
                                 // we collected goes to the current token, including the new line token
                                 // that we're not producing.
+                                startingWhiteSpace = _state.CurWhiteSpace.Length;
                                 _state.CurWhiteSpace.Append(startingKind.GetString());
                                 _state.CurWhiteSpace.Append(_state.NextWhiteSpace);
                                 _state.NextWhiteSpace.Clear();
                             }
+                            if ((_options & TokenizerOptions.GroupingRecovery) != 0) {
+                                int tokenEnd = System.Math.Min(_position, _end);
+                                int tokenLength = tokenEnd - _start;
+                                
+                                _state.GroupingRecovery = new GroupingRecovery(
+                                    startingKind, 
+                                    noAllocWhiteSpace, 
+                                    spaces, 
+                                    sb, 
+                                    _tokenStartIndex, 
+                                    startingWhiteSpace,
+                                    _position
+                                );
+                            }
                             return false;
                         }
-
+                        _state.GroupingRecovery = null;
                         MarkTokenEnd();
 
                         // We've captured a line of significant identation (i.e. not pure whitespace).
@@ -1672,7 +1853,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private void SetIndent(int spaces, StringBuilder chars, string noAllocWhiteSpace, int indentStart) {
+        private void SetIndent(int spaces, StringBuilder chars, string noAllocWhiteSpace, int indentStart = -1) {
             int current = _state.Indent[_state.IndentLevel];
             if (spaces == current) {
                 return;
@@ -1690,9 +1871,9 @@ namespace Microsoft.PythonTools.Parsing {
             } else {
                 current = DoDedent(spaces, current);
 
-                if (spaces != current) {
+                if (spaces != current && indentStart != -1) {
                     ReportSyntaxError(
-						new IndexSpan(indentStart, spaces),
+                        new IndexSpan(indentStart, spaces),
                         "unindent does not match any outer indentation level", ErrorCodes.IndentationError);
                 }
             }
@@ -1808,6 +1989,7 @@ namespace Microsoft.PythonTools.Parsing {
             // white space tracking
             public StringBuilder CurWhiteSpace;
             public StringBuilder NextWhiteSpace;
+            public GroupingRecovery GroupingRecovery;
 
             public State(State state, bool verbatim) {
                 Indent = (int[])state.Indent.Clone();
@@ -1826,6 +2008,7 @@ namespace Microsoft.PythonTools.Parsing {
                     CurWhiteSpace = null;
                     NextWhiteSpace = null;
                 }
+                GroupingRecovery = null;
             }
 
             public State(TokenizerOptions options) {
@@ -1841,6 +2024,7 @@ namespace Microsoft.PythonTools.Parsing {
                     CurWhiteSpace = null;
                     NextWhiteSpace = null;
                 }
+                GroupingRecovery = null;
             }
 
             public override bool Equals(object obj) {
@@ -1879,6 +2063,56 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             #endregion
+        }
+
+        /// <summary>
+        /// Stores information to recover from a non-terminated grouping when we encounter a keyword which
+        /// is only ever present outside of a grouping (e.g. class, def, etc...)
+        /// 
+        /// We only use this when the tokenizer has been created to use group recovery because this alters
+        /// how we tokenize the language.  The parser creates the tokenizer in this mode.
+        /// </summary>
+        class GroupingRecovery {
+            /// <summary>
+            /// the new line kind that was in the grouping
+            /// </summary>
+            public readonly NewLineKind NewLineKind;
+            /// <summary>
+            /// the whitespace after the new line, for setting indent when we recover
+            /// </summary>
+            public readonly string NoAllocWhiteSpace;
+            /// <summary>
+            /// the # of spaces after the new line, for setting the indent when we recover
+            /// </summary>
+            public readonly int Spaces;
+            /// <summary>
+            /// the allocated whitespace after the new line, for setting the indent when we recover 
+            /// </summary>
+            public readonly StringBuilder Whitespace;
+            /// <summary>
+            /// the index within the file where the newline starts (not an index into the buffer)
+            /// </summary>
+            public readonly int NewlineStart;
+            /// <summary>
+            /// The amount of whitespace we had already collected before the newline, 
+            /// so we can leave whitespace assocated w/ the newline attached to the newline
+            /// </summary>
+            public readonly int VerbatimWhiteSpaceLength;
+            /// <summary>
+            /// The _start position when we hit the newline, this GroupingRecovery is only 
+            /// valid if this is unchanged which means we haven't ready an additional tokens.
+            /// </summary>
+            public readonly int BufferStart;
+
+            public GroupingRecovery(NewLineKind newlineKind, string noAllocWhiteSpace, int spaces, StringBuilder whitespace, int newlineStart, int verbatimWhiteSpaceLength, int bufferStart) {
+                NewLineKind = newlineKind;
+                NoAllocWhiteSpace = noAllocWhiteSpace;
+                Spaces = spaces;
+                Whitespace = whitespace;
+                NewlineStart = newlineStart;
+                VerbatimWhiteSpaceLength = verbatimWhiteSpaceLength;
+                BufferStart = bufferStart;
+            }
         }
 
         #region Buffer Access

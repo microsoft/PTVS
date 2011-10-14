@@ -228,7 +228,6 @@
     <Compile Include="Parsing\TokenCategory.cs" />
     <Compile Include="Parsing\TokenInfo.cs" />
     <Compile Include="Parsing\Tokenizer.cs" />
-    <Compile Include="Parsing\Tokenizer.Generated.cs" />
     <Compile Include="Parsing\TokenKind.Generated.cs" />
     <Compile Include="Parsing\TokenTriggers.cs" />
     <Compile Include="Pickler.cs" />

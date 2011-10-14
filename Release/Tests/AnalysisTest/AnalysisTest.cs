@@ -2231,7 +2231,7 @@ abc = 42
             package.Analyze();
             y.Analyze();
 
-            AssertContainsExactly(package.Analysis.GetTypesFromName("y", 1), FunctionType);
+            AssertContainsExactly(package.Analysis.GetTypesFromName("y", 1), FunctionType, ModuleType);
         }
 
 

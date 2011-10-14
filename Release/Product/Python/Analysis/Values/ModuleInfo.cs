@@ -222,6 +222,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return result;
         }
 
+        public override IPythonType PythonType {
+            get { return this.ProjectEntry.ProjectState.Types.Module; }
+        }
+
         #region IVariableDefContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {

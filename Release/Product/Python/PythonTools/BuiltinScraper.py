@@ -52,7 +52,18 @@ def get_arg_name(arg, cfunc):
         return arg[:colon_index]
     return arg
 
-BUILTIN_TYPES = [type_name for type_name in __builtins__.keys() if type(__builtins__[type_name]) is type]
+def builtins_keys():
+    if isinstance(__builtins__, dict):
+        return __builtins__.keys()
+    return dir(__builtins__)
+
+def get_builtin(name):
+    if isinstance(__builtins__, dict):
+        return __builtins__[name]
+
+    return getattr(__builtins__, name)
+
+BUILTIN_TYPES = [type_name for type_name in builtins_keys() if type(get_builtin(type_name)) is type]
 if sys.version >= '3.':
     BUILTIN = 'builtins'
 else:

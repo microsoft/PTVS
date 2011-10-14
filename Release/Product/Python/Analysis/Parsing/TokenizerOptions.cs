@@ -28,6 +28,19 @@ namespace Microsoft.PythonTools.Parsing {
         /// <summary>
         /// Tokenizer will report comment tokens and explicit line join tokens in addition to the normal tokens it produces.
         /// </summary>
-        VerbatimCommentsAndLineJoins = 0x02
+        VerbatimCommentsAndLineJoins = 0x02,
+        /// <summary>
+        /// Tokenizer will attempt to recover from groupings which contain invalid characters
+        /// by ending the grouping automatically.  This allows code like:
+        /// 
+        /// x = f(
+        /// 
+        /// def g():
+        ///     pass
+        ///     
+        /// To successfully parse the function defintion even though we have no idea we should
+        /// be looking at indents/dedents after the open grouping starts.
+        /// </summary>
+        GroupingRecovery = 0x04
     }
 }

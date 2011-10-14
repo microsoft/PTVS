@@ -82,6 +82,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override IPythonType PythonType {
+            get {
+                return this.ProjectState.Types.Module;
+            }
+        }
+
         public override PythonMemberType ResultType {
             get { return _interpreterModule.MemberType; }
         }

@@ -53,6 +53,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// The type returned by dict.itervalues (2.x) or dict.values (3.x)
         /// </summary>
-        DictValues
+        DictValues,
+
+        /// <summary>
+        /// The type of a module
+        /// </summary>
+        Module
     }
 }

@@ -377,6 +377,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var analysis = ((IPythonProjectEntry)snapshot.TextBuffer.GetAnalysis()).Analysis;
+            if (analysis == null) {
+                return MissingImportAnalysis.Empty;
+            }
+
             var text = exprRange.Value.GetText();
             var analyzer = analysis.ProjectState;
             var lineNo = span.GetStartPoint(snapshot).GetContainingLine().LineNumber;
@@ -570,6 +574,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (pyProjEntry != null) {
+                // TODO: As our tokenizer/parser error recovery improves we could possibly process
+                // trees with errors.  With the new grouping recovery added w/ this change we might be
+                // good enough, but I'm not quite ready to flip the switch yet.
+
                 if ((!hasErrors && asts.Count > 0) || asts.Count > 1) {
                     // only update the AST when we're error free, this way we don't remove
                     // a useful analysis with an incomplete and useless analysis.
@@ -588,11 +596,14 @@ namespace Microsoft.PythonTools.Intellisense {
                         finalAst = new PythonAst(new SuiteStatement(bodies.ToArray()), new int[0]);
                     }
 
-                    pyProjEntry.UpdateTree(finalAst, new SnapshotCookie(snapshots[0])); // SnapshotCookie is ot entirely right, we should merge the snapshots
+                    pyProjEntry.UpdateTree(finalAst, new SnapshotCookie(snapshots[0])); // SnapshotCookie is not entirely right, we should merge the snapshots
                     _analysisQueue.Enqueue(analysis, AnalysisPriority.High);
                 } else {
                     // indicate that we are done parsing.
-                    pyProjEntry.UpdateTree(null, null);
+                    PythonAst prevTree;
+                    IAnalysisCookie prevCookie;
+                    pyProjEntry.GetTreeAndCookie(out prevTree, out prevCookie);
+                    pyProjEntry.UpdateTree(prevTree, prevCookie);
                 }
             }
         }

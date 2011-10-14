@@ -565,7 +565,8 @@ namespace Microsoft.PythonTools.Debugger {
             // list of thread frames
             var frames = new List<PythonStackFrame>();
             int tid = socket.ReadInt();
-            var thread = _threads[tid];
+            PythonThread thread;
+            _threads.TryGetValue(tid, out thread);
             var threadName = socket.ReadString();
 
             int frameCount = socket.ReadInt();
@@ -578,19 +579,28 @@ namespace Microsoft.PythonTools.Debugger {
                 int argCount = socket.ReadInt();
                 int varCount = socket.ReadInt();
                 PythonEvaluationResult[] variables = new PythonEvaluationResult[varCount];
-                var frame = new PythonStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i);
+                PythonStackFrame frame = null; 
+                if (thread != null) {
+                    frame = new PythonStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i);
+                }
                 for (int j = 0; j < variables.Length; j++) {
                     string name = socket.ReadString();
-                    variables[j] = ReadPythonObject(socket, name, "", false, false, frame);
+                    if (frame != null) {
+                        variables[j] = ReadPythonObject(socket, name, "", false, false, frame);
+                    }
                 }
-                frame.SetVariables(variables);
-                frames.Add(frame);
+                if (frame != null) {
+                    frame.SetVariables(variables);
+                    frames.Add(frame);
+                }
             }
 
             Debug.WriteLine("Received frames for thread {0}", tid);
-            thread.Frames = frames;
-            if (threadName != null) {
-                thread.Name = threadName;
+            if (thread != null) {
+                thread.Frames = frames;
+                if (threadName != null) {
+                    thread.Name = threadName;
+                }
             }
         }
 

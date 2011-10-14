@@ -302,6 +302,7 @@ def generate_builtin_module():
     members_table['generator'] = generate_member(types.GeneratorType, is_hidden=True)
     members_table['NoneType'] = generate_member(type(None), is_hidden=True)
     members_table['ellipsis'] = generate_member(type(Ellipsis), is_hidden=True)
+    members_table['module_type'] = generate_member(types.ModuleType, is_hidden=True)
     if sys.version_info[0] == 2:
         members_table['dict_keys'] = generate_member(type({}.iterkeys()), is_hidden=True)
         members_table['dict_values'] = generate_member(type({}.itervalues()), is_hidden=True)
@@ -451,7 +452,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('8')
+    f.write('9')
     f.close()
 
     # inspect extension modules installed into site-packages

@@ -1174,12 +1174,6 @@ namespace AnalysisTest {
                         Assert.AreEqual(args.Exception.TypeName, exceptions[curException].TypeName);
                     }
 
-                    // http://ironpython.codeplex.com/workitem/30130
-                    if (GetType() != typeof(DebuggerTestsIpy)) {
-                        Assert.IsTrue(args.Exception.Description.IndexOf("line " + exceptions[curException].LineNumber) != -1);
-                    }
-                    Assert.IsTrue(args.Exception.Description.IndexOf(filename) != -1);
-
                     if (GetType() != typeof(DebuggerTestsIpy) || curException < exceptions.Length) {    // Ipy over reports
                         curException++;
                     }

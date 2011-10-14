@@ -503,12 +503,12 @@ namespace AnalysisTest {
                     new ErrorInfo("invalid syntax", 418, 23, 3, 435, 23, 20),
                     new ErrorInfo("invalid syntax", 439, 24, 3, 456, 24, 20),
                     new ErrorInfo("invalid syntax", 460, 25, 3, 477, 25, 20),
-                    new ErrorInfo("invalid syntax", 480, 26, 2, 519, 26, 41),
-                    new ErrorInfo("invalid syntax", 522, 27, 2, 533, 27, 13),
-                    new ErrorInfo("bad char for the integer value: 'l' (base 10)", 536, 28, 2, 547, 28, 13),
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 550, 29, 2, 561, 29, 13),
-                    new ErrorInfo("invalid token", 563, 30, 1, 567, 30, 5),
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 570, 31, 2, 574, 31, 6)
+                    new ErrorInfo("invalid syntax", 480, 26, 2, 519, 27, 36),
+                    new ErrorInfo("invalid syntax", 522, 28, 2, 533, 28, 13),
+                    new ErrorInfo("bad char for the integer value: 'l' (base 10)", 536, 29, 2, 547, 29, 13),
+                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 550, 30, 2, 561, 30, 13),
+                    new ErrorInfo("invalid token", 563, 31, 1, 567, 31, 5),
+                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 570, 32, 2, 574, 32, 6)
                 );
             }
         }
@@ -654,6 +654,19 @@ namespace AnalysisTest {
                     new ErrorInfo("unexpected token '>'", 3, 1, 4, 4, 1, 5),
                     new ErrorInfo("invalid syntax", 5, 1, 6, 6, 1, 7)
                 });
+            }
+        }
+
+        [TestMethod]
+        public void GroupingRecovery() {
+            foreach (var version in AllVersions) {
+                CheckAst(
+                    ParseFile("GroupingRecovery.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckAssignment(Foo, CheckParenExpr(CheckErrorExpr())),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass))
+                    )
+                );
             }
         }
 
@@ -1988,7 +2001,8 @@ namespace AnalysisTest {
                 var skippedFiles = new HashSet<string>(new[] { 
                     "py3_test_grammar.py",  // included in 2x distributions but includes 3x grammar
                     "py2_test_grammar.py",  // included in 3x distributions but includes 2x grammar
-                    "proxy_base.py"         // included in Qt port to Py3k but installed in 2.x distributions
+                    "proxy_base.py",        // included in Qt port to Py3k but installed in 2.x distributions
+                    "test_pep3131.py"       // we need to update to support this.
                 });
                 var errorSink = new CollectingErrorSink();
                 var errors = new Dictionary<string, CollectingErrorSink>();
@@ -2715,6 +2729,12 @@ namespace AnalysisTest {
                     lhs[i](assign.Left[i]);
                 }
                 rhs(assign.Right);
+            };
+        }
+
+        private static Action<Expression> CheckErrorExpr() {
+            return expr => {
+                Assert.AreEqual(typeof(ErrorExpression), expr.GetType());
             };
         }
 

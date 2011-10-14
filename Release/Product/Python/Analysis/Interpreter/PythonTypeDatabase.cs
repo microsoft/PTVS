@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 8;
+        public static readonly int CurrentVersion = 9;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _dbDir = databaseDirectory;
@@ -350,6 +350,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.Generator: name = "generator"; break;
                 case BuiltinTypeId.NoneType: name = "NoneType"; break;
                 case BuiltinTypeId.Ellipsis: name = "ellipsis"; break;
+                case BuiltinTypeId.Module: name = "module_type"; break;
 
                 default: return null;
             }

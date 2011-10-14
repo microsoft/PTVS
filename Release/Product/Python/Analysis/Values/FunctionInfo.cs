@@ -553,6 +553,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override IPythonType PythonType {
+            get { return ProjectState.Types.Function; }
+        }
+
         #region IReferenceableContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
