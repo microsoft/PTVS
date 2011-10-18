@@ -24,6 +24,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="sigs.py" />
+    <None Include="multilinesigs.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

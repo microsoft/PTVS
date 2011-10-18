@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using AnalysisTest.UI;
 using EnvDTE;
@@ -105,7 +106,7 @@ namespace AnalysisTest.ProjectSystem {
             var item = project.ProjectItems.Item("sigs.py");
             var window = item.Open();
             window.Activate();
-
+            
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
@@ -132,6 +133,30 @@ namespace AnalysisTest.ProjectSystem {
 
             Keyboard.Backspace();
             WaitForCurrentParameter(session);
+            Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MultiLineSignaturesTest() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\Signatures.sln");
+
+            var item = project.ProjectItems.Item("multilinesigs.py");
+            var window = item.Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+
+            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(5 - 1).Start;
+                doc.TextView.Caret.MoveTo(point);
+            }));
+
+            ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.ParameterInfo"));
+            
+
+            var session = doc.WaitForSession<ISignatureHelpSession>();
             Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
         }
 

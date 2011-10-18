@@ -55,7 +55,8 @@ namespace Microsoft.PythonTools.Intellisense {
             int dummy;
             SnapshotPoint? dummyPoint;
             string lastKeywordArg;
-            return GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, forCompletion);
+            bool isParameterName;
+            return GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName, forCompletion);
         }        
 
         internal static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
@@ -81,6 +82,69 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        /// <summary>
+        /// Walks backwards to figure out if we're a parameter name which comes after a (     
+        /// </summary>
+        private bool IsParameterNameOpenParen(IEnumerator<ClassificationSpan> enumerator) {
+            if (MoveNextSkipExplicitNewLines(enumerator)) {
+                if (enumerator.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                    if (MoveNextSkipExplicitNewLines(enumerator) &&
+                        enumerator.Current.ClassificationType == Classifier.Provider.Keyword &&
+                        enumerator.Current.Span.GetText() == "def") {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Walks backwards to figure out if we're a parameter name which comes after a comma.
+        /// </summary>
+        private bool IsParameterNameComma(IEnumerator<ClassificationSpan> enumerator) {
+            int groupingLevel = 1;
+
+            while (MoveNextSkipExplicitNewLines(enumerator)) {
+                if (enumerator.Current.ClassificationType == _classifier.Provider.Keyword) {
+                    if (enumerator.Current.Span.GetText() == "def" && groupingLevel == 0) {
+                        return true;
+                    }
+
+                    if (IsStmtKeyword(enumerator.Current.Span.GetText())) {
+                        return false;
+                    }
+                }
+                if (enumerator.Current.IsOpenGrouping()) {
+                    groupingLevel--;
+                    if (groupingLevel == 0) {
+                        return IsParameterNameOpenParen(enumerator);
+                    }
+                } else if (enumerator.Current.IsCloseGrouping()) {
+                    groupingLevel++;
+                } 
+            }
+
+            return false;
+        }
+
+        private bool MoveNextSkipExplicitNewLines(IEnumerator<ClassificationSpan> enumerator) {
+            while (enumerator.MoveNext()) {
+                if (enumerator.Current == null) {
+                    while (enumerator.Current == null) {
+                        if (!enumerator.MoveNext()) {
+                            return false;
+                        }
+                    }
+                    if (!IsExplicitLineJoin(enumerator.Current)) {
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         /// <summary>
         /// Gets the range of the expression to the left of our starting span.  
@@ -88,13 +152,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="nesting">1 if we have an opening parenthesis for sig completion</param>
         /// <param name="paramIndex">The current parameter index.</param>
         /// <returns></returns>
-        public SnapshotSpan? GetExpressionRange(int nesting, out int paramIndex, out SnapshotPoint? sigStart, out string lastKeywordArg, bool forCompletion = true) {
+        public SnapshotSpan? GetExpressionRange(int nesting, out int paramIndex, out SnapshotPoint? sigStart, out string lastKeywordArg, out bool isParameterName, bool forCompletion = true) {
             SnapshotSpan? start = null;
             paramIndex = 0;
             sigStart = null;
             bool nestingChanged = false, lastTokenWasCommaOrOperator = true, lastTokenWasKeywordArgAssignment = false;
             int otherNesting = 0;
             bool isSigHelp = nesting != 0;
+            isParameterName = false;
             lastKeywordArg = null;
 
             ClassificationSpan lastToken = null;
@@ -106,7 +171,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 lastToken = enumerator.Current;
-                if (!forCompletion && ShouldSkipAsLastToken(lastToken) && enumerator.MoveNext()) {
+                while (ShouldSkipAsLastToken(lastToken, forCompletion) && enumerator.MoveNext()) {
                     // skip trailing new line if the user is hovering at the end of the line
                     lastToken = enumerator.Current;
                 }
@@ -142,6 +207,9 @@ namespace Microsoft.PythonTools.Intellisense {
                                 // hovering directly over an open paren, don't provide a tooltip
                                 return null;
                             }
+
+                            // figure out if we're a parameter definition
+                            isParameterName = IsParameterNameOpenParen(enumerator);
                             break;
                         }
                         lastTokenWasCommaOrOperator = true;
@@ -195,6 +263,15 @@ namespace Microsoft.PythonTools.Intellisense {
                                 } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
                                     return null;
                                 }
+                                if (text == "*" || text == "**") {
+                                    if (enumerator.MoveNext()) {
+                                        if (enumerator.Current.ClassificationType == _classifier.Provider.CommaClassification) {
+                                            isParameterName = IsParameterNameComma(enumerator);
+                                        } else if (enumerator.Current.IsOpenGrouping() && enumerator.Current.Span.GetText() == "(") {
+                                            isParameterName = IsParameterNameOpenParen(enumerator);
+                                        }
+                                    }
+                                }
                                 break;
                             } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
                                 (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
@@ -228,6 +305,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             if (start == null) {
                                 return null;
                             }
+                            isParameterName = IsParameterNameComma(enumerator);
                             break;
                         } else if (nesting == 1 && otherNesting == 0 && sigStart == null) {
                             paramIndex++;
@@ -286,11 +364,11 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Returns true if we should skip this token when it's the last token that the user hovers over.  Currently true
         /// for new lines and dot classifications.  
         /// </summary>
-        private bool ShouldSkipAsLastToken(ClassificationSpan lastToken) {
+        private bool ShouldSkipAsLastToken(ClassificationSpan lastToken, bool forCompletion) {
             return lastToken == null || (
                 (lastToken.ClassificationType.Classification == PredefinedClassificationTypeNames.WhiteSpace &&
                     (lastToken.Span.GetText() == "\r\n" || lastToken.Span.GetText() == "\n" || lastToken.Span.GetText() == "\r")) ||
-                    (lastToken.ClassificationType == Classifier.Provider.DotClassification));
+                    (lastToken.ClassificationType == Classifier.Provider.DotClassification && !forCompletion));
         }
 
         public PythonClassifier Classifier {

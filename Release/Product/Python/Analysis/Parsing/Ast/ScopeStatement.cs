@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private List<PythonVariable> _freeVars;                         // list of variables accessed from outer scopes
         private List<string> _globalVars;                               // global variables accessed from this scope
         private List<string> _cellVars;                                 // variables accessed from nested scopes
-        private List<string> _nonLocalVars;                             // variables declared as nonlocal within this scope
+        private List<NameExpression> _nonLocalVars;                             // variables declared as nonlocal within this scope
         private Dictionary<string, List<PythonReference>> _references;        // names of all variables referenced, null after binding completes
         private ScopeStatement _parent;
 
@@ -176,9 +176,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return name;
         }
 
-        internal void AddNonLocalVariable(string name) {
+        internal void AddNonLocalVariable(NameExpression name) {
             if (_nonLocalVars == null) {
-                _nonLocalVars = new List<string>();
+                _nonLocalVars = new List<NameExpression>();
             }
             _nonLocalVars.Add(name);
         }
@@ -284,14 +284,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     for (ScopeStatement parent = Parent; parent != null; parent = parent.Parent) {
                         PythonVariable variable;
 
-                        if (parent.TryBindOuter(this, variableName, false, out variable)) {
+                        if (parent.TryBindOuter(this, variableName.Name, false, out variable)) {
                             bound = !variable.IsGlobal;
                             break;
                         }
                     }
 
                     if (!bound) {
-                        binder.ReportSyntaxError(String.Format("no binding for nonlocal '{0}' found", variableName), this);
+                        binder.ReportSyntaxError(String.Format("no binding for nonlocal '{0}' found", variableName.Name), variableName);
                     }
                 }
             }

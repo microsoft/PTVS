@@ -319,14 +319,14 @@ namespace Microsoft.PythonTools.Intellisense {
             int paramIndex;
             SnapshotPoint? sigStart;
             string lastKeywordArg;
-            var exprRange = parser.GetExpressionRange(1, out paramIndex, out sigStart, out lastKeywordArg);
+            bool isParameterName;
+            var exprRange = parser.GetExpressionRange(1, out paramIndex, out sigStart, out lastKeywordArg, out isParameterName);
             if (exprRange == null || sigStart == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
 
             Debug.Assert(sigStart != null);
             var text = new SnapshotSpan(exprRange.Value.Snapshot, new Span(exprRange.Value.Start, sigStart.Value.Position - exprRange.Value.Start)).GetText();
-            //var text = exprRange.Value.GetText();
             var applicableSpan = parser.Snapshot.CreateTrackingSpan(exprRange.Value.Span, SpanTrackingMode.EdgeInclusive);
 
             if (snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(text)) {
@@ -371,8 +371,12 @@ namespace Microsoft.PythonTools.Intellisense {
         public static MissingImportAnalysis GetMissingImports(ITextSnapshot snapshot, ITrackingSpan span) {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
             var loc = span.GetSpan(snapshot.Version);
-            var exprRange = parser.GetExpressionRange();
-            if (exprRange == null) {
+            int dummy;
+            SnapshotPoint? dummyPoint;
+            string lastKeywordArg;
+            bool isParameterName;
+            var exprRange = parser.GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName);
+            if (exprRange == null || isParameterName) {
                 return MissingImportAnalysis.Empty;
             }
 
@@ -396,8 +400,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         SpanTrackingMode.EdgeExclusive
                     );
 
+                    var variables = analysis.GetVariables(text, lineNo).Where(IsDefinition).Count();                    
                     var values = analysis.GetValues(text, lineNo).ToArray();
-                    if (values.Length == 0) {
+
+                    // if we have type information or an assignment to the variable we won't offer 
+                    // an import smart tag.
+                    if (values.Length == 0 && variables == 0) {
                         string name = nameExpr.Name;
                         var imports = analysis.ProjectState.FindNameInAllModules(name);
 
@@ -408,6 +416,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             // if we have type information don't offer to add imports
             return MissingImportAnalysis.Empty;
+        }
+
+        private static bool IsDefinition(IAnalysisVariable variable) {
+            return variable.Type == VariableType.Definition;
         }
 
         private static bool IsImplicitlyDefinedName(NameExpression nameExpr) {

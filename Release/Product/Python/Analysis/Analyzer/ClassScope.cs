@@ -28,6 +28,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
+        public override int GetBodyStart(PythonAst ast) {
+            return ast.IndexToLocation(((ClassDefinition)Node).HeaderIndex).Line;
+        }
+
         public override string Name {
             get { return Class.ClassDefinition.Name; }
         }

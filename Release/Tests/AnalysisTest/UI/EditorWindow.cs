@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Threading;
+using System.Windows;
 using System.Windows.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -25,8 +27,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
-using System.Threading;
-using System.Windows;
 
 namespace AnalysisTest.UI {
     class EditorWindow : AutomationWrapper {
@@ -59,6 +59,12 @@ namespace AnalysisTest.UI {
             }
 
             Assert.AreEqual(text, Text);
+        }
+
+        public void StartSmartTagSessionNoSession() {
+            ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("View.ShowSmartTag"));
+            System.Threading.Thread.Sleep(100);
+            Assert.IsTrue(!(IntellisenseSessionStack.TopSession is ISmartTagSession));
         }
 
         public ISmartTagSession StartSmartTagSession() {

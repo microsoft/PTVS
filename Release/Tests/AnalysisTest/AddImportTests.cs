@@ -15,10 +15,10 @@
 using System.Linq;
 using AnalysisTest.ProjectSystem;
 using AnalysisTest.UI;
+using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using EnvDTE;
 
 namespace AnalysisTest {
     [TestClass]
@@ -214,7 +214,56 @@ sub_package";
             AddSmartTagTest("ImportSubPackage.py", 1, 1, new[] { "from test_package import sub_package" }, 0, expectedText);
         }
 
-        private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction, string expectedText) {
+        private static string[] _NoSmartTags = new string[0];
+
+        /// <summary>
+        /// Adds an import statement for a package.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void Parameters() {            
+            var getreclimit = new [] { "from sys import getrecursionlimit" };
+
+            AddSmartTagTest("Parameters.py", 1, 19, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 1, 30, getreclimit);
+
+            AddSmartTagTest("Parameters.py", 4, 18, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 7, 18, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 10, 20, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 13, 22, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 16, 22, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 19, 22, _NoSmartTags);
+            
+            AddSmartTagTest("Parameters.py", 19, 35, getreclimit);
+
+            AddSmartTagTest("Parameters.py", 22, 25, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 22, 56, getreclimit);
+
+            AddSmartTagTest("Parameters.py", 25, 38, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 25, 38, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 25, 48, getreclimit);
+
+            AddSmartTagTest("Parameters.py", 29, 12, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 29, 42, getreclimit);
+
+            AddSmartTagTest("Parameters.py", 34, 26, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 34, 31, getreclimit);
+
+            AddSmartTagTest("Parameters.py", 42, 16, _NoSmartTags);
+            AddSmartTagTest("Parameters.py", 51, 16, _NoSmartTags);
+        }
+
+        /// <summary>
+        /// Adds an import statement for a package.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AssignedWithoutTypeInfo() {
+            AddSmartTagTest("Assignments.py", 1, 2, _NoSmartTags);
+            AddSmartTagTest("Assignments.py", 1, 8, _NoSmartTags);
+        }
+
+        private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\AddImport.sln");
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
@@ -228,18 +277,22 @@ sub_package";
                 doc.TextView.Caret.MoveTo(point);
             });
 
-            var session = doc.StartSmartTagSession();
-            Assert.AreEqual(1, session.ActionSets.Count);
-            var set = session.ActionSets.First();
+            if (expectedActions.Length > 0) {
+                var session = doc.StartSmartTagSession();
+                Assert.AreEqual(1, session.ActionSets.Count);
+                var set = session.ActionSets.First();
 
-            Assert.AreEqual(set.Actions.Count, expectedActions.Length);
-            for (int i = 0; i < set.Actions.Count; i++) {
-                Assert.AreEqual(set.Actions[i].DisplayText, expectedActions[i].Replace("_", "__"));
-            }
+                Assert.AreEqual(set.Actions.Count, expectedActions.Length);
+                for (int i = 0; i < set.Actions.Count; i++) {
+                    Assert.AreEqual(set.Actions[i].DisplayText, expectedActions[i].Replace("_", "__"));
+                }
 
-            if (invokeAction != -1) {
-                doc.Invoke(() => set.Actions[invokeAction].Invoke());
-                Assert.AreEqual(expectedText, doc.Text);
+                if (invokeAction != -1) {
+                    doc.Invoke(() => set.Actions[invokeAction].Invoke());
+                    Assert.AreEqual(expectedText, doc.Text);
+                }
+            } else {
+                doc.StartSmartTagSessionNoSession();
             }
 
             VsIdeTestHostContext.Dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);

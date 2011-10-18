@@ -558,11 +558,11 @@ namespace Microsoft.PythonTools.Analysis {
                 // def g():  # starts on 3, ends on 4
                 //     pass
                 var parent = _unit.Ast.GlobalParent;
-                int lastStart = curScope.GetStart(parent);
+                int lastStart = curScope.GetStart(parent) - 1;
                 
                 for (int i = curScope.Children.Count - 1; i >= 0; i--) {
                     var scope = curScope.Children[i];
-                    var curStart = scope.GetStart(parent);
+                    var curStart = scope.GetBodyStart(parent);
                     
                     if (curStart <= lineNumber) {
                         var curEnd = scope.GetStop(parent);
@@ -577,7 +577,7 @@ namespace Microsoft.PythonTools.Analysis {
                             break;
                         }
                     }
-                    lastStart = curStart;
+                    lastStart = scope.GetStart(parent) - 1;
                 }
             }
             return chain;

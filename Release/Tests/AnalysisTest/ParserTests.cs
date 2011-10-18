@@ -1076,10 +1076,10 @@ namespace AnalysisTest {
                     new ErrorInfo("nonlocal declaration not allowed at module level", 195, 17, 1, 203, 17, 9),
                     new ErrorInfo("name 'x' is nonlocal and global", 118, 10, 13, 128, 10, 23),
                     new ErrorInfo("name 'x' is a parameter and nonlocal", 181, 15, 13, 191, 15, 23),
-                    new ErrorInfo("no binding for nonlocal 'x' found", 375, 34, 9, 407, 35, 23),
-                    new ErrorInfo("no binding for nonlocal 'x' found", 285, 26, 2, 307, 27, 13),
-                    new ErrorInfo("no binding for nonlocal 'globalvar' found", 227, 20, 1, 259, 21, 23),
-                    new ErrorInfo("no binding for nonlocal 'a' found", 14, 2, 5, 42, 3, 19)
+                    new ErrorInfo("no binding for nonlocal 'x' found", 406, 35, 22, 407, 35, 23),
+                    new ErrorInfo("no binding for nonlocal 'x' found", 306, 27, 12, 307, 27, 13),
+                    new ErrorInfo("no binding for nonlocal 'globalvar' found", 250, 21, 14, 259, 21, 23),
+                    new ErrorInfo("no binding for nonlocal 'a' found", 41, 3, 18, 42, 3, 19)
                 );
             }
 

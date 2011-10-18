@@ -380,6 +380,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Python.VS.TestData\AddImport\Assignments.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddImport\Parameters.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\AddImport\DocStringFuture.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -725,6 +731,9 @@
     </Content>
     <Content Include="Python.VS.TestData\Signatures.sln">
       <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\Signatures\multilinesigs.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\Signatures\sigs.py">

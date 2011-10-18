@@ -549,7 +549,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     // no previously definied variables, add it to the current scope
                     _currentScope.CreateVariable(n, VariableKind.Nonlocal);
                 }
-                _currentScope.AddNonLocalVariable(n);
+                _currentScope.AddNonLocalVariable(nameNode);
                 nameNode.AddVariableReference(_globalScope, _bindRefs, Reference(n));
             }
             return true;

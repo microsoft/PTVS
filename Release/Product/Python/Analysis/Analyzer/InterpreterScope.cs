@@ -34,7 +34,16 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         /// <summary>
-        /// Gets the line number that this scope starts at.
+        /// Gets the line that the scope actually starts on.  This is the line where the colon
+        /// is on for the start of the body if we're a function or class definition.
+        /// </summary>
+        public virtual int GetBodyStart(PythonAst ast) {
+            return GetStart(ast);
+        }
+
+        /// <summary>
+        /// Gets the line number that this scope starts at.  This is the line number which includes
+        /// the definition it's self (e.g. def foo(...) or class foo(...)).
         /// </summary>
         public virtual int GetStart(PythonAst ast) {
             if (_node == null) {
