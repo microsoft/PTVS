@@ -13,7 +13,7 @@
         <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
            <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
              <Directory Id="_B3593B26D51E4E91BED2317473CC5D85" Name="IronPython Interpreter">
-               <Directory Id="INSTALLLOCATION" Name="1.0">
+               <Directory Id="INSTALLLOCATION" Name="1.1">
                </Directory>
              </Directory>
           </Directory>

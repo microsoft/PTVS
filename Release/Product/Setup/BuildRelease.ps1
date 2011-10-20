@@ -60,6 +60,7 @@ foreach ($targetVs in ("11.0", "10.0")) {
         $outDir = $prevOutDir + "\Dev" + $targetVs
     }
     
+    tf edit $asmverfile
     (Get-Content $asmverfile) | %{ $_ -replace "0.7.4100.000", $version } | Set-Content $asmverfile
     
     Get-Content $asmverfile
@@ -82,6 +83,8 @@ foreach ($targetVs in ("11.0", "10.0")) {
             exit 3
         }
     }
+    
+    tf undo /noprompt $asmverfile
     
     mkdir $outdir\Debug
     copy -force ..\..\..\Binaries\Win32\Debug\PythonToolsInstaller.msi $outdir\Debug\PythonToolsInstaller.msi

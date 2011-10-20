@@ -17,7 +17,7 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{F0602549-7439-4DEC-8DCC-BF986EA53DF0}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools for Visual Studio\1.0\'/>
+                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.1' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools for Visual Studio\1.1\'/>
                 </RegistryKey>
             </Component>
             

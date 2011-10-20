@@ -13,7 +13,7 @@
         <Directory Id="_0AC62D6FF09F49DCB209A740D8BED631" Name="Extensions">
           <Directory Id="_16BB2A4F12774B36AA7994C01AE3479A" Name="Microsoft">
             <Directory Id="_D67A6BA9BF9248ECB0BA398AC5AF37AA" Name="Microsoft.VisualStudio.ReplWindow">
-              <Directory Id="INSTALLLOCATION" Name="1.0">
+              <Directory Id="INSTALLLOCATION" Name="1.1">
               </Directory>
             </Directory>
           </Directory>

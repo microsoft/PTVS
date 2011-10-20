@@ -11,7 +11,11 @@ using System.Runtime.InteropServices;
 // If you get compiler errors CS0579, "Duplicate '<attributename>' attribute", check your 
 // Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
 // (See also AssemblyInfoCommon.cs in this same directory.)
-[assembly: AssemblyVersion("0.7.4100.000")]
+#if DEV11
+[assembly: AssemblyVersion("0.7.4100.000")] // Assembly version not set in stone for Dev11 builds
+#else
+[assembly: AssemblyVersion("1.8.40818.0")]  // 1.0 shipped w/ this version, keep it for compat
+#endif
 [assembly: AssemblyFileVersion("0.7.4100.000")]
 
 class AssemblyVersionInfo {
