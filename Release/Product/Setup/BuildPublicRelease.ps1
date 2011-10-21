@@ -118,30 +118,16 @@ foreach($job in $jobs) {
 $destpath = "$args\Release\SignedBinaries"
 mkdir $destpath
 # copy files back to binaries
-foreach($file in dir $firstjob.JobCompletionPath) {
-    copy -force $file.FullName [System.IO.Path]::Combine($destpath, $file.Name)
-}
+echo 'Completion path', $firstjob.JobCompletionPath
 
-foreach($file in dir $secondjob.JobCompletionPath) {
-    copy -force $file.FullName [System.IO.Path]::Combine($destpath, $file.Name)
-}
+robocopy $firstjob.JobCompletionPath $destpath\
+robocopy $secondjob.JobCompletionPath $destpath\
+robocopy $thirdjob.JobCompletionPath $destpath\x64\
 
-foreach($file in dir $thirdjob.JobCompletionPath) {
-    copy -force $file.FullName [System.IO.Path]::Combine($destpath + "\\x64", $file.Name)
-}
- 
 # copy files back to binaries for re-building the MSI
-foreach($file in dir $firstjob.JobCompletionPath) {
-    copy -force $file.FullName [System.IO.Path]::Combine("..\..\..\binaries\win32\Release", $file.Name)
-}
-
-foreach($file in dir $secondjob.JobCompletionPath) {
-    copy -force $file.FullName [System.IO.Path]::Combine("..\..\..\binaries\win32\Release", $file.Name)
-}
-
-foreach($file in dir $thirdjob.JobCompletionPath) {
-    copy -force $file.FullName [System.IO.Path]::Combine("..\..\..\binaries\x64\Release", $file.Name)
-}
+robocopy $firstjob.JobCompletionPath ..\..\..\binaries\win32\Release\
+robocopy $secondjob.JobCompletionPath ..\..\..\binaries\win32\Release\
+robocopy $thirdjob.JobCompletionPath ..\..\..\binaries\x64\Release\
 
 # now generate MSI with signed binaries.
 $file = [System.IO.File]::ReadAllLines((get-location).Path + '\release_output.txt')
@@ -210,5 +196,5 @@ do {
 } while(!$files);
 
 foreach($file in dir $job.JobCompletionPath) {
-    copy -force $file.FullName [System.IO.Path]::Combine($args, "Release\" + $file.Name)
+    copy -force $file.FullName "$args\Release\PTVS 1.1 Alpha.msi"
 }
