@@ -5,7 +5,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:ptvs="clr-namespace:Microsoft.PythonTools" 
              mc:Ignorable="d" >
-    <StackPanel Name="_panel">
-        <TextBlock Name="_warning" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextWrapping="Wrap" Margin="2,5,2,2"/>
-    </StackPanel>
+    <Grid Name="_grid" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Name="_warning" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextWrapping="Wrap" Margin="2,5,2,2" Grid.Row="1" Grid.Column="0"/>
+    </Grid>
 </UserControl>

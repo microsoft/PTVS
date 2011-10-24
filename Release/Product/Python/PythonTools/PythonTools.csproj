@@ -129,10 +129,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
-    <Reference Include="Microsoft.VisualStudio.Platform.VSEditor, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\CommonExtensions\Microsoft\Editor\Microsoft.VisualStudio.Platform.VSEditor.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Aliases>global</Aliases>
     </Reference>
@@ -207,6 +203,8 @@
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
+    <Compile Include="PythonTools\Intellisense\IOrderableContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ImportSmartTagAction.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagAction.cs" />

@@ -41,7 +41,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 _warning.Visibility = System.Windows.Visibility.Collapsed;
             }
 
-            _panel.Children.Insert(0, view);
+            view.SetValue(Grid.RowProperty, 0);
+            view.SetValue(Grid.ColumnProperty, 0);
+            _grid.Children.Add(view);
 
             var content = view as ContentControl;
             if (content != null) {
@@ -54,7 +56,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         void SessionDismissed(object sender, System.EventArgs e) {
-            _panel.Children.Remove(_view);
+            _grid.Children.Remove(_view);
         }
 
         #region IIntellisenseCommandTarget Members

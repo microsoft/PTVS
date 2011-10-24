@@ -18,7 +18,6 @@ using System.ComponentModel.Composition;
 using System.Windows;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Text.Utilities;
 
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IUIElementProvider<CompletionSet, ICompletionSession>))]
