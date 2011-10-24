@@ -107,6 +107,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public bool IsCurrent {
+            get {
+                return DeclaringModule == null || DeclaringVersion == DeclaringModule.AnalysisVersion;
+            }
+        }
+
         #endregion
 
         #region Dynamic Operations

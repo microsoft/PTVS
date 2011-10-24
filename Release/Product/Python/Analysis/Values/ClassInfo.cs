@@ -115,8 +115,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<LocationInfo> Locations {
             get {
-                var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
-                return new[] { new LocationInfo(DeclaringModule, start.Line, start.Column) };
+                if (_declVersion == DeclaringModule.AnalysisVersion) {
+                    var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
+                    return new[] { new LocationInfo(DeclaringModule, start.Line, start.Column) };
+                }
+                return LocationInfo.Empty;
             }
         }
 

@@ -863,12 +863,34 @@ class _ReplOutput(object):
     def __init__(self, backend, is_stdout):
         self.backend = backend
         self.is_stdout = is_stdout
+        self.pipe = None
 
     def flush(self):
         pass
     
+    def fileno(self):
+        if self.pipe is None:        
+            self.pipe = os.pipe()
+            thread.start_new_thread(self.pipe_thread, (), {})
+
+        return self.pipe[1]
+
+    def pipe_thread(self):
+        while True:
+            data = os.read(self.pipe[0], 1)
+            if data == '\r':
+                data = os.read(self.pipe[0], 1)
+                if data == '\n':
+                    self.write('\n')
+                else:
+                    self.write('\r' + data)
+            else:
+                self.write(data)
+
     def writelines(self, lines):
-        pass
+        for line in lines:
+            self.write(line)
+            self.write('\n')
     
     def write(self, value):
         _debug_write('printing ' + repr(value) + '\n')

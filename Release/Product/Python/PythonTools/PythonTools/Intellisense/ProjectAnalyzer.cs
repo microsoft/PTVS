@@ -387,7 +387,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var text = exprRange.Value.GetText();
             var analyzer = analysis.ProjectState;
-            var lineNo = span.GetStartPoint(snapshot).GetContainingLine().LineNumber;
+            var lineNo = span.GetStartPoint(snapshot).GetContainingLine().LineNumber + 1;
 
             var expr = Statement.GetExpression(analysis.GetAstFromText(text, lineNo).Body);
 

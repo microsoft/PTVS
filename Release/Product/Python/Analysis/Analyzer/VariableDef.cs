@@ -134,14 +134,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool AddTypes(Node node, AnalysisUnit unit, IEnumerable<T> newTypes) {
             bool added = false;
 
+            var dependencies = GetDependentItems(unit.ProjectEntry);
             foreach (var value in newTypes) {
-                var declaringModule = value.DeclaringModule;
-                if (declaringModule == null || declaringModule.AnalysisVersion == value.DeclaringVersion) {
-                    var dependencies = GetDependentItems(declaringModule ?? unit.ProjectEntry);
-
-                    if (dependencies.Types.Add(value, unit.ProjectState)) {
-                        added = true;
-                    }
+                if (dependencies.Types.Add(value, unit.ProjectState)) {
+                    added = true;
                 }
             }
 
@@ -268,17 +264,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     class LocatedVariableDef : VariableDef {
         private readonly ProjectEntry _entry;
+        private readonly int _declaringVersion;
         private Node _location;
+
         
         public LocatedVariableDef(ProjectEntry entry, Node location) {
             _entry = entry;
             _location = location;
+            _declaringVersion = entry.AnalysisVersion;
         }
 
         public LocatedVariableDef(ProjectEntry entry, Node location, VariableDef copy) {
             _entry = entry;
             _location = location;
             _dependencies = copy._dependencies;
+            _declaringVersion = entry.AnalysisVersion;
+        }
+
+        public int DeclaringVersion {
+            get {
+                return _declaringVersion;
+            }
         }
 
         public ProjectEntry Entry {

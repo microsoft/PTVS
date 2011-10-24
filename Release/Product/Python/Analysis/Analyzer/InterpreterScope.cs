@@ -164,6 +164,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
+        public void ClearLinkedVariables() {
+            _linkedVariables = null;
+        }
+
         internal HashSet<VariableDef> GetLinkedVariables(string saveName) {
             if (_linkedVariables == null) {
                 _linkedVariables = new Dictionary<string, HashSet<VariableDef>>();

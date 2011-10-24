@@ -858,7 +858,7 @@ class C(object):
 ";
             var entry = ProcessText(text);
             VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(9, 14, VariableType.Definition), new VariableLocation(10, 18, VariableType.Reference), new VariableLocation(11, 20, VariableType.Reference));
-            VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "foo")), new VariableLocation(8, 24, VariableType.Definition), new VariableLocation(9, 20, VariableType.Reference));
+            VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "= foo")), new VariableLocation(8, 24, VariableType.Definition), new VariableLocation(9, 20, VariableType.Reference));
         }
 
         [TestMethod]
@@ -875,7 +875,7 @@ class C(object):
 ";
             var entry = ProcessText(text);
             VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(5, 14, VariableType.Definition), new VariableLocation(6, 18, VariableType.Reference), new VariableLocation(7, 20, VariableType.Reference));
-            VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "foo")), new VariableLocation(4, 24, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
+            VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "= foo")), new VariableLocation(4, 24, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
 
             text = @"
 # add ref w/ type info
@@ -889,7 +889,7 @@ D(42)";
             entry = ProcessText(text);
 
             VerifyReferences(entry.GetVariables("self.abc", GetLineNumber(text, "self.abc")), new VariableLocation(5, 14, VariableType.Definition), new VariableLocation(6, 18, VariableType.Reference), new VariableLocation(7, 20, VariableType.Reference));
-            VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "foo")), new VariableLocation(4, 24, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
+            VerifyReferences(entry.GetVariables("foo", GetLineNumber(text, "= foo")), new VariableLocation(4, 24, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
             VerifyReferences(UniqifyVariables(entry.GetVariables("D", GetLineNumber(text, "D(42)"))), new VariableLocation(9, 1, VariableType.Reference), new VariableLocation(3, 7, VariableType.Definition));
 
             // function definitions
@@ -1012,7 +1012,7 @@ def f(abc):
         abc
 ";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("abc", GetLineNumber(text, "f(abc)")), 
+            VerifyReferences(entry.GetVariables("abc", GetLineNumber(text, "try:")), 
                 new VariableLocation(2, 7, VariableType.Definition), 
                 new VariableLocation(4, 12, VariableType.Reference), 
                 new VariableLocation(7, 23, VariableType.Definition),
@@ -1093,7 +1093,7 @@ def f(abc):
     lambda : abc
 ";
             entry = ProcessText(text);
-            VerifyReferences(entry.GetVariables("abc", GetLineNumber(text, "f(abc)")),
+            VerifyReferences(entry.GetVariables("abc", GetLineNumber(text, "x =")),
                 new VariableLocation(2, 7, VariableType.Definition),
 
                 new VariableLocation(3, 9, VariableType.Reference),
@@ -1156,7 +1156,7 @@ def f(a):
 
             entry = ProcessText(text);
             VerifyReferences(
-                entry.GetVariables("a", GetLineNumber(text, "f(a)")),
+                entry.GetVariables("a", GetLineNumber(text, "def g")),
                 new VariableLocation(2, 7, VariableType.Definition)
             );
 
@@ -1384,7 +1384,8 @@ foo = abc.f()
 
         [TestMethod]
         public void TestKeywordArguments() {
-            var funcDef = "def f(a, b, c): pass";
+            var funcDef = @"def f(a, b, c): 
+    pass";
             var classWithInit  = @"class f(object):
     def __init__(self, a, b, c):
         pass";
@@ -1418,7 +1419,8 @@ f = x().g";
 
         [TestMethod]
         public void TestPositionalSplat() {
-            var funcDef = "def f(a, b, c): pass";            
+            var funcDef = @"def f(a, b, c): 
+    pass";            
             var classWithInit = @"class f(object):
     def __init__(self, a, b, c):
         pass";
@@ -1473,7 +1475,7 @@ class C(object):
             var fifty = entry.GetVariablesNoBuiltins(GetLineNumber(text, "abc.foo")).ToSet();
             AssertContainsExactly(fifty, "C", "D", "a", "abc", "self", "x");
 
-            var three = entry.GetVariablesNoBuiltins(GetLineNumber(text, "lass D")).ToSet();
+            var three = entry.GetVariablesNoBuiltins(GetLineNumber(text, "lass D") + 1).ToSet();
             AssertContainsExactly(three, "C", "D", "bar");
 
             var allFifty = entry.GetMembersFromName("abc", GetLineNumber(text, "abc.foo")).ToSet();
@@ -1895,7 +1897,7 @@ class D(object):
 def g(a, b, c): pass
 ";
             var entry = ProcessText(text);
-            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(text, "self")),
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(text, "self.")),
                 GetUnion(_objectMembers, "func"));
         }
 
@@ -2011,7 +2013,7 @@ class X(object):
         pass
 ";
             var entry = ProcessText(text);
-            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(text, "self")),
+            AssertContainsExactly(entry.GetMembersFromName("self", GetLineNumber(text, "self.")),
                 GetUnion(_objectMembers, "f", "g", "h"));
         }
 
@@ -2127,6 +2129,57 @@ class x(object):
             public string GetLine(int lineNo) {
                 throw new NotImplementedException();
             }
+        }
+
+
+        [TestMethod]
+        public void TestMoveClass() {
+            var fooSrc = GetSourceUnit("from bar import C", @"foo.py");
+
+            var barSrc = GetSourceUnit(@"
+class C(object):
+    pass
+", @"bar.py");
+
+            var bazSrc = GetSourceUnit(@"
+class C(object):
+    pass
+", @"baz.py");
+
+            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+
+            var foo = state.AddModule("foo", @"foo.py", EmptyAnalysisCookie.Instance);
+            var bar = state.AddModule("bar", @"bar.py", EmptyAnalysisCookie.Instance);
+            var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
+
+            Prepare(foo, fooSrc);
+            Prepare(bar, barSrc);
+            Prepare(baz, bazSrc);
+
+            foo.Analyze();
+            bar.Analyze();
+            baz.Analyze();
+
+            Assert.AreEqual(foo.Analysis.GetValues("C", 1).First().Description, "class C");
+            Assert.IsTrue(foo.Analysis.GetValues("C", 1).First().Location.FilePath.EndsWith("bar.py"));
+
+            barSrc = GetSourceUnit(@"
+", @"bar.py");
+
+            // delete the class..
+            Prepare(bar, barSrc);
+            bar.Analyze();
+            bar.AnalysisGroup.AnalyzeQueuedEntries();
+
+            Assert.AreEqual(foo.Analysis.GetValues("C", 1).ToArray().Length, 0);
+
+            fooSrc = GetSourceUnit("from baz import C", @"foo.py");
+            Prepare(foo, fooSrc);
+
+            foo.Analyze();
+
+            Assert.AreEqual(foo.Analysis.GetValues("C", 1).First().Description, "class C");
+            Assert.IsTrue(foo.Analysis.GetValues("C", 1).First().Location.FilePath.EndsWith("baz.py"));
         }
 
         [TestMethod]
@@ -2710,23 +2763,25 @@ class Base(object):
     def __init__(self):
         self.foo()
     
-    def foo(self): pass
+    def foo(self): 
+        pass
     
     
 class Derived(Base):
-    def foo(self): 'x'
+    def foo(self): 
+        'x'
 ";
 
             var entry = ProcessText(text);
 
             var vars = entry.GetVariables("self.foo", GetLineNumber(text, "'x'"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
 
-            vars = entry.GetVariables("self.foo", GetLineNumber(text, "foo(self): pass"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
+            vars = entry.GetVariables("self.foo", GetLineNumber(text, "pass"));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
 
             vars = entry.GetVariables("self.foo", GetLineNumber(text, "self.foo"));
-            VerifyReferences(UniqifyVariables(vars), new VariableLocation(10, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
+            VerifyReferences(UniqifyVariables(vars), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
         }
         
         /// <summary>

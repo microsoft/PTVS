@@ -409,12 +409,12 @@ namespace Microsoft.PythonTools.Analysis {
         private object GenerateParameter(Parameter param, VariableDef typeInfo) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             // TODO: Serialize default values and type name
-            if (param.Name.StartsWith("**")) {
-                res["name"] = MemoizeString(param.Name.Substring(2));
+            if(param.Kind == ParameterKind.Dictionary) {
+                res["name"] = MemoizeString(param.Name);
                 res["arg_format"] = "**";
                 res["type"] = GenerateTypeName(typeInfo.Types);
-            } else if (param.Name.StartsWith("*")) {
-                res["name"] = MemoizeString(param.Name.Substring(1));
+            } else if (param.Kind == ParameterKind.List) {
+                res["name"] = MemoizeString(param.Name);
                 res["arg_format"] = "*";
                 res["type"] = GenerateTypeName(typeInfo.Types);
             } else {

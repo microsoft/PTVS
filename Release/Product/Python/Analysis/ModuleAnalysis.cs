@@ -62,11 +62,13 @@ namespace Microsoft.PythonTools.Analysis {
                 MultipleMemberInfo multipleMembers = v as MultipleMemberInfo;
                 if (multipleMembers != null) {
                     foreach (var member in multipleMembers.Members) {
-                        yield return member;
+                        if (v.IsCurrent) {
+                            yield return member;
+                        }
                     }
-                } else {
+                } else if (v.IsCurrent) {
                     yield return v;
-                }
+                }                
             }
         }
 
@@ -81,7 +83,9 @@ namespace Microsoft.PythonTools.Analysis {
         internal IEnumerable<AnalysisVariable> ToVariables(IReferenceable referenceable) {
             LocatedVariableDef locatedDef = referenceable as LocatedVariableDef;
 
-            if (locatedDef != null && locatedDef.Entry.Tree != null) {  // null tree if there are errors in the file
+            if (locatedDef != null &&
+                locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
+                locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {  
                 var start = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
                 yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, start.Line, start.Column));
             }
@@ -564,7 +568,7 @@ namespace Microsoft.PythonTools.Analysis {
                     var scope = curScope.Children[i];
                     var curStart = scope.GetBodyStart(parent);
                     
-                    if (curStart <= lineNumber) {
+                    if (curStart < lineNumber) {
                         var curEnd = scope.GetStop(parent);
 
                         if (curEnd >= lineNumber ||                                      // we fit in this scope
@@ -577,7 +581,7 @@ namespace Microsoft.PythonTools.Analysis {
                             break;
                         }
                     }
-                    lastStart = scope.GetStart(parent) - 1;
+                    lastStart = scope.GetStart(parent);
                 }
             }
             return chain;

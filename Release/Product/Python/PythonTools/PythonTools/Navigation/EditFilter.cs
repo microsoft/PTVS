@@ -526,7 +526,7 @@ namespace Microsoft.PythonTools.Language {
         private void UpdateStatusForIncompleteAnalysis() {
             var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
             var analyzer = _textView.GetAnalyzer();
-            if (analyzer != null && !analyzer.IsAnalyzing) {
+            if (analyzer != null && analyzer.IsAnalyzing) {
                 statusBar.SetText("Python source analysis is not up to date");
             }
         }

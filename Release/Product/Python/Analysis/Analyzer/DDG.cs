@@ -183,6 +183,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 Scopes[Scopes.Length - 1].GetLinkedVariables(saveName).Add(importedValue);
 
                 newTypes = newTypes.Union(importedValue.Types, ref madeSet);
+                importedValue.AddDependency(_unit);
             }
 
             BuiltinModule builtinModule = userMod as BuiltinModule;

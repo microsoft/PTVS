@@ -142,6 +142,26 @@ namespace AnalysisTest {
         }
 
         /// <summary>
+        /// “x = 42”
+        /// “x “ should not being up any completions.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestStdOutRedirected() {
+            var interactive = Prepare();
+
+            const string code = "import subprocess, sys";
+            Keyboard.Type(code + "\r");
+
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt);
+
+            const string code2 = "x = subprocess.Popen(['C:\\\\python27\\\\python.exe', '-c', 'print 42'], stdout=sys.stdout).wait()";
+            Keyboard.Type(code2 + "\r");
+
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt + code2, "42", ReplPrompt);
+        }
+
+        /// <summary>
         /// Pasting CSV data
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
