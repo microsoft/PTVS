@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 case TokenKind.Error:
                     if (token is IncompleteStringErrorToken) {
-                        result.Category = TokenCategory.StringLiteral;
+                        result.Category = TokenCategory.IncompleteMultiLineStringLiteral;
                     } else {
                         result.Category = TokenCategory.Error;
                     }

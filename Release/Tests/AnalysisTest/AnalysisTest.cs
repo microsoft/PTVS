@@ -812,10 +812,158 @@ foo2 = u'abc' + u'%d'
 bar2 = foo2 % (42, )";
 
             var entry = ProcessText(text);
-            AssertContainsExactly(GetTypeNames(entry.GetValues("y", GetLineNumber(text, "y ="))), "type unicode");
-            AssertContainsExactly(GetTypeNames(entry.GetValues("y1", GetLineNumber(text, "y1 ="))), "type str");
-            AssertContainsExactly(GetTypeNames(entry.GetValues("bar", GetLineNumber(text, "bar ="))), "type str");
-            AssertContainsExactly(GetTypeNames(entry.GetValues("bar2", GetLineNumber(text, "bar2 ="))), "type unicode");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y", GetLineNumber(text, "y ="))), "unicode");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y1", GetLineNumber(text, "y1 ="))), "str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar", GetLineNumber(text, "bar ="))), "str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar2", GetLineNumber(text, "bar2 ="))), "unicode");
+        }
+
+        [TestMethod]
+        public void TestStringMultiply() {
+            var text = @"
+x = u'abc %d'
+y = x * 100
+
+
+x1 = 'abc %d'
+y1 = x1 * 100
+
+foo = 'abc %d'.lower()
+bar = foo * 100
+
+foo2 = u'abc' + u'%d'
+bar2 = foo2 * 100";
+
+            var entry = ProcessText(text);
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y", GetLineNumber(text, "y ="))), "unicode");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y1", GetLineNumber(text, "y1 ="))), "str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar", GetLineNumber(text, "bar ="))), "str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar2", GetLineNumber(text, "bar2 ="))), "unicode");
+
+            text = @"
+x = u'abc %d'
+y = 100 * x
+
+
+x1 = 'abc %d'
+y1 = 100 * x1
+
+foo = 'abc %d'.lower()
+bar = 100 * foo
+
+foo2 = u'abc' + u'%d'
+bar2 = 100 * foo2";
+
+            entry = ProcessText(text);
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y", GetLineNumber(text, "y ="))), "unicode");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y1", GetLineNumber(text, "y1 ="))), "str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar", GetLineNumber(text, "bar ="))), "str");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar2", GetLineNumber(text, "bar2 ="))), "unicode");
+        }
+
+        [TestMethod]
+        public void TestBinaryOperators() {
+            var operators = new[] {
+                new { Method = "add", Operator = "+" },
+                new { Method = "sub", Operator = "-" },
+                new { Method = "mul", Operator = "*" },
+                new { Method = "div", Operator = "/" },
+                new { Method = "mod", Operator = "%" },
+                new { Method = "and", Operator = "&" },
+                new { Method = "or", Operator = "|" },
+                new { Method = "xor", Operator = "^" },
+                new { Method = "lshift", Operator = "<<" },
+                new { Method = "rshift", Operator = ">>" },
+                new { Method = "pow", Operator = "**" },
+                new { Method = "floordiv", Operator = "//" },
+            };
+
+            var text = @"
+class ForwardResult(object):
+    pass
+
+class ReverseResult(object):
+    pass
+
+class C(object):
+    def __{0}__(self, other):
+        return ForwardResult()
+
+    def __r{0}__(self, other):
+        return ReverseResult()
+
+a = C() {1} 42
+b = 42 {1} C()
+c = [] {1} C()
+d = C() {1} []
+e = () {1} C()
+f = C() {1} ()
+g = C() {1} 42.0
+h = 42.0 {1} C()
+i = C() {1} 42L
+j = 42L {1} C()
+k = C() {1} 42j
+l = 42j {1} C()
+";
+
+            foreach (var test in operators) {
+                Console.WriteLine(test.Operator);
+                var entry = ProcessText(String.Format(text, test.Method, test.Operator));
+
+                AssertContainsExactly(GetTypeNames(entry.GetValues("a", GetLineNumber(text, "a ="))), "ForwardResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("b", GetLineNumber(text, "b ="))), "ReverseResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("c", GetLineNumber(text, "c ="))), "ReverseResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("d", GetLineNumber(text, "d ="))), "ForwardResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("e", GetLineNumber(text, "e ="))), "ReverseResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("f", GetLineNumber(text, "f ="))), "ForwardResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("g", GetLineNumber(text, "g ="))), "ForwardResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("h", GetLineNumber(text, "h ="))), "ReverseResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("i", GetLineNumber(text, "i ="))), "ForwardResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("j", GetLineNumber(text, "j ="))), "ReverseResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("k", GetLineNumber(text, "k ="))), "ForwardResult instance");
+                AssertContainsExactly(GetTypeNames(entry.GetValues("l", GetLineNumber(text, "l ="))), "ReverseResult instance");
+            }
+        }
+
+        [TestMethod]
+        public void TestSequenceMultiply() {
+            var text = @"
+x = ()
+y = x * 100
+
+x1 = (1,2,3)
+y1 = x1 * 100
+
+foo = [1,2,3]
+bar = foo * 100
+
+foo2 = []
+bar2 = foo2 * 100";
+
+            var entry = ProcessText(text);
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y", GetLineNumber(text, "y ="))), "tuple");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y1", GetLineNumber(text, "y1 ="))), "tuple");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar", GetLineNumber(text, "bar ="))), "list");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar2", GetLineNumber(text, "bar2 ="))), "list");
+
+            text = @"
+x = ()
+y = 100 * x
+
+x1 = (1,2,3)
+y1 = 100 * x1
+
+foo = [1,2,3]
+bar = 100 * foo 
+
+foo2 = []
+bar2 = 100 * foo2";
+
+            entry = ProcessText(text);
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y", GetLineNumber(text, "y ="))), "tuple");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("y1", GetLineNumber(text, "y1 ="))), "tuple");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar", GetLineNumber(text, "bar ="))), "list");
+            AssertContainsExactly(GetTypeNames(entry.GetValues("bar2", GetLineNumber(text, "bar2 ="))), "list");
         }
 
         [TestMethod]

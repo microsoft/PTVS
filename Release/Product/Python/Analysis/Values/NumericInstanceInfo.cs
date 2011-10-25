@@ -16,10 +16,10 @@ using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class NumericInstanceInfo : BuiltinInstanceInfo {
-
         public NumericInstanceInfo(BuiltinClassInfo klass)
             : base(klass) {
         }
@@ -36,24 +36,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.IsNot:
                     return ProjectState._boolType.Instance;
                 case PythonOperator.TrueDivide:
-                    if (ClassInfo == unit.ProjectState._intType || ClassInfo == unit.ProjectState._longType) {
-                        bool intsOnly = true, rhsInt = false;
-                        foreach (var type in rhs) {
-                            if (type.IsOfType(unit.ProjectState._intType) || type.IsOfType(unit.ProjectState._longType)) {
-                                rhsInt = true;
-                            } else {
-                                intsOnly = false;
-                            }
-                        }
-
-                        if (rhsInt) {
-                            if (intsOnly) {
-                                return unit.ProjectState._floatType;
-                            }
-                            return base.BinaryOperation(node, unit, operation, rhs).Union(unit.ProjectState._floatType);
-                        }
-                    }
-                    break;
+                case PythonOperator.Add:
+                case PythonOperator.Subtract:
+                case PythonOperator.Multiply:
+                case PythonOperator.Divide:
+                case PythonOperator.Mod:
+                case PythonOperator.BitwiseAnd:
+                case PythonOperator.BitwiseOr:
+                case PythonOperator.Xor:
+                case PythonOperator.LeftShift:
+                case PythonOperator.RightShift:
+                case PythonOperator.Power:
+                case PythonOperator.FloorDivide:
+                    return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? base.BinaryOperation(node, unit, operation, rhs);
             }
             return base.BinaryOperation(node, unit, operation, rhs);
         }

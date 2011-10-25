@@ -15,6 +15,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -28,6 +30,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override int? GetLength() {
             return IndexTypes.Length;
+        }
+
+        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+            switch (operation) {
+                case PythonOperator.Multiply:
+                    ISet<Namespace> res = EmptySet<Namespace>.Instance;
+                    bool madeSet = false;
+                    foreach (var type in rhs) {
+                        var typeId = type.TypeId;
+
+                        if (typeId == BuiltinTypeId.Int ||
+                            typeId == BuiltinTypeId.Long) {
+                            res = res.Union(this, ref madeSet);
+                        } else {
+                            res = res.Union(type.ReverseBinaryOperation(node, unit, operation, this), ref madeSet);
+                        }
+                    
+                    }
+                    return res;
+            }
+            return base.BinaryOperation(node, unit, operation, rhs);
+        }
+
+        public override ISet<Namespace> ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+            return SelfSet;
         }
 
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {

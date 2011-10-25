@@ -98,6 +98,11 @@ namespace Microsoft.PythonTools.Parsing {
         /// </summary>
         Error,
 
+        /// <summary>
+        /// The start or continuation of an incomplete multi-line string literal
+        /// </summary>
+        IncompleteMultiLineStringLiteral,
+
         LanguageDefined = 0x100
     }
 }

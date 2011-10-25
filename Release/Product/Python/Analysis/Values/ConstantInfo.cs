@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class ConstantInfo : BuiltinInstanceInfo {
         private readonly object _value;
-        private readonly Namespace _builtinInfo;
+        private readonly BuiltinInstanceInfo _builtinInfo;
         private readonly PythonMemberType _memberType;
         private string _doc;
 
@@ -39,15 +39,133 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _builtinInfo = ((BuiltinClassInfo)projectState.GetNamespaceFromObjects(value.Type)).Instance;
         }
 
+        internal static BuiltinTypeId[,] NumericResultType = MakeTypeMapping();
+
+        /// <summary>
+        /// Builds the table which defines the result of a numeric addition.
+        /// 
+        /// First index is the lhs, second index is the rhs, the value is the result type.
+        /// </summary>
+        /// <returns></returns>
+        private static BuiltinTypeId[,] MakeTypeMapping() {
+
+            const int intVal = (int)BuiltinTypeId.Int;
+            const int longVal = (int)BuiltinTypeId.Long;
+            const int floatVal = (int)BuiltinTypeId.Float;
+            const int complexVal = (int)BuiltinTypeId.Complex;
+            
+            var res = new BuiltinTypeId[5,5];
+
+            res[intVal, intVal] = BuiltinTypeId.Int;
+            res[intVal, floatVal] = BuiltinTypeId.Float;
+            res[intVal, complexVal] = BuiltinTypeId.Complex;
+            res[intVal, longVal] = BuiltinTypeId.Long;
+
+            res[floatVal, intVal] = BuiltinTypeId.Float;
+            res[floatVal, floatVal] = BuiltinTypeId.Float;
+            res[floatVal, complexVal] = BuiltinTypeId.Complex;
+            res[floatVal, longVal] = BuiltinTypeId.Float;
+
+            res[longVal, intVal] = BuiltinTypeId.Long;
+            res[longVal, floatVal] = BuiltinTypeId.Float;
+            res[longVal, complexVal] = BuiltinTypeId.Complex;
+            res[longVal, longVal] = BuiltinTypeId.Long;
+
+            res[complexVal, intVal] = BuiltinTypeId.Complex;
+            res[complexVal, floatVal] = BuiltinTypeId.Complex;
+            res[complexVal, complexVal] = BuiltinTypeId.Complex;
+            res[complexVal, longVal] = BuiltinTypeId.Complex;
+            
+            return res;
+        }
+
         public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
-            if (operation == PythonOperator.Mod) {
-                if (_value is string) {
-                    return ProjectState._unicodeType.SelfSet;
-                } else if (_value is AsciiString) {
-                    return ProjectState._bytesType.SelfSet;
-                }
+            return NumericOp(node, this, unit, operation, rhs) ?? _builtinInfo.BinaryOperation(node, unit, operation, rhs);
+        }
+
+        public override ISet<Namespace> ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+            return SelfSet;
+        }
+
+        internal static ISet<Namespace> NumericOp(Node node, Namespace lhs, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+            BuiltinTypeId curType = lhs.TypeId;
+            switch (operation) {
+                case PythonOperator.TrueDivide:
+                    if (curType == BuiltinTypeId.Int || curType == BuiltinTypeId.Long) {
+                        bool intsOnly = true, rhsInt = false;
+                        foreach (var type in rhs) {
+                            var rhsType = type.TypeId;
+                            if (rhsType == BuiltinTypeId.Int|| rhsType == BuiltinTypeId.Long) {
+                                rhsInt = true;
+                            } else {
+                                intsOnly = false;
+                            }
+                        }
+
+                        if (rhsInt) {
+                            if (intsOnly) {
+                                return unit.ProjectState._floatType;
+                            }
+                            goto case PythonOperator.Add;
+                        }
+                    }
+                    break;
+                case PythonOperator.Mod:
+                    if (lhs.TypeId == BuiltinTypeId.Str || lhs.TypeId == BuiltinTypeId.Bytes) {
+                        return lhs.SelfSet;
+                    }
+                    goto case PythonOperator.Add;
+                case PythonOperator.Multiply:
+                    if (curType == BuiltinTypeId.Str || curType == BuiltinTypeId.Bytes) {
+                        foreach (var type in rhs) {
+                            var rhsType = type.TypeId;
+                            if (rhsType == BuiltinTypeId.Int || rhsType == BuiltinTypeId.Long) {
+                                return lhs.SelfSet;
+                            }
+                        }
+                    } else if (curType == BuiltinTypeId.Int || curType == BuiltinTypeId.Long) {
+                        foreach (var type in rhs) {
+                            var rhsType = type.TypeId;
+                            if (rhsType == BuiltinTypeId.Str || rhsType == BuiltinTypeId.Bytes) {
+                                return type.SelfSet;
+                            }
+                        }
+                    }
+
+                    goto case PythonOperator.Add;
+                case PythonOperator.Add:
+                case PythonOperator.Subtract:
+                case PythonOperator.Divide:
+                case PythonOperator.BitwiseAnd:
+                case PythonOperator.BitwiseOr:
+                case PythonOperator.Xor:
+                case PythonOperator.LeftShift:
+                case PythonOperator.RightShift:
+                case PythonOperator.Power:
+                case PythonOperator.FloorDivide:
+                    ISet<Namespace> res = EmptySet<Namespace>.Instance;
+                    bool madeSet = false;
+
+                    foreach (var type in rhs) {
+                        var typeId = type.TypeId;
+
+                        if (curType <= BuiltinTypeId.Complex && typeId <= BuiltinTypeId.Complex) {
+                            switch (NumericResultType[(int)curType, (int)typeId]) {
+                                case BuiltinTypeId.Complex: res = res.Union(unit.ProjectState._complexType, ref madeSet); break;
+                                case BuiltinTypeId.Long: res = res.Union(unit.ProjectState._floatType, ref madeSet); break;
+                                case BuiltinTypeId.Float: res = res.Union(unit.ProjectState._floatType, ref madeSet); break;
+                                case BuiltinTypeId.Int: res = res.Union(unit.ProjectState._intType, ref madeSet); break;
+                                default:
+                                    res = res.Union(type.ReverseBinaryOperation(node, unit, operation, lhs), ref madeSet);
+                                    break;
+                            }
+                        } else {
+                            res = res.Union(type.ReverseBinaryOperation(node, unit, operation, lhs), ref madeSet);
+                        }
+                    }
+                    return res;
             }
-            return _builtinInfo.BinaryOperation(node, unit, operation, rhs);
+            return null;
         }
 
         public override ISet<Namespace> UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
@@ -149,6 +267,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public object Value {
             get {
                 return _value;
+            }
+        }
+
+        public override BuiltinTypeId TypeId {
+            get {
+                return ClassInfo.PythonType.TypeId;
             }
         }
     }

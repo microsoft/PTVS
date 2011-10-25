@@ -89,19 +89,38 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
-            if (operation == PythonOperator.Mod) {
-                if (_klass == ProjectState._unicodeType) {
-                    return ProjectState._unicodeType.SelfSet;
-                } else if (_klass == ProjectState._bytesType) {
-                    return ProjectState._bytesType.SelfSet;
-                }
+            switch (operation) {
+                case PythonOperator.Mod:
+                case PythonOperator.Multiply:
+                    ISet<Namespace> res = EmptySet<Namespace>.Instance;
+                    bool madeSet = false;
+                    foreach (var type in rhs) {
+                        if (type.IsOfType(ProjectState._intType) || type.IsOfType(ProjectState._longType) || operation == PythonOperator.Mod) {
+                            if (_klass == ProjectState._unicodeType) {
+                                res = res.Union(ProjectState._unicodeType.Instance.SelfSet, ref madeSet);
+                            } else if (_klass == ProjectState._bytesType) {
+                                res = res.Union(ProjectState._bytesType.Instance.SelfSet, ref madeSet);
+                            } else {
+                                res = res.Union(type.ReverseBinaryOperation(node, unit, operation, SelfSet), ref madeSet);
+                            }
+                        } else {
+                            res = res.Union(type.ReverseBinaryOperation(node, unit, operation, SelfSet), ref madeSet);
+                        }
+                    }
+                    return res;
+                default:
+                    return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? base.BinaryOperation(node, unit, operation, rhs);
             }
-
-            return base.BinaryOperation(node, unit, operation, rhs);
         }
 
         public override bool IsOfType(BuiltinClassInfo klass) {
             return this.ClassInfo == klass;
+        }
+
+        public override BuiltinTypeId TypeId {
+            get {
+                return ClassInfo.PythonType.TypeId;
+            }
         }
 
         #region IReferenceableContainer Members

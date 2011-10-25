@@ -6,7 +6,10 @@ try:
     from IPython.zmq.kernelmanager import ShellSocketChannel, KernelManager, SubSocketChannel, StdInSocketChannel, HBSocketChannel
     from IPython.utils.traitlets import Type
 except ImportError:
-    raise UnsupportedReplException('IPython mode requires IPython 0.11 or later.')
+    import sys
+    exc_value = sys.exc_info()[1]
+
+    raise UnsupportedReplException('IPython mode requires IPython 0.11 or later: ' + str(exc_value))
 
 import thread
 from base64 import decodestring

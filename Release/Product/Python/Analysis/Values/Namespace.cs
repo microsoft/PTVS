@@ -146,8 +146,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.Is:
                 case PythonOperator.IsNot:
                     return unit.DeclaringModule.ProjectEntry.ProjectState._boolType.Instance;
+                default:
+                    ISet<Namespace> res = EmptySet<Namespace>.Instance;
+                    bool madeSet = false;
+                    foreach (var value in rhs) {
+                        res = res.Union(value.ReverseBinaryOperation(node, unit, operation, SelfSet), ref madeSet);
+                    }
+
+                    return res;
             }
-            return SelfSet.Union(rhs);
+        }
+
+        /// <summary>
+        /// Provides implementation of __r*__methods (__radd__, __rsub__, etc...)
+        /// 
+        /// This is dispatched to when the LHS doesn't understand the RHS.  Unlike normal Python it's currently
+        /// the LHS responsibility to dispatch to this.
+        /// </summary>
+        public virtual ISet<Namespace> ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {                        
+            return EmptySet<Namespace>.Instance;
         }
 
         public virtual ISet<Namespace> UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
@@ -193,6 +210,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public virtual bool IsOfType(BuiltinClassInfo klass) {
             return false;
+        }
+
+        public virtual BuiltinTypeId TypeId {
+            get {
+                return BuiltinTypeId.Unknown;
+            }
         }
 
         #endregion

@@ -82,6 +82,31 @@ namespace AnalysisTest.Mocks {
         }
 
         [TestMethod]
+        public void Scenario_CompletionInTripleQuotedString() {
+            string code = @"
+'''
+foo
+bar
+
+baz
+'''
+";
+
+            for (int i = code.IndexOf("'''") + 4; i < code.LastIndexOf("'''"); i++) {
+                Console.WriteLine(i);
+                var analysis = AnalyzeExpression(i, code, forCompletion: false);
+
+                var fact = new IronPythonInterpreterFactory();
+                var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
+                var buffer = new MockTextBuffer(code);
+                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+                var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0));
+                Assert.AreEqual(context, NormalCompletionAnalysis.EmptyCompletionContext);
+            }
+        }
+
+        [TestMethod]
         public void Scenario_GotoDefinition() {
             string code = @"
 class C:

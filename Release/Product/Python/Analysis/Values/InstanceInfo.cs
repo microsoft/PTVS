@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -204,6 +205,64 @@ namespace Microsoft.PythonTools.Analysis.Values {
             instMember.AddReference(node, unit);
 
             _classInfo.GetMember(node, unit, name);
+        }
+
+        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, ISet<Namespace> rhs) {
+            string op = null;
+            switch (operation) {
+                case PythonOperator.Multiply: op = "__mul__"; break;
+                case PythonOperator.Add: op = "__add__"; break;
+                case PythonOperator.Subtract: op = "__sub__"; break;
+                case PythonOperator.Xor: op = "__xor__"; break;
+                case PythonOperator.BitwiseAnd: op = "__and__"; break;
+                case PythonOperator.BitwiseOr: op = "__or__"; break;
+                case PythonOperator.Divide: op = "__div__"; break;
+                case PythonOperator.FloorDivide: op = "__floordiv__"; break;
+                case PythonOperator.LeftShift: op = "__lshift__"; break;
+                case PythonOperator.Mod: op = "__mod__"; break;
+                case PythonOperator.Power: op = "__pow__"; break;
+                case PythonOperator.RightShift: op = "__rshift__"; break;
+                case PythonOperator.TrueDivide: op = "__truediv__"; break;
+            }
+
+            if (op != null) {
+                var invokeMem = GetMember(node, unit, op);
+                if (invokeMem.Count > 0) {
+                    // call __*__ method
+                    return invokeMem.Call(node, unit, new[] { rhs }, ExpressionEvaluator.EmptyNames);
+                }
+            }
+
+            return base.BinaryOperation(node, unit, operation, rhs);
+        }
+
+        public override ISet<Namespace> ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+            string op = null;
+            switch (operation) {
+                case PythonOperator.Multiply: op = "__rmul__"; break;
+                case PythonOperator.Add: op = "__radd__"; break;
+                case PythonOperator.Subtract: op = "__rsub__"; break;
+                case PythonOperator.Xor: op = "__rxor__"; break;
+                case PythonOperator.BitwiseAnd: op = "__rand__"; break;
+                case PythonOperator.BitwiseOr: op = "__ror__"; break;
+                case PythonOperator.Divide: op = "__rdiv__"; break;
+                case PythonOperator.FloorDivide: op = "__rfloordiv__"; break;
+                case PythonOperator.LeftShift: op = "__rlshift__"; break;
+                case PythonOperator.Mod: op = "__rmod__"; break;
+                case PythonOperator.Power: op = "__rpow__"; break;
+                case PythonOperator.RightShift: op = "__rrshift__"; break;
+                case PythonOperator.TrueDivide: op = "__rtruediv__"; break;
+            }
+
+            if (op != null) {
+                var invokeMem = GetMember(node, unit, op);
+                if (invokeMem.Count > 0) {
+                    // call __r*__ method
+                    return invokeMem.Call(node, unit, new[] { rhs }, ExpressionEvaluator.EmptyNames);
+                }
+            }
+
+            return base.ReverseBinaryOperation(node, unit, operation, rhs);
         }
 
         public override ProjectEntry DeclaringModule {

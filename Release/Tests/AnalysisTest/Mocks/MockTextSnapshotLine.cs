@@ -50,7 +50,9 @@ namespace AnalysisTest.Mocks {
         }
 
         public SnapshotSpan ExtentIncludingLineBreak {
-            get { throw new NotImplementedException(); }
+            get {
+                return new SnapshotSpan(Start, EndIncludingLineBreak);
+            }
         }
 
         public string GetLineBreakText() {

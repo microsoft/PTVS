@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools {
             if (span.Length > 0) {
                 // don't add classifications for REPL commands.
                 if (!span.Snapshot.IsReplBufferWithCommand()) {
-                    AddClassifications(GetTokenizer(), classifications, span, 0, 0);
+                    AddClassifications(GetTokenizer(), classifications, span);
                 }
             }
 
@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools {
                     _tokenCache.DeleteLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1, -change.LineCountDelta);
                 }
 
-                ApplyChange(tokenizer, snapshot, change.NewSpan, 0, 0);
+                ApplyChange(tokenizer, snapshot, change.NewSpan);
             }
         }
 
@@ -131,63 +131,142 @@ namespace Microsoft.PythonTools {
         /// Adds classification spans to the given collection.
         /// Scans a contiguous sub-<paramref name="span"/> of a larger code span which starts at <paramref name="codeStartLine"/>.
         /// </summary>
-        private void AddClassifications(Tokenizer tokenizer, List<ClassificationSpan> classifications, SnapshotSpan span, int codeStartLine, int codeStartLineOffset) {
+        private void AddClassifications(Tokenizer tokenizer, List<ClassificationSpan> classifications, SnapshotSpan span) {
             Debug.Assert(span.Length > 0);
 
             var snapshot = span.Snapshot;            
             int firstLine = snapshot.GetLineNumberFromPosition(span.Start);
             int lastLine = snapshot.GetLineNumberFromPosition(span.End - 1);
 
-            Contract.Assert(codeStartLineOffset >= 0);
-            Contract.Assert(firstLine >= codeStartLine);
+            Contract.Assert(firstLine >= 0);
 
             _tokenCache.EnsureCapacity(snapshot.LineCount);
 
             // find the closest line preceding firstLine for which we know categorizer state, stop at the codeStartLine:
             LineTokenization lineTokenization;
-            int currentLine = _tokenCache.IndexOfPreviousTokenization(firstLine, codeStartLine, out lineTokenization) + 1;
+            int currentLine = _tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenization) + 1;
             object state = lineTokenization.State;
 
             while (currentLine <= lastLine) {
                 if (!_tokenCache.TryGetTokenization(currentLine, out lineTokenization)) {
-                    lineTokenization = TokenizeLine(tokenizer, snapshot, state, currentLine, (currentLine == codeStartLine) ? codeStartLineOffset : 0);
+                    lineTokenization = TokenizeLine(tokenizer, snapshot, state, currentLine);
                     _tokenCache[currentLine] = lineTokenization;
                 }
 
                 state = lineTokenization.State;
 
-                classifications.AddRange(
-                    from token in lineTokenization.Tokens
-                    let classification = ClassifyToken(span, token, currentLine)
-                    where classification != null
-                    select classification
-                );
+                foreach (var token in lineTokenization.Tokens) {
+                    if (token.Category == TokenCategory.IncompleteMultiLineStringLiteral) {
+                        // we need to walk backwards to find the start of this multi-line string...
+
+                        TokenInfo startToken = token;
+                        int validPrevLine;  
+                        int length = startToken.SourceSpan.Length;
+                        length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, ref startToken, out validPrevLine);
+
+                        length += GetTrailingMultiLineStrings(tokenizer, snapshot, currentLine, state);
+
+                        var multiStrSpan = new Span(SnapshotSpanToSpan(snapshot, startToken, validPrevLine).Start, length);
+                        classifications.Add(
+                            new ClassificationSpan(
+                                new SnapshotSpan(snapshot, multiStrSpan), 
+                                _provider.StringLiteral
+                            )
+                        );
+                    } else {
+                        var classification = ClassifyToken(span, token, currentLine);
+
+                        if (classification != null) {
+                            classifications.Add(classification);
+                        }
+                    }
+                }
 
                 currentLine++;
             }
+        }
+
+        private int GetLeadingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int firstLine, int currentLine, ref TokenInfo startToken, out int validPrevLine) {
+            validPrevLine = currentLine;
+            int prevLine = currentLine - 1;
+            int length = 0;
+            
+            while (prevLine >= 0) {
+                LineTokenization prevLineTokenization;
+                if (!_tokenCache.TryGetTokenization(prevLine, out prevLineTokenization)) {
+                    LineTokenization lineTokenizationTemp;
+                    int currentLineTemp = _tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenizationTemp) + 1;
+                    object stateTemp = lineTokenizationTemp.State;
+
+                    while (currentLineTemp <= snapshot.LineCount) {
+                        if (!_tokenCache.TryGetTokenization(currentLineTemp, out lineTokenizationTemp)) {
+                            lineTokenizationTemp = TokenizeLine(tokenizer, snapshot, stateTemp, currentLineTemp);
+                            _tokenCache[currentLineTemp] = lineTokenizationTemp;
+                        }
+
+                        stateTemp = lineTokenizationTemp.State;
+                    }
+
+                    prevLineTokenization = TokenizeLine(tokenizer, snapshot, stateTemp, prevLine);
+                    _tokenCache[prevLine] = prevLineTokenization;
+                }
+
+                if (prevLineTokenization.Tokens.Length != 0 &&
+                    prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
+                    break;
+                }
+
+                startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
+                length += startToken.SourceSpan.Length;
+                validPrevLine = prevLine;
+                prevLine--;
+            }
+            return length;
+        }
+
+        private int GetTrailingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int currentLine, object state) {
+            int nextLine = currentLine + 1;
+            var prevState = state;
+            int length = 0;
+            while (nextLine < snapshot.LineCount) {
+                LineTokenization nextLineTokenization;
+                if (!_tokenCache.TryGetTokenization(nextLine, out nextLineTokenization)) {
+                    nextLineTokenization = TokenizeLine(tokenizer, snapshot, prevState, nextLine);
+                    prevState = nextLineTokenization.State;
+                    _tokenCache[nextLine] = nextLineTokenization;
+                }
+
+                if (nextLineTokenization.Tokens.Length != 0 &&
+                    nextLineTokenization.Tokens[0].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
+                    break;
+                }
+
+                length += nextLineTokenization.Tokens[0].SourceSpan.Length;
+                nextLine++;
+            }
+            return length;
         }
 
         /// <summary>
         /// Rescans the part of the buffer affected by a change. 
         /// Scans a contiguous sub-<paramref name="span"/> of a larger code span which starts at <paramref name="codeStartLine"/>.
         /// </summary>
-        private void ApplyChange(Tokenizer tokenizer, ITextSnapshot snapshot, Span span, int codeStartLine, int codeStartLineOffset) {
+        private void ApplyChange(Tokenizer tokenizer, ITextSnapshot snapshot, Span span) {
             int firstLine = snapshot.GetLineNumberFromPosition(span.Start);
             int lastLine = snapshot.GetLineNumberFromPosition(span.Length > 0 ? span.End - 1 : span.End);
 
-            Contract.Assert(codeStartLineOffset >= 0);
-            Contract.Assert(firstLine >= codeStartLine);
+            Contract.Assert(firstLine >= 0);
 
             // find the closest line preceding firstLine for which we know categorizer state, stop at the codeStartLine:
             LineTokenization lineTokenization;
-            firstLine = _tokenCache.IndexOfPreviousTokenization(firstLine, codeStartLine, out lineTokenization) + 1;
+            firstLine = _tokenCache.IndexOfPreviousTokenization(firstLine, 0, out lineTokenization) + 1;
             object state = lineTokenization.State;
 
             int currentLine = firstLine;
             object previousState;
             while (currentLine < snapshot.LineCount) {
                 previousState = _tokenCache.TryGetTokenization(currentLine, out lineTokenization) ? lineTokenization.State : null;
-                _tokenCache[currentLine] = lineTokenization = TokenizeLine(tokenizer, snapshot, state, currentLine, (currentLine == codeStartLine) ? codeStartLineOffset : 0);
+                _tokenCache[currentLine] = lineTokenization = TokenizeLine(tokenizer, snapshot, state, currentLine);
                 state = lineTokenization.State;
 
                 // stop if we visted all affected lines and the current line has no tokenization state or its previous state is the same as the new state:
@@ -210,14 +289,14 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private LineTokenization TokenizeLine(Tokenizer tokenizer, ITextSnapshot snapshot, object previousLineState, int lineNo, int lineOffset) {
+        private LineTokenization TokenizeLine(Tokenizer tokenizer, ITextSnapshot snapshot, object previousLineState, int lineNo) {
             ITextSnapshotLine line = snapshot.GetLineFromLineNumber(lineNo);
-            SnapshotSpan lineSpan = new SnapshotSpan(snapshot, line.Start + lineOffset, line.LengthIncludingLineBreak - lineOffset);
+            SnapshotSpan lineSpan = new SnapshotSpan(snapshot, line.Start, line.LengthIncludingLineBreak);
 
             var tcp = new SnapshotSpanSourceCodeReader(lineSpan);
 
-            tokenizer.Initialize(previousLineState, tcp, new SourceLocation(lineOffset, lineNo + 1, lineOffset + 1));
-            var tokens = new List<TokenInfo>(tokenizer.ReadTokens(lineSpan.Length)).ToArray();
+            tokenizer.Initialize(previousLineState, tcp, new SourceLocation(line.Start.Position, lineNo + 1, 1));
+            var tokens = tokenizer.ReadTokens(lineSpan.Length).ToArray();
             return new LineTokenization(tokens, tokenizer.CurrentState);
         }
 
@@ -243,16 +322,24 @@ namespace Microsoft.PythonTools {
             }
 
             if (classification != null) {
-                var line = span.Snapshot.GetLineFromLineNumber(lineNumber);
-                var index = line.Start.Position + token.SourceSpan.Start.Column - 1;
-                var tokenSpan = new Span(index, token.SourceSpan.Length);
+                var tokenSpan = SnapshotSpanToSpan(span.Snapshot, token, lineNumber);
                 var intersection = span.Intersection(tokenSpan);
-                if (intersection != null && intersection.Value.Length > 0) {
+                
+                if (intersection != null && intersection.Value.Length > 0 || 
+                    tokenSpan.Contains(span.Start) || // handle zero-length spans
+                    tokenSpan.Contains(span.End)) {
                     return new ClassificationSpan(new SnapshotSpan(span.Snapshot, tokenSpan), classification);
                 }
             }
 
             return null;
+        }
+
+        private static Span SnapshotSpanToSpan(ITextSnapshot snapshot, TokenInfo token, int lineNumber) {
+            var line = snapshot.GetLineFromLineNumber(lineNumber);
+            var index = line.Start.Position + token.SourceSpan.Start.Column - 1;
+            var tokenSpan = new Span(index, token.SourceSpan.Length);
+            return tokenSpan;
         }
 
         #endregion

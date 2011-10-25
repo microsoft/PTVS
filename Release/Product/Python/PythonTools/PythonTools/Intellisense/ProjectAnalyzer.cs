@@ -17,9 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
@@ -31,6 +29,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -297,9 +296,22 @@ namespace Microsoft.PythonTools.Intellisense {
             var line = snapshot.GetLineFromPosition(loc.Start);
             var lineStart = line.Start;
 
+            
+
             var textLen = loc.End - lineStart.Position;
             if (textLen <= 0) {
                 // Ctrl-Space on an empty line, we just want to get global vars
+
+                var classifier = buffer.GetPythonClassifier();
+                if (classifier != null) {
+                    var classSpans = classifier.GetClassificationSpans(line.ExtentIncludingLineBreak);
+                    if (classSpans.Count > 0 &&
+                        classSpans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+                        // unless we're in a string literal
+                        return NormalCompletionAnalysis.EmptyCompletionContext;
+                    }
+                }
+
                 return new NormalCompletionAnalysis(String.Empty, loc.Start, parser.Snapshot, parser.Span, parser.Buffer, 0);
             }
 
@@ -856,7 +868,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     return CompletionAnalysis.EmptyCompletionContext;
                 } else if (lastClass.ClassificationType == classifier.Provider.StringLiteral) {
                     // String completion
-                    return new StringLiteralCompletionList(lastClass.Span.GetText(), snapSpan.Start, span, buffer);
+                    if (lastClass.Span.Start.GetContainingLine().LineNumber == lastClass.Span.End.GetContainingLine().LineNumber) {
+                        return new StringLiteralCompletionList(lastClass.Span.GetText(), snapSpan.Start, span, buffer);
+                    } else {
+                        // multi-line string, no string completions.
+                        return CompletionAnalysis.EmptyCompletionContext;
+                    }
                 } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
                     lastClass.Span.GetText() == "@") {
 
