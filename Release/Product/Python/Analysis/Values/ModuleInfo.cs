@@ -189,7 +189,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Documentation {
             get {
-                return ProjectEntry.Tree.Body.Documentation.TrimDocumentation() ?? String.Empty;
+                if (ProjectEntry.Tree != null && ProjectEntry.Tree.Body != null) {
+                    return ProjectEntry.Tree.Body.Documentation.TrimDocumentation() ?? String.Empty;
+                }
+                return String.Empty;
             }
         }
 

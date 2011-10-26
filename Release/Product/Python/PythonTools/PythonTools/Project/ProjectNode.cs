@@ -21,7 +21,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Windows.Threading;
+using System.Windows.Forms;
 using System.Xml;
 using EnvDTE;
 using Microsoft.Build.Execution;
@@ -37,7 +37,6 @@ using MSBuildExecution = Microsoft.Build.Execution;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
-using System.Collections.Specialized;
 
 namespace Microsoft.PythonTools.Project
 {
@@ -2725,14 +2724,32 @@ namespace Microsoft.PythonTools.Project
         /// <returns>S_OK for success, or an error message</returns>
         protected virtual int CanOverwriteExistingItem(string originalFileName, string computedNewFileName)
         {
-            if (String.IsNullOrEmpty(originalFileName) || String.IsNullOrEmpty(computedNewFileName))
-            {
+            return CanOverwriteExistingItem(originalFileName, computedNewFileName, false);
+        }
+
+        const int E_CANCEL_FILE_ADD = unchecked((int)0xA0010001);      // Severity = Error, Customer Bit set, Facility = 1, Error = 1
+
+        /// <summary>
+        /// Checks to see if the user wants to overwrite the specified file name.  
+        /// 
+        /// Returns:
+        ///     E_ABORT if we disallow the user to overwrite the file
+        ///     OLECMDERR_E_CANCELED if the user wants to cancel
+        ///     S_OK if the user wants to overwrite
+        ///     E_CANCEL_FILE_ADD (0xA0010001) if the user doesn't want to overwrite and wants to abort the larger transaction
+        /// </summary>
+        /// <param name="originalFileName"></param>
+        /// <param name="computedNewFileName"></param>
+        /// <param name="canCancel"></param>
+        /// <returns></returns>
+        protected virtual int CanOverwriteExistingItem(string originalFileName, string computedNewFileName, bool canCancel) {
+            if (String.IsNullOrEmpty(originalFileName) || String.IsNullOrEmpty(computedNewFileName)) {
                 return VSConstants.E_INVALIDARG;
             }
-
+            
             string message = String.Empty;
             string title = String.Empty;
-            OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
+            OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;            
             OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
             OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
 
@@ -2743,8 +2760,7 @@ namespace Microsoft.PythonTools.Project
 
             bool isOpen = VsShellUtilities.IsDocumentOpen(this.Site, computedNewFileName, Guid.Empty, out hier, out itemid, out windowFrame);
 
-            if (isOpen)
-            {
+            if (isOpen) {
                 message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.CannotAddFileThatIsOpenInEditor, CultureInfo.CurrentUICulture), Path.GetFileName(computedNewFileName));
                 VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
                 return VSConstants.E_ABORT;
@@ -2752,12 +2768,16 @@ namespace Microsoft.PythonTools.Project
 
 
             // File already exists in project... message box
-            message = SR.GetString(SR.FileAlreadyInProject, CultureInfo.CurrentUICulture);
+            message = String.Format(SR.GetString(SR.FileAlreadyInProject, CultureInfo.CurrentUICulture), Path.GetFileName(originalFileName));
             icon = OLEMSGICON.OLEMSGICON_QUERY;
             buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNO;
+            if (canCancel) {
+                buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNOCANCEL;
+            }
             int msgboxResult = VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
-            if (msgboxResult != NativeMethods.IDYES)
-            {
+            if (msgboxResult == NativeMethods.IDCANCEL) {
+                return (int)E_CANCEL_FILE_ADD;
+            } else if (msgboxResult != NativeMethods.IDYES) {
                 return (int)OleConstants.OLECMDERR_E_CANCELED;
             }
 
@@ -3869,7 +3889,7 @@ namespace Microsoft.PythonTools.Project
             return AddItemWithSpecificInternal(itemIdLoc, op, itemName, filesToOpen, files, dlgOwner, editorFlags, ref editorType, physicalView, ref logicalView, result);
         }
 
-        internal int AddItemWithSpecificInternal(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result, bool alwaysCopy = false) {
+        internal int AddItemWithSpecificInternal(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result, bool alwaysCopy = false, bool? promptOverwrite = null) {
             if (files == null || result == null || files.Length == 0 || result.Length == 0) {
                 return VSConstants.E_INVALIDARG;
             }
@@ -3920,7 +3940,7 @@ namespace Microsoft.PythonTools.Project
 
                 switch (op) {
                     case VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE: {
-                            string fileName = Path.GetFileName(itemName);
+                            string fileName = Path.GetFileName(itemName ?? file);
                             newFileName = Path.Combine(baseDir, fileName);
                         }
                         break;
@@ -3995,10 +4015,19 @@ namespace Microsoft.PythonTools.Project
                         result[0] = VSADDRESULT.ADDRESULT_Cancel;
                         return (int)OleConstants.OLECMDERR_E_CANCELED;
                     } else {
-                        int canOverWriteExistingItem = this.CanOverwriteExistingItem(file, newFileName);
+                        if (promptOverwrite != null && !promptOverwrite.Value) {
+                            continue;
+                        }
 
-                        if (canOverWriteExistingItem == (int)OleConstants.OLECMDERR_E_CANCELED) {
+                        int canOverWriteExistingItem = CanOverwriteExistingItem(file, newFileName, promptOverwrite != null && promptOverwrite.Value);
+                        if (canOverWriteExistingItem == E_CANCEL_FILE_ADD) {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                            return (int)OleConstants.OLECMDERR_E_CANCELED;
+                        } else if (canOverWriteExistingItem == (int)OleConstants.OLECMDERR_E_CANCELED) {
+                            result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                            if (promptOverwrite != null && promptOverwrite.Value) {
+                                continue;
+                            }
                             return canOverWriteExistingItem;
                         } else if (canOverWriteExistingItem == VSConstants.S_OK) {
                             overwrite = true;
@@ -4075,6 +4104,9 @@ namespace Microsoft.PythonTools.Project
                     if (updatingNode != null && updatingNode.IsLinkFile) {
                         // we just need to update the link to the new path.
                         linkedFile = updatingNode.ItemNode as MsBuildProjectElement;
+                    } else if (Directory.Exists(file)) {
+                        // http://pytools.codeplex.com/workitem/546
+                        return AddDirectory(result, n, file, promptOverwrite);
                     } else if (!isLink) {
                         // Copy the file to the correct location.
                         // We will suppress the file change events to be triggered to this item, since we are going to copy over the existing file and thus we will trigger a file change event. 
@@ -4157,6 +4189,92 @@ namespace Microsoft.PythonTools.Project
             }
 
             return VSConstants.S_OK;
+        }
+
+        /// <summary>
+        /// Adds a folder into the project recursing and adding any sub-files and sub-directories.
+        /// 
+        /// The user can be prompted to overwrite the existing files if the folder already exists
+        /// in the project.  They will be initially prompted to overwrite - if they answer no t
+        /// we'll set promptOverwrite to false and when we recurse we won't prompt.  If they say
+        /// yes then we'll set it to true and we will prompt for individual files.  
+        /// </summary>
+        private int AddDirectory(VSADDRESULT[] result, HierarchyNode n, string file, bool? promptOverwrite) {
+            // need to recursively add all of the directory contents
+
+            HierarchyNode targetFolder = n.FindChild(Path.GetFileName(file), false);
+            if (targetFolder == null) {
+                var newChild = CreateFolderNode(Path.GetFileName(file));
+                n.AddChild(newChild);
+                targetFolder = newChild;
+            } else if (promptOverwrite == null) {
+                var res = MessageBox.Show(
+                    String.Format(
+                    @"This folder already contains a folder called '{0}'.
+
+If the files in the existing folder have the same names as files in the folder you are copying, do you want to replace the existing files?", Path.GetFileName(file)),
+                    "Merge Folders",
+                    MessageBoxButtons.YesNoCancel
+                );
+
+                // yes means prompt for each file
+                // no means don't prompt for any of the files
+                // cancel means forget what I'm doing
+
+                switch (res) {
+                    case DialogResult.Cancel:
+                        result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                        return (int)OleConstants.OLECMDERR_E_CANCELED;
+                    case DialogResult.No:
+                        promptOverwrite = false;
+                        break;
+                    case DialogResult.Yes:
+                        promptOverwrite = true;
+                        break;
+                }
+            }
+
+            // add the files...
+            var dirFiles = Directory.GetFiles(file);
+            Guid empty = Guid.Empty;
+
+            var subRes = AddItemWithSpecificInternal(
+                targetFolder.ID,
+                VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE,
+                null,
+                (uint)dirFiles.Length,
+                dirFiles,
+                IntPtr.Zero,
+                0,
+                ref empty,
+                null,
+                ref empty,
+                result,
+                promptOverwrite: promptOverwrite
+            );
+
+            if (ErrorHandler.Failed(subRes)) {
+                return subRes;
+            }
+
+            // add any subdirectories...
+
+            var subDirs = Directory.GetDirectories(file);
+
+            return AddItemWithSpecificInternal(
+                targetFolder.ID,
+                VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE,
+                null,
+                (uint)subDirs.Length,
+                subDirs,
+                IntPtr.Zero,
+                0,
+                ref empty,
+                null,
+                ref empty,
+                result,
+                promptOverwrite: promptOverwrite
+            );
         }
 
         protected virtual void LinkFileAdded(string filename) {

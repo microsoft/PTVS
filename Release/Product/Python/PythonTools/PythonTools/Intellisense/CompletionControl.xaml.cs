@@ -54,6 +54,17 @@ namespace Microsoft.PythonTools.Intellisense {
 
             session.Dismissed += SessionDismissed;
         }
+        
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e) {
+            // force the inner presenter to not re-size to a smaller size.  The inner presenter
+            // will then force the tab controls to not re-size keeping the completion list 
+            // to a fixed size.
+            // http://pytools.codeplex.com/workitem/554
+            var content = _view as ContentControl;
+            if (content != null && (content.Width < ActualWidth || double.IsNaN(content.Width))) {
+                content.Width = content.MinWidth = ActualWidth;
+            }
+        }
 
         void SessionDismissed(object sender, System.EventArgs e) {
             _grid.Children.Remove(_view);
