@@ -15,7 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Reflection;
 using System.Windows;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Utilities;
 
@@ -27,6 +29,18 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class CompletionUIElementProvider : IUIElementProvider<CompletionSet, ICompletionSession> {
         [ImportMany]
         internal List<Lazy<IUIElementProvider<CompletionSet, ICompletionSession>, IOrderableContentTypeMetadata>> UnOrderedCompletionSetUIElementProviders { get; set; }
+        private static bool _isPreSp1 = CheckPreSp1();
+
+        private static bool CheckPreSp1() {
+            var attrs = typeof(VSConstants).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false);
+            if (attrs.Length > 0 && ((AssemblyFileVersionAttribute)attrs[0]).Version == "10.0.30319.1") {
+                // http://pytools.codeplex.com/workitem/537
+                // http://connect.microsoft.com/VisualStudio/feedback/details/550886/visual-studio-2010-crash-when-the-source-file-contains-non-unicode-characters
+                // pre-SP1 cannot handle us wrapping this up, so just don't offer this functionality pre-SP1.
+                return true;
+            }
+            return false;
+        }
 
         public CompletionUIElementProvider() {
         }
@@ -44,11 +58,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         var res = presenterProviderExport.Value.GetUIElement(itemToRender, context, elementType);
                         if (res != null) {
+                            if (_isPreSp1) {
+                                return res;
+                            }
+
                             return new CompletionControl(res, context);
                         }
                     }
                 }
-
             }
 
             return null;
