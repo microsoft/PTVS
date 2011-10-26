@@ -19,7 +19,7 @@ function copy_repo($from, $to) {
         $cur_from = join-path $from $included_dir
         $cur_to = join-path $to $included_dir
         
-        robocopy /MIR $cur_from $cur_to /XD .hg
+        robocopy /MIR $cur_from $cur_to /XD .hg /XF OSSREADME_????.txt
 	}
 
 	# update the top level files which we include
