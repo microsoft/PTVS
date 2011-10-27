@@ -3889,6 +3889,7 @@ namespace Microsoft.PythonTools.Project
             return AddItemWithSpecificInternal(itemIdLoc, op, itemName, filesToOpen, files, dlgOwner, editorFlags, ref editorType, physicalView, ref logicalView, result);
         }
 
+        // TODO: Refactor me into something sane
         internal int AddItemWithSpecificInternal(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result, bool alwaysCopy = false, bool? promptOverwrite = null) {
             if (files == null || result == null || files.Length == 0 || result.Length == 0) {
                 return VSConstants.E_INVALIDARG;

@@ -3748,6 +3748,7 @@ namespace Microsoft.PythonTools.Parsing {
                                     AddErrorMissingCloseGrouping(dictComp);
                                 }
                             }
+                            dictComp.SetLoc(GetStart(), GetEnd());
                             return dictComp;
                         }
 
@@ -3782,6 +3783,7 @@ namespace Microsoft.PythonTools.Parsing {
                                     AddErrorMissingCloseGrouping(setComp);
                                 }
                             }
+                            setComp.SetLoc(GetStart(), GetEnd());
                             return setComp;
                         }
 

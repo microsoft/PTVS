@@ -50,6 +50,53 @@ namespace Microsoft.PythonTools.Refactoring {
             return false;
         }
 
+        public override bool Walk(ListComprehension node) {
+            if (node.Item != null) {
+                node.Item.Walk(Define);
+            }
+
+            return WalkIterators(node);
+        }
+
+        public override bool Walk(GeneratorExpression node) {
+            if (node.Item != null) {
+                node.Item.Walk(Define);
+            }
+
+            return WalkIterators(node);
+        }
+
+        public override bool Walk(DictionaryComprehension node) {
+            if (node.Key != null) {
+                node.Key.Walk(Define);
+            }
+
+            if (node.Value != null) {
+                node.Value.Walk(Define);
+            }
+
+            return WalkIterators(node);
+        }
+
+        public override bool Walk(SetComprehension node) {
+            if (node.Item != null) {
+                node.Item.Walk(Define);
+            }
+
+            return WalkIterators(node);
+        }
+
+        private bool WalkIterators(Comprehension node) {
+            if (node.Iterators != null) {
+                foreach (ComprehensionIterator ci in node.Iterators) {
+                    ci.Walk(this);
+                }
+            }
+
+            return false;
+        }
+
+
         public override bool Walk(ForStatement node) {
             if (node.Left != null) {
                 node.Left.Walk(Define);

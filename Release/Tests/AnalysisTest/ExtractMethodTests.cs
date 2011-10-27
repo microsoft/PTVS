@@ -14,8 +14,8 @@
 
 using System;
 using AnalysisTest.Mocks;
-using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.Text;
 
 namespace AnalysisTest {
     [TestClass]
+    [DeploymentItem(@"..\\PythonTools\\CompletionDB\\", "CompletionDB")]
     public class ExtractMethodTests {
         private const string ErrorReturn = "When the selection contains a return statement, all code paths must be terminated by a return statement too.";
         private const string ErrorYield = "Cannot extract code containing \"yield\" expression";
@@ -776,6 +777,37 @@ class C:
         }
 
         [TestMethod]
+        public void TestComprehensions() {
+            SuccessTest("i % 2 == 0", @"def f():
+    x = [i for i in range(100) if i % 2 == 0]", @"def g(i):
+    return i % 2 == 0
+
+def f():
+    x = [i for i in range(100) if g(i)]");
+
+            SuccessTest("i % 2 == 0", @"def f():
+    x = (i for i in range(100) if i % 2 == 0)", @"def g(i):
+    return i % 2 == 0
+
+def f():
+    x = (i for i in range(100) if g(i))");
+
+            SuccessTest("i % 2 == 0", @"def f():
+    x = {i for i in range(100) if i % 2 == 0}", @"def g(i):
+    return i % 2 == 0
+
+def f():
+    x = {i for i in range(100) if g(i)}", version: new Version(3, 2));
+
+            SuccessTest("(k+v) % 2 == 0", @"def f():
+    x = {k:v for k,v in range(100) if (k+v) % 2 == 0}", @"def g(k, v):
+    return (k+v) % 2 == 0
+
+def f():
+    x = {k:v for k,v in range(100) if g(k, v)}", version: new Version(3, 2));
+        }
+
+        [TestMethod]
         public void SuccessfulTests() {
             SuccessTest("x .. 100",
 @"def f():
@@ -1129,8 +1161,8 @@ def f(x):
     return (g())");
         }
 
-        private void SuccessTest(string extract, string input, string result, string scopeName = null, string[] parameters = null) {
-            ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, parameters: parameters);
+        private void SuccessTest(string extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null) {
+            ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
         }
 
 
@@ -1172,8 +1204,8 @@ def f(x):
             ExtractMethodTest(input, extract, TestResult.Error(ErrorBreak));
         }
 
-        private void ExtractMethodTest(string input, string extract, TestResult expected, string scopeName = null, string targetName = "g", params string[] parameters) {
-            var fact = new IronPythonInterpreterFactory();
+        private void ExtractMethodTest(string input, string extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
+            var fact = new CPythonInterpreterFactory(version ?? new Version(2, 7), Guid.Empty, "", "", "", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
             var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             var buffer = new MockTextBuffer(input);
             var view = new MockTextView(buffer);
