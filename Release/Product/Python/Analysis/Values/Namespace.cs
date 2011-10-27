@@ -187,14 +187,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public virtual ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            var item = GetMember(node, unit, "__getitem__");
-            ISet<Namespace> result = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
-            foreach (var ns in item) {
-                // FIXME: new string[0]
-                result = result.Union(ns.Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames), ref madeSet);
-            }
-            return result;
+            return GetMember(node, unit, "__getitem__").Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
         }
 
         public virtual void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {

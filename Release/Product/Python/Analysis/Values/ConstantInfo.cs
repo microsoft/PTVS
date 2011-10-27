@@ -193,6 +193,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
+            // indexing/slicing strings should return the string type.
+            if (_value is AsciiString) {                
+                return ProjectState._bytesType.Instance.SelfSet;
+            } else if (_value is string) {
+                return ProjectState._unicodeType.Instance.SelfSet;
+            }
+
             return base.GetIndex(node, unit, index);
         }
 

@@ -186,7 +186,7 @@ DOC_REGEX_CFUNC = ('([a-zA-Z_][\\w]*\\.)?'                                    # 
             '(\s*[[]?\s*,\s*(?:[a-zA-Z_]+\s+)?(?:(?:(?:\\*)|(?:\\*\\*))?\s*[a-zA-Z_][\\w]*)\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*\\)'    # additional args, accepts ", foo", [, foo]"
             '(\s*->\s*[a-zA-Z_][\\w]*)?')                               # return type
 
-def get_overloads_from_doc_string(doc_str, mod, obj_class, is_method = False):
+def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, is_method = False):
     decl_mod = None
     if mod is not None:
         decl_mod = sys.modules.get(mod, None)
@@ -200,8 +200,11 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class, is_method = False):
             cfunc = True
     
         for arg_info in doc_matches:
-            inst = arg_info[0]
             method = arg_info[1]
+            if func_name is not None and method != func_name:
+                # wrong function name, ignore the match
+                continue
+                
             args = [get_arg_info(arg, decl_mod, cfunc) for arg in arg_info[2:-1] if get_arg_name(arg, cfunc)]
             
             ret_type = arg_info[-1]
@@ -234,13 +237,20 @@ def get_overloads(func, is_method = False):
     return get_overloads_from_doc_string(func.__doc__, 
                                          getattr(func, '__module__', None), 
                                          getattr(func, '__objclass__', None),
+                                         getattr(func, '__name__', None),
                                          is_method)
 
 def get_descriptor_type(descriptor):
 	return object
 
 def get_new_overloads(type_obj, obj):
-    res = get_overloads_from_doc_string(type_obj.__doc__, getattr(type_obj, '__module__', None), type(type_obj))
+    res = get_overloads_from_doc_string(type_obj.__doc__, 
+                                        getattr(type_obj, '__module__', None), 
+                                        type(type_obj), 
+                                        getattr(type_obj, '__name__', None))
     if not res:
-        res = get_overloads_from_doc_string(obj.__doc__, getattr(type_obj, '__module__', None), type(type_obj))
+        res = get_overloads_from_doc_string(obj.__doc__, 
+                                            getattr(type_obj, '__module__', None), 
+                                            type(type_obj), 
+                                            getattr(type_obj, '__name__', None))
     return res

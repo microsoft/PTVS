@@ -68,7 +68,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            // TODO: look for __getitem__, index, get result
+            if (_klass == ProjectState._stringType || _klass == ProjectState._bytesType) {
+                // indexing/slicing strings should return the string type.
+                return _klass.Instance;
+            }
+
             return base.GetIndex(node, unit, index);
         }
 

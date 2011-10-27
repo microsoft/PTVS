@@ -139,7 +139,7 @@ def generate_builtin_function(function, is_method = False):
     if isinstance(function.__doc__, str):
         function_table['doc'] = function.__doc__
 
-    function_table['overloads'] = BuiltinScraper.get_overloads(function, True)
+    function_table['overloads'] = BuiltinScraper.get_overloads(function, is_method)
     
     return function_table
     
@@ -425,7 +425,7 @@ def write_analysis(mod_name, outpath, analysis):
 if __name__ == "__main__":
     outpath = sys.argv[1]
     if len(sys.argv) > 2:
-        baselinepath = sys.argv[2]
+        baselinepath = sys.argv[2]  
     else:
         baselinepath = None
     
@@ -438,7 +438,7 @@ if __name__ == "__main__":
     res = merge_with_baseline(builtin_name, baselinepath, res)
 
     write_analysis(builtin_name, outpath, res)
-        
+    
     for mod_name in sys.builtin_module_names:
         if mod_name == builtin_name or mod_name == '__main__': continue
         
@@ -452,7 +452,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('9')
+    f.write('10')
     f.close()
 
     # inspect extension modules installed into site-packages

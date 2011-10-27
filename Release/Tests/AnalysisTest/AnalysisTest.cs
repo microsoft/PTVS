@@ -587,6 +587,22 @@ z = y[0]
 ");
 
             AssertContainsExactly(entry.GetTypesFromName("z", 1), IntType);
+
+            var text = @"
+lit = 'abc'           
+inst = str.lower()       
+
+slit = lit[1:2]
+ilit = lit[1]
+sinst = inst[1:2]
+iinst = inst[1]
+";
+
+            entry = ProcessText(text);
+
+            foreach (var name in new[] { "slit", "ilit", "sinst", "iinst" }) {
+                AssertContainsExactly(entry.GetValues(name, GetLineNumber(text, name + " = ")).Select(x => x.PythonType.Name), "str");
+            }
         }
 
         [TestMethod]
