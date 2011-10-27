@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools {
                         TokenInfo startToken = token;
                         int validPrevLine;  
                         int length = startToken.SourceSpan.Length;
-                        length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, ref startToken, out validPrevLine);
+                        length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine);
 
                         length += GetTrailingMultiLineStrings(tokenizer, snapshot, currentLine, state);
 
@@ -186,7 +186,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private int GetLeadingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int firstLine, int currentLine, ref TokenInfo startToken, out int validPrevLine) {
+        private int GetLeadingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int firstLine, int currentLine, out int validPrevLine) {
             validPrevLine = currentLine;
             int prevLine = currentLine - 1;
             int length = 0;
@@ -211,13 +211,15 @@ namespace Microsoft.PythonTools {
                     _tokenCache[prevLine] = prevLineTokenization;
                 }
 
-                if (prevLineTokenization.Tokens.Length != 0 &&
-                    prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
-                    break;
+                if (prevLineTokenization.Tokens.Length != 0) {
+                    if (prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
+                        break;
+                    }
+
+                    var startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
+                    length += startToken.SourceSpan.Length;
                 }
 
-                startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
-                length += startToken.SourceSpan.Length;
                 validPrevLine = prevLine;
                 prevLine--;
             }
@@ -236,12 +238,13 @@ namespace Microsoft.PythonTools {
                     _tokenCache[nextLine] = nextLineTokenization;
                 }
 
-                if (nextLineTokenization.Tokens.Length != 0 &&
-                    nextLineTokenization.Tokens[0].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
-                    break;
-                }
+                if (nextLineTokenization.Tokens.Length != 0) {
+                    if (nextLineTokenization.Tokens[0].Category != TokenCategory.IncompleteMultiLineStringLiteral) {
+                        break;
+                    }
 
-                length += nextLineTokenization.Tokens[0].SourceSpan.Length;
+                    length += nextLineTokenization.Tokens[0].SourceSpan.Length;
+                }
                 nextLine++;
             }
             return length;
@@ -326,8 +329,7 @@ namespace Microsoft.PythonTools {
                 var intersection = span.Intersection(tokenSpan);
                 
                 if (intersection != null && intersection.Value.Length > 0 || 
-                    tokenSpan.Contains(span.Start) || // handle zero-length spans
-                    tokenSpan.Contains(span.End)) {
+                    (span.Length == 0 && tokenSpan.Contains(span.Start))) { // handle zero-length spans which Intersect and Overlap won't return true on ever.
                     return new ClassificationSpan(new SnapshotSpan(span.Snapshot, tokenSpan), classification);
                 }
             }
