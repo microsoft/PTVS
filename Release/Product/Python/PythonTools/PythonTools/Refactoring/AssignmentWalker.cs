@@ -50,40 +50,14 @@ namespace Microsoft.PythonTools.Refactoring {
             return false;
         }
 
-        public override bool Walk(ListComprehension node) {
-            if (node.Item != null) {
-                node.Item.Walk(Define);
+        public override bool Walk(ComprehensionFor node) {
+            if (node.Left != null) {
+                node.Left.Walk(Define);
+            }            
+            if (node.List != null) {
+                node.List.Walk(this);
             }
-
-            return WalkIterators(node);
-        }
-
-        public override bool Walk(GeneratorExpression node) {
-            if (node.Item != null) {
-                node.Item.Walk(Define);
-            }
-
-            return WalkIterators(node);
-        }
-
-        public override bool Walk(DictionaryComprehension node) {
-            if (node.Key != null) {
-                node.Key.Walk(Define);
-            }
-
-            if (node.Value != null) {
-                node.Value.Walk(Define);
-            }
-
-            return WalkIterators(node);
-        }
-
-        public override bool Walk(SetComprehension node) {
-            if (node.Item != null) {
-                node.Item.Walk(Define);
-            }
-
-            return WalkIterators(node);
+            return false;
         }
 
         private bool WalkIterators(Comprehension node) {
