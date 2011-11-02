@@ -12,12 +12,12 @@ using System.Runtime.InteropServices;
 // Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
 // (See also AssemblyInfoCommon.cs in this same directory.)
 #if DEV11
-[assembly: AssemblyVersion("1.8.41102.0")] // Assembly version not set in stone for Dev11 builds
+[assembly: AssemblyVersion("1.1.41102.0")] // Assembly version not set in stone for Dev11 builds
 #else
 [assembly: AssemblyVersion("1.8.40818.0")]  // 1.0 shipped w/ this version, keep it for compat
 #endif
-[assembly: AssemblyFileVersion("1.8.41102.0")]
+[assembly: AssemblyFileVersion("1.1.41102.0")]
 
 class AssemblyVersionInfo {
-    public const string Version = "1.8.41102.0";
+    public const string Version = "1.1.41102.0";
 }
