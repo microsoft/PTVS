@@ -1,0 +1,11 @@
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\ResolveAssemblyReference.cache
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\PythonTools\Navigation\WaitForCompleteAnalysisDialog.baml
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\PythonTools\Refactoring\ExtractMethodDialog.baml
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\PythonTools\Refactoring\RenameVariableDialog.baml
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\PythonTools\Intellisense\CompletionControl.g.cs
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\PythonTools\Navigation\WaitForCompleteAnalysisDialog.g.cs
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\PythonTools\Refactoring\ExtractMethodDialog.g.cs
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\PythonTools\Refactoring\RenameVariableDialog.g.cs
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\Microsoft.PythonTools_MarkupCompile.cache
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\Microsoft.PythonTools_MarkupCompile.lref
+F:\Product\TCP0\Open_Source\Release\Product\Python\PythonTools\obj\Win32\Release\Microsoft.PythonTools.g.resources

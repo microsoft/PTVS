@@ -38,9 +38,9 @@
   </References>
   <Content>
     <VsPackage>|%CurrentProject%|</VsPackage>
-    <Assembly AssemblyName="Microsoft.PythonTools">Microsoft.PythonTools</Assembly>
-    <Assembly AssemblyName="Microsoft.PythonTools.Analysis">Microsoft.PythonTools.Analysis</Assembly>
-    <Assembly AssemblyName="Microsoft.PythonTools.Debugger">Microsoft.PythonTools.Debugger</Assembly>
+    <Assembly AssemblyName="|%CurrentProject%|">|%CurrentProject%|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.Analysis|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.Debugger|</MefComponent>
