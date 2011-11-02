@@ -7,6 +7,8 @@
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
+    <ProjectFile Include="PyKinectInstaller\PyKinectInstaller.wixproj"/>
+    <ProjectFile Include="PyVotInstaller\PyVotInstaller.wixproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

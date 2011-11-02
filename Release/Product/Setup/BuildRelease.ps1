@@ -36,7 +36,7 @@ if ($uninstall)
     start -wait msiexec "/uninstall","{$guid}","/passive"
 }
 
-$versionFiles = "..\..\..\Build\AssemblyVersion.cs", "..\Python\PythonTools\source.extension.vsixmanifest"
+$versionFiles = "..\..\..\Build\AssemblyVersion.cs"
 foreach($versionedFile in $versionFiles) {
     tf edit $versionedFile
     if ($LASTEXITCODE -gt 0) {
@@ -88,6 +88,8 @@ foreach ($targetVs in ("11.0", "10.0")) {
     
     mkdir $outdir\Debug
     copy -force ..\..\..\Binaries\Win32\Debug\PythonToolsInstaller.msi $outdir\Debug\PythonToolsInstaller.msi
+    copy -force ..\..\..\Binaries\Win32\Debug\PyKinectInstaller.msi $outdir\Debug\PyKinectInstaller.msi
+    copy -force ..\..\..\Binaries\Win32\Debug\PyvotInstaller.msi $outdir\Debug\PyvotInstaller.msi
     copy -force PythonToolsInstaller\SnInternal.reg $outdir\Debug\EnableSkipVerification.reg
     copy -force PythonToolsInstaller\SnInternal64.reg $outdir\Debug\EnableSkipVerificationX64.reg
     copy -force PythonToolsInstaller\SnInternalRemove.reg $outdir\Debug\DisableSkipVerification.reg
@@ -112,6 +114,8 @@ foreach ($targetVs in ("11.0", "10.0")) {
     
     mkdir $outdir\Release
     copy -force ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $outdir\Release\PythonToolsInstaller.msi
+    copy -force ..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi $outdir\Release\PyKinectInstaller.msi
+    copy -force ..\..\..\Binaries\Win32\Release\PyvotInstaller.msi $outdir\Release\PyvotInstaller.msi
     copy -force PythonToolsInstaller\SnInternal.reg $outdir\Release\EnableSkipVerification.reg
     copy -force PythonToolsInstaller\SnInternal64.reg $outdir\Release\EnableSkipVerificationX64.reg
     copy -force PythonToolsInstaller\SnInternalRemove.reg $outdir\Release\DisableSkipVerification.reg

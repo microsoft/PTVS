@@ -1,0 +1,450 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting Started with Pyvot &mdash; Pyvot v0.1.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pyvot v0.1.1 documentation" href="index.html" />
+    <link rel="next" title="Pyvot workflows" href="workflows.html" />
+    <link rel="prev" title="Introduction" href="intro.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflows.html" title="Pyvot workflows"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Pyvot v0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="getting-started-with-pyvot">
+<span id="tutorial"></span><h1>Getting Started with Pyvot<a class="headerlink" href="#getting-started-with-pyvot" title="Permalink to this headline">¶</a></h1>
+<p>The Pyvot API is exposed in the <a class="reference internal" href="api/default.html#module-xl" title="xl"><tt class="xref py py-mod docutils literal"><span class="pre">xl</span></tt></a> package:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">xl</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="intro.html#install"><em>Installation</em></a> if you can&#8217;t yet import Pyvot.</p>
+<div class="section" id="first-steps-python-to-excel-and-back-again">
+<h2>First steps: Python to Excel and back again<a class="headerlink" href="#first-steps-python-to-excel-and-back-again" title="Permalink to this headline">¶</a></h2>
+<p>Pyvot enables easy transit of data between Python and Excel.</p>
+<p>For example, we can move a list of Python values to Excel, view and manipulate the data, and retrieve the new version. In a symmetric and equally common usage, we can grab and process Excel values in Python, and display the result to Excel.</p>
+<div class="section" id="python-to-excel">
+<h3>Python to Excel<a class="headerlink" href="#python-to-excel" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">()</span> <span class="c"># Create empty Excel workbook, stored as the &#39;active&#39; workbook</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">)</span> <span class="c"># some Python array</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">[1, 2, 3, 4, 5, 6, 7, 8, 9]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="c"># show Python array in Excel (active workbook)</span>
+</pre></div>
+</div>
+<p>The Python array is copied into Excel. By default, Pyvot picks an open range on the active worksheet.</p>
+<img alt="_images/view.png" src="_images/view.png" />
+</div>
+<div class="section" id="excel-to-python">
+<h3>Excel to Python<a class="headerlink" href="#excel-to-python" title="Permalink to this headline">¶</a></h3>
+<p>Retrieving data from Excel requires an <a class="reference internal" href="api/range.html#xl.range.Range" title="xl.range.Range"><tt class="xref py py-class docutils literal"><span class="pre">xl.Range</span></tt></a> object (see <a class="reference internal" href="#ranges-in-detail"><em>Ranges in Detail</em></a>), which represents the cells on which to operate. The <a class="reference internal" href="api/tools.html#xl.tools.view" title="xl.tools.view"><tt class="xref py py-func docutils literal"><span class="pre">xl.view</span></tt></a> function returns the range that it selected to store the data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span>
+<span class="go">&lt;ColumnVector range object for $A$2:$A$1048576 (visible only)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sum</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="c"># ranges are iterable</span>
+<span class="go">45.0</span>
+</pre></div>
+</div>
+<p>Note that view chose the entirety of column A (sans header) to store our list, but <tt class="xref py py-meth docutils literal"><span class="pre">Range.get</span></tt> assumed we only wanted its useful data.</p>
+<p>Now we can manipulate the Excel range, and fetch the new results back. For example, suppose we delete some rows using the Excel UI and change the values like so:</p>
+<img alt="_images/view_post_delete.png" src="_images/view_post_delete.png" />
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">get</span><span class="p">()</span> <span class="c"># get updated values</span>
+<span class="go">[1.0, 20.0, 8.0, 9.0]</span>
+</pre></div>
+</div>
+<p>The current selection is also available as a Range. This allows Excel to act as an interface for selecting interesting data:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">selected_range</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">8.0</span>
+</pre></div>
+</div>
+<p><strong>Things to remember about Range objects:</strong></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Range objects are a &#8220;live&#8221; connection back to the Excel workbook and are updated as the Excel range updates. Range objects are essentially L-values into the workbook.</li>
+<li>Range objects can return the current contents as a Python value via their <tt class="xref py py-meth docutils literal"><span class="pre">get()</span></tt> method.</li>
+<li>A snapshot of the current selection is available as xl.selected_range()</li>
+<li>Range objects implement the iterable protocol.</li>
+<li>Range objects also have a <tt class="xref py py-meth docutils literal"><span class="pre">set()</span></tt> method for updating the range contents.</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="obtaining-ranges">
+<h3>Obtaining Ranges<a class="headerlink" href="#obtaining-ranges" title="Permalink to this headline">¶</a></h3>
+<p>So far, we have seen <a class="reference internal" href="api/range.html#xl.range.Range" title="xl.range.Range"><tt class="xref py py-class docutils literal"><span class="pre">xl.Range</span></tt></a> objects returned from the top-level <tt class="xref py py-func docutils literal"><span class="pre">view()</span></tt> (this is also true of most other operations that insert data into Excel) and <tt class="xref py py-func docutils literal"><span class="pre">selected_range()</span></tt> functions. However, we more typically wish to refer to cells which already have a well-known name.</p>
+<p>The <a class="reference internal" href="api/tools.html#xl.tools.get" title="xl.tools.get"><tt class="xref py py-func docutils literal"><span class="pre">xl.get</span></tt></a> function (and <a class="reference internal" href="api/sheet.html#xl.sheet.Workbook.get" title="xl.sheet.Workbook.get"><tt class="xref py py-meth docutils literal"><span class="pre">Workbook.get</span></tt></a>, which it wraps) finds Ranges for an Excel named range, table columns (see <a class="reference internal" href="#working-with-tables"><em>Working with tables</em></a>), or by address (ex. A1:B4)</p>
+<img alt="_images/named_range.png" src="_images/named_range.png" />
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;MY_DATA&quot;</span><span class="p">)</span>
+<span class="go">&lt;Scalar range object for $B$2 (visible only)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;MY_DATA&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">1234.0</span>
+</pre></div>
+</div>
+<p>xl.get aims to be &#8216;smart.&#8217;  It provides conveniences include the following:</p>
+<ul class="simple">
+<li>It excludes header rows (<tt class="docutils literal"><span class="pre">get(&quot;ColumnName&quot;).get()</span></tt> does not contain &#8220;ColumnName&#8221;)</li>
+<li>It only selects from the <em>used range</em>. In contrast, the raw Excel COM API has a frustrating problem where if you select an entire column, the returned range includes a million blank cells.</li>
+</ul>
+<p>The <a class="reference internal" href="api/sheet.html#xl.sheet.Workbook.range" title="xl.sheet.Workbook.range"><tt class="xref py py-meth docutils literal"><span class="pre">Workbook.range</span></tt></a> method by contrast only handles A1-style references and named ranges (it doesn&#8217;t search column names), and applies neither of the aforementioned heuristics. It is useful for when you wish to access an exact range, without interference from Pyvot.</p>
+</div>
+</div>
+<div class="section" id="managing-workbooks">
+<h2>Managing Workbooks<a class="headerlink" href="#managing-workbooks" title="Permalink to this headline">¶</a></h2>
+<p>Pyvot has a state model similar to <a class="reference external" href="http://matplotlib.sourceforge.net/api/pyplot_api.html">PyPlot</a>. It tracks an <em>active workbook</em> to use with convenience operators. You can also choose to use a particular workbook, which becomes useful when working with multiple workbooks. This is also a best practice when <a class="reference internal" href="workflows.html#standalone"><em>writing standalone Pyvot scripts</em></a>.</p>
+<p>The original code snippet could have been written more explicitly:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">xl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="go">&lt;ColumnVector range object for $A$2:$A$1048576 (visible only)&gt;</span>
+</pre></div>
+</div>
+<p>Each invocation of the <a class="reference internal" href="api/sheet.html#xl.sheet.Workbook" title="xl.sheet.Workbook"><tt class="xref py py-class docutils literal"><span class="pre">xl.Workbook</span></tt></a> constructor sets the &#8220;active&#8221; workbook.</p>
+<div class="section" id="connecting-to-an-existing-excel-instance">
+<h3>Connecting to an existing Excel instance<a class="headerlink" href="#connecting-to-an-existing-excel-instance" title="Permalink to this headline">¶</a></h3>
+<p>There are  several ways to connect to an Excel workbook from Pyvot.</p>
+<ol class="arabic simple">
+<li>Create a new (empty) workbook via xl.Workbook()</li>
+<li>Connect to an already-running workbook instance, by providing the name to xl.Workbook()</li>
+<li>Open a workbook from disk, by providing the path to xl.Workbook().</li>
+</ol>
+<p>Suppose we have an existing open workbook, named <tt class="file docutils literal"><span class="pre">cities.xlsx</span></tt>, which contains per-city crime-rate data that we downloaded from <a class="reference external" href="https://datamarket.azure.com/">Azure DataMarket</a> using the <a class="reference external" href="https://datamarket.azure.com/addin">Excel Data Markertplace Addin</a>:</p>
+<img alt="_images/alaska.png" src="_images/alaska.png" />
+<p>Pyvot can show currently open Excel instances:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">workbooks</span><span class="p">()</span>
+<span class="go">[Workbook(u&#39;Book1&#39;), Workbook(u&#39;cities.xlsx&#39;)]</span>
+</pre></div>
+</div>
+<p>This returns an array of Workbook objects, and the Workbook __repr__ provides the name expression.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">workbooks</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span><span class="o">.</span><span class="n">name</span>
+<span class="go">u&#39;cities.xlsx&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;City&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">[u&#39;Anchorage&#39;, u&#39;Bethel&#39;, u&#39;Bristol Bay Borough&#39;, ...&lt;snip&gt;, u&#39;Blountsville&#39;]</span>
+</pre></div>
+</div>
+<p>Or we can provide the name directly to the workbook constructor:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">&quot;cities.xlsx&quot;</span><span class="p">)</span>
+<span class="go">Workbook(u&#39;cities.xlsx&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">u&#39;Book1&#39;</span><span class="p">)</span>
+<span class="go">Workbook(u&#39;Book1&#39;)</span>
+<span class="go">&gt;&gt; xl.Workbook(u&#39;Book2&#39;)</span>
+<span class="go">...exception...</span>
+</pre></div>
+</div>
+<p>If we provide a fully qualified path, the workbook will be opened from disk if needed:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">r&quot;c:\temp\cities.xlsx&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Pyvot will first try to match running workbooks by fully qualified path. If no such match exists, then it will match by the shortened filename. As a last resort, it will try to load the workbook from disk.</p>
+</div>
+</div>
+<div class="section" id="shortcut-the-pyvot-shell">
+<h2>Shortcut: the Pyvot Shell<a class="headerlink" href="#shortcut-the-pyvot-shell" title="Permalink to this headline">¶</a></h2>
+<p>We have now covered how to import Pyvot, connect to workbooks, and move data in and out of Excel. For interactive and exploratory usages, those first two items become tedious. The Pyvot Shell provides a shortcut to quickly start an interactive session.
+The Pyvot shell is defined in the executable xl.shell module. Since xl should be on the Python module search path anyway, it can most easily be started by running <tt class="docutils literal"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">xl.shell</span></tt></p>
+<p>The shell eliminates the tedium of connecting to an open workbook by mapping each to a pre-defined variable. If no workbooks are open, it opens a blank one.</p>
+<p>For more on interactive workflows with the Pyvot shell, see <a class="reference internal" href="workflows.html#interactive"><em>Interactive usage and xl.shell</em></a>.</p>
+</div>
+<div class="section" id="working-with-tables">
+<span id="id1"></span><h2>Working with tables<a class="headerlink" href="#working-with-tables" title="Permalink to this headline">¶</a></h2>
+<p>Pyvot is designed to work with tabular data and specifically recognizes Excel&#8217;s Tables and AutoFilter objects.</p>
+<p>In Excel 2007 or later, you can create a table by highlighting a region and then pressing <tt class="kbd docutils literal"><span class="pre">Ctrl</span> <span class="pre">+</span> <span class="pre">T</span></tt>. See <a class="reference external" href="http://office.microsoft.com/en-us/excel-help/manage-information-in-tables-in-excel-2007-HA010219000.aspx">here</a> for more details on using tables in Excel.  You can create an auto-filter via the Filter button on the Data ribbon:</p>
+<img alt="_images/autofilter.png" src="_images/autofilter.png" />
+<p>Pyvot specifically recognizes column names from tables and auto-filters. Pyvot will search all tables in the workbook for a given column name.</p>
+<div class="section" id="visible-rows">
+<h3>Visible rows<a class="headerlink" href="#visible-rows" title="Permalink to this headline">¶</a></h3>
+<p>Fetching ranges only returns data from visible cells by default. This allows you to use Excel to filter data, and then operate on the post-filter results in Python. For example, suppose we just want the cities in Alaska where violent crimes are greater than 100, and we want it sorted in alphabetical order. These filters are easy to set in Excel:</p>
+<img alt="_images/alaska_filtered.png" src="_images/alaska_filtered.png" />
+<p>You can see from the blue row numbers on the left that Excel is hiding rows.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wCities</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">&quot;cities.xlsx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wCities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;City&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">[u&#39;Anchorage&#39;, u&#39;Fairbanks&#39;, u&#39;Juneau&#39;]</span>
+</pre></div>
+</div>
+<p>The expected workflow here is that you can use Excel&#8217;s visual filters on your data, and then pull the results back into Python.</p>
+<p>For further details on how Ranges handle visibility, see <a class="reference internal" href="#range-visibility"><em>Visibility</em></a>.</p>
+</div>
+<div class="section" id="running-map-operations-on-excel-columns">
+<h3>Running Map operations on Excel columns<a class="headerlink" href="#running-map-operations-on-excel-columns" title="Permalink to this headline">¶</a></h3>
+<p>You can also run map operations on Excel data. This can be useful for writing Python functions to clean the data and return new computed columns.</p>
+<p>For example, suppose we want to combine the city and state columns in a single column:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">Merge</span><span class="p">(</span><span class="n">city</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">city</span> <span class="o">+</span> <span class="s">&quot;, &quot;</span> <span class="o">+</span> <span class="n">state</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wCities</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">&quot;cities.xlsx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">Merge</span><span class="p">,</span> <span class="n">wCities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;City&quot;</span><span class="p">),</span> <span class="n">wCities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;State&quot;</span><span class="p">))</span>
+<span class="go">&lt;ColumnVector range object for $N$2:$N$51 (visible only)&gt;</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="api/tools.html#xl.tools.map" title="xl.tools.map"><tt class="xref py py-func docutils literal"><span class="pre">xl.map</span></tt></a> works just like the builtin map function, but will inserts the results as a new computed column in Excel. It will infer a column name from the function name, and it will pick a column related to its arguments. Note below that &#8220;Merge&#8221; becomes a new column in the source table:</p>
+<img alt="_images/alaska_map.png" src="_images/alaska_map.png" />
+<p>The results mirror that of the builtin map function which it emulates:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wCities</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">&quot;cities.xlsx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cities</span> <span class="o">=</span> <span class="n">wCities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;City&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">states</span> <span class="o">=</span> <span class="n">wCities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;State&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">map</span><span class="p">(</span><span class="n">Merge</span><span class="p">,</span> <span class="n">cities</span><span class="p">,</span> <span class="n">states</span><span class="p">)</span>
+<span class="go">[u&#39;Alexander City, Alabama&#39;, u&#39;Bethel, Alaska&#39;, u&#39;Bristol Bay Borough, Alaska&#39;,</span>
+<span class="gp">...</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">xl.map</span></tt> also works with lambdas, or with input parameters that are non-Range Python iterables.</p>
+</div>
+<div class="section" id="apply-operations-on-excel-columns">
+<h3>Apply operations on Excel columns<a class="headerlink" href="#apply-operations-on-excel-columns" title="Permalink to this headline">¶</a></h3>
+<p>Pyvot also provides <a class="reference internal" href="api/tools.html#xl.tools.apply" title="xl.tools.apply"><tt class="xref py py-func docutils literal"><span class="pre">xl.apply</span></tt></a>, which is a counterpart to the builtin <tt class="docutils literal"><span class="pre">apply`</span> <span class="pre">function.</span>&nbsp; <span class="pre">Whereas</span> <span class="pre">``map</span></tt> runs on each row independently, <tt class="docutils literal"><span class="pre">apply</span></tt> runs on the entire column.</p>
+<p>For example, we can use xl.apply to create a new computed column showing how the values in &#8220;ViolentCrime&#8221; column compare to the average:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="c"># take a vector, return a vector</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">CompareToAverage</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">a</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="n">a</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wCities</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">&quot;cities.xlsx&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">CompareToAverage</span><span class="p">,</span> <span class="n">wCities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;ViolentCrime&quot;</span><span class="p">))</span>
+<span class="go">&lt;ColumnVector range object for $N$2:$N$51 (visible only)&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="join-operations-between-tables">
+<h3>Join operations between tables<a class="headerlink" href="#join-operations-between-tables" title="Permalink to this headline">¶</a></h3>
+<p>Pyvot supports join operations on Excel tables.
+<a class="reference internal" href="api/tools.html#xl.tools.join" title="xl.tools.join"><tt class="xref py py-func docutils literal"><span class="pre">xl.join(rangeDest,</span> <span class="pre">rangeSrc)</span></tt></a> takes in 2 Ranges. It infers the containing tables for each range. For each value in rangeDest, it will do the lookup in <tt class="docutils literal"><span class="pre">rangeSrc</span></tt> and merge the row into the table in <tt class="docutils literal"><span class="pre">rangeDest</span></tt>.</p>
+<p>For example, suppose we want to city crime data from in &#8220;cities.xlsx&#8221; with population data from &#8220;population.xlsx&#8221;.</p>
+<p>First we load (or connect to) the workbooks containing tables we want to join:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wCities</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">u&#39;cities.xlsx&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wPop</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">(</span><span class="s">&quot;Population.xlsx&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Then we compute a primary key column, if necessary.  In this case, we&#8217;re joining on multiple columns (both city and state), so we&#8217;ll merge them into a single column for the join:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">Merge</span><span class="p">,</span> <span class="n">wPop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;City&quot;</span><span class="p">),</span> <span class="n">wPop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;State&quot;</span><span class="p">))</span>
+<span class="go">&lt;ColumnVector range object for $D$2:$D$51 (visible only)&gt;</span>
+</pre></div>
+</div>
+<p>The same operation is then applied on <tt class="docutils literal"><span class="pre">wCities</span></tt>.</p>
+<p>The two mapped columns act as keys for the join:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wCities</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Merge&quot;</span><span class="p">),</span> <span class="n">wPop</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Merge&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="figure">
+<img alt="_images/alaska_join_city.png" src="_images/alaska_join_city.png" />
+<p class="caption">Destination table</p>
+</div>
+<div class="figure">
+<img alt="_images/alaska_join_pop.png" src="_images/alaska_join_pop.png" />
+<p class="caption">Source table</p>
+</div>
+<div class="figure">
+<img alt="_images/alaska_join_final.png" src="_images/alaska_join_final.png" />
+<p class="caption">Destination table after join</p>
+</div>
+</div>
+</div>
+<div class="section" id="ranges-in-detail">
+<span id="id2"></span><h2>Ranges in Detail<a class="headerlink" href="#ranges-in-detail" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="shape">
+<h3>Shape<a class="headerlink" href="#shape" title="Permalink to this headline">¶</a></h3>
+<p>Every Range has a shape which is determined by its dimensions (note that cell visibility is ignored for this determination). Each range shape corresponds to a subclass of Range. The Range.shape property is defined as type(self), and serves as a simple readability aid.</p>
+<p>xl.get(&#8220;A:A&#8221;) returns a ColumnVector, whereas xl.get(&#8220;A1&#8221;) returns a Scalar.  The other shapes are RowVector and Matrix (for 2D ranges). As demonstrated prior without due attention, xl.get(&#8220;A1&#8221;).get() returns a single value rather than a list of a single value, whereas we expect a Vector range (further derived for &#8216;row&#8217; or &#8216;column&#8217;) to return a list. This is generally true; the data reading / writing methods of Range behave according to shape, most noticeably in types expected or returned.</p>
+</div>
+<div class="section" id="concerns-for-utility-functions">
+<h3>Concerns for utility functions<a class="headerlink" href="#concerns-for-utility-functions" title="Permalink to this headline">¶</a></h3>
+<p>Although the differing return types by shape does not cause surprise in interactive use, it can be an obstacle to writing re-usable utility functions. For example, a function written with <a class="reference internal" href="api/range.html#xl.range.Matrix" title="xl.range.Matrix"><tt class="xref py py-class docutils literal"><span class="pre">Matrix</span></tt></a> ranges in mind will attempt to iterate row by row, and then within each row; that function would behave poorly given a <a class="reference internal" href="api/range.html#xl.range.ColumnVector" title="xl.range.ColumnVector"><tt class="xref py py-class docutils literal"><span class="pre">ColumnVector</span></tt></a> of strings.</p>
+<p>To this end, the Range class provides the <a class="reference internal" href="api/range.html#xl.range.Range.as_matrix" title="xl.range.Range.as_matrix"><tt class="xref py py-attr docutils literal"><span class="pre">as_matrix</span></tt></a> property, which promotes any Range shape to a <a class="reference internal" href="api/range.html#xl.range.Matrix" title="xl.range.Matrix"><tt class="xref py py-class docutils literal"><span class="pre">Matrix</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A1&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span>
+<span class="go">&lt;Scalar range object for $A$1 (visible only)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">as_matrix</span>
+<span class="go">&lt;Matrix range object for $A$1 (visible only)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">as_matrix</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">[[u&#39;some string&#39;]]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="visibility">
+<span id="range-visibility"></span><h3>Visibility<a class="headerlink" href="#visibility" title="Permalink to this headline">¶</a></h3>
+<p>As covered previously, Range objects typically exclude hidden cells in order to co-operate with auto-filters and table filters. Sometimes, this is not the desired behavior. The <a class="reference internal" href="api/range.html#xl.range.Range.including_hidden" title="xl.range.Range.including_hidden"><tt class="xref py py-attr docutils literal"><span class="pre">including_hidden</span></tt></a> and <a class="reference internal" href="api/range.html#xl.range.Range.excluding_hidden" title="xl.range.Range.excluding_hidden"><tt class="xref py py-attr docutils literal"><span class="pre">excluding_hidden</span></tt></a> properties (returning new Ranges) allow code to declare a desired treatment of hidden cells. A range derived from another (such as when getting a vector range for the first row of a matrix, or the result of <a class="reference internal" href="api/range.html#xl.range.Range.as_matrix" title="xl.range.Range.as_matrix"><tt class="xref py py-attr docutils literal"><span class="pre">as_matrix</span></tt></a>) inherits this flag.</p>
+<p>In the following example, column B is hidden and empty:</p>
+<img alt="_images/hidden_column.png" src="_images/hidden_column.png" />
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A1:C2&quot;</span><span class="p">)</span>
+<span class="go">&lt;Matrix range object for $A$1:$A$2,$C$1:$C$2 (visible only)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A1:C2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">[[1.0, 3.0], [2.0, 4.0]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A1:C2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">including_hidden</span>
+<span class="go">&lt;Matrix range object for $A$1:$C$2 (includes hidden)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A1:C2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">including_hidden</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">[[1.0, None, 3.0], [2.0, None, 4.0]]</span>
+</pre></div>
+</div>
+<p>Due to the inheritance of visibility behavior in derived Ranges, most functions can remain naive to visibility concerns, while still producing a consistent result.</p>
+</div>
+</div>
+<div class="section" id="cache-layer">
+<h2>Cache Layer<a class="headerlink" href="#cache-layer" title="Permalink to this headline">¶</a></h2>
+<p>Pyvot must assume that the contents of an Excel workbook can change at any time, due to interactive manipulation or other external influences. In the following REPL example, Pyvot must determine the dimensions of r twice (if r filters hidden cells, this requires applying a visibility filter and enumerating r&#8217;s visible components!):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">num_rows</span>
+<span class="go">4</span>
+<span class="go">(user may now decide to insert a column)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">r</span><span class="o">.</span><span class="n">num_columns</span>
+<span class="go">10</span>
+</pre></div>
+</div>
+<p>However, in the interest of high performance with large data sets, Pyvot internally uses a cache to minimize accesses to the (remote) Excel workbook. This cache assumes that Excel does not change <em>during a call to the Pyvot API</em>. Experiments indicate that this is responsible for a significant performance gain.</p>
+<p>In most usages, this detail can be ignored in user code. However, the cache layer is exposed in the public API to enable users to make that same assumption within blocks of their own code. The Pyvot test suite, for example, enables the cache for the duration of each test by default; when disabled, the test suite takes about twice as long to run.</p>
+<p>Users may enable the cache for a function with the <a class="reference internal" href="api/cache.html#xl.cache.enable_caching" title="xl.cache.enable_caching"><tt class="xref py py-func docutils literal"><span class="pre">&#64;xl.enable_caching</span></tt></a> decorator, or for a block within a function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">caching_enabled</span><span class="p">():</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Column A&quot;</span><span class="p">),</span> <span class="n">xl</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;Column B&quot;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;A is </span><span class="si">%d</span><span class="s"> by </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">num_columns</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s">&quot;B is </span><span class="si">%d</span><span class="s"> by </span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">num_columns</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Were Pyvot&#8217;s cache not enabled for that block, Pyvot would need to probe Excel for the workbook&#8217;s tables and search their headers twice, and determine the dimensions of a and b twice each.</p>
+</div>
+<div class="section" id="interop">
+<h2>Interop<a class="headerlink" href="#interop" title="Permalink to this headline">¶</a></h2>
+<p>Pyvot is written on top of <a class="reference external" href="http://msdn.microsoft.com/en-us/library/ms262200(v=Office.11).aspx">Excel&#8217;s COM API</a>. You can always get the underlying COM object and make COM calls yourself:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span>
+<span class="go">Workbook(u&#39;cities.xlsx&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span><span class="o">.</span><span class="n">xlWorkbook</span> <span class="c"># get underlying COM object</span>
+<span class="go">&lt;win32com.gen_py.Microsoft Excel 14.0 Object Library._Workbook instance at 0x46745240&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wb</span><span class="o">.</span><span class="n">xlWorkbook</span><span class="o">.</span><span class="n">ActiveSheet</span><span class="o">.</span><span class="n">Name</span>  <span class="c"># make COM-call outside of Pyvot</span>
+<span class="go">u&#39;Sheet1&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="feedback">
+<h2>Feedback<a class="headerlink" href="#feedback" title="Permalink to this headline">¶</a></h2>
+<p>Pyvot is a very new public release, and we would appreciate hearing about your first experiences with Pyvot. Please <a class="reference external" href="mailto:vspython&#37;&#52;&#48;microsoft&#46;com">email the PTVS team</a> with any feedback.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting Started with Pyvot</a><ul>
+<li><a class="reference internal" href="#first-steps-python-to-excel-and-back-again">First steps: Python to Excel and back again</a><ul>
+<li><a class="reference internal" href="#python-to-excel">Python to Excel</a></li>
+<li><a class="reference internal" href="#excel-to-python">Excel to Python</a></li>
+<li><a class="reference internal" href="#obtaining-ranges">Obtaining Ranges</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#managing-workbooks">Managing Workbooks</a><ul>
+<li><a class="reference internal" href="#connecting-to-an-existing-excel-instance">Connecting to an existing Excel instance</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#shortcut-the-pyvot-shell">Shortcut: the Pyvot Shell</a></li>
+<li><a class="reference internal" href="#working-with-tables">Working with tables</a><ul>
+<li><a class="reference internal" href="#visible-rows">Visible rows</a></li>
+<li><a class="reference internal" href="#running-map-operations-on-excel-columns">Running Map operations on Excel columns</a></li>
+<li><a class="reference internal" href="#apply-operations-on-excel-columns">Apply operations on Excel columns</a></li>
+<li><a class="reference internal" href="#join-operations-between-tables">Join operations between tables</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ranges-in-detail">Ranges in Detail</a><ul>
+<li><a class="reference internal" href="#shape">Shape</a></li>
+<li><a class="reference internal" href="#concerns-for-utility-functions">Concerns for utility functions</a></li>
+<li><a class="reference internal" href="#visibility">Visibility</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cache-layer">Cache Layer</a></li>
+<li><a class="reference internal" href="#interop">Interop</a></li>
+<li><a class="reference internal" href="#feedback">Feedback</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="intro.html"
+                        title="previous chapter">Introduction</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="workflows.html"
+                        title="next chapter">Pyvot workflows</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/tutorial.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="workflows.html" title="Pyvot workflows"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="intro.html" title="Introduction"
+             >previous</a> |</li>
+        <li><a href="index.html">Pyvot v0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Microsoft Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

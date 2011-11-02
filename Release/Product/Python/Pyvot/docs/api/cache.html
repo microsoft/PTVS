@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>xl.cache - Cache layer for Excel communication &mdash; Pyvot v0.1.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Pyvot v0.1.1 documentation" href="../index.html" />
+    <link rel="up" title="The Pyvot API" href="api_index.html" />
+    <link rel="prev" title="xl.sheet - The Excel workbook model" href="sheet.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sheet.html" title="xl.sheet - The Excel workbook model"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" accesskey="U">The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-xl.cache">
+<span id="xl-cache-cache-layer-for-excel-communication"></span><span id="api-cache"></span><h1><a class="reference internal" href="#module-xl.cache" title="xl.cache"><tt class="xref py py-mod docutils literal"><span class="pre">xl.cache</span></tt></a> - Cache layer for Excel communication<a class="headerlink" href="#module-xl.cache" title="Permalink to this headline">¶</a></h1>
+<p>Cache layer</p>
+<p>Pyvot must assume that the contents of an Excel workbook can change at any time, due to interactive manipulation 
+or other external influences. Living out of process, this can be a performance catastrophe. We use a cache when
+possible, on the assumption that Excel doesn&#8217;t change during any single call into to the Pyvot user API.</p>
+<p>This module provides the <tt class="xref py py-func docutils literal"><span class="pre">&#64;cache_result()</span></tt> decorator which adds caching to a function or property,
+an <tt class="xref py py-func docutils literal"><span class="pre">&#64;enable_caching()</span></tt> decorator for enabling the (off by default) cache for the duration of a function call, and the
+CacheManager, for non-decorator cache control including invalidation.</p>
+<dl class="data">
+<dt id="xl.cache.CacheManager">
+<tt class="descclassname">xl.cache.</tt><tt class="descname">CacheManager</tt><a class="headerlink" href="#xl.cache.CacheManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Singleton CacheManager used by all of Pyvot</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.cache.CacheManager_class">
+<em class="property">class </em><tt class="descclassname">xl.cache.</tt><tt class="descname">CacheManager_class</tt><a class="headerlink" href="#xl.cache.CacheManager_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Singleton manager for the program&#8217;s CacheSites (created through use of &#64;:func:<cite>cache_result</cite>)
+Cache state is dynamically scoped on the stack by use of a context manager:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">CacheManager</span><span class="o">.</span><span class="n">caching_enabled</span><span class="p">():</span>
+    <span class="n">do_stuff</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Within that context, all &#64;cache_result decorators are enabled and may store / return cached values
+Cached values are deleted when the context is exited.</p>
+<p>The context may be safely nested.</p>
+<dl class="method">
+<dt id="xl.cache.CacheManager_class.cache_info">
+<tt class="descname">cache_info</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.cache.CacheManager_class.cache_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a tuple (site group key, group size, hits, misses, uncached misses) per cache site group.
+(uncached misses refers to those misses that occurred without caching enabled (see CacheManager.is_caching_enabled)
+A cache site group is an aggregation of cache sites that are considered meaningfully related,
+with regards to performance counters.</p>
+<p>For example, though a method on a class has a cache site per _instance_, all instance sites
+of a method are joined to the same site group.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.cache.CacheManager_class.caching_disabled">
+<tt class="descname">caching_disabled</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#xl.cache.CacheManager_class.caching_disabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an object implementing the context-manager protocol. Within the context, caching is
+disabled. When exiting the context, the cache-enable state (incl. nesting level) is restored to its
+previous value. Entering the context immediately invalidates all cache sites</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">caching_enabled</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">caching_disabled</span><span class="p">():</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">is_caching_enabled</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">is_caching_enabled</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.cache.CacheManager_class.caching_enabled">
+<tt class="descname">caching_enabled</tt><big>(</big><em>*args</em>, <em>**kwds</em><big>)</big><a class="headerlink" href="#xl.cache.CacheManager_class.caching_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an object implementing the context-manager protocol. Within the context,
+caching is enabled (this is a context-manager version of the <cite>&#64;enable_caching</cite> decorator).</p>
+<p>Cache activation may be nested; there is no harm in enabling caching before calling a function
+which does the same:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">with</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">caching_enabled</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">caching_enabled</span><span class="p">():</span>
+        <span class="k">assert</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">is_caching_enabled</span><span class="p">()</span>
+    <span class="k">assert</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">is_caching_enabled</span><span class="p">()</span>
+<span class="k">assert</span> <span class="ow">not</span> <span class="n">xl</span><span class="o">.</span><span class="n">CacheManager</span><span class="o">.</span><span class="n">is_caching_enabled</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.cache.CacheManager_class.create_cache_site">
+<tt class="descname">create_cache_site</tt><big>(</big><em>source</em>, <em>site_name</em>, <em>site_group_key</em><big>)</big><a class="headerlink" href="#xl.cache.CacheManager_class.create_cache_site" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a CacheSite instanced, managed by this CacheManager.
+The manager keeps a weak reference to the site ; the lifetime of the
+cache is controlled by the caller</p>
+<p>The site_group_key specifies the key on which to aggregate hit / miss stats in cache_info()
+Note that a reference to site_group_key will continue to be held by the CacheManager, so take
+care to select keys that are small in size, or wouldn&#8217;t be garbage collected anyway (i.e. a module-level class)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.cache.CacheManager_class.invalidate_all_caches">
+<tt class="descname">invalidate_all_caches</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.cache.CacheManager_class.invalidate_all_caches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Invalidates cache sites program-wide. This method should be called whenever the Excel COM API is used to
+modify a workbook (for example, it is called by <tt class="xref py py-meth docutils literal"><span class="pre">xl.range.Range.set()</span></tt>).</p>
+<p>Alternatively, one can use <a class="reference internal" href="#xl.cache.CacheManager_class.caching_disabled" title="xl.cache.CacheManager_class.caching_disabled"><tt class="xref py py-meth docutils literal"><span class="pre">caching_disabled()</span></tt></a>, since it invalidates caches on context entry.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.cache.CacheManager_class.is_caching_enabled">
+<tt class="descname">is_caching_enabled</tt><a class="headerlink" href="#xl.cache.CacheManager_class.is_caching_enabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.cache.CacheSite">
+<em class="property">class </em><tt class="descclassname">xl.cache.</tt><tt class="descname">CacheSite</tt><big>(</big><em>source</em>, <em>site_name=None</em><big>)</big><a class="headerlink" href="#xl.cache.CacheSite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a single cache of arguments -&gt; results.
+Note that there can be multiple cache sites per &#64;cache_result-wrapped method;
+each instance with the caching method uses a separate cache site</p>
+<dl class="method">
+<dt id="xl.cache.CacheSite.clear">
+<tt class="descname">clear</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.cache.CacheSite.clear" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xl.cache.CacheSite.get">
+<tt class="descname">get</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#xl.cache.CacheSite.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.cache.CacheSiteStats">
+<em class="property">class </em><tt class="descclassname">xl.cache.</tt><tt class="descname">CacheSiteStats</tt><a class="headerlink" href="#xl.cache.CacheSiteStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Container for <tt class="xref py py-attr docutils literal"><span class="pre">hits</span></tt>, <tt class="xref py py-attr docutils literal"><span class="pre">misses</span></tt>, and <tt class="xref py py-attr docutils literal"><span class="pre">uncached_misses</span></tt>
+(misses that occurred with cachind disabled). Accessed as <tt class="xref py py-attr docutils literal"><span class="pre">CacheSite.stats</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.cache.cache_result">
+<tt class="descclassname">xl.cache.</tt><tt class="descname">cache_result</tt><a class="headerlink" href="#xl.cache.cache_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator class for caching the results of method calls / read-only properties. The cache is controlled
+by the state of the singleton CacheManager. While caching is enabled, the wrapped function / property
+is called only once per unique set of arguments, and the return value is stored to satisfy future
+calls with those same arguments. When caching is disabled, all cached values are cleared, and
+the wrapped function is always called.</p>
+<p>This decorator may only be applied to a method or property within a class. A separate cache is maintained <em>per instance</em>; 
+although argument sets are typically compared for value equality, two equal instances still have separate caches.</p>
+<p>Cache statistics are available via the &#8216;stats&#8217; attribute (unless wrapping a property):</p>
+<blockquote>
+<div>instance_a.cached_method -&gt; CacheSite instance
+instance_a.cached_method.stats.hits -&gt; # of cache hits (similarly for misses)
+instance_b.cached_method -&gt; Different CacheSite instance</div></blockquote>
+<p>This information is summarized by CacheManager.cache_info(), in which the per-instance stats are aggregated by class</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.cache.enable_caching">
+<tt class="descclassname">xl.cache.</tt><tt class="descname">enable_caching</tt><big>(</big><em>f</em><big>)</big><a class="headerlink" href="#xl.cache.enable_caching" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator which enables caching within the wrapped function. Caching is enabled
+until the function exits; i.e. functions called directly or indirectly will also have
+caching enabled.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sheet.html"
+                        title="previous chapter"><tt class="docutils literal"><span class="pre">xl.sheet</span></tt> - The Excel workbook model</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/cache.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sheet.html" title="xl.sheet - The Excel workbook model"
+             >previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" >The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Microsoft Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

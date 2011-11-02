@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="83f5123e-4b4a-45c0-baec-bea8964d7b25">
+    <Name>Python Tools PyKinect Sample</Name>
+    <Author>Microsoft</Author>
+    <Version>1.1</Version>
+    <Description xml:space="preserve">Adds samples for working with Kinect from Python.</Description>
+    <Locale>1033</Locale>
+    <InstalledByMsi>true</InstalledByMsi>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+      <Name>Visual Studio MPF</Name>
+    </Reference>
+    <Reference Id="Python Tools for Visual Studio" MinVersion="1.1">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+    </Reference>
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="1.1">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+    </Reference>
+  </References>
+  <Content>
+    <VsPackage>|%CurrentProject%|</VsPackage>
+    <ProjectTemplate>Templates\Projects\PyKinectPyGame</ProjectTemplate>
+  </Content>
+</Vsix>

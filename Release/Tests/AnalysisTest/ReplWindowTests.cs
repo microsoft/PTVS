@@ -950,7 +950,7 @@ namespace AnalysisTest {
         public void ReplCommandComment() {
             var interactive = Prepare();
 
-            const string code = "$$ foo bar baz";
+            const string code = "$$ quox bar baz";
             Keyboard.Type(code + "\r");
             interactive.WaitForReadyState();
 

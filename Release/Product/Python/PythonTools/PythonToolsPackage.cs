@@ -26,7 +26,6 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
@@ -132,6 +131,8 @@ namespace Microsoft.PythonTools {
         private static Dictionary<Command, MenuCommand> _commands = new Dictionary<Command,MenuCommand>();
         private PythonAutomation _autoObject = new PythonAutomation();
         private IContentType _contentType;
+        internal static Guid _noInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
+        private static List<EventHandler> _earlyHandlers = new List<EventHandler>();
 
         /// <summary>
         /// Default constructor of the package.
@@ -143,6 +144,12 @@ namespace Microsoft.PythonTools {
         public PythonToolsPackage() {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
             Instance = this;
+
+            // hook up any event handlers that were registered before we were sited.
+            foreach (var earlyHandler in _earlyHandlers) {
+                InterpretersChanged += earlyHandler;
+            }
+            _earlyHandlers.Clear();
         }
 
         internal static void NavigateTo(string filename, Guid docViewGuidType, int line, int col) {
@@ -253,6 +260,28 @@ namespace Microsoft.PythonTools {
         }
 
         /// <summary>
+        /// Event is fired when the list of configured interpreters is changed.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public static event EventHandler InterpretersChanged {
+            add {
+                if (Instance == null) {
+                    _earlyHandlers.Add(value);
+                } else {
+                    Instance.InterpreterOptionsPage.InterpretersChanged += value;
+                }
+            }
+            remove {
+                if (Instance == null) {
+                    _earlyHandlers.Remove(value);
+                } else {
+                    Instance.InterpreterOptionsPage.InterpretersChanged -= value;
+                }
+            }
+        }
+
+        /// <summary>
         /// The analyzer which is used for loose files.
         /// </summary>
         internal ProjectAnalyzer DefaultAnalyzer {
@@ -271,7 +300,7 @@ namespace Microsoft.PythonTools {
         private ProjectAnalyzer CreateAnalyzer() {
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
 
-            var defaultFactory = GetDefaultInterpreter(model.GetAllPythonInterpreterFactories());
+            var defaultFactory = model.GetAllPythonInterpreterFactories().GetDefaultInterpreter();
             EnsureCompletionDb(defaultFactory);
             return new ProjectAnalyzer(defaultFactory.CreateInterpreter(), defaultFactory, model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>());
         }
@@ -287,45 +316,6 @@ namespace Microsoft.PythonTools {
                     interpWithDb.AutoGenerateCompletionDatabase();
                 }
             }
-        }
-
-        internal static Guid _noInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
-        private static IPythonInterpreterFactory _noInterpretersFactory;
-
-        internal IPythonInterpreterFactory GetDefaultInterpreter(IPythonInterpreterFactory[] factories) {
-            IPythonInterpreterFactory lastInterpreter = null, defaultInterpreter = null;
-            foreach (var interpreter in factories) {
-                lastInterpreter = interpreter;
-
-                if (interpreter.Id == InterpreterOptionsPage.DefaultInterpreter &&
-                    interpreter.Configuration.Version == InterpreterOptionsPage.DefaultInterpreterVersion) {
-                    defaultInterpreter = interpreter;
-                    break;
-                }
-            }
-
-            if (defaultInterpreter == null && lastInterpreter != null) {
-                // default interpreter not configured, just select the last one and make it the default.
-                defaultInterpreter = lastInterpreter;
-                InterpreterOptionsPage.DefaultInterpreter = defaultInterpreter.Id;
-                InterpreterOptionsPage.DefaultInterpreterVersion = defaultInterpreter.Configuration.Version;
-                InterpreterOptionsPage.SaveSettingsToStorage();
-            }
-
-            if (defaultInterpreter == null) {
-                // no interpreters installed, create a default interpreter for analysis
-                if (_noInterpretersFactory == null) {
-                    _noInterpretersFactory = ComponentModel.GetService<IDefaultInterpreterFactoryCreator>().CreateInterpreterFactory(
-                        new Dictionary<InterpreterFactoryOptions, object>() {
-                            { InterpreterFactoryOptions.Description, "Python 2.7 - No Interpreters Installed" },
-                            { InterpreterFactoryOptions.Guid, _noInterpretersFactoryGuid }
-                        }
-                    );
-                }
-                defaultInterpreter = _noInterpretersFactory;
-            }
-
-            return defaultInterpreter;
         }
 
         private void UpdateDefaultAnalyzer(object sender, EventArgs args) {
@@ -422,12 +412,12 @@ namespace Microsoft.PythonTools {
             });
 
             RegisterCommands(GetReplCommands());
-            
-            InterpreterOptionsPage.InterpretersChanged += InterpretersChanged;
+
+            InterpreterOptionsPage.InterpretersChanged += OnInterpretersChanged;
             InterpreterOptionsPage.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
         }
 
-        private void InterpretersChanged(object sender, EventArgs e) {
+        private void OnInterpretersChanged(object sender, EventArgs e) {
             RefreshReplCommands();
         }
 
@@ -473,7 +463,7 @@ namespace Microsoft.PythonTools {
 
         private List<OpenReplCommand> GetReplCommands() {
             var factories = ComponentModel.GetAllPythonInterpreterFactories();
-            var defaultFactory = GetDefaultInterpreter(factories);
+            var defaultFactory = factories.GetDefaultInterpreter();
             // sort so default always comes first, and otherwise in sorted order
             Array.Sort(factories, (x, y) => {
                 if (x == y) {

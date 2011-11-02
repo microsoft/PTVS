@@ -29,7 +29,7 @@ namespace AnalysisTest {
     [TestClass]
     [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
     public class PublishTest {
-        private const string TestFtpUrl = "ftp://anonymous:foobar@dinov1/testdir";
+        private const string TestFtpUrl = "ftp://anonymous:blazzz@dinov1/testdir";
         private const string FtpValidateDir = "\\\\dinov1\\ftproot\\testdir";
         private const string TestSharePublic = "\\\\dinov1\\Test";
         private const string TestSharePrivate = "\\\\dinov1\\PubTest";

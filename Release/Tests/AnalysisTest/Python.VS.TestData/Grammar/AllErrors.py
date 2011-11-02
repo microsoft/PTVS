@@ -79,7 +79,7 @@ from __future__ import division
 
 
 
-nonlocal foobar
+nonlocal blazzz
 raise foo, bar
 
 

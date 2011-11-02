@@ -1,0 +1,345 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>xl.range - Referencing Excel data &mdash; Pyvot v0.1.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Pyvot v0.1.1 documentation" href="../index.html" />
+    <link rel="up" title="The Pyvot API" href="api_index.html" />
+    <link rel="next" title="xl.sheet - The Excel workbook model" href="sheet.html" />
+    <link rel="prev" title="xl.tools - map(), filter(), and other top-level utilities" href="tools.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sheet.html" title="xl.sheet - The Excel workbook model"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tools.html" title="xl.tools - map(), filter(), and other top-level utilities"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" accesskey="U">The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-xl.range">
+<span id="xl-range-referencing-excel-data"></span><span id="api-range"></span><h1><a class="reference internal" href="#module-xl.range" title="xl.range"><tt class="xref py py-mod docutils literal"><span class="pre">xl.range</span></tt></a> - Referencing Excel data<a class="headerlink" href="#module-xl.range" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="xl.range.ColumnVector">
+<em class="property">class </em><tt class="descclassname">xl.range.</tt><tt class="descname">ColumnVector</tt><big>(</big><em>xlRange</em>, <em>with_hidden</em>, <em>as_matrix=False</em><big>)</big><a class="headerlink" href="#xl.range.ColumnVector" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="exception">
+<dt id="xl.range.ExcelRangeError">
+<em class="property">exception </em><tt class="descclassname">xl.range.</tt><tt class="descname">ExcelRangeError</tt><a class="headerlink" href="#xl.range.ExcelRangeError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Raised when
+- a requested range / named range / table column is invalid or cannot be found
+- usage of a Range instance fails due to its dimensions, e.g. Range.set() with too many values</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.range.Matrix">
+<em class="property">class </em><tt class="descclassname">xl.range.</tt><tt class="descname">Matrix</tt><big>(</big><em>xlRange</em>, <em>with_hidden</em>, <em>as_matrix=False</em><big>)</big><a class="headerlink" href="#xl.range.Matrix" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="xl.range.Matrix.get">
+<tt class="descname">get</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.range.Matrix.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list-of-lists representation in the form:</p>
+<div class="highlight-python"><pre>[[row values,...], [row values,...], ...]</pre>
+</div>
+<p>All row lists have the same length. The number of rows / columns returned may be less than num_rows / num_columns;
+the fetch is clipped to the &#8216;used range&#8217; of the worksheet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.range.Matrix.set">
+<tt class="descname">set</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#xl.range.Matrix.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the matrix&#8217;s cells. <cite>data</cite> should be of the form:</p>
+<div class="highlight-python"><pre>[[row values, ...], [row values,...], ...]</pre>
+</div>
+<p>Not all rows and columns need to be specified; the given values fill
+the top-left corner of the matrix, and the remaining cells are unchanged. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">workbook</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A:C&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>only modifies A1:B2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.range.Range">
+<em class="property">class </em><tt class="descclassname">xl.range.</tt><tt class="descname">Range</tt><big>(</big><em>xlRange</em>, <em>with_hidden</em>, <em>as_matrix=False</em><big>)</big><a class="headerlink" href="#xl.range.Range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents a contiguous range of cells in Excel, ex. A1:B20. The contents (in Excel) can be read and written to (see the <cite>get</cite>
+and <cite>set</cite> methods).</p>
+<p>Ranges are usually obtained using the <a class="reference internal" href="sheet.html#xl.sheet.Workbook.get" title="xl.sheet.Workbook.get"><tt class="xref py py-meth docutils literal"><span class="pre">xl.sheet.Workbook.get()</span></tt></a> or <a class="reference internal" href="sheet.html#xl.sheet.Workbook.range" title="xl.sheet.Workbook.range"><tt class="xref py py-meth docutils literal"><span class="pre">xl.sheet.Workbook.range()</span></tt></a> method. The returned range behaves
+according to its &#8216;shape,&#8217; which is reflected in its type as well as the <cite>shape</cite> property:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">type</span><span class="p">(</span><span class="n">workbook</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A:A&quot;</span><span class="p">))</span>
+<span class="go">&lt;class &#39;xl.range.ColumnVector&#39;&gt;</span>
+</pre></div>
+</div>
+<p>A range&#8217;s shape may be <cite>ColumnVector</cite>, <cite>RowVector</cite>, <cite>Scalar</cite>, or <cite>Matrix</cite>. The <cite>Vector</cite> type (a base for RowVector
+and ColumnVector) allows detection of either vector variety:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">workbook</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A:A&quot;</span><span class="p">),</span> <span class="n">xl</span><span class="o">.</span><span class="n">Vector</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The shape subclasses differ in the rules and types involved in accessing the backing Excel data, e.g. the return
+type of <cite>get</cite>. See help(shape class) for specifics.</p>
+<p>By default, a Range excludes &#8216;hidden&#8217; cells - those not visible in Excel due to an Excel-level filter,
+or manual hiding by the user. The <cite>including_hidden</cite> and <cite>excluding_hidden</cite> properties permit explicit
+control of this behavior:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">workbook</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A1:A3&quot;</span><span class="p">)</span>
+<span class="go">&lt;ColumnVector range object for $A$1,$A$3 (visible only)&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">workbook</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A1:A3&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">including_hidden</span>
+<span class="go">&lt;ColumnVector range object for $A$1:$A$3 (includes hidden)&gt;</span>
+</pre></div>
+</div>
+<p>Note that un-filtered dimensions determine shape, e.g. <tt class="docutils literal"><span class="pre">workbook.get(&quot;A1:B2&quot;)</span></tt> is a Matrix, even if column B is hidden</p>
+<dl class="attribute">
+<dt id="xl.range.Range.as_matrix">
+<tt class="descname">as_matrix</tt><a class="headerlink" href="#xl.range.Range.as_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a version of this range that is always a Matrix (even if shaped differently).
+This is useful for utility functions that wish to avoid a special case per range shape</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.column">
+<tt class="descname">column</tt><a class="headerlink" href="#xl.range.Range.column" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sheet-wide column index of the left-most unfiltered cells</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.range.Range.column_vector">
+<tt class="descname">column_vector</tt><big>(</big><em>idx</em><big>)</big><a class="headerlink" href="#xl.range.Range.column_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns one of the column-vectors comprising this Range
+by index, i.e. column_vector(0) gives the first column</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.containing_table">
+<tt class="descname">containing_table</tt><a class="headerlink" href="#xl.range.Range.containing_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>If this range is partially or fully contained in a Table, returns the table
+Otherwise, returns None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.dimensions">
+<tt class="descname">dimensions</tt><a class="headerlink" href="#xl.range.Range.dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives the tuple (num rows, num columns). If applicable for this range, hidden cells are excluded</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.excluding_hidden">
+<tt class="descname">excluding_hidden</tt><a class="headerlink" href="#xl.range.Range.excluding_hidden" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new Range identical this one, but with hidden cells filtered away.
+This is reversible, e.g. range.exluding_hidden.including_hidden</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.includes_hidden_cells">
+<tt class="descname">includes_hidden_cells</tt><a class="headerlink" href="#xl.range.Range.includes_hidden_cells" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.including_hidden">
+<tt class="descname">including_hidden</tt><a class="headerlink" href="#xl.range.Range.including_hidden" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new Range identical this one, but with hidden cells included.
+This is reversible, e.g. range.including_hidden.excluding_hidden</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.range.Range.intersects">
+<tt class="descname">intersects</tt><big>(</big><em>rangeOther</em><big>)</big><a class="headerlink" href="#xl.range.Range.intersects" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xl.range.Range.itercells">
+<tt class="descname">itercells</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.range.Range.itercells" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a generator yielding the single cell ranges comprising this scalar / vector.
+Thus, range.get() == [c.get() for c in range.itercells()]</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.normalize">
+<tt class="descname">normalize</tt><a class="headerlink" href="#xl.range.Range.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a normalized version of this range. The returned range is reduced to
+encompass only in-use areas of the worksheet, and (if applicable) the data area of its table</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.num_columns">
+<tt class="descname">num_columns</tt><a class="headerlink" href="#xl.range.Range.num_columns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.num_rows">
+<tt class="descname">num_rows</tt><a class="headerlink" href="#xl.range.Range.num_rows" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.row">
+<tt class="descname">row</tt><a class="headerlink" href="#xl.range.Range.row" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sheet-wide row index of the top-most unfiltered cells</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.range.Range.row_vector">
+<tt class="descname">row_vector</tt><big>(</big><em>idx</em><big>)</big><a class="headerlink" href="#xl.range.Range.row_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns one of the row-vectors comprising this Range
+by index, i.e. row_vector(0) gives the first row</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.shape">
+<tt class="descname">shape</tt><a class="headerlink" href="#xl.range.Range.shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the shape class of this range (e.g. RowVector). Equivalent to type(self)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.range.Range.with_filter">
+<tt class="descname">with_filter</tt><a class="headerlink" href="#xl.range.Range.with_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a range with the specified inclusion / exclusion of hidden cells.
+See the including_hidden / excluding_hidden properties for less verbose shortcuts</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.range.RowVector">
+<em class="property">class </em><tt class="descclassname">xl.range.</tt><tt class="descname">RowVector</tt><big>(</big><em>xlRange</em>, <em>with_hidden</em>, <em>as_matrix=False</em><big>)</big><a class="headerlink" href="#xl.range.RowVector" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="xl.range.Scalar">
+<em class="property">class </em><tt class="descclassname">xl.range.</tt><tt class="descname">Scalar</tt><big>(</big><em>xlRange</em>, <em>with_hidden</em>, <em>as_matrix=False</em><big>)</big><a class="headerlink" href="#xl.range.Scalar" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="xl.range.Scalar.get">
+<tt class="descname">get</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.range.Scalar.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the single value in the scalar range.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.range.Scalar.set">
+<tt class="descname">set</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#xl.range.Scalar.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates this scalar range&#8217;s cell. The <cite>data</cite> parameter
+may be a single value, or a (non-string) iterable that returns one item.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.range.Vector">
+<em class="property">class </em><tt class="descclassname">xl.range.</tt><tt class="descname">Vector</tt><big>(</big><em>xlRange</em>, <em>with_hidden</em>, <em>as_matrix=False</em><big>)</big><a class="headerlink" href="#xl.range.Vector" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="method">
+<dt id="xl.range.Vector.get">
+<tt class="descname">get</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.range.Vector.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list representation of this vector&#8217;s values (containing values for low indices first)</p>
+<p>The number of elements returned may be less than num_rows / num_columns; the fetch is clipped to the &#8216;used range&#8217; of the worksheet</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xl.range.Vector.set">
+<tt class="descname">set</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#xl.range.Vector.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates this vector&#8217;s cells. The <cite>data</cite> parameter should be an iterable returning cell values.
+Not all cells need to be specified. Values are filled in from the top-left of the vector, and
+additional cells are left unmodified. For example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">workbook</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;A:A&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>sets the first 3 values of column A</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tools.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">xl.tools</span></tt> - <tt class="docutils literal docutils literal"><span class="pre">map()</span></tt>, <tt class="docutils literal docutils literal"><span class="pre">filter()</span></tt>, and other top-level utilities</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="sheet.html"
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">xl.sheet</span></tt> - The Excel workbook model</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/range.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="sheet.html" title="xl.sheet - The Excel workbook model"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tools.html" title="xl.tools - map(), filter(), and other top-level utilities"
+             >previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" >The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Microsoft Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

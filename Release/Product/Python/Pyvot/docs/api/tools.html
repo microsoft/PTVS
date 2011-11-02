@@ -1,0 +1,189 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>xl.tools - map(), filter(), and other top-level utilities &mdash; Pyvot v0.1.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Pyvot v0.1.1 documentation" href="../index.html" />
+    <link rel="up" title="The Pyvot API" href="api_index.html" />
+    <link rel="next" title="xl.range - Referencing Excel data" href="range.html" />
+    <link rel="prev" title="Core API" href="default.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="range.html" title="xl.range - Referencing Excel data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="default.html" title="Core API"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" accesskey="U">The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-xl.tools">
+<span id="xl-tools-map-filter-and-other-top-level-utilities"></span><span id="api-tools"></span><h1><a class="reference internal" href="#module-xl.tools" title="xl.tools"><tt class="xref py py-mod docutils literal"><span class="pre">xl.tools</span></tt></a> - <tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt>, <tt class="xref py py-func docutils literal"><span class="pre">filter()</span></tt>, and other top-level utilities<a class="headerlink" href="#module-xl.tools" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="xl.tools.apply">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">apply</tt><big>(</big><em>func</em>, <em>*rangeIn</em><big>)</big><a class="headerlink" href="#xl.tools.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Excel equivalent to the built-in apply().</p>
+<p>Ranges as well as Python iterables are accepted. Ranges
+are converted to lists of Python values (with Range.get()).</p>
+<p>The value returned by <cite>func</cite> is then passed to xl.view</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.filter">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">filter</tt><big>(</big><em>func</em>, <em>range</em><big>)</big><a class="headerlink" href="#xl.tools.filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filters rows or columns by applying <cite>func</cite> to the given range.
+<cite>func</cite> is called for each value in the range. If it returns False,
+the corresponding row / column is hidden. Otherwise, the row / column is
+made visible.</p>
+<p><cite>range</cite> must be a row or column vector. If it is a row vector, columns are hidden, and vice versa.</p>
+<dl class="docutils">
+<dt>Note that, to unhide rows / columns, <cite>range</cite> must include hidden cells. For example, to unhide a range:</dt>
+<dd>xl.filter(lambda v: True, some_vector.including_hidden)</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.get">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">get</tt><big>(</big><em>r</em><big>)</big><a class="headerlink" href="#xl.tools.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Range for the given table column name, named range, or Excel address (ex. A1:B4).
+<cite>get</cite> guesses the active workbook, and begins its search on the active sheet.</p>
+<p>See also: xl.Workbook.get and xl.Workbook.range</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.join">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">join</tt><big>(</big><em>key_range_a</em>, <em>key_range_b</em><big>)</big><a class="headerlink" href="#xl.tools.join" title="Permalink to this definition">¶</a></dt>
+<dd><p>Joins the table associated with key range B to the table for key range A.
+Each key in range A must have zero or one matching keys in range B (i.e. rows will not be added to table A)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.map">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">map</tt><big>(</big><em>func</em>, <em>*rangeIn</em><big>)</big><a class="headerlink" href="#xl.tools.map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Excel equivalent to the built-in map().</p>
+<p>ColumnVector ranges as well as Python iterables are accepted.
+The result list is written back to Excel as a column. A ColumnVector
+representing the stored results is returned</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.selected_range">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">selected_range</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.tools.selected_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the currently selected range. The returned range filters
+hidden cells by default</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.selected_value">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">selected_value</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.tools.selected_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the values in the currently selected range. See xl.selected_range()</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.view">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">view</tt><big>(</big><em>x</em>, <em>name=None</em>, <em>to=None</em><big>)</big><a class="headerlink" href="#xl.tools.view" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="xl.tools.workbooks">
+<tt class="descclassname">xl.tools.</tt><tt class="descname">workbooks</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.tools.workbooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of open workbooks</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="default.html"
+                        title="previous chapter">Core API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="range.html"
+                        title="next chapter"><tt class="docutils literal docutils literal docutils literal"><span class="pre">xl.range</span></tt> - Referencing Excel data</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/tools.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="range.html" title="xl.range - Referencing Excel data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="default.html" title="Core API"
+             >previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" >The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Microsoft Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

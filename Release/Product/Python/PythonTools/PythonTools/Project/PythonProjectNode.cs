@@ -302,7 +302,7 @@ namespace Microsoft.PythonTools.Project {
             var fact = allFactories.GetInterpreterFactory(interpreterId, interpreterVersion);
 
             if (fact == null) {
-                fact = PythonToolsPackage.Instance.GetDefaultInterpreter(allFactories);
+                fact = allFactories.GetDefaultInterpreter();
                 _defaultInterpreter = true;
 
                 PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged += DefaultInterpreterChanged;

@@ -1,0 +1,195 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>xl.sheet - The Excel workbook model &mdash; Pyvot v0.1.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="Pyvot v0.1.1 documentation" href="../index.html" />
+    <link rel="up" title="The Pyvot API" href="api_index.html" />
+    <link rel="next" title="xl.cache - Cache layer for Excel communication" href="cache.html" />
+    <link rel="prev" title="xl.range - Referencing Excel data" href="range.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cache.html" title="xl.cache - Cache layer for Excel communication"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="range.html" title="xl.range - Referencing Excel data"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" accesskey="U">The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-xl.sheet">
+<span id="xl-sheet-the-excel-workbook-model"></span><span id="api-sheet"></span><h1><a class="reference internal" href="#module-xl.sheet" title="xl.sheet"><tt class="xref py py-mod docutils literal"><span class="pre">xl.sheet</span></tt></a> - The Excel workbook model<a class="headerlink" href="#module-xl.sheet" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="xl.sheet.Workbook">
+<em class="property">class </em><tt class="descclassname">xl.sheet.</tt><tt class="descname">Workbook</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#xl.sheet.Workbook" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="xl.sheet.Workbook.active_sheet">
+<tt class="descname">active_sheet</tt><a class="headerlink" href="#xl.sheet.Workbook.active_sheet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="xl.sheet.Workbook.default_workbook">
+<em class="property">classmethod </em><tt class="descname">default_workbook</tt><big>(</big><big>)</big><a class="headerlink" href="#xl.sheet.Workbook.default_workbook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xl.sheet.Workbook.get">
+<tt class="descname">get</tt><a class="headerlink" href="#xl.sheet.Workbook.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Range for the requested table column, named Excel range, or Excel address (ex. A1:B20)</p>
+<p>The returned Range has been normalized (see Range.normalize()); if possible, it is clipped to an overlapping table&#8217;s data area,
+as well as the worksheet&#8217;s <cite>used range</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.sheet.Workbook.name">
+<tt class="descname">name</tt><a class="headerlink" href="#xl.sheet.Workbook.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xl.sheet.Workbook.named_ranges">
+<tt class="descname">named_ranges</tt><a class="headerlink" href="#xl.sheet.Workbook.named_ranges" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xl.sheet.Workbook.range">
+<tt class="descname">range</tt><a class="headerlink" href="#xl.sheet.Workbook.range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Range for the requested named Excel range or Excel address.</p>
+<p>The returned range is not normalized, e.g. range(&#8220;A:A&#8221;) returns a Range containing ~1mil rows,
+rather than clipping to the &#8216;used range&#8217; / table areas. See also <cite>get</cite></p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="xl.sheet.Workbook.set_default_workbook">
+<em class="property">classmethod </em><tt class="descname">set_default_workbook</tt><big>(</big><em>workbook</em><big>)</big><a class="headerlink" href="#xl.sheet.Workbook.set_default_workbook" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xl.sheet.Workbook.view">
+<tt class="descname">view</tt><big>(</big><em>obj</em>, <em>name=None</em>, <em>to=None</em><big>)</big><a class="headerlink" href="#xl.sheet.Workbook.view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a Python iterable to an available location in the workbook, with an optional header (name).
+The optional <cite>to</cite> argument specifies a location hint.</p>
+<p>If None, the values are written to an empty column on the active sheet.
+If <cite>to</cite> is a Range, the values are written to it (like Range.set, but with the header prepended)
+If <cite>to</cite> is a Table, the values are written to a new column in the table.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xl.sheet.Workbook.worksheets">
+<tt class="descname">worksheets</tt><a class="headerlink" href="#xl.sheet.Workbook.worksheets" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xl.sheet.Worksheet">
+<em class="property">class </em><tt class="descclassname">xl.sheet.</tt><tt class="descname">Worksheet</tt><big>(</big><em>xlSheet</em><big>)</big><a class="headerlink" href="#xl.sheet.Worksheet" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="xl.sheet.Worksheet.name">
+<tt class="descname">name</tt><a class="headerlink" href="#xl.sheet.Worksheet.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xl.sheet.Worksheet.tables">
+<tt class="descname">tables</tt><a class="headerlink" href="#xl.sheet.Worksheet.tables" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all table-like things on the sheet</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="range.html"
+                        title="previous chapter"><tt class="docutils literal docutils literal"><span class="pre">xl.range</span></tt> - Referencing Excel data</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="cache.html"
+                        title="next chapter"><tt class="docutils literal docutils literal"><span class="pre">xl.cache</span></tt> - Cache layer for Excel communication</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/sheet.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="cache.html" title="xl.cache - Cache layer for Excel communication"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="range.html" title="xl.range - Referencing Excel data"
+             >previous</a> |</li>
+        <li><a href="../index.html">Pyvot v0.1.1 documentation</a> &raquo;</li>
+          <li><a href="api_index.html" >The Pyvot API</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Microsoft Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

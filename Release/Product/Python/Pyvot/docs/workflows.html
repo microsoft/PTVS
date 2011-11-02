@@ -1,0 +1,159 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Pyvot workflows &mdash; Pyvot v0.1.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Pyvot v0.1.1 documentation" href="index.html" />
+    <link rel="next" title="The Pyvot API" href="api/api_index.html" />
+    <link rel="prev" title="Getting Started with Pyvot" href="tutorial.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/api_index.html" title="The Pyvot API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Getting Started with Pyvot"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Pyvot v0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="pyvot-workflows">
+<span id="workflows"></span><h1>Pyvot workflows<a class="headerlink" href="#pyvot-workflows" title="Permalink to this headline">¶</a></h1>
+<p>Pyvot aims to enable both standalone Excel automation and interactive experimentation / analysis. Some users simply want to <a class="reference internal" href="api/tools.html#xl.tools.map" title="xl.tools.map"><tt class="xref py py-func docutils literal"><span class="pre">xl.tools.map()</span></tt></a> an Excel column once-off, while others need a repeatable transformation to be applied to future workbooks.</p>
+<div class="section" id="module-xl.shell">
+<span id="interactive-usage-and-xl-shell"></span><span id="interactive"></span><h2>Interactive usage and <a class="reference internal" href="#module-xl.shell" title="xl.shell"><tt class="xref py py-mod docutils literal"><span class="pre">xl.shell</span></tt></a><a class="headerlink" href="#module-xl.shell" title="Permalink to this headline">¶</a></h2>
+<p>Pyvot provides a customized interactive shell to get running quickly:</p>
+<div class="highlight-python"><pre>python -m xl.shell</pre>
+</div>
+<p>The shell mimics the normal Python REPL, but performs additional set-up for convenient usage of Pyvot:</p>
+<ul class="simple">
+<li><a class="reference internal" href="api/default.html#module-xl" title="xl"><tt class="xref py py-mod docutils literal"><span class="pre">xl</span></tt></a> is imported</li>
+<li>An empty Excel workbook is opened, if no others are present</li>
+<li>Open Excel workbooks are assigned variables (<tt class="docutils literal"><span class="pre">workbook</span></tt>, <tt class="docutils literal"><span class="pre">workbook_1</span></tt>, etc.).
+Each such variable and its workbook&#8217;s name are printed in a table</li>
+</ul>
+<img alt="_images/shell.png" src="_images/shell.png" />
+</div>
+<div class="section" id="standalone-usage-for-repeatable-transforms">
+<span id="standalone"></span><h2>Standalone usage for repeatable transforms<a class="headerlink" href="#standalone-usage-for-repeatable-transforms" title="Permalink to this headline">¶</a></h2>
+<p>As a regular Python module, Pyvot can also be used from standalone scripts. This is useful for creating repeatable (and distributable) transformations, with familiar program structure:</p>
+<div class="highlight-python"><pre>python summarize_sales.py --by-region \\share\sales_9-30-2011.xlsx</pre>
+</div>
+<p>Code assets born in the interactive shell transfer easily to scripts. Needed changes in the transition on using <tt class="xref py py-class docutils literal"><span class="pre">Workbooks</span></tt> and <tt class="xref py py-class docutils literal"><span class="pre">Ranges</span></tt> explicitly:</p>
+<ul class="simple">
+<li>Prefer <a class="reference internal" href="api/sheet.html#xl.sheet.Workbook.get" title="xl.sheet.Workbook.get"><tt class="xref py py-meth docutils literal"><span class="pre">xl.sheet.Workbook.get()</span></tt></a> to <a class="reference internal" href="api/tools.html#xl.tools.get" title="xl.tools.get"><tt class="xref py py-func docutils literal"><span class="pre">xl.tools.get()</span></tt></a>. The user may have other workbooks open</li>
+<li>Pass the desired <em>absolute</em> file path to the Workbook constructor. This will open the workbook if needed, or connect to an existing instance.</li>
+<li>Prefer table column names to A1-style references</li>
+<li>Don&#8217;t assume that mapping &#8220;NumSales&#8221; writes to column B; use the return value of <a class="reference internal" href="api/tools.html#xl.tools.map" title="xl.tools.map"><tt class="xref py py-func docutils literal"><span class="pre">xl.map</span></tt></a> (similarly for other functions)</li>
+</ul>
+</div>
+<div class="section" id="usage-with-python-tools-for-visual-studio">
+<h2>Usage with Python Tools for Visual Studio<a class="headerlink" href="#usage-with-python-tools-for-visual-studio" title="Permalink to this headline">¶</a></h2>
+<p>Whether using the Pyvot interactive shell or standalone model, <a class="reference external" href="http://pytools.codeplex.com/">Python Tools for Visual Studio (PTVS)</a> provides a convenient development environment.</p>
+<p>In interactive usage, the &#8220;Send to interactive window&#8221; command allows iterative, interactive development of functions and snippets that operate on an open workbook. This solves the common pain of modifying a function defined within a REPL session. IntelliSense within the REPL eases discovery of the Pyvot API.</p>
+<p>In standalone usage and development, IntelliSense provides quick access to the Pyvot API and documentation. The VS debugger enables stepping through a Pyvot program (seeing the workbook update in Excel each step of the way).</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Pyvot workflows</a><ul>
+<li><a class="reference internal" href="#module-xl.shell">Interactive usage and <tt class="docutils literal"><span class="pre">xl.shell</span></tt></a></li>
+<li><a class="reference internal" href="#standalone-usage-for-repeatable-transforms">Standalone usage for repeatable transforms</a></li>
+<li><a class="reference internal" href="#usage-with-python-tools-for-visual-studio">Usage with Python Tools for Visual Studio</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="previous chapter">Getting Started with Pyvot</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api/api_index.html"
+                        title="next chapter">The Pyvot API</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/workflows.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/api_index.html" title="The Pyvot API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Getting Started with Pyvot"
+             >previous</a> |</li>
+        <li><a href="index.html">Pyvot v0.1.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Microsoft Corporation.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
+    </div>
+  </body>
+</html>

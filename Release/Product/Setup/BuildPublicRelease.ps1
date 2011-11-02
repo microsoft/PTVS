@@ -39,7 +39,7 @@ $request | Out-File -Encoding ascii -FilePath request.txt
 #################################################################
 # Submit managed binaries
 
-$approvers = "smortaz", "mradmila", "johncos", "pavaga", 
+$approvers = "smortaz", "mradmila", "johncos", "pavaga"
 
 $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
 $job.Description = "Python Tools for Visual Studio - managed code"
@@ -60,7 +60,9 @@ $files = ("Microsoft.PythonTools.Analysis.dll",
           "Microsoft.PythonTools.IronPython.dll", 
           "Microsoft.PythonTools.MpiShim.exe", 
           "Microsoft.PythonTools.Profiling.dll", 
-          "Microsoft.VisualStudio.ReplWindow.dll")
+          "Microsoft.VisualStudio.ReplWindow.dll",
+          "Microsoft.PythonTools.PyKinect.dll",
+          "Microsoft.PythonTools.Pyvot.dll")
 
 foreach ($filename in $files) {
     $fullpath =  "$outdir\Release\Binaries\$filename"
@@ -81,7 +83,7 @@ $job.SelectCertificate("10006")  # Authenticode
 
 foreach ($approver in $approvers) { $job.AddApprover($approver) }
 
-$files = "PyDebugAttach.dll", "VsPyProf.dll"
+$files = "PyDebugAttach.dll", "VsPyProf.dll", "PyKinectAudio.dll"
 
 foreach ($filename in $files) {
     $fullpath = "$outdir\Release\Binaries\$filename"
@@ -160,6 +162,12 @@ foreach($line in $file) {
             if ($targetdir -eq "PythonHpcSupportMsm") {
                 $targetdir = "PythonHpcSupport"
             }
+            if ($targetdir -eq "PyvotMsm") {
+                $targetdir = "PyVot"
+            }
+            if ($targetdir -eq "PyKinectMsm") {
+                $targetdir = "PyKinect"
+            }
             echo $targetdir
 
             cd $targetdir
@@ -174,11 +182,19 @@ foreach($line in $file) {
 $destpath = "$outdir\Release\UnsignedMsi"
 mkdir $destpath
 move $outdir\Release\PythonToolsInstaller.msi $outdir\Release\UnsignedMsi\PythonToolsInstaller.msi
+move $outdir\Release\PyKinectInstaller.msi $outdir\Release\UnsignedMsi\PyKinectInstaller.msi
+move $outdir\Release\PyvotInstaller.msi $outdir\Release\UnsignedMsi\PyvotInstaller.msi
 
 $destpath = "$outdir\Release\SignedBinariesUnsignedMsi"
 mkdir $destpath
 copy  ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PythonToolsInstaller.msi
 copy  ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $outdir\Release\PythonToolsInstaller.msi
+
+copy  ..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PyKinectInstaller.msi
+copy  ..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi $outdir\Release\PyKinectInstaller.msi
+
+copy  ..\..\..\Binaries\Win32\Release\PyvotInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PyvotInstaller.msi
+copy  ..\..\..\Binaries\Win32\Release\PyvotInstaller.msi $outdir\Release\PyvotInstaller.msi
 
 #################################################################
 ### Now submit the MSI for signing
@@ -192,6 +208,8 @@ $job.SelectCertificate("10006")  # Authenticode
 foreach ($approver in $approvers) { $job.AddApprover($approver) }
 
 $job.AddFile((get-location).Path + "\..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+$job.AddFile((get-location).Path + "\..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+$job.AddFile((get-location).Path + "\..\..\..\Binaries\Win32\Release\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
 
 $job.Send()
 
@@ -204,6 +222,6 @@ do {
     sleep -seconds 5
 } while(-not $files);
 
-foreach($file in dir $job.JobCompletionPath) {
-    copy -force $file "$outdir\Release\PTVS 1.1 Alpha.msi"
-}
+copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outdir\Release\PTVS 1.1 Alpha.msi"
+copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outdir\Release\PTVS 1.1 Alpha - PyKinect Sample.msi"
+copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outdir\Release\PTVS 1.1 Alpha - Pyvot Sample.msi"

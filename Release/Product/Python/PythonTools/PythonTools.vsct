@@ -63,9 +63,21 @@
       <Group guid="guidPythonToolsCmdSet" id="RemoveImportsGroup" priority="0x0000">
         <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsMenu"/>
       </Group>
+      
+      <Group guid="guidPythonToolsCmdSet" id="SamplesGroup" priority="0x0600">
+        <Parent guid="guidPythonToolsCmdSet" id="SamplesMenu"/>
+      </Group>
     </Groups>
 
     <Menus>
+      <Menu guid="guidPythonToolsCmdSet" id="SamplesMenu" priority="0x002" type="Menu">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+        <Strings>
+          <ButtonText>Samples</ButtonText>
+          <CommandName>&amp;Samples</CommandName>
+        </Strings>
+      </Menu>
+
       <Menu guid="guidPythonToolsCmdSet" id="ToolsMenu" priority="0x8008" type="Menu">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_TOOLS_OTHER2"/>
         <Strings>
@@ -550,6 +562,8 @@
       <IDSymbol name="RemoveImportsMenu" value ="0x2002" />
 
 
+      <IDSymbol name="SamplesMenu" value="0x4000" />
+      <IDSymbol name="SamplesGroup" value="0x1020" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{7f103a95-8141-4004-a01d-e3f739caa27d}" >
