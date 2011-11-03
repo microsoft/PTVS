@@ -61,7 +61,7 @@ m = max
             using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
                 AssertContains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
 
-                var newMod = newPs.NewModule("baz", @"
+                string codeText = @"
 import test
 abc = test.abc
 foo = test.foo
@@ -75,26 +75,28 @@ union = test.union
 f1 = test.f1
 f2 = test.f2
 m = test.m
-");
+";
+                var newMod = newPs.NewModule("baz", codeText);
+                int pos = codeText.LastIndexOf('\n');
 
-                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValues("abc", 3).First().PythonType);
-                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValues("cf", 3).First().PythonType);
-                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValues("cg", 3).First().PythonType);
-                Assert.AreEqual("function f1", newMod.Analysis.GetValues("f1", 3).First().Description);
-                Assert.AreEqual("bound method x", newMod.Analysis.GetValues("dx", 3).First().Description);
-                Assert.AreEqual("function g", newMod.Analysis.GetValues("scg", 3).First().Description);
-                var unionMembers = new List<IAnalysisValue>(newMod.Analysis.GetValues("union", 3));
+                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValuesByIndex("abc", pos).First().PythonType);
+                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValuesByIndex("cf", pos).First().PythonType);
+                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValuesByIndex("cg", pos).First().PythonType);
+                Assert.AreEqual("function f1", newMod.Analysis.GetValuesByIndex("f1", pos).First().Description);
+                Assert.AreEqual("bound method x", newMod.Analysis.GetValuesByIndex("dx", pos).First().Description);
+                Assert.AreEqual("function g", newMod.Analysis.GetValuesByIndex("scg", pos).First().Description);
+                var unionMembers = new List<IAnalysisValue>(newMod.Analysis.GetValuesByIndex("union", pos));
                 Assert.AreEqual(unionMembers.Count, 2);
                 AssertContainsExactly(unionMembers.Select(x => x.PythonType.Name), "X", "Y");
 
-                Assert.AreEqual("type int", newMod.Analysis.GetValues("foo", 3).First().ShortDescription);
+                Assert.AreEqual("type int", newMod.Analysis.GetValuesByIndex("foo", pos).First().ShortDescription);
 
-                var result = newMod.Analysis.GetSignatures("f1", 3).ToArray();
+                var result = newMod.Analysis.GetSignaturesByIndex("f1", pos).ToArray();
                 Assert.AreEqual(result.Length, 1);
                 Assert.AreEqual(result[0].Parameters.Length, 1);
                 Assert.AreEqual(result[0].Parameters[0].Type, "int");
 
-                result = newMod.Analysis.GetSignatures("m", 3).ToArray();
+                result = newMod.Analysis.GetSignaturesByIndex("m", pos).ToArray();
                 Assert.AreEqual(result.Length, 6);
             }
         }
@@ -120,12 +122,13 @@ x = bar.f()
 def f(): return 42";
 
             using (var newPs = SaveLoad(new AnalysisModule("foo", "foo.py", foo), new AnalysisModule("bar", "bar.py", bar))) {
-                var newMod = newPs.NewModule("baz", @"
+                string code = @"
 import foo
 abc = foo.x
-");
+";
+                var newMod = newPs.NewModule("baz", code);
 
-                Assert.AreEqual(newMod.Analysis.GetValues("abc", 3).First().PythonType, newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int));
+                Assert.AreEqual(newMod.Analysis.GetValuesByIndex("abc", code.LastIndexOf('\n')).First().PythonType, newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int));
             }
         }
 

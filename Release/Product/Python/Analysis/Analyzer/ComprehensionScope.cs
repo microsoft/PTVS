@@ -17,29 +17,13 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
-    sealed class ClassScope : InterpreterScope {
-        public ClassScope(ClassInfo classInfo, ClassDefinition ast)
-            : base(classInfo, ast) {
+    sealed class ComprehensionScope : InterpreterScope {
+        public ComprehensionScope(Namespace comprehensionResult, Comprehension comprehension)
+            : base(comprehensionResult, comprehension) {
         }
-
-        public ClassInfo Class {
-            get {
-                return Namespace as ClassInfo;
-            }
-        }
-
-        public override int GetBodyStart(PythonAst ast) {
-            return ast.IndexToLocation(((ClassDefinition)Node).HeaderIndex).Index;
-        }        
 
         public override string Name {
-            get { return Class.ClassDefinition.Name; }
-        }
-
-        public override bool VisibleToChildren {
-            get {
-                return false;
-            }
+            get { return "<comprehension scope>";  }
         }
     }
 }

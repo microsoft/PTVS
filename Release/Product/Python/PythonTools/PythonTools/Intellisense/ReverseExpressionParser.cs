@@ -251,6 +251,10 @@ namespace Microsoft.PythonTools.Intellisense {
                                 // We have to be the 1st param.
                                 paramIndex = 0;
                             }
+
+                            if (nesting == 0 && otherNesting == 0) {
+                                break;
+                            }
                         } else {
                             if (text == ":") {
                                 startAtLastToken = start;

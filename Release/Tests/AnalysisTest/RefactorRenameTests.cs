@@ -446,6 +446,17 @@ abc = 200
         }
 
         [TestMethod]
+        public void RenameGeneratorVariable() {
+            // http://pytools.codeplex.com/workitem/454
+            RefactorTest("foo", "abc",
+                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "foo = 100; x = (abc for abc in range(foo))") }
+            );
+            RefactorTest("foo", "abc for",
+                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "abc = 100; x = (foo for foo in range(abc))") }
+            );
+        }
+
+        [TestMethod]
         public void TypelessForVariable() {
             RefactorTest("baz", "abc",
                 new[] { 

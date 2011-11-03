@@ -17,11 +17,15 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class SetInfo : BuiltinInstanceInfo {
-        private readonly ISet<Namespace> _valueTypes;
+        private ISet<Namespace> _valueTypes;
 
-        public SetInfo(ISet<Namespace> valueTypes, PythonAnalyzer projectState, bool showClr)
+        public SetInfo(ISet<Namespace> valueTypes, PythonAnalyzer projectState)
             : base(projectState._setType) {
             _valueTypes = valueTypes;
+        }
+
+        public void AddTypes(ISet<Namespace> types) {
+            _valueTypes = _valueTypes.Union(types);
         }
 
         public override string ShortDescription {

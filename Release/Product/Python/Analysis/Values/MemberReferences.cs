@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (!_references.TryGetValue(name, out refs)) {
                     _references[name] = refs = new ReferenceDict();
                 }
-                refs.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)));
+                refs.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit.Tree, node));
             }
         }
 
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var keyValue in this) {
                     if (keyValue.Value.References != null) {
                         foreach (var reference in keyValue.Value.References) {
-                            yield return new LocationInfo(keyValue.Key, reference.Line, reference.Column);
+                            yield return reference.GetLocationInfo(keyValue.Key);
                         }
                     }
                 }
@@ -97,29 +97,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class ReferenceList : IReferenceable {
         public readonly int Version;
         public readonly IProjectEntry Project;
-        public ISet<SimpleSrcLocation> References;
+        public ISet<EncodedLocation> References;
 
         public ReferenceList(IProjectEntry project) {
             Version = project.AnalysisVersion;
             Project = project;
-            References = new HashSet<SimpleSrcLocation>();
+            References = new HashSet<EncodedLocation>();
         }
 
-        public void AddReference(SimpleSrcLocation location) {
+        public void AddReference(EncodedLocation location) {
             HashSetExtensions.AddValue(ref References, location);
         }
 
         #region IReferenceable Members
 
-        public IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> Definitions {
+        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
             get { yield break; }
         }
 
-        IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> IReferenceable.References {
+        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> IReferenceable.References {
             get {
                 if (References != null) {
                     foreach (var location in References) {
-                        yield return new KeyValuePair<IProjectEntry, SimpleSrcLocation>(Project, location);
+                        yield return new KeyValuePair<IProjectEntry, EncodedLocation>(Project, location);
                     }
                 }
             }
@@ -140,11 +140,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         #region IReferenceable Members
 
-        public IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> Definitions {
-            get { yield return new KeyValuePair<IProjectEntry, SimpleSrcLocation>(_location.ProjectEntry, new SimpleSrcLocation(_location.Line, _location.Column)); }
+        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
+            get { yield return new KeyValuePair<IProjectEntry, EncodedLocation>(_location.ProjectEntry, new EncodedLocation(_location, null)); }
         }
 
-        IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> IReferenceable.References {
+        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> IReferenceable.References {
             get { yield break; }
         }
 

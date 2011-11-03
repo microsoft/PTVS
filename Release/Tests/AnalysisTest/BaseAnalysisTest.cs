@@ -87,7 +87,7 @@ namespace AnalysisTest {
             }
         }
 
-        public void AssertContains<T>(IEnumerable<T> source, T value) {
+        public static void AssertContains<T>(IEnumerable<T> source, T value) {
             foreach (var v in source) {
                 if (v.Equals(value)) {
                     return;
@@ -105,7 +105,7 @@ namespace AnalysisTest {
             }
         }
 
-        public void AssertDoesntContain<T>(IEnumerable<T> source, T value) {
+        public static void AssertDoesntContain<T>(IEnumerable<T> source, T value) {
             foreach (var v in source) {
                 if (v.Equals(value)) {
                     Assert.Fail(String.Format("{0} does not contain {1}", MakeText(source), value));
@@ -125,7 +125,7 @@ namespace AnalysisTest {
             Assert.Fail(String.Format("Expected {0}, got {1}", MakeText(values), MakeText(set)));
         }
 
-        public string MakeText<T>(IEnumerable<T> values) {
+        public static string MakeText<T>(IEnumerable<T> values) {
             var sb = new StringBuilder("{");
             foreach (var value in values) {
                 if (sb.Length > 1) {

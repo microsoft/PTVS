@@ -12,28 +12,22 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Parsing.Ast;
+using System.Linq;
+using System.Text;
+using Microsoft.VisualStudio.Language.Intellisense;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
-    sealed class FunctionScope : InterpreterScope {
-        public FunctionScope(FunctionInfo functionInfo, Node node)
-            : base(functionInfo, node) {
+namespace AnalysisTest.Mocks {
+    class MockGlyphService : IGlyphService {
+        #region IGlyphService Members
+
+        public ImageSource GetGlyph(StandardGlyphGroup group, StandardGlyphItem item) {
+            return new DrawingImage();
         }
 
-        public FunctionInfo Function {
-            get {
-                return Namespace as FunctionInfo;
-            }
-        }
-
-        public override int GetBodyStart(PythonAst ast) {
-            return ast.IndexToLocation(((FunctionDefinition)Node).HeaderIndex).Index;
-        }
-
-        public override string Name {
-            get { return Function.FunctionDefinition.Name;  }
-        }
+        #endregion
     }
 }

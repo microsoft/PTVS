@@ -12,20 +12,19 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
+using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Analysis.Values {
-    interface IReferenceableContainer {
-        IEnumerable<IReferenceable> GetDefinitions(string name);
+namespace Microsoft.PythonTools.Analysis {
+    /// <summary>
+    /// Resolves a location object into the LocationInfo which we expose to the consumer
+    /// of the analysis APIs.  This enables an efficient mechanism to track references
+    /// during analysis which doesn't involve actually tracking all of the line number
+    /// information directly.  Instead we can support different resolvers and location
+    /// objects and only lazily turn them back into real line information.
+    /// 
+    /// See EncodedLocation for more information.
+    /// </summary>
+    interface ILocationResolver {
+        LocationInfo ResolveLocation(IProjectEntry project, object location);
     }
-
-    interface IReferenceable {
-        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
-            get;
-        }
-        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> References {
-            get;
-        }
-    }
-
 }

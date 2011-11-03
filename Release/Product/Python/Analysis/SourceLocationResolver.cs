@@ -12,20 +12,15 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
+using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Analysis.Values {
-    interface IReferenceableContainer {
-        IEnumerable<IReferenceable> GetDefinitions(string name);
-    }
+namespace Microsoft.PythonTools.Analysis {
+    class SourceLocationResolver : ILocationResolver {
+        public static SourceLocationResolver Instance = new SourceLocationResolver();
 
-    interface IReferenceable {
-        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
-            get;
-        }
-        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> References {
-            get;
+        public LocationInfo ResolveLocation(IProjectEntry project, object location) {
+            SourceLocation loc = (SourceLocation)location;
+            return new LocationInfo(project, loc.Line, loc.Column);
         }
     }
-
 }

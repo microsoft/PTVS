@@ -33,9 +33,17 @@ namespace AnalysisTest.Mocks {
             throw new NotImplementedException();
         }
 
-        public event EventHandler<GraphBufferContentTypeChangedEventArgs> GraphBufferContentTypeChanged;
+        public event EventHandler<GraphBufferContentTypeChangedEventArgs> GraphBufferContentTypeChanged {
+            add { }
+            remove { }
+        }
 
-        public event EventHandler<GraphBuffersChangedEventArgs> GraphBuffersChanged;
+        public event EventHandler<GraphBuffersChangedEventArgs> GraphBuffersChanged {
+            add {
+            }
+            remove {
+            }
+        }
 
         public NormalizedSnapshotSpanCollection MapDownToBuffer(SnapshotSpan span, SpanTrackingMode trackingMode, ITextBuffer targetBuffer) {
             throw new NotImplementedException();

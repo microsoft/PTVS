@@ -19,12 +19,12 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     abstract class InterpreterScope {
         private readonly Namespace _ns;
-        private readonly ScopeStatement _node;
+        private readonly Node _node;
         public readonly List<InterpreterScope> Children = new List<InterpreterScope>();
         private Dictionary<string, VariableDef> _variables = new Dictionary<string, VariableDef>();
         private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
 
-        public InterpreterScope(Namespace ns, ScopeStatement ast) {
+        public InterpreterScope(Namespace ns, Node ast) {
             _ns = ns;
             _node = ast;
         }
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         /// <summary>
-        /// Gets the line that the scope actually starts on.  This is the line where the colon
+        /// Gets the index in the file/buffer that the scope actually starts on.  This is the index where the colon
         /// is on for the start of the body if we're a function or class definition.
         /// </summary>
         public virtual int GetBodyStart(PythonAst ast) {
@@ -42,31 +42,31 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         /// <summary>
-        /// Gets the line number that this scope starts at.  This is the line number which includes
+        /// Gets the index in the file/buffer that this scope starts at.  This is the index which includes
         /// the definition it's self (e.g. def foo(...) or class foo(...)).
         /// </summary>
         public virtual int GetStart(PythonAst ast) {
             if (_node == null) {
                 return 1;
             }
-            return _node.GetStart(ast).Line;
+            return _node.GetStart(ast).Index;
         }
 
         /// <summary>
-        /// Gets the line number that this scope ends at.
+        /// Gets the index in the file/buffer that this scope ends at.
         /// </summary>
         public virtual int GetStop(PythonAst ast) {
             if (_node == null) {
                 return int.MaxValue;
             }
-            return _node.GetEnd(ast).Line;
+            return _node.GetEnd(ast).Index;
         }
 
         public abstract string Name {
             get;
         }
 
-        public ScopeStatement Node {
+        public Node Node {
             get {
                 return _node;
             }

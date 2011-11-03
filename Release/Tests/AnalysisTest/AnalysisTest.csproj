@@ -50,6 +50,7 @@
     <Compile Include="CompletionContextTests.cs" />
     <Compile Include="AddImportTests.cs" />
     <Compile Include="CompletionDBTest.cs" />
+    <Compile Include="Mocks\MockGlyphService.cs" />
     <Compile Include="ProjectSystem\LinkedFileTests.cs" />
     <Compile Include="RemoveImportTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />

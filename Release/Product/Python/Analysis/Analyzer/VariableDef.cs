@@ -163,48 +163,34 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public void AddReference(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                // TODO: This could be improved.  We could avoid eagerly going from index spans -> full location spans by holding onto
-                // the node and parent and lazily translating.
-                SourceSpan span = GetSpan(node, unit);
-                AddReference(new SimpleSrcLocation(span), unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
+                AddReference(new EncodedLocation(unit.Tree, node), unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
             }
         }
 
-        private static SourceSpan GetSpan(Node node, AnalysisUnit unit) {
-            MemberExpression me = node as MemberExpression;
-            SourceSpan span;
-            if (me != null) {
-                span = me.GetNameSpan(unit.Ast.GlobalParent);
-            } else {
-                span = node.GetSpan(unit.Ast.GlobalParent);
-            }
-            return span;
-        }
-
-        public TypedDependencyInfo<T> AddReference(SimpleSrcLocation location, IProjectEntry module) {
+        public TypedDependencyInfo<T> AddReference(EncodedLocation location, IProjectEntry module) {
             var depUnits = GetDependentItems(module);
             depUnits.AddReference(location);
             return depUnits;
         }
 
-        public void AddAssignment(SimpleSrcLocation location, IProjectEntry entry) {
+        public void AddAssignment(EncodedLocation location, IProjectEntry entry) {
             var depUnits = GetDependentItems(entry);
             depUnits.AddAssignment(location);
         }
 
         public void AddAssignment(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                AddAssignment(new SimpleSrcLocation(GetSpan(node, unit)), unit.DeclaringModule.ProjectEntry);
+                AddAssignment(new EncodedLocation(unit.Tree, node), unit.DeclaringModule.ProjectEntry);
             }
         }
 
-        public IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> References {
+        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> References {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
                         if (keyValue.Value.References != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
                             foreach (var reference in keyValue.Value.References) {
-                                yield return new KeyValuePair<IProjectEntry, SimpleSrcLocation>(keyValue.Key, reference);
+                                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(keyValue.Key, reference);
                             }
                         }
                     }
@@ -212,13 +198,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<KeyValuePair<IProjectEntry, SimpleSrcLocation>> Definitions {
+        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
                         if (keyValue.Value.Assignments != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
                             foreach (var reference in keyValue.Value.Assignments) {
-                                yield return new KeyValuePair<IProjectEntry, SimpleSrcLocation>(keyValue.Key, reference);
+                                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(keyValue.Key, reference);
                             }
                         }
                     }

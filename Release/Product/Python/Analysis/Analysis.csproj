@@ -55,12 +55,15 @@
   <ItemGroup>
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisVariable.cs" />
+    <Compile Include="Analyzer\ComprehensionScope.cs" />
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="SourceLocationResolver.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
+    <Compile Include="ILocationResolver.cs" />
     <Compile Include="Interpreter\IPythonModule2.cs" />
     <Compile Include="Interpreter\IInterpreterWithCompletionDatabase2.cs" />
     <Compile Include="Interpreter\ILocatedMember.cs" />
@@ -234,7 +237,7 @@
     <Compile Include="ProjectEntry.cs" />
     <Compile Include="PythonAnalyzer.cs" />
     <Compile Include="SaveAnalysis.cs" />
-    <Compile Include="SimpleSrcLocation.cs" />
+    <Compile Include="EncodedLocation.cs" />
     <Compile Include="Analyzer\AnalysisUnit.cs" />
     <Compile Include="Parsing\SourceLocation.cs" />
     <Compile Include="Unpickler.cs" />
@@ -249,6 +252,7 @@
     <Compile Include="Values\BuiltinPropertyInfo.cs" />
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
+    <Compile Include="Values\GeneratorFunctionInfo.cs" />
     <Compile Include="Values\IteratorInfo.cs" />
     <Compile Include="Values\IterableInfo.cs" />
     <Compile Include="Values\DependencyInfo.cs" />

@@ -23,12 +23,16 @@ using System.Text;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     /// <summary>
-    /// Encapsulates a single piece of code which can be analyzed.  Currently this could be a top-level module, a class definition, or
-    /// a function definition.  AnalysisUnit holds onto both the AST of the code which is to be analyzed along with
-    /// the scope in which the object is declared.
+    /// Encapsulates a single piece of code which can be analyzed.  Currently this could be a top-level module, a class definition, 
+    /// a function definition, or a comprehension scope (generator, dict, set, or list on 3.x).  AnalysisUnit holds onto both the 
+    /// AST of the code which is to be analyzed along with the scope in which the object is declared.
+    /// 
+    /// Our dependency tracking scheme works by tracking analysis units - when we add a dependency it is the current
+    /// AnalysisUnit which is dependent upon the variable.  If the value of a variable changes then all of the dependent
+    /// AnalysisUnit's will be re-enqueued.  This proceeds until we reach a fixed point.
     /// </summary>
     internal class AnalysisUnit {
-        private readonly ScopeStatement _ast;
+        private readonly Node _ast;
         private readonly InterpreterScope[] _scopes;
         private bool _inQueue, _forEval;
 #if DEBUG
@@ -42,12 +46,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public static AnalysisUnit EvalUnit = new AnalysisUnit(null, null, true);
 
-        public AnalysisUnit(ScopeStatement node, InterpreterScope[] scopes) {
+        public AnalysisUnit(Node node, InterpreterScope[] scopes) {
             _ast = node;
             _scopes = scopes;
         }
 
-        public AnalysisUnit(ScopeStatement ast, InterpreterScope[] scopes, bool forEval) {
+        public AnalysisUnit(Node ast, InterpreterScope[] scopes, bool forEval) {
             _ast = ast;
             _scopes = scopes;
             _forEval = forEval;
@@ -108,8 +112,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         /// The AST which will be analyzed when this node is analyzed
         /// </summary>
-        public ScopeStatement Ast {
+        public Node Ast {
             get { return _ast; }
+        }
+
+        public virtual PythonAst Tree {
+            get {
+                return ((ScopeStatement)_ast).GlobalParent;
+            }
         }
 
         public void Analyze(DDG ddg) {
@@ -169,10 +179,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override string ToString() {
             return String.Format(
-                "<_AnalysisUnit: Name={0}, NodeType={1}, ScopeName={2}>",
+                "<_AnalysisUnit: Name={0}, NodeType={1}>",
                 FullName,
-                _ast.GetType().Name,
-                Ast.Name
+                _ast.GetType().Name
             );
         }
 
@@ -194,6 +203,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
     class FunctionAnalysisUnit : AnalysisUnit {
         private readonly AnalysisUnit _outerUnit;
+
         public FunctionAnalysisUnit(FunctionDefinition node, InterpreterScope[] scopes, AnalysisUnit outerUnit)
             : base(node, scopes) {
             _outerUnit = outerUnit;
@@ -311,6 +321,92 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             ddg.SetCurrentUnit(this);
             ddg.WalkBody(Ast.Body, newScope._analysisUnit);
+        }
+    }
+    
+    class ComprehensionAnalysisUnit : AnalysisUnit {
+        private readonly PythonAst _parent;
+        private readonly AnalysisUnit _outerUnit;
+
+        public ComprehensionAnalysisUnit(Comprehension node, PythonAst parent, InterpreterScope[] scopes, AnalysisUnit outerUnit)
+            : base(node, scopes) {
+            _outerUnit = outerUnit;
+            _parent = parent;
+        }
+
+        protected override void AnalyzeWorker(DDG ddg) {
+            ddg.SetCurrentUnit(this);
+
+            ExpressionEvaluator.WalkComprehension(ddg._eval, (Comprehension)Ast);
+        }
+
+        public override PythonAst Tree {
+            get {
+                return _parent;
+            }
+        }
+    }
+
+    class GeneratorComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
+        public GeneratorComprehensionAnalysisUnit(Comprehension node, PythonAst parent, InterpreterScope[] scopes, AnalysisUnit outerUnit)
+            : base(node, parent, scopes, outerUnit) {
+        }
+
+        protected override void AnalyzeWorker(DDG ddg) {
+            base.AnalyzeWorker(ddg);
+
+            var generator = (GeneratorInfo)((ComprehensionScope)Scopes[Scopes.Length - 1]).Namespace;
+
+            var node = (GeneratorExpression)Ast;
+            generator.AddYield(ddg._eval.Evaluate(node.Item));
+        }
+    }
+
+    class SetComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
+        public SetComprehensionAnalysisUnit(Comprehension node, PythonAst parent, InterpreterScope[] scopes, AnalysisUnit outerUnit)
+            : base(node, parent, scopes, outerUnit) {
+        }
+
+        protected override void AnalyzeWorker(DDG ddg) {
+            base.AnalyzeWorker(ddg);
+
+            var set = (SetInfo)((ComprehensionScope)Scopes[Scopes.Length - 1]).Namespace;
+
+            var node = (SetComprehension)Ast;
+
+            set.AddTypes(ddg._eval.Evaluate(node.Item));
+        }
+    }
+
+
+    class DictionaryComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
+        public DictionaryComprehensionAnalysisUnit(Comprehension node, PythonAst parent, InterpreterScope[] scopes, AnalysisUnit outerUnit)
+            : base(node, parent, scopes, outerUnit) {
+        }
+
+        protected override void AnalyzeWorker(DDG ddg) {
+            base.AnalyzeWorker(ddg);
+
+            var dict = (DictionaryInfo)((ComprehensionScope)Scopes[Scopes.Length - 1]).Namespace;
+
+            var node = (DictionaryComprehension)Ast;
+
+            dict.SetIndex(node, this, ddg._eval.Evaluate(node.Key), ddg._eval.Evaluate(node.Value));
+        }
+    }
+
+    class ListComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
+        public ListComprehensionAnalysisUnit(Comprehension node, PythonAst parent, InterpreterScope[] scopes, AnalysisUnit outerUnit)
+            : base(node, parent, scopes, outerUnit) {
+        }
+
+        protected override void AnalyzeWorker(DDG ddg) {
+            base.AnalyzeWorker(ddg);
+
+            var list = (ListInfo)((ComprehensionScope)Scopes[Scopes.Length - 1]).Namespace;
+            var node = (ListComprehension)Ast;
+
+            list.AddTypes(new[] { ddg._eval.Evaluate(node.Item) });
         }
     }
 }

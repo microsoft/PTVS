@@ -22,6 +22,7 @@ using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
+using System.Linq;
 
 namespace AnalysisTest.Mocks {
     [TestClass]
@@ -211,16 +212,25 @@ e): <no type information available>");
         }
 
         private static void MemberCompletionTest(int location, string sourceCode, string expectedExpression) {
+            var context = GetCompletions(location, sourceCode);
+            Assert.AreEqual(expectedExpression, context.Text);            
+        }
+
+        private static CompletionAnalysis GetCompletions(int location, string sourceCode, bool intersectMembers = true) {
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
             var fact = new IronPythonInterpreterFactory();
             var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);            
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-            var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0));
-            Assert.AreEqual(expectedExpression, context.Text);            
+            
+            analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
+            analyzer.WaitForCompleteAnalysis(x => true);
+
+            var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
+            return context;
         }
 
         private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex) {

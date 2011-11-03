@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
@@ -205,13 +206,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private static ISet<Namespace> EvaluateSetComp(ExpressionEvaluator ee, Node node) {
-            var n = (SetComprehension)node;
+            ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
 
-            WalkComprehension(ee, n);
-
-            return ee.GlobalScope.GetOrMakeNodeVariable(
-                node,
-                (x) => new SetInfo(ee.Evaluate(n.Item), ee._unit.ProjectState, false).SelfSet);
+            return compScope.Namespace.SelfSet;
         }
 
         private static ISet<Namespace> EvaluateDictionary(ExpressionEvaluator ee, Node node) {
@@ -240,13 +237,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private static ISet<Namespace> EvaluateDictionaryComp(ExpressionEvaluator ee, Node node) {
-            var n = (DictionaryComprehension)node;
+            ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
 
-            WalkComprehension(ee, n);    
-
-            return ee.GlobalScope.GetOrMakeNodeVariable(
-                node,
-                (x) => new DictionaryInfo(new HashSet<Namespace>(ee.Evaluate(n.Key)), new HashSet<Namespace>(ee.Evaluate(n.Value)), ee._unit.ProjectState).SelfSet);
+            return compScope.Namespace.SelfSet;
         }
 
         private static ISet<Namespace> EvaluateConstant(ExpressionEvaluator ee, Node node) {
@@ -319,7 +312,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private static ISet<Namespace> EvaluateYield(ExpressionEvaluator ee, Node node) {
             var yield = (YieldExpression)node;
-            var funcDef = ee._currentScopes[ee._currentScopes.Length - 1].Namespace as FunctionInfo;
+            var funcDef = ee._currentScopes[ee._currentScopes.Length - 1].Namespace as GeneratorFunctionInfo;
             if (funcDef != null) {
                 var gen = funcDef.Generator;
 
@@ -332,16 +325,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private static ISet<Namespace> EvaluateListComprehension(ExpressionEvaluator ee, Node node) {
-            ListComprehension listComp = (ListComprehension)node;
+            if (!ee._unit.ProjectState.LanguageVersion.Is3x()) {
+                // list comprehension is in enclosing scope in 2.x
+                ListComprehension listComp = (ListComprehension)node;
 
-            WalkComprehension(ee, listComp);
+                WalkComprehension(ee, listComp);
 
-            return ee.GlobalScope.GetOrMakeNodeVariable(
-                node,
-                (x) => new ListInfo(new [] { ee.Evaluate(listComp.Item) }, ee._unit.ProjectState._listType).SelfSet);
+                return ee.GlobalScope.GetOrMakeNodeVariable(
+                    node,
+                    (x) => new ListInfo(new[] { ee.Evaluate(listComp.Item) }, ee._unit.ProjectState._listType).SelfSet);
+            } else {
+                // list comprehension has its own scope in 3.x
+                ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
+
+                return compScope.Namespace.SelfSet;
+            }
         }
 
-        private static void WalkComprehension(ExpressionEvaluator ee, Comprehension comp) {
+        internal static void WalkComprehension(ExpressionEvaluator ee, Comprehension comp) {
             for (int i = 0; i < comp.Iterators.Count; i++) {
                 ComprehensionFor compFor = comp.Iterators[i] as ComprehensionFor;
                 if (compFor != null) {
@@ -358,17 +359,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private static ISet<Namespace> EvaluateGenerator(ExpressionEvaluator ee, Node node) {
-            GeneratorExpression gen = (GeneratorExpression)node;
+            ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
 
-            WalkComprehension(ee, gen);
-
-            var res = (GeneratorInfo)ee.GlobalScope.GetOrMakeNodeVariable(
-                node,
-                (x) => new GeneratorInfo(new FunctionInfo(ee._unit)));
-
-            res.AddYield(ee.Evaluate(gen.Item));
-
-            return res.SelfSet;
+            return compScope.Namespace.SelfSet;
         }
 
         internal void AssignTo(Node assignStmt, Expression left, ISet<Namespace> values) {
@@ -467,6 +460,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             return result;
+        }
+
+        internal InterpreterScope[] PushScope(InterpreterScope scope) {
+            var newScopes = new InterpreterScope[_currentScopes.Length + 1];
+            _currentScopes.CopyTo(newScopes, 0);
+            newScopes[_currentScopes.Length] = scope;
+            _currentScopes = newScopes;
+            return newScopes;
         }
 
         #endregion

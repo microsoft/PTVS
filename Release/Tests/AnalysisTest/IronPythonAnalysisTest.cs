@@ -43,6 +43,12 @@ namespace AnalysisTest {
             return new IronPythonInterpreter(new IronPythonInterpreterFactory(), engine);
         }
 
+        public override string UnicodeStringType {
+            get {
+                return "str";
+            }
+        }
+
         [TestMethod]
         public void TestGenerics() {
             var text = @"
@@ -54,7 +60,7 @@ y = GenericType()
 zzz = y.ReturnsGenericParam()
 ";
             var entry = ProcessText(text);
-            AssertContainsExactly(entry.GetMembersFromName("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
+            AssertContainsExactly(entry.GetMembersFromNameByIndex("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
         }
 
 
@@ -65,7 +71,7 @@ import clr
 x = 'abc'
 ";
             var entry = ProcessText(text);
-            AssertContainsExactly(entry.GetMembersFromName("x", 1), _strMembersClr);
+            AssertContainsExactly(entry.GetMembersFromNameByIndex("x", 1), _strMembersClr);
         }
 
         [TestMethod]
@@ -76,7 +82,7 @@ clr.AddReference('System.Drawing')
 from System.Drawing import Point
 ";
             var entry = ProcessText(text);
-            var members = entry.GetMembersFromName("Point", GetLineNumber(text, "from System.")).ToList();
+            var members = entry.GetMembersFromNameByIndex("Point", text.IndexOf("from System.")).ToList();
 
             Assert.AreEqual(35, members.Count);
         }
@@ -89,7 +95,7 @@ clr.AddReferenceByName('Microsoft.Scripting')
 from Microsoft.Scripting import SourceUnit
 ";
             var entry = ProcessText(text);
-            Assert.AreEqual(40, entry.GetMembersFromName("SourceUnit", GetLineNumber(text, "from Microsoft.")).ToList().Count);
+            Assert.AreEqual(40, entry.GetMembersFromNameByIndex("SourceUnit", text.IndexOf("from Microsoft.")).ToList().Count);
         }
 
         [TestMethod]
@@ -99,7 +105,7 @@ import System
 x = System.StringComparison.OrdinalIgnoreCase
             ");
 
-            var x = entry.GetValues("x", 1).First();
+            var x = entry.GetValuesByIndex("x", 1).First();
             Debug.Assert(x.ResultType == PythonMemberType.EnumInstance);
             Assert.AreEqual(x.ResultType, PythonMemberType.EnumInstance);
         }
@@ -126,7 +132,7 @@ a = C()
 b = a.some_color
 ");
 
-            AssertContainsExactly(entry.GetTypesFromName("b", 1).Select(x => x.Name), "Color");
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", 1).Select(x => x.Name), "Color");
         }
 
         [TestMethod]
@@ -140,15 +146,15 @@ y = str
 y = int
 ");
 
-            var result = entry.GetSignatures("System.Collections.Generic.Dictionary[int, int]", 1).ToArray();
+            var result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[int, int]", 1).ToArray();
             Assert.AreEqual(result.Length, 6);
 
             // 2 possible types
-            result = entry.GetSignatures("System.Collections.Generic.Dictionary[x, int]", 1).ToArray();
+            result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[x, int]", 1).ToArray();
             Assert.AreEqual(result.Length, 12);
 
             // 4 possible types
-            result = entry.GetSignatures("System.Collections.Generic.Dictionary[x, y]", 1).ToArray();
+            result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[x, y]", 1).ToArray();
             Assert.AreEqual(result.Length, 24);
         }
 
@@ -162,7 +168,7 @@ def g():
 def f(sender, args): pass
 ";
             var entry = ProcessText(text);
-            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "x ="))), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 5, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("x ="))), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 5, VariableType.Definition));
 
             text = @"
 from System import EventHandler
@@ -170,7 +176,7 @@ def f(sender, args): pass
 
 x = EventHandler(f)";
             entry = ProcessText(text);
-            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "x ="))), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("x ="))), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
 
             // left hand side is unknown, right hand side should still have refs added
             text = @"
@@ -180,7 +186,7 @@ def f(sender, args): pass
 a.foo += EventHandler(f)
 ";
             entry = ProcessText(text);
-            VerifyReferences(UniqifyVariables(entry.GetVariables("f", GetLineNumber(text, "a.foo +="))), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("a.foo +="))), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
         }
 
         [TestMethod]
@@ -190,7 +196,7 @@ from System import Environment
 Environment.GetCommandLineArgs()
 ";
             var entry = ProcessText(text);
-            Assert.IsTrue(entry.GetMembersFromName("Environment", 1).Any(s => s == "CommandLine"));
+            Assert.IsTrue(entry.GetMembersFromNameByIndex("Environment", 1).Any(s => s == "CommandLine"));
         }
 
         [TestMethod]
@@ -199,7 +205,7 @@ Environment.GetCommandLineArgs()
 import System.Collections as coll
 ";
             var entry = ProcessText(text);
-            Assert.IsTrue(entry.GetMembersFromName("coll", 1).Any(s => s == "ArrayList"));
+            Assert.IsTrue(entry.GetMembersFromNameByIndex("coll", 1).Any(s => s == "ArrayList"));
         }
 
         [TestMethod]
@@ -210,13 +216,13 @@ System.Environment.GetCommandLineArgs()
 x = System.Environment
 ";
             var entry = ProcessText(text);
-            var system = entry.GetMembersFromName("System", 1).ToSet();
+            var system = entry.GetMembersFromNameByIndex("System", 1).ToSet();
             // defined in mscorlib
             AssertContains(system, "AccessViolationException");
             // defined in System
             AssertContains(system, "CodeDom");
 
-            AssertContains(entry.GetMembersFromName("x", 1), "GetEnvironmentVariables");
+            AssertContains(entry.GetMembersFromNameByIndex("x", 1), "GetEnvironmentVariables");
         }
 
         [TestMethod]
@@ -229,10 +235,10 @@ args = x.GetCommandLineArgs()
 ";
             var entry = ProcessText(text);
 
-            var args = entry.GetTypesFromName("args", GetLineNumber(text, "args =")).ToSet();
+            var args = entry.GetTypesFromNameByIndex("args", text.IndexOf("args =")).ToSet();
             AssertContainsExactly(args, ((IronPythonInterpreter)Interpreter).GetTypeFromType(typeof(string[])));
 
-            Assert.IsTrue(entry.GetMembersFromName("args", GetLineNumber(text, "args =")).Any(s => s == "AsReadOnly"));
+            Assert.IsTrue(entry.GetMembersFromNameByIndex("args", text.IndexOf("args =")).Any(s => s == "AsReadOnly"));
         }
 
         [TestMethod]
@@ -242,7 +248,7 @@ import System
 x = System.Collections
 ";
             var entry = ProcessText(text);
-            var x = entry.GetMembersFromName("x", GetLineNumber(text, "x =")).ToSet();
+            var x = entry.GetMembersFromNameByIndex("x", text.IndexOf("x =")).ToSet();
             Assert.IsTrue(x.Contains("Generic"));
             Assert.IsTrue(x.Contains("ArrayList"));
         }
@@ -259,7 +265,7 @@ x = List[int]()
 
             // AreEqual(entry.GetMembersFromName('x', len(text) - 1), 
             //     get_intersect_members_clr(List[int]))
-            var self = new List<string>(entry.GetMembersFromName("x", GetLineNumber(text, "x =")));
+            var self = new List<string>(entry.GetMembersFromNameByIndex("x", text.IndexOf("x =")));
             Assert.IsTrue(self.Contains("AddRange"));
         }
 
@@ -274,7 +280,7 @@ mod = asm.DefineDynamicModule()
 mod.
 ";
             var entry = ProcessText(text);
-            var tooltips = entry.GetMembers("mod", GetLineNumber(text, "mod ="))
+            var tooltips = entry.GetMembersByIndex("mod", text.IndexOf("mod ="))
                 .Where(m => m.Name == "CreateGlobalFunctions")
                 .Select(m => m.Documentation)
                 .ToArray();
@@ -296,14 +302,14 @@ def f(sender, args):
 System.AppDomain.CurrentDomain.AssemblyLoad += f
 ";
             var entry = ProcessText(text);
-            Assert.IsTrue(entry.GetMembersFromName("args", GetLineNumber(text, "pass")).Any(s => s == "LoadedAssembly"));
+            Assert.IsTrue(entry.GetMembersFromNameByIndex("args", text.IndexOf("pass")).Any(s => s == "LoadedAssembly"));
         }
 
         [TestMethod]
         public void TestEventMemberType() {
             var text = @"from System import AppDomain";
             var entry = ProcessText(text);
-            var mem = entry.GetMembers("AppDomain", 1).Where(x =>x.Name == "AssemblyLoad").First();
+            var mem = entry.GetMembersByIndex("AppDomain", 1).Where(x => x.Name == "AssemblyLoad").First();
             Assert.AreEqual(mem.MemberType, PythonMemberType.Event);
         }
 
@@ -332,17 +338,17 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertContainsExactly(GetVariableDescriptions(entry, "System.String.Length", 1), "property of type int");
-            AssertContainsExactly(GetVariableDescriptions(entry, "System.Environment.CurrentDirectory", 1), "str");
-            AssertContainsExactly(GetVariableDescriptions(entry, "e", 1), "ArrayList");
-            AssertContainsExactly(GetVariableShortDescriptions(entry, "ArrayList", 1), "type ArrayList");
-            AssertContainsExactly(GetVariableDescriptions(entry, "e.Count", 1), "int");
-            AssertContainsExactly(GetVariableDescriptions(entry, "System.DBNull.Value", 1), "DBNull");
-            AssertContainsExactly(GetVariableShortDescriptions(entry, "System.StringSplitOptions", 1), "type StringSplitOptions");
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "System.String.Length", 1), "property of type int");
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "System.Environment.CurrentDirectory", 1), "str");
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "e", 1), "ArrayList");
+            AssertContainsExactly(GetVariableShortDescriptionsByIndex(entry, "ArrayList", 1), "type ArrayList");
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "e.Count", 1), "int");
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "System.DBNull.Value", 1), "DBNull");
+            AssertContainsExactly(GetVariableShortDescriptionsByIndex(entry, "System.StringSplitOptions", 1), "type StringSplitOptions");
             //AssertContainsExactly(GetVariableDescriptions(entry, "\"abc\".Length", 1), "int");
             //AssertContainsExactly(GetVariableDescriptions(entry, "c.Length", 1), "int");
             //AssertContainsExactly(GetVariableDescriptions(entry, "System.StringSplitOptions.RemoveEmptyEntries", 0), "field of type StringSplitOptions");
-            AssertContainsExactly(GetVariableDescriptions(entry, "g", 1), "def g(...)");    // return info could be better
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "g", 1), "def g(...)");    // return info could be better
             //AssertContainsExactly(GetVariableDescriptions(entry, "System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
         }
 
@@ -356,7 +362,7 @@ constructed = str().Contains
 
             string[] testContains = new[] { "const", "constructed" };
             foreach (var test in testContains) {
-                var result = entry.GetSignatures(test, 1).ToArray();
+                var result = entry.GetSignaturesByIndex(test, 1).ToArray();
                 Assert.AreEqual(result.Length, 1);
                 Assert.AreEqual(result[0].Parameters.Length, 1);
                 Assert.AreEqual(result[0].Parameters[0].Name, "value");

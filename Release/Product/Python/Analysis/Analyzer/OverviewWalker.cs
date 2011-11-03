@@ -12,10 +12,11 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
@@ -140,7 +141,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 prevScopes.CopyTo(scopes, 0);
                 
                 var unit = new FunctionAnalysisUnit(node, scopes, outerUnit);
-                var function = new FunctionInfo(unit);
+                var function = node.IsGenerator ? new GeneratorFunctionInfo(unit) : new FunctionInfo(unit);
 
                 if (node.Decorators != null) {
                     foreach (var d in node.Decorators.Decorators) {
@@ -160,9 +161,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 outerUnit.DeclaringModule.NodeScopes[node] = funcScope;
 
                 var declScope = outerUnit.Scopes[outerUnit.Scopes.Length - 1];
-                if (!node.IsLambda) {
-                    declScope.Children.Add(funcScope);
-                }
+                declScope.Children.Add(funcScope);
+
                 scopes[scopes.Length - 1] = funcScope;
                 scope = funcScope;
 
@@ -188,6 +188,90 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 unit.Enqueue();
             }
             return scope.Namespace as FunctionInfo;
+        }
+
+        public override bool Walk(GeneratorExpression node) {
+            EnsureComprehensionScope(node, MakeGeneratorComprehensionScope);
+
+            return base.Walk(node);
+        }
+
+        public override bool Walk(ListComprehension node) {
+            // List comprehension runs in a new scope in 3.x, runs in the same
+            // scope in 2.x.  But these don't get their own analysis units
+            // because they are still just expressions.
+            if (_curUnit.ProjectState.LanguageVersion.Is3x()) {
+                // always a new scope for SetComprehension
+
+                EnsureComprehensionScope(node, MakeListComprehensionScope);
+            }
+
+            return base.Walk(node);
+        }
+
+        public override void PostWalk(SetComprehension node) {
+            // always a new scope for SetComprehension
+            EnsureComprehensionScope(node, MakeSetComprehensionScope);
+
+            base.PostWalk(node);
+        }
+        
+        public override void PostWalk(DictionaryComprehension node) {
+            EnsureComprehensionScope(node, MakeDictComprehensionScope);
+
+            base.PostWalk(node);
+        }
+
+        /// <summary>
+        /// Makes sure we create a scope for a comprehension (generator, set, dict, or list comprehension in 3.x) where
+        /// the variables which are assigned will be stored.  
+        /// </summary>
+        private void EnsureComprehensionScope(Comprehension node, Func<Comprehension, InterpreterScope[], ComprehensionScope> makeScope) {
+            InterpreterScope scope;
+            if (!_curUnit.DeclaringModule.NodeScopes.TryGetValue(node, out scope)) {
+                var scopes = new InterpreterScope[_scopes.Count + 1];
+                _scopes.CopyTo(scopes, 0);
+
+                var compScope = makeScope(node, scopes);
+
+                _curUnit.DeclaringModule.NodeScopes[node] = compScope;
+                scopes[scopes.Length - 1] = compScope;
+
+                var declScope = _curUnit.Scopes[_curUnit.Scopes.Length - 1];
+                declScope.Children.Add(compScope);
+            }
+        }
+
+        private ComprehensionScope MakeGeneratorComprehensionScope(Comprehension node, InterpreterScope[] scopes) {
+            var unit = new GeneratorComprehensionAnalysisUnit(node, _entry.Tree, scopes, _curUnit);
+            var generatorInfo = new GeneratorInfo(unit);
+            var compScope = new ComprehensionScope(generatorInfo, node);
+            unit.Enqueue();
+            return compScope;
+        }
+
+        private ComprehensionScope MakeListComprehensionScope(Comprehension node, InterpreterScope[] scopes) {
+            var unit = new ListComprehensionAnalysisUnit(node, _entry.Tree, scopes, _curUnit);
+            var setInfo = new ListInfo(new ISet<Namespace>[0], _curUnit.ProjectState._listType);
+            var compScope = new ComprehensionScope(setInfo, node);
+            unit.Enqueue();
+            return compScope;
+        }
+
+        private ComprehensionScope MakeSetComprehensionScope(Comprehension node, InterpreterScope[] scopes) {
+            var unit = new SetComprehensionAnalysisUnit(node, _entry.Tree, scopes, _curUnit);
+            var setInfo = new SetInfo(EmptySet<Namespace>.Instance, _curUnit.ProjectState);
+            var compScope = new ComprehensionScope(setInfo, node);
+            unit.Enqueue();
+            return compScope;
+        }
+
+        private ComprehensionScope MakeDictComprehensionScope(Comprehension node, InterpreterScope[] scopes) {
+            var unit = new DictionaryComprehensionAnalysisUnit(node, _entry.Tree, scopes, _curUnit);
+            var dictInfo = new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), _curUnit.ProjectState);
+            var compScope = new ComprehensionScope(dictInfo, node);
+            unit.Enqueue();
+            return compScope;
         }
 
         private bool WalkMember(UserDefinedInfo userInfo) {

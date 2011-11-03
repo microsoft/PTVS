@@ -113,7 +113,12 @@ namespace AnalysisTest.Mocks {
             }
         }
 
-        public event System.EventHandler<CaretPositionChangedEventArgs> PositionChanged;
+        public event System.EventHandler<CaretPositionChangedEventArgs> PositionChanged {
+            add {
+            }
+            remove {
+            }
+        }
 
         public double Right {
             get { throw new System.NotImplementedException(); }

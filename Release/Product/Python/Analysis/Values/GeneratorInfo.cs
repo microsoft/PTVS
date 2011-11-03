@@ -19,16 +19,21 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
+    /// <summary>
+    /// Represents a generator instance - either constructed using a generator expression or
+    /// by calling a function definition which contains yield expressions.
+    /// </summary>
     internal class GeneratorInfo : BuiltinInstanceInfo {
-        private readonly FunctionInfo _functionInfo;
+        private readonly AnalysisUnit _unit;
         private readonly GeneratorNextBoundBuiltinMethodInfo _nextMethod;
         private readonly GeneratorSendBoundBuiltinMethodInfo _sendMethod;        
         private ISet<Namespace> _yields = EmptySet<Namespace>.Instance;
-        private VariableDef _sends;
+        private VariableDef _sends, _callers;
 
-        public GeneratorInfo(FunctionInfo functionInfo)
-            : base(functionInfo.ProjectState._generatorType) {
-            _functionInfo = functionInfo;
+        public GeneratorInfo(AnalysisUnit unit)
+            : base(unit.ProjectState._generatorType) {
+            _unit = unit;
+
             ISet<Namespace> nextMeth, sendMeth;
             if (TryGetMember("__next__", out nextMeth) || TryGetMember("next", out nextMeth)) {
                 _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
@@ -39,6 +44,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             _sends = new VariableDef();
+            _callers = new VariableDef();
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
@@ -66,13 +72,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             int count = _yields.Count;
             _yields = _yields.Union(yieldValue);
             if (_yields.Count != count) {
-                _functionInfo.ReturnValue.EnqueueDependents();
+                _callers.EnqueueDependents();
             }
         }
 
         public void AddSend(Node node, AnalysisUnit unit, ISet<Namespace> sendValue) {
             if (_sends.AddTypes(node, unit, sendValue)) {
-                _functionInfo._analysisUnit.Enqueue();
+                _unit.Enqueue();
             }
         }
 
@@ -85,6 +91,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public VariableDef Sends {
             get {
                 return _sends;
+            }
+        }
+
+        /// <summary>
+        /// Used to track dependencies for who calls us.  This is effectively the return type of the function and
+        /// logically would have us as the only value in here (but we don't actually need to add ourselves here
+        /// as we never read the Types from this variable def).
+        /// </summary>
+        public VariableDef Callers {
+            get {
+                return _callers;
             }
         }
     }

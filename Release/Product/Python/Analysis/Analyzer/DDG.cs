@@ -561,11 +561,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
 
                 // push the scope, it will be popped when we leave the current SuiteStatement.
-                var newScopes = new InterpreterScope[_curScopes.Length + 1];
-                _curScopes.CopyTo(newScopes, 0);
-                newScopes[_curScopes.Length] = scope;
-                _curScopes = newScopes;
-                _eval._currentScopes = _curScopes;
+                _curScopes = _eval.PushScope(scope);
             }
         }
 

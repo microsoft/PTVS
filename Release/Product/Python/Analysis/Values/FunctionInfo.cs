@@ -28,7 +28,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class FunctionInfo : UserDefinedInfo, IReferenceableContainer {
         private Dictionary<Namespace, ISet<Namespace>> _methods;
         private Dictionary<string, VariableDef> _functionAttrs;
-        private GeneratorInfo _generator;
         private VariableDef _returnValue;
         public bool IsStatic;
         public bool IsClassMethod;
@@ -64,19 +63,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             if (unit != null) {
-                AddCall(node, keywordArgNames, unit, args);
-            }
+                ReturnValue.AddDependency(unit);
 
-            if (_generator != null) {
-                return _generator.SelfSet;
+                AddCall(node, keywordArgNames, unit, args);
             }
 
             return ReturnValue.Types;
         }
 
-        private void AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args) {
-            ReturnValue.AddDependency(unit);
-
+        protected void AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args) {
             if (ParameterTypes != null) {
                 bool added = false;
 
@@ -330,8 +325,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        
-
         internal static ParameterResult MakeParameterResult(PythonAnalyzer state, Parameter curParam, IEnumerable<IAnalysisVariable> variables = null) {
             string name = curParam.Name;
             if (curParam.IsDictionary) {
@@ -520,15 +513,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return FunctionDefinition.Parameters[index].Name;
         }
 
-        public GeneratorInfo Generator {
-            get {
-                if (_generator == null) {
-                    _generator = new GeneratorInfo(this);
-                }
-                return _generator;
-            }
-        }
-
         public VariableDef ReturnValue {
             get { return _returnValue; }
         }
@@ -540,7 +524,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_references == null) {
                     _references = new ReferenceDict();
                 }
-                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new SimpleSrcLocation(node.GetSpan(unit.Ast.GlobalParent)));
+                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit.Tree, node));
             }
         }
 

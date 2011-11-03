@@ -13,33 +13,35 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
-    sealed class ClassScope : InterpreterScope {
-        public ClassScope(ClassInfo classInfo, ClassDefinition ast)
-            : base(classInfo, ast) {
+namespace Microsoft.PythonTools.Analysis.Values {
+    /// <summary>
+    /// Represents a function which is a generator (it contains yield expressions)
+    /// </summary>
+    class GeneratorFunctionInfo : FunctionInfo {
+        private readonly GeneratorInfo _generator;
+
+        internal GeneratorFunctionInfo(AnalysisUnit unit)
+            : base(unit) {
+            _generator = new GeneratorInfo(unit);
         }
 
-        public ClassInfo Class {
+        public GeneratorInfo Generator {
             get {
-                return Namespace as ClassInfo;
+                return _generator;
             }
         }
 
-        public override int GetBodyStart(PythonAst ast) {
-            return ast.IndexToLocation(((ClassDefinition)Node).HeaderIndex).Index;
-        }        
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+            if (unit != null) {
+                _generator.Callers.AddDependency(unit);
 
-        public override string Name {
-            get { return Class.ClassDefinition.Name; }
-        }
-
-        public override bool VisibleToChildren {
-            get {
-                return false;
+                AddCall(node, keywordArgNames, unit, args);
             }
+
+            return _generator.SelfSet;
         }
     }
 }

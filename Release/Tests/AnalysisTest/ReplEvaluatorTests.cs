@@ -164,7 +164,12 @@ namespace AnalysisTest {
 
             #region IReplWindow Members
 
-            public event Action ReadyForInput;
+            public event Action ReadyForInput {
+                add {
+                }
+                remove {
+                }
+            }
 
             public Microsoft.VisualStudio.Text.Editor.IWpfTextView TextView {
                 get { throw new NotImplementedException(); }

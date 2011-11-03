@@ -73,9 +73,9 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = GetAnalysisEntry();
             string fixedText = FixupCompletionText(Text);
             if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                members = analysis.GetMembers(
+                members = analysis.GetMembersByIndex(
                     fixedText, 
-                    _snapshot.GetLineNumberFromPosition(_pos) + 1,
+                    _pos,
                     MemberOptions
                 ).ToArray();
             } else {

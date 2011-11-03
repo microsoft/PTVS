@@ -49,9 +49,20 @@ namespace Microsoft.PythonTools.Analysis {
         /// that the expression can evaluate to.
         /// </summary>
         /// <param name="exprText">The expression to determine the result of.</param>
-        /// <param name="lineNumber">The line number to evaluate at within the module.</param>
+        /// <param name="lineNumber">The 1-based line number to evaluate at within the module.</param>
+        [Obsolete("Use GetValuesByIndex instead")]
         public IEnumerable<IAnalysisValue> GetValues(string exprText, int lineNumber) {
-            var scopes = FindScopes(lineNumber);
+            return GetValuesByIndex(exprText, LineToIndex(lineNumber));
+        }
+
+        /// <summary>
+        /// Evaluates the given expression in at the provided line number and returns the values
+        /// that the expression can evaluate to.
+        /// </summary>
+        /// <param name="exprText">The expression to determine the result of.</param>
+        /// <param name="index">The 0-based absolute index into the file where the expression should be evaluated within the module.</param>
+        public IEnumerable<IAnalysisValue> GetValuesByIndex(string exprText, int index) {
+            var scopes = FindScopes(index);
             var privatePrefix = GetPrivatePrefixClassName(scopes);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
@@ -100,11 +111,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             foreach (var reference in referenceable.Definitions) {
-                yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(reference.Key, reference.Value.Line, reference.Value.Column));
+                yield return new AnalysisVariable(VariableType.Definition, reference.Value.GetLocationInfo(reference.Key));
             }
 
             foreach (var reference in referenceable.References) {
-                yield return new AnalysisVariable(VariableType.Reference, new LocationInfo(reference.Key, reference.Value.Line, reference.Value.Column));
+                yield return new AnalysisVariable(VariableType.Reference, reference.Value.GetLocationInfo(reference.Key));
             }
         }
 
@@ -114,9 +125,24 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// Variables are classified as either definitions or references.  Only parameters have unique definition points - all other types of variables
         /// have only one or more references.
+        /// 
+        /// lineNumber is a 1-based line number.
         /// </summary>
+        [Obsolete("Use GetVariablesByIndex instead")]
         public IEnumerable<IAnalysisVariable> GetVariables(string exprText, int lineNumber) {
-            var scopes = FindScopes(lineNumber);
+            return GetVariablesByIndex(exprText, LineToIndex(lineNumber));
+        }
+
+        /// <summary>
+        /// Gets the variables the given expression evaluates to.  Variables include parameters, locals, and fields assigned on classes, modules and instances.
+        /// 
+        /// Variables are classified as either definitions or references.  Only parameters have unique definition points - all other types of variables
+        /// have only one or more references.
+        /// 
+        /// index is a 0-based absolute index into the file.
+        /// </summary>
+        public IEnumerable<IAnalysisVariable> GetVariablesByIndex(string exprText, int index) {
+            var scopes = FindScopes(index);
             string privatePrefix = GetPrivatePrefixClassName(scopes);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
@@ -125,7 +151,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (name != null) {
                 for (int i = scopes.Count - 1; i >= 0; i--) {
                     VariableDef def;
-                    if (IncludeScope(scopes, i, lineNumber)) {
+                    if (IncludeScope(scopes, i, index)) {
                         if (scopes[i].Variables.TryGetValue(name.Name, out def)) {
                             foreach (var res in ToVariables(def)) {
                                 yield return res;
@@ -237,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res.ToArray();
         }
 
-        private static bool IncludeScope(List<InterpreterScope> scopes, int i, int lineNo) {
+        private static bool IncludeScope(List<InterpreterScope> scopes, int i, int index) {
             if (scopes[i].VisibleToChildren || i == scopes.Count - 1) {
                 return true;
             }
@@ -246,6 +272,9 @@ namespace Microsoft.PythonTools.Analysis {
             if (i == scopes.Count - 2 && scopes[scopes.Count - 1] is FunctionScope) {
                 var funcScope = (FunctionScope)scopes[scopes.Count - 1];
                 var def = funcScope.Function.FunctionDefinition;
+                
+                // TODO: Fix me to use indexes
+                int lineNo = def.GlobalParent.IndexToLocation(index).Line;
                 if (lineNo == def.GetStart(def.GlobalParent).Line) {
                     return true;
                 }
@@ -257,13 +286,27 @@ namespace Microsoft.PythonTools.Analysis {
         /// Evaluates a given expression and returns a list of members which exist in the expression.
         /// 
         /// If the expression is an empty string returns all available members at that location.
+        /// 
+        /// lineNumber is a 1-based line number.
         /// </summary>
+        [Obsolete("Use GetMembersByIndex instead")]
         public IEnumerable<MemberResult> GetMembers(string exprText, int lineNumber, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
+            return GetMembersByIndex(exprText, LineToIndex(lineNumber), options);
+        }
+
+        /// <summary>
+        /// Evaluates a given expression and returns a list of members which exist in the expression.
+        /// 
+        /// If the expression is an empty string returns all available members at that location.
+        /// 
+        /// index is a zero-based absolute index into the file.
+        /// </summary>
+        public IEnumerable<MemberResult> GetMembersByIndex(string exprText, int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             if (exprText.Length == 0) {
-                return GetAllAvailableMembers(lineNumber);
+                return GetAllAvailableMembersByIndex(index);
             }
 
-            var scopes = FindScopes(lineNumber).ToArray();
+            var scopes = FindScopes(index).ToArray();
             var privatePrefix = GetPrivatePrefixClassName(scopes);
 
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
@@ -280,11 +323,21 @@ namespace Microsoft.PythonTools.Analysis {
         /// Gets information about the available signatures for the given expression.
         /// </summary>
         /// <param name="exprText">The expression to get signatures for.</param>
-        /// <param name="lineNumber">The line number to use for the context of looking up members.</param>
+        /// <param name="lineNumber">The 1-based line number to use for the context of looking up members.</param>
+        [Obsolete("Use GetSignaturesByIndex instead")]
         public IEnumerable<IOverloadResult> GetSignatures(string exprText, int lineNumber) {
+            return GetSignaturesByIndex(exprText, LineToIndex(lineNumber));
+        }
+
+        /// <summary>
+        /// Gets information about the available signatures for the given expression.
+        /// </summary>
+        /// <param name="exprText">The expression to get signatures for.</param>
+        /// <param name="index">The 0-based absolute index into the file.</param>
+        public IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
             try {
                 
-                var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray());
+                var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(index).ToArray());
                 using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
                     var expr = GetExpression(parser.ParseTopExpression().Body);
                     if (expr is ListExpression ||
@@ -312,8 +365,17 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the available names at the given location.  This includes built-in variables, global variables, and locals.
         /// </summary>
-        /// <param name="lineNumber">The line number where the available mebmers should be looked up.</param>
+        /// <param name="lineNumber">The 1-based line number where the available mebmers should be looked up.</param>
+        [Obsolete("Use GetAllAvailableMembersByIndex instead")]
         public IEnumerable<MemberResult> GetAllAvailableMembers(int lineNumber, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
+            return GetAllAvailableMembers(LineToIndex(lineNumber), options);
+        }
+
+        /// <summary>
+        /// Gets the available names at the given location.  This includes built-in variables, global variables, and locals.
+        /// </summary>
+        /// <param name="index">The 0-based absolute index into the file where the available mebmers should be looked up.</param>
+        public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             var result = new Dictionary<string, List<Namespace>>();
 
             // collect builtins
@@ -322,7 +384,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // collect variables from user defined scopes
-            var scopes = FindScopes(lineNumber);
+            var scopes = FindScopes(index);
             foreach (var scope in scopes) {
                 foreach (var kvp in scope.Variables) {
                     result[kvp.Key] = new List<Namespace>(kvp.Value.Types);
@@ -339,8 +401,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="name"></param>
         /// <param name="lineNumber"></param>
         /// <returns></returns>
-        internal IEnumerable<IPythonType> GetTypesFromName(string name, int lineNumber) {
-            var chain = FindScopes(lineNumber);
+        internal IEnumerable<IPythonType> GetTypesFromNameByIndex(string name, int index) {
+            var chain = FindScopes(index);
             var result = new HashSet<IPythonType>();
             foreach (var scope in chain) {
                 if (scope.VisibleToChildren || scope == chain[chain.Count - 1]) {
@@ -363,9 +425,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// TODO: This should go away, it's only used for tests.
         /// </summary>
         /// <param name="lineNumber">The line number where the available mebmers should be looked up.</param>
-        /// <returns></returns>
-        internal IEnumerable<string> GetVariablesNoBuiltins(int lineNumber) {
-            var chain = FindScopes(lineNumber);
+        internal IEnumerable<string> GetVariablesNoBuiltinsByIndex(int index) {
+            var chain = FindScopes(index);
             foreach (var scope in chain) {
                 if (scope.VisibleToChildren || scope == chain[chain.Count - 1]) {
                     foreach (var varName in scope.Variables) {
@@ -513,10 +574,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// inside of a class definition this will return a MemberExpression with the mangled name
         /// like "foo.__ClassName_Bar".
         /// 
+        /// index is a 0-based absolute index into the file.
+        /// 
         /// New in 1.1.
         /// </summary>
-        public PythonAst GetAstFromText(string exprText, int lineNumber) {
-            var scopes = FindScopes(lineNumber);
+        public PythonAst GetAstFromTextByIndex(string exprText, int index) {
+            var scopes = FindScopes(index);
             var privatePrefix = GetPrivatePrefixClassName(scopes);
 
             return GetAstFromText(exprText, privatePrefix);
@@ -526,10 +589,6 @@ namespace Microsoft.PythonTools.Analysis {
             using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true })) {
                 return parser.ParseTopExpression();
             }
-        }
-
-        private ISet<Namespace> GetVariablesForExpression(Expression expr, int lineNumber) {
-            return new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(lineNumber).ToArray()).Evaluate(expr);
         }
 
         internal static Expression GetExpression(Statement statement) {
@@ -545,7 +604,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private List<InterpreterScope> FindScopes(int lineNumber) {
+        private List<InterpreterScope> FindScopes(int index) {
             InterpreterScope curScope = ScopeTree.First();
             InterpreterScope prevScope = null;
             var chain = new List<InterpreterScope> { Scopes[0] };
@@ -561,26 +620,58 @@ namespace Microsoft.PythonTools.Analysis {
                 //     pass
                 // def g():  # starts on 3, ends on 4
                 //     pass
-                var parent = _unit.Ast.GlobalParent;
+                var parent = _unit.Tree;
                 int lastStart = curScope.GetStart(parent) - 1;
-                
+
                 for (int i = curScope.Children.Count - 1; i >= 0; i--) {
                     var scope = curScope.Children[i];
                     var curStart = scope.GetBodyStart(parent);
                     
-                    if (curStart < lineNumber) {
+
+                    if (curStart < index) {
                         var curEnd = scope.GetStop(parent);
 
-                        if (curEnd >= lineNumber ||                                      // we fit in this scope
-                            (i == curScope.Children.Count - 1 && curEnd < lineNumber) || // last scope, we're implicitly in it
-                            lineNumber < lastStart) {                                    // gap in scopes, we are in this one.
+                        if (curEnd >= index ||                                      // we fit in this scope
+                            (i == curScope.Children.Count - 1 && curEnd < index) || // last scope, we're implicitly in it
+                            index < lastStart) {                                    // gap in scopes, we are in this one.
                             if (!(scope is StatementScope)) {
                                 curScope = scope;
                                 chain.Add(curScope);
                             }
                             break;
                         }
+                    } else if (scope is FunctionScope) {
+                        var initialStart = scope.GetStart(parent);
+                        if (initialStart < curStart) {
+                            // we could be on a parameter or we could be on a default value.
+                            // If we're on a parameter then we're logically in the function
+                            // scope.  If we're on a default value then we're in the outer
+                            // scope.
+                            var funcDef = (FunctionDefinition)((FunctionScope)scope).Node;
+
+                            if (funcDef.Parameters != null) {
+                                bool isParam = false;
+                                foreach (var param in funcDef.Parameters) {
+                                    string paramName = param.GetVerbatimImage(_unit.Tree) ?? param.Name;
+                                    var nameStart = param.IndexSpan.Start;
+
+                                    if (index >= nameStart && index <= (nameStart + paramName.Length)) {
+                                        curScope = scope;
+                                        chain.Add(curScope);
+                                        isParam = true;
+                                        break;
+                                    }
+
+                                }
+
+                                if (isParam) {
+                                    break;
+                                }
+                            }
+
+                        }
                     }
+
                     lastStart = scope.GetStart(parent);
                 }
             }
@@ -632,5 +723,14 @@ namespace Microsoft.PythonTools.Analysis {
             return null;
         }
 
+        private int LineToIndex(int line) {
+            if (line <= 1) {    // <= because v1 allowed zero even though we take 1 based lines.
+                return 0;
+            }
+
+            // line is 1 based, and index 0 in the array is the position of the 2nd line in the file.
+            line -= 2;
+            return _unit.Tree._lineLocations[line];
+        }
     }
 }

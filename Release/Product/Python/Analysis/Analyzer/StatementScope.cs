@@ -31,11 +31,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         public override int GetStart(PythonAst ast) {
-            return ast.IndexToLocation(_startIndex).Line;
+            return ast.IndexToLocation(_startIndex).Index;
         }
 
         public override int GetStop(PythonAst ast) {
-            return ast.IndexToLocation(_endIndex).Line;
+            return ast.IndexToLocation(_endIndex).Index;
         }
 
         public int EndIndex {

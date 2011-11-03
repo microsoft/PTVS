@@ -14,9 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
-    public class LocationInfo : IEquatable<LocationInfo> {
+    public class LocationInfo : IEquatable<LocationInfo>, ILocationResolver {
         private readonly int _line, _column;
         private readonly IProjectEntry _entry;
         internal static LocationInfo[] Empty = new LocationInfo[0];
@@ -90,5 +91,13 @@ namespace Microsoft.PythonTools.Analysis {
                 return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.ProjectEntry.GetHashCode();
             }
         }
+
+        #region ILocationResolver Members
+
+        LocationInfo ILocationResolver.ResolveLocation(IProjectEntry project, object location) {
+            return this;
+        }
+
+        #endregion
     }
 }

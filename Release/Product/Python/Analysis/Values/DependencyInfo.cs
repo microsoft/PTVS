@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
     internal class TypedDependencyInfo<T> : DependencyInfo where T : Namespace {
         private TypeUnion<T> _union;
-        public ISet<SimpleSrcLocation> _references, _assignments;
+        public ISet<EncodedLocation> _references, _assignments;
 
         public TypedDependencyInfo(int version)
             : base(version) {
@@ -75,12 +75,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-
-        public void AddReference(SimpleSrcLocation location) {
+        public void AddReference(EncodedLocation location) {
             HashSetExtensions.AddValue(ref _references, location);
         }
 
-        public ISet<SimpleSrcLocation> References {
+        public ISet<EncodedLocation> References {
             get {
                 return _references;
             }
@@ -95,11 +94,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void AddAssignment(SimpleSrcLocation location) {
+        public void AddAssignment(EncodedLocation location) {
             HashSetExtensions.AddValue(ref _assignments, location);
         }
 
-        public ISet<SimpleSrcLocation> Assignments {
+        public ISet<EncodedLocation> Assignments {
             get {
                 return _assignments;
             }

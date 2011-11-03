@@ -100,7 +100,12 @@ namespace AnalysisTest.Mocks {
             get { throw new NotImplementedException(); }
         }
 
-        public event EventHandler SelectionChanged;
+        public event EventHandler SelectionChanged {
+            add {
+            }
+            remove {
+            }
+        }
 
         public VirtualSnapshotPoint Start {
             get { return _start; }

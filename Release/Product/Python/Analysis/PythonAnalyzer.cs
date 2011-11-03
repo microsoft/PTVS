@@ -513,7 +513,7 @@ namespace Microsoft.PythonTools.Analysis {
                                         VariableDef def;
                                         if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
                                             def.AddAssignment(
-                                                new SimpleSrcLocation(type.LineNumber, type.LineOffset),
+                                                new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, type.LineNumber, type.LineOffset)),
                                                 xamlProject
                                             );
                                         }
@@ -536,7 +536,7 @@ namespace Microsoft.PythonTools.Analysis {
                                         VariableDef def;
                                         if (ci.Scope.Variables.TryGetValue(keyValue.Key, out def)) {
                                             def.AddReference(
-                                                new SimpleSrcLocation(member.LineNumber, member.LineOffset),
+                                                new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, member.LineNumber, member.LineOffset)),
                                                 xamlProject
                                             );
                                         }

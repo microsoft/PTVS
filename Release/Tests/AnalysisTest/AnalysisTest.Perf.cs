@@ -35,8 +35,8 @@ import System
             Stopwatch sw = new Stopwatch();
             sw.Start();
             for (int i = 0; i < 1000; i++) {
-                foreach (var varRef in entry.GetMembers("System", 1)) {
-                    foreach (var innerRef in entry.GetMembers("System." + varRef.Name, 1)) {
+                foreach (var varRef in entry.GetMembersByIndex("System", 1)) {
+                    foreach (var innerRef in entry.GetMembersByIndex("System." + varRef.Name, 1)) {
                     }
                 }
             }
@@ -102,41 +102,41 @@ import System
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            foreach (var varRef in entry.GetMembers("System", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Collections", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Collections", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Collections.Generic", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Collections.Generic", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.CodeDom", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.CodeDom", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Configuration", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Configuration", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.ComponentModel", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.ComponentModel", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Deployment", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Deployment", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Diagnostics", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Diagnostics", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Dynamic", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Dynamic", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Globalization", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Globalization", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Linq", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Linq", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Management", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Management", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Media", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Media", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Net", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Net", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Runtime", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Runtime", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Security", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Security", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Text", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Text", 1)) {
             }
-            foreach (var varRef in entry.GetMembers("System.Threading", 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System.Threading", 1)) {
             }
 
             sw.Stop();
@@ -154,8 +154,8 @@ import System
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
-            foreach (var varRef in entry.GetMembers("System", 1)) {
-                foreach (var innerRef in entry.GetMembers("System" + varRef.Name, 1)) {
+            foreach (var varRef in entry.GetMembersByIndex("System", 1)) {
+                foreach (var innerRef in entry.GetMembersByIndex("System" + varRef.Name, 1)) {
                 }
             }
             sw.Stop();
@@ -175,8 +175,8 @@ import System
             sw.Start();
             for (int i = 0; i < 50; i++) {
                 foreach (var name in builtin_module_names) {
-                    foreach (var varRef in entry.GetMembers(name, 1)) {
-                        foreach (var innerRef in entry.GetMembers(name + "." + varRef.Name, 1)) {
+                    foreach (var varRef in entry.GetMembersByIndex(name, 1)) {
+                        foreach (var innerRef in entry.GetMembersByIndex(name + "." + varRef.Name, 1)) {
                         }
                     }
                 }
@@ -193,7 +193,7 @@ import System
         }
 
         public PythonAnalyzer AnalyzeStdLib() {
-            string dir = Path.Combine("C:\\Python27\\Lib");
+            string dir = Path.Combine("C:\\Python27_x64\\Lib");
             List<string> files = new List<string>();
             CollectFiles(dir, files);
 

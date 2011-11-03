@@ -277,7 +277,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     return new ExpressionAnalysis(
                         text,
                         analysis,
-                        lineNo + 1,
+                        loc.Start,
                         applicableSpan);
                 }
             }
@@ -355,9 +355,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 var analysis = ((IPythonProjectEntry)analysisItem).Analysis;
                 if (analysis != null) {
 
-                    var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
+                    int index = loc.Start;
 
-                    var sigs = analysis.GetSignatures(text, lineNo + 1);
+                    var sigs = analysis.GetSignaturesByIndex(text, index);
                     var end = Stopwatch.ElapsedMilliseconds;
 
                     if (/*Logging &&*/ (end - start) > CompletionAnalysis.TooMuchTime) {
@@ -399,9 +399,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var text = exprRange.Value.GetText();
             var analyzer = analysis.ProjectState;
-            var lineNo = span.GetStartPoint(snapshot).GetContainingLine().LineNumber + 1;
+            var index = span.GetStartPoint(snapshot).Position;
 
-            var expr = Statement.GetExpression(analysis.GetAstFromText(text, lineNo).Body);
+            var expr = Statement.GetExpression(analysis.GetAstFromTextByIndex(text, index).Body);
 
             if (expr != null && expr is NameExpression) {
                 var nameExpr = (NameExpression)expr;
@@ -412,8 +412,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         SpanTrackingMode.EdgeExclusive
                     );
 
-                    var variables = analysis.GetVariables(text, lineNo).Where(IsDefinition).Count();                    
-                    var values = analysis.GetValues(text, lineNo).ToArray();
+                    var variables = analysis.GetVariablesByIndex(text, index).Where(IsDefinition).Count();                    
+                    var values = analysis.GetValuesByIndex(text, index).ToArray();
 
                     // if we have type information or an assignment to the variable we won't offer 
                     // an import smart tag.

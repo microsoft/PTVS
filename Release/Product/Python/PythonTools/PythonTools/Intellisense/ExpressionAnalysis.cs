@@ -25,13 +25,13 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string _expr;
         private readonly ModuleAnalysis _analysis;
         private readonly ITrackingSpan _span;
-        private readonly int _lineNo;
+        private readonly int _index;
         public static readonly ExpressionAnalysis Empty = new ExpressionAnalysis("", null, 0, null);
         
-        internal ExpressionAnalysis(string expression, ModuleAnalysis analysis, int lineNo, ITrackingSpan span) {
+        internal ExpressionAnalysis(string expression, ModuleAnalysis analysis, int index, ITrackingSpan span) {
             _expr = expression;
             _analysis = analysis;
-            _lineNo = lineNo;
+            _index = index;
             _span = span;
         }
 
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public IEnumerable<IAnalysisVariable> Variables {
             get {
                 if (_analysis != null) {
-                    return _analysis.GetVariables(_expr, _lineNo);
+                    return _analysis.GetVariablesByIndex(_expr, _index);
                 }
                 return new IAnalysisVariable[0];
             }
@@ -71,14 +71,14 @@ namespace Microsoft.PythonTools.Intellisense {
         public IEnumerable<IAnalysisValue> Values {
             get {
                 if (_analysis != null) {
-                    return _analysis.GetValues(_expr, _lineNo);
+                    return _analysis.GetValuesByIndex(_expr, _index);
                 }
                 return new IAnalysisValue[0];
             }
         }
 
         public Expression GetEvaluatedExpression() {
-            return Statement.GetExpression(_analysis.GetAstFromText(_expr, _lineNo).Body);
+            return Statement.GetExpression(_analysis.GetAstFromTextByIndex(_expr, _index).Body);
         }
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         /// <returns></returns>
         public PythonAst GetEvaluatedAst() {
-            return _analysis.GetAstFromText(_expr, _lineNo);
+            return _analysis.GetAstFromTextByIndex(_expr, _index);
         }
     }
 }
