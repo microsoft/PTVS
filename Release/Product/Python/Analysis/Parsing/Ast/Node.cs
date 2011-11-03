@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal abstract void AppendCodeString(StringBuilder res, PythonAst ast);
 
         internal void SetLoc(int start, int end) {
-            _span = new IndexSpan(start, end > start ? end - start : start);
+            _span = new IndexSpan(start, end >= start ? end - start : start);
         }
 
         internal void SetLoc(IndexSpan span) {

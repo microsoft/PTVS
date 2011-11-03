@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools {
                         TokenInfo startToken = token;
                         int validPrevLine;  
                         int length = startToken.SourceSpan.Length;
-                        length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine);
+                        length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine, ref startToken);
 
                         length += GetTrailingMultiLineStrings(tokenizer, snapshot, currentLine, state);
 
@@ -186,7 +186,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private int GetLeadingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int firstLine, int currentLine, out int validPrevLine) {
+        private int GetLeadingMultiLineStrings(Tokenizer tokenizer, ITextSnapshot snapshot, int firstLine, int currentLine, out int validPrevLine, ref TokenInfo startToken) {
             validPrevLine = currentLine;
             int prevLine = currentLine - 1;
             int length = 0;
@@ -216,7 +216,7 @@ namespace Microsoft.PythonTools {
                         break;
                     }
 
-                    var startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
+                    startToken = prevLineTokenization.Tokens[prevLineTokenization.Tokens.Length - 1];
                     length += startToken.SourceSpan.Length;
                 }
 

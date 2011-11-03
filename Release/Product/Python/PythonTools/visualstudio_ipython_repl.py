@@ -150,7 +150,7 @@ class IPythonBackend(ReplBackend):
         self.launch_file = launch_file
         self.mod_name = mod_name
         self.km = VsKernelManager()
-        self.km.start_kernel(**{'ipython': True, 'extra_arguments': [u'--pylab=inline']})
+        self.km.start_kernel(**{'ipython': True, 'extra_arguments': self.get_extra_arguments()})
         self.km.start_channels()
         self.exit_lock = thread.allocate_lock()
         self.exit_lock.acquire()     # used as an event
@@ -163,6 +163,9 @@ class IPythonBackend(ReplBackend):
         self.km.hb_channel._vs_backend = self        
         self.execution_count = 1        
 
+    def get_extra_arguments(self):
+        return [u'--pylab=inline']
+        
     def execute_file_as_main(self, filename):
         contents = open(filename, 'rb').read().replace("\r\n", "\n")
         code = '''
@@ -265,3 +268,6 @@ __visualstudio_debugger_attach()
 del __visualstudio_debugger_attach
 ''', True)
 
+class IPythonBackendWithoutPyLab(IPythonBackend):
+    def get_extra_arguments(self):
+        return []

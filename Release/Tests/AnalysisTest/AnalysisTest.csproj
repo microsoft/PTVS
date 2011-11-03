@@ -385,6 +385,9 @@
     <Content Include="Python.VS.TestData\AddImport\Assignments.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\AddImport\ImportWithError.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\AddImport\Parameters.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -463,6 +466,9 @@
     <None Include="Python.VS.TestData\Completions\Completions.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python.VS.TestData\Classification\MultiLineString.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\DebuggerProject\A\module1.py" />
     <Content Include="Python.VS.TestData\DebuggerProject\A\__init__.py" />
     <Content Include="Python.VS.TestData\DebuggerProject\B\module1.py" />

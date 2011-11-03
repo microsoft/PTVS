@@ -544,7 +544,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
             IPythonProjectEntry pyProjEntry = analysis as IPythonProjectEntry;
             List<PythonAst> asts = new List<PythonAst>();
-            bool hasErrors = false;
             foreach (var snapshot in snapshots) {
                 if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)) {
                     continue;
@@ -560,10 +559,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         if (ast != null) {
                             asts.Add(ast);
-                        }
-
-                        if (errorSink.Errors.Count != 0) {
-                            hasErrors = true;
                         }
 
                         // update squiggles for the buffer
@@ -598,16 +593,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (pyProjEntry != null) {
-                // TODO: As our tokenizer/parser error recovery improves we could possibly process
-                // trees with errors.  With the new grouping recovery added w/ this change we might be
-                // good enough, but I'm not quite ready to flip the switch yet.
-
-                if ((!hasErrors && asts.Count > 0) || asts.Count > 1) {
-                    // only update the AST when we're error free, this way we don't remove
-                    // a useful analysis with an incomplete and useless analysis.
-                    // If we have more than one AST we're in the REPL - we'll update the
-                    // AST in that case as errors won't go away.
-
+                if (asts.Count > 0) {
                     PythonAst finalAst;
                     if (asts.Count == 1) {
                         finalAst = asts[0];

@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools {
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.Operator)]
-        [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
+        [BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]
         internal static ClassificationTypeDefinition OperatorClassificationDefinition = null; // Set via MEF
 
         #endregion
@@ -168,6 +168,7 @@ namespace Microsoft.PythonTools {
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class OperatorFormat : ClassificationFormatDefinition {
         public OperatorFormat() {
+            ForegroundColor = Color.FromRgb(0x00, 0x80, 0x80);
         }
     }
 

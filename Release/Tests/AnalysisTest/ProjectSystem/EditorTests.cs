@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -85,22 +86,8 @@ namespace AnalysisTest.ProjectSystem {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ClassificationTest() {
-            var project = DebugProject.OpenProject(@"Python.VS.TestData\Classification.sln");
-
-            var item = project.ProjectItems.Item("Program.py");
-            var window = item.Open();
-            window.Activate();
-
-
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var doc = app.GetDocument(item.Document.FullName);
-
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            var classifier = doc.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-
-            VerifyClassification(doc.TextView.TextBuffer, spans,
+        public void ClassificationTest() {            
+            VerifyClassification(GetClassifications("Program.py"),
                 new Classifcation("comment", 0, 8, "#comment"),
                 new Classifcation("whitespace", 8, 10, "\r\n"),
                 new Classifcation("literal", 10, 11, "1"),
@@ -110,10 +97,20 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("keyword", 20, 23, "def"),
                 new Classifcation("identifier", 24, 25, "f"),
                 new Classifcation("Python grouping", 25, 27, "()"),
-                new Classifcation("operator", 27, 28, ":"),
+                new Classifcation("Python operator", 27, 28, ":"),
                 new Classifcation("keyword", 29, 33, "pass"),
                 new Classifcation("whitespace", 33, 35, "\r\n"),
                 new Classifcation("string", 35, 46, "'abc\\\r\ndef'")
+            );
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ClassificationMultiLineStringTest() {
+            VerifyClassification(GetClassifications("MultiLineString.py"),
+                new Classifcation("identifier", 0, 1, "x"),
+                new Classifcation("Python operator", 38, 39, "="),
+                new Classifcation("string", 40, 117, "'''\r\ncontents = open(%(filename)r, 'rb').read().replace(\"\\\\r\\\\n\", \"\\\\n\")\r\n'''")
             );
         }
 
@@ -573,36 +570,56 @@ x\
             }
         }
 
-        private void VerifyClassification(ITextBuffer buffer, IList<ClassificationSpan> spans, params Classifcation[] expected) {
+        private static IList<ClassificationSpan> GetClassifications(string filename) {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\Classification.sln");
+
+            var item = project.ProjectItems.Item(filename);
+            var window = item.Open();
+            window.Activate();
+
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            var classifier = doc.Classifier;
+            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            return spans;
+        }
+
+        private void VerifyClassification(IList<ClassificationSpan> spans, params Classifcation[] expected) {
             bool passed = false;
             try {
                 Assert.AreEqual(expected.Length, spans.Count);
 
                 for (int i = 0; i < spans.Count; i++) {
                     var curSpan = spans[i];
-
+                    
 
                     int start = curSpan.Span.Start.Position;
                     int end = curSpan.Span.End.Position;
 
                     Assert.AreEqual(expected[i].Start, start);
                     Assert.AreEqual(expected[i].End, end);
-                    Assert.AreEqual(expected[i].Text, buffer.CurrentSnapshot.GetText(Span.FromBounds(start, end)));
+                    Assert.AreEqual(expected[i].Text, curSpan.Span.GetText());
+                    Assert.AreEqual(expected[i].ClassificationType, curSpan.ClassificationType.Classification);
                 }
                 passed = true;
             } finally {
                 if (!passed) {
                     // output results for easy test creation...
-                    for (int i = 0; i < spans.Count; i++) {
-                        var curSpan = spans[i];
-
-                        Console.WriteLine("new Classifcation(\"{0}\", {1}, {2}, \"{3}\"),",
-                            curSpan.ClassificationType.Classification,
-                            curSpan.Span.Start.Position,
-                            curSpan.Span.End.Position,
-                            FormatString(curSpan.Span.GetText())
-                        );
-                    }
+                    Console.WriteLine(
+                        String.Join(",\r\n", 
+                            spans.Select(curSpan => 
+                                String.Format("new Classifcation(\"{0}\", {1}, {2}, \"{3}\")",
+                                    curSpan.ClassificationType.Classification,
+                                    curSpan.Span.Start.Position,
+                                    curSpan.Span.End.Position,
+                                    FormatString(curSpan.Span.GetText())
+                                )
+                            )
+                        )
+                    );
                 }
             }
         }
@@ -625,8 +642,10 @@ x\
         private class Classifcation {
             public readonly int Start, End;
             public readonly string Text;
+            public readonly string ClassificationType;
 
             public Classifcation(string classificationType, int start, int end, string text) {
+                ClassificationType = classificationType;
                 Start = start;
                 End = end;
                 Text = text;

@@ -73,6 +73,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", AD7Engine.DebugEngineId)]
     [ProvidePythonExecutionModeAttribute(ExecutionMode.StandardModeId, "Standard", "Standard")]
     [ProvidePythonExecutionModeAttribute("{91BB0245-B2A9-47BF-8D76-DD428C6D8974}", "IPython", "visualstudio_ipython_repl.IPythonBackend", false)]
+    [ProvidePythonExecutionModeAttribute("{3E390328-A806-4250-ACAD-97B5B37076E2}", "IPython w/o PyLab", "visualstudio_ipython_repl.IPythonBackendWithoutPyLab", false)]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ArithmeticError")]

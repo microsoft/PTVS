@@ -99,6 +99,16 @@ subpackage_method()";
             AddSmartTagTest("ImportFunctionFromSubpackage.py", 1, 1, new[] { "from test_package.sub_package import subpackage_method" }, 0, expectedText);
         }
 
+        /// <summary>
+        /// We should understand assignment from import statements even in the face of errors
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ImportWithErrors() {
+            // http://pytools.codeplex.com/workitem/547
+            AddSmartTagTest("ImportWithError.py", 1, 9, _NoSmartTags);
+            AddSmartTagTest("ImportWithError.py", 2, 3, _NoSmartTags);
+        }
 
         /// <summary>
         /// Add a from .. import for a function in a built-in module

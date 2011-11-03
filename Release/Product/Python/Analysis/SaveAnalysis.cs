@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -40,13 +41,31 @@ namespace Microsoft.PythonTools.Analysis {
 
                 if (moduleInfo != null) {
                     var info = SerializeModule(moduleInfo);
-                    using (var writer = new FileStream(Path.Combine(outDir, name + ".idb"), FileMode.Create, FileAccess.ReadWrite)) {
-                        new Pickler(writer).Dump(info);
+                    for (int i = 0; i < 10; i++) {
+                        try {
+                            using (var writer = new FileStream(Path.Combine(outDir, name + ".idb"), FileMode.Create, FileAccess.ReadWrite)) {
+                                new Pickler(writer).Dump(info);
+                            }
+                            break;
+                        } catch (IOException ex) {
+                            // race with a reader, retry... http://pytools.codeplex.com/workitem/570
+                            Console.WriteLine("Could not access {0} {1}", name + ".idb", ex);
+                            Thread.Sleep(1000);
+                        }
                     }
 
-                    using (var writer = new StreamWriter(new FileStream(Path.Combine(outDir, name + ".idb.$memlist"), FileMode.Create, FileAccess.ReadWrite))) {
-                        foreach (var keyValue in moduleInfo.Scope.Variables) {
-                            writer.WriteLine(keyValue.Key);
+                    for (int i = 0; i < 10; i++) {
+                        try {
+                            using (var writer = new StreamWriter(new FileStream(Path.Combine(outDir, name + ".idb.$memlist"), FileMode.Create, FileAccess.ReadWrite))) {
+                                foreach (var keyValue in moduleInfo.Scope.Variables) {
+                                    writer.WriteLine(keyValue.Key);
+                                }
+                            }
+                            break;
+                        } catch (IOException ex) {
+                            // race with a reader, retry... http://pytools.codeplex.com/workitem/570
+                            Console.WriteLine("Could not access {0} {1}", name + ".idb.$memlist", ex);
+                            Thread.Sleep(1000);
                         }
                     }
                 }

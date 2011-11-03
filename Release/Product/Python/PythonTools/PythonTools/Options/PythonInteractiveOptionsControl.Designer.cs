@@ -222,6 +222,7 @@
             // 
             // _executionMode
             // 
+            this._executionMode.DropDownWidth = 115;
             this._executionMode.FormattingEnabled = true;
             this._executionMode.Location = new System.Drawing.Point(304, 61);
             this._executionMode.Name = "_executionMode";

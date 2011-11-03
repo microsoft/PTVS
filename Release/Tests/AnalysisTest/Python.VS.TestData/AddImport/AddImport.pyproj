@@ -43,6 +43,7 @@
     <Compile Include="ImportBuiltinFunction.py" />
     <Compile Include="Parameters.py" />
     <Compile Include="Assignments.py" />
+    <Compile Include="ImportWithError.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
