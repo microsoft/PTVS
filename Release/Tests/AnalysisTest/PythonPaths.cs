@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing;
 
 namespace AnalysisTest {
@@ -24,6 +25,18 @@ namespace AnalysisTest {
         public static readonly PythonVersion Python31 = new PythonVersion("C:\\Python31\\python.exe", PythonLanguageVersion.V31);
         public static readonly PythonVersion Python32 = new PythonVersion("C:\\Python32\\python.exe", PythonLanguageVersion.V32);
         public static readonly PythonVersion IronPython27 = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\ipy.exe", PythonLanguageVersion.V27);
+
+        public static IEnumerable<PythonVersion> Versions {
+            get {
+                yield return Python25;
+                yield return Python26;
+                yield return Python27;
+                yield return Python30;
+                yield return Python31;
+                yield return Python31;
+                yield return IronPython27;
+            }
+        }
     }
 
     class PythonVersion {

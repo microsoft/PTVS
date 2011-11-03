@@ -847,6 +847,20 @@ namespace AnalysisTest {
         #region Breakpoint Tests
 
         [TestMethod]
+        public void TestBreakpointsFilenameColide() {
+            // http://pytools.codeplex.com/workitem/565
+
+            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
+            BreakpointTest(
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "BreakpointFilenames.py"),
+                new [] { 4 },
+                new int [0],
+                cwd: cwd,
+                breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "B", "module1.py"),
+                checkBound: false);
+        }
+
+        [TestMethod]
         public void TestBreakpointsSimpleFilename() {
             // http://pytools.codeplex.com/workitem/522
 

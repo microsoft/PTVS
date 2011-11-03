@@ -188,7 +188,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -463,6 +463,11 @@
     <None Include="Python.VS.TestData\Completions\Completions.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python.VS.TestData\DebuggerProject\A\module1.py" />
+    <Content Include="Python.VS.TestData\DebuggerProject\A\__init__.py" />
+    <Content Include="Python.VS.TestData\DebuggerProject\B\module1.py" />
+    <Content Include="Python.VS.TestData\DebuggerProject\B\__init__.py" />
+    <Content Include="Python.VS.TestData\DebuggerProject\BreakpointFilenames.py" />
     <Content Include="Python.VS.TestData\Completions\foo.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -490,6 +495,27 @@
     <Content Include="Python.VS.TestData\BadLinkPath.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Python.VS.TestData\UnregisteredFileExtension\UnregisteredFileExtension.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Python.VS.TestData\UnregisteredFileExtension\Foo.unregfileext">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="Python.VS.TestData\UnregisteredFileExtension.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\UnregisteredFileExtension\Program.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\InteractiveFile.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\InteractiveFile\Program.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Python.VS.TestData\InteractiveFile\InteractiveFile.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Python.VS.TestData\DebuggerProject\SimpleExceptionUnhandled.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
@@ -27,28 +28,35 @@ namespace AnalysisTest {
     [DeploymentItem(@"..\\PythonTools\\IronPythonScraper.py")]
     [DeploymentItem("PyDebugAttach.dll")]
     public class CompletionDBTest {
+        
         [TestMethod]
         public void TestOpen() {
-            Guid testId = Guid.NewGuid();
-            var testDir = Path.Combine(Path.GetTempPath(), testId.ToString());
-            Directory.CreateDirectory(testDir);
+            foreach (var path in PythonPaths.Versions) {
+                Console.WriteLine(path.Path);
 
-            // run the scraper
-            var startInfo = new ProcessStartInfo("C:\\Python27\\python.exe", 
-                String.Format("PythonScraper.py \"{0}\" \"{1}\"", testDir, Path.Combine(Directory.GetCurrentDirectory(), "CompletionDB"))
-            );
+                Guid testId = Guid.NewGuid();
+                var testDir = Path.Combine(Path.GetTempPath(), testId.ToString());
+                Directory.CreateDirectory(testDir);
 
-            var process = Process.Start(startInfo);
-            process.WaitForExit();
+                // run the scraper
+                var startInfo = new ProcessStartInfo(path.Path,
+                    String.Format("PythonScraper.py \"{0}\" \"{1}\"", testDir, Path.Combine(Directory.GetCurrentDirectory(), "CompletionDB"))
+                );
 
-            // it should succeed
-            Assert.AreEqual(process.ExitCode, 0);
+                var process = Process.Start(startInfo);
+                process.WaitForExit();
 
-            // perform some basic validation
-            dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "__builtin__.idb"), FileMode.Open, FileAccess.Read));
-            foreach (var overload in builtinDb["members"]["open"]["value"]["overloads"]) {
-                Assert.AreEqual(overload["ret_type"][0], "__builtin__");
-                Assert.AreEqual(overload["ret_type"][1], "file");
+                // it should succeed
+                Assert.AreEqual(process.ExitCode, 0);
+
+                // perform some basic validation
+                dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, path.Version.Is3x() ? "builtins.idb" : "__builtin__.idb"), FileMode.Open, FileAccess.Read));
+                if (path.Version.Is2x()) { // no open in 3.x
+                    foreach (var overload in builtinDb["members"]["open"]["value"]["overloads"]) {
+                        Assert.AreEqual(overload["ret_type"][0], "__builtin__");
+                        Assert.AreEqual(overload["ret_type"][1], "file");
+                    }
+                }
             }
         }
     }

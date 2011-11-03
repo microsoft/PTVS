@@ -237,8 +237,11 @@ def generate_type(type_obj, is_hidden=False):
         else:
             members_table[member] = generate_member(type_obj.__dict__[member])
 
-    if not found_new:
-        members_table['__new__'] = generate_type_new(type_obj, type_obj.__new__)
+    if not found_new and hasattr(type_obj, '__new__'):
+        # you'd expect all types to have __new__, but twisted.internet.iocpreactor.iocpsupport.Event
+        # is missing it for some reason, so we'll fallback to object.__new__
+        members_table['__new__'] = generate_type_new(type_obj, 
+                                                     getattr(type_obj, '__new__', object.__new__))
 
     return type_table
 

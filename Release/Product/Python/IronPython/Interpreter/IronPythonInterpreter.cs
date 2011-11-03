@@ -314,21 +314,23 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IPythonModule ImportModule(string name) {
-            if (_typeDb != null) {
-                var res = _typeDb.GetModule(name);
-                if (res != null) {
-                    return res;
+            if (!String.IsNullOrWhiteSpace(name)) {
+                if (_typeDb != null) {
+                    var res = _typeDb.GetModule(name);
+                    if (res != null) {
+                        return res;
+                    }
                 }
-            }
 
-            IronPythonModule mod;
-            if (_modules.TryGetValue(name, out mod)) {
-                return mod;
-            }
+                IronPythonModule mod;
+                if (_modules.TryGetValue(name, out mod)) {
+                    return mod;
+                }
 
-            var ns = _namespaceTracker.TryGetPackage(name);
-            if (ns != null) {
-                return MakeObject(ns) as IPythonModule;
+                var ns = _namespaceTracker.TryGetPackage(name);
+                if (ns != null) {
+                    return MakeObject(ns) as IPythonModule;
+                }
             }
 
             return null;

@@ -41,6 +41,25 @@ namespace AnalysisTest.ProjectSystem {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void UnregisteredFileExtensionEditor() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\UnregisteredFileExtension.sln");
+
+            var item = project.ProjectItems.Item("Foo.unregfileext");
+            var window = item.Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+
+            // we shouldn't have opened this as a .py file, so we should have no classifications.
+            var classifier = doc.Classifier;
+            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            Assert.AreEqual(spans.Count, 0);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OutliningTest() {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\Outlining.sln");
 

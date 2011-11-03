@@ -370,8 +370,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Runs all of the custom fixup actions.
         /// </summary>
         internal void RunFixups() {
-            foreach (var fixup in _fixups) {
-                fixup();
+            // we don't use foreach here because we can add fixups while
+            // running fixups, in which case we want to keep processing
+            // the additional fixups.
+            for (int i = 0; i < _fixups.Count; i++) {
+                _fixups[i]();
             }
 
             _fixups.Clear();

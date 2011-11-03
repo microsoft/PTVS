@@ -2084,6 +2084,33 @@ $cls
             }
         }
 
+        /// <summary>
+        /// Simple test case of Ipython Debug->Execute in Interactive which then accesses __file__
+        /// during the script.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestIPythonStartInInteractive() {
+            if (!IPythonSupported) {
+                return;
+            }
+
+            GetInteractiveOptions().ExecutionMode = "IPython";
+            InteractiveWindow interactive = null;
+            try {
+                interactive = Prepare();
+                var project = DebugProject.OpenProject(@"Python.VS.TestData\InteractiveFile.sln");
+
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                Assert.AreNotEqual(null, interactive);
+
+                interactive.WaitForTextEnd("Program.pyabcdef", ReplPrompt);
+            } finally {
+                GetInteractiveOptions().ExecutionMode = "Standard";
+                ForceReset();
+            }
+        }
+
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgv() {
@@ -2098,7 +2125,7 @@ $cls
                 interactive.WaitForTextEnd("Program.py']", ReplPrompt);
             }
         }
-
+        
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AttachReplTest() {

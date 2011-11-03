@@ -3187,6 +3187,11 @@ class D(object):
             }
         }
 
+        [TestMethod]
+        public void TestFromImport() {
+            ProcessText("from #   blah");
+        }
+
         protected IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
             Dictionary<LocationInfo, IAnalysisVariable> res = new Dictionary<LocationInfo,IAnalysisVariable>();
             foreach (var v in vars) {

@@ -293,6 +293,8 @@ attach_sent_break = False
 
 
 def filename_is_same(filename1, filename2):
+    if path.isabs(filename1) and path.isabs(filename2):
+        return path.normcase(filename1) == path.normcase(filename2)
     return path.normcase(path.basename(filename1)) == path.normcase(path.basename(filename2))
 
 

@@ -161,10 +161,25 @@ class IPythonBackend(ReplBackend):
         self.km.stdin_channel._vs_backend = self
         self.km.sub_channel._vs_backend = self
         self.km.hb_channel._vs_backend = self        
-        self.execution_count = 1
+        self.execution_count = 1        
+
+    def execute_file_as_main(self, filename):
+        contents = open(filename, 'rb').read().replace("\r\n", "\n")
+        code = '''
+import sys
+sys.argv = [%(filename)r]
+__file__ = %(filename)r
+del sys
+exec(compile(%(contents)r, %(filename)r, 'exec')) 
+''' % {'filename' : filename, 'contents':contents}
         
+        self.run_command(code, True)
 
     def execution_loop(self):
+        # launch the startup script if one has been specified
+        if self.launch_file:
+            self.execute_file_as_main(self.launch_file)
+
         # we've got a bunch of threads setup for communication, we just block
         # here until we're requested to exit.  
         self.send_prompt('\r\nIn [1]: ', '   ...: ', False)
@@ -174,7 +189,7 @@ class IPythonBackend(ReplBackend):
         self.km.shell_channel.execute(command, silent)
         
     def execute_file(self, filename):
-        self.km.shell_channel.execute(file(filename).read(), False)
+        self.execute_file_as_main(filename)
 
     def exit_process(self):
         self.exit_lock.release()

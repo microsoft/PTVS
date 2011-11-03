@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
     [ProvideObject(typeof(PythonDebugPropertyPage))]
     [ProvideObject(typeof(PublishPropertyPage))]
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = VSConstants.CLSID.MiscellaneousFilesProject_string, NameResourceID = 3006, DefaultName = "module", TemplateDir = "Templates\\NewItem")]
-    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, "*:32", ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
+    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, "*:1", ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryPromptForEncodingGuid + "}", NameResourceID = 3015, LinkedEditorGuid = "{" + PythonConstants.EditorFactoryGuid + "}")]
     [ProvideFileFilter("{" + PythonConstants.EditorFactoryGuid + "}", "/1", "Python Files;*.py,*.pyw", 100)]
