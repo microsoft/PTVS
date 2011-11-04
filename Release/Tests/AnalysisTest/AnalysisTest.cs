@@ -1536,23 +1536,23 @@ f(lambda x=x:x, lambda x=y:x)";
             var entry = ProcessText(code);
             
             // default value, should be a list
-            var members = entry.GetMembersByIndex("x", code.IndexOf("lambda x=") + 10, GetMemberOptions.None).Select(x => x.Name);
+            var members = entry.GetMembersByIndex("x", code.IndexOf("lambda x=") + 10, GetMemberOptions.None).Select(x => x.Completion);
             AssertContains(members, "pop");
             AssertDoesntContain(members, "real");
             AssertDoesntContain(members, "rfind");
 
             // parameter used in the lambda, should be list and str
-            members = entry.GetMembersByIndex("x", code.IndexOf("lambda x=") + 12, GetMemberOptions.None).Select(x => x.Name);            
+            members = entry.GetMembersByIndex("x", code.IndexOf("lambda x=") + 12, GetMemberOptions.None).Select(x => x.Completion);            
             AssertContains(members, "pop");
             AssertContains(members, "upper");
 
             // default value in the 2nd lambda, should be list
-            members = entry.GetMembersByIndex("y", code.IndexOf("lambda x=") + 24, GetMemberOptions.None).Select(x => x.Name);
+            members = entry.GetMembersByIndex("y", code.IndexOf("lambda x=") + 24, GetMemberOptions.None).Select(x => x.Completion);
             AssertContains(members, "count");
             AssertDoesntContain(members, "pop");
 
             // value in the 2nd lambda, should be tuple and int
-            members = entry.GetMembersByIndex("x", code.IndexOf("lambda x=") + 26, GetMemberOptions.None).Select(x => x.Name);            
+            members = entry.GetMembersByIndex("x", code.IndexOf("lambda x=") + 26, GetMemberOptions.None).Select(x => x.Completion);            
             AssertContains(members, "count");
             AssertContains(members, "real");
         }

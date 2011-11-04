@@ -95,11 +95,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     var replMembers = pyReplEval.GetMemberNames(TextBuffer.GetAnalyzer(), fixedText);
                     if (replMembers != null) {
                         foreach (var member in replMembers) {
-                            memberDict[member.Name] = member;
+                            memberDict[member.Completion] = member;
                         }
 
                         foreach (var member in members) {
-                            memberDict[member.Name] = member;
+                            memberDict[member.Completion] = member;
                         }
 
                         members = memberDict.Values.ToArray();
@@ -161,8 +161,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var result = new List<MemberResult>(completions.Length);
             foreach (var comp in completions) {
-                if (filterFunc(comp.Name, filter)) {
-                    result.Add(comp.FilterCompletion(comp.Name.Substring(filter.Length)));
+                if (filterFunc(comp.Completion, filter)) {
+                    result.Add(comp.FilterCompletion(comp.Completion.Substring(filter.Length)));
                 }
             }
             return result.ToArray();

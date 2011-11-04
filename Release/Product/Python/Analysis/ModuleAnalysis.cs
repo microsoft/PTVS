@@ -487,6 +487,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             Dictionary<string, List<Namespace>> memberDict = null;
+            Dictionary<string, List<Namespace>> ownerDict = null;
             HashSet<string> memberSet = null;
             foreach (Namespace ns in namespaces) {
                 if (ProjectState._noneInst == ns) {
@@ -503,9 +504,11 @@ namespace Microsoft.PythonTools.Analysis {
                     // first namespace, add everything
                     memberSet = new HashSet<string>(newMembers.Keys);
                     memberDict = new Dictionary<string, List<Namespace>>();
+                    ownerDict = new Dictionary<string, List<Namespace>>();
                     foreach (var kvp in newMembers) {
                         var tmp = new List<Namespace>(kvp.Value);
                         memberDict[kvp.Key] = tmp;
+                        ownerDict[kvp.Key] = new List<Namespace> { ns };
                     }
                 } else {
                     // 2nd or nth namespace, union or intersect
@@ -539,11 +542,16 @@ namespace Microsoft.PythonTools.Analysis {
                             memberDict[name] = values = new List<Namespace>();
                         }
                         values.AddRange(newMembers[name]);
+                        if (!ownerDict.TryGetValue(name, out values)) {
+                            ownerDict[name] = values = new List<Namespace>();
+                        }
+                        values.Add(ns);
                     }
 
                     if (toRemove != null) {
                         foreach (var name in toRemove) {
                             memberDict.Remove(name);
+                            ownerDict.Remove(name);
                         }
                     }
                 }
@@ -552,7 +560,12 @@ namespace Microsoft.PythonTools.Analysis {
             if (memberDict == null) {
                 return new MemberResult[0];
             }
-            return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict);
+            if (options.Intersect()) {
+                // No need for this information if we're only showing the
+                // intersection. Setting it to null saves lookups later.
+                ownerDict = null;
+            }
+            return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict, ownerDict, namespaces.Count);
         }
 
         /// <summary>
@@ -678,11 +691,27 @@ namespace Microsoft.PythonTools.Analysis {
             return chain;
         }
 
-        private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<Namespace>> memberDict) {
+        private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<Namespace>> memberDict,
+            Dictionary<string, List<Namespace>> ownerDict=null, int maximumOwners=0) {
             foreach (var kvp in memberDict) {
                 string name = GetMemberName(privatePrefix, options, kvp.Key);
+                string completion = name;
                 if (name != null) {
-                    yield return new MemberResult(name, kvp.Value);
+                    List<Namespace> owners;
+                    if (ownerDict != null && ownerDict.TryGetValue(name, out owners) && kvp.Value.Count >= 1 && kvp.Value.Count < maximumOwners) {
+                        var types = new System.Text.StringBuilder();
+                        foreach (var v in owners) {
+                            if (!string.IsNullOrWhiteSpace(v.ShortDescription)) {
+                                types.Append(v.ShortDescription);
+                                types.Append(", ");
+                            }
+                        }
+                        if (types.Length > 2) {
+                            types.Length -= 2;
+                        }
+                        name += " (" + types.ToString() + ")";
+                    }
+                    yield return new MemberResult(name, completion, kvp.Value, null);
                 }
             }
         }
