@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
@@ -489,8 +490,10 @@ namespace Microsoft.PythonTools.Analysis {
             Dictionary<string, List<Namespace>> memberDict = null;
             Dictionary<string, List<Namespace>> ownerDict = null;
             HashSet<string> memberSet = null;
+            int namespacesCount = namespaces.Count;
             foreach (Namespace ns in namespaces) {
                 if (ProjectState._noneInst == ns) {
+                    namespacesCount -= 1;
                     continue;
                 }
 
@@ -565,7 +568,7 @@ namespace Microsoft.PythonTools.Analysis {
                 // intersection. Setting it to null saves lookups later.
                 ownerDict = null;
             }
-            return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict, ownerDict, namespaces.Count);
+            return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict, ownerDict, namespacesCount);
         }
 
         /// <summary>
@@ -692,24 +695,43 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<Namespace>> memberDict,
-            Dictionary<string, List<Namespace>> ownerDict=null, int maximumOwners=0) {
+            Dictionary<string, List<Namespace>> ownerDict = null, int maximumOwners = 0) {
             foreach (var kvp in memberDict) {
                 string name = GetMemberName(privatePrefix, options, kvp.Key);
                 string completion = name;
                 if (name != null) {
                     List<Namespace> owners;
-                    if (ownerDict != null && ownerDict.TryGetValue(name, out owners) && kvp.Value.Count >= 1 && kvp.Value.Count < maximumOwners) {
-                        var types = new System.Text.StringBuilder();
+                    if (ownerDict != null && ownerDict.TryGetValue(kvp.Key, out owners) && owners.Any() &&
+                        kvp.Value.Count >= 1 && kvp.Value.Count < maximumOwners) {
+                        // This member came from less than the full set of types.
+                        var newName = new StringBuilder(name);
+                        newName.Append(" (");
                         foreach (var v in owners) {
                             if (!string.IsNullOrWhiteSpace(v.ShortDescription)) {
-                                types.Append(v.ShortDescription);
-                                types.Append(", ");
+                                // Restrict each displayed type to 25 characters
+                                if (v.ShortDescription.Length > 25) {
+                                    newName.Append(v.ShortDescription.Substring(0, 22));
+                                    newName.Append("...");
+                                } else {
+                                    newName.Append(v.ShortDescription);
+                                }
+                                newName.Append(", ");
                             }
+                            if (newName.Length > 200) break;
                         }
-                        if (types.Length > 2) {
-                            types.Length -= 2;
+                        // Restrict the entire completion string to 200 characters
+                        if (newName.Length > 200) {
+                            newName.Length = 197;
+                            // Avoid showing more than three '.'s in a row
+                            while (newName[newName.Length - 1] == '.') {
+                                newName.Length -= 1;
+                            }
+                            newName.Append("...");
+                        } else {
+                            newName.Length -= 2;
                         }
-                        name += " (" + types.ToString() + ")";
+                        newName.Append(")");
+                        name = newName.ToString();
                     }
                     yield return new MemberResult(name, completion, kvp.Value, null);
                 }
