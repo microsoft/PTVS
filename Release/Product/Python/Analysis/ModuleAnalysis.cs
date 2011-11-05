@@ -701,8 +701,8 @@ namespace Microsoft.PythonTools.Analysis {
                 string completion = name;
                 if (name != null) {
                     List<Namespace> owners;
-                    if (ownerDict != null && ownerDict.TryGetValue(kvp.Key, out owners) && owners.Any() &&
-                        kvp.Value.Count >= 1 && kvp.Value.Count < maximumOwners) {
+                    if (ownerDict != null && ownerDict.TryGetValue(kvp.Key, out owners) &&
+                        owners.Count >= 1 && owners.Count < maximumOwners) {
                         // This member came from less than the full set of types.
                         var newName = new StringBuilder(name);
                         newName.Append(" (");
