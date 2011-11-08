@@ -48,7 +48,6 @@
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -59,6 +58,12 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
+    <Compile Include="Interpreter\IPythonInterpreter2.cs" />
+    <Compile Include="Interpreter\ITypeDatabaseReader.cs" />
+    <Compile Include="Interpreter\ProjectReference.cs" />
+    <Compile Include="Interpreter\ProjectReferenceKind.cs" />
+    <Compile Include="Interpreter\SharedDatabaseState.cs" />
     <Compile Include="SourceLocationResolver.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />

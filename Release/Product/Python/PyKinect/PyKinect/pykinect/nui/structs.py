@@ -65,7 +65,7 @@ class _Enumeration(ctypes.c_int):
 
     def __ne__(self, other):
         if type(self) is not type(other):
-            return self.value == other
+            return self.value != other
 
         return self.value != other.value
 
@@ -82,7 +82,7 @@ class Vector(ctypes.Structure):
         return '<x=%r, y=%r, z=%r, w=%r>' % (self.x, self.y, self.z, self.w)
 
 
-class PlanerImage(ctypes.Structure):
+class PlanarImage(ctypes.Structure):
     """Represents a video image."""
     _fields_ = [('width', ctypes.c_int32),
                 ('height', ctypes.c_int32),
@@ -136,7 +136,7 @@ class ImageFrame(ctypes.Structure):
                ('frame_number', ctypes.c_uint32),              # Returns the frame number
                ('type', ImageType),                         # An ImageType value that specifies the image type.
                ('resolution', ImageResolution),                # An ImageResolution value that specifies the image resolution.
-               ('image', ctypes.POINTER(PlanerImage)),         # A PlanarImage object that represents the image.
+               ('image', ctypes.POINTER(PlanarImage)),         # A PlanarImage object that represents the image.
                ('flags', ctypes.c_uint32),                     # flags, not used
                ('view_area', ImageViewArea),                   # An ImageViewArea value that specifies the view area.
               ]

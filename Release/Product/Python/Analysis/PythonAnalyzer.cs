@@ -130,6 +130,29 @@ namespace Microsoft.PythonTools.Analysis {
             LoadKnownTypes();
 
             FinishBuiltinsInit(InitializeBuiltinModules());
+
+            var names = new HashSet<string>(_interpreter.GetModuleNames());
+            List<string> removed = null;
+            foreach (var mod in _modules) {
+                var builtinMod = mod.Value.Module as BuiltinModule;
+                if (builtinMod != null && !names.Contains(mod.Key)) {
+                    if (removed == null) {
+                        removed = new List<string>();
+                    }
+                    removed.Add(mod.Key);
+                }
+            }
+            if (removed != null) {
+                foreach (var builtin in removed) {
+                    ModuleReference dummy;
+                    _modules.TryRemove(builtin, out dummy);
+                }
+            }
+
+            var modsChanged = ModulesChanged;
+            if (modsChanged != null) {
+                modsChanged(this, EventArgs.Empty);
+            }
         }
 
         #region Public API
@@ -248,6 +271,13 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
+
+        /// <summary>
+        /// Provides an event which notifies the consumer of the analyzer that we've been informed
+        /// the built-in modules have been re-analyzed.  This is a good time to re-analyze all of the
+        /// project so that it reflects the up-to-date built-in modules.
+        /// </summary>
+        public event EventHandler ModulesChanged;
 
         private bool ModuleContainsMember(string name, ModuleReference moduleRef) {
             BuiltinModule builtin = moduleRef.Module as BuiltinModule;

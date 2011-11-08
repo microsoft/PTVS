@@ -14,23 +14,24 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using Microsoft.PythonTools.Intellisense;
+using System.Linq;
+using System.Text;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonBuiltinModule : CPythonModule, IBuiltinPythonModule {
-        public CPythonBuiltinModule(SharedDatabaseState typeDb, string moduleName, string filename, bool isBuiltin)
-            : base(typeDb, moduleName, filename, isBuiltin) {
+namespace Microsoft.PythonTools.Project {
+    class PythonReferenceContainerNode : CommonReferenceContainerNode {
+        public PythonReferenceContainerNode(PythonProjectNode root)
+            : base(root) {
         }
 
-        public IMember GetAnyMember(string name) {
-            EnsureLoaded();
-
-            IMember res;
-            if (_members.TryGetValue(name, out res) || (_hiddenMembers != null && _hiddenMembers.TryGetValue(name, out res))) {
-                return res;
+        protected override ReferenceNode CreateReferenceNode(string referenceType, ProjectElement element) {
+            if (referenceType == ProjectFileConstants.Reference) {
+                string pyExtension = element.GetMetadata(PythonConstants.PythonExtension);
+                if (pyExtension != null) {
+                    return new PythonExtensionReferenceNode((PythonProjectNode)ProjectMgr, element, pyExtension);
+                }
             }
-            return null;
+
+            return base.CreateReferenceNode(referenceType, element);
         }
     }
 }

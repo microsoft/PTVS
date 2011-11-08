@@ -1253,6 +1253,17 @@ namespace Microsoft.PythonTools.Project
         #region virtual methods
 
         /// <summary>
+        /// Creates a reference node for the given file returning the node, or returns null
+        /// if the file doesn't represent a valid file which can be referenced.
+        /// </summary>
+        public virtual ReferenceNode CreateReferenceNodeForFile(string filename) {
+#if FALSE
+            return new ComReferenceNode(this.ProjectMgr, selectorData);
+#endif
+            return null;
+        }
+
+        /// <summary>
         /// Executes a wizard.
         /// </summary>
         /// <param name="parentNode">The node to which the wizard should add item(s).</param>
@@ -1434,7 +1445,7 @@ namespace Microsoft.PythonTools.Project
                         (uint)tabInit.Length,
                         tabInit,
                         ref guidEmpty,
-                        "*.dll",
+                        AddReferenceExtensions,
                         ref strBrowseLocations));
                 }
             }
@@ -1449,6 +1460,12 @@ namespace Microsoft.PythonTools.Project
                 ShowProjectInSolutionPage = true;
             }
             return VSConstants.S_OK;
+        }
+
+        protected virtual string AddReferenceExtensions {
+            get {
+                return "*.dll";
+            }
         }
 
         /// <summary>

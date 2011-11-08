@@ -18,21 +18,21 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.Win32;
+using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
     /// Provides access to an on-disk store of cached intellisense information.
     /// </summary>
-    public sealed class PythonTypeDatabase {
-        private readonly Dictionary<string, IPythonModule> _modules = new Dictionary<string, IPythonModule>();
-        private readonly List<Action> _fixups = new List<Action>();
-        private readonly string _dbDir;
-        private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
-        private readonly bool _is3x;
-        private IBuiltinPythonModule _builtinModule;
+    public sealed class PythonTypeDatabase : ITypeDatabaseReader {
+        private readonly SharedDatabaseState _sharedState;
+        internal readonly Dictionary<string, IPythonModule> _modules;
+        internal readonly Dictionary<IPythonType, CPythonConstant> _constants;
 
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
@@ -40,19 +40,271 @@ namespace Microsoft.PythonTools.Interpreter {
         public static readonly int CurrentVersion = 10;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
-            _dbDir = databaseDirectory;
-            _modules["__builtin__"] = _builtinModule = builtinsModule ?? new CPythonBuiltinModule(this, "__builtin__", Path.Combine(databaseDirectory, is3x ? "builtins.idb" : "__builtin__.idb"), true);
-            _is3x = is3x;
+            _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
+        }
 
-            foreach (var file in Directory.GetFiles(databaseDirectory)) {
-                if (!file.EndsWith(".idb", StringComparison.OrdinalIgnoreCase)) {
-                    continue;
-                } else if (String.Equals(Path.GetFileName(file), is3x ? "builtins.idb" : "__builtin__.idb", StringComparison.OrdinalIgnoreCase)) {
-                    continue;
+        internal PythonTypeDatabase(SharedDatabaseState cloning) {
+            _sharedState = cloning;
+            _modules = new Dictionary<string, IPythonModule>();
+            _constants = new Dictionary<IPythonType, CPythonConstant>();
+        }
+
+        /// <summary>
+        /// Creates a light weight copy of this PythonTypeDatabase which supports adding 
+        /// </summary>
+        /// <returns></returns>
+        public PythonTypeDatabase Clone() {
+            if (_modules != null) {
+                throw new InvalidOperationException("Cannot clone an already cloned type database");
+            }
+            return new PythonTypeDatabase(_sharedState);
+        }
+
+        /// <summary>
+        /// Asynchrousnly loads the specified extension module into the type database making the completions available.
+        /// 
+        /// If the module has not already been analyzed it will be analyzed and then loaded.
+        /// 
+        /// If the specified module was already loaded it replaces the existing module.
+        /// 
+        /// Returns a new Task which can be blocked upon until the analysis of the new extension module is available.
+        /// 
+        /// If the extension module cannot be analyzed an exception is reproted.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token which can be used to cancel the async loading of the module</param>
+        /// <param name="extensionModuleFilename">The filename of the extension module to be loaded</param>
+        /// <param name="interpreter">The Python interprefer which will be used to analyze the extension module.</param>
+        /// <param name="moduleName">The module name of the extension module.</param>
+        public Task LoadExtensionModuleAsync(IPythonInterpreterFactory interpreter, string moduleName, string extensionModuleFilename, CancellationToken cancellationToken = default(CancellationToken)) {
+            if (_modules == null) {
+                return MakeExceptionTask(new InvalidOperationException("Can only LoadModules into a cloned PythonTypeDatabase"));
+            }
+
+            return Task.Factory.StartNew(
+                new ExtensionModuleLoader(
+                    TaskScheduler.FromCurrentSynchronizationContext(), 
+                    this, 
+                    interpreter, 
+                    moduleName, 
+                    extensionModuleFilename, 
+                    cancellationToken
+                ).LoadExtensionModule
+            );
+        }
+
+        public bool UnloadExtensionModule(string moduleName) {
+            return _modules.Remove(moduleName);
+        }
+
+        private static Task MakeExceptionTask(Exception e) {
+            var res = new TaskCompletionSource<Task>();
+            res.SetException(e);
+            return res.Task;
+        }
+
+        internal class ProcessWaitHandle : WaitHandle {
+            public ProcessWaitHandle(Process process) {
+                Debug.Assert(process != null);
+                SafeWaitHandle = new SafeWaitHandle(process.Handle, false); // Process owns the handle
+            }
+        }
+
+        class ExtensionModuleLoader {
+            private readonly PythonTypeDatabase _typeDb;
+            private readonly IPythonInterpreterFactory _factory;
+            private readonly string _moduleName;
+            private readonly string _extensionFilename;
+            private readonly CancellationToken _cancel;
+            private readonly TaskScheduler _startScheduler;
+
+            const string _extensionModuleInfoFile = "extensions.$list";
+
+            public ExtensionModuleLoader(TaskScheduler startScheduler, PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, string moduleName, string extensionFilename, CancellationToken cancel) {
+                _typeDb = typeDb;
+                _factory = factory;
+                _moduleName = moduleName;
+                _extensionFilename = extensionFilename;
+                _cancel = cancel;
+                _startScheduler = startScheduler;
+            }
+
+            public void LoadExtensionModule() {
+                List<string> existingModules = new List<string>();
+                string dbFile = null;
+                // open the file locking it - only one person can look at the "database" of per-project analysis.
+                using (var fs = OpenProjectExtensionList()) {
+                    dbFile = FindDbFile(_factory, _extensionFilename, existingModules, dbFile, fs);
+
+                    if (dbFile == null) {
+                        dbFile = GenerateDbFile(_factory, _moduleName, _extensionFilename, existingModules, dbFile, fs);
+                    }
                 }
 
-                string modName = Path.GetFileNameWithoutExtension(file);
-                _modules[modName] = new CPythonModule(this, modName, file, false);
+                // we need to access _typeDb._modules on the UI thread.
+                Task.Factory.StartNew(PublishModule, dbFile, default(CancellationToken), TaskCreationOptions.None, _startScheduler).Wait();
+            }
+
+            private void PublishModule(object state) {
+                _typeDb._modules[_moduleName] = new CPythonModule(_typeDb, _moduleName, (string)state, false);
+            }
+
+            private FileStream OpenProjectExtensionList() {
+                for (int i = 0; i < 50 && !_cancel.IsCancellationRequested; i++) {
+                    try {
+                        return new FileStream(Path.Combine(_typeDb.DatabaseDirectory, _extensionModuleInfoFile), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                    } catch (IOException) {
+                        if (_cancel.CanBeCanceled) {
+                            _cancel.WaitHandle.WaitOne(100);
+                        } else {
+                            System.Threading.Thread.Sleep(100);
+                        }
+                    }
+                }
+
+                throw new CannotAnalyzeExtensionException("Cannot access per-project extension registry.");
+            }
+
+            private string GenerateDbFile(IPythonInterpreterFactory interpreter, string moduleName, string extensionModuleFilename, List<string> existingModules, string dbFile, FileStream fs) {
+                // we need to generate the DB file
+                dbFile = Path.Combine(_typeDb._sharedState.DatabaseDirectory, moduleName + ".$project.idb");
+                int retryCount = 0;
+                while (File.Exists(dbFile)) {
+                    dbFile = Path.Combine(_typeDb._sharedState.DatabaseDirectory, moduleName + "." + ++retryCount + ".$project.idb");
+                }
+
+                var psi = new ProcessStartInfo();
+                psi.CreateNoWindow = true;
+                psi.UseShellExecute = false;
+                psi.FileName = interpreter.Configuration.InterpreterPath;
+                psi.RedirectStandardOutput = true;
+                psi.RedirectStandardError = true;
+                psi.Arguments =
+                    "\"" + Path.Combine(GetPythonToolsInstallPath(), "ExtensionScraper.py") + "\"" +      // script to run
+                    " scrape" +                                                                           // scrape are
+                    " \"" + extensionModuleFilename + "\"" +                                              // extension module path
+                    " \"" + dbFile.Substring(0, dbFile.Length - 4) + "\"";                                // output file path (minus .idb)
+
+                var proc = Process.Start(psi);
+                OutputDataReceiver receiver = new OutputDataReceiver();
+                proc.OutputDataReceived += receiver.OutputDataReceived;
+
+                proc.BeginOutputReadLine();
+                proc.BeginErrorReadLine();
+
+                if (_cancel.CanBeCanceled) {
+                    if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, new ProcessWaitHandle(proc) }) != 1) {
+                        // we were cancelled
+                        return null;
+                    }
+                } else {
+                    proc.WaitForExit();
+                }
+
+                if (proc.ExitCode == 0) {
+                    // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
+                    // save the new entry in the DB file
+                    existingModules.Add(
+                        String.Format("{0}|{1}|{2}|{3}|{4}",
+                            extensionModuleFilename,
+                            interpreter.Id,
+                            interpreter.Configuration.Version,
+                            new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
+                            dbFile
+                        )
+                    );
+
+                    fs.Seek(0, SeekOrigin.Begin);
+                    fs.SetLength(0);
+                    var sw = new StreamWriter(fs);
+                    sw.Write(String.Join(Environment.NewLine, existingModules));
+                    sw.Flush();
+                } else {
+                    throw new CannotAnalyzeExtensionException(receiver.Received.ToString());
+                }
+
+                return dbFile;
+            }
+
+            class OutputDataReceiver {
+                public readonly StringBuilder Received = new StringBuilder();
+
+                public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
+                    Received.Append(e.Data);
+                }
+            }
+
+            const int extensionModuleFilenameIndex = 0;
+            const int interpreterGuidIndex = 1;
+            const int interpreterVersionIndex = 2;
+            const int extensionTimeStamp = 3;
+            const int dbFileIndex = 4;
+
+            /// <summary>
+            /// Finds the appropriate entry in our database file and returns the name of the .idb file to be loaded or null
+            /// if we do not have a generated .idb file.
+            /// </summary>
+            private static string FindDbFile(IPythonInterpreterFactory interpreter, string extensionModuleFilename, List<string> existingModules, string dbFile, FileStream fs) {
+                var reader = new StreamReader(fs);
+
+                string line;
+                while ((line = reader.ReadLine()) != null) {
+                    // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
+                    string[] columns = line.Split('|');
+                    Guid interpGuid;
+                    Version interpVersion;
+
+                    if (columns.Length != 5) {
+                        // malformed data...
+                        continue;
+                    }
+
+                    if (File.Exists(columns[dbFileIndex])) {
+                        // db file still exists
+                        DateTime lastModified;
+                        if (!File.Exists(columns[extensionModuleFilenameIndex]) ||  // extension has been deleted
+                            !DateTime.TryParseExact(columns[extensionTimeStamp], "O", null, System.Globalization.DateTimeStyles.RoundtripKind, out lastModified) ||
+                            lastModified != new FileInfo(extensionModuleFilename).LastWriteTime) { // extension has been modified
+
+                            // cleanup the stale DB files as we go...
+                            try {
+                                File.Delete(columns[4]);
+                            } catch (IOException) {
+                            }
+                            continue;
+                        }
+                    } else {
+                        continue;
+                    }
+
+                    // check if this is the file we're looking for...
+                    if(!Guid.TryParse(columns[interpreterGuidIndex], out interpGuid) ||            // corrupt data
+                        interpGuid != interpreter.Id ||                         // not our interpreter
+                        !Version.TryParse(columns[interpreterVersionIndex], out interpVersion) ||     // corrupt data
+                        interpVersion != interpreter.Configuration.Version ||
+                        String.Compare(columns[extensionModuleFilenameIndex], extensionModuleFilename, StringComparison.OrdinalIgnoreCase) != 0) {   // not our interpreter
+
+                        // nope, but remember the line for when we re-write out the DB.
+                        existingModules.Add(line);
+                        continue;
+                    }
+
+                    // this is our file, but continue reading the other lines for when we write out the DB...
+                    dbFile = columns[dbFileIndex];
+                }
+                return dbFile;
+            }
+        }
+
+        /// <summary>
+        /// Determines if this PythonTypeDatabase can load modules or not.  Only PythonTypeDatabases
+        /// which have been cloned can load modules.  All type databases which are cloned off of a parent
+        /// support adding modules and will share the common information of the parent type database.
+        /// 
+        /// Once a type database has been cloned it cannot be cloned again.
+        /// </summary>
+        public bool CanLoadModules {
+            get {
+                return _modules != null;
             }
         }
 
@@ -61,29 +313,41 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<string> GetModuleNames() {
-            return _modules.Keys;
+            foreach (var key in _sharedState.Modules.Keys) {
+                yield return key;
+            }
+
+            if (_modules != null) {
+                foreach (var key in _modules.Keys) {
+                    yield return key;
+                }
+            }
         }
 
         public IPythonModule GetModule(string name) {
             IPythonModule res;
-            if (_modules.TryGetValue(name, out res)) {
+            if (_sharedState.Modules.TryGetValue(name, out res)) {
                 return res;
             }
+
+            if (_modules != null && _modules.TryGetValue(name, out res)) {
+                return res;
+            }
+
             return null;
         }
 
         public string DatabaseDirectory {
             get {
-                return _dbDir;
+                return _sharedState.DatabaseDirectory;
             }
         }
 
         public IBuiltinPythonModule BuiltinModule {
             get {
-                return _builtinModule;
+                return _sharedState.BuiltinModule;
             }
         }
-
 
         /// <summary>
         /// Creates a new completion database based upon the specified request.  Calls back the provided delegate when
@@ -264,261 +528,24 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        /// <summary>
-        /// Looks up a type and queues a fixup if the type is not yet available.  Receives a delegate
-        /// which assigns the value to the appropriate field.
-        /// </summary>
-        internal void LookupType(object type, Action<IPythonType> assign) {
-            var value = LookupType(type);
+        void ITypeDatabaseReader.LookupType(object type, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb) {
+            Debug.Assert(instanceDb == null);
 
-            if (value == null) {
-                AddFixup(
-                    () => {
-                        var delayedType = LookupType(type);
-                        if (delayedType == null) {
-                            delayedType = BuiltinModule.GetAnyMember("object") as IPythonType;
-                        }
-                        Debug.Assert(delayedType != null);
-                        assign(delayedType);
-                    }
-                );
-            } else {
-                assign(value);
-            }
+            _sharedState.LookupType(type, assign, this);
         }
 
-        private IPythonType LookupType(object type) {
-            if (type != null) {
-                object[] typeInfo = (object[])type;
-                if (typeInfo.Length == 2) {
-                    string modName = typeInfo[0] as string;
-                    string typeName = typeInfo[1] as string;
-
-                    if (modName != null) {
-                        if (typeName != null) {
-                            var module = GetModule(modName);
-                            if (module != null) {
-                                IBuiltinPythonModule builtin = module as IBuiltinPythonModule;
-                                if (builtin != null) {
-                                    return builtin.GetAnyMember(typeName) as IPythonType;
-                                }
-                                return module.GetMember(null, typeName) as IPythonType;
-                            }
-                        }
-                    }
-                }
-            } else {
-                return BuiltinModule.GetAnyMember("object") as IPythonType;
-            }
-            return null;
+        string ITypeDatabaseReader.GetBuiltinTypeName(BuiltinTypeId id) {
+            return _sharedState.GetBuiltinTypeName(id);
         }
 
-        internal string GetBuiltinTypeName(BuiltinTypeId id) {
-            string name;
-            switch (id) {
-                case BuiltinTypeId.Bool: name = "bool"; break;
-                case BuiltinTypeId.Complex: name = "complex"; break;
-                case BuiltinTypeId.Dict: name = "dict"; break;
-                case BuiltinTypeId.Float: name = "float"; break;
-                case BuiltinTypeId.Int: name = "int"; break;
-                case BuiltinTypeId.List: name = "list"; break;
-                case BuiltinTypeId.Long: name = "long"; break;
-                case BuiltinTypeId.Object: name = "object"; break;
-                case BuiltinTypeId.Set: name = "set"; break;
-                case BuiltinTypeId.Str:
-                    if (_is3x) {
-                        name = "str";
-                    } else {
-                        name = "unicode";
-                    }
-                    break;
-                case BuiltinTypeId.Bytes:
-                    if (_is3x) {
-                        name = "bytes";
-                    } else {
-                        name = "str";
-                    }
-                    break;
-                case BuiltinTypeId.Tuple: name = "tuple"; break;
-                case BuiltinTypeId.Type: name = "type"; break;
-
-                case BuiltinTypeId.BuiltinFunction: name = "builtin_function"; break;
-                case BuiltinTypeId.BuiltinMethodDescriptor: name = "builtin_method_descriptor"; break;
-                case BuiltinTypeId.DictKeys: name = "dict_keys"; break;
-                case BuiltinTypeId.DictValues: name = "dict_values"; break;
-                case BuiltinTypeId.Function: name = "function"; break;
-                case BuiltinTypeId.Generator: name = "generator"; break;
-                case BuiltinTypeId.NoneType: name = "NoneType"; break;
-                case BuiltinTypeId.Ellipsis: name = "ellipsis"; break;
-                case BuiltinTypeId.Module: name = "module_type"; break;
-
-                default: return null;
-            }
-            return name;
+        void ITypeDatabaseReader.RunFixups() {
+            _sharedState.RunFixups();
         }
 
-        /// <summary>
-        /// Adds a custom action which will attempt to resolve a type lookup which failed because the
-        /// type was not yet defined.  All fixups are run after the database is loaded so all types
-        /// should be available.
-        /// </summary>
-        private void AddFixup(Action action) {
-            _fixups.Add(action);
-        }
+        void ITypeDatabaseReader.ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container, PythonTypeDatabase instanceDb) {
+            Debug.Assert(instanceDb == null);
 
-        /// <summary>
-        /// Runs all of the custom fixup actions.
-        /// </summary>
-        internal void RunFixups() {
-            // we don't use foreach here because we can add fixups while
-            // running fixups, in which case we want to keep processing
-            // the additional fixups.
-            for (int i = 0; i < _fixups.Count; i++) {
-                _fixups[i]();
-            }
-
-            _fixups.Clear();
-        }
-        
-        internal void ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container) {
-            object memberKind;
-            object value;
-            Dictionary<string, object> valueDict;
-
-            if (memberValue.TryGetValue("value", out value) &&
-                (valueDict = (value as Dictionary<string, object>)) != null &&
-                memberValue.TryGetValue("kind", out memberKind) && memberKind is string) {
-                switch ((string)memberKind) {
-                    case "function":
-                        assign(memberName, new CPythonFunction(this, memberName, valueDict, container));
-                        break;
-                    case "func_ref":
-                        string funcName;
-                        if (valueDict.TryGetValue("func_name", out value) && (funcName = value as string) != null) {
-                            var names = funcName.Split('.');
-                            IPythonModule mod;
-                            if (this._modules.TryGetValue(names[0], out mod)) {
-                                if (names.Length == 2) {
-                                    var mem = mod.GetMember(null, names[1]);
-                                    if (mem == null) {
-                                        AddFixup(() => {
-                                            var tmp = mod.GetMember(null, names[1]);
-                                            if (tmp != null) {
-                                                assign(memberName, tmp);
-                                            }
-                                        });
-                                    } else {
-                                        assign(memberName, mem);
-                                    }
-                                } else {
-                                    LookupType(new object[] { names[0], names[1] }, (type) => {
-                                        var mem = type.GetMember(null, names[2]);
-                                        if (mem != null) {
-                                            assign(memberName, mem);
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                        break;
-                    case "method":
-                        assign(memberName, new CPythonMethodDescriptor(this, memberName, valueDict, container));
-                        break;
-                    case "property":
-                        assign(memberName, new CPythonProperty(this, valueDict, container));
-                        break;
-                    case "data":
-                        object typeInfo;
-                        if (valueDict.TryGetValue("type", out typeInfo)) {
-                            LookupType(typeInfo, (dataType) => {
-                                assign(memberName, GetConstant(dataType));
-                            });
-                        }
-                        break;
-                    case "type":
-                        assign(memberName, MakeType(memberName, valueDict, container));
-                        break;
-                    case "multiple":
-                        object members;
-                        object[] memsArray;
-                        if (valueDict.TryGetValue("members", out members) && (memsArray = members as object[]) != null) {
-                            IMember[] finalMembers = GetMultipleMembers(memberName, container, memsArray);
-                            assign(memberName, new CPythonMultipleMembers(finalMembers));
-                        }
-                        break;
-                    case "typeref":
-                        object typeName;
-                        if (valueDict.TryGetValue("type_name", out typeName)) {
-                            LookupType(typeName, (dataType) => {
-                                assign(memberName, dataType);
-                            });
-                        }
-                        break;
-                    case "moduleref":
-                        object modName;
-                        if (!valueDict.TryGetValue("module_name", out modName) || !(modName is string)) {
-                            throw new InvalidOperationException("Failed to find module name: " + modName);
-                        }
-
-                        assign(memberName, GetModule((string)modName));
-                        break;
-                }
-            }
-        }
-
-        private IMember[] GetMultipleMembers(string memberName, IMemberContainer container, object[] memsArray) {
-            IMember[] finalMembers = new IMember[memsArray.Length];
-            for (int i = 0; i < finalMembers.Length; i++) {
-                var curMember = memsArray[i] as Dictionary<string, object>;
-                var tmp = i;    // close over the current value of i, not the last one...
-                if (curMember != null) {
-                    ReadMember(memberName, curMember, (name, newMemberValue) => finalMembers[tmp] = newMemberValue, container);
-                }
-            }
-            return finalMembers;
-        }
-
-        private CPythonType MakeType(string typeName, Dictionary<string, object> valueDict, IMemberContainer container) {
-            BuiltinTypeId typeId = BuiltinTypeId.Unknown;
-            if (container == _builtinModule) {
-                typeId = GetBuiltinTypeId(typeName);
-            }
-
-            return new CPythonType(container, this, typeName, valueDict, typeId);
-        }
-
-        private BuiltinTypeId GetBuiltinTypeId(string typeName) {
-            switch (typeName) {
-                case "list": return BuiltinTypeId.List;
-                case "tuple": return BuiltinTypeId.Tuple;
-                case "float": return BuiltinTypeId.Float;
-                case "int": return BuiltinTypeId.Int;
-                case "complex": return BuiltinTypeId.Complex;
-                case "dict": return BuiltinTypeId.Dict;
-                case "bool": return BuiltinTypeId.Bool;
-                case "generator": return BuiltinTypeId.Generator;
-                case "function": return BuiltinTypeId.Function;
-                case "set": return BuiltinTypeId.Set;
-                case "type": return BuiltinTypeId.Type;
-                case "object": return BuiltinTypeId.Object;
-                case "long": return BuiltinTypeId.Long;
-                case "str":
-                    if (_is3x) {
-                        return BuiltinTypeId.Str;
-                    }
-                    return BuiltinTypeId.Bytes;
-                case "unicode":
-                    return BuiltinTypeId.Str;
-                case "bytes":
-                    return BuiltinTypeId.Bytes;
-                case "builtin_function": return BuiltinTypeId.BuiltinFunction;
-                case "builtin_method_descriptor": return BuiltinTypeId.BuiltinMethodDescriptor;
-                case "NoneType": return BuiltinTypeId.NoneType;
-                case "ellipsis": return BuiltinTypeId.Ellipsis;
-                case "dict_keys": return BuiltinTypeId.DictKeys;
-                case "dict_values": return BuiltinTypeId.DictValues;
-            }
-            return BuiltinTypeId.Unknown;
+            _sharedState.ReadMember(memberName, memberValue, assign, container, this);
         }
 
         internal CPythonConstant GetConstant(IPythonType type) {
@@ -577,5 +604,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        internal IPythonModule GetInstancedModule(string name) {
+            IPythonModule res;
+            if (_modules.TryGetValue(name, out res)) {
+                return res;
+            }
+            return null;
+        }
     }
+
 }

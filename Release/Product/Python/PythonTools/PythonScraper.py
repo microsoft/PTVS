@@ -97,8 +97,6 @@ type_name:
     
 """
 
-BLACKLIST = ['cseries.pyd', 'opencv_cv.pyd', 'opencv_backend.pyd', 'h5.pyd', 'h5a.pyd', 'h5d.pyd', 'h5e.pyd', 'h5f.pyd', 'h5fd.pyd', 'h5g.pyd', 'h5i.pyd', 'h5l.pyd', 'h5o.pyd', 'h5p.pyd', 'h5r.pyd', 'h5s.pyd', 'h5t.pyd', 'h5z.pyd', 'h5z.pyd', 'utils.pyd', '_conv.pyd', '_proxy.pyd', 'phonon.pyd', 'QtDeclarative.pyd', 'QtHelp.pyd', 'QtMultimedia.pyd', 'QtOpenGL.pyd', 'QtScriptTools.pyd', 'QtSql.pyd', 'QtSvg.pyd', 'QtTest.pyd', 'QtUiTools.pyd', 'QtWebKit.pyd']
-
 import types
 try:
     import cPickle
@@ -109,13 +107,6 @@ import sys
 import os
 import datetime
 from os.path import join
-
-if sys.platform == "cli":
-	# provides extra type info when generating against IronPython which can be used w/ CPython completions
-    import IronPythonScraper as BuiltinScraper 
-else:
-	import BuiltinScraper
-
 
 TYPE_NAMES = {}
 
@@ -132,6 +123,14 @@ def memoize_type_name(name):
         return TYPE_NAMES[name]
     TYPE_NAMES[name] = name
     return name
+
+
+if sys.platform == "cli":
+	# provides extra type info when generating against IronPython which can be used w/ CPython completions
+    import IronPythonScraper as BuiltinScraper 
+else:
+	import BuiltinScraper
+
 
 def generate_builtin_function(function, is_method = False):
     function_table = {}
@@ -253,7 +252,7 @@ def generate_data(data_value):
     
     return data_table
 
-def generate_module(module_name):
+def lookup_module(module_name):
     try:
         module = __import__(module_name)    
     except:
@@ -264,8 +263,11 @@ def generate_module(module_name):
                 module = getattr(module, name)
             except:
                 module = sys.modules[module_name]
+    
+    return module
 
-    if type(module) is not type(sys):
+def generate_module(module):
+    if not isinstance(module, type(sys)):
         return None
     
     all_members = {}
@@ -294,7 +296,7 @@ else:
     builtin_name = 'builtins'
 
 def generate_builtin_module():
-    res  = generate_module(builtin_name)
+    res  = generate_module(lookup_module(builtin_name))
 
     # add some hidden members we need to support resolving to
     members_table = res['members']
@@ -395,8 +397,8 @@ def merge_with_baseline(mod_name, baselinepath, final):
 
     return final
 
-def write_analysis(mod_name, outpath, analysis):
-    out_file = open(os.path.join(outpath, mod_name + '.idb'), 'wb')
+def write_analysis(out_filename, analysis):
+    out_file = open(out_filename + '.idb', 'wb')
     saved_analysis = cPickle.dumps(analysis, 2)
     if sys.platform == 'cli':
         # work around strings always being unicode on IronPython, we fail to
@@ -415,7 +417,7 @@ def write_analysis(mod_name, outpath, analysis):
     out_file.close()
 
     # write a list of members which we can load to check for member existance
-    out_file = open(os.path.join(outpath, mod_name + '.idb.$memlist'), 'wb')
+    out_file = open(out_filename + '.idb.$memlist', 'wb')
     for member in analysis['members']:
         if sys.version >= '3.':
             out_file.write((member + '\n').encode('utf8'))
@@ -423,6 +425,10 @@ def write_analysis(mod_name, outpath, analysis):
             out_file.write(member + '\n')
 
     out_file.close()
+
+def write_module(mod_name, outpath, analysis):
+    write_analysis(os.path.join(outpath, mod_name), analysis)
+
 
 
 if __name__ == "__main__":
@@ -440,17 +446,17 @@ if __name__ == "__main__":
 
     res = merge_with_baseline(builtin_name, baselinepath, res)
 
-    write_analysis(builtin_name, outpath, res)
+    write_module(builtin_name, outpath, res)
     
     for mod_name in sys.builtin_module_names:
         if mod_name == builtin_name or mod_name == '__main__': continue
         
-        res = generate_module(mod_name)
+        res = generate_module(lookup_module(mod_name))
         if res is not None:
             try:
                 res = merge_with_baseline(mod_name, baselinepath, res)
 
-                write_analysis(mod_name, outpath, res)
+                write_module(mod_name, outpath, res)
             except ValueError:
                 pass
 
@@ -462,22 +468,15 @@ if __name__ == "__main__":
     def package_inspector(site_packages, dirname, fnames):
         for filename in fnames:
             if filename.endswith('.pyd'):
-                if filename in BLACKLIST:
-                    # these are known to crash the process, 
-                    # better would be to determine these dynamically
-                    continue
-                base_path = dirname[len(site_packages)+1:]
-                package_name = '.'.join(base_path.split('\\'))
-                if package_name:
-                    mod_name =  package_name + '.' + filename[:-4]
-                else:
-                    mod_name = filename[:-4]
-                res = generate_module(mod_name)
-                if res is not None:
-                    try:
-                        write_analysis(mod_name, outpath, res)
-                    except ValueError:
-                        pass
+                # Spawn scraping out to a subprocess incase the module causes a crash.
+                os.spawnl(os.P_WAIT, 
+                          sys.executable,
+                          sys.executable,
+                          "\"" + os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py') + "\"",
+                          'scrape',
+                          "\"" + os.path.join(dirname, filename) + "\"",
+                          "\"" + outpath + "\""
+                )
 
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
     for root, dirs, files in os.walk(site_packages):

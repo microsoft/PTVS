@@ -348,7 +348,7 @@ namespace Microsoft.PythonTools.Project
 
             return node;
         }
-
+        
         protected virtual ReferenceNode CreateReferenceNode(VSCOMPONENTSELECTORDATA selectorData)
         {
             ReferenceNode node = null;
@@ -447,9 +447,8 @@ namespace Microsoft.PythonTools.Project
                 {
                     return null;
                 }
-#if FALSE
-                node = this.CreateComReferenceNode(selectorData);
-#endif
+
+                node = ProjectMgr.CreateReferenceNodeForFile(selectorData.bstrFile);
             }
 
             return node;
@@ -521,23 +520,7 @@ namespace Microsoft.PythonTools.Project
 
             return node;
         }
-#if FALSE
-        /// <summary>
-        /// Creates a com reference node from the project element.
-        /// </summary>
-        protected virtual ComReferenceNode CreateComReferenceNode(ProjectElement reference)
-        {
-            return new ComReferenceNode(this.ProjectMgr, reference);
-        }
-        /// <summary>
-        /// Creates a com reference node from a selector data.
-        /// </summary>
-        protected virtual ComReferenceNode CreateComReferenceNode(Microsoft.VisualStudio.Shell.Interop.VSCOMPONENTSELECTORDATA selectorData)
-        {
-            ComReferenceNode node = new ComReferenceNode(this.ProjectMgr, selectorData);
-            return node;
-        }
-#endif
+
         #endregion
 
     }

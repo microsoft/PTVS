@@ -21,7 +21,7 @@ class KinectError(WindowsError):
 
 from pykinect.nui.structs import (ImageDigitalZoom, ImageFrame, ImageResolution, 
                                   ImageType, ImageViewArea, JointId, 
-                                  JointTrackingState, PlanerImage, SkeletonData, 
+                                  JointTrackingState, PlanarImage, SkeletonData, 
                                   SkeletonFrame, SkeletonFrameQuality, 
                                   SkeletonQuality, SkeletonTrackingState, 
                                   TransformSmoothParameters, Vector, _Enumeration)

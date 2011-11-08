@@ -18,16 +18,17 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Windows;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Text.Adornments;
 #if !DEV11
 using Microsoft.Windows.Design.Host;
 #endif
-using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
@@ -51,6 +52,10 @@ namespace Microsoft.PythonTools.Project {
 
         public override CommonFileNode CreateNonCodeFileNode(MsBuildProjectElement item) {
             return new PythonNonCodeFileNode(this, item);
+        }
+
+        protected override ReferenceContainerNode CreateReferenceContainerNode() {
+            return new PythonReferenceContainerNode(this);
         }
 
         protected override void LinkFileAdded(string filename) {
@@ -346,6 +351,63 @@ namespace Microsoft.PythonTools.Project {
 
                     Reanalyze(child, newAnalyzer);
                 }
+            }
+        }
+
+        public override ReferenceNode CreateReferenceNodeForFile(string filename) {
+            var interp = this.GetInterpreter() as IPythonInterpreter2;
+            CancellationTokenSource cancelSource = new CancellationTokenSource();
+            var task = interp.AddReferenceAsync(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
+            
+            // try to complete synchronously w/o flashing the dialog...
+            if (!task.Wait(100)) {
+                var progress = new TaskProgressBar(task, cancelSource, "Waiting for analysis of extension module to complete...");
+                if (progress.ShowDialog() != true) {
+                    // user cancelled.
+                    return null;
+                }
+            }
+
+            var exception = task.Exception;
+            if (exception != null) {
+                string msg = GetErrorMessage(exception);
+
+                string fullMsg = String.Format("Cannot add reference to {0}:", filename);
+                if (msg != null) {
+                    fullMsg = fullMsg + "\r\n\r\n" + msg;
+                }
+                MessageBox.Show(fullMsg);
+            } else {
+                return new PythonExtensionReferenceNode(this, filename);
+            }
+
+            return null;
+        }
+
+        private static string GetErrorMessage(AggregateException exception) {
+            string msg = null;
+            foreach (var inner in exception.InnerExceptions) {
+                if (inner is AggregateException) {
+                    msg = GetErrorMessage((AggregateException)inner);
+                } else if (msg == null || inner is CannotAnalyzeExtensionException) {
+                    msg = inner.Message;
+                } 
+            }
+            return msg;
+        }
+
+        class OutputDataReceiver {
+            public readonly StringBuilder Received = new StringBuilder();
+
+            public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
+                Received.Append(e.Data);
+            }
+
+        }
+
+        protected override string AddReferenceExtensions {
+            get {
+                return "*.dll;*.pyd";
             }
         }
 

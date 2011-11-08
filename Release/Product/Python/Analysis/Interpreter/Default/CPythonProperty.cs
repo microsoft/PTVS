@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly CPythonModule _declaringModule;
         private readonly int _line, _column;
         
-        public CPythonProperty(PythonTypeDatabase typeDb, Dictionary<string, object> valueDict, IMemberContainer container) {
+        public CPythonProperty(ITypeDatabaseReader typeDb, Dictionary<string, object> valueDict, IMemberContainer container) {
             _declaringModule = CPythonModule.GetDeclaringModuleFromContainer(container);
 
             object value;
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             PythonTypeDatabase.GetLocation(valueDict, ref _line, ref _column);
 
-            typeDb.LookupType(type, (typeValue) => _type = typeValue);
+            typeDb.LookupType(type, (typeValue, fromInstanceDb) => _type = typeValue);
         }
 
         #region IBuiltinProperty Members

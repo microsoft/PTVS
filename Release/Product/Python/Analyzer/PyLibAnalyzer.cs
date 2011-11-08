@@ -154,8 +154,9 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var files in fileGroups) {
                 if (files.Count > 0) {
                     Log(writer, "GROUP START \"" + Path.GetDirectoryName(files[0]) + "\"");
-                    Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
-                    var projectState = new PythonAnalyzer(new CPythonInterpreter(new PythonTypeDatabase(_indir, _version.Is3x())), _version);
+                    Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));                    
+                    var fact = new CPythonInterpreterFactory();
+                    var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
                     var modules = new List<IPythonProjectEntry>();
                     for (int i = 0; i < files.Count; i++) {
                         string modName = PythonAnalyzer.PathToModuleName(files[i]);

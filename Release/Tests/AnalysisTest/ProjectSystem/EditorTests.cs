@@ -59,23 +59,11 @@ namespace AnalysisTest.ProjectSystem {
             Assert.AreEqual(spans.Count, 0);
         }
 
+       
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OutliningTest() {
-            var project = DebugProject.OpenProject(@"Python.VS.TestData\Outlining.sln");
-
-            var item = project.ProjectItems.Item("Program.py");
-            var window = item.Open();
-            window.Activate();
-
-
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var doc = app.GetDocument(item.Document.FullName);
-
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
-
-            VerifyTags(doc.TextView.TextBuffer, tags,
+            OutlineTest("Program.py", 
                 new ExpectedTag(8, 18, "\r\n    pass"),
                 new ExpectedTag(40, 50, "\r\n    pass"),
                 new ExpectedTag(72, 82, "\r\n    pass"),
@@ -83,6 +71,34 @@ namespace AnalysisTest.ProjectSystem {
                 new ExpectedTag(153, 185, "\r\n    pass\r\nelif True:\r\n    pass")
             );
         }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void OutlineNestedFuncDef() {
+            OutlineTest("NestedFuncDef.py", 
+                new ExpectedTag(8, 36, @"
+    def g():
+        pass"),
+                new ExpectedTag(22, 36, @"
+        pass"));
+        }
+
+        private void OutlineTest(string filename, params ExpectedTag[] expected) {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\Outlining.sln");
+
+            var item = project.ProjectItems.Item(filename);
+            var window = item.Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(item.Document.FullName);
+
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));                
+
+            VerifyTags(doc.TextView.TextBuffer, tags, expected);
+        }
+
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]

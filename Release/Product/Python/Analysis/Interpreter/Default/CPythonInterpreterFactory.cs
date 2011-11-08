@@ -30,6 +30,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonTypeDatabase _typeDb;
         private bool _generating;
 
+        public CPythonInterpreterFactory()
+            : this(default(Version), Guid.Empty, "Default interpreter", "", "", "PYTHONPATH", ProcessorArchitecture.X86) {
+        }
+
         public CPythonInterpreterFactory(Version version, Guid id, string description, string pythonPath, string pythonwPath, string pathEnvVar, ProcessorArchitecture arch) {
             if (version == default(Version)) {
                 version = new Version(2, 7);
@@ -62,7 +66,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     _typeDb = new PythonTypeDatabase(GetConfiguredDatabasePath(), Is3x);
                 }
 
-                var res = new CPythonInterpreter(_typeDb);
+                var res = new CPythonInterpreter(this, _typeDb);
 
                 if (!ConfigurableDatabaseExists()) {
                     _interpreters.Add(new WeakReference(res));

@@ -132,6 +132,11 @@ namespace Microsoft.PythonTools {
                             if (tagSpan != null) {
                                 yield return tagSpan;
                             }
+
+                            // recurse into the class definition and outline it's members
+                            foreach (var v in ProcessSuite(spans, ast, funcDef.Body as SuiteStatement, snapshot, false)) {
+                                yield return v;
+                            }
                         }
 
                         ClassDefinition classDef = statement as ClassDefinition;

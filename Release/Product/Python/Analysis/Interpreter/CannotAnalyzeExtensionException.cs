@@ -13,24 +13,16 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.PythonTools.Intellisense;
+using System.Runtime.Serialization;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonBuiltinModule : CPythonModule, IBuiltinPythonModule {
-        public CPythonBuiltinModule(SharedDatabaseState typeDb, string moduleName, string filename, bool isBuiltin)
-            : base(typeDb, moduleName, filename, isBuiltin) {
+namespace Microsoft.PythonTools.Interpreter {
+    public class CannotAnalyzeExtensionException : Exception {
+        public CannotAnalyzeExtensionException() : base() { }
+        public CannotAnalyzeExtensionException(string msg) : base(msg) { }
+        public CannotAnalyzeExtensionException(string message, Exception innerException)
+            : base(message, innerException) {
         }
 
-        public IMember GetAnyMember(string name) {
-            EnsureLoaded();
-
-            IMember res;
-            if (_members.TryGetValue(name, out res) || (_hiddenMembers != null && _hiddenMembers.TryGetValue(name, out res))) {
-                return res;
-            }
-            return null;
-        }
+        protected CannotAnalyzeExtensionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 }

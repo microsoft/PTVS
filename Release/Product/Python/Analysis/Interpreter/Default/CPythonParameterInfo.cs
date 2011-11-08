@@ -21,12 +21,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly object _typeObj;
         private IPythonType _type;
 
-        public CPythonParameterInfo(PythonTypeDatabase typeDb, Dictionary<string, object> parameterTable) {
+        public CPythonParameterInfo(ITypeDatabaseReader typeDb, Dictionary<string, object> parameterTable) {
             if (parameterTable != null) {
                 object typeObj;
                 
                 if (parameterTable.TryGetValue("type", out typeObj)) {
-                    typeDb.LookupType(typeObj, (value) => _type = value);
+                    typeDb.LookupType(typeObj, (value, fromInstanceDb) => _type = value);
                 }
                 _typeObj = typeObj;
                 

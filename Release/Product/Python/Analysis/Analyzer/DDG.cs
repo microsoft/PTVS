@@ -421,8 +421,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         public override bool Walk(ImportStatement node) {
-            var x = _unit.ProjectEntry.Tree;
-
             int len = Math.Min(node.Names.Count, node.AsNames.Count);
             for (int i = 0; i < len; i++) {
                 var curName = node.Names[i];

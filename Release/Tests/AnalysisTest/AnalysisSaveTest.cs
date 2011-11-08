@@ -154,7 +154,7 @@ abc = foo.x
             File.Copy(Path.Combine(PythonTypeDatabase.GetBaselineDatabasePath(), "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
 
             return new SaveLoadResult(
-                new PythonAnalyzer(new CPythonInterpreter(new PythonTypeDatabase(tmpFolder)), PythonLanguageVersion.V27),
+                new PythonAnalyzer(new CPythonInterpreter(new CPythonInterpreterFactory(), new PythonTypeDatabase(tmpFolder)), PythonLanguageVersion.V27),
                 tmpFolder
             );
         }

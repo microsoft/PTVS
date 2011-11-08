@@ -49,5 +49,6 @@ namespace Microsoft.PythonTools {
 
         public const string LaunchProvider = "LaunchProvider";
 
+        public const string PythonExtension = "PythonExtension";
     }
 }

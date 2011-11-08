@@ -76,11 +76,19 @@ namespace Microsoft.PythonTools.Intellisense {
             _project = project;
 
             _pyAnalyzer = new PythonAnalyzer(interpreter, factory.GetLanguageVersion());
+            _pyAnalyzer.ModulesChanged += OnModulesChanged;
             _projectFiles = new Dictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
             if (PythonToolsPackage.Instance != null) {
                 _errorList = (IVsErrorList)PythonToolsPackage.GetGlobalService(typeof(SVsErrorList));
                 _pyAnalyzer.CrossModulAnalysisLimit = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
+            }
+        }
+
+        private void OnModulesChanged(object sender, EventArgs e) {
+            // re-analyze all of the modules when we get a new set of modules loaded...
+            foreach (var nameAndEntry in _projectFiles) {
+                _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
             }
         }
 

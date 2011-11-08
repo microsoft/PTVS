@@ -26,6 +26,7 @@ namespace AnalysisTest {
     [DeploymentItem(@"..\\PythonTools\\PythonScraper.py")]
     [DeploymentItem(@"..\\PythonTools\\BuiltinScraper.py")]
     [DeploymentItem(@"..\\PythonTools\\IronPythonScraper.py")]
+    [DeploymentItem(@"..\\PythonTools\\ExtensionScraper.py")]
     [DeploymentItem("PyDebugAttach.dll")]
     public class CompletionDBTest {
         
@@ -40,7 +41,11 @@ namespace AnalysisTest {
 
                 // run the scraper
                 var startInfo = new ProcessStartInfo(path.Path,
-                    String.Format("PythonScraper.py \"{0}\" \"{1}\"", testDir, Path.Combine(Directory.GetCurrentDirectory(), "CompletionDB"))
+                    String.Format("\"{2}\" \"{0}\" \"{1}\"", 
+                        testDir, 
+                        Path.Combine(Directory.GetCurrentDirectory(), "CompletionDB"), 
+                        Path.Combine(Directory.GetCurrentDirectory(), "PythonScraper.py")
+                    )
                 );
 
                 var process = Process.Start(startInfo);

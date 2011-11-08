@@ -298,6 +298,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
+
+        internal void Enqueue() {
+            _unit.Enqueue();
+        }
     }
 
     /// <summary>

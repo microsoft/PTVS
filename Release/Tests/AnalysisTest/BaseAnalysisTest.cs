@@ -37,7 +37,7 @@ namespace AnalysisTest {
         public string[] _listMembers, _intMembers;
 
         public BaseAnalysisTest()
-            : this(new CPythonInterpreter(PythonTypeDatabase.CreateDefaultTypeDatabase())) {
+            : this(new CPythonInterpreter(new CPythonInterpreterFactory(), PythonTypeDatabase.CreateDefaultTypeDatabase())) {
         }
 
         public BaseAnalysisTest(IPythonInterpreter interpreter) {

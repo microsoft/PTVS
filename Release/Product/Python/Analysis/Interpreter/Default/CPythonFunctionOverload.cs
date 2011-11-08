@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private IPythonType _retType;
         private static readonly CPythonParameterInfo[] EmptyParameters = new CPythonParameterInfo[0];
 
-        public CPythonFunctionOverload(PythonTypeDatabase typeDb, Dictionary<string, object> argInfo, bool isMethod) {
+        public CPythonFunctionOverload(ITypeDatabaseReader typeDb, Dictionary<string, object> argInfo, bool isMethod) {
             if (argInfo != null) {
                 object args;
                 IList<object> argList;
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 object retTypeObj;
                 argInfo.TryGetValue("ret_type", out retTypeObj);
 
-                typeDb.LookupType(retTypeObj, (value) => _retType = value);
+                typeDb.LookupType(retTypeObj, (value, fromInstanceDb) => _retType = value);
             }
         }
         

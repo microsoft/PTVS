@@ -216,9 +216,11 @@
     <Compile Include="PythonTools\Project\AssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceFolderItem.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAPythonExtensionReference.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
     <Compile Include="PythonTools\Project\BuildDependency.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\PythonExtensionReferenceNode.cs" />
     <Compile Include="PythonTools\Project\IDEBuildLogger.cs" />
     <Compile Include="PythonTools\Project\Misc\ConnectionPointContainer.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAAssemblyReference.cs" />
@@ -230,9 +232,13 @@
     <Compile Include="PythonTools\Project\FileChangeManager.cs" />
     <Compile Include="PythonTools\Project\ProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
+    <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceNode.cs" />
     <Compile Include="PythonTools\Project\UIThread.cs" />
+    <Compile Include="PythonTools\Project\TaskProgressBar.xaml.cs">
+      <DependentUpon>TaskProgressBar.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
@@ -561,6 +567,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\PythonProject.ico" />
+    <Content Include="ExtensionScraper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="PythonProjectBig.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -962,6 +972,10 @@
     <Page Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Project\TaskProgressBar.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="PythonTools\Refactoring\ExtractMethodDialog.xaml">
       <SubType>Designer</SubType>

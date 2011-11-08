@@ -94,6 +94,9 @@
             <Component Id="cmp67E450890B9C4F48901224A227A5C4CC" Directory="INSTALLLOCATION" Guid="{B04EE073-FC98-4F4C-A02D-0219E6B202B6}">
                 <File Id="fil939E6C6B5F3D48A8A6C64E29C3688CC1" KeyPath="yes" Source="$(var.TargetDir)\PythonScraper.py" />
             </Component>
+            <Component Id="cmpB00A7775504B4EB2B150EB7A1FF09BE4" Directory="INSTALLLOCATION" Guid="{07E40788-8514-4153-9510-FD5607597305}">
+                <File Id="fil22E71EFD0875400CAC464BFA7581AA98" KeyPath="yes" Source="$(var.TargetDir)\ExtensionScraper.py" />
+            </Component>
             <Component Id="cmpFBCB9BCEEA4349AB8B9CD0296BB2010E" Directory="INSTALLLOCATION" Guid="{E7F1AB15-9725-4770-ACF8-FADD85AF45FE}">
                 <File Id="filF1F2F4BBDC7D4A29B9714547D345A2EA" KeyPath="yes" Source="$(var.TargetDir)\IronPythonScraper.py" />
             </Component>

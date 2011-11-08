@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonModule : IPythonModule2, IProjectEntry, ILocatedMember {
         private readonly string _modName;
         private readonly string _dbFile;
-        private readonly PythonTypeDatabase _typeDb;
+        private readonly ITypeDatabaseReader _typeDb;
         private readonly bool _isBuiltin;
         internal readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
         private Dictionary<object, object> _properties;
@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private bool _loaded;
         [ThreadStatic] private static int _loadDepth;
 
-        public CPythonModule(PythonTypeDatabase typeDb, string moduleName, string databaseFilename, bool isBuiltin) {
+        public CPythonModule(ITypeDatabaseReader typeDb, string moduleName, string databaseFilename, bool isBuiltin) {
             _modName = moduleName;
             _dbFile = databaseFilename;
             _typeDb = typeDb;
@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
-        internal PythonTypeDatabase TypeDb {
+        internal ITypeDatabaseReader TypeDb {
             get {
                 return _typeDb;
             }

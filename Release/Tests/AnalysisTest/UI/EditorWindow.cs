@@ -49,6 +49,12 @@ namespace AnalysisTest.UI {
             }
         }
 
+        public void MoveCaret(SnapshotPoint newPoint) {
+            ((UIElement)TextView).Dispatcher.Invoke((Action)(() => {
+                TextView.Caret.MoveTo(newPoint);
+            }));
+        }
+
         public void WaitForText(string text) {
             for (int i = 0; i < 10; i++) {
                 if (Text != text) {

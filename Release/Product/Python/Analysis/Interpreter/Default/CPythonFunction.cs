@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly bool _isBuiltin, _isStatic;
         private static readonly CPythonFunctionOverload[] EmptyOverloads = new CPythonFunctionOverload[0];
 
-        public CPythonFunction(PythonTypeDatabase typeDb, string name, Dictionary<string, object> functionTable, IMemberContainer declaringType, bool isMethod = false) {
+        public CPythonFunction(ITypeDatabaseReader typeDb, string name, Dictionary<string, object> functionTable, IMemberContainer declaringType, bool isMethod = false) {
             _name = name;
 
             object doc;
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _declaringType = declaringType as IPythonType;
         }
 
-        private CPythonFunctionOverload[] LoadOverloads(PythonTypeDatabase typeDb, object overloads, bool isMethod) {
+        private CPythonFunctionOverload[] LoadOverloads(ITypeDatabaseReader typeDb, object overloads, bool isMethod) {
             var overloadsArr = overloads as IList<object>;
             if (overloadsArr != null) {
                 CPythonFunctionOverload[] res = new CPythonFunctionOverload[overloadsArr.Count];
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return EmptyOverloads;
         }
 
-        private CPythonFunctionOverload LoadOverload(PythonTypeDatabase typeDb, object overloadObj, bool isMethod) {
+        private CPythonFunctionOverload LoadOverload(ITypeDatabaseReader typeDb, object overloadObj, bool isMethod) {
             return new CPythonFunctionOverload(typeDb, overloadObj as Dictionary<string, object>, isMethod);
         }
 
