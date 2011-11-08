@@ -59,9 +59,13 @@ namespace Microsoft.PythonTools.Analysis {
 
         public string Documentation {
             get {
+                var docs = new HashSet<string>();
                 var doc = new StringBuilder();
                 foreach (var ns in _vars) {
-                    doc.Append(ns.Documentation);
+                    if (docs.Add(ns.Documentation)) {
+                        doc.AppendLine(ns.Documentation);
+                        doc.AppendLine();
+                    }
                 }
                 return Utils.CleanDocumentation(doc.ToString());
             }
