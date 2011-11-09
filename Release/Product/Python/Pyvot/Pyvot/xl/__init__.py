@@ -1,16 +1,12 @@
- # ############################################################################
- #
- # Copyright (c) Microsoft Corporation. 
- #
- # This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- # copy of the license can be found in the License.html file at the root of this distribution. If 
- # you cannot locate the Apache License, Version 2.0, please send an email to 
- # vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- # by the terms of the Apache License, Version 2.0.
- #
- # You must not remove this notice, or any other, from this software.
- #
- # ###########################################################################/
+# Copyright (c) Microsoft Corporation. 
+#
+# This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+# copy of the license can be found in the LICENSE.txt file at the root of this distribution. If 
+# you cannot locate the Apache License, Version 2.0, please send an email to 
+# vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+# by the terms of the Apache License, Version 2.0.
+#
+# You must not remove this notice, or any other, from this software.
 
 """Pyvot - Pythonic interface for data exploration in Excel
 
@@ -42,7 +38,18 @@ The user-level API for the `xl` package follows. For interactive use, consider r
     - :func:`xl.selected_range() <xl.tools.selected_range>` / :func:`xl.selected_value() <xl.tools.selected_value>` 
       provide the active sheet's selection"""
 
-__version__ = "0.1.1"
+try:
+    __import__('win32com')
+except ImportError as e:
+    import ctypes
+    import sys
+    is_64bit = ctypes.sizeof(ctypes.c_voidp) > 4
+    arch_str = "64-bit" if is_64bit else "32-bit"
+    ver = "%d.%d" % (sys.version_info.major, sys.version_info.minor)
+    raise Exception("pywin32 does not appear to be installed. Visit http://sourceforge.net/projects/pywin32/ and download "
+                    "build 216 or above for Python %s (%s)" % (ver, arch_str), e)
+
+from .version import __version__
 
 # Conventions:
 # - prefix excel COM objectss with "xl". Apply to field and method names.

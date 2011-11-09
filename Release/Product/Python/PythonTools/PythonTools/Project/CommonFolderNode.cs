@@ -51,6 +51,15 @@ namespace Microsoft.PythonTools.Project {
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
+        public override void RenameFolder(string newName) {
+            _project.SuppressFileChangeNotifications();
+            try {
+                base.RenameFolder(newName);
+            } finally {
+                _project.RestoreFileChangeNotifications();
+            }
+        }
+
         /// <summary>
         /// Common Folder Node can only be deleted from file system.
         /// </summary>        

@@ -1,0 +1,6 @@
+exclude README.txt
+include LICENSE.txt
+recursive-include doc *
+recursive-include test *.xlsx *.py
+prune doc/html
+prune non_shipping

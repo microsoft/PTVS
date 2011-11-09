@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.Project {
         private static int _imageOffset;
         private CommonSearchPathContainerNode _searchPathContainer;
         private FileSystemWatcher _watcher;
+        private int _suppressFileWatcherCount;
         private string _projectDir;
         private bool _isRefreshing;
         private object _automationObject;
@@ -367,12 +368,13 @@ namespace Microsoft.PythonTools.Project {
                 _watcher.EnableRaisingEvents = false;
                 _watcher.Dispose();
             }
-            
+
             _watcher = new FileSystemWatcher(ProjectDir);
             _watcher.IncludeSubdirectories = true;
             _watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
             _watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
             _watcher.Renamed += new RenamedEventHandler(FileNameChanged);
+            _watcher.SynchronizingObject = new UIThreadSynchronizer();
             _watcher.EnableRaisingEvents = true;
         }
 
@@ -381,12 +383,21 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void FileNameChanged(object sender, RenamedEventArgs e) {
-            var child = FindChild(e.OldFullPath);
+            string oldPath = e.OldFullPath;
+            if (!File.Exists(oldPath) && Directory.Exists(oldPath)) {
+                oldPath = oldPath + "\\";
+            }
+            
+            var child = FindChild(oldPath);
             if (child != null) {
                 child.ReDraw(UIHierarchyElement.Icon);
             }
 
-            child = FindChild(e.FullPath);
+            string newPath = e.FullPath;
+            if (!File.Exists(newPath) && Directory.Exists(newPath)) {
+                newPath = newPath + "\\";
+            }
+            child = FindChild(newPath);
             if (child != null) {
                 child.ReDraw(UIHierarchyElement.Icon);
             }            
@@ -448,6 +459,9 @@ namespace Microsoft.PythonTools.Project {
                     libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
                 }
             }
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Dispose();
+            _watcher = null;
 
             return base.Close();
         }
@@ -1111,5 +1125,16 @@ namespace Microsoft.PythonTools.Project {
         }
 
         #endregion
+
+        internal void SuppressFileChangeNotifications() {
+            _watcher.EnableRaisingEvents = false;
+            _suppressFileWatcherCount++;
+        }
+
+        internal void RestoreFileChangeNotifications() {
+            if (--_suppressFileWatcherCount == 0) {
+                _watcher.EnableRaisingEvents = true;
+            }
+        }
     }
 }

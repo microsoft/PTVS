@@ -116,7 +116,7 @@ def depth_frame_ready(frame):
 
     with screen_lock:
         address = surface_to_array(screen)
-        ctypes.memmove(address, frame.image.contents.bits, len(address))
+        frame.image.copy_bits(address)
         del address
         if skeletons is not None and draw_skeleton:
             draw_skeletons(skeletons)
@@ -129,7 +129,7 @@ def video_frame_ready(frame):
 
     with screen_lock:
         address = surface_to_array(screen)
-        ctypes.memmove(address, frame.image.contents.bits, len(address))
+        frame.image.copy_bits(address)
         del address
         if skeletons is not None and draw_skeleton:
             draw_skeletons(skeletons)

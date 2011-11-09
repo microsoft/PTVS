@@ -12,7 +12,7 @@ import os
 import thread
 
 # basic initialization, Python specific infrastructure
-_nuidll_path = os.path.join(os.environ['MSRKINECTSDK'], 'MSRKinectNUI.dll')
+_nuidll_path = os.path.join(os.environ['WINDIR'], 'System32', 'MSRKinectNUI.dll')
 _NUIDLL = ctypes.CDLL(_nuidll_path)
 
 class KinectError(WindowsError):

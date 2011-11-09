@@ -239,6 +239,7 @@
     <Compile Include="PythonTools\Project\TaskProgressBar.xaml.cs">
       <DependentUpon>TaskProgressBar.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Project\UIThreadSynchronizer.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />

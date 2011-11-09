@@ -11,7 +11,7 @@ import os
 import ctypes
 from os import path
 
-_audiodll_path = os.path.join(os.environ['MSRKINECTSDK'], 'MSRKinectAudio.dll')
+_audiodll_path = os.path.join(os.environ['WINDIR'], 'System32', 'MSRKinectAudio.dll')
 
 _MAX_STR_LEN = 512
 _AUDIODLL = ctypes.WinDLL(_audiodll_path)

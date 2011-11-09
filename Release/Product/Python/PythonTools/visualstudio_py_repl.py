@@ -970,7 +970,7 @@ if sys.platform == 'cli':
                 else:
                     super(DotNetOutput, self).Write(value)
             else:
-                super(DotNetOutput, self).Write(value, *args)
+                self.Write(System.String.Format(value, *args))
 
         def WriteLine(self, value, *args):
             if not args:
@@ -980,9 +980,9 @@ if sys.platform == 'cli':
                     else:
                         self.backend.write_stderr(str(value).replace('\r\n', '\n') + '\n')
                 else:
-                    super(DotNetOutput, self).Write(value)
+                    super(DotNetOutput, self).WriteLine(value)
             else:
-                super(DotNetOutput, self).WriteLine(value, *args)
+                self.WriteLine(System.String.Format(value, *args))
 
         @property
         def Encoding(self):

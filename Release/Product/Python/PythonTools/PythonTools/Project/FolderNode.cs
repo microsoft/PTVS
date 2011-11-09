@@ -357,7 +357,7 @@ namespace Microsoft.PythonTools.Project
 		#region helper methods
 
         // Made public for IronStudio directory based projects:
-		public void RenameFolder(string newName)
+		public virtual void RenameFolder(string newName)
 		{
 			// Do the rename (note that we only do the physical rename if the leaf name changed)
 			string newPath = Path.Combine(this.Parent.VirtualNodeName, newName);

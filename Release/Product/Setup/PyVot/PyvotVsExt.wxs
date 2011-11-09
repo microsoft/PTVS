@@ -40,9 +40,21 @@
             <Component Id="cmpFCC6B733062744D785E3F8249CA859F3" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{8380F864-7D12-46CA-A2D0-0AFF691C492B}">
                 <File Id="fil6659C9D1DDDC446492BE375F88DEDB3F" KeyPath="yes" Source="$(var.PyvotDir)\setup.py" />
             </Component>
+            <Component Id="cmp231456696F2C417C9F30A5F2CB00EF0B" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{6F318B8C-50F2-474D-84F2-7967BDF73CDB}">
+              <File Id="fil58B16832E1C349DF89EDB72228D4EB91" KeyPath="yes" Source="$(var.PyvotDir)\MANIFEST.in" />
+            </Component>
+            <Component Id="cmp51A6316E7AEA4F1DB5EAFD755FDDA2E8" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{D4739860-B0FF-48AF-A80F-4B73E7ACAC6F}">
+              <File Id="filA360C0BBC923476E946719420DB9C07A" KeyPath="yes" Source="$(var.PyvotDir)\LICENSE.txt" />
+            </Component>
+            <Component Id="cmp36959AFA95C046568EE57833A0AD7DCC" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{5CFBEF11-CD81-4AE9-B7BA-438C8928F5B6}">
+              <File Id="fil5CFBEF11CD814AE9B7BA438C8928F5B6" KeyPath="yes" Source="$(var.PyvotDir)\setup.cfg" />
+            </Component>
 
             <Component Id="cmpCAB080C190514DF4BFC9CBCA35BB21DE" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{533F5815-8921-4E5B-900B-77D77CC4EDC5}">
                 <File Id="filF51D7932FAD340298E42645370159E0F" KeyPath="yes" Source="$(var.PyvotDir)\xl\__init__.py" />
+            </Component>
+            <Component Id="cmp8F577CC90706434BA80C23186824D751" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{4D614E3A-C98B-46B2-B46C-F907BB0D5BED}">
+              <File Id="filEB5E6092F10C4C2CB74B1C32E8D3E1C2" KeyPath="yes" Source="$(var.PyvotDir)\xl\version.py" />
             </Component>
             <Component Id="cmp3BEBD2BE1A094205921DA0275EF8821D" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{242E402D-27AB-4789-B015-D280153D2259}">
                 <File Id="filBEFF98B84C6D4646AEB075D1E054123B" KeyPath="yes" Source="$(var.PyvotDir)\xl\cache.py" />

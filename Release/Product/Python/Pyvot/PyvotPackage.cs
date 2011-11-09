@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Pyvot {
                 startInfo.WorkingDirectory = Path.Combine(GetPythonToolsInstallPath(), sampleName);
                 startInfo.FileName = Factory.Configuration.InterpreterPath;
 
-                startInfo.Arguments = String.Format("\"{0}\" install", Path.Combine(GetPythonToolsInstallPath(), sampleName, "setup.py"));
+                startInfo.Arguments = String.Format("\"{0}\" --no-downloads install", Path.Combine(GetPythonToolsInstallPath(), sampleName, "setup.py"));
                 startInfo.Verb = "runas";
 
                 try {

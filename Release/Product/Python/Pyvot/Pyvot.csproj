@@ -158,6 +158,18 @@
     <Content Include="Pyvot\setup.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+	<Content Include="Pyvot\setup.cfg">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+	<Content Include="Pyvot\MANIFEST.in">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+	<Content Include="Pyvot\LICENSE.txt">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+	<Content Include="Pyvot\xl\version.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Pyvot\xl\cache.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
