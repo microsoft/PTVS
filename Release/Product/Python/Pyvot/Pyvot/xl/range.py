@@ -303,7 +303,7 @@ class Range(object):
         current_index = None
         for start, stop in sorted(pairs):
             assert stop >= start
-            if start > current_index: current_index = start
+            if (current_index is None) or (start > current_index): current_index = start
             contained = stop - current_index + 1
             if contained > 0: # Though sorted, the previous pair may contain this one. ex: (11, 20), (12, 15)
                 if count + contained < count_limit:

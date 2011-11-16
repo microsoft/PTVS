@@ -17,8 +17,10 @@ using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonBuiltinMethodDescriptor : PythonObject<BuiltinMethodDescriptor>, IPythonMethodDescriptor {
-        public IronPythonBuiltinMethodDescriptor(IronPythonInterpreter interpreter, BuiltinMethodDescriptor desc)
+    class IronPythonBuiltinMethodDescriptor : PythonObject, IPythonMethodDescriptor {
+        private IPythonFunction _function;
+
+        public IronPythonBuiltinMethodDescriptor(IronPythonInterpreter interpreter, ObjectIdentityHandle desc)
             : base(interpreter, desc) {
         }
 
@@ -26,9 +28,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonFunction Function {
             get {
-                var func = PythonOps.GetBuiltinMethodDescriptorTemplate(Value);
+                if (_function == null) {
+                    var func = Interpreter.Remote.GetBuiltinMethodDescriptorTemplate(Value);
 
-                return (IPythonFunction)Interpreter.MakeObject(func);
+                    _function = (IPythonFunction)Interpreter.MakeObject(func);
+                }
+                return _function;
             }
         }
 

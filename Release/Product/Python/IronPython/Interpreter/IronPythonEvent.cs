@@ -17,8 +17,11 @@ using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonEvent : PythonObject<ReflectedEvent>, IPythonEvent {
-        public IronPythonEvent(IronPythonInterpreter interpreter, ReflectedEvent eventObj)
+    class IronPythonEvent : PythonObject, IPythonEvent {
+        private IPythonType _eventHandlerType;
+        private IList<IPythonType> _parameterTypes;
+
+        public IronPythonEvent(IronPythonInterpreter interpreter, ObjectIdentityHandle eventObj)
             : base(interpreter, eventObj) {
         }
 
@@ -29,20 +32,30 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IPythonType EventHandlerType {
-            get { return Interpreter.GetTypeFromType(Value.Info.EventHandlerType); }
+            get {
+                if (_eventHandlerType == null) {
+                    _eventHandlerType = Interpreter.GetTypeFromType(Interpreter.Remote.GetEventPythonType(Value));
+                }
+                return _eventHandlerType;
+            }
         }
 
         public IList<IPythonType> GetEventParameterTypes() {
-            var parameters = Value.Info.EventHandlerType.GetMethod("Invoke").GetParameters();
-            var res = new IPythonType[parameters.Length];
-            for (int i = 0; i < parameters.Length; i++) {
-                res[i] = Interpreter.GetTypeFromType(parameters[i].ParameterType);
+            if (_parameterTypes == null) {
+                var types = Interpreter.Remote.GetEventParameterPythonTypes(Value);
+
+                var paramTypes = new IPythonType[types.Length];
+                for (int i = 0; i < paramTypes.Length; i++) {
+                    paramTypes[i] = Interpreter.GetTypeFromType(types[i]);
+                }
+
+                _parameterTypes = paramTypes;
             }
-            return res;
+            return _parameterTypes;
         }
 
         public string Documentation {
-            get { return Value.__doc__;  }
+            get { return Interpreter.Remote.GetEventDocumentation(Value); }
         }
 
         #endregion

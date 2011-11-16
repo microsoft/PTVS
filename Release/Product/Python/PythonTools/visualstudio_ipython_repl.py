@@ -12,6 +12,7 @@ except ImportError:
     raise UnsupportedReplException('IPython mode requires IPython 0.11 or later: ' + str(exc_value))
 
 import thread
+import sys
 from base64 import decodestring
 
 # TODO: SystemExit exceptions come back to us as strings, can we automatically exit when ones raised somehow?
@@ -164,7 +165,9 @@ class IPythonBackend(ReplBackend):
         self.execution_count = 1        
 
     def get_extra_arguments(self):
-        return [u'--pylab=inline']
+        if sys.version <= '2.':
+            return [unicode('--pylab=inline')]
+        return ['--pylab=inline']
         
     def execute_file_as_main(self, filename):
         contents = open(filename, 'rb').read().replace("\r\n", "\n")

@@ -174,8 +174,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 ITextDocument doc;
                 if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out doc)) {
                     doc.EncodingChanged -= EncodingChanged;
-                }
+                }                
             }
+            _timer.Dispose();
         }
 
         public Dispatcher Dispatcher {

@@ -23,49 +23,72 @@ using Microsoft.Scripting.Generation;
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonParameterInfo : IParameterInfo {
         private IronPythonInterpreter _interpreter;
-        private ParameterInfo _parameterInfo;
+        private ObjectIdentityHandle _parameterInfo;
+        private string _name;
+        private ParameterKind _paramKind;
+        private IPythonType _paramType;
+        private string _defaultValue;
+        private static readonly string _noDefaultValue = "<No Default Value>";  // sentinel value to mark when an object doesn't have a default value
 
-        public IronPythonParameterInfo(IronPythonInterpreter _interpreter, ParameterInfo parameterInfo) {
-            this._interpreter = _interpreter;
-            this._parameterInfo = parameterInfo;
+        public IronPythonParameterInfo(IronPythonInterpreter interpreter, ObjectIdentityHandle parameterInfo) {
+            _interpreter = interpreter;
+            _parameterInfo = parameterInfo;
         }
 
         #region IParameterInfo Members
 
         public IPythonType ParameterType {
-            get { return _interpreter.GetTypeFromType(_parameterInfo.ParameterType); }
+            get {
+                if (_paramType == null) {
+                    _paramType = _interpreter.GetTypeFromType(_interpreter.Remote.GetParameterPythonType(_parameterInfo));
+                }
+                return _paramType;
+            }
         }
 
         // FIXME
         public string Documentation {
-            get { return "";}
+            get { return ""; }
         }
 
         public string Name {
-            get { return _parameterInfo.Name; }
+            get {
+                if (_name == null) {
+                    _name = _interpreter.Remote.GetParameterName(_parameterInfo);
+                }
+                return _name;
+            }
         }
 
         public bool IsParamArray {
-            get { return _parameterInfo.IsDefined(typeof(ParamArrayAttribute), false); }
+            get {
+                if (_paramKind == ParameterKind.Unknown) {
+                    _paramKind = _interpreter.Remote.GetParameterKind(_parameterInfo);
+                }
+                return _paramKind == ParameterKind.List;
+            }
         }
 
         public bool IsKeywordDict {
-            get { return _parameterInfo.IsDefined(typeof(ParamDictionaryAttribute), false); }
+            get {
+                if (_paramKind == ParameterKind.Unknown) {
+                    _paramKind = _interpreter.Remote.GetParameterKind(_parameterInfo);
+                }
+                return _paramKind == ParameterKind.Dictionary;
+            }
         }
 
         public string DefaultValue {
             get {
-                if (_parameterInfo.DefaultValue != DBNull.Value && !(_parameterInfo.DefaultValue is Missing)) {
-                    return PythonOps.Repr(DefaultContext.Default, _parameterInfo.DefaultValue);
-                } else if (_parameterInfo.IsOptional) {
-                    object missing = CompilerHelpers.GetMissingValue(_parameterInfo.ParameterType);
-                    if (missing != Missing.Value) {
-                        return PythonOps.Repr(DefaultContext.Default, missing);
-                    } else {
-                        return "";
-                    }
+                if (_defaultValue == null) {
+                    _defaultValue = _interpreter.Remote.GetParameterDefaultValue(_parameterInfo) ?? _noDefaultValue;
                 }
-                return null;
+
+                if (Object.ReferenceEquals(_defaultValue, _noDefaultValue)) {
+                    return null;
+                }
+
+                return _noDefaultValue;
             }
         }
 

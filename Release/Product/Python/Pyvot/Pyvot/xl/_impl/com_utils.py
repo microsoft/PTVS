@@ -16,6 +16,10 @@ import winerror
 from win32com.client import constants
 import datetime
 
+import sys
+# Needed to handle some breaking pywintypes changes
+_running_python3 = sys.version_info.major > 2
+
 def ensure_excel_dispatch_support():
     """Ensure that early-bound dispatch support is generated for Excel typelib, version 1.7
     
@@ -44,13 +48,31 @@ def unmarshal_from_excel_value(v):
         return v
 
 def _com_time_to_datetime(pytime):
-    assert pytime.msec == 0, "fractional seconds not yet handled"
-    return datetime.datetime(month=pytime.month, day=pytime.day, year=pytime.year, 
-                             hour=pytime.hour, minute=pytime.minute, second=pytime.second)
+    if _running_python3:
+        # The py3 version of pywintypes has its time type inherit from datetime.
+        # We copy to a new datetime so that the returned type is the same between 2/3
+        # pywintypes promises to only return instances set to UTC; see doc link in _datetime_to_com_time
+        assert pytime.tzinfo is not None
+        return datetime.datetime(month=pytime.month, day=pytime.day, year=pytime.year, 
+                                 hour=pytime.hour, minute=pytime.minute, second=pytime.second,
+                                 microsecond=pytime.microsecond, tzinfo=pytime.tzinfo)
+    else:
+        assert pytime.msec == 0, "fractional seconds not yet handled"
+        return datetime.datetime(month=pytime.month, day=pytime.day, year=pytime.year, 
+                                 hour=pytime.hour, minute=pytime.minute, second=pytime.second)
 
 def _datetime_to_com_time(dt):
-    assert dt.microsecond == 0, "fractional seconds not yet handled"
-    return pywintypes.Time( dt.timetuple() )
+    if _running_python3:
+        # The py3 version of pywintypes has its time type inherit from datetime.
+        # For some reason, though it accepts plain datetimes, they must have a timezone set.
+        # See http://docs.activestate.com/activepython/2.7/pywin32/html/win32/help/py3k.html
+        # We replace no timezone -> UTC to allow round-trips in the naive case
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=datetime.timezone.utc)
+        return dt
+    else:
+        assert dt.microsecond == 0, "fractional seconds not yet handled"
+        return pywintypes.Time( dt.timetuple() )
 
 
 def enum_running_monikers():

@@ -98,12 +98,13 @@ baz
                 var analysis = AnalyzeExpression(i, code, forCompletion: false);
 
                 var fact = new IronPythonInterpreterFactory();
-                var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
-                var buffer = new MockTextBuffer(code);
-                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
-                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-                var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0));
-                Assert.AreEqual(context, NormalCompletionAnalysis.EmptyCompletionContext);
+                using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                    var buffer = new MockTextBuffer(code);
+                    buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                    var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+                    var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0));
+                    Assert.AreEqual(context, NormalCompletionAnalysis.EmptyCompletionContext);
+                }
             }
         }
 
@@ -197,18 +198,19 @@ e): <no type information available>");
                 location = sourceCode.Length + location + 1;
             }
             var fact = new IronPythonInterpreterFactory();
-            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
-            var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
-            var textView = new MockTextView(buffer);
-            var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
-            while (!item.ProjectEntry.IsAnalyzed) {
-                Thread.Sleep(10);
-            }
-            
-            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                var buffer = new MockTextBuffer(sourceCode);
+                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                var textView = new MockTextView(buffer);
+                var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
+                while (!item.ProjectEntry.IsAnalyzed) {
+                    Thread.Sleep(10);
+                }
 
-            return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
+                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+
+                return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
+            }
         }
 
         private static void MemberCompletionTest(int location, string sourceCode, string expectedExpression) {
@@ -221,16 +223,17 @@ e): <no type information available>");
                 location = sourceCode.Length + location + 1;
             }
             var fact = new IronPythonInterpreterFactory();
-            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
-            var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);            
-            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-            
-            analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
-            analyzer.WaitForCompleteAnalysis(x => true);
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                var buffer = new MockTextBuffer(sourceCode);
+                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
-            var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
-            return context;
+                analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
+                analyzer.WaitForCompleteAnalysis(x => true);
+
+                var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
+                return context;
+            }
         }
 
         private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex) {
@@ -238,13 +241,14 @@ e): <no type information available>");
                 location = sourceCode.Length + location;
             }
             var fact = new IronPythonInterpreterFactory();
-            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
-            var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
-            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-            var context = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
-            Assert.AreEqual(context.Text, expectedExpression);
-            Assert.AreEqual(context.ParameterIndex, paramIndex);
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                var buffer = new MockTextBuffer(sourceCode);
+                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+                var context = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
+                Assert.AreEqual(context.Text, expectedExpression);
+                Assert.AreEqual(context.ParameterIndex, paramIndex);
+            }
         }
 
 #if FALSE

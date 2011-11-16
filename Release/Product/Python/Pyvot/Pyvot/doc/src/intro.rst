@@ -10,7 +10,7 @@ Pyvot connects familiar data-exploration and visualization tools in Excel with t
 Installation
 ------------
 
-Pyvot requires :program:`CPython` 2.6 or `2.7 <http://python.org/download/releases/2.7.2/>`_ with the `Python for Windows extensions (pywin32) <http://sourceforge.net/projects/pywin32/>`_ installed, and Office 2010. 
+Pyvot requires :program:`CPython` version `2.7 <http://python.org/download/releases/2.7.2/>`_ or `3.2 <http://www.python.org/download/releases/3.2.2/>`_ with the `Python for Windows extensions (pywin32) <http://sourceforge.net/projects/pywin32/>`_ installed, and Office 2010. 
 
 If a clean Python session can import the win32com module, Pyvot is ready to be installed::
 
@@ -20,8 +20,8 @@ If a clean Python session can import the win32com module, Pyvot is ready to be i
 	>>> import win32com
 	>>>
 
-Installing with :mod:`setuptools`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installing with :mod:`setuptools` / :mod:`distribute`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have `setuptools <http://pypi.python.org/pypi/setuptools>`_ installed, you can install a source or binary distribution of Pyvot with :program:`easy_install`. :program:`easy_install` is usually in :file:`<Python directory, ex. C:\\Python27>\\Scripts`
 
@@ -36,15 +36,9 @@ If you have `setuptools <http://pypi.python.org/pypi/setuptools>`_ installed, yo
 Installing manually
 ^^^^^^^^^^^^^^^^^^^
 
-If you do not have setuptools installed (the default, if you used the official Python installer), Pyvot can also be installed manually.
+If you do not have setuptools or distribute installed (the default, if you used the official Python installer), Pyvot can also be installed manually.
 
-To do so, extract the source .zip for Pyvot, and copy the ``xl`` directory (contains __init__.py) to a site-packages directory for the desired Python interpreter.
+To do so, extract the source .zip for Pyvot, and run the following in the extracted directory::
 
-* For system-wide installation:
-  
-  :file:`<Python directory, ex. C:\\Python27>\\lib\site-packages\\`
-	
-* For single-user installation, run the following command to determine your user site-packages directory::
-
-	python -c "import site ; print site.getusersitepackages()"
+	<Python directory, ex. C:\Python27>\python.exe setup.py install
 

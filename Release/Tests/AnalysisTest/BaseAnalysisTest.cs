@@ -71,9 +71,14 @@ namespace AnalysisTest {
             return GetSourceUnit(text, "foo");
         }
 
-        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27) {
+        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
             var sourceUnit = GetSourceUnit(text, "foo");
             var state = new PythonAnalyzer(Interpreter, version);
+            if (analysisDirs != null) {
+                foreach (var dir in analysisDirs) {
+                    state.AddAnalysisDirectory(dir);
+                }
+            }
             var entry = state.AddModule("foo", "foo", null);
             Prepare(entry, sourceUnit, version);
             entry.Analyze();

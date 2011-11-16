@@ -12,7 +12,7 @@ from xl.range import Range, Vector, RowVector, ColumnVector, Scalar
 from xl.sheet import Workbook, Worksheet
 from xl.cache import CacheManager, enable_caching, cache_result
 
-from operator import isSequenceType
+import collections
 
 def workbooks():
     """Returns a list of open workbooks"""
@@ -101,7 +101,7 @@ def _to_value(obj):
     r = _tryToRange(obj)
     if r is not None:
         return r.get()
-    if isSequenceType(obj):
+    if isinstance(obj, collections.Sequence):
         return obj
     raise ValueError("Expected range or value")
 
@@ -109,9 +109,9 @@ def _to_value(obj):
 def _tryToRange(obj):
     if obj is None:
         raise ValueError("range object can't be None")
-    if hasattr(obj, "xlRange"): # assume xl.Range instance
+    if isinstance(obj, Range):
         return obj
-    t = type(obj)    
+    t = type(obj)   
     # $$$ is it an xlRange?
     if t is str:
         return get(obj)

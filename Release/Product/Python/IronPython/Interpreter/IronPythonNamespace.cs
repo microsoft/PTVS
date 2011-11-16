@@ -17,18 +17,15 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.Scripting.Actions;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonNamespace : PythonObject<NamespaceTracker>, IPythonModule {
-        private readonly NamespaceTracker _ns;
-
-        public IronPythonNamespace(IronPythonInterpreter interpreter, NamespaceTracker ns)
+    class IronPythonNamespace : PythonObject, IPythonModule {
+        public IronPythonNamespace(IronPythonInterpreter interpreter, ObjectIdentityHandle ns)
             : base(interpreter, ns) {
-            _ns = ns;
         }
 
         #region IPythonModule Members
 
         public string Name {
-            get { return _ns.Name; }
+            get { return Interpreter.Remote.GetNamespaceName(Value); }
         }
 
         public void Imported(IModuleContext context) {
@@ -36,11 +33,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IEnumerable<string> GetChildrenModules() {
-            foreach (var name in _ns.GetMemberNames()) {
-                if (_ns[name] is NamespaceTracker) {
-                    yield return name;
-                }
-            }
+            return Interpreter.Remote.GetNamespaceChildren(Value);
         }
 
         #endregion

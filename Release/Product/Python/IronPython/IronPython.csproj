@@ -143,7 +143,9 @@
     <Compile Include="Interpreter\IronPythonProperty.cs" />
     <Compile Include="Interpreter\IronPythonType.cs" />
     <Compile Include="Interpreter\IronPythonInterpreter.cs" />
+    <Compile Include="Interpreter\ObjectIdentityHandle.cs" />
     <Compile Include="Interpreter\PythonObject.cs" />
+    <Compile Include="Interpreter\RemoteInterpreter.cs" />
     <Compile Include="IpyToolsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

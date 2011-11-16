@@ -19,7 +19,7 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonBuiltinModule : IronPythonModule, IBuiltinPythonModule {
 
-        public IronPythonBuiltinModule(IronPythonInterpreter interpreter, PythonModule mod, string name)
+        public IronPythonBuiltinModule(IronPythonInterpreter interpreter, ObjectIdentityHandle mod, string name)
             : base(interpreter, mod, name) {
         }
 

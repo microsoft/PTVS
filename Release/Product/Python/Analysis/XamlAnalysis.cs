@@ -49,7 +49,9 @@ namespace Microsoft.PythonTools.Analysis {
                 var settings = new XamlXmlReaderSettings();
                 settings.ProvideLineInfo = true;
 
-                using (XamlXmlReader reader = new XamlXmlReader(textReader, settings)) {
+                var context = new XamlSchemaContext(new XamlSchemaContextSettings() { FullyQualifyAssemblyNamesInClrNamespaces = true });
+
+                using (XamlXmlReader reader = new XamlXmlReader(textReader, context, settings)) {
                     Analyze(reader);
                 }
             } catch {

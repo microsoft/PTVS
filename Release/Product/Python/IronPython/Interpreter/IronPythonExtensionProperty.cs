@@ -17,15 +17,22 @@ using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonExtensionProperty : PythonObject<ReflectedExtensionProperty>, IBuiltinProperty {
-        public IronPythonExtensionProperty(IronPythonInterpreter interpreter, ReflectedExtensionProperty property)
+    class IronPythonExtensionProperty : PythonObject, IBuiltinProperty {
+        private IPythonType _propertyType;
+
+        public IronPythonExtensionProperty(IronPythonInterpreter interpreter, ObjectIdentityHandle property)
             : base(interpreter, property) {
         }
 
         #region IBuiltinProperty Members
 
         public IPythonType Type {
-            get { return Interpreter.GetTypeFromType(Value.PropertyType); }
+            get {
+                if (_propertyType == null) {
+                    _propertyType = Interpreter.GetTypeFromType(Interpreter.Remote.GetExtensionPropertyType(Value));
+                }
+                return _propertyType;
+            }
         }
 
         public bool IsStatic {
@@ -35,12 +42,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public string Documentation {
-            get { return Value.__doc__; }
+            get { return Interpreter.Remote.GetExtensionPropertyDocumentation(Value); }
         }
 
-        // FIXME
         public string Description {
-            get { throw new NotImplementedException(); }
+            get { return Documentation; }
         }
 
         public override PythonMemberType MemberType {

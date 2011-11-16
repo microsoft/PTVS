@@ -58,6 +58,10 @@ def make_workbook_map():
         for c in itertools.count(1): yield "workbook_%d" % c
     return dict(zip( _names(), xl.workbooks() ))
 
+def shell_input(*args, **kwargs):
+    # 2to3 only notices raw_input used as a function
+    return raw_input(*args, **kwargs)
+
 def run_shell():
     ensure_open_workbook()
     workbook_vars = make_workbook_map()
@@ -70,6 +74,6 @@ def run_shell():
               'xl' : xl}
     locals.update( workbook_vars )
 
-    code.interact(banner, raw_input, locals)
+    code.interact(banner, shell_input, locals)
 
 if __name__ == '__main__': run_shell()

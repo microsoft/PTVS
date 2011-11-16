@@ -12,26 +12,29 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonBuiltinFunction : PythonObject<BuiltinFunction>, IPythonFunction {
-        private IPythonFunctionOverload[] _targets;
+    class IronPythonBuiltinFunction : PythonObject, IPythonFunction {
+        private IronPythonBuiltinFunctionTarget[] _targets;
+        private IPythonType _declaringType;
+        private IPythonModule _declaringModule;
 
-        public IronPythonBuiltinFunction(IronPythonInterpreter interpreter, BuiltinFunction function)
+        public IronPythonBuiltinFunction(IronPythonInterpreter interpreter, ObjectIdentityHandle function)
             : base(interpreter, function) {
         }
 
         #region IBuiltinFunction Members
 
         public string Name {
-            get { return Value.__name__; }
+            get { return Interpreter.Remote.GetBuiltinFunctionName(Value); }
         }
 
         public string Documentation {
-            get { return Value.__doc__; }
+            get { return Interpreter.Remote.GetBuiltinFunctionDocumentation(Value); }
         }
 
         public IList<IPythonFunctionOverload> Overloads {
@@ -40,15 +43,19 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 // object.Equals(Object_#1, object other))
 
                 if (_targets == null) {
-                    var result = new List<IPythonFunctionOverload>();
-                    foreach (var ov in Value.Overloads.Functions) {
-                        BuiltinFunction overload = (ov as BuiltinFunction);
-                        if (overload.Overloads.Targets[0].DeclaringType.IsAssignableFrom(Value.DeclaringType) ||
-                            overload.Overloads.Targets[0].DeclaringType.FullName.StartsWith("IronPython.Runtime.Operations.")) {
-                            result.Add(new IronPythonBuiltinFunctionTarget(Interpreter, overload.Targets[0], ((IronPythonType)DeclaringType).Value.__clrtype__()));
-                        }
+                    var overloads = Interpreter.Remote.GetBuiltinFunctionOverloads(Value);
+                    var result = new IronPythonBuiltinFunctionTarget[overloads.Length];
+                    var decltype = (IronPythonType)DeclaringType;
+                    for(int i = 0; i<overloads.Length; i++){
+                        result[i] = new IronPythonBuiltinFunctionTarget(
+                            Interpreter, 
+                            overloads[i], 
+                            decltype
+                        );
+
                     }
-                    _targets = result.ToArray();
+
+                    _targets = result;
                 }
 
                 return _targets;
@@ -56,7 +63,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IPythonType DeclaringType {
-            get { return Interpreter.GetTypeFromType(Value.DeclaringType); }
+            get {
+                if (_declaringType == null) {
+                    _declaringType = Interpreter.GetTypeFromType(Interpreter.Remote.GetBuiltinFunctionDeclaringPythonType(Value));
+                }
+                return _declaringType;
+            }
         }
 
         public bool IsBuiltin {
@@ -73,7 +85,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonModule DeclaringModule {
             get {
-                return Interpreter.GetModule(this.Value.Get__module__(Interpreter.CodeContext));
+                if (_declaringModule == null) {
+                    _declaringModule = Interpreter.GetModule(Interpreter.Remote.GetBuiltinFunctionModule(Value));
+                }
+                return _declaringModule;
             }
         }
 

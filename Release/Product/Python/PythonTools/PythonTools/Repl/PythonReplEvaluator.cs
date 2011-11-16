@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Repl {
         private IPythonInterpreterFactory _interpreter;
         private ListenerThread _curListener;
         private IReplWindow _window;
-        private bool _multipleScopes = true, _enableAttach, _attached;
+        private bool _multipleScopes = true, _enableAttach, _attached, _ownsAnalyzer;
         private ProjectAnalyzer _replAnalyzer;
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
@@ -103,6 +103,7 @@ namespace Microsoft.PythonTools.Repl {
             get {
                 if (_replAnalyzer == null) {
                     _replAnalyzer = new ProjectAnalyzer(Interpreter, _factProvider.GetInterpreterFactories().ToArray(), _errorProviderFactory);
+                    _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
             }
@@ -192,6 +193,7 @@ namespace Microsoft.PythonTools.Repl {
                         analyzer.SwitchAnalyzers(_replAnalyzer);
                     }
                     _replAnalyzer = analyzer;
+                    _ownsAnalyzer = false;
                 }
             }
 
@@ -1179,6 +1181,10 @@ namespace Microsoft.PythonTools.Repl {
                 _curListener.Close();
             }
             _attached = false;
+            if (_ownsAnalyzer && _replAnalyzer != null) {
+                _replAnalyzer.Dispose();
+                _replAnalyzer = null;
+            }
         }
 
         #endregion

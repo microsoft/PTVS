@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// <summary>
     /// Performs analysis of multiple Python code files and enables interrogation of the resulting analysis.
     /// </summary>
-    public class PythonAnalyzer : IInterpreterState, IGroupableAnalysisProject {
+    public class PythonAnalyzer : IInterpreterState, IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
         private readonly ConcurrentDictionary<string, ModuleReference> _modules;
         private readonly Dictionary<string, ModuleInfo> _modulesByFilename;
@@ -526,8 +526,8 @@ namespace Microsoft.PythonTools.Analysis {
                             // add named objects to instance
                             foreach (var keyValue in analysis.NamedObjects) {
                                 var type = keyValue.Value;
-                                if (type.Type.UnderlyingType != null) {
-
+                                if (type.Type.UnderlyingType != null) {  
+                                           
                                     var ns = GetNamespaceFromObjects(((IDotNetPythonInterpreter)Interpreter).GetBuiltinType(type.Type.UnderlyingType));
                                     if (ns is BuiltinClassInfo) {
                                         ns = ((BuiltinClassInfo)ns).Instance;
@@ -717,10 +717,6 @@ namespace Microsoft.PythonTools.Analysis {
             return GetBuiltinType(type).Instance;
         }
 
-        internal IPythonType GetPythonType(BuiltinTypeId id) {
-            return _interpreter.GetBuiltinType(id);
-        }
-
         internal BuiltinClassInfo GetBuiltinType(IPythonType type) {
             return GetCached(type,
                 () => MakeBuiltinType(type)
@@ -855,7 +851,23 @@ namespace Microsoft.PythonTools.Analysis {
         #endregion
 
         public void AddAnalysisDirectory(string dir) {
-            _analysisDirs.Add(dir);
+            var dirAdded = AnalysisDirectoryAdded;
+            if (_analysisDirs.Add(dir) && dirAdded != null) {
+                dirAdded(this, EventArgs.Empty);
+            }
         }
+
+        public event EventHandler AnalysisDirectoryAdded;
+
+        #region IDisposable Members
+
+        void IDisposable.Dispose() {
+            IDisposable interpreter = _interpreter as IDisposable;
+            if (interpreter != null) {
+                interpreter.Dispose();
+            }
+        }
+
+        #endregion
     }
 }

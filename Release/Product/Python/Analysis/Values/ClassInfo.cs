@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IPythonType PythonType {
             get {
-                return this._analysisUnit.ProjectState.Interpreter.GetBuiltinType(BuiltinTypeId.Type);
+                return this._analysisUnit.ProjectState.Types.Type;
             }
         }
 

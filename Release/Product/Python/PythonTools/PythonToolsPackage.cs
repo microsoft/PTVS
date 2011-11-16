@@ -295,6 +295,9 @@ namespace Microsoft.PythonTools {
         }
 
         internal void RecreateAnalyzer() {
+            if (_analyzer != null) {
+                _analyzer.Dispose();
+            }
             _analyzer = CreateAnalyzer();
         }
 

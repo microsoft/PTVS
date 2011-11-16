@@ -15,10 +15,10 @@
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonGenericMember : PythonObject<object> {
+    class IronPythonGenericMember : PythonObject {
         private readonly PythonMemberType _type;
 
-        public IronPythonGenericMember(IronPythonInterpreter interpreter, object obj, PythonMemberType type)
+        public IronPythonGenericMember(IronPythonInterpreter interpreter, ObjectIdentityHandle obj, PythonMemberType type)
             : base(interpreter, obj) {
             _type = type;
         }

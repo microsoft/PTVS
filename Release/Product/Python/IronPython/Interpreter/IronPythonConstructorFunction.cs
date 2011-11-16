@@ -18,11 +18,13 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonConstructorFunction : IPythonFunction {
-        private readonly ConstructorInfo[] _infos;
+        private readonly ObjectIdentityHandle[] _infos;
         private readonly IronPythonInterpreter _interpreter;
         private readonly IPythonType _type;
+        private IPythonFunctionOverload[] _overloads;
+        private IPythonType _declaringType;
 
-        public IronPythonConstructorFunction(IronPythonInterpreter interpreter, ConstructorInfo[] infos, IPythonType type) {
+        public IronPythonConstructorFunction(IronPythonInterpreter interpreter, ObjectIdentityHandle[] infos, IPythonType type) {
             _interpreter = interpreter;
             _infos = infos;
             _type = type;
@@ -41,16 +43,24 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IList<IPythonFunctionOverload> Overloads {
             get {
-                IPythonFunctionOverload[] res = new IPythonFunctionOverload[_infos.Length];
-                for (int i = 0; i < _infos.Length; i++) {
-                    res[i] = new IronPythonBuiltinFunctionTarget(_interpreter, _infos[i], _infos[0].DeclaringType);
+                if (_overloads == null) {
+                    IPythonFunctionOverload[] res = new IPythonFunctionOverload[_infos.Length];
+                    for (int i = 0; i < _infos.Length; i++) {
+                        res[i] = new IronPythonBuiltinFunctionTarget(_interpreter, _infos[i], (IronPythonType)DeclaringType);
+                    }
+                    _overloads = res;
                 }
-                return res;
+                return _overloads;
             }
         }
 
         public IPythonType DeclaringType {
-            get { return _interpreter.GetTypeFromType(_infos[0].DeclaringType); }
+            get {
+                if (_declaringType == null) {
+                    _declaringType = _interpreter.GetTypeFromType(_interpreter.Remote.GetConstructorDeclaringPythonType(_infos[0]));
+                }
+                return _declaringType;
+            }
         }
 
         public bool IsBuiltin {

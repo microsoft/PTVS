@@ -12,16 +12,15 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonModule : PythonObject<PythonModule>, IPythonModule2 {
-        private readonly string _name;
+    class IronPythonModule : PythonObject, IPythonModule2 {
+        private string _name;
 
-        public IronPythonModule(IronPythonInterpreter interpreter, PythonModule mod, string name)
+        public IronPythonModule(IronPythonInterpreter interpreter, ObjectIdentityHandle mod, string name = null)
             : base(interpreter, mod) {
             _name = name;
         }
@@ -35,13 +34,18 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IPythonModule Members
 
         public string Name {
-            get { return _name; }
+            get {
+                if (_name == null) {
+                    _name = Interpreter.Remote.GetModuleName(Value);
+                }
+                return _name; 
+            }
         }
 
         public void Imported(IModuleContext context) {
-            if (_name == "clr") {
+            if (Name == "clr") {
                 ((IronPythonModuleContext)context).ShowClr = true;
-            } else if (_name == "wpf") {
+            } else if (Name == "wpf") {
                 AddWpfReferences();
             }
         }
@@ -51,24 +55,18 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void AddWpfReferences() {
-            Interpreter.AddAssembly(typeof(System.Windows.Markup.XamlReader).Assembly);     // PresentationFramework
-            Interpreter.AddAssembly(typeof(System.Windows.Clipboard).Assembly);             // PresentationCore
-            Interpreter.AddAssembly(typeof(System.Windows.DependencyProperty).Assembly);    // WindowsBase
-            Interpreter.AddAssembly(typeof(System.Xaml.XamlReader).Assembly);               // System.Xaml
+            if (Interpreter.Remote.LoadWpf()) {
+                Interpreter.RaiseModuleNamesChanged();
+            }
         }
-
 
         #endregion
 
         #region IPythonModule2 Members
 
         public string Documentation {
-            get { 
-                object docValue;
-                if (!Value.Get__dict__().TryGetValue("__doc__", out docValue) || !(docValue is string)) {
-                    return String.Empty;
-                }
-                return (string)docValue;
+            get {
+                return Interpreter.Remote.GetModuleDocumentation(Value);
             }
         }
 

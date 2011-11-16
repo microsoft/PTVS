@@ -25,14 +25,14 @@ def _gen_indices_from_pairs(pairs):
     m = None
     for start, end in pairs:
         for i in xrange(start, end + 1): 
-            if i > m: yield i ; m = i
+            if (m is None) or (i > m): yield i ; m = i
 
 def _count_indices_in_pairs(pairs):
     count = 0
     current_index = None
     for start, stop in pairs:
         assert stop >= start
-        if start > current_index: current_index = start
+        if (current_index is None) or (start > current_index): current_index = start
         contained = stop - current_index + 1
         # Though sorted, the previous pair may contain this one. ex: (11, 20), (12, 15)
         if contained > 0: count += contained

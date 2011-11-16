@@ -17,30 +17,37 @@ using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonProperty : PythonObject<ReflectedProperty>, IBuiltinProperty {
-        public IronPythonProperty(IronPythonInterpreter interpreter, ReflectedProperty property)
+    class IronPythonProperty : PythonObject, IBuiltinProperty {
+        private IPythonType _propertyType;
+        private bool? _isStatic;
+
+        public IronPythonProperty(IronPythonInterpreter interpreter, ObjectIdentityHandle property)
             : base(interpreter, property) {
         }
 
         #region IBuiltinProperty Members
 
         public IPythonType Type {
-            get { return Interpreter.GetTypeFromType(Value.PropertyType); }
+            get {
+                if (_propertyType == null) {
+                    _propertyType = (IPythonType)Interpreter.MakeObject(Interpreter.Remote.GetPropertyType(Value));
+                }
+                return _propertyType;
+            }
         }
 
         public bool IsStatic {
             get {
-                var method = Value.Info.GetGetMethod() ?? Value.Info.GetSetMethod();
-                if (method != null) {
-                    return method.IsStatic;
+                if (_isStatic == null) {
+                    _isStatic = Interpreter.Remote.IsPropertyStatic(Value);
                 }
-                return false;
+                return _isStatic.Value;
             }
         }
 
         public string Documentation {
             get {
-                return Value.__doc__;
+                return Interpreter.Remote.GetPropertyDocumentation(Value);
             }
         }
 

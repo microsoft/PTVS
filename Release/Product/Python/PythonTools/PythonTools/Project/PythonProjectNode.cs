@@ -260,6 +260,11 @@ namespace Microsoft.PythonTools.Project {
             if (_defaultInterpreter) {
                 PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;
             }
+
+            if (_analyzer != null) {
+                _analyzer.Dispose();
+                _analyzer = null;
+            }            
         }
 
         public IPythonInterpreter GetInterpreter() {

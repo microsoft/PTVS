@@ -17,6 +17,13 @@ using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
+    /// <summary>
+    /// Provides APIs that interpreters can consume.  An instance of this is provided via the IPythonInterpreter.Initialize
+    /// method.
+    /// 
+    /// This interface is deprecated in v1.1 and instead you should access additional functionality by casting the IInterpreterState
+    /// to a PythonAnalyzer object.
+    /// </summary>
     public interface IInterpreterState {
         /// <summary>
         /// Enables a Python interpreter to be notified of when a specific function has been called

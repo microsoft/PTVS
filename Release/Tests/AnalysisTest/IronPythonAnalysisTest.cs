@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -20,6 +21,7 @@ using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Runtime.Remoting;
 
 namespace AnalysisTest {
     /// <summary>
@@ -38,9 +40,9 @@ namespace AnalysisTest {
         }
 
         private static IPythonInterpreter CreateInterperter() {
-            var engine = Python.CreateEngine();
-            engine.Runtime.LoadAssembly(typeof(IronPythonAnalysisTest).Assembly);
-            return new IronPythonInterpreter(new IronPythonInterpreterFactory(), engine);
+            var res = new IronPythonInterpreter(new IronPythonInterpreterFactory());
+            res.Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
+            return res;
         }
 
         public override string UnicodeStringType {
@@ -59,7 +61,7 @@ from AnalysisTest.DotNetAnalysis import *
 y = GenericType()
 zzz = y.ReturnsGenericParam()
 ";
-            var entry = ProcessText(text);
+            var entry = ProcessText(text, analysisDirs: new[] { Environment.CurrentDirectory });
             AssertContainsExactly(entry.GetMembersFromNameByIndex("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
         }
 
@@ -235,8 +237,8 @@ args = x.GetCommandLineArgs()
 ";
             var entry = ProcessText(text);
 
-            var args = entry.GetTypesFromNameByIndex("args", text.IndexOf("args =")).ToSet();
-            AssertContainsExactly(args, ((IronPythonInterpreter)Interpreter).GetTypeFromType(typeof(string[])));
+            var args = entry.GetTypesFromNameByIndex("args", text.IndexOf("args =")).Select(x => x.Name).ToSet();
+            AssertContainsExactly(args, "Array[str]");
 
             Assert.IsTrue(entry.GetMembersFromNameByIndex("args", text.IndexOf("args =")).Any(s => s == "AsReadOnly"));
         }

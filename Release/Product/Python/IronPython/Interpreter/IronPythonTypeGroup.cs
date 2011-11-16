@@ -12,41 +12,34 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Numerics;
-using System.Reflection;
-using IronPython.Runtime;
-using IronPython.Runtime.Types;
+using System.Runtime.Remoting;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.Scripting.Actions;
-using System.Text;
-using System.Linq;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonTypeGroup : PythonObject<TypeGroup>, IAdvancedPythonType {
-        public IronPythonTypeGroup(IronPythonInterpreter interpreter, TypeGroup type)
+    class IronPythonTypeGroup : PythonObject, IAdvancedPythonType {
+        private bool? _genericTypeDefinition;
+        private PythonMemberType _memberType;
+        private IList<IPythonType> _eventInvokeArgs;
+        private IPythonFunction _ctors;
+
+        public IronPythonTypeGroup(IronPythonInterpreter interpreter, ObjectIdentityHandle type)
             : base(interpreter, type) {
         }
 
         #region IPythonType Members
 
         public IPythonFunction GetConstructors() {
-            foreach (var type in Value.Types) {
-                var clrType = ClrModule.GetClrType(type);
-                var newMethods = clrType.GetMember("__new__", BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Static);
-                if (!IsPythonType) {
-                    var initMethods = clrType.GetMember("__init__", BindingFlags.InvokeMethod | BindingFlags.Public | BindingFlags.Instance);
-                    if (newMethods.Length == 0 && initMethods.Length == 0) {
-                        return GetClrOverloads();
-                    }
-                } else if (clrType == typeof(object)) {
-                    return GetClrOverloads();
+            if (_ctors == null) {
+                if (!Interpreter.Remote.TypeGroupHasNewOrInitMethods(Value)) {
+                    _ctors = GetClrOverloads();
                 }
 
-                return GetMember(null, "__new__") as IPythonFunction;
+                if (_ctors == null) {
+                    _ctors = GetMember(null, "__new__") as IPythonFunction;
+                }
             }
-            return null;
+            return _ctors;
         }
 
         public bool IsPythonType {
@@ -59,40 +52,30 @@ namespace Microsoft.IronPythonTools.Interpreter {
         /// Returns the overloads for a normal .NET type
         /// </summary>
         private IPythonFunction GetClrOverloads() {
-            foreach (var clrType in Value.Types) {
-                // just a normal .NET type...
-                var ctors = clrType.GetConstructors(BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance);
-                if (ctors.Length > 0) {
-                    return new IronPythonConstructorFunction(Interpreter, ctors, Interpreter.GetTypeFromType(clrType));
-                }
+            ObjectIdentityHandle declType;
+            var ctors = Interpreter.Remote.GetTypeGroupConstructors(Value, out declType);
+            if (ctors != null) {
+                return new IronPythonConstructorFunction(Interpreter, ctors, Interpreter.GetTypeFromType(declType));
             }
             return null;            
         }
 
         public override PythonMemberType MemberType {
             get {
-                foreach (var type in Value.Types) {
-                    if (type.IsEnum) {
-                        return PythonMemberType.Enum;
-                    } else if (typeof(Delegate).IsAssignableFrom(type)) {
-                        return PythonMemberType.Delegate;
-                    }
+                if (_memberType == PythonMemberType.Unknown) {
+                    _memberType = Interpreter.Remote.GetTypeGroupMemberType(Value);
                 }
-                return PythonMemberType.Class;
+                return _memberType;
             }
         }
 
         public string Name {
-            get { return Value.Name; }
+            get { return Interpreter.Remote.GetTypeGroupName(Value); }
         }
 
         public string Documentation {
             get {
-                StringBuilder res = new StringBuilder();
-                foreach (var type in Value.Types) {
-                    res.Append(PythonType.Get__doc__(Interpreter.CodeContext, DynamicHelpers.GetPythonTypeFromType(type)) as string);
-                }
-                return res.ToString();
+                return Interpreter.Remote.GetTypeGroupDocumentation(Value);
             }
         }
 
@@ -104,11 +87,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonModule DeclaringModule {
             get {
-                return this.Interpreter.ImportModule(
-                    (string)PythonType.Get__module__(
-                        Interpreter.CodeContext, 
-                        DynamicHelpers.GetPythonTypeFromType(Value.Types.First())
-                    )
+                return Interpreter.ImportModule(
+                    Interpreter.Remote.GetTypeGroupDeclaringModule(Value)
                 );
             }
         }
@@ -130,52 +110,43 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IList<IPythonType> GetTypesPropagatedOnCall() {
-            foreach (var type in Value.Types) {
-                if (typeof(Delegate).IsAssignableFrom(type)) {
-                    return GetEventInvokeArgs(type);
+            if (_eventInvokeArgs == null) {
+                var types = Interpreter.Remote.GetTypeGroupEventInvokeArgs(Value);
+                if (types == null) {
+                    _eventInvokeArgs = IronPythonType.NoPropagateOnCall;
+                } else {
+                    var args = new IPythonType[types.Length];
+                    for (int i = 0; i < types.Length; i++) {
+                        args[i] = Interpreter.GetTypeFromType(types[i]);
+                    }
+                    _eventInvokeArgs = args;
                 }
             }
-            return null;
+
+            return _eventInvokeArgs == IronPythonType.NoPropagateOnCall ? null : _eventInvokeArgs;
         }
 
         #endregion
 
-        private IPythonType[] GetEventInvokeArgs(Type type) {
-            var p = type.GetMethod("Invoke").GetParameters();
-
-            var args = new IPythonType[p.Length];
-            for (int i = 0; i < p.Length; i++) {
-                args[i] = this.Interpreter.GetTypeFromType(p[i].ParameterType);
-            }
-            return args;
-        }
-
-
         #region IPythonType Members
-
 
         public bool IsGenericTypeDefinition {
             get {
-                foreach (var type in Value.Types) {
-                    if (type.IsGenericTypeDefinition) {
-                        return true;
-                    }
+                if (_genericTypeDefinition == null) {
+                    _genericTypeDefinition = Interpreter.Remote.TypeGroupIsGenericTypeDefinition(Value);
                 }
-                return false;
+                return _genericTypeDefinition.Value;
             }
         }
 
         public IPythonType MakeGenericType(IPythonType[] indexTypes) {
-            var genType = Value.GetTypeForArity(indexTypes.Length);
-            if (genType != null) {
-
-                Type[] types = new Type[indexTypes.Length];
-                for (int i = 0; i < types.Length; i++) {
-                    types[i] = ((IronPythonType)indexTypes[i]).Value.__clrtype__();
-                }
-                return Interpreter.GetTypeFromType(genType.Type.MakeGenericType(types));
+            // TODO: Caching?
+            ObjectIdentityHandle[] types = new ObjectIdentityHandle[indexTypes.Length];
+            for (int i = 0; i < types.Length; i++) {
+                types[i] = ((IronPythonType)indexTypes[i]).Value;
             }
-            return null;
+
+            return Interpreter.GetTypeFromType(Interpreter.Remote.TypeGroupMakeGenericType(Value, types));
         }
 
         #endregion

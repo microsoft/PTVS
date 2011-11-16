@@ -16,31 +16,41 @@ using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonField : PythonObject<ReflectedField>, IBuiltinProperty {
-        public IronPythonField(IronPythonInterpreter interpreter, ReflectedField field)
+    class IronPythonField : PythonObject, IBuiltinProperty {
+        private IPythonType _fieldType;
+        private bool? _isStatic;
+
+        public IronPythonField(IronPythonInterpreter interpreter, ObjectIdentityHandle field)
             : base(interpreter, field) {
         }
 
         #region IBuiltinProperty Members
 
         public IPythonType Type {
-            get { return Interpreter.GetTypeFromType(Value.FieldType); }
+            get {
+                if (_fieldType == null) {
+                    _fieldType = (IPythonType)Interpreter.MakeObject(Interpreter.Remote.GetFieldType(Value));
+                }
+                return _fieldType;
+            }
         }
 
         public bool IsStatic {
             get {
-                return Value.Info.IsStatic;
+                if (_isStatic == null) {
+                    _isStatic = Interpreter.Remote.IsFieldStatic(Value);
+                }
+
+                return _isStatic.Value;
             }
         }
 
-        // FIXME
         public string Documentation {
-            get { return ""; }
+            get { return Interpreter.Remote.GetFieldDocumentation(Value); }
         }
 
-        // FIXME
         public string Description {
-            get { return ""; }
+            get { return Documentation; }
         }
 
         public override PythonMemberType MemberType {

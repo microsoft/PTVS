@@ -12,22 +12,22 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.Scripting.Runtime;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonBuiltinFunctionTarget : IPythonFunctionOverload {
-        private static readonly string _codeCtxType = "IronPython.Runtime.CodeContext";
         private readonly IronPythonInterpreter _interpreter;
-        private readonly MethodBase _overload;
-        private readonly Type _declaringType;
+        private readonly ObjectIdentityHandle _overload;
+        private readonly IronPythonType _declaringType;
         private IParameterInfo[] _params;
+        private IPythonType _returnType;
 
-        public IronPythonBuiltinFunctionTarget(IronPythonInterpreter Interpreter, MethodBase overload, Type declType) {
-            _interpreter = Interpreter;
+        public IronPythonBuiltinFunctionTarget(IronPythonInterpreter interpreter, ObjectIdentityHandle overload, IronPythonType declType) {
+            Debug.Assert(interpreter.Remote.TypeIs<MethodBase>(overload));
+            _interpreter = interpreter;
             _overload = overload;
             _declaringType = declType;
         }
@@ -46,20 +46,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IParameterInfo[] GetParameters() {
             if (_params == null) {
-                var target = _overload;
+                bool isInstanceExtensionMethod = _interpreter.Remote.IsInstanceExtensionMethod(_overload, _declaringType.Value);
 
-                bool isInstanceExtensionMethod = false;
-                if (!target.DeclaringType.IsAssignableFrom(_declaringType)) {
-                    // extension method
-                    isInstanceExtensionMethod = !target.IsDefined(typeof(StaticExtensionMethodAttribute), false);
-                }
-
-                var parameters = _overload.GetParameters();
+                var parameters = _interpreter.Remote.GetParametersNoCodeContext(_overload);
                 var res = new List<IParameterInfo>(parameters.Length);
                 foreach (var param in parameters) {
-                    if (res.Count == 0 && param.ParameterType.FullName == _codeCtxType) {
-                        continue;
-                    } else if (res.Count == 0 && isInstanceExtensionMethod) {
+                    if (res.Count == 0 && isInstanceExtensionMethod) {
                         // skip instance parameter
                         isInstanceExtensionMethod = false;
                         continue;
@@ -75,12 +67,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonType ReturnType {
             get {
-                MethodInfo mi = _overload as MethodInfo;
-                if (mi != null) {
-                    return _interpreter.GetTypeFromType(mi.ReturnType);
+                if (_returnType == null) {
+                    _returnType = _interpreter.GetTypeFromType(_interpreter.Remote.GetBuiltinFunctionOverloadReturnType(_overload));
                 }
-
-                return _interpreter.GetTypeFromType(_overload.DeclaringType);
+                return _returnType;
             }
         }
 

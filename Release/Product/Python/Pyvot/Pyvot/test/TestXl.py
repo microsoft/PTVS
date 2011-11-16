@@ -25,6 +25,9 @@ import xl
 from xl._impl.collapsed_matrix import CollapsedMatrix
 import xl.cache as cache
 
+import sys
+running_python3 = sys.version_info.major > 2
+
 def ensure_excel_is_not_running():
     import pythoncom
     import pywintypes
@@ -540,16 +543,19 @@ class WorkbookWithJoinsTestCase(ExcelWorkbookTestCase):
 class PublicAPITestCase(unittest.TestCase):
     def test_import_all(self):
         """Tests that 'from xl import *' doesn't clobber map/apply/filter, but instead provides xlmap, etc."""
+        
+        globals = {} ; locals = {}
+        exec "from xl import *" in globals, locals
+        all_vars = globals ; all_vars.update(locals)
+
         import __builtin__
-        exec "from xl import *" # Wrapping in exec manages to bypass a warning about using import * anywhere but the module level
-        self.assertTrue(map is __builtin__.map)
-        self.assertTrue(apply is __builtin__.apply)
-        self.assertTrue(filter is __builtin__.filter)
+        self.assertTrue(all_vars['xlmap'] is xl.xlmap)
+        self.assertTrue(all_vars['xlapply'] is xl.xlapply)
+        self.assertTrue(all_vars['xlfilter'] is xl.xlfilter)
 
-        self.assertFalse(xlmap is __builtin__.map)
-        self.assertFalse(xlapply is __builtin__.apply)
-        self.assertFalse(xlfilter is __builtin__.filter)
-
+        self.assertFalse('map' in all_vars)
+        self.assertFalse('apply' in all_vars)
+        self.assertFalse('filter' in all_vars)
 
 class PerformanceTestCase(ExcelWorkbookTestCase):
     workbook_path = get_workbook_path("TestPerf.xlsx")

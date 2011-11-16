@@ -8,6 +8,10 @@
 #
 # You must not remove this notice, or any other, from this software.
 
+#
+# This file must work in both Python 2 and 3 as-is (without applying 2to3) 
+#
+
 import sys
 
 # If setuptools available, we normally want to install dependencies. The --no-downloads flag
@@ -20,14 +24,23 @@ if no_downloads_flag in sys.argv:
     allow_downloads = False
 
 try:
-    from setuptools import setup
+    from setuptools import setup, Distribution
     use_setuptools = True
 except ImportError:
-    from distutils.core import setup
+    from distutils.core import setup, Distribution
     use_setuptools = False
 
+running_python3 = sys.version_info.major > 2
+
 # Sets __version__ as a global without importing xl's __init__. We might not have pywin32 yet.
-execfile(r'.\xl\version.py')
+with open(r'.\xl\version.py') as version_file:
+    exec(version_file.read(), globals())
+
+class PyvotDistribution(Distribution):
+    def find_config_files(self):
+        configs = Distribution.find_config_files(self)
+        configs.append("setup.py3.cfg" if running_python3 else "setup.py2.cfg")
+        return configs
 
 long_description = \
     """Pyvot connects familiar data-exploration and visualization tools in Excel with the powerful data analysis 
@@ -52,8 +65,16 @@ setup_options = dict(
         'Programming Language :: Python :: 2',
         'Topic :: Office/Business :: Financial :: Spreadsheet',
         'License :: OSI Approved :: Apache Software License'],
-      packages=['xl', 'xl._impl']
+      packages=['xl', 'xl._impl'],
+      distclass=PyvotDistribution
     )
+
+if running_python3:
+    use_2to3 = True
+    from distutils.command.build_py import build_py_2to3
+    setup_options.update(dict(
+        cmdclass={'build_py': build_py_2to3}
+    ))
 
 if use_setuptools:
     setup_options.update(dict(
@@ -61,7 +82,7 @@ if use_setuptools:
     ))
 if use_setuptools and allow_downloads:
     setup_options.update(dict(
-        setup_requires=["sphinx"],
+        setup_requires=["Sphinx"],
     ))
 
 setup(**setup_options)

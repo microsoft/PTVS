@@ -2336,50 +2336,51 @@ def g(a, b, c):
         }
 
         private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
-            var fact = new CPythonInterpreterFactory(version ?? new Version(2, 6), new Guid(), "test interpreter", "C:\\foo\\python.exe", "C:\\foo\\pythonw.exe", "PYTHONPATH", ProcessorArchitecture.X86);            
-            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
-            MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
-            MockTextView[] views = new MockTextView[inputs.Length];
-            Dictionary<string, ITextBuffer> bufferTable = new Dictionary<string, ITextBuffer>();
-            List<MonitoredBufferResult> analysis = new List<MonitoredBufferResult>();
-            for (int i = 0; i < inputs.Length; i++) {
-                buffers[i] = new MockTextBuffer(inputs[i].Input, inputs[i].Filename);
-                views[i] = new MockTextView(buffers[i]);
-                buffers[i].AddProperty(typeof(ProjectAnalyzer), analyzer);
-                bufferTable[inputs[i].Filename] = buffers[i];
-                analysis.Add(analyzer.MonitorTextBuffer(views[i], buffers[i]));
-            }
-
-            bool missingAnalysis;
-            do {
-                missingAnalysis = false;
-                for (int i = 0; i < analysis.Count; i++) {
-                    if (!analysis[i].ProjectEntry.IsAnalyzed) {
-                        missingAnalysis = true;
-                    }
+            var fact = new CPythonInterpreterFactory(version ?? new Version(2, 6), new Guid(), "test interpreter", "C:\\foo\\python.exe", "C:\\foo\\pythonw.exe", "PYTHONPATH", ProcessorArchitecture.X86);
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
+                MockTextView[] views = new MockTextView[inputs.Length];
+                Dictionary<string, ITextBuffer> bufferTable = new Dictionary<string, ITextBuffer>();
+                List<MonitoredBufferResult> analysis = new List<MonitoredBufferResult>();
+                for (int i = 0; i < inputs.Length; i++) {
+                    buffers[i] = new MockTextBuffer(inputs[i].Input, inputs[i].Filename);
+                    views[i] = new MockTextView(buffers[i]);
+                    buffers[i].AddProperty(typeof(ProjectAnalyzer), analyzer);
+                    bufferTable[inputs[i].Filename] = buffers[i];
+                    analysis.Add(analyzer.MonitorTextBuffer(views[i], buffers[i]));
                 }
-                Thread.Sleep(10);
-            } while (missingAnalysis);
+
+                bool missingAnalysis;
+                do {
+                    missingAnalysis = false;
+                    for (int i = 0; i < analysis.Count; i++) {
+                        if (!analysis[i].ProjectEntry.IsAnalyzed) {
+                            missingAnalysis = true;
+                        }
+                    }
+                    Thread.Sleep(10);
+                } while (missingAnalysis);
 
 
-            var caretPos = inputs[0].Input.IndexOf(caretText);
-            views[0].Caret.MoveTo(new SnapshotPoint(buffers[0].CurrentSnapshot, caretPos));
+                var caretPos = inputs[0].Input.IndexOf(caretText);
+                views[0].Caret.MoveTo(new SnapshotPoint(buffers[0].CurrentSnapshot, caretPos));
 
-            var extractInput = new RenameVariableTestInput(newName, bufferTable, preview);
-            var previewChangesService = new TestPreviewChanges(expected);
+                var extractInput = new RenameVariableTestInput(newName, bufferTable, preview);
+                var previewChangesService = new TestPreviewChanges(expected);
 
-            new VariableRenamer(views[0]).RenameVariable(extractInput, previewChangesService);
-            if (error != null) {
-                Assert.AreEqual(error, extractInput.Failure);
-                return;
-            }
-            Assert.AreEqual(previewChangesService.Previewed, preview);
-            for (int i = 0; i < buffers.Length; i++) {
-                Assert.AreEqual(inputs[i].Output, buffers[i].CurrentSnapshot.GetText());
-            }
+                new VariableRenamer(views[0]).RenameVariable(extractInput, previewChangesService);
+                if (error != null) {
+                    Assert.AreEqual(error, extractInput.Failure);
+                    return;
+                }
+                Assert.AreEqual(previewChangesService.Previewed, preview);
+                for (int i = 0; i < buffers.Length; i++) {
+                    Assert.AreEqual(inputs[i].Output, buffers[i].CurrentSnapshot.GetText());
+                }
 
-            foreach (var monitored in analysis) {
-                analyzer.StopMonitoringTextBuffer(monitored.BufferParser);
+                foreach (var monitored in analysis) {
+                    analyzer.StopMonitoringTextBuffer(monitored.BufferParser);
+                }
             }
         }
 

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Performs centralized parsing and analysis of Python source code.
     /// </summary>
-    internal class ProjectAnalyzer {
+    internal class ProjectAnalyzer : IDisposable {
         private readonly ParseQueue _queue;
         private readonly AnalysisQueue _analysisQueue;
         private readonly IPythonInterpreterFactory _interpreterFactory;
@@ -1275,5 +1275,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
         }
+
+        #region IDisposable Members
+
+        public void Dispose() {
+            ((IDisposable)_pyAnalyzer).Dispose();
+            _analysisQueue.Stop();
+        }
+
+        #endregion
     }
 }

@@ -16,91 +16,91 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Numerics;
-using System.Reflection;
-using System.Text;
+using System.Linq;
+using System.Runtime.Remoting;
+using System.Threading;
 using IronPython.Hosting;
-using IronPython.Modules;
 using IronPython.Runtime;
-using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Hosting;
-using Microsoft.Scripting.Hosting.Providers;
-using Microsoft.Scripting.Runtime;
 using Microsoft.Win32;
+using System.Reflection;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter {
-        private readonly Dictionary<PythonType, IronPythonType> _types = new Dictionary<PythonType, IronPythonType>();
-        private readonly ScriptEngine _engine;
-        private readonly CodeContext _codeContext;
-        private readonly CodeContext _codeContextCls;
-
-        private readonly TopNamespaceTracker _namespaceTracker;
+    class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IDisposable {
+        private readonly RemoteInterpreter _remote;
+        private readonly Dictionary<ObjectIdentityHandle, IMember> _members = new Dictionary<ObjectIdentityHandle, IMember>();
         private readonly Dictionary<string, IronPythonModule> _modules = new Dictionary<string, IronPythonModule>();
         private readonly HashSet<string> _assemblyLoadSet = new HashSet<string>();
         private readonly IronPythonInterpreterFactory _factory;
+        private readonly AppDomain _remoteDomain;
+        private readonly DomainUnloader _unloader;
         private IInterpreterState _state;
         private PythonTypeDatabase _typeDb;
 
-        public IronPythonInterpreter(IronPythonInterpreterFactory factory)
-            : this(factory, Python.CreateEngine(new Dictionary<string, object> { { "NoAssemblyResolveHook", true } })) {
-        }
-
-        public IronPythonInterpreter(IronPythonInterpreterFactory factory, ScriptEngine engine) {
-            _engine = engine;
+        public IronPythonInterpreter(IronPythonInterpreterFactory factory) {
             _factory = factory;
 
-            var pythonContext = HostingHelpers.GetLanguageContext(_engine) as PythonContext;
-            _codeContextCls = new ModuleContext(new PythonDictionary(), pythonContext).GlobalContext;
-            _codeContextCls.ModuleContext.ShowCls = true;
-
-            _codeContext = new ModuleContext(
-                new PythonDictionary(),
-                HostingHelpers.GetLanguageContext(_engine) as PythonContext
-                ).GlobalContext;
-
-            _namespaceTracker = new TopNamespaceTracker(_codeContext.LanguageContext.DomainManager);
-
-            AddAssembly(LoadAssemblyInfo(typeof(string).Assembly));
-            AddAssembly(LoadAssemblyInfo(typeof(Debug).Assembly));
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
             
-            string installDir = GetPythonInstallDir();
-            if (installDir != null) {
-                var dllDir = Path.Combine(installDir, "DLLs");
-                if (Directory.Exists(dllDir)) {
-                    foreach (var assm in Directory.GetFiles(dllDir)) {
-                        try {
-                            var asm = Assembly.LoadFile(Path.Combine(dllDir, assm));
-                            _engine.Runtime.LoadAssembly(asm);
-
-                            AddAssembly(LoadAssemblyInfo(asm));
-                        } catch {
-                        }
-                    }
-                }
-            }
+            _remoteDomain = CreateDomain(out _remote);
+            _unloader = new DomainUnloader(_remoteDomain);
 
             LoadAssemblies();
 
             LoadModules();
-
             
             if (factory.ConfigurableDatabaseExists()) {
                 LoadNewTypeDb();
             }
         }
 
+        private AppDomain CreateDomain(out RemoteInterpreter remoteInterpreter) {
+            // We create a sacrificial domain for loading all of our assemblies into.  
+
+            AppDomainSetup setup = new AppDomainSetup();
+            setup.ShadowCopyFiles = "true";
+            // We are in ...\Extensions\Microsoft\IronPython Interpreter\1.1
+            // We need to be able to load assemblies from:
+            //      Python Tools for Visual Studio\1.1
+            //      IronPython Interpreter\1.1
+            //
+            // So setup the application base to be Extensions\Microsoft\, and then add the other 2 dirs to the private bin path.
+            setup.ApplicationBase = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
+            setup.PrivateBinPath = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.Location) + ";" + 
+                                   Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location);
+
+            setup.PrivateBinPathProbe = "";
+
+            var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
+            
+            remoteInterpreter = (RemoteInterpreter)domain.CreateInstanceAndUnwrap(
+                typeof(RemoteInterpreter).Assembly.FullName,
+                typeof(RemoteInterpreter).FullName);
+
+            return domain;
+        }
+
+        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+            if (new AssemblyName(args.Name).FullName == typeof(RemoteInterpreter).Assembly.FullName) {
+                return typeof(RemoteInterpreter).Assembly;
+            }
+            return null;
+        }
+
+        public RemoteInterpreter Remote {
+            get {
+                return _remote;
+            }
+        }
+
         private void LoadModules() {
-            var names = _engine.Operations.GetMember<PythonTuple>(_engine.GetSysModule(), "builtin_module_names");
-            foreach (string modName in names) {
+            foreach (string modName in Remote.GetBuiltinModuleNames()) {
                 try {
-                    PythonModule mod = Importer.Import(_codeContextCls, modName, PythonOps.EmptyTuple, 0) as PythonModule;
-                    Debug.Assert(mod != null);
+                    var mod = Remote.ImportBuiltinModule(modName);
 
                     if (modName == "__builtin__") {
                         _modules[modName] = new IronPythonBuiltinModule(this, mod, modName);
@@ -116,11 +116,36 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public void Initialize(IInterpreterState state) {
             state.SpecializeFunction("clr", "AddReference", (n) => AddReference(n, null));
-            state.SpecializeFunction("clr", "AddReferenceByPartialName", (n) => AddReference(n, ClrModule.LoadAssemblyByPartialName));
+            state.SpecializeFunction("clr", "AddReferenceByPartialName", (n) => AddReference(n, LoadAssemblyByPartialName));
             state.SpecializeFunction("clr", "AddReferenceByName", (n) => AddReference(n, null));
-            state.SpecializeFunction("clr", "AddReferenceToFile", (n) => AddReference(n, (s) => ClrModule.LoadAssemblyFromFile(_codeContext, s)));
-            state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n) => AddReference(n, (s) => ClrModule.LoadAssemblyFromFileWithPath(_codeContext, s)));
+            state.SpecializeFunction("clr", "AddReferenceToFile", (n) => AddReference(n, LoadAssemblyFromFile));
+            state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n) => AddReference(n, LoadAssemblyFromFileWithPath));
             _state = state;
+
+            PythonAnalyzer analyzer = _state as PythonAnalyzer;
+            if (analyzer != null) {
+                analyzer.AnalysisDirectoryAdded += AnalysisDirectoryAdded;
+            }
+        }
+
+        private void AnalysisDirectoryAdded(object sender, EventArgs e) {
+            _remote.SetAnalysisDirectories(_state.AnalysisDirectories.ToArray());
+        }
+
+        private ObjectHandle LoadAssemblyByName(string name) {
+            return Remote.LoadAssemblyByName(name);
+        }
+
+        private ObjectHandle LoadAssemblyByPartialName(string name) {
+            return Remote.LoadAssemblyByPartialName(name);
+        }
+
+        private ObjectHandle LoadAssemblyFromFile(string name) {
+            return Remote.LoadAssemblyFromFile(name);
+        }
+
+        private ObjectHandle LoadAssemblyFromFileWithPath(string name) {
+            return Remote.LoadAssemblyFromFileWithPath(name);
         }
 
         /// <summary>
@@ -133,7 +158,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private static void LoadAssemblies() {
             GC.KeepAlive(typeof(IronPython.Modules.ArrayModule)); // IronPython.Modules
         }
-       
 
         internal static string GetPythonInstallDir() {
             using (var ipy = Registry.LocalMachine.OpenSubKey("SOFTWARE\\IronPython")) {
@@ -172,23 +196,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return File.Exists(Path.Combine(dir, "ipy.exe"));
         }
 
-        public ScriptEngine Engine {
-            get {
-                return _engine;
-            }
-        }
-
-        private KeyValuePair<Assembly, TopNamespaceTracker> LoadAssemblyInfo(Assembly assm) {
-            var nsTracker = new TopNamespaceTracker(_codeContext.LanguageContext.DomainManager);
-            nsTracker.LoadAssembly(assm);
-            return new KeyValuePair<Assembly, TopNamespaceTracker>(assm, nsTracker);
-        }
-
-        private void AddAssembly(KeyValuePair<Assembly, TopNamespaceTracker> assembly) {
-            _namespaceTracker.LoadAssembly(assembly.Key);
-        }
-
-        private void AddReference(Microsoft.PythonTools.Parsing.Ast.CallExpression node, Func<string, Assembly> partialLoader) {
+        private void AddReference(Microsoft.PythonTools.Parsing.Ast.CallExpression node, Func<string, ObjectHandle> partialLoader) {
             // processes a call to clr.AddReference updating project state
             // so that it contains the newly loaded assembly.
             foreach (var arg in node.Args) {
@@ -211,15 +219,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     }
                 }
                 if (asmName != null && _assemblyLoadSet.Add(asmName)) {
-                    Assembly asm = null;
+                    ObjectHandle asm = null;
                     try {
                         if (partialLoader != null) {
                             asm = partialLoader(asmName);
                         } else {
                             try {
-                                asm = ClrModule.LoadAssemblyByName(_codeContext, asmName);
+                                asm = LoadAssemblyByName(asmName);
                             } catch {
-                                asm = ClrModule.LoadAssemblyByPartialName(asmName);
+                                asm = LoadAssemblyByPartialName(asmName);
                             }
                         }
 
@@ -230,11 +238,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                                     string path = Path.Combine(dir, asmName);
                                     if (File.Exists(path)) {
-                                        asm = Assembly.LoadFrom(path);
+                                        asm = Remote.LoadAssemblyFrom(path);
                                     } else if (File.Exists(path + ".dll")) {
-                                        asm = Assembly.LoadFrom(path + ".dll");
+                                        asm = Remote.LoadAssemblyFrom(path + ".dll");
                                     } else if (File.Exists(path + ".exe")) {
-                                        asm = Assembly.LoadFrom(path + ".exe");
+                                        asm = Remote.LoadAssemblyFrom(path + ".exe");
                                     }
                                 }
 
@@ -242,60 +250,30 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         }
                     } catch {
                     }
-                    AddAssembly(asm);                
+                    if (asm != null && Remote.AddAssembly(asm)) {
+                        RaiseModuleNamesChanged();
+                    }
                 }
             }
         }
 
-        public void AddAssembly(Assembly asm) {
-            if (asm != null && !_namespaceTracker.PackageAssemblies.Contains(asm)) {
-                if (_namespaceTracker.LoadAssembly(asm)) {
-                    var modNamesChanged = ModuleNamesChanged;
-                    if (modNamesChanged != null) {
-                        modNamesChanged(this, EventArgs.Empty);
-                    }
-                }
+        internal void RaiseModuleNamesChanged() {
+            var modNamesChanged = ModuleNamesChanged;
+            if (modNamesChanged != null) {
+                modNamesChanged(this, EventArgs.Empty);
             }
         }
 
         #region IPythonInterpreter Members
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
-            switch (id) {
-                case BuiltinTypeId.Bool: return GetTypeFromType(typeof(bool));
-                case BuiltinTypeId.BuiltinFunction: return GetTypeFromType(typeof(BuiltinFunction));
-                case BuiltinTypeId.BuiltinMethodDescriptor: return GetTypeFromType(typeof(BuiltinMethodDescriptor));
-                case BuiltinTypeId.Complex: return GetTypeFromType(typeof(Complex));
-                case BuiltinTypeId.Dict: return GetTypeFromType(typeof(PythonDictionary));
-                case BuiltinTypeId.Float: return GetTypeFromType(typeof(double));
-                case BuiltinTypeId.Function: return GetTypeFromType(typeof(PythonFunction));
-                case BuiltinTypeId.Generator: return GetTypeFromType(typeof(PythonGenerator));
-                case BuiltinTypeId.Int: return GetTypeFromType(typeof(int));
-                case BuiltinTypeId.List: return GetTypeFromType(typeof(List));
-                case BuiltinTypeId.Long: return GetTypeFromType(typeof(System.Numerics.BigInteger));
-                case BuiltinTypeId.Unknown: return GetTypeFromType(typeof(DynamicNull));
-                case BuiltinTypeId.Object: return GetTypeFromType(typeof(object));
-                case BuiltinTypeId.Set: return GetTypeFromType(typeof(SetCollection));
-                case BuiltinTypeId.Str: return GetTypeFromType(typeof(string));
-                case BuiltinTypeId.Bytes: return GetTypeFromType(typeof(string));   // keep strings and bytes the same on Ipy because '' and u'abc' create the same type
-                case BuiltinTypeId.Tuple: return GetTypeFromType(typeof(PythonTuple));
-                case BuiltinTypeId.Type: return GetTypeFromType(typeof(PythonType));
-                case BuiltinTypeId.NoneType: return GetTypeFromType(typeof(DynamicNull));
-                case BuiltinTypeId.Ellipsis: return GetTypeFromType(typeof(Ellipsis));
-                case BuiltinTypeId.DictKeys: return GetTypeFromType(typeof(DictionaryKeyEnumerator));
-                case BuiltinTypeId.DictValues: return GetTypeFromType(typeof(DictionaryValueEnumerator));
-                case BuiltinTypeId.Module: return GetTypeFromType(typeof(PythonModule));
-                default:
-                    return null;
-            }
+            return GetTypeFromType(Remote.GetBuiltinType(id));
         }
 
         public IList<string> GetModuleNames() {
             List<string> res = new List<string>(_modules.Keys);
 
-            foreach (var r in _namespaceTracker.Keys) {
-                res.Add(r);
-            }
+            res.AddRange(Remote.GetModuleNames());
 
             if (_typeDb != null) {
                 foreach (var name in _typeDb.GetModuleNames()) {
@@ -327,9 +305,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     return mod;
                 }
 
-                var ns = _namespaceTracker.TryGetPackage(name);
-                if (ns != null) {
-                    return MakeObject(ns) as IPythonModule;
+                var handle = Remote.LookupNamespace(name);
+                if (!handle.IsNull) {
+                    return MakeObject(handle) as IPythonModule;
                 }
             }
 
@@ -341,178 +319,53 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         #endregion
-
-        internal IPythonType GetTypeFromType(Type type) {
-            if (type.IsGenericParameter && type.GetInterfaces().Length != 0) {
-                // generic parameter with constraints, IronPython will throw an 
-                // exception while constructing the PythonType 
-                // http://ironpython.codeplex.com/workitem/30905
-                // Return the type for the interface
-                return GetTypeFromType(type.GetInterfaces()[0]);
-            }
-
-            var pyType = DynamicHelpers.GetPythonTypeFromType(type);
-            
-            return GetTypeFromType(pyType);
-        }
-
-        internal IPythonType GetTypeFromType(PythonType type) {
-            IronPythonType res;
-            lock (_types) {
-                if (!_types.TryGetValue(type, out res)) {
-                    _types[type] = res = new IronPythonType(this, type);
-                }
-            }
-            return res;
-        }
-
-        internal bool TryGetMember(object obj, string name, out object value) {
-            return TryGetMember(_codeContext, obj, name, out value);
-        }
-
-        internal bool TryGetMember(object obj, string name, bool showClr, out object value) {
-            var cctx = showClr ? _codeContextCls : _codeContext;
-            return TryGetMember(cctx, obj, name, out value);
-        }
-
-        private bool TryGetMember(CodeContext codeContext, object obj, string name, out object value) {
-            NamespaceTracker nt = obj as NamespaceTracker;
-            if (nt != null) {
-                value = NamespaceTrackerOps.GetCustomMember(codeContext, nt, name);
-                return value != OperationFailed.Value;
-            }
-
-            object result = Builtin.getattr(codeContext, obj, name, this);
-            if (result == this) {
-                value = null;
-                return false;
-            } else {
-                value = result;
-                return true;
-            }
-        }
-
-        public CodeContext CodeContext {
-            get {
-                return _codeContext;
-            }
-        }
-
-        internal static IList<string> DirHelper(object obj, bool showClr) {
-            NamespaceTracker nt = obj as NamespaceTracker;
-            if (nt != null) {
-                return nt.GetMemberNames();
-            }
-            
-            var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
-            int len = dir.__len__();
-            string[] result = new string[len];
-            for (int i = 0; i < len; i++) {
-                // TODO: validate
-                result[i] = dir[i] as string;
-            }
-            return result;
-        }
-
-        private readonly Dictionary<object, IMember> _members = new Dictionary<object, IMember>();
-
-        internal IMember MakeObject(object obj) {
-            if (obj == null) {
+        
+        internal IPythonType GetTypeFromType(ObjectIdentityHandle type) {
+            if (type.IsNull) {
                 return null;
             }
+
             lock (this) {
                 IMember res;
-                if (!_members.TryGetValue(obj, out res)) {
-                    PythonModule mod = obj as PythonModule;
-                    if (mod != null) {
-                        // FIXME: name
-                        object name;
-                        if (!mod.Get__dict__().TryGetValue("__name__", out name) || !(name is string)) {
-                            name = "";
-                        }
-                        _members[obj] = res = new IronPythonModule(this, mod, (string)name);
-                    }
+                if (!_members.TryGetValue(type, out res)) {
+                    _members[type] = res = new IronPythonType(this, type);
+                }
+                return res as IPythonType;
+            }
+        }
 
-                    PythonType type = obj as PythonType;
-                    if (type != null) {
-                        _members[obj] = res = GetTypeFromType(type);
-                    }
+        internal IMember MakeObject(ObjectIdentityHandle obj) {
+            if (obj.IsNull) {
+                return null;
+            }
 
-                    BuiltinFunction func = obj as BuiltinFunction;
-                    if (func != null) {
-                        _members[obj] = res = new IronPythonBuiltinFunction(this, func);
-                    }
-
-                    BuiltinMethodDescriptor methodDesc = obj as BuiltinMethodDescriptor;
-                    if (methodDesc != null) {
-                        _members[obj] = res = new IronPythonBuiltinMethodDescriptor(this, methodDesc);
-                    }
-
-                    ReflectedField field = obj as ReflectedField;
-                    if (field != null) {
-                        return new IronPythonField(this, field);
-                    }
-
-                    ReflectedProperty prop = obj as ReflectedProperty;
-                    if (prop != null) {
-                        _members[obj] = res = new IronPythonProperty(this, prop);
-                    }
-
-                    ReflectedExtensionProperty extProp = obj as ReflectedExtensionProperty;
-                    if (extProp != null) {
-                        _members[obj] = res = new IronPythonExtensionProperty(this, extProp);
-                    }
-
-                    NamespaceTracker ns = obj as NamespaceTracker;
-                    if (ns != null) {
-                        _members[obj] = res = new IronPythonNamespace(this, ns);
-                    }
-
-                    Method method = obj as Method;
-                    if (method != null) {
-                        _members[obj] = res = new IronPythonGenericMember(this, method, PythonMemberType.Method);
-                    }
-
-                    var classMethod = obj as ClassMethodDescriptor;
-                    if (classMethod != null) {
-                        _members[obj] = res = new IronPythonGenericMember(this, classMethod, PythonMemberType.Method);
-                    }
-
-                    var typeSlot = obj as PythonTypeTypeSlot;
-                    if (typeSlot != null) {
-                        _members[obj] = res = new IronPythonGenericMember(this, typeSlot, PythonMemberType.Property);
-                    }
-
-                    ReflectedEvent eventObj = obj as ReflectedEvent;
-                    if (eventObj != null) {
-                        return new IronPythonEvent(this, eventObj);
-                    }
-
-                    if (res == null) {
-                        var genericTypeSlot = obj as PythonTypeSlot;
-                        if (genericTypeSlot != null) {
-                            _members[obj] = res = new IronPythonGenericMember(this, genericTypeSlot, PythonMemberType.Property);
-                        }
-                    }
-
-                    TypeGroup tg = obj as TypeGroup;
-                    if (tg != null) {
-                        _members[obj] = res = new IronPythonTypeGroup(this, tg);
-                    }
-
-                    var attrType = (obj != null) ? obj.GetType() : typeof(DynamicNull);
-                    if (attrType == typeof(bool) || attrType == typeof(int) || attrType == typeof(Complex) ||
-                        attrType == typeof(string) || attrType == typeof(long) || attrType == typeof(double) ||
-                        attrType.IsEnum || obj == null) {
-                        _members[obj] = res = new IronPythonConstant(this, obj);
-                    }
-
-                    if (res == null) {
-                        Debug.Assert(!(obj is bool));
-                        _members[obj] = res = new PythonObject<object>(this, obj);
-                    }
+            lock (this) {
+                IMember res;
+                if (_members.TryGetValue(obj, out res)) {
+                    return res;
                 }
 
+                switch (_remote.GetObjectKind(obj)) {
+                    case ObjectKind.Module: res = new IronPythonModule(this, obj); break;
+                    case ObjectKind.Type: res = new IronPythonType(this, obj); break;
+                    case ObjectKind.BuiltinFunction: res = new IronPythonBuiltinFunction(this, obj); break;
+                    case ObjectKind.BuiltinMethodDesc: res = new IronPythonBuiltinMethodDescriptor(this, obj); break;
+                    case ObjectKind.ReflectedEvent: res = new IronPythonEvent(this, obj); break;
+                    case ObjectKind.ReflectedExtensionProperty: res = new IronPythonExtensionProperty(this, obj); break;
+                    case ObjectKind.ReflectedField: res = new IronPythonField(this, obj); break;
+                    case ObjectKind.ReflectedProperty: res = new IronPythonProperty(this, obj); break;
+                    case ObjectKind.TypeGroup: res = new IronPythonTypeGroup(this, obj); break;
+                    case ObjectKind.NamespaceTracker: res = new IronPythonNamespace(this, obj); break;
+                    case ObjectKind.Constant: res = new IronPythonConstant(this, obj); break;
+                    case ObjectKind.ClassMethod: res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
+                    case ObjectKind.Method: res = res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
+                    case ObjectKind.PythonTypeSlot: res = new IronPythonGenericMember(this, obj, PythonMemberType.Property); break;
+                    case ObjectKind.PythonTypeTypeSlot: res = new IronPythonGenericMember(this, obj, PythonMemberType.Property); break;
+                    case ObjectKind.Unknown: res = new PythonObject(this, obj); break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+                _members[obj] = res;
                 return res;
             }
         }
@@ -520,7 +373,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IDotNetPythonInterpreter Members
 
         public IPythonType GetBuiltinType(Type type) {
-            return GetTypeFromType(type);
+            return GetTypeFromType(Remote.GetBuiltinTypeFromType(type));
         }
 
         #endregion
@@ -528,5 +381,47 @@ namespace Microsoft.IronPythonTools.Interpreter {
         internal void LoadNewTypeDb() {
             _typeDb = new PythonTypeDatabase(_factory.GetConfiguredDatabasePath(), false, (IronPythonBuiltinModule)_modules["__builtin__"]);
         }
+
+        class DomainUnloader : IDisposable {
+            private readonly AppDomain _domain;
+
+            public DomainUnloader(AppDomain domain) {
+                _domain = domain;
+            }
+
+            ~DomainUnloader() {
+                // The CLR doesn't allow unloading an app domain from the finalizer thread,
+                // so instead we unload it from a thread pool thread when we're finalized.  
+                ThreadPool.QueueUserWorkItem(Unload);
+            }
+
+            private void Unload(object state) {
+                try {
+                    AppDomain.Unload(_domain);
+                } catch (CannotUnloadAppDomainException) {
+                    // if we fail to unload, keep trying by creating a new finalizable object...
+                    Debug.Fail("should have unloaded");
+                    new DomainUnloader(_domain);
+                }
+            }
+
+            #region IDisposable Members
+
+            public void Dispose() {
+                AppDomain.Unload(_domain);
+                GC.SuppressFinalize(this);
+            }
+
+            #endregion
+        }
+
+        #region IDisposable Members
+
+        public void Dispose() {
+            AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+            _unloader.Dispose();
+        }
+
+        #endregion
     }
 }

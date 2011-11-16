@@ -15,26 +15,37 @@
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonConstant : PythonObject<object>, IPythonConstant {
-        public IronPythonConstant(IronPythonInterpreter interpreter, object value)
+    class IronPythonConstant : PythonObject, IPythonConstant {
+        private IPythonType _type;
+        private PythonMemberType _memType;
+
+        public IronPythonConstant(IronPythonInterpreter interpreter, ObjectIdentityHandle value)
             : base(interpreter, value) {
         }
 
         public override PythonMemberType MemberType {
             get {
-                if (Value != null && Value.GetType().IsEnum) {
-                    return PythonMemberType.EnumInstance;
+                if (_memType == PythonMemberType.Unknown) {
+                    if (!Value.IsNull && Interpreter.Remote.IsEnumValue(Value)) {
+                        _memType = PythonMemberType.EnumInstance;
+                    } else {
+                        _memType = PythonMemberType.Constant;
+                    }
                 }
-                return PythonMemberType.Constant;
+                return _memType;
             }
         }
 
         public IPythonType Type {
             get {
-                if (Value == null) {
-                    return Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
+                if (_type == null) {
+                    if (Value.IsNull) {
+                        _type = Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
+                    } else {
+                        _type = Interpreter.GetTypeFromType(Interpreter.Remote.GetObjectPythonType(Value));
+                    }
                 }
-                return Interpreter.GetTypeFromType(Value.GetType()); 
+                return _type;
             }
         }
     }

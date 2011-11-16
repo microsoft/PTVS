@@ -1012,7 +1012,7 @@ def _run_repl():
     sys.modules['visualstudio_py_repl'] = sys.modules['__main__']
     global __name__
     __name__ = 'visualstudio_py_repl'
-    
+
     backend_type = BasicReplBackend
     backend_error = None
     if options.backend is not None and options.backend.lower() != 'standard':

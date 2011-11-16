@@ -1206,37 +1206,38 @@ def f(x):
 
         private void ExtractMethodTest(string input, string extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = new CPythonInterpreterFactory(version ?? new Version(2, 7), Guid.Empty, "", "", "", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
-            var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
-            var buffer = new MockTextBuffer(input);
-            var view = new MockTextView(buffer);
-            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
-            var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
-            
-            if (extract.IndexOf(" .. ") != -1) {
-                var pieces = extract.Split(new[] { " .. " }, 2, StringSplitOptions.None);
-                int start = input.IndexOf(pieces[0]);
-                int end = input.IndexOf(pieces[1]) + pieces[1].Length - 1;
-                view.Selection.Select(
-                    new SnapshotSpan(view.TextBuffer.CurrentSnapshot, Span.FromBounds(start, end)),
-                    false
-                );
-            } else {
-                int start = input.IndexOf(extract);
-                int length = extract.Length;
-                view.Selection.Select(
-                    new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(start, length)),
-                    false
-                );
-            }
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                var buffer = new MockTextBuffer(input);
+                var view = new MockTextView(buffer);
+                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 
-            new MethodExtractor(view).ExtractMethod(extractInput);
+                if (extract.IndexOf(" .. ") != -1) {
+                    var pieces = extract.Split(new[] { " .. " }, 2, StringSplitOptions.None);
+                    int start = input.IndexOf(pieces[0]);
+                    int end = input.IndexOf(pieces[1]) + pieces[1].Length - 1;
+                    view.Selection.Select(
+                        new SnapshotSpan(view.TextBuffer.CurrentSnapshot, Span.FromBounds(start, end)),
+                        false
+                    );
+                } else {
+                    int start = input.IndexOf(extract);
+                    int length = extract.Length;
+                    view.Selection.Select(
+                        new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(start, length)),
+                        false
+                    );
+                }
 
-            if (expected.IsError) {
-                Assert.AreEqual(expected.Text, extractInput.FailureReason);
-                Assert.AreEqual(input, view.TextBuffer.CurrentSnapshot.GetText());
-            } else {
-                Assert.AreEqual(null, extractInput.FailureReason);
-                Assert.AreEqual(expected.Text, view.TextBuffer.CurrentSnapshot.GetText());
+                new MethodExtractor(view).ExtractMethod(extractInput);
+
+                if (expected.IsError) {
+                    Assert.AreEqual(expected.Text, extractInput.FailureReason);
+                    Assert.AreEqual(input, view.TextBuffer.CurrentSnapshot.GetText());
+                } else {
+                    Assert.AreEqual(null, extractInput.FailureReason);
+                    Assert.AreEqual(expected.Text, view.TextBuffer.CurrentSnapshot.GetText());
+                }
             }
         }
 

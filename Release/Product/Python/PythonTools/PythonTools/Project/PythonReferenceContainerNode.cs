@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Project {
         protected override ReferenceNode CreateReferenceNode(string referenceType, ProjectElement element) {
             if (referenceType == ProjectFileConstants.Reference) {
                 string pyExtension = element.GetMetadata(PythonConstants.PythonExtension);
-                if (pyExtension != null) {
+                if (!String.IsNullOrWhiteSpace(pyExtension)) {
                     return new PythonExtensionReferenceNode((PythonProjectNode)ProjectMgr, element, pyExtension);
                 }
             }
