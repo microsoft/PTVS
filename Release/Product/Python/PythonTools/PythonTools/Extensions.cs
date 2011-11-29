@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -401,6 +403,10 @@ namespace Microsoft.PythonTools {
                 throw new InvalidOperationException();
             }
             return list[list.Count - 1];
-        }  
+        }
+
+        internal static Task StartNew(this TaskScheduler scheduler, Action func) {
+            return Task.Factory.StartNew(func, default(CancellationToken), TaskCreationOptions.None, scheduler);
+        }
     }
 }

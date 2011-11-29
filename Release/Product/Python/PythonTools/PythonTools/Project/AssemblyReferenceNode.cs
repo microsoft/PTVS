@@ -114,6 +114,11 @@ namespace Microsoft.PythonTools.Project
 
 			this.InitializeFileChangeEvents();
 
+			if (File.Exists(assemblyPath))
+			{
+				this.fileChangeListener.ObserveItem(this.assemblyPath);
+			}
+
 			string include = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
 
 			this.CreateFromAssemblyName(new System.Reflection.AssemblyName(include));
@@ -467,7 +472,7 @@ namespace Microsoft.PythonTools.Project
 		/// </summary>
 		/// <param name="sender">The FileChangeManager object.</param>
 		/// <param name="e">Event args containing the file name that was updated.</param>
-		private void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e)
+		protected virtual void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e)
 		{
 			Debug.Assert(e != null, "No event args specified for the FileChangedOnDisk event");
 

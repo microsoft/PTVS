@@ -643,7 +643,7 @@ namespace AnalysisTest.ProjectSystem {
             return OpenProjectAndBreak(@"Python.VS.TestData\DebuggerProject.sln", startItem, lineNo);
         }
 
-        internal static Project OpenProject(string projName, string startItem = null, int expectedProjects = 1) {
+        internal static Project OpenProject(string projName, string startItem = null, int expectedProjects = 1, string projectName = null) {
             string fullPath = Path.GetFullPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
             VsIdeTestHostContext.Dte.Solution.Open(fullPath);
@@ -665,8 +665,17 @@ namespace AnalysisTest.ProjectSystem {
             
             var iter = VsIdeTestHostContext.Dte.Solution.Projects.GetEnumerator();
             iter.MoveNext();
+            
             Project project = (Project)iter.Current;
-
+            if (projectName != null) {
+                while (project.Name != projectName) {
+                    if (!iter.MoveNext()) {
+                        Assert.Fail("Failed to find project named " + projectName);
+                    }
+                    project = (Project)iter.Current;
+                }
+            }
+            
             if (startItem != null) {
                 project.SetStartupFile(startItem);
             }

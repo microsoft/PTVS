@@ -13,14 +13,60 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Diagnostics;
+using System.IO;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Project {
     class PythonReferenceContainerNode : CommonReferenceContainerNode {
         public PythonReferenceContainerNode(PythonProjectNode root)
             : base(root) {
+        }
+
+        protected override ProjectReferenceNode CreateProjectReferenceNode(ProjectElement element) {
+            return new PythonProjectReferenceNode(this.ProjectMgr, element);
+        }
+
+        protected override ProjectReferenceNode CreateProjectReferenceNode(VSCOMPONENTSELECTORDATA selectorData) {
+            return new PythonProjectReferenceNode(this.ProjectMgr, selectorData.bstrTitle, selectorData.bstrFile, selectorData.bstrProjRef);
+        }
+
+        protected override AssemblyReferenceNode CreateAssemblyReferenceNode(ProjectElement element) {
+            AssemblyReferenceNode node = null;
+            try {
+                node = new PythonAssemblyReferenceNode((PythonProjectNode)this.ProjectMgr, element);
+            } catch (ArgumentNullException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (FileNotFoundException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (BadImageFormatException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (FileLoadException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (System.Security.SecurityException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            }
+
+            return node;
+        }
+
+        protected override AssemblyReferenceNode CreateAssemblyReferenceNode(string fileName) {
+            AssemblyReferenceNode node = null;
+            try {
+                node = new PythonAssemblyReferenceNode((PythonProjectNode)this.ProjectMgr, fileName);
+            } catch (ArgumentNullException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (FileNotFoundException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (BadImageFormatException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (FileLoadException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            } catch (System.Security.SecurityException e) {
+                Trace.WriteLine("Exception : " + e.Message);
+            }
+
+            return node;
         }
 
         protected override ReferenceNode CreateReferenceNode(string referenceType, ProjectElement element) {

@@ -352,6 +352,8 @@ namespace Microsoft.PythonTools.Analysis {
     public interface IProjectEntry2 {
         /// <summary>
         /// Called when the project entry is removed from the project.
+        /// 
+        /// Implementors of this method must ensure this method is thread safe.
         /// </summary>
         void RemovedFromProject();
     }
@@ -413,6 +415,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// UpdateTree has been called.
         /// 
         /// Calls to BeginParsingTree should be balanced with calls to UpdateTree.
+        /// 
+        /// This method is thread safe.
         /// </summary>
         void BeginParsingTree();
 

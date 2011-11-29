@@ -49,6 +49,12 @@
             <Component Id="cmp36959AFA95C046568EE57833A0AD7DCC" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{5CFBEF11-CD81-4AE9-B7BA-438C8928F5B6}">
               <File Id="fil5CFBEF11CD814AE9B7BA438C8928F5B6" KeyPath="yes" Source="$(var.PyvotDir)\setup.cfg" />
             </Component>
+            <Component Id="cmpFA23EAE0EEAF46469F419D3317A1F12B" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{66EE5E00-8A81-4129-841D-01C3799A0A43}">
+              <File Id="filC20992A623EC4024A64253B6BA40D5BC" KeyPath="yes" Source="$(var.PyvotDir)\setup.py2.cfg" />
+            </Component>
+            <Component Id="cmpB3C9C54314454E6E94E1D541FE2C30A4" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{F57EEFE9-B4A3-429E-9196-8F335D30B8A6}">
+              <File Id="fil38F4332FBD224D05B87741652EA80B5B" KeyPath="yes" Source="$(var.PyvotDir)\setup.py3.cfg" />
+            </Component>
 
             <Component Id="cmpCAB080C190514DF4BFC9CBCA35BB21DE" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{533F5815-8921-4E5B-900B-77D77CC4EDC5}">
                 <File Id="filF51D7932FAD340298E42645370159E0F" KeyPath="yes" Source="$(var.PyvotDir)\xl\__init__.py" />

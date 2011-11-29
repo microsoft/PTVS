@@ -169,6 +169,12 @@ namespace Microsoft.PythonTools.Project {
                             dirName = Path.GetDirectoryName(dirName);
                         } while (dirName != null && File.Exists(Path.Combine(dirName, "__init__.py")));
                     }
+                    
+                    // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
+                    oldDirs.ExceptWith(newDirs);
+                    foreach (var dir in oldDirs) {
+                        _analyzer.StopAnalyzingDirectory(dir);
+                    }
 
                     AnalyzeSearchPaths(newDirs);
                     break;

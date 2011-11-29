@@ -134,6 +134,8 @@ namespace Microsoft.PythonTools {
         private IContentType _contentType;
         internal static Guid _noInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
         private static List<EventHandler> _earlyHandlers = new List<EventHandler>();
+        private UpdateSolutionEventsListener _solutionEventListener;
+        internal static SolutionAdvisor _solutionAdvisor;
 
         /// <summary>
         /// Default constructor of the package.
@@ -150,7 +152,7 @@ namespace Microsoft.PythonTools {
             foreach (var earlyHandler in _earlyHandlers) {
                 InterpretersChanged += earlyHandler;
             }
-            _earlyHandlers.Clear();
+            _earlyHandlers.Clear();            
         }
 
         internal static void NavigateTo(string filename, Guid docViewGuidType, int line, int col) {
@@ -388,7 +390,7 @@ namespace Microsoft.PythonTools {
             ((IServiceContainer)this).AddService(langService.GetType(), langService, true);
 
             var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
-            //ErrorHandler.ThrowOnFailure(solution.AdviseSolutionEvents(new SolutionAdvisor(), out cookie));
+            _solutionAdvisor = new SolutionAdvisor(solution);
 
             IVsTextManager textMgr = (IVsTextManager)Instance.GetService(typeof(SVsTextManager));
             var langPrefs = new LANGPREFERENCES[1];
@@ -419,6 +421,20 @@ namespace Microsoft.PythonTools {
 
             InterpreterOptionsPage.InterpretersChanged += OnInterpretersChanged;
             InterpreterOptionsPage.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
+
+            _solutionEventListener = new UpdateSolutionEventsListener(PythonToolsPackage.Instance);
+        }
+
+        internal SolutionAdvisor SolutionAdvisor {
+            get {
+                return _solutionAdvisor;
+            }
+        }
+
+        internal UpdateSolutionEventsListener EventListener {
+            get {
+                return _solutionEventListener;
+            }
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {

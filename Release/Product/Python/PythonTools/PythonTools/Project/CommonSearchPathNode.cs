@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Project {
         
         public override void Remove(bool removeFromStorage) {
             //Save this search path, because the node can be deleted after call to base Remove()
-            string path = this.VirtualNodeName;
+            string path = this.Url;
             base.Remove(removeFromStorage);
             //Remove entry from project's Search Path
             _project.RemoveSearchPathEntry(path);

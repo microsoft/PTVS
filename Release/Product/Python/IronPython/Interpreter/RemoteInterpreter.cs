@@ -51,8 +51,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly TopNamespaceTracker _namespaceTracker;
         private readonly Dictionary<object, ObjectIdentityHandle> _members = new Dictionary<object, ObjectIdentityHandle>();
         private readonly List<object> _reverseMembers = new List<object>();
-        private const string _codeCtxType = "IronPython.Runtime.CodeContext";
+        private readonly HashSet<string> _assembliesLoadedFromDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Assembly> _referencedAssemblies = new Dictionary<string, Assembly>(StringComparer.OrdinalIgnoreCase);
         private string[] _analysisDirs;
+
+        private const string _codeCtxType = "IronPython.Runtime.CodeContext";
 
         public RemoteInterpreter()
             : this(Python.CreateEngine(new Dictionary<string, object> { { "NoAssemblyResolveHook", true } })) {
@@ -101,22 +104,34 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return typeof(RemoteInterpreter).Assembly;
             }
 
-            foreach (var dir in _analysisDirs) {
-                var name = new AssemblyName(args.Name).Name;
-                var asm = TryLoad(dir, name, "");
-                if (asm != null) {
-                    return asm;
-                }
-                asm = TryLoad(dir, name, ".dll");
-                if (asm != null) {
-                    return asm;
-                }
-                asm = TryLoad(dir, name, ".exe");
-                if (asm != null) {
-                    return asm;
+            if (_analysisDirs != null) {
+                foreach (var dir in _analysisDirs) {
+                    var name = new AssemblyName(args.Name).Name;
+                    var asm = TryLoad(dir, name, "");
+                    if (asm != null) {
+                        AddLoadedAssembly(dir);
+                        return asm;
+                    }
+                    asm = TryLoad(dir, name, ".dll");
+                    if (asm != null) {
+                        AddLoadedAssembly(dir);
+                        return asm;
+                    }
+                    asm = TryLoad(dir, name, ".exe");
+                    if (asm != null) {
+                        AddLoadedAssembly(dir);
+                        return asm;
+                    }
                 }
             }
+
             return null;
+        }
+
+        private void AddLoadedAssembly(string dir) {
+            lock (_assembliesLoadedFromDirectories) {
+                _assembliesLoadedFromDirectories.Add(dir);
+            }
         }
 
         private Assembly TryLoad(string dir, string name, string ext) {
@@ -211,10 +226,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal ObjectHandle LoadAssemblyByName(string name) {
-            var res = ClrModule.LoadAssemblyByName(CodeContext, name);
-            if (res != null) {
+            Assembly res;
+            if (_referencedAssemblies.TryGetValue(name, out res) || 
+                (res = ClrModule.LoadAssemblyByName(CodeContext, name)) != null) {
                 return new ObjectHandle(res);
             }
+           
             return null;
         }
 
@@ -1057,8 +1074,61 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return Unwrap(handle) is T;
         }
 
-        internal void SetAnalysisDirectories(string[] dirs) {
+        /// <summary>
+        /// Sets the current list of analysis directories.  Returns true if the list changed and the
+        /// module changed event should be raised to the analysis engine.
+        /// </summary>
+        internal SetAnalysisDirectoriesResult SetAnalysisDirectories(string[] dirs) {
+            SetAnalysisDirectoriesResult raiseModuleChangedEvent = SetAnalysisDirectoriesResult.NoChange;
+            if (_analysisDirs != null) {
+                // check if we're removing any dirs, and if we are, re-initialize our namespace object...
+                var newDirs = new HashSet<string>(dirs, StringComparer.OrdinalIgnoreCase);
+                foreach (var dir in _analysisDirs) {
+                    lock (_assembliesLoadedFromDirectories) {
+                        if (!newDirs.Contains(dir) && _assembliesLoadedFromDirectories.Contains(dir)) {
+                            // this directory was removed                        
+                            raiseModuleChangedEvent = SetAnalysisDirectoriesResult.Reload;
+                            _assembliesLoadedFromDirectories.Remove(dir);
+                        }
+                    }
+                }
+
+                // check if we're adding new dirs, in which case we need to raise the modules change event
+                // in IronPythonInterpreter so that we'll re-analyze all of the files and we can pick up
+                // the new assemblies.
+                if (raiseModuleChangedEvent == SetAnalysisDirectoriesResult.NoChange) {
+                    HashSet<string> existing = new HashSet<string>(_analysisDirs);
+                    foreach (var dir in dirs) {
+                        if (!existing.Contains(dir)) {
+                            raiseModuleChangedEvent = SetAnalysisDirectoriesResult.ModulesChanged;
+                            break;
+                        }
+                    }
+                }
+            } else if (dirs.Length > 0) {
+                raiseModuleChangedEvent = SetAnalysisDirectoriesResult.ModulesChanged;
+            }
+
             _analysisDirs = dirs;
+            return raiseModuleChangedEvent;
+        }
+
+        internal bool LoadAssemblyReference(string assembly) {
+            try {
+                var asm = Assembly.Load(File.ReadAllBytes(assembly));
+                if (asm != null) {
+                    _referencedAssemblies[asm.FullName] = asm;
+                    _referencedAssemblies[new AssemblyName(asm.FullName).Name] = asm;
+                    _referencedAssemblies[assembly] = asm;
+                    return true;
+                }
+            } catch {
+            }
+            return false;
+        }
+
+        internal bool UnloadAssemblyReference(string name) {
+            return _referencedAssemblies.ContainsKey(name);
         }
 
         internal ObjectIdentityHandle GetBuiltinTypeFromType(Type type) {
@@ -1092,5 +1162,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         TypeGroup,
         Constant,
         Unknown
+    }
+
+    enum SetAnalysisDirectoriesResult {
+        NoChange,
+        Reload,
+        ModulesChanged
+
     }
 }

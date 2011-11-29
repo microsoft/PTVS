@@ -33,11 +33,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The reference is to a Python extension module.  The name is a fully qualified
         /// path to the .pyd file.
         /// </summary>
-        ExtensionModule,
-        /// <summary>
-        /// The reference is to a Python project.  The name is a fully qualified path to the
-        /// .pyproj file.
-        /// </summary>
-        Project
+        ExtensionModule
     }
 }

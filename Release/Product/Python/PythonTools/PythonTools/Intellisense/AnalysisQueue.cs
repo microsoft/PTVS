@@ -15,21 +15,22 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Library.Intellisense {
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides a single threaded analysis queue.  Items can be enqueued into the
     /// analysis at various priorities.  
     /// </summary>
     sealed class AnalysisQueue : IDisposable {
-        private readonly Thread _thread;
-        private readonly AutoResetEvent _event;
+        private readonly Thread _workThread;
+        private readonly AutoResetEvent _workEvent;
         private readonly ProjectAnalyzer _analyzer;
         private readonly object _queueLock = new object();
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
+        private TaskScheduler _scheduler;
         private volatile bool _unload;
         private bool _isAnalyzing;
         private int _analysisPending;
@@ -37,7 +38,7 @@ namespace Microsoft.PythonTools.Library.Intellisense {
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
         internal AnalysisQueue(ProjectAnalyzer analyzer) {
-            _event = new AutoResetEvent(false);
+            _workEvent = new AutoResetEvent(false);
             _analyzer = analyzer;
 
             _queue = new List<IAnalyzable>[PriorityCount];
@@ -45,11 +46,22 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                 _queue[i] = new List<IAnalyzable>();
             }
 
-            _thread = new Thread(Worker);
-            _thread.Name = "Python Analysis Queue";
-            _thread.Priority = ThreadPriority.BelowNormal;
-            _thread.IsBackground = true;
-            _thread.Start();
+            _workThread = new Thread(Worker);
+            _workThread.Name = "Python Analysis Queue";
+            _workThread.Priority = ThreadPriority.BelowNormal;
+            _workThread.IsBackground = true;
+            
+            // start the thread, wait for our synchronization context to be created
+            using (AutoResetEvent threadStarted = new AutoResetEvent(false)) {
+                _workThread.Start(threadStarted);
+                threadStarted.WaitOne();
+            }
+        }
+
+        public TaskScheduler Scheduler {
+            get {
+                return _scheduler;
+            }
         }
 
         public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
@@ -88,14 +100,14 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                 } else {
                     _queue[iPri].Add(item);
                 }
-                _event.Set();
+                _workEvent.Set();
             }
         }
 
         public void Stop() {
-            if (_thread != null) {
+            if (_workThread != null) {
                 _unload = true;
-                _event.Set();
+                _workEvent.Set();
             }
         }
 
@@ -134,7 +146,14 @@ namespace Microsoft.PythonTools.Library.Intellisense {
             return null;
         }
 
-        private void Worker() {
+        private void Worker(object threadStarted) {
+            try {
+                SynchronizationContext.SetSynchronizationContext(new AnalysisSynchronizationContext(this));
+                _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            } finally {
+                ((AutoResetEvent)threadStarted).Set();
+            }
+
             while (!_unload) {
                 IAnalyzable workItem;
 
@@ -158,7 +177,7 @@ namespace Microsoft.PythonTools.Library.Intellisense {
                     _isAnalyzing = false;
                 } else {
                     _isAnalyzing = false;
-                    _event.WaitOne();
+                    _workEvent.WaitOne();
                 }   
             }
         }

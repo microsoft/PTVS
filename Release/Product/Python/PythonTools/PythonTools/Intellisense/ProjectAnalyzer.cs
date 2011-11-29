@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -21,7 +22,6 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Library.Intellisense;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IPythonInterpreterFactory _interpreterFactory;
         private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
         private readonly IErrorProviderFactory _errorProvider;
-        private readonly Dictionary<string, IProjectEntry> _projectFiles;
+        private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
         private readonly PythonAnalyzer _pyAnalyzer;
         private readonly Dictionary<Type, Command> _commands = new Dictionary<Type, Command>();
         private readonly IVsErrorList _errorList;
@@ -76,16 +76,27 @@ namespace Microsoft.PythonTools.Intellisense {
             _project = project;
 
             _pyAnalyzer = new PythonAnalyzer(interpreter, factory.GetLanguageVersion());
-            _pyAnalyzer.ModulesChanged += OnModulesChanged;
-            _projectFiles = new Dictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
+            interpreter.ModuleNamesChanged += OnModulesChanged;
+            _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
             if (PythonToolsPackage.Instance != null) {
                 _errorList = (IVsErrorList)PythonToolsPackage.GetGlobalService(typeof(SVsErrorList));
-                _pyAnalyzer.CrossModulAnalysisLimit = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
+                _pyAnalyzer.CrossModuleAnalysisLimit = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
             }
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
+            _analysisQueue.Scheduler.StartNew(() => _pyAnalyzer.ReloadModules()).ContinueWith(
+                task => {
+                    // check the exception (which should never happen) rather than crashing 
+                    // from throwing on the finalizer thread.
+                    if (task.Exception != null) {
+                        Console.WriteLine(task.Exception);
+                        Debug.Fail(task.Exception.ToString());
+                    }
+                }
+            );
+
             // re-analyze all of the modules when we get a new set of modules loaded...
             foreach (var nameAndEntry in _projectFiles) {
                 _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
@@ -180,13 +191,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 _projectFiles[path] = entry;
 
                 if (ImplicitProject && ShouldAnalyzePath(path)) { // don't analyze std lib
-                    // TODO: We're doing this on the UI thread and when we end up w/ a lot to queue here we hang for a while...
-                    // But this adds files to the analyzer so it's not as simple as queueing this onto another thread.
-                    AnalyzeDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
+                    QueueDirectoryAnalysis(path);
                 }
             }
 
             return entry;
+        }
+
+        private void QueueDirectoryAnalysis(string path) {
+            ThreadPool.QueueUserWorkItem(x => AnalyzeDirectory(Path.GetDirectoryName(Path.GetFullPath(path))));
         }
 
         private bool ShouldAnalyzePath(string path) {
@@ -956,6 +969,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             } catch (DirectoryNotFoundException) {
             }
+        }
+
+        public void StopAnalyzingDirectory(string directory) {
+            _pyAnalyzer.RemoveAnalysisDirectory(directory);
         }
 
         internal void UnloadFile(IProjectEntry entry) {

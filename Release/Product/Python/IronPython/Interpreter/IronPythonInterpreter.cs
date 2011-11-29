@@ -17,27 +17,25 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Remoting;
 using System.Threading;
-using IronPython.Hosting;
+using System.Threading.Tasks;
 using IronPython.Runtime;
-using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.Scripting.Hosting;
 using Microsoft.Win32;
-using System.Reflection;
+using System.Collections.Concurrent;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IDisposable {
-        private readonly RemoteInterpreter _remote;
+    class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IPythonInterpreter2, IDisposable {
         private readonly Dictionary<ObjectIdentityHandle, IMember> _members = new Dictionary<ObjectIdentityHandle, IMember>();
-        private readonly Dictionary<string, IronPythonModule> _modules = new Dictionary<string, IronPythonModule>();
-        private readonly HashSet<string> _assemblyLoadSet = new HashSet<string>();
+        private readonly ConcurrentDictionary<string, IronPythonModule> _modules = new ConcurrentDictionary<string, IronPythonModule>();
+        private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
         private readonly IronPythonInterpreterFactory _factory;
-        private readonly AppDomain _remoteDomain;
-        private readonly DomainUnloader _unloader;
+        private RemoteInterpreter _remote;
+        private DomainUnloader _unloader;
         private IInterpreterState _state;
         private PythonTypeDatabase _typeDb;
 
@@ -45,9 +43,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _factory = factory;
 
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
-            
-            _remoteDomain = CreateDomain(out _remote);
-            _unloader = new DomainUnloader(_remoteDomain);
+
+            InitializeRemoteDomain();
 
             LoadAssemblies();
 
@@ -56,6 +53,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (factory.ConfigurableDatabaseExists()) {
                 LoadNewTypeDb();
             }
+        }
+
+        private void InitializeRemoteDomain() {
+            var remoteDomain = CreateDomain(out _remote);
+            _unloader = new DomainUnloader(remoteDomain);
         }
 
         private AppDomain CreateDomain(out RemoteInterpreter remoteInterpreter) {
@@ -115,21 +117,66 @@ namespace Microsoft.IronPythonTools.Interpreter {
        }
 
         public void Initialize(IInterpreterState state) {
-            state.SpecializeFunction("clr", "AddReference", (n) => AddReference(n, null));
-            state.SpecializeFunction("clr", "AddReferenceByPartialName", (n) => AddReference(n, LoadAssemblyByPartialName));
-            state.SpecializeFunction("clr", "AddReferenceByName", (n) => AddReference(n, null));
-            state.SpecializeFunction("clr", "AddReferenceToFile", (n) => AddReference(n, LoadAssemblyFromFile));
-            state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n) => AddReference(n, LoadAssemblyFromFileWithPath));
-            _state = state;
-
             PythonAnalyzer analyzer = _state as PythonAnalyzer;
             if (analyzer != null) {
-                analyzer.AnalysisDirectoryAdded += AnalysisDirectoryAdded;
+                analyzer.AnalysisDirectoriesChanged -= AnalysisDirectoryChanged;
+            }
+
+            _state = state;
+            SpecializeClrFunctions();
+
+            analyzer = _state as PythonAnalyzer;
+            if (analyzer != null) {
+                analyzer.AnalysisDirectoriesChanged += AnalysisDirectoryChanged;
             }
         }
 
-        private void AnalysisDirectoryAdded(object sender, EventArgs e) {
-            _remote.SetAnalysisDirectories(_state.AnalysisDirectories.ToArray());
+        private void SpecializeClrFunctions() {
+            _state.SpecializeFunction("clr", "AddReference", (n) => AddReference(n, null));
+            _state.SpecializeFunction("clr", "AddReferenceByPartialName", (n) => AddReference(n, LoadAssemblyByPartialName));
+            _state.SpecializeFunction("clr", "AddReferenceByName", (n) => AddReference(n, null));
+            _state.SpecializeFunction("clr", "AddReferenceToFile", (n) => AddReference(n, LoadAssemblyFromFile));
+            _state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n) => AddReference(n, LoadAssemblyFromFileWithPath));
+        }
+
+        private void AnalysisDirectoryChanged(object sender, EventArgs e) {
+            switch(_remote.SetAnalysisDirectories(_state.AnalysisDirectories.ToArray())) {
+                case SetAnalysisDirectoriesResult.NoChange: 
+                    break;
+                case SetAnalysisDirectoriesResult.ModulesChanged:
+                    ClearAssemblyLoadSet();
+                    RaiseModuleNamesChanged();
+                    break;
+                case SetAnalysisDirectoriesResult.Reload:
+                    // we are unloading an assembly so we need to create a new app domain because the CLR will continue
+                    // to return the assemblies that we've already loaded
+                    ReloadRemoteDomain();
+                    break;
+            }
+        }
+
+        private void ClearAssemblyLoadSet() {
+            string asm;
+            while (_assemblyLoadSet.TryTake(out asm)) {
+            }
+        }
+
+        private void ReloadRemoteDomain() {
+            var oldUnloader = _unloader;
+
+            lock (this) {
+                _members.Clear();
+                _modules.Clear();
+                ClearAssemblyLoadSet();
+
+                InitializeRemoteDomain();
+
+                LoadModules();
+            }
+
+            RaiseModuleNamesChanged();
+
+            oldUnloader.Dispose();
         }
 
         private ObjectHandle LoadAssemblyByName(string name) {
@@ -218,7 +265,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         asmName = bytes.String;
                     }
                 }
-                if (asmName != null && _assemblyLoadSet.Add(asmName)) {
+                if (asmName != null && !_assemblyLoadSet.Contains(asmName)) {
+                    _assemblyLoadSet.Add(asmName);
                     ObjectHandle asm = null;
                     try {
                         if (partialLoader != null) {
@@ -304,7 +352,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 if (_modules.TryGetValue(name, out mod)) {
                     return mod;
                 }
-
+                
                 var handle = Remote.LookupNamespace(name);
                 if (!handle.IsNull) {
                     return MakeObject(handle) as IPythonModule;
@@ -379,7 +427,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #endregion
 
         internal void LoadNewTypeDb() {
-            _typeDb = new PythonTypeDatabase(_factory.GetConfiguredDatabasePath(), false, (IronPythonBuiltinModule)_modules["__builtin__"]);
+            IronPythonBuiltinModule builtin;
+            lock (this) {
+                builtin = (IronPythonBuiltinModule)_modules["__builtin__"];
+            }
+
+            _typeDb = new PythonTypeDatabase(_factory.GetConfiguredDatabasePath(), false, builtin);
         }
 
         class DomainUnloader : IDisposable {
@@ -420,6 +473,43 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public void Dispose() {
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
             _unloader.Dispose();
+        }
+
+        #endregion
+
+        #region IPythonInterpreter2 Members
+
+        public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
+            switch (reference.Kind) {
+                case ProjectReferenceKind.Assembly:
+                    var asmRef = (ProjectAssemblyReference)reference;
+
+                    return Task.Factory.StartNew(() => {
+                        if (!Remote.LoadAssemblyReference(asmRef.Name)) {
+                            throw new Exception("Failed to load assembly: "+ asmRef.Name);
+                        }
+
+                        // re-analyze clr.AddReference calls w/ new assemblie names
+                        ClearAssemblyLoadSet();
+
+                        // the names haven't changed yet, but we want to re-analyze the clr.AddReference calls,
+                        // and then the names may change for real..
+                        RaiseModuleNamesChanged();
+                    });
+            }
+            return Task.Factory.StartNew(() => {});
+        }
+        
+        public void RemoveReference(ProjectReference reference) {
+            switch (reference.Kind) {
+                case ProjectReferenceKind.Assembly:
+                    var asmRef = (ProjectAssemblyReference)reference;
+
+                    if (Remote.UnloadAssemblyReference(asmRef.Name)) {
+                        ReloadRemoteDomain();
+                    }
+                    break;
+            }
         }
 
         #endregion

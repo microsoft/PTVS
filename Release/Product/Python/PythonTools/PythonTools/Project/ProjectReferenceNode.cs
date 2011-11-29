@@ -223,9 +223,9 @@ namespace Microsoft.PythonTools.Project
 				{
 					return null;
 				}
-
+                
 				// Get the active configuration.
-				EnvDTE.Configuration config = confManager.ActiveConfiguration;
+				EnvDTE.Configuration config = confManager.ActiveConfiguration;                
 				if(null == config)
 				{
 					return null;
@@ -274,6 +274,31 @@ namespace Microsoft.PythonTools.Project
 				outputPath = System.IO.Path.Combine(outputPath, assemblyNameProperty.Value.ToString());
 
 				return outputPath;
+			}
+		}
+
+		internal string AssemblyName
+		{
+			get
+			{
+				// Now get the name of the assembly from the project.
+				// Some project system throw if the property does not exist. We expect an ArgumentException.
+				EnvDTE.Property assemblyNameProperty = null;
+				if (ReferencedProjectObject != null)
+				{
+					try
+					{
+						assemblyNameProperty = this.ReferencedProjectObject.Properties.Item(ProjectFileConstants.AssemblyName);
+					}
+					catch (ArgumentException)
+					{
+					}
+					if (assemblyNameProperty != null)
+					{
+						return assemblyNameProperty.Value.ToString();
+					}
+				}
+				return null;
 			}
 		}
 

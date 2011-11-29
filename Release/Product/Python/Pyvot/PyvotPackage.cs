@@ -137,7 +137,10 @@ namespace Microsoft.PythonTools.Pyvot {
             public void QueryStatusMethod(object sender, EventArgs args) {
                 var oleMenu = sender as OleMenuCommand;
 
-                if (Factory == null || Factory.Configuration.Version.Major != 2 || (Factory.Configuration.Version.Minor != 7 && Factory.Configuration.Version.Minor != 6)) {
+                var supportedPy2 = Factory.Configuration.Version.Major == 2 && (Factory.Configuration.Version.Minor == 7 || Factory.Configuration.Version.Minor == 6);
+                var supportedPy3 = Factory.Configuration.Version.Major == 3 && Factory.Configuration.Version.Minor >= 2;
+
+                if (Factory == null || (!supportedPy2 && !supportedPy3)) {
                     oleMenu.Visible = false;
                     oleMenu.Enabled = false;
                     oleMenu.Supported = false;

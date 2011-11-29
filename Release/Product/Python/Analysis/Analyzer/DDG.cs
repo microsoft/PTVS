@@ -276,8 +276,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private bool TryGetUserModule(string modName, out ModuleReference moduleRef) {
-            if (ProjectState.CrossModulAnalysisLimit != null &&
-                ProjectState.ModulesByFilename.Count > ProjectState.CrossModulAnalysisLimit) {
+            if (ProjectState.CrossModuleAnalysisLimit != null &&
+                ProjectState.ModulesByFilename.Count > ProjectState.CrossModuleAnalysisLimit) {
                 // too many modules loaded, disable cross module analysis by blocking
                 // scripts from seeing other modules.
                 moduleRef = null;

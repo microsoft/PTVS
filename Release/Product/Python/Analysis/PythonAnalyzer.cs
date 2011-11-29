@@ -33,10 +33,10 @@ namespace Microsoft.PythonTools.Analysis {
     public class PythonAnalyzer : IInterpreterState, IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
         private readonly ConcurrentDictionary<string, ModuleReference> _modules;
-        private readonly Dictionary<string, ModuleInfo> _modulesByFilename;
+        private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
         private readonly Dictionary<object, object> _itemCache;
         private BuiltinModule _builtinModule;
-        private readonly Dictionary<string, XamlProjectEntry> _xamlByFilename = new Dictionary<string, XamlProjectEntry>();
+        private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
         internal Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
         internal ISet<Namespace> _objectSet;
         internal Namespace _functionType;
@@ -60,11 +60,10 @@ namespace Microsoft.PythonTools.Analysis {
             _langVersion = langVersion;
             _interpreter = pythonInterpreter;
             _modules = new ConcurrentDictionary<string, ModuleReference>();
-            _modulesByFilename = new Dictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
+            _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _itemCache = new Dictionary<object, object>();
 
             var allBuiltins = InitializeBuiltinModules();
-            pythonInterpreter.ModuleNamesChanged += new EventHandler(ModuleNamesChanged);
 
             _queue = new Deque<AnalysisUnit>();
 
@@ -125,8 +124,14 @@ namespace Microsoft.PythonTools.Analysis {
 
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
         }
-
-        void ModuleNamesChanged(object sender, EventArgs e) {
+        
+        /// <summary>
+        /// Reloads the modules from the interpreter.
+        /// 
+        /// This method should be called on the analysis thread and is usually invoked
+        /// when the interpreter signals that it's modules have changed.
+        /// </summary>
+        public void ReloadModules() {
             LoadKnownTypes();
 
             FinishBuiltinsInit(InitializeBuiltinModules());
@@ -149,10 +154,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            var modsChanged = ModulesChanged;
-            if (modsChanged != null) {
-                modsChanged(this, EventArgs.Empty);
-            }
+            _interpreter.Initialize(this);
         }
 
         #region Public API
@@ -165,6 +167,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         /// <summary>
         /// Adds a new module of code to the list of available modules and returns a ProjectEntry object.
+        /// 
+        /// This method is thread safe.
         /// </summary>
         /// <param name="moduleName">The name of the module; used to associate with imports</param>
         /// <param name="filePath">The path to the file on disk</param>
@@ -182,8 +186,14 @@ namespace Microsoft.PythonTools.Analysis {
             return entry;
         }
 
+        /// <summary>
+        /// Removes the specified project entry from the current analysis.
+        /// 
+        /// This method is thread safe.
+        /// </summary>
         public void RemoveModule(IProjectEntry entry) {
-            _modulesByFilename.Remove(entry.FilePath);
+            ModuleInfo removed;
+            _modulesByFilename.TryRemove(entry.FilePath, out removed);
             ModuleReference modRef;
             Modules.TryRemove(PathToModuleName(entry.FilePath), out modRef);
             var projEntry2 = entry as IProjectEntry2;
@@ -192,6 +202,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        /// <summary>
+        /// Adds a XAML file to be analyzed.  
+        /// 
+        /// This method is thread safe.
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="cookie"></param>
+        /// <returns></returns>
         public IXamlProjectEntry AddXamlFile(string filePath, IAnalysisCookie cookie = null) {
             var entry = new XamlProjectEntry(filePath);
 
@@ -271,13 +289,6 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
-
-        /// <summary>
-        /// Provides an event which notifies the consumer of the analyzer that we've been informed
-        /// the built-in modules have been re-analyzed.  This is a good time to re-analyze all of the
-        /// project so that it reflects the up-to-date built-in modules.
-        /// </summary>
-        public event EventHandler ModulesChanged;
 
         private bool ModuleContainsMember(string name, ModuleReference moduleRef) {
             BuiltinModule builtin = moduleRef.Module as BuiltinModule;
@@ -362,6 +373,11 @@ namespace Microsoft.PythonTools.Analysis {
                 String.Compare(modName, lastDot + 1, name, 0, name.Length) == 0;
         }
 
+        /// <summary>
+        /// Returns the interpreter that the analyzer is using.
+        /// 
+        /// This property is thread safe.
+        /// </summary>
         public IPythonInterpreter Interpreter {
             get {
                 return _interpreter;
@@ -413,9 +429,16 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(call); return null; });
         }
 
+        /// <summary>
+        /// Gets the list of directories which should be analyzed.
+        /// 
+        /// This property is thread safe.
+        /// </summary>
         public IEnumerable<string> AnalysisDirectories {
             get {
-                return _analysisDirs;
+                lock (_analysisDirs) {
+                    return _analysisDirs.ToArray();
+                }
             }
         }
 
@@ -441,6 +464,16 @@ namespace Microsoft.PythonTools.Analysis {
             return moduleName;
         }
 
+        [Obsolete("This was misspelled, use CrossModuleAnalysisLimit instead"), System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public int? CrossModulAnalysisLimit {
+            get {
+                return CrossModuleAnalysisLimit;
+            }
+            set {
+                CrossModuleAnalysisLimit = value;
+            }
+        }
+
         /// <summary>
         /// gets or sets the maximum number of files which will be used for cross module analysis.
         /// 
@@ -448,7 +481,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// value will cause cross module analysis to be disabled after that number of files has been
         /// loaded.
         /// </summary>
-        public int? CrossModulAnalysisLimit {
+        public int? CrossModuleAnalysisLimit {
             get {
                 return _crossModuleLimit;
             }
@@ -483,7 +516,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (builtin != null) {
                     foreach (var v in builtin[name]) {
                         BuiltinFunctionInfo funcInfo = v as BuiltinFunctionInfo;
-                        if (funcInfo != null) {
+                        if (funcInfo != null && !(funcInfo is SpecializedBuiltinFunction)) {
                             builtin[name] = new SpecializedBuiltinFunction(this, funcInfo.Function, dlg).SelfSet;
                             break;
                         }
@@ -785,7 +818,7 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _modules; }
         }
 
-        internal Dictionary<string, ModuleInfo> ModulesByFilename {
+        internal ConcurrentDictionary<string, ModuleInfo> ModulesByFilename {
             get { return _modulesByFilename; }
         }
 
@@ -850,14 +883,48 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
 
+        /// <summary>
+        /// Adds a directory to the list of directories being analyzed.
+        /// 
+        /// This method is thread safe.
+        /// </summary>
         public void AddAnalysisDirectory(string dir) {
-            var dirAdded = AnalysisDirectoryAdded;
-            if (_analysisDirs.Add(dir) && dirAdded != null) {
-                dirAdded(this, EventArgs.Empty);
+            var dirsChanged = AnalysisDirectoriesChanged;
+            bool added;
+            lock (_analysisDirs) {
+                added = _analysisDirs.Add(dir);
+            }
+            if (added && dirsChanged != null) {
+                dirsChanged(this, EventArgs.Empty);
             }
         }
 
-        public event EventHandler AnalysisDirectoryAdded;
+        /// <summary>
+        /// Removes a directory from the list of directories being analyzed.
+        /// 
+        /// This method is thread safe.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public void RemoveAnalysisDirectory(string dir) {
+            var dirsChanged = AnalysisDirectoriesChanged;
+            bool removed;
+            lock (_analysisDirs) {
+                removed = _analysisDirs.Remove(dir);
+            }
+            if (removed && dirsChanged != null) {
+                dirsChanged(this, EventArgs.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Event fired when the analysis directories have changed.  
+        /// 
+        /// This event can be fired on any thread.
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        public event EventHandler AnalysisDirectoriesChanged;
 
         #region IDisposable Members
 

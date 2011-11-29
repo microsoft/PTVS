@@ -152,22 +152,28 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Pyvot\setup.py2.cfg">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Pyvot\setup.py3.cfg">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
     <Content Include="Pyvot\setup.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-	<Content Include="Pyvot\setup.cfg">
+    <Content Include="Pyvot\setup.cfg">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-	<Content Include="Pyvot\MANIFEST.in">
+    <Content Include="Pyvot\MANIFEST.in">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-	<Content Include="Pyvot\LICENSE.txt">
+    <Content Include="Pyvot\LICENSE.txt">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-	<Content Include="Pyvot\xl\version.py">
+    <Content Include="Pyvot\xl\version.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Pyvot\xl\cache.py">

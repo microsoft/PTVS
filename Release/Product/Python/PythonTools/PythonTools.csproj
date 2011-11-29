@@ -199,6 +199,7 @@
     <Compile Include="PythonTools\CommonUtils.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactory.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\AnalysisSynchronizationContext.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
@@ -220,6 +221,7 @@
     <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
     <Compile Include="PythonTools\Project\BuildDependency.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\PythonAssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonExtensionReferenceNode.cs" />
     <Compile Include="PythonTools\Project\IDEBuildLogger.cs" />
     <Compile Include="PythonTools\Project\Misc\ConnectionPointContainer.cs" />
@@ -228,10 +230,10 @@
     <Compile Include="PythonTools\Project\Automation\VSProject\OAReferenceBase.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAReferences.cs" />
     <Compile Include="PythonTools\Project\CommonReferenceContainerNode.cs" />
-    <Compile Include="PythonTools\Project\CommonReferenceNode.cs" />
     <Compile Include="PythonTools\Project\FileChangeManager.cs" />
     <Compile Include="PythonTools\Project\ProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
+    <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceContainerNode.cs" />
     <Compile Include="PythonTools\Project\ReferenceNode.cs" />
@@ -240,6 +242,7 @@
       <DependentUpon>TaskProgressBar.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\UIThreadSynchronizer.cs" />
+    <Compile Include="PythonTools\Project\UpdateSolutionEventsListener.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />

@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// Project references consist of a name and a kind.  Based upon the kind
     /// you can decode the information in the name which is typically a filename.
     /// </summary>
-    public sealed class ProjectReference : IEquatable<ProjectReference> {
+    public class ProjectReference : IEquatable<ProjectReference> {
         private readonly string _referenceName;
         private readonly ProjectReferenceKind _kind;
 
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         #region IEquatable<ProjectReference> Members
 
-        public bool Equals(ProjectReference other) {
+        public virtual bool Equals(ProjectReference other) {
             return other.Kind == Kind && other.Name == Name;
         }
 

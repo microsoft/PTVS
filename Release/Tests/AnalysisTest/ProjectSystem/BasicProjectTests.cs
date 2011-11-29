@@ -15,13 +15,17 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices; // Ambiguous with EnvDTE.Thread.
+using AnalysisTest.UI;
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
 using TestUtilities;
 using VSLangProj;
 
@@ -519,6 +523,126 @@ namespace AnalysisTest.ProjectSystem {
                 AssertError<InvalidOperationException>(() => pf.Open(""));
             }
         }
+
+        /// <summary>
+        /// Opens a project w/ a reference to a .NET project.  Makes sure we get completion after a build, changes the assembly, rebuilds, makes
+        /// sure the completion info changes.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DotNetProjectReferences() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\ProjectReference\ProjectReference.sln", expectedProjects: 2, projectName: "PythonApplication");
+
+            VsIdeTestHostContext.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
+            var program = project.ProjectItems.Item("Program.py");
+            var window = program.Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(program.Document.FullName);
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            var index = snapshot.GetText().IndexOf("a =");
+            var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
+            var analysis = snapshot.AnalyzeExpression(span);
+            Assert.AreEqual(analysis.Values.First().Description, "str");
+
+            var lib = GetProject("ClassLibrary");
+            var classFile = lib.ProjectItems.Item("Class1.cs");
+            window = classFile.Open();
+            window.Activate();
+            doc = app.GetDocument(classFile.Document.FullName);
+            
+            doc.Invoke(() => {
+                using (var edit = doc.TextView.TextBuffer.CreateEdit()) {
+                    edit.Delete(0, doc.TextView.TextBuffer.CurrentSnapshot.Length);
+                    edit.Insert(0, @"namespace ClassLibrary1
+{
+    public class Class1
+    {
+        public bool X
+        {
+            get { return true; }
+        }
+    }
+}
+");
+                    edit.Apply();
+                }
+            });
+            classFile.Save();
+
+            // rebuild
+            VsIdeTestHostContext.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
+
+            analysis = snapshot.AnalyzeExpression(span);
+            Assert.AreEqual(analysis.Values.First().Description, "bool");
+        }
+
+        /// <summary>
+        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
+        /// sure the completion info changes.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DotNetAssemblyReferences() {
+            var loc = typeof(string).Assembly.Location;
+            var psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(loc), "csc.exe"), "/target:library ClassLibrary.cs");
+            psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, @"Python.VS.TestData\\AssemblyReference\\PythonApplication");
+            var proc = System.Diagnostics.Process.Start(psi);
+            proc.WaitForExit();
+            Assert.AreEqual(proc.ExitCode, 0);
+
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AssemblyReference\AssemblyReference.sln");
+            
+            var program = project.ProjectItems.Item("Program.py");
+            var window = program.Open();
+            window.Activate();
+
+            System.Threading.Thread.Sleep(2000);
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(program.Document.FullName);
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            var index = snapshot.GetText().IndexOf("a =");
+            var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
+            var analysis = snapshot.AnalyzeExpression(span);
+            Assert.AreEqual(analysis.Values.First().Description, "str");
+
+            var filename = Path.Combine(Environment.CurrentDirectory, @"Python.VS.TestData\\AssemblyReference\\PythonApplication\\ClassLibrary.cs");
+            File.WriteAllText(filename, @"namespace ClassLibrary1
+{
+    public class Class1
+    {
+        public bool X
+        {
+            get { return true; }
+        }
+    }
+}
+");
+
+            psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(loc), "csc.exe"), "/target:library ClassLibrary.cs");
+            psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, @"Python.VS.TestData\\AssemblyReference\\PythonApplication");
+            proc = System.Diagnostics.Process.Start(psi);
+            proc.WaitForExit();
+            Assert.AreEqual(proc.ExitCode, 0);
+
+            System.Threading.Thread.Sleep(2000);
+
+            analysis = snapshot.AnalyzeExpression(span);
+            Assert.AreEqual(analysis.Values.First().Description, "bool");
+        }
+
+        private static Project GetProject(string name) {
+            var iter = VsIdeTestHostContext.Dte.Solution.Projects.GetEnumerator();
+            while (iter.MoveNext()) {
+                if (((Project)iter.Current).Name == name) {
+                    return (Project)iter.Current;
+                }
+            }
+            return null;
+        }
+
 
         private static void AssertNotImplemented(Action action) {
             AssertError<NotImplementedException>(action);

@@ -20,9 +20,12 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools {
-#if FALSE
     class SolutionAdvisor : IVsSolutionEvents {
-        private int _pyProjectCount = 0;
+        private uint _cookie;
+
+        public SolutionAdvisor(IVsSolution solution) {
+            ErrorHandler.ThrowOnFailure(solution.AdviseSolutionEvents(this, out _cookie));
+        }
 
         public int OnAfterCloseSolution(object pUnkReserved) {
             return VSConstants.S_OK;
@@ -32,7 +35,14 @@ namespace Microsoft.PythonTools {
             return VSConstants.S_OK;
         }
 
+        public event EventHandler AfterLoadProject;
+
         public int OnAfterOpenProject(IVsHierarchy pHierarchy, int fAdded) {
+            var afterLoad = AfterLoadProject;
+            if (afterLoad != null) {
+                afterLoad(this, EventArgs.Empty);
+            }
+
             return VSConstants.S_OK;
         }
 
@@ -64,5 +74,4 @@ namespace Microsoft.PythonTools {
             return VSConstants.S_OK;
         }
     }
-#endif
 }
