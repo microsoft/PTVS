@@ -55,8 +55,10 @@ namespace Microsoft.VisualStudio.Repl {
             for (int i = startIndex; i < coloredSpans.Count && coloredSpans[i].Span.Start < spanEnd; i++) {
                 IClassificationType type;
                 if (_provider._classTypes.TryGetValue(coloredSpans[i].Color, out type)) {
-                    var overlap = span.Overlap(coloredSpans[i].Span).Value;
-                    classifications.Add(new ClassificationSpan(overlap, type));
+                    var overlap = span.Overlap(coloredSpans[i].Span);
+                    if (overlap != null) {
+                        classifications.Add(new ClassificationSpan(overlap.Value, type));
+                    }
                 }
             }
 

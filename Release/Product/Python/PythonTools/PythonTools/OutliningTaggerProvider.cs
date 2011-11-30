@@ -186,51 +186,47 @@ namespace Microsoft.PythonTools {
             }
 
             private static TagSpan GetForSpan(PythonAst ast, ITextSnapshot snapshot, ForStatement forStmt) {
-                TagSpan tagSpan = null;
-                try {
-                    var start = forStmt.StartIndex;
-                    var end = forStmt.EndIndex;
-                    if (forStmt.List != null) {
-                        var testLen = forStmt.List.EndIndex - forStmt.StartIndex + 1;
-                        if (start != -1 && end != -1) {
-                            int length = end - start - testLen;
-                            if (length > 0) {
-                                var forSpan = GetFinalSpan(snapshot,
-                                    start + testLen,
-                                    length
-                                );
-
-                                tagSpan = new TagSpan(
-                                    new SnapshotSpan(snapshot, forSpan),
-                                    new OutliningTag(snapshot, forSpan, false)
-                                );
-                            }
-                        }
-                    }
-                } catch (ArgumentException) {
-                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
-                    Debug.Assert(false, "bad argument when making span/tag");
+                if (forStmt.List != null) {
+                    return GetTagSpan(snapshot, forStmt.StartIndex, forStmt.EndIndex, forStmt.List.EndIndex - forStmt.StartIndex + 1);
                 }
-                return tagSpan;
+                return null;
             }
 
             private static TagSpan GetWhileSpan(PythonAst ast, ITextSnapshot snapshot, WhileStatement whileStmt) {
+                return GetTagSpan(
+                    snapshot, 
+                    whileStmt.StartIndex, 
+                    whileStmt.EndIndex, 
+                    whileStmt.Test.EndIndex - whileStmt.StartIndex + 1
+                );
+            }
+
+            private static TagSpan GetIfSpan(PythonAst ast, ITextSnapshot snapshot, IfStatement ifStmt) {
+                return GetTagSpan(snapshot, ifStmt.StartIndex, ifStmt.EndIndex, ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1);
+            }
+
+            private static TagSpan GetFunctionSpan(PythonAst ast, ITextSnapshot snapshot, FunctionDefinition funcDef) {
+                return GetTagSpan(snapshot, funcDef.StartIndex, funcDef.EndIndex, funcDef.HeaderIndex - funcDef.StartIndex + 1);
+            }
+
+            private static TagSpan GetClassSpan(PythonAst ast, ITextSnapshot snapshot, ClassDefinition classDef) {
+                return GetTagSpan(snapshot, classDef.StartIndex, classDef.EndIndex, classDef.HeaderIndex - classDef.StartIndex + 1);
+            }
+
+            private static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int testLen) {
                 TagSpan tagSpan = null;
                 try {
-                    var start = whileStmt.StartIndex;
-                    var end = whileStmt.EndIndex;
-                    var testLen = whileStmt.Test.EndIndex - whileStmt.StartIndex + 1;
                     if (start != -1 && end != -1) {
                         int length = end - start - testLen;
                         if (length > 0) {
-                            var whileSpan = GetFinalSpan(snapshot,
+                            var span = GetFinalSpan(snapshot,
                                 start + testLen,
                                 length
                             );
 
                             tagSpan = new TagSpan(
-                                new SnapshotSpan(snapshot, whileSpan),
-                                new OutliningTag(snapshot, whileSpan, false)
+                                new SnapshotSpan(snapshot, span),
+                                new OutliningTag(snapshot, span, false)
                             );
                         }
                     }
@@ -238,83 +234,7 @@ namespace Microsoft.PythonTools {
                     // sometimes Python's parser gives usbad spans, ignore those and fix the parser
                     Debug.Assert(false, "bad argument when making span/tag");
                 }
-                return tagSpan;
-            }
 
-            private static TagSpan GetIfSpan(PythonAst ast, ITextSnapshot snapshot, IfStatement ifStmt) {
-                TagSpan tagSpan = null;
-                try {
-                    var ifStmtStart = ifStmt.StartIndex;
-                    var ifStmtEnd = ifStmt.EndIndex;
-                    var testLen = ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1;
-                    if (ifStmtStart != -1 && ifStmtEnd != -1) {
-                        int length = ifStmtEnd - ifStmtStart - testLen;
-                        if (length > 0) {
-                            var ifSpan = GetFinalSpan(snapshot,
-                                ifStmtStart + testLen,
-                                length
-                            );
-
-                            tagSpan = new TagSpan(
-                                new SnapshotSpan(snapshot, ifSpan),
-                                new OutliningTag(snapshot, ifSpan, false)
-                            );
-                        }
-                    }
-                } catch (ArgumentException) {
-                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
-                    Debug.Assert(false, "bad argument when making span/tag");
-                }
-                return tagSpan;
-            }
-
-            private static TagSpan GetFunctionSpan(PythonAst ast, ITextSnapshot snapshot, FunctionDefinition funcDef) {
-                TagSpan tagSpan = null;
-                try {
-                    var funcDefStart = funcDef.StartIndex;
-                    var funcDefEnd = funcDef.EndIndex;
-                    int nameLen = funcDef.HeaderIndex - funcDef.StartIndex + 1;
-                    if (funcDefStart != -1 && funcDefEnd != -1) {
-                        int length = funcDefEnd - funcDefStart - nameLen;
-                        if (length >= 0 && length < snapshot.Length - (funcDefStart + nameLen)) {
-                            var funcSpan = GetFinalSpan(snapshot,
-                                funcDefStart + nameLen,
-                                length);
-
-                            tagSpan = new TagSpan(
-                                new SnapshotSpan(snapshot, funcSpan),
-                                new OutliningTag(snapshot, funcSpan, true)
-                            );
-                        }
-                    }
-                } catch (ArgumentException) {
-                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
-                    Debug.Assert(false, "bad argument when making span/tag");
-                }
-                return tagSpan;
-            }
-
-            private static TagSpan GetClassSpan(PythonAst ast, ITextSnapshot snapshot, ClassDefinition classDef) {
-                TagSpan tagSpan = null;
-                try {
-                    var classDefStart = classDef.StartIndex;
-                    var classDefEnd = classDef.EndIndex;
-                    int nameLen = classDef.HeaderIndex - classDef.StartIndex + 1;
-                    if (classDefStart != -1 && classDefEnd != -1) {
-                        var classSpan = GetFinalSpan(snapshot,
-                            classDefStart + nameLen,
-                            classDefEnd - classDefStart - nameLen
-                        );
-
-                        tagSpan = new TagSpan(
-                            new SnapshotSpan(snapshot, classSpan),
-                            new OutliningTag(snapshot, classSpan, false)
-                        );
-                    }
-                } catch (ArgumentException) {
-                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
-                    Debug.Assert(false, "bad argument when making span/tag");
-                }
                 return tagSpan;
             }
 

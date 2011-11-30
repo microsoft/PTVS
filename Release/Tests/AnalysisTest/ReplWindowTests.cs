@@ -2362,7 +2362,7 @@ $cls
 
         protected override bool IPythonSupported {
             get {
-                return false;
+                return true;
             }
         }
 

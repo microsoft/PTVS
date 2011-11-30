@@ -11,7 +11,11 @@ except ImportError:
 
     raise UnsupportedReplException('IPython mode requires IPython 0.11 or later: ' + str(exc_value))
 
-import thread
+try:
+    import thread
+except:
+    import _thread as thread    # Renamed as Py3k
+
 import sys
 from base64 import decodestring
 

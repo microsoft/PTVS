@@ -151,11 +151,13 @@ namespace Microsoft.PythonTools.Repl {
             processInfo.UseShellExecute = debugMode;
             processInfo.RedirectStandardOutput = !debugMode;
             processInfo.RedirectStandardError = !debugMode;
+            processInfo.RedirectStandardInput = !debugMode;
 #else
             processInfo.CreateNoWindow = true;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = true;
             processInfo.RedirectStandardError = true;
+            processInfo.RedirectStandardInput = true;
 #endif
 
             var conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
