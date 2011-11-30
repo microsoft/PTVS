@@ -63,6 +63,7 @@ setup_options = dict(
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'Topic :: Office/Business :: Financial :: Spreadsheet',
         'License :: OSI Approved :: Apache Software License'],
       packages=['xl', 'xl._impl'],

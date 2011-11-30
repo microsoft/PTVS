@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools.Parsing {
     sealed class PythonAsciiEncoding : Encoding {
         internal static readonly Encoding Instance = MakeNonThrowing();
         internal static readonly Encoding SourceEncoding = MakeSourceEncoding();
+        internal static readonly Encoding SourceEncodingNoFallback = MakeSourceEncodingNoFallback();
 
         internal PythonAsciiEncoding()
             : base() {
@@ -45,6 +46,13 @@ namespace Microsoft.PythonTools.Parsing {
             // we need to Clone the new instance here so that the base class marks us as non-readonly
             Encoding enc = (Encoding)new PythonAsciiEncoding().Clone();
             enc.DecoderFallback = new SourceNonStrictDecoderFallback();
+            return enc;
+        }
+
+        private static Encoding MakeSourceEncodingNoFallback() {
+            // we need to Clone the new instance here so that the base class marks us as non-readonly
+            Encoding enc = (Encoding)new PythonAsciiEncoding().Clone();
+            enc.DecoderFallback = new SourceNonStrictDecoderFallbackNoFallback();
             return enc;
         }
 
@@ -262,6 +270,44 @@ namespace Microsoft.PythonTools.Parsing {
             get { throw new NotImplementedException(); }
         }
     }
+
+    class SourceNonStrictDecoderFallbackNoFallback : DecoderFallback {
+        public override DecoderFallbackBuffer CreateFallbackBuffer() {
+            return new SourceNonStrictDecoderFallbackBufferNoFallback();
+        }
+
+        public override int MaxCharCount {
+            get { return 1; }
+        }
+    }
+
+    // no ctors on DecoderFallbackBuffer in Silverlight
+    class SourceNonStrictDecoderFallbackBufferNoFallback : DecoderFallbackBuffer {
+        private int _fallbackLen, _initialFallbackLen;     
+        
+        public override bool Fallback(byte[] bytesUnknown, int index) {
+            _initialFallbackLen = _fallbackLen = bytesUnknown.Length;
+            return true;
+        }
+
+        public override char GetNextChar() {
+            _fallbackLen--;
+            return '?';
+        }
+
+        public override bool MovePrevious() {
+            if (_fallbackLen < _initialFallbackLen) {
+                _fallbackLen++;
+                return true;
+            }
+            return false;
+        }
+
+        public override int Remaining {
+            get { return _fallbackLen; }
+        }
+    }
+
 
     [Serializable]
     public class BadSourceException : Exception {

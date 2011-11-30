@@ -4999,9 +4999,21 @@ namespace Microsoft.PythonTools.Parsing {
             return noNewlineRes;
         }
 
+        /// <summary>
+        /// Returns an Encoding object which raises a BadSourceException when invalid characters are encountered.
+        /// </summary>
         public static Encoding DefaultEncoding {
             get {
                 return PythonAsciiEncoding.SourceEncoding;
+            }
+        }
+
+        /// <summary>
+        /// Returns an Encoding object which will not provide any fallback for invalid characters.
+        /// </summary>
+        public static Encoding DefaultEncodingNoFallback {
+            get {
+                return PythonAsciiEncoding.SourceEncodingNoFallback;
             }
         }
 

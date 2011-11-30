@@ -557,6 +557,28 @@ x\
             Assert.AreEqual(actual, expectedText);
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void OpenInvalidUnicodeFile() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\ErrorProjectUnicode.sln");
+            var item = project.ProjectItems.Item("Program.py");
+            EnvDTE.Window window = null;
+            ThreadPool.QueueUserWorkItem(x => { window = item.Open(); });
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var dialog = app.WaitForDialog();
+
+            VisualStudioApp.CheckMessageBox(UI.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
+            while (window == null) {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            window.Activate();
+            var doc = app.GetDocument(item.Document.FullName);
+            var text = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+            Assert.AreNotEqual(text.IndexOf("????"), -1);
+        }
+
         #endregion
 
         #region Helpers

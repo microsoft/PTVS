@@ -24,7 +24,9 @@ using System.Windows;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 #if !DEV11
 using Microsoft.Windows.Design.Host;
@@ -289,6 +291,26 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private ProjectAnalyzer CreateAnalyzer() {
+            // check to see if we should share our analyzer with another project in the same solution.  This enables
+            // refactoring, find all refs, and intellisense across projects.
+            var vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
+            var guid = new Guid(PythonConstants.ProjectFactoryGuid);
+            IEnumHierarchies hierarchies;
+            ErrorHandler.ThrowOnFailure((vsSolution.GetProjectEnum((uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_ALLPROJECTS), ref guid, out hierarchies)));
+            IVsHierarchy[] hierarchy = new IVsHierarchy[1];
+            uint fetched;
+            var curFactory = GetInterpreterFactory();            
+            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+                var pyProj = hierarchy[0].GetProject().GetPythonProject();
+                
+                if (pyProj != this && 
+                    pyProj._analyzer != null && 
+                    pyProj._analyzer.InterpreterFactory == curFactory) {
+                    // we have the same interpreter, we'll share analysis engines across projects.
+                    return pyProj._analyzer;
+                }
+            }
+
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
             return new ProjectAnalyzer(GetInterpreter(), GetInterpreterFactory(), model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>(), this);
         }

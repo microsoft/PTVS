@@ -633,6 +633,30 @@ namespace AnalysisTest.ProjectSystem {
             Assert.AreEqual(analysis.Values.First().Description, "bool");
         }
 
+        /// <summary>
+        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
+        /// sure the completion info changes.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MultiProjectAnalysis() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln", projectName: "PythonApplication", expectedProjects: 2);
+
+            var program = project.ProjectItems.Item("Program.py");
+            var window = program.Open();
+            window.Activate();
+
+            System.Threading.Thread.Sleep(2000);
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(program.Document.FullName);
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            var index = snapshot.GetText().IndexOf("a =");
+            var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
+            var analysis = snapshot.AnalyzeExpression(span);
+            Assert.AreEqual(analysis.Values.First().Description, "int");
+        }
+
         private static Project GetProject(string name) {
             var iter = VsIdeTestHostContext.Dte.Solution.Projects.GetEnumerator();
             while (iter.MoveNext()) {
