@@ -83,6 +83,13 @@ namespace AnalysisTest.ProjectSystem {
         pass"));
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void OutliningBadForStatement() {
+            // there should be no exceptions and no outlining when parsing a malformed for statement
+            OutlineTest("BadForStatement.py");
+        }
+
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\Outlining.sln");
 

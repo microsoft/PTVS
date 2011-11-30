@@ -25,6 +25,7 @@
   <ItemGroup>
     <None Include="Program.py" />
     <None Include="NestedFuncDef.py" />
+    <None Include="BadForStatement.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

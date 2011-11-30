@@ -1700,7 +1700,7 @@ namespace Microsoft.PythonTools.Parsing {
             bool? isSpace = null;                       // the current mix of whitespace, null = nothing yet, true = space, false = tab
 
             int spaces = 0;
-			int indentStart = _position;
+            int indentStart = CurrentIndex;
             while (true) {
                 int ch = NextChar();
 

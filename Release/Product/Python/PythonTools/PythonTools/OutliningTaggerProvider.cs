@@ -188,21 +188,23 @@ namespace Microsoft.PythonTools {
             private static TagSpan GetForSpan(PythonAst ast, ITextSnapshot snapshot, ForStatement forStmt) {
                 TagSpan tagSpan = null;
                 try {
-                    var start = forStmt.GetStart(ast);
-                    var end = forStmt.GetEnd(ast);
-                    var testLen = forStmt.List.EndIndex - forStmt.StartIndex + 1;
-                    if (start.IsValid && end.IsValid) {
-                        int length = end.Index - start.Index - testLen;
-                        if (length > 0) {
-                            var forSpan = GetFinalSpan(snapshot,
-                                start.Index + testLen,
-                                length
-                            );
+                    var start = forStmt.StartIndex;
+                    var end = forStmt.EndIndex;
+                    if (forStmt.List != null) {
+                        var testLen = forStmt.List.EndIndex - forStmt.StartIndex + 1;
+                        if (start != -1 && end != -1) {
+                            int length = end - start - testLen;
+                            if (length > 0) {
+                                var forSpan = GetFinalSpan(snapshot,
+                                    start + testLen,
+                                    length
+                                );
 
-                            tagSpan = new TagSpan(
-                                new SnapshotSpan(snapshot, forSpan),
-                                new OutliningTag(snapshot, forSpan, false)
-                            );
+                                tagSpan = new TagSpan(
+                                    new SnapshotSpan(snapshot, forSpan),
+                                    new OutliningTag(snapshot, forSpan, false)
+                                );
+                            }
                         }
                     }
                 } catch (ArgumentException) {
@@ -215,14 +217,14 @@ namespace Microsoft.PythonTools {
             private static TagSpan GetWhileSpan(PythonAst ast, ITextSnapshot snapshot, WhileStatement whileStmt) {
                 TagSpan tagSpan = null;
                 try {
-                    var start = whileStmt.GetStart(ast);
-                    var end = whileStmt.GetEnd(ast);
+                    var start = whileStmt.StartIndex;
+                    var end = whileStmt.EndIndex;
                     var testLen = whileStmt.Test.EndIndex - whileStmt.StartIndex + 1;
-                    if (start.IsValid && end.IsValid) {
-                        int length = end.Index - start.Index - testLen;
+                    if (start != -1 && end != -1) {
+                        int length = end - start - testLen;
                         if (length > 0) {
                             var whileSpan = GetFinalSpan(snapshot,
-                                start.Index + testLen,
+                                start + testLen,
                                 length
                             );
 
@@ -242,14 +244,14 @@ namespace Microsoft.PythonTools {
             private static TagSpan GetIfSpan(PythonAst ast, ITextSnapshot snapshot, IfStatement ifStmt) {
                 TagSpan tagSpan = null;
                 try {
-                    var ifStmtStart = ifStmt.GetStart(ast);
-                    var ifStmtEnd = ifStmt.GetEnd(ast);
+                    var ifStmtStart = ifStmt.StartIndex;
+                    var ifStmtEnd = ifStmt.EndIndex;
                     var testLen = ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1;
-                    if (ifStmtStart.IsValid && ifStmtEnd.IsValid) {
-                        int length = ifStmtEnd.Index - ifStmtStart.Index - testLen;
+                    if (ifStmtStart != -1 && ifStmtEnd != -1) {
+                        int length = ifStmtEnd - ifStmtStart - testLen;
                         if (length > 0) {
                             var ifSpan = GetFinalSpan(snapshot,
-                                ifStmtStart.Index + testLen,
+                                ifStmtStart + testLen,
                                 length
                             );
 
@@ -269,14 +271,14 @@ namespace Microsoft.PythonTools {
             private static TagSpan GetFunctionSpan(PythonAst ast, ITextSnapshot snapshot, FunctionDefinition funcDef) {
                 TagSpan tagSpan = null;
                 try {
-                    var funcDefStart = funcDef.GetStart(ast);
-                    var funcDefEnd = funcDef.GetEnd(ast);
+                    var funcDefStart = funcDef.StartIndex;
+                    var funcDefEnd = funcDef.EndIndex;
                     int nameLen = funcDef.HeaderIndex - funcDef.StartIndex + 1;
-                    if (funcDefStart.IsValid && funcDefEnd.IsValid) {
-                        int length = funcDefEnd.Index - funcDefStart.Index - nameLen;
-                        if (length >= 0 && length < snapshot.Length - (funcDefStart.Index + nameLen)) {
+                    if (funcDefStart != -1 && funcDefEnd != -1) {
+                        int length = funcDefEnd - funcDefStart - nameLen;
+                        if (length >= 0 && length < snapshot.Length - (funcDefStart + nameLen)) {
                             var funcSpan = GetFinalSpan(snapshot,
-                                funcDefStart.Index + nameLen,
+                                funcDefStart + nameLen,
                                 length);
 
                             tagSpan = new TagSpan(
@@ -295,13 +297,13 @@ namespace Microsoft.PythonTools {
             private static TagSpan GetClassSpan(PythonAst ast, ITextSnapshot snapshot, ClassDefinition classDef) {
                 TagSpan tagSpan = null;
                 try {
-                    var classDefStart = classDef.GetStart(ast);
-                    var classDefEnd = classDef.GetEnd(ast);
+                    var classDefStart = classDef.StartIndex;
+                    var classDefEnd = classDef.EndIndex;
                     int nameLen = classDef.HeaderIndex - classDef.StartIndex + 1;
-                    if (classDefStart.IsValid && classDefEnd.IsValid) {
+                    if (classDefStart != -1 && classDefEnd != -1) {
                         var classSpan = GetFinalSpan(snapshot,
-                            classDefStart.Index + nameLen,
-                            classDefEnd.Index - classDefStart.Index - nameLen
+                            classDefStart + nameLen,
+                            classDefEnd - classDefStart - nameLen
                         );
 
                         tagSpan = new TagSpan(
