@@ -1,13 +1,14 @@
 <VSTemplate Version="2.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
     <Name>IronPython WPF Window</Name>
-    <Description>A WPF XAML file containing a window</Description>
+    <Description>A WPF Window consisting of a XAML file and an associated .py file which loads the XAML.</Description>
     <Icon>__TemplateIcon.ico</Icon>
     <ProjectType>Python</ProjectType>
     <DefaultName>Window</DefaultName>
   </TemplateData>
   <TemplateContent>
     <References/>
-    <ProjectItem SubType="Code" TargetFileName="$fileinputname$.xaml">WpfWindow.xaml</ProjectItem>
+    <ProjectItem SubType="Designer" TargetFileName="$fileinputname$.xaml" ReplaceParameters="true">WpfWindow.xaml</ProjectItem>
+    <ProjectItem SubType="Code" TargetFileName="$fileinputname$.py" ReplaceParameters="true">WpfWindow.py</ProjectItem>
   </TemplateContent>
 </VSTemplate>

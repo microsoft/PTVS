@@ -170,6 +170,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="Resources\PythonProject.ico" />
+    <Content Include="Templates\Files\WpfWindow\WpfWindow.py" />
     <Content Include="Templates\Files\WpfWindow\WpfWindow.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -220,6 +221,12 @@
     <EmbeddedResource Include="Debugger\IronPythonLauncherOptions.resx">
       <DependentUpon>IronPythonLauncherOptions.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Templates\Files\WpfWindow\WpfWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <Import Project="..\Python.settings" />
   <Import Project="$(TargetsPath)\TCWB.CSharp.targets" />

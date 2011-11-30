@@ -22,8 +22,13 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="$safeprojectname$.py" />
-    <None Include="$safeprojectname$.xaml" />
+    <Compile Include="$safeprojectname$.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$safeprojectname$.xaml">
+      <SubType>Designer</SubType>
+    </Content>
+
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
