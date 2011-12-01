@@ -64,8 +64,9 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public virtual int get_DeploySourceURL(out string pbstrDeploySourceURL) {
             if (output == null) {
-                pbstrDeploySourceURL = null;
-                return VSConstants.E_FAIL;
+                // we're lying here to keep callers happy who expect a path...  See also OutputGroup.get_KeyOutputObject
+                pbstrDeploySourceURL = GetType().Assembly.CodeBase;
+                return VSConstants.S_OK;
             }
 
             string path = output.GetMetadataValue(ProjectFileConstants.FinalOutputPath);

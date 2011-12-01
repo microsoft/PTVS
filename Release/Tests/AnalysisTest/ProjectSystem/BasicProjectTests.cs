@@ -541,10 +541,7 @@ namespace AnalysisTest.ProjectSystem {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(program.Document.FullName);
             var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            var index = snapshot.GetText().IndexOf("a =");
-            var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
-            var analysis = snapshot.AnalyzeExpression(span);
-            Assert.AreEqual(analysis.Values.First().Description, "str");
+            Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "str");
 
             var lib = GetProject("ClassLibrary");
             var classFile = lib.ProjectItems.Item("Class1.cs");
@@ -574,8 +571,7 @@ namespace AnalysisTest.ProjectSystem {
             // rebuild
             VsIdeTestHostContext.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
 
-            analysis = snapshot.AnalyzeExpression(span);
-            Assert.AreEqual(analysis.Values.First().Description, "bool");
+            Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
         }
 
         /// <summary>
@@ -585,12 +581,7 @@ namespace AnalysisTest.ProjectSystem {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DotNetAssemblyReferences() {
-            var loc = typeof(string).Assembly.Location;
-            var psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(loc), "csc.exe"), "/target:library ClassLibrary.cs");
-            psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, @"Python.VS.TestData\\AssemblyReference\\PythonApplication");
-            var proc = System.Diagnostics.Process.Start(psi);
-            proc.WaitForExit();
-            Assert.AreEqual(proc.ExitCode, 0);
+            CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
 
             var project = DebugProject.OpenProject(@"Python.VS.TestData\AssemblyReference\AssemblyReference.sln");
             
@@ -603,34 +594,68 @@ namespace AnalysisTest.ProjectSystem {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(program.Document.FullName);
             var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            var index = snapshot.GetText().IndexOf("a =");
-            var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
-            var analysis = snapshot.AnalyzeExpression(span);
-            Assert.AreEqual(analysis.Values.First().Description, "str");
+            Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "str");
 
-            var filename = Path.Combine(Environment.CurrentDirectory, @"Python.VS.TestData\\AssemblyReference\\PythonApplication\\ClassLibrary.cs");
-            File.WriteAllText(filename, @"namespace ClassLibrary1
-{
-    public class Class1
-    {
-        public bool X
-        {
-            get { return true; }
-        }
-    }
-}
-");
-
-            psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(loc), "csc.exe"), "/target:library ClassLibrary.cs");
-            psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, @"Python.VS.TestData\\AssemblyReference\\PythonApplication");
-            proc = System.Diagnostics.Process.Start(psi);
-            proc.WaitForExit();
-            Assert.AreEqual(proc.ExitCode, 0);
+            CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
             System.Threading.Thread.Sleep(2000);
 
-            analysis = snapshot.AnalyzeExpression(span);
-            Assert.AreEqual(analysis.Values.First().Description, "bool");
+            Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
+        }
+
+
+        /// <summary>
+        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
+        /// sure the completion info changes.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MultipleDotNetAssemblyReferences() {
+            CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
+            CompileFile("ClassLibrary2.cs", "ClassLibrary2.dll");
+
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AssemblyReference\AssemblyReference.sln");
+
+            var program = project.ProjectItems.Item("Program2.py");
+            var window = program.Open();
+            window.Activate();
+
+            System.Threading.Thread.Sleep(2000);
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var doc = app.GetDocument(program.Document.FullName);
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "str");
+            Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "int");
+
+            // recompile one file, we should still have type info for both DLLs, with one updated
+            CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
+
+            System.Threading.Thread.Sleep(2000);
+            Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
+            Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "int");
+
+            // recompile the 2nd file, we should then have updated types for both DLLs
+            CompileFile("ClassLibrary2Char.cs", "ClassLibrary2.dll");
+            System.Threading.Thread.Sleep(2000);
+
+            Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
+            Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "Char");
+        }
+
+        private static ExpressionAnalysis GetVariableAnalysis(string variable, ITextSnapshot snapshot) {
+            var index = snapshot.GetText().IndexOf(variable + " =");
+            var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
+            return snapshot.AnalyzeExpression(span);
+        }
+
+        private static void CompileFile(string file, string outname) {
+            string loc = typeof(string).Assembly.Location;
+            var psi = new ProcessStartInfo(Path.Combine(Path.GetDirectoryName(loc), "csc.exe"), "/target:library /out:" + outname + " " + file);
+            psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, @"Python.VS.TestData\\AssemblyReference\\PythonApplication");
+            var proc = System.Diagnostics.Process.Start(psi);
+            proc.WaitForExit();
+            Assert.AreEqual(proc.ExitCode, 0);
         }
 
         /// <summary>

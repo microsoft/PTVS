@@ -33,6 +33,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly Dictionary<ObjectIdentityHandle, IMember> _members = new Dictionary<ObjectIdentityHandle, IMember>();
         private readonly ConcurrentDictionary<string, IronPythonModule> _modules = new ConcurrentDictionary<string, IronPythonModule>();
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
+        private readonly HashSet<ProjectReference> _projectReferenceSet = new HashSet<ProjectReference>();
         private readonly IronPythonInterpreterFactory _factory;
         private RemoteInterpreter _remote;
         private DomainUnloader _unloader;
@@ -489,6 +490,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
                             throw new Exception("Failed to load assembly: "+ asmRef.Name);
                         }
 
+                        lock (_projectReferenceSet) {
+                            _projectReferenceSet.Add(reference);
+                        }
+
                         // re-analyze clr.AddReference calls w/ new assemblie names
                         ClearAssemblyLoadSet();
 
@@ -507,6 +512,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                     if (Remote.UnloadAssemblyReference(asmRef.Name)) {
                         ReloadRemoteDomain();
+                        
+                        lock (_projectReferenceSet) {
+                            _projectReferenceSet.Remove(reference);
+                            
+                            foreach (var prevRef in _projectReferenceSet) {
+                                Remote.LoadAssemblyReference(prevRef.Name);
+                            }
+                        }
                     }
                     break;
             }

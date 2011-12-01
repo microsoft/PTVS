@@ -627,16 +627,29 @@ class Thread(object):
         self._block_lock.release()
 
     def schedule_work(self, work):
-        self._block_starting_lock.acquire()
         self.unblock_work = work
         self.unblock()
-        self._block_starting_lock.release()
 
     def run_on_thread(self, text, cur_frame, execution_id):
-        if not self._is_working:
+        self._block_starting_lock.acquire()
+        
+        if not self._is_blocked:
+            report_execution_error('<expression cannot be evaluated at this time>', execution_id)
+        elif not self._is_working:
             self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id))
         else:
             report_execution_error('<error: previous evaluation has not completed>', execution_id)
+        
+        self._block_starting_lock.release()
+
+    def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate):
+        self._block_starting_lock.acquire()
+        if not self._is_working and self._is_blocked:
+            self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate))
+            self._block_starting_lock.release()
+        else:
+            self._block_starting_lock.release()
+            report_children(execution_id, [], False, False)
 
     def run_locally(self, text, cur_frame, execution_id):
         try:
@@ -649,12 +662,6 @@ class Thread(object):
             report_execution_result(execution_id, res)
         except:
             report_execution_exception(execution_id, sys.exc_info())
-
-    def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate):
-        if not self._is_working:
-            self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate))
-        else:
-            report_children(execution_id, [], False, False)
 
     def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate):
         try:

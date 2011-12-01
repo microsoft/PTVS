@@ -30,12 +30,19 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Program.py" />
+    <Compile Include="Program2.py" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ClassLibrary, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <Name>Class1</Name>
+      <Name>ClassLibrary</Name>
       <AssemblyName>ClassLibrary.dll</AssemblyName>
       <HintPath>ClassLibrary.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="ClassLibrary2, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <Name>ClassLibrary2</Name>
+      <AssemblyName>ClassLibrary2.dll</AssemblyName>
+      <HintPath>ClassLibrary2.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

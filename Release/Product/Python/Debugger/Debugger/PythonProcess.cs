@@ -525,6 +525,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _pendingExecutes.Remove(execId);
                 _ids.Free(execId);
             }
+            Debug.WriteLine("Received execution request {0}", execId);
             completion.Completion(ReadPythonObject(socket, completion.Text, "", false, false, completion.Frame));
         }
 
@@ -863,8 +864,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal void ExecuteText(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult> completion) {
-            DebugWriteCommand("ExecuteText");
             int executeId = _ids.Allocate();
+            DebugWriteCommand("ExecuteText to thread " + pythonStackFrame.Thread.Id + " " + executeId);
             lock (_pendingExecutes) {
                 _pendingExecutes[executeId] = new CompletionInfo(completion, text, pythonStackFrame);
             }
