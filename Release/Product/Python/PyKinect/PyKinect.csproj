@@ -178,6 +178,7 @@
     <Content Include="PyKinect\speech\__init__.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="PyKinect\tests.py" />
     <Content Include="Templates\Projects\PyKinectPyGame\KinectGame.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
