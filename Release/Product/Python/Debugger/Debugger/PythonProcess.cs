@@ -623,7 +623,7 @@ namespace Microsoft.PythonTools.Debugger {
             int id = socket.ReadInt();
             var brkEvent = BreakpointBindFailed;
             PythonBreakpoint breakpoint;
-            if (brkEvent != null && _breakpoints.TryGetValue(id, out breakpoint) {
+            if (brkEvent != null && _breakpoints.TryGetValue(id, out breakpoint)) {
                 brkEvent(this, new BreakpointEventArgs(breakpoint));
             }
         }
