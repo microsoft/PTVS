@@ -24,7 +24,9 @@ using System.Windows.Input;
 using AnalysisTest.ProjectSystem;
 using AnalysisTest.UI;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Repl;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -2162,6 +2164,68 @@ $cls
             } finally {
                 GetInteractiveOptions().EnableAttach = false;
             }            
+        }
+
+        /// <summary>
+        /// Directed unit tests for the repl evaluator's spliting code into individual statements...
+        /// </summary>
+        [TestMethod]
+        public void ReplSplitCodeTest() {
+            var eval = new PythonReplEvaluator(
+                new CPythonInterpreterFactoryProvider(),
+                new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"),
+                new Version(2, 7),
+                null
+            );
+
+            var testCases = new[] {
+                new { 
+                    Code = @"def f():
+    pass
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n\r\n", "def g():\r\n    pass\r\n\r\n", "f()\r\n", "g()" }
+                },
+                new {
+                    Code = @"def f():
+    pass
+
+f()
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n\r\n", "f()\r\n", "def g():\r\n    pass\r\n\r\n", "f()\r\n", "g()" }
+                },
+                new {
+                    Code = @"def f():
+    pass
+
+f()
+f()
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n\r\n", "f()\r\n", "f()\r\n", "def g():\r\n    pass\r\n\r\n", "f()\r\n", "g()" }
+                }
+            };
+
+            foreach (var testCase in testCases) {
+                var got = eval.SplitCode(testCase.Code).ToArray();
+                Assert.AreEqual(testCase.Expected.Length, got.Length);
+                for (int i = 0; i < got.Length; i++) {
+                    Assert.AreEqual(testCase.Expected[i], got[i]);
+                }
+            }
         }
 
         /// <summary>

@@ -1293,21 +1293,44 @@ namespace Microsoft.PythonTools.Repl {
                 // But if this text is invalid and the previous parse was incomplete
                 // then appending more text won't fix things - the code in invalid, the user
                 // needs to fix it, so let's not break it up which would prevent that from happening.
-                if (result != ParseResult.Invalid || prevParseResult == ParseResult.IncompleteStatement) {
+                if (result == ParseResult.Empty) {
+                    temp.Clear();
+                    continue;
+                } else if (result == ParseResult.Complete) {
+                    yield return newCode;
+                    temp.Clear();
+
+                    prevParseResult = null;
+                    prevText = null;
+                } else if (ShouldAppendCode(prevParseResult, result)) {
                     prevText = newCode;
+                    prevParseResult = result;
                 } else if (prevText != null) {
                     // we have a complete input
                     yield return FixEndingNewLine(prevText);
                     temp.Clear();
-                    temp.AppendLine(line);
-                    prevText = temp.ToString();
+
+                    // reparse this line so our state remains consistent as if we just started out.
+                    i--;
+                    prevParseResult = null;
+                    prevText = null;
+                } else {
+                    prevParseResult = result;
                 }
-                prevParseResult = result;
             }
 
             if (temp.Length > 0) {
                 yield return FixEndingNewLine(temp.ToString());
             }
+        }
+
+        private static bool ShouldAppendCode(ParseResult? prevParseResult, ParseResult result) {
+            if (result == ParseResult.Invalid) {
+                if (prevParseResult == ParseResult.IncompleteStatement || prevParseResult == ParseResult.Invalid) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public IReplWindow Window {

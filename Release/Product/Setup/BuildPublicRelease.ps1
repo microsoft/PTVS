@@ -222,6 +222,6 @@ do {
     sleep -seconds 5
 } while(-not $files);
 
-copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outdir\Release\PTVS 1.1 Alpha.msi"
-copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outdir\Release\PTVS 1.1 Alpha - PyKinect Sample.msi"
-copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outdir\Release\PTVS 1.1 Alpha - Pyvot Sample.msi"
+copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outdir\Release\PTVS 1.1 Beta 1.msi"
+copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outdir\Release\PTVS 1.1 Beta 1 - PyKinect Sample.msi"
+copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outdir\Release\PTVS 1.1 Beta 1 - Pyvot Sample.msi"
