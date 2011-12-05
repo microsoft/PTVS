@@ -32,7 +32,6 @@ namespace AnalysisTest {
         private const string ErrorReturnWithOutputs = "Cannot extract method that assigns to variables and returns";
         private const string ErrorImportStar = "Cannot extract method containing from ... import * statement";
         private const string ErrorExtractFromClass = "Cannot extract statements from a class definition";
-        private const string ErrorExtractParameter = "Cannot extract parameter name";
 
         [TestMethod]
         public void TestDefinitions() {
@@ -91,12 +90,86 @@ def f():
         }
 
         [TestMethod]
-        public void TestExtractParameter() {
-            ExtractMethodTest(
-@"def f(x):
-    pass", "x", TestResult.Error(ErrorExtractParameter));
+        public void TestExtractDefiniteAssignmentAfter() {
+            SuccessTest("x = 42",
+@"def f():
+    x = 42
+
+    for x, y in []:
+        print x, y",
+@"def g():
+    x = 42
+
+def f():
+    g()
+
+    for x, y in []:
+        print x, y");
         }
-        
+
+        [TestMethod]
+        public void TestExtractDefiniteAssignmentAfterStmtList() {
+            SuccessTest("x = 42",
+@"def f():
+    x = 42; x = 100
+
+    for x, y in []:
+        print x, y",
+@"def g():
+    x = 42
+
+def f():
+    g(); x = 100
+
+    for x, y in []:
+        print x, y");
+        }
+
+
+
+
+        [TestMethod]
+        public void TestExtractDefiniteAssignmentAfterStmtListRead() {
+            SuccessTest("x = 100",
+@"def f():
+    x = 100; x
+
+    for x, y in []:
+        print (x, y)",
+@"def g():
+    x = 100
+    return x
+
+def f():
+    x = g(); x
+
+    for x, y in []:
+        print (x, y)");
+        }
+
+
+
+
+        [TestMethod]
+        public void TestExtractDefiniteAssignmentAfterStmtListMultipleAssign() {
+            SuccessTest("x = 100; x = 200",
+@"def f():
+    x = 100; x = 200; x
+    
+    for x, y in []:
+        print (x, y)",
+@"def g():
+    x = 100; x = 200
+    return x
+
+def f():
+    x = g(); x
+    
+    for x, y in []:
+        print (x, y)");
+        }
+
+
 
         [TestMethod]
         public void TestExtractFromClass() {

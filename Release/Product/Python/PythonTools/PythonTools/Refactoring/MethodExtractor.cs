@@ -98,8 +98,20 @@ namespace Microsoft.PythonTools.Refactoring {
                 readBeforeInit = new HashSet<PythonVariable>();
             }
 
+            // then on code which follows our extracted body
+            var afterStmts = walker.Target.GetStatementsAfter(_ast);
+            HashSet<PythonVariable> readByFollowingCodeBeforeInit = null;
+            if (afterStmts != null) {
+                var parentNode = walker.Target.Parents[walker.Target.Parents.Length - 1];
+                if (parentNode.ScopeVariables != null) {
+                    var checker = new FlowChecker(parentNode);
+                    afterStmts.Walk(checker);
+                    readByFollowingCodeBeforeInit = checker.ReadBeforeInitializedVariables;
+                }
+            }
+
             // discover any variables which are consumed and need to be available as outputs...
-            var outputCollector = new OuterVariableWalker(_ast, walker.Target, varCollector, readBeforeInit);
+            var outputCollector = new OuterVariableWalker(_ast, walker.Target, varCollector, readBeforeInit, readByFollowingCodeBeforeInit);
             _ast.Walk(outputCollector);
 
             if (outputCollector._outputVars.Count > 0 &&
@@ -399,14 +411,15 @@ namespace Microsoft.PythonTools.Refactoring {
             private readonly SelectionTarget _target;
             internal readonly HashSet<PythonVariable> _outputVars = new HashSet<PythonVariable>();
             internal readonly HashSet<PythonVariable> _inputVars = new HashSet<PythonVariable>();
-            private readonly HashSet<PythonVariable> _readBeforeInitialized;
+            private readonly HashSet<PythonVariable> _readBeforeInitialized, _readByFollowingCodeBeforeInit;
             private bool _inLoop = false;
 
-            public OuterVariableWalker(PythonAst root, SelectionTarget target, InnerVariableWalker inputCollector, HashSet<PythonVariable> readBeforeInitialized) {
+            public OuterVariableWalker(PythonAst root, SelectionTarget target, InnerVariableWalker inputCollector, HashSet<PythonVariable> readBeforeInitialized, HashSet<PythonVariable> readByFollowingCodeBeforeInit) {
                 _root = root;
                 _target = target;
                 _inputCollector = inputCollector;
                 _readBeforeInitialized = readBeforeInitialized;
+                _readByFollowingCodeBeforeInit = readByFollowingCodeBeforeInit;
                 _define = new DefineWalker(this);
             }
 
@@ -481,7 +494,8 @@ namespace Microsoft.PythonTools.Refactoring {
 
                         // it's read after the extracted code, if its written to in the refactored 
                         // code we need to include it as an output
-                        if (_inputCollector._allWrittenVariables.Contains(reference.Variable)) {
+                        if (_inputCollector._allWrittenVariables.Contains(reference.Variable) &&
+                            (_readByFollowingCodeBeforeInit == null || _readByFollowingCodeBeforeInit.Contains(reference.Variable))) {
                             // the variable is written to by the refactored code
                             _outputVars.Add(reference.Variable);
                         }

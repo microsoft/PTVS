@@ -116,7 +116,8 @@ namespace Microsoft.PythonTools.Refactoring {
             }
             if (_targetNode == null &&
                 node.StartIndex <= _selectedSpan.Start &&
-                node.EndIndex >= _selectedSpan.End) {
+                node.EndIndex >= _selectedSpan.End &&
+                node is Expression) {
                 _targetNode = new NodeTarget(_insertLocations, _parents.ToArray(), node);
             }
         }

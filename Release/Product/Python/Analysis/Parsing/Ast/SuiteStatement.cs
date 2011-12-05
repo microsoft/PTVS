@@ -69,12 +69,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (colonWhiteSpace != null) {
                 ast.SetAttribute(res, NodeAttributes.PreceedingWhiteSpace, "");
             } else if (itemWhiteSpace != null) {
+                // semi-colon list of statements, must end in a new line, but the original new line
+                // could be multiple lines.
                 ast.SetAttribute(res, NodeAttributes.ListWhiteSpace, new string[0]);
-
+                var trailingNewLine = this.GetTrailingNewLine(ast);
+                if (trailingNewLine != null) {
+                    ast.SetAttribute(res, NodeAttributes.TrailingNewLine, "\r\n");
+                }
             }
+
             if (this.IsAltForm(ast)) {
                 ast.SetAttribute(res, NodeAttributes.IsAltFormValue, NodeAttributes.IsAltFormValue);
             }
+
             return res;
         }
 

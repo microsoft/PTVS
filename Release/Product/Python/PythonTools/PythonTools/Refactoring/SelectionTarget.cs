@@ -40,6 +40,10 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public abstract Statement GetBody(PythonAst root);
 
+        public virtual SuiteStatement GetStatementsAfter(PythonAst root) {
+            return null;
+        }
+
         public abstract int Start {
             get;
         }
@@ -127,6 +131,14 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public override Statement GetBody(PythonAst root) {
             var ast = _suite.CloneSubset(Parents[0] as PythonAst, _start, _end);
+            if (!_suite.IsFunctionOrClassSuite(root)) {
+                ast = new SuiteStatement(new[] { ast });
+            }
+            return ast;
+        }
+
+        public override SuiteStatement GetStatementsAfter(PythonAst root) {
+            var ast = _suite.CloneSubset(Parents[0] as PythonAst, _end + 1, _suite.Statements.Count - 1);
             if (!_suite.IsFunctionOrClassSuite(root)) {
                 ast = new SuiteStatement(new[] { ast });
             }
