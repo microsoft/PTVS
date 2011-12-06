@@ -35,7 +35,7 @@ if len(sys.argv) == 4:
             module = imp.load_dynamic(mod_name, filename)
         except ImportError:
             e = sys.exc_info()[1]
-            print e
+            print(e)
             sys.exit(1)
 
         import PythonScraper

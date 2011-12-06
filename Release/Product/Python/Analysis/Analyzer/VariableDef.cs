@@ -250,10 +250,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     class LocatedVariableDef : VariableDef {
         private readonly ProjectEntry _entry;
-        private readonly int _declaringVersion;
+        private int _declaringVersion;
         private Node _location;
 
-        
         public LocatedVariableDef(ProjectEntry entry, Node location) {
             _entry = entry;
             _location = location;
@@ -270,6 +269,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public int DeclaringVersion {
             get {
                 return _declaringVersion;
+            }
+            set {
+                _declaringVersion = value;
             }
         }
 

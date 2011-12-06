@@ -49,6 +49,19 @@ namespace AnalysisTest.Mocks {
 
 #pragma warning restore 67
 
+        /// <summary>
+        /// Raises a fake changed low priority event
+        /// </summary>
+        public void RaiseChangedLowPriority() {
+            var changed = ChangedLowPriority;
+            if (changed != null) {
+                var oldSnapshot = _snapshot;
+                var newSnapshot = new MockTextSnapshot(this, _snapshot.GetText());
+                _snapshot = newSnapshot;
+                changed(this, new TextContentChangedEventArgs(oldSnapshot, newSnapshot, EditOptions.None, null));
+            }
+        }
+
         public bool CheckEditAccess() {
             throw new NotImplementedException();
         }

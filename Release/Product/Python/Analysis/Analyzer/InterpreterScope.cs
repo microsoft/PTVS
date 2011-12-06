@@ -92,6 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 return Variables[name] = def;
             } else {
                 ((LocatedVariableDef)value).Node = location;
+                ((LocatedVariableDef)value).DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
             }
             return value;
         }
