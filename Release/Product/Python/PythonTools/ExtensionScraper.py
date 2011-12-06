@@ -33,7 +33,8 @@ if len(sys.argv) == 4:
         mod_name = path.splitext(path.basename(filename))[0]
         try:
             module = imp.load_dynamic(mod_name, filename)
-        except ImportError, e:
+        except ImportError:
+            e = sys.exc_info()[1]
             print e
             sys.exit(1)
 
