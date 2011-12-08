@@ -28,13 +28,27 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly string _dbDir;
         private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
         private readonly bool _is3x;
+        private readonly Version _langVersion;  // language version, null when we have a generated database, set when using the shared DB.
         private IBuiltinPythonModule _builtinModule;
 
         public SharedDatabaseState(string databaseDirectory, bool is3x, IBuiltinPythonModule builtinsModule) {
             _dbDir = databaseDirectory;
-            _modules["__builtin__"] = _builtinModule = builtinsModule ?? new CPythonBuiltinModule(this, "__builtin__", Path.Combine(databaseDirectory, is3x ? "builtins.idb" : "__builtin__.idb"), true);
+            _modules["__builtin__"] = _builtinModule = builtinsModule ?? MakeBuiltinModule(databaseDirectory, is3x);
             _is3x = is3x;
 
+            InitializeModules(databaseDirectory, is3x);
+        }
+
+        public SharedDatabaseState(string databaseDirectory, Version pythonLanguageVersion) {
+            _dbDir = databaseDirectory;
+            _is3x = pythonLanguageVersion.Major >= 3;
+            _modules["__builtin__"] = _builtinModule = MakeBuiltinModule(databaseDirectory, _is3x);
+            _langVersion = pythonLanguageVersion;
+
+            InitializeModules(databaseDirectory, _is3x);
+        }
+
+        private void InitializeModules(string databaseDirectory, bool is3x) {
             foreach (var file in Directory.GetFiles(databaseDirectory)) {
                 if (!file.EndsWith(".idb", StringComparison.OrdinalIgnoreCase) || file.IndexOf('$') != -1) {
                     continue;
@@ -43,8 +57,26 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 string modName = Path.GetFileNameWithoutExtension(file);
+                if (is3x && _langVersion != null) {
+                    // aliases for 3.x when using the default completion DB
+                    switch (modName) {
+                        case "cPickle": modName = "_pickle"; break;
+                        case "thread": modName = "_thread"; break;
+                    }
+                }
                 _modules[modName] = new CPythonModule(this, modName, file, false);
             }
+        }
+
+        private CPythonBuiltinModule MakeBuiltinModule(string databaseDirectory, bool is3x) {
+            string filename = Path.Combine(databaseDirectory, "__builtin__.idb");
+            if (is3x && !File.Exists(filename)) {
+                // Python 3.x the module is builtins, but we may have __builtin__.idb even if
+                // we're 3.x when using the default completion DB that we install w/ PTVS.
+                filename = Path.Combine(databaseDirectory, "builtins.idb");
+            }
+
+            return new CPythonBuiltinModule(this, "__builtin__", filename, true);
         }
 
         public IPythonModule GetModule(string name, PythonTypeDatabase instanceDb = null) {
@@ -60,6 +92,12 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (instanceDb != null && instanceDb._modules.TryGetValue(name, out res)) {
                 isInstanceMember = true;
                 return res;
+            } else if (_is3x && _langVersion != null) {
+                // aliases for 3.x when using the default completion DB
+                switch (name) {
+                    case "cPickle": return GetModule("_pickle", out isInstanceMember, instanceDb);
+                    case "thread": return GetModule("_thread", out isInstanceMember, instanceDb);
+                }
             }
 
             isInstanceMember = false;
@@ -195,7 +233,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 memberValue.TryGetValue("kind", out memberKind) && memberKind is string) {
                 switch ((string)memberKind) {
                     case "function":
-                        assign(memberName, new CPythonFunction(this, memberName, valueDict, container));
+                        if (CheckVersion(valueDict)) {
+                            assign(memberName, new CPythonFunction(this, memberName, valueDict, container));
+                        }
                         break;
                     case "func_ref":
                         string funcName;
@@ -228,14 +268,18 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                         break;
                     case "method":
-                        assign(memberName, new CPythonMethodDescriptor(this, memberName, valueDict, container));
+                        if (CheckVersion(valueDict)) {
+                            assign(memberName, new CPythonMethodDescriptor(this, memberName, valueDict, container));
+                        }
                         break;
                     case "property":
-                        assign(memberName, new CPythonProperty(this, valueDict, container));
+                        if (CheckVersion(valueDict)) {
+                            assign(memberName, new CPythonProperty(this, valueDict, container));
+                        }
                         break;
                     case "data":
                         object typeInfo;
-                        if (valueDict.TryGetValue("type", out typeInfo)) {
+                        if (valueDict.TryGetValue("type", out typeInfo) && CheckVersion(valueDict)) {
                             LookupType(
                                 typeInfo,
                                 (dataType, fromInstanceDb) => {
@@ -246,7 +290,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                         break;
                     case "type":
-                        assign(memberName, MakeType(memberName, valueDict, container));
+                        if (CheckVersion(valueDict)) {
+                            assign(memberName, MakeType(memberName, valueDict, container));
+                        }
                         break;
                     case "multiple":
                         object members;
@@ -274,6 +320,74 @@ namespace Microsoft.PythonTools.Interpreter {
                         break;
                 }
             }
+        }
+
+        private bool CheckVersion(Dictionary<string, object> valueDict) {
+            object version;
+            return !valueDict.TryGetValue("version", out version) || VersionApplies(version);
+        }
+
+        /// <summary>
+        /// Checks to see if this member is applicable to our current language version for the shared DB.
+        /// 
+        /// Version formats are specified in the format:
+        /// 
+        /// version_check|version_checks
+        /// 
+        /// version_check:
+        ///     greater_equals_check
+        ///     less_equals_check
+        ///     equals_check
+        ///     
+        /// greater_equals_check:   &gt;=version
+        /// less_equals_check:      &lt;=version
+        /// equals_check            ==version
+        /// 
+        /// version:    major_version.minor_version
+        /// major_version: number
+        /// minor_version: number
+        /// 
+        /// version_checks:  version_check(;version_check)+
+        /// 
+        /// For the member to be included all checks must pass.
+        /// </summary>
+        internal bool VersionApplies(object version) {
+            if (_langVersion == null || version == null) {
+                return true;
+            }
+
+            string strVer = version as string;
+            if (strVer != null) {
+                if (strVer.IndexOf(';') != -1) {
+                    foreach (var curVersion in strVer.Split(';')) {
+                        if (!OneVersionApplies(curVersion)) {
+                            return false;
+                        }
+                    }
+                    return true;
+                } else {
+                    return OneVersionApplies(strVer);
+                }
+            }
+            return false;
+        }
+
+        private bool OneVersionApplies(string strVer) {            
+            Version specifiedVer;
+            if (strVer.StartsWith(">=")) {
+                if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion >= specifiedVer) {
+                    return true;
+                }
+            } else if (strVer.StartsWith("<=")) {
+                if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion <= specifiedVer) {
+                    return true;
+                }
+            } else if (strVer.StartsWith("==")) {
+                if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion == specifiedVer) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private IMember[] GetMultipleMembers(string memberName, IMemberContainer container, object[] memsArray, PythonTypeDatabase instanceDb = null) {

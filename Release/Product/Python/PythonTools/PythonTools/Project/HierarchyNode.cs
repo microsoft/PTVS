@@ -1171,37 +1171,26 @@ namespace Microsoft.PythonTools.Project
 				string newFolderName;
 				ErrorHandler.ThrowOnFailure(this.projectMgr.GenerateUniqueItemName(this.hierarchyId, String.Empty, String.Empty, out newFolderName));
 
-				// create the project part of it, the project file
-				HierarchyNode child = this.ProjectMgr.CreateFolderNodes(Path.Combine(this.virtualNodeName, newFolderName));
+				// create the folder node, this will add it to MS build but we won't have the directory created yet.
+				var folderNode = ProjectMgr.CreateFolderNode(Path.Combine(this.virtualNodeName, newFolderName));
+				folderNode.IsBeingCreated = true;
+				AddChild(folderNode);
 
-				if(child is FolderNode)
+				IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.projectMgr.Site, SolutionExplorer);
+				ErrorHandler.ThrowOnFailure(uiWindow.ExpandItem(this.projectMgr, folderNode.hierarchyId, EXPANDFLAGS.EXPF_SelectItem));
+				IVsUIShell shell = this.projectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
+
+				// let the user rename the folder which will create the directory when finished
+				int hr;
+				object dummy = null;
+				Guid cmdGroup = VsMenus.guidStandardCommandSet97;
+				if (ErrorHandler.Failed(hr = shell.PostExecCommand(ref cmdGroup, (uint)VsCommands.Rename, 0, ref dummy)))
 				{
-					((FolderNode)child).CreateDirectory();
-				}
-
-				// If we are in automation mode then skip the ui part which is about renaming the folder
-				if(!Utilities.IsInAutomationFunction(this.projectMgr.Site))
-				{
-					IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.projectMgr.Site, SolutionExplorer);
-					// we need to get into label edit mode now...
-					// so first select the new guy...
-					ErrorHandler.ThrowOnFailure(uiWindow.ExpandItem(this.projectMgr, child.hierarchyId, EXPANDFLAGS.EXPF_SelectItem));
-					// them post the rename command to the shell. Folder verification and creation will
-					// happen in the setlabel code...
-					IVsUIShell shell = this.projectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
-
-					Debug.Assert(shell != null, "Could not get the ui shell from the project");
-					if(shell == null)
-					{
-						return VSConstants.E_FAIL;
-					}
-
-					object dummy = null;
-					Guid cmdGroup = VsMenus.guidStandardCommandSet97;
-					ErrorHandler.ThrowOnFailure(shell.PostExecCommand(ref cmdGroup, (uint)VsCommands.Rename, 0, ref dummy));
+					// make sure the directory is created...
+					folderNode.OnCancelLabelEdit();
 				}
 			}
-			catch(COMException e)
+			catch (COMException e)
 			{
 				Trace.WriteLine("Exception : " + e.Message);
 				return e.ErrorCode;

@@ -37,10 +37,17 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 10;
+        public static readonly int CurrentVersion = 11;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
+        }
+
+        /// <summary>
+        /// Constructor used for the default type database specified with a version.
+        /// </summary>
+        internal PythonTypeDatabase(string databaseDirectory, Version languageVersion) {
+            _sharedState = new SharedDatabaseState(databaseDirectory, languageVersion);
         }
 
         internal PythonTypeDatabase(SharedDatabaseState cloning) {
@@ -310,6 +317,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static PythonTypeDatabase CreateDefaultTypeDatabase() {
             return new PythonTypeDatabase(GetBaselineDatabasePath());
+        }
+
+        public static PythonTypeDatabase CreateDefaultTypeDatabase(Version pythonLanguageVersion) {
+            return new PythonTypeDatabase(GetBaselineDatabasePath(), pythonLanguageVersion);
         }
 
         public IEnumerable<string> GetModuleNames() {

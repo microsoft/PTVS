@@ -67,6 +67,15 @@
     <None Include="Python.VS.TestData\ErrorProjectUnicode\HelloWorld.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Python.VS.TestData\AddFolderExists\AddFolderExists.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="Python.VS.TestData\AddFolderExists\Program.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddFolderExists.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\ErrorProjectUnicode.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1482,7 +1491,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Python.VS.TestData\AddFolderExists\X\" />
+    <Folder Include="Python.VS.TestData\AddFolderExists\Y\" />
+  </ItemGroup>
   <Import Project="..\..\Product\Python\Python.settings" />
   <Import Project="$(TargetsPath)\TCWB.CSharp.targets" />
   <PropertyGroup>

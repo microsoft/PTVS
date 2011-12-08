@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -62,6 +63,71 @@ namespace AnalysisTest {
                         Assert.AreEqual(overload["ret_type"][1], "file");
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Checks that members removed or introduced in later versions show up or don't in
+        /// earlier versions as appropriate.
+        /// </summary>
+        [TestMethod]
+        public void VersionedSharedDatabase() {
+            var twoFive = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 5));
+            var twoSix = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 6));
+            var twoSeven = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 7));
+            var threeOh = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(3, 0));
+            var threeOne = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(3, 1));
+            var threeTwo = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(3, 2));
+
+            // new in 2.6
+            Assert.AreEqual(null, twoFive.BuiltinModule.GetAnyMember("bytearray"));
+            foreach (var version in new[] { twoSix, twoSeven, threeOh, threeOne, threeTwo }) {
+                Assert.AreNotEqual(version, version.BuiltinModule.GetAnyMember("bytearray"));
+            }
+
+            // new in 2.7
+            Assert.AreEqual(null, twoSix.BuiltinModule.GetAnyMember("memoryview"));
+            foreach (var version in new[] { twoSeven, threeOh, threeOne, threeTwo }) {
+                Assert.AreNotEqual(version, version.BuiltinModule.GetAnyMember("memoryview"));
+            }
+
+            // not in 3.0
+            foreach (var version in new[] { twoFive, twoSix, twoSeven }) {
+                Assert.AreNotEqual(null, version.BuiltinModule.GetAnyMember("StandardError"));
+            }
+
+            foreach (var version in new[] { threeOh, threeOne, threeTwo }) {
+                Assert.AreEqual(null, version.BuiltinModule.GetAnyMember("StandardError"));
+            }
+
+            // new in 3.0
+            foreach (var version in new[] { twoFive, twoSix, twoSeven }) {
+                Assert.AreEqual(null, version.BuiltinModule.GetAnyMember("exec"));
+                Assert.AreEqual(null, version.BuiltinModule.GetAnyMember("print"));
+            }
+
+            foreach (var version in new[] { threeOh, threeOne, threeTwo }) {
+                Assert.AreNotEqual(null, version.BuiltinModule.GetAnyMember("exec"));
+                Assert.AreNotEqual(null, version.BuiltinModule.GetAnyMember("print"));
+            }
+
+
+            // new in 3.1
+            foreach (var version in new[] { twoFive, twoSix, twoSeven, threeOh }) {
+                Assert.AreEqual(null, version.GetModule("sys").GetMember(null, "int_info"));
+            }
+
+            foreach (var version in new[] { threeOne, threeTwo }) {
+                Assert.AreNotEqual(null, version.GetModule("sys").GetMember(null, "int_info"));
+            }
+
+            // new in 3.2
+            foreach (var version in new[] { twoFive, twoSix, twoSeven, threeOh, threeOne }) {
+                Assert.AreEqual(null, version.GetModule("sys").GetMember(null, "setswitchinterval"));
+            }
+
+            foreach (var version in new[] { threeTwo }) {
+                Assert.AreNotEqual(null, version.GetModule("sys").GetMember(null, "setswitchinterval"));
             }
         }
     }

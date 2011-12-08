@@ -32,6 +32,8 @@ namespace Microsoft.PythonTools.Project
 	[ComVisible(true)]
 	public class FolderNode : HierarchyNode
 	{
+		private bool _isBeingCreated;
+
 		#region ctors
 		/// <summary>
 		/// Constructor for the FolderNode
@@ -103,7 +105,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			return this.ProjectMgr.ImageHandler.GetIconHandle(open ? (int)ProjectNode.ImageName.OpenFolder : (int)ProjectNode.ImageName.Folder);
 		}
-
+        
 		/// <summary>
 		/// Rename Folder
 		/// </summary>
@@ -111,32 +113,40 @@ namespace Microsoft.PythonTools.Project
 		/// <returns>VSConstants.S_OK, if succeeded</returns>
 		public override int SetEditLabel(string label)
 		{
-			if(String.Compare(Path.GetFileName(this.Url.TrimEnd('\\')), label, StringComparison.Ordinal) == 0)
+			if (_isBeingCreated)
 			{
-				// Label matches current Name
-				return VSConstants.S_OK;
+				return FinishFolderAdd(label);
 			}
-
-			string newPath = Path.Combine(new DirectoryInfo(this.Url).Parent.FullName, label);
-
-			// Verify that No Directory/file already exists with the new name among current children
-			for(HierarchyNode n = Parent.FirstChild; n != null; n = n.NextSibling)
+			else
 			{
-				if(n != this && String.Compare(n.Caption, label, StringComparison.OrdinalIgnoreCase) == 0)
+				if (String.Compare(Path.GetFileName(this.Url.TrimEnd('\\')), label, StringComparison.Ordinal) == 0)
+				{
+					// Label matches current Name
+					return VSConstants.S_OK;
+				}
+
+				string newPath = Path.Combine(new DirectoryInfo(this.Url).Parent.FullName, label);
+
+				// Verify that No Directory/file already exists with the new name among current children
+				for (HierarchyNode n = Parent.FirstChild; n != null; n = n.NextSibling)
+				{
+					if (n != this && String.Compare(n.Caption, label, StringComparison.OrdinalIgnoreCase) == 0)
+					{
+						return ShowFileOrFolderAlreadExistsErrorMessage(newPath);
+					}
+				}
+
+				// Verify that No Directory/file already exists with the new name on disk
+				if (Directory.Exists(newPath) || File.Exists(newPath))
 				{
 					return ShowFileOrFolderAlreadExistsErrorMessage(newPath);
 				}
-			}
 
-			// Verify that No Directory/file already exists with the new name on disk
-			if(Directory.Exists(newPath) || File.Exists(newPath))
-			{
-				return ShowFileOrFolderAlreadExistsErrorMessage(newPath);
+				if (!ProjectMgr.Tracker.CanRenameItem(Url, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory))
+				{
+					return VSConstants.S_OK;
+				}
 			}
-
-            if (!ProjectMgr.Tracker.CanRenameItem(Url, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory)) {
-                return VSConstants.S_OK;
-            }
 
 			try
 			{
@@ -165,6 +175,46 @@ namespace Microsoft.PythonTools.Project
 			return VSConstants.S_OK;
 		}
 
+		private int FinishFolderAdd(string label)
+		{
+			// finish creation
+			string filename = label.Trim();
+			if (filename == "." || filename == "..")
+			{
+				// TODO: Report error, illegal filename
+				NativeMethods.SetErrorDescription("{0} is an invalid filename.", filename);
+				return VSConstants.E_FAIL;
+			}
+
+			var path = Path.Combine(ProjectMgr.GetBaseDirectoryForAddingFiles(Parent), label);
+			if (path.Length > NativeMethods.MAX_PATH)
+			{
+				NativeMethods.SetErrorDescription("The path {0} is too long and the folder cannot be added.", path);
+				return VSConstants.E_FAIL;
+			}
+
+			if (filename == Caption || this.Parent.FindChild(filename, false) == null)
+			{
+				if (ProjectMgr.QueryFolderAdd(Parent, this, path))
+				{
+					Directory.CreateDirectory(path);
+					_isBeingCreated = false;
+					this.VirtualNodeName = filename;
+
+					this.OnItemDeleted();
+					this.Parent.RemoveChild(this);
+					this.ID = ProjectMgr.ItemIdMap.Add(this);
+					this.Parent.AddChild(this);
+				}
+			}
+			else
+			{
+				// Set error: folder already exists
+				NativeMethods.SetErrorDescription("The folder {0} already exists.", filename);
+				return VSConstants.E_FAIL;
+			}
+			return VSConstants.S_OK;
+		}
 
 		public override int MenuCommandId
 		{
@@ -412,6 +462,27 @@ namespace Microsoft.PythonTools.Project
 			else
 			{
 				throw new InvalidOperationException(errorMessage);
+			}
+		}
+
+		internal void OnCancelLabelEdit()
+		{
+			if (_isBeingCreated)
+			{
+				// finish the creation
+				ErrorHandler.ThrowOnFailure(SetEditLabel(VirtualNodeName));
+			}
+		}
+
+		internal bool IsBeingCreated
+		{
+			get
+			{
+				return _isBeingCreated;
+			}
+			set
+			{
+				_isBeingCreated = value;
 			}
 		}
 

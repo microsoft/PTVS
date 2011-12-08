@@ -14,12 +14,11 @@
 
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Project
@@ -485,46 +484,48 @@ namespace Microsoft.PythonTools.Project
 		/// </devdoc>
 		public static class OLECMDTEXT
 		{
-            public static void SetText(IntPtr pCmdTextInt, string text) {
-                Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
-                char[] menuText = text.ToCharArray();
+			public static void SetText(IntPtr pCmdTextInt, string text)
+			{
+				Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
+				char[] menuText = text.ToCharArray();
 
-                // Get the offset to the rgsz param.  This is where we will stuff our text
-                //
-                IntPtr offset = Marshal.OffsetOf(typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT), "rgwz");
-                IntPtr offsetToCwActual = Marshal.OffsetOf(typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT), "cwActual");
+				// Get the offset to the rgsz param.  This is where we will stuff our text
+				//
+				IntPtr offset = Marshal.OffsetOf(typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT), "rgwz");
+				IntPtr offsetToCwActual = Marshal.OffsetOf(typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT), "cwActual");
 
-                // The max chars we copy is our string, or one less than the buffer size,
-                // since we need a null at the end.
-                //
-                int maxChars = Math.Min((int)pCmdText.cwBuf - 1, menuText.Length);
+				// The max chars we copy is our string, or one less than the buffer size,
+				// since we need a null at the end.
+				//
+				int maxChars = Math.Min((int)pCmdText.cwBuf - 1, menuText.Length);
 
-                Marshal.Copy(menuText, 0, (IntPtr)((long)pCmdTextInt + (long)offset), maxChars);
+				Marshal.Copy(menuText, 0, (IntPtr)((long)pCmdTextInt + (long)offset), maxChars);
 
-                // append a null character
-                Marshal.WriteInt16((IntPtr)((long)pCmdTextInt + (long)offset + maxChars * 2), 0);
+				// append a null character
+				Marshal.WriteInt16((IntPtr)((long)pCmdTextInt + (long)offset + maxChars * 2), 0);
 
-                // write out the length
-                // +1 for the null char
-                Marshal.WriteInt32((IntPtr)((long)pCmdTextInt + (long)offsetToCwActual), maxChars + 1);
-            }
+				// write out the length
+				// +1 for the null char
+				Marshal.WriteInt32((IntPtr)((long)pCmdTextInt + (long)offsetToCwActual), maxChars + 1);
+			}
 
-            /// <summary>
-            /// Gets the flags of the OLECMDTEXT structure
-            /// </summary>
-            /// <param name="pCmdTextInt">The structure to read.</param>
-            /// <returns>The value of the flags.</returns>
-            public static OLECMDTEXTF GetFlags(IntPtr pCmdTextInt) {
-                Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
+			/// <summary>
+			/// Gets the flags of the OLECMDTEXT structure
+			/// </summary>
+			/// <param name="pCmdTextInt">The structure to read.</param>
+			/// <returns>The value of the flags.</returns>
+			public static OLECMDTEXTF GetFlags(IntPtr pCmdTextInt)
+			{
+				Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
 
-                if ((pCmdText.cmdtextf & (int)OLECMDTEXTF.OLECMDTEXTF_NAME) != 0)
-                    return OLECMDTEXTF.OLECMDTEXTF_NAME;
+				if ((pCmdText.cmdtextf & (int)OLECMDTEXTF.OLECMDTEXTF_NAME) != 0)
+					return OLECMDTEXTF.OLECMDTEXTF_NAME;
 
-                if ((pCmdText.cmdtextf & (int)OLECMDTEXTF.OLECMDTEXTF_STATUS) != 0)
-                    return OLECMDTEXTF.OLECMDTEXTF_STATUS;
+				if ((pCmdText.cmdtextf & (int)OLECMDTEXTF.OLECMDTEXTF_STATUS) != 0)
+					return OLECMDTEXTF.OLECMDTEXTF_STATUS;
 
-                return OLECMDTEXTF.OLECMDTEXTF_NONE;
-            }
+				return OLECMDTEXTF.OLECMDTEXTF_NONE;
+			}
 
 
 			/// <summary>
@@ -558,7 +559,7 @@ namespace Microsoft.PythonTools.Project
 		/// </devdoc>
 		public static bool IsSamePath(string file1, string file2)
 		{
-			if(file1 == null || file1.Length == 0)
+			if (file1 == null || file1.Length == 0)
 			{
 				return (file2 == null || file2.Length == 0);
 			}
@@ -568,25 +569,46 @@ namespace Microsoft.PythonTools.Project
 
 			try
 			{
-				if(!Uri.TryCreate(file1, UriKind.Absolute, out uri1) || !Uri.TryCreate(file2, UriKind.Absolute, out uri2))
+				if (!Uri.TryCreate(file1, UriKind.Absolute, out uri1) || !Uri.TryCreate(file2, UriKind.Absolute, out uri2))
 				{
 					return false;
 				}
 
-				if(uri1 != null && uri1.IsFile && uri2 != null && uri2.IsFile)
+				if (uri1 != null && uri1.IsFile && uri2 != null && uri2.IsFile)
 				{
 					return 0 == String.Compare(uri1.LocalPath, uri2.LocalPath, StringComparison.OrdinalIgnoreCase);
 				}
 
 				return file1 == file2;
 			}
-			catch(UriFormatException e)
+			catch (UriFormatException e)
 			{
 				Trace.WriteLine("Exception " + e.Message);
 			}
 
 			return false;
 		}
+
+		public static void SetErrorDescription(string description, params object[] args)
+		{
+			ICreateErrorInfo errInfo;
+			ErrorHandler.ThrowOnFailure(CreateErrorInfo(out errInfo));
+
+			errInfo.SetDescription(String.Format(description, args));
+			var guidNull = Guid.Empty;
+			errInfo.SetGUID(ref guidNull);
+			errInfo.SetHelpFile(null);
+			errInfo.SetHelpContext(0);
+			errInfo.SetSource("");
+			IErrorInfo errorInfo = errInfo as IErrorInfo;
+			SetErrorInfo(0, errorInfo);
+		}
+
+		[DllImport("oleaut32")]
+		static extern int CreateErrorInfo(out ICreateErrorInfo errInfo);
+
+		[DllImport("oleaut32")]
+		static extern int SetErrorInfo(uint dwReserved, IErrorInfo perrinfo);
 
 		[ComImport(), Guid("9BDA66AE-CA28-4e22-AA27-8A7218A0E3FA"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
 		public interface IEventHandler
@@ -732,215 +754,240 @@ namespace Microsoft.PythonTools.Project
 		[DllImport("kernel32.dll")]
 		public static extern bool GetBinaryType([MarshalAs(UnmanagedType.LPWStr)]string lpApplicationName, out uint lpBinaryType);
 
-           
-        [DllImport("advapi32.dll", CharSet=CharSet.Auto, SetLastError=true)]
-        public extern static bool DuplicateToken(IntPtr ExistingTokenHandle, 
-           int SECURITY_IMPERSONATION_LEVEL, ref IntPtr DuplicateTokenHandle);
 
-        [DllImport("ADVAPI32.dll", SetLastError = true)]
-        internal static extern bool LogonUser(
-            [In] string lpszUsername,
-            [In] string lpszDomain,
-            [In] string lpszPassword,
-            [In] LogonType dwLogonType,
-            [In] LogonProvider dwLogonProvider,
-            [In, Out] ref IntPtr hToken
-            );
+		[DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		public extern static bool DuplicateToken(IntPtr ExistingTokenHandle,
+		   int SECURITY_IMPERSONATION_LEVEL, ref IntPtr DuplicateTokenHandle);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool CloseHandle(IntPtr handle);
+		[DllImport("ADVAPI32.dll", SetLastError = true)]
+		internal static extern bool LogonUser(
+			[In] string lpszUsername,
+			[In] string lpszDomain,
+			[In] string lpszPassword,
+			[In] LogonType dwLogonType,
+			[In] LogonProvider dwLogonProvider,
+			[In, Out] ref IntPtr hToken
+			);
 
-        public enum LogonType {
-            LOGON32_LOGON_INTERACTIVE = 2,
-            LOGON32_LOGON_NETWORK,
-            LOGON32_LOGON_BATCH,
-            LOGON32_LOGON_SERVICE = 5,
-            LOGON32_LOGON_UNLOCK = 7,
-            LOGON32_LOGON_NETWORK_CLEARTEXT,
-            LOGON32_LOGON_NEW_CREDENTIALS
-        }
-     
-         public enum LogonProvider {
-                LOGON32_PROVIDER_DEFAULT = 0,
-                LOGON32_PROVIDER_WINNT35,
-                LOGON32_PROVIDER_WINNT40,
-                LOGON32_PROVIDER_WINNT50
-            }
-    
+		[DllImport("kernel32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		public static extern bool CloseHandle(IntPtr handle);
+
+		public enum LogonType
+		{
+			LOGON32_LOGON_INTERACTIVE = 2,
+			LOGON32_LOGON_NETWORK,
+			LOGON32_LOGON_BATCH,
+			LOGON32_LOGON_SERVICE = 5,
+			LOGON32_LOGON_UNLOCK = 7,
+			LOGON32_LOGON_NETWORK_CLEARTEXT,
+			LOGON32_LOGON_NEW_CREDENTIALS
+		}
+
+		public enum LogonProvider
+		{
+			LOGON32_PROVIDER_DEFAULT = 0,
+			LOGON32_PROVIDER_WINNT35,
+			LOGON32_PROVIDER_WINNT40,
+			LOGON32_PROVIDER_WINNT50
+		}
+
 
 
 	}
 
 
-    internal class CredUI {
-        private const string advapi32Dll = "advapi32.dll";
-        private const string credUIDll = "credui.dll";
+	internal class CredUI
+	{
+		private const string advapi32Dll = "advapi32.dll";
+		private const string credUIDll = "credui.dll";
 
-        public const int
-        ERROR_INVALID_FLAGS = 1004,  // Invalid flags.
-        ERROR_NOT_FOUND = 1168,  // Element not found.
-        ERROR_NO_SUCH_LOGON_SESSION = 1312,  // A specified logon session does not exist. It may already have been terminated.
-        ERROR_LOGON_FAILURE = 1326;  // Logon failure: unknown user name or bad password.
+		public const int
+		ERROR_INVALID_FLAGS = 1004,  // Invalid flags.
+		ERROR_NOT_FOUND = 1168,  // Element not found.
+		ERROR_NO_SUCH_LOGON_SESSION = 1312,  // A specified logon session does not exist. It may already have been terminated.
+		ERROR_LOGON_FAILURE = 1326;  // Logon failure: unknown user name or bad password.
 
-        [Flags]
-        public enum CREDUI_FLAGS : uint {
-            INCORRECT_PASSWORD = 0x1,
-            DO_NOT_PERSIST = 0x2,
-            REQUEST_ADMINISTRATOR = 0x4,
-            EXCLUDE_CERTIFICATES = 0x8,
-            REQUIRE_CERTIFICATE = 0x10,
-            SHOW_SAVE_CHECK_BOX = 0x40,
-            ALWAYS_SHOW_UI = 0x80,
-            REQUIRE_SMARTCARD = 0x100,
-            PASSWORD_ONLY_OK = 0x200,
-            VALIDATE_USERNAME = 0x400,
-            COMPLETE_USERNAME = 0x800,
-            PERSIST = 0x1000,
-            SERVER_CREDENTIAL = 0x4000,
-            EXPECT_CONFIRMATION = 0x20000,
-            GENERIC_CREDENTIALS = 0x40000,
-            USERNAME_TARGET_CREDENTIALS = 0x80000,
-            KEEP_USERNAME = 0x100000,
-        }
+		[Flags]
+		public enum CREDUI_FLAGS : uint
+		{
+			INCORRECT_PASSWORD = 0x1,
+			DO_NOT_PERSIST = 0x2,
+			REQUEST_ADMINISTRATOR = 0x4,
+			EXCLUDE_CERTIFICATES = 0x8,
+			REQUIRE_CERTIFICATE = 0x10,
+			SHOW_SAVE_CHECK_BOX = 0x40,
+			ALWAYS_SHOW_UI = 0x80,
+			REQUIRE_SMARTCARD = 0x100,
+			PASSWORD_ONLY_OK = 0x200,
+			VALIDATE_USERNAME = 0x400,
+			COMPLETE_USERNAME = 0x800,
+			PERSIST = 0x1000,
+			SERVER_CREDENTIAL = 0x4000,
+			EXPECT_CONFIRMATION = 0x20000,
+			GENERIC_CREDENTIALS = 0x40000,
+			USERNAME_TARGET_CREDENTIALS = 0x80000,
+			KEEP_USERNAME = 0x100000,
+		}
 
-        [StructLayout(LayoutKind.Sequential)]
-        public class CREDUI_INFO {
-            public int cbSize;
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2006:UseSafeHandleToEncapsulateNativeResources")]
-            public IntPtr hwndParentCERParent;
-            [MarshalAs(UnmanagedType.LPWStr)]
-            public string pszMessageText;
-            [MarshalAs(UnmanagedType.LPWStr)]
-            public string pszCaptionText;
-            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2006:UseSafeHandleToEncapsulateNativeResources")]
-            public IntPtr hbmBannerCERHandle;
-        }
+		[StructLayout(LayoutKind.Sequential)]
+		public class CREDUI_INFO
+		{
+			public int cbSize;
+			[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2006:UseSafeHandleToEncapsulateNativeResources")]
+			public IntPtr hwndParentCERParent;
+			[MarshalAs(UnmanagedType.LPWStr)]
+			public string pszMessageText;
+			[MarshalAs(UnmanagedType.LPWStr)]
+			public string pszCaptionText;
+			[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2006:UseSafeHandleToEncapsulateNativeResources")]
+			public IntPtr hbmBannerCERHandle;
+		}
 
-        public enum CredUIReturnCodes : uint {
-            NO_ERROR = 0,
-            ERROR_CANCELLED = 1223,
-            ERROR_NO_SUCH_LOGON_SESSION = 1312,
-            ERROR_NOT_FOUND = 1168,
-            ERROR_INVALID_ACCOUNT_NAME = 1315,
-            ERROR_INSUFFICIENT_BUFFER = 122,
-            ERROR_INVALID_PARAMETER = 87,
-            ERROR_INVALID_FLAGS = 1004,
-        }
+		public enum CredUIReturnCodes : uint
+		{
+			NO_ERROR = 0,
+			ERROR_CANCELLED = 1223,
+			ERROR_NO_SUCH_LOGON_SESSION = 1312,
+			ERROR_NOT_FOUND = 1168,
+			ERROR_INVALID_ACCOUNT_NAME = 1315,
+			ERROR_INSUFFICIENT_BUFFER = 122,
+			ERROR_INVALID_PARAMETER = 87,
+			ERROR_INVALID_FLAGS = 1004,
+		}
 
-        // Copied from wincred.h
-        public const uint
-            // Values of the Credential Type field.
-        CRED_TYPE_GENERIC = 1,
-        CRED_TYPE_DOMAIN_PASSWORD = 2,
-        CRED_TYPE_DOMAIN_CERTIFICATE = 3,
-        CRED_TYPE_DOMAIN_VISIBLE_PASSWORD = 4,
-        CRED_TYPE_MAXIMUM = 5,                           // Maximum supported cred type
-        CRED_TYPE_MAXIMUM_EX = (CRED_TYPE_MAXIMUM + 1000),    // Allow new applications to run on old OSes
+		// Copied from wincred.h
+		public const uint
+			// Values of the Credential Type field.
+		CRED_TYPE_GENERIC = 1,
+		CRED_TYPE_DOMAIN_PASSWORD = 2,
+		CRED_TYPE_DOMAIN_CERTIFICATE = 3,
+		CRED_TYPE_DOMAIN_VISIBLE_PASSWORD = 4,
+		CRED_TYPE_MAXIMUM = 5,                           // Maximum supported cred type
+		CRED_TYPE_MAXIMUM_EX = (CRED_TYPE_MAXIMUM + 1000),    // Allow new applications to run on old OSes
 
-        // String limits
-        CRED_MAX_CREDENTIAL_BLOB_SIZE = 512,         // Maximum size of the CredBlob field (in bytes)
-        CRED_MAX_STRING_LENGTH = 256,         // Maximum length of the various credential string fields (in characters)
-        CRED_MAX_USERNAME_LENGTH = (256 + 1 + 256), // Maximum length of the UserName field.  The worst case is <User>@<DnsDomain>
-        CRED_MAX_GENERIC_TARGET_NAME_LENGTH = 32767,       // Maximum length of the TargetName field for CRED_TYPE_GENERIC (in characters)
-        CRED_MAX_DOMAIN_TARGET_NAME_LENGTH = (256 + 1 + 80),  // Maximum length of the TargetName field for CRED_TYPE_DOMAIN_* (in characters). Largest one is <DfsRoot>\<DfsShare>
-        CRED_MAX_VALUE_SIZE = 256,         // Maximum size of the Credential Attribute Value field (in bytes)
-        CRED_MAX_ATTRIBUTES = 64,          // Maximum number of attributes per credential
-        CREDUI_MAX_MESSAGE_LENGTH = 32767,
-        CREDUI_MAX_CAPTION_LENGTH = 128,
-        CREDUI_MAX_GENERIC_TARGET_LENGTH = CRED_MAX_GENERIC_TARGET_NAME_LENGTH,
-        CREDUI_MAX_DOMAIN_TARGET_LENGTH = CRED_MAX_DOMAIN_TARGET_NAME_LENGTH,
-        CREDUI_MAX_USERNAME_LENGTH = CRED_MAX_USERNAME_LENGTH,
-        CREDUI_MAX_PASSWORD_LENGTH = (CRED_MAX_CREDENTIAL_BLOB_SIZE / 2);
+		// String limits
+		CRED_MAX_CREDENTIAL_BLOB_SIZE = 512,         // Maximum size of the CredBlob field (in bytes)
+		CRED_MAX_STRING_LENGTH = 256,         // Maximum length of the various credential string fields (in characters)
+		CRED_MAX_USERNAME_LENGTH = (256 + 1 + 256), // Maximum length of the UserName field.  The worst case is <User>@<DnsDomain>
+		CRED_MAX_GENERIC_TARGET_NAME_LENGTH = 32767,       // Maximum length of the TargetName field for CRED_TYPE_GENERIC (in characters)
+		CRED_MAX_DOMAIN_TARGET_NAME_LENGTH = (256 + 1 + 80),  // Maximum length of the TargetName field for CRED_TYPE_DOMAIN_* (in characters). Largest one is <DfsRoot>\<DfsShare>
+		CRED_MAX_VALUE_SIZE = 256,         // Maximum size of the Credential Attribute Value field (in bytes)
+		CRED_MAX_ATTRIBUTES = 64,          // Maximum number of attributes per credential
+		CREDUI_MAX_MESSAGE_LENGTH = 32767,
+		CREDUI_MAX_CAPTION_LENGTH = 128,
+		CREDUI_MAX_GENERIC_TARGET_LENGTH = CRED_MAX_GENERIC_TARGET_NAME_LENGTH,
+		CREDUI_MAX_DOMAIN_TARGET_LENGTH = CRED_MAX_DOMAIN_TARGET_NAME_LENGTH,
+		CREDUI_MAX_USERNAME_LENGTH = CRED_MAX_USERNAME_LENGTH,
+		CREDUI_MAX_PASSWORD_LENGTH = (CRED_MAX_CREDENTIAL_BLOB_SIZE / 2);
 
-        internal enum CRED_PERSIST : uint {
-            NONE = 0,
-            SESSION = 1,
-            LOCAL_MACHINE = 2,
-            ENTERPRISE = 3,
-        }
+		internal enum CRED_PERSIST : uint
+		{
+			NONE = 0,
+			SESSION = 1,
+			LOCAL_MACHINE = 2,
+			ENTERPRISE = 3,
+		}
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct NativeCredential {
-            public uint flags;
-            public uint type;
-            public string targetName;
-            public string comment;
-            public int lastWritten_lowDateTime;
-            public int lastWritten_highDateTime;
-            public uint credentialBlobSize;
-            public IntPtr credentialBlob;
-            public uint persist;
-            public uint attributeCount;
-            public IntPtr attributes;
-            public string targetAlias;
-            public string userName;
-        };
+		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+		public struct NativeCredential
+		{
+			public uint flags;
+			public uint type;
+			public string targetName;
+			public string comment;
+			public int lastWritten_lowDateTime;
+			public int lastWritten_highDateTime;
+			public uint credentialBlobSize;
+			public IntPtr credentialBlob;
+			public uint persist;
+			public uint attributeCount;
+			public IntPtr attributes;
+			public string targetAlias;
+			public string userName;
+		};
 
-        [DllImport(advapi32Dll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredReadW")]
-        public static extern bool
-        CredRead(
-            [MarshalAs(UnmanagedType.LPWStr)]
+		[DllImport(advapi32Dll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredReadW")]
+		public static extern bool
+		CredRead(
+			[MarshalAs(UnmanagedType.LPWStr)]
             string targetName,
-            [MarshalAs(UnmanagedType.U4)]
+			[MarshalAs(UnmanagedType.U4)]
             uint type,
-            [MarshalAs(UnmanagedType.U4)]
+			[MarshalAs(UnmanagedType.U4)]
             uint flags,
-            out IntPtr credential
-            );
+			out IntPtr credential
+			);
 
-        [DllImport(advapi32Dll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredWriteW")]
-        public static extern bool
-        CredWrite(
-            ref NativeCredential Credential,
-            [MarshalAs(UnmanagedType.U4)]
+		[DllImport(advapi32Dll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredWriteW")]
+		public static extern bool
+		CredWrite(
+			ref NativeCredential Credential,
+			[MarshalAs(UnmanagedType.U4)]
             uint flags
-            );
+			);
 
-        [DllImport(advapi32Dll, SetLastError = true)]
-        public static extern bool
-        CredFree(
-            IntPtr buffer
-            );
+		[DllImport(advapi32Dll, SetLastError = true)]
+		public static extern bool
+		CredFree(
+			IntPtr buffer
+			);
 
-        [DllImport(credUIDll, EntryPoint = "CredUIPromptForCredentialsW", CharSet = CharSet.Unicode)]
-        public static extern CredUIReturnCodes CredUIPromptForCredentials(
-            CREDUI_INFO pUiInfo,  // Optional (one can pass null here)
-            [MarshalAs(UnmanagedType.LPWStr)]
+		[DllImport(credUIDll, EntryPoint = "CredUIPromptForCredentialsW", CharSet = CharSet.Unicode)]
+		public static extern CredUIReturnCodes CredUIPromptForCredentials(
+			CREDUI_INFO pUiInfo,  // Optional (one can pass null here)
+			[MarshalAs(UnmanagedType.LPWStr)]
             string targetName,
-            IntPtr Reserved,      // Must be 0 (IntPtr.Zero)
-            int iError,
-            [MarshalAs(UnmanagedType.LPWStr)]
+			IntPtr Reserved,      // Must be 0 (IntPtr.Zero)
+			int iError,
+			[MarshalAs(UnmanagedType.LPWStr)]
             StringBuilder pszUserName,
-            [MarshalAs(UnmanagedType.U4)]
+			[MarshalAs(UnmanagedType.U4)]
             uint ulUserNameMaxChars,
-            [MarshalAs(UnmanagedType.LPWStr)]
+			[MarshalAs(UnmanagedType.LPWStr)]
             StringBuilder pszPassword,
-            [MarshalAs(UnmanagedType.U4)]
+			[MarshalAs(UnmanagedType.U4)]
             uint ulPasswordMaxChars,
-            ref int pfSave,
-            CREDUI_FLAGS dwFlags);
+			ref int pfSave,
+			CREDUI_FLAGS dwFlags);
 
-        /// <returns>
-        /// Win32 system errors:
-        /// NO_ERROR
-        /// ERROR_INVALID_ACCOUNT_NAME
-        /// ERROR_INSUFFICIENT_BUFFER
-        /// ERROR_INVALID_PARAMETER
-        /// </returns>
-        [DllImport(credUIDll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredUIParseUserNameW")]
-        public static extern CredUIReturnCodes CredUIParseUserName(
-            [MarshalAs(UnmanagedType.LPWStr)]
+		/// <returns>
+		/// Win32 system errors:
+		/// NO_ERROR
+		/// ERROR_INVALID_ACCOUNT_NAME
+		/// ERROR_INSUFFICIENT_BUFFER
+		/// ERROR_INVALID_PARAMETER
+		/// </returns>
+		[DllImport(credUIDll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredUIParseUserNameW")]
+		public static extern CredUIReturnCodes CredUIParseUserName(
+			[MarshalAs(UnmanagedType.LPWStr)]
             string strUserName,
-            [MarshalAs(UnmanagedType.LPWStr)]
+			[MarshalAs(UnmanagedType.LPWStr)]
             StringBuilder strUser,
-            [MarshalAs(UnmanagedType.U4)]
+			[MarshalAs(UnmanagedType.U4)]
             uint iUserMaxChars,
-            [MarshalAs(UnmanagedType.LPWStr)]
+			[MarshalAs(UnmanagedType.LPWStr)]
             StringBuilder strDomain,
-            [MarshalAs(UnmanagedType.U4)]
+			[MarshalAs(UnmanagedType.U4)]
             uint iDomainMaxChars
-            );
-    }
+			);
+	}
+
+	[Guid("22F03340-547D-101B-8E65-08002B2BD119")]
+	[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	interface ICreateErrorInfo
+	{
+		int SetGUID(
+			 ref Guid rguid
+		 );
+
+		int SetSource(string szSource);
+
+		int SetDescription(string szDescription);
+
+		int SetHelpFile(string szHelpFile);
+
+		int SetHelpContext(uint dwHelpContext);
+	}
 }
 

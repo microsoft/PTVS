@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (ConfigurableDatabaseExists()) {
                 return new PythonTypeDatabase(GetConfiguredDatabasePath(), Is3x);
             }
-            return PythonTypeDatabase.CreateDefaultTypeDatabase();
+            return PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);
         }
 
         private bool ConfigurableDatabaseExists() {

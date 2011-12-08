@@ -23,7 +23,6 @@ using EnvDTE80;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using TestUtilities;
@@ -66,24 +65,6 @@ namespace AnalysisTest.ProjectSystem {
             extender.StartWebServerOnDebug = false;
 
             project.Save();
-        }
-
-        /// <summary>
-        /// Get the outer IVsHierarchy implementation.
-        /// This is used for scenario where a flavor may be modifying the behavior
-        /// </summary>
-        internal static IVsHierarchy GetOuterHierarchy(IVsHierarchy node) {
-            IVsHierarchy hierarchy = null;
-            // The hierarchy of a node is its project node hierarchy
-            IntPtr projectUnknown = Marshal.GetIUnknownForObject(node);
-            try {
-                hierarchy = (IVsHierarchy)Marshal.GetTypedObjectForIUnknown(projectUnknown, typeof(IVsHierarchy));
-            } finally {
-                if (projectUnknown != IntPtr.Zero) {
-                    Marshal.Release(projectUnknown);
-                }
-            }
-            return hierarchy;
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -692,6 +673,85 @@ namespace AnalysisTest.ProjectSystem {
             return null;
         }
 
+        /// <summary>
+        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
+        /// sure the completion info changes.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddFolderExists() {
+            Directory.CreateDirectory(@"Python.VS.TestData\\AddFolderExists\\X");
+            Directory.CreateDirectory(@"Python.VS.TestData\\AddFolderExists\\Y");
+
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AddFolderExists.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var solutionExplorer = app.SolutionExplorerTreeView;
+
+            var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
+            
+
+            var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists");
+
+            // Project menu can take a little while to appear...
+            for (int i = 0; i < 10; i++) {
+                Mouse.MoveTo(projectNode.GetClickablePoint());
+                Mouse.Click();
+                projectNode.SetFocus();
+                try {                    
+                    app.Dte.ExecuteCommand("Project.NewFolder");
+                    break;
+                } catch {
+                }
+
+                Mouse.MoveTo(solutionNode.GetClickablePoint());
+                Mouse.Click();
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            System.Threading.Thread.Sleep(1000);
+            Keyboard.Type("."); // bad filename
+            Keyboard.Type(System.Windows.Input.Key.Enter);
+
+            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
+            System.Threading.Thread.Sleep(1000);
+
+            Keyboard.Type(".."); // another bad filename
+            Keyboard.Type(System.Windows.Input.Key.Enter);
+
+            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
+            System.Threading.Thread.Sleep(1000);
+
+            Keyboard.Type("Y"); // another bad filename
+            Keyboard.Type(System.Windows.Input.Key.Enter);
+
+            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "The folder Y already exists.");
+            System.Threading.Thread.Sleep(1000);
+
+            Keyboard.Type("X"); // directory exists, but is ok.
+            Keyboard.Type(System.Windows.Input.Key.Enter);
+
+            // item should be successfully added now.
+            WaitForItem(project, "X");
+        }
+
+        private static ProjectItem WaitForItem(Project project, string name) {
+            bool found = false;
+            ProjectItem item = null;
+            for (int i = 0; i < 10; i++) {
+                try {
+                    item = project.ProjectItems.Item(name);
+                    if (item != null) {
+                        found = true;
+                        break;
+                    }
+                } catch (ArgumentException) {
+                }
+                // wait for the edit to complete
+                System.Threading.Thread.Sleep(1000);
+            }
+            Assert.IsTrue(found);
+            return item;
+        }
 
         private static void AssertNotImplemented(Action action) {
             AssertError<NotImplementedException>(action);

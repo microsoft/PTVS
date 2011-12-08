@@ -3345,6 +3345,31 @@ namespace Microsoft.PythonTools.Project
             return result;
         }
 
+        internal bool QueryFolderAdd(HierarchyNode targetFolder, FolderNode existingFolder, string path) {
+            if (!disableQueryEdit) {
+                var queryTrack = this.GetService(typeof(SVsTrackProjectDocuments)) as IVsTrackProjectDocuments2;
+                if (queryTrack != null) {
+                    VSQUERYADDDIRECTORYRESULTS[] res = new VSQUERYADDDIRECTORYRESULTS[1];
+                    ErrorHandler.ThrowOnFailure(
+                        queryTrack.OnQueryAddDirectories(
+                            this,
+                            1,
+                            new[] { Path.Combine(GetBaseDirectoryForAddingFiles(targetFolder), Path.GetFileName(path)) },
+                            new[] { VSQUERYADDDIRECTORYFLAGS.VSQUERYADDDIRECTORYFLAGS_padding },
+                            res,
+                            res
+                        )
+                    );
+
+                    if (res[0] == VSQUERYADDDIRECTORYRESULTS.VSQUERYADDDIRECTORYRESULTS_AddNotOK) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+
         /// <summary>
         /// Given a node determines what is the directory that can accept files.
         /// If the node is a FoldeNode than it is the Url of the Folder.
