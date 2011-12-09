@@ -66,11 +66,11 @@
             </Component>
 
             <Component Id="cmpEEA42CAD3819432883D800891A45C1FC" Directory="dir2A04F814997C4D2F88133D144E5B3EEE" Guid="{ACB980A7-E2FD-4E36-8179-917936AB7814}">
-                <File Id="filEF750F7644254166BBE4D8D97B40B300" KeyPath="yes" Source="$(var.PyKinectDir)\PyKinect\speech\__init__.py" />
+                <File Id="filEF750F7644254166BBE4D8D97B40B300" KeyPath="yes" Source="$(var.PyKinectDir)\PyKinect\winspeech\__init__.py" />
             </Component>
 
             <Component Id="cmpA4760890FA8D4B25BB32FC268D753856" Directory="dir2A04F814997C4D2F88133D144E5B3EEE" Guid="{EB6BB542-D28C-47BB-BCDE-B0B6F9126C29}">
-                <File Id="filAEB5A96EBBC644CEA03896016FB6F8AC" KeyPath="yes" Source="$(var.PyKinectDir)\PyKinect\speech\recognition.py" />
+                <File Id="filAEB5A96EBBC644CEA03896016FB6F8AC" KeyPath="yes" Source="$(var.PyKinectDir)\PyKinect\winspeech\recognition.py" />
             </Component>
 
             <Component Id="cmp5D4D4389AA804F3F9A2E6B46F7582F40" Directory="dirEB615C5BD073420189EF582A99D7486B" Guid="{528B6F3B-9349-44F4-AFD9-6DD07CAE45DC}">
@@ -93,7 +93,7 @@
     <Fragment>
         <DirectoryRef Id="dirEB615C5BD073420189EF582A99D7486B">
             <Directory Id="dirD024E1804578437F96ECD9F13F35BF80" Name="pykinect" />
-            <Directory Id="dir2A04F814997C4D2F88133D144E5B3EEE" Name="speech" />
+            <Directory Id="dir2A04F814997C4D2F88133D144E5B3EEE" Name="winspeech" />
         </DirectoryRef>
     </Fragment>
     <Fragment>

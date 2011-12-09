@@ -11,7 +11,7 @@ import unittest
 from unittest.main import TestProgram
 from pykinect.nui import Device, Runtime, KinectError, ImageResolution, ImageStreamType, ImageType, ImageStream
 from pykinect.audio import KinectAudioSource, GetKinectDeviceInfo
-from speech.recognition import SpeechRecognitionEngine, Grammar
+from winspeech.recognition import SpeechRecognitionEngine, Grammar
 import time
 
 class KinectTestCases(unittest.TestCase):

@@ -16,10 +16,10 @@ setup(name='PyKinect',
       author='Microsoft',
       author_email='vspython@microsoft.com',
       url='http://pytools.codeplex.com/',
-      packages=['pykinect', 'speech', 'pykinect.audio', 'pykinect.nui'],
+      packages=['pykinect', 'winspeech', 'pykinect.audio', 'pykinect.nui'],
       package_data={
         'pykinect.audio': ['*.dll'], 
         'pykinect': ['LICENSE.txt'],
-        'speech' : ['LICENSE.txt']
+        'winspeech' : ['LICENSE.txt']
       },
      )
