@@ -292,11 +292,51 @@ namespace Microsoft.PythonTools.Repl {
                 outputThread.Start();
 
                 if (redirectOutput) {
-                    var readOutputThread = new Thread(ReadOutput);
-                    readOutputThread.Start();
+                    _process.OutputDataReceived += new DataReceivedEventHandler(StdOutReceived);
+                    _process.ErrorDataReceived += new DataReceivedEventHandler(StdErrReceived);
+                    _process.Exited += new EventHandler(ProcessExited);
 
-                    var readErrorThread = _stdErrReaderThread = new Thread(ReadError);
-                    readErrorThread.Start();
+                    _process.BeginOutputReadLine();
+                    _process.BeginErrorReadLine();
+                }
+            }
+
+            private void ProcessExited(object sender, EventArgs e) {
+                Window.WriteError("Failed to launch REPL process\r\n");
+                if (_preConnectionOutput != null) {
+                    lock (_preConnectionOutput) {
+                        Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
+                    }
+                }
+            }
+
+            private void StdErrReceived(object sender, DataReceivedEventArgs e) {
+                if (e.Data != null) {
+                    if (!_connected) {
+                        AppendPreConnectionOutput(e);
+                    } else {
+                        Window.WriteError(e.Data + Environment.NewLine);
+                    }
+                }
+            }
+
+            private void StdOutReceived(object sender, DataReceivedEventArgs e) {
+                if (e.Data != null) {
+                    if (!_connected) {
+                        AppendPreConnectionOutput(e);
+                    } else {
+                        Window.WriteOutput(e.Data + Environment.NewLine);
+                    }
+                }
+            }
+
+            private void AppendPreConnectionOutput(DataReceivedEventArgs e) {
+                if (_preConnectionOutput == null) {
+                    Interlocked.CompareExchange(ref _preConnectionOutput, new StringBuilder(), null);
+                }
+
+                lock (_preConnectionOutput) {
+                    _preConnectionOutput.Append(e.Data + Environment.NewLine);
                 }
             }
 
@@ -350,45 +390,7 @@ namespace Microsoft.PythonTools.Repl {
                 } catch (DisconnectedException) {
                 }
             }
-
-            private void ReadOutput() {
-                ReadStream(_process.StandardOutput);
-
-                if (_process.HasExited && !_connected) {
-                    _stdErrReaderThread.Join(); // wait for stderr to finish being written...
-
-                    Window.WriteError("Failed to launch REPL process\r\n");
-                    if (_preConnectionOutput != null) {
-                        lock (_preConnectionOutput) {
-                            Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
-                        }
-                    }
-                }
-            }
-
-            private void ReadStream(StreamReader reader) {
-                var buffer = new char[1024];
-                try {
-                    while (!_process.HasExited) {
-                        int bytesRead = reader.Read(buffer, 0, buffer.Length);
-                        if (!_connected && bytesRead > 0) {
-                            if (_preConnectionOutput == null) {
-                                Interlocked.CompareExchange(ref _preConnectionOutput, new StringBuilder(), null);
-                            }
-
-                            lock (_preConnectionOutput) {
-                                _preConnectionOutput.Append(buffer, 0, bytesRead);
-                            }
-                        }
-                    }
-                } catch {
-                }
-            }
-
-            private void ReadError() {
-                ReadStream(_process.StandardError);
-            }
-
+            
             private Socket Socket {
                 get {
 #if DEBUG
