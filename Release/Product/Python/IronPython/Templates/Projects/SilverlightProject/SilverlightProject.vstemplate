@@ -4,7 +4,7 @@
     <Description>A project for creating a web page scripted on the client side with IronPython via Silverlight</Description>
     <Icon>__TemplateIcon.ico</Icon>
     <ProjectType>Python</ProjectType>
-    <CreateNewFolder>true</CreateNewFolder>
+    <CreateNewFolder>false</CreateNewFolder>
     <SortOrder>150</SortOrder>
     <DefaultName>SilverlightPage</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>

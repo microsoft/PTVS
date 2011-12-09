@@ -6,7 +6,7 @@
     <ProjectSubType>
     </ProjectSubType>
     <SortOrder>120</SortOrder>
-    <CreateNewFolder>true</CreateNewFolder>
+    <CreateNewFolder>false</CreateNewFolder>
     <DefaultName>WpfApplication</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>
     <LocationField>Enabled</LocationField>

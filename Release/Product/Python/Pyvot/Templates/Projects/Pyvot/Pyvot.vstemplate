@@ -6,13 +6,13 @@
     <ProjectType>Python</ProjectType>
     <SortOrder>160</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
-    <CreateNewFolder>true</CreateNewFolder>
+    <CreateNewFolder>false</CreateNewFolder>
     <DefaultName>PyvotProgram</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
     <Project File="Pyvot.pyproj" ReplaceParameters="true">
-      <ProjectItem ReplaceParameters="true" OpenInEditor="true">Program.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="true" TargetFileName="$safeprojectname$.py">Program.py</ProjectItem>
       <ProjectItem ReplaceParameters="false" OpenInEditor="false">PyvotSample.xlsx</ProjectItem>
     </Project>
   </TemplateContent>
