@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>$guid1$</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>Program.py</StartupFile>
+    <StartupFile>$safeprojectname$.py</StartupFile>
     <SearchPath></SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -18,7 +18,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Program.py" />
+    <Compile Include="$safeprojectname$.py" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="PyvotSample.xlsx">
