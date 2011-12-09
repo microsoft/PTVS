@@ -358,6 +358,9 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _sharedState.BuiltinModule;
             }
+            set {
+                _sharedState.BuiltinModule = value;
+            }
         }
 
         /// <summary>

@@ -742,8 +742,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     if (curType != null) {
                         IDictionary<object, object> dict = new DictProxy(curType);
                         object bresult;
-                        if (dict.TryGetValue(name, out bresult)) {
-                            return MakeHandle(bresult);
+                        // reflection can throw while resolving references, ignore the member...
+                        // http://pytools.codeplex.com/workitem/612
+                        try {
+                            if (dict.TryGetValue(name, out bresult)) {
+                                return MakeHandle(bresult);
+                            }
+                        } catch {
                         }
                     }
                 }

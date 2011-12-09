@@ -26,7 +26,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly string _name;
         private readonly ProjectEntry _projectEntry;
         private readonly Dictionary<Node, ISet<Namespace>> _sequences;  // sequences defined in the module
-        //private readonly Dictionary<Node, ImportInfo> _imports;         // imports performed during the module
         private readonly ModuleScope _scope;
         private readonly Dictionary<Node, InterpreterScope> _scopes;    // scopes from Ast node to InterpreterScope
         private readonly WeakReference _weakModule;
@@ -39,13 +38,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _name = moduleName;
             _projectEntry = projectEntry;
             _sequences = new Dictionary<Node, ISet<Namespace>>();
-            //_imports = new Dictionary<Node, ImportInfo>();
             _scope = new ModuleScope(this);
             _weakModule = new WeakReference(this);
             _context = moduleContext;
             _scopes = new Dictionary<Node, InterpreterScope>();
         }
-        
+
+        internal void Clear() {
+            _sequences.Clear();
+            _scope.ClearLinkedVariables();
+            _scope.Variables.Clear();
+            _scopes.Clear();
+        }
+
         public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
             var res = new Dictionary<string, ISet<Namespace>>();
             foreach (var kvp in _scope.Variables) {

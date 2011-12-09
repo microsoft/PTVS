@@ -23,7 +23,7 @@ namespace AnalysisTest {
     public class CPythonInterpreterTests {
         [TestMethod]
         public void FactoryProvider() {
-            var provider = new CPythonInterpreterFactoryProvider();
+            var provider = ReplWindowTests.InterpFactory;
             var factories = provider.GetInterpreterFactories().ToArray();
 
             if (factories.Length > 0) {

@@ -457,6 +457,10 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _builtinModule;
             }
+            set {
+                Modules[value.Name] = value;
+                _builtinModule = value;
+            }
         }
 
         public Dictionary<string, IPythonModule> Modules {

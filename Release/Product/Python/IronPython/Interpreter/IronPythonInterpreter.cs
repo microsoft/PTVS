@@ -106,7 +106,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     var mod = Remote.ImportBuiltinModule(modName);
 
                     if (modName == "__builtin__") {
-                        _modules[modName] = new IronPythonBuiltinModule(this, mod, modName);
+                        var newMod = new IronPythonBuiltinModule(this, mod, modName);
+                        _modules[modName] = newMod;
+                        if (_typeDb != null) {
+                            _typeDb.BuiltinModule = newMod;
+                        }
                     } else {
                         _modules[modName] = new IronPythonModule(this, mod, modName);
                     }
@@ -172,7 +176,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                 InitializeRemoteDomain();
 
-                LoadModules();
+                LoadModules();                
             }
 
             RaiseModuleNamesChanged();

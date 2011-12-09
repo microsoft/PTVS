@@ -132,9 +132,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// when the interpreter signals that it's modules have changed.
         /// </summary>
         public void ReloadModules() {
+            var allBuiltins = InitializeBuiltinModules();
+
             LoadKnownTypes();
 
-            FinishBuiltinsInit(InitializeBuiltinModules());
+            FinishBuiltinsInit(allBuiltins);
 
             var names = new HashSet<string>(_interpreter.GetModuleNames());
             List<string> removed = null;
@@ -155,6 +157,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             _interpreter.Initialize(this);
+
+            _itemCache.Clear();
+
+            foreach (var mod in _modulesByFilename.Values) {
+                mod.Clear();
+            }
         }
 
         #region Public API

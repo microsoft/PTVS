@@ -94,6 +94,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 int kwIndex = i - (args.Length - keywordArgNames.Length);
                 if (kwIndex >= 0) {
                     var curArg = keywordArgNames[kwIndex];
+                    if (curArg == null) {
+                        continue;
+                    }
                     switch (curArg.Name) {
                         case "*":
                             int lastPos = args.Length - keywordArgNames.Length;

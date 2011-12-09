@@ -2166,13 +2166,15 @@ $cls
             }            
         }
 
+        internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider();
+
         /// <summary>
         /// Directed unit tests for the repl evaluator's spliting code into individual statements...
         /// </summary>
         [TestMethod]
         public void ReplSplitCodeTest() {
             var eval = new PythonReplEvaluator(
-                new CPythonInterpreterFactoryProvider(),
+                InterpFactory,
                 new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"),
                 new Version(2, 7),
                 null
