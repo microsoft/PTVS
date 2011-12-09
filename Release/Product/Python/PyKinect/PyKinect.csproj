@@ -172,10 +172,10 @@
     <Content Include="PyKinect\setup.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="PyKinect\speech\recognition.py">
+    <Content Include="PyKinect\winspeech\recognition.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="PyKinect\speech\__init__.py">
+    <Content Include="PyKinect\winspeech\__init__.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="PyKinect\tests.py" />
