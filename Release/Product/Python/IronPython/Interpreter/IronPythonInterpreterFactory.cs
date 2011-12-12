@@ -146,7 +146,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal bool ConfigurableDatabaseExists() {
-            if (File.Exists(Path.Combine(GetConfiguredDatabasePath(), "builtins.idb"))) {
+            if (File.Exists(Path.Combine(GetConfiguredDatabasePath(), "__builtin__.idb"))) {
                 string versionFile = Path.Combine(GetConfiguredDatabasePath(), "database.ver");
                 if (File.Exists(versionFile)) {
                     try {
