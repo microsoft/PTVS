@@ -6,5 +6,8 @@ namespace ClassLibrary1
         {
             get { return null; }
         }
+
+        public static void Foo() {
+        }
     }
 }

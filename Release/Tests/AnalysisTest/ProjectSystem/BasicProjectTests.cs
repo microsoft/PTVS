@@ -609,6 +609,11 @@ namespace AnalysisTest.ProjectSystem {
             Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "str");
             Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "int");
 
+            // verify getting signature help doesn't crash...  This used to crash because IronPython
+            // used the empty path for an assembly and throws an exception.  We now handle the exception
+            // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
+            Assert.AreEqual(GetSignatures("Class1.Foo(", snapshot).Signatures.First().Documentation, "");
+
             // recompile one file, we should still have type info for both DLLs, with one updated
             CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
@@ -628,6 +633,12 @@ namespace AnalysisTest.ProjectSystem {
             var index = snapshot.GetText().IndexOf(variable + " =");
             var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
             return snapshot.AnalyzeExpression(span);
+        }
+
+        private static SignatureAnalysis GetSignatures(string text, ITextSnapshot snapshot) {
+            var index = snapshot.GetText().IndexOf(text);
+            var span = snapshot.CreateTrackingSpan(new Span(index, text.Length), SpanTrackingMode.EdgeInclusive);
+            return snapshot.GetSignatures(span);
         }
 
         private static void CompileFile(string file, string outname) {

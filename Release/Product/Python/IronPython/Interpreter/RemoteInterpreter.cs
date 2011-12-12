@@ -474,7 +474,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal string GetPythonTypeDocumentation(ObjectIdentityHandle handle) {
-            return PythonType.Get__doc__(CodeContext, (PythonType)Unwrap(handle)) as string;
+            try {
+                return PythonType.Get__doc__(CodeContext, (PythonType)Unwrap(handle)) as string;
+            } catch (ArgumentException) {
+                // IronPython can throw here if it can't figure out the 
+                // path of the assembly this type is defined in.
+                return null;
+            }
         }
 
         internal BuiltinTypeId PythonTypeGetBuiltinTypeId(ObjectIdentityHandle handle) {
@@ -637,7 +643,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal string GetFieldDocumentation(ObjectIdentityHandle field) {
             var value = (ReflectedField)Unwrap(field);
-            return value.__doc__;
+            try {
+                return value.__doc__;
+            } catch (ArgumentException) {
+                // IronPython can throw here if it can't figure out the 
+                // path of the assembly this type is defined in.
+                return "";
+            }
         }
 
         /// <summary>
@@ -666,7 +678,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal string GetBuiltinFunctionDocumentation(ObjectIdentityHandle function) {
             BuiltinFunction func = (BuiltinFunction)Unwrap(function);
-            return func.__doc__;
+            try {
+                return func.__doc__;
+            } catch (ArgumentException) {
+                // IronPython can throw here if it can't figure out the 
+                // path of the assembly this type is defined in.
+                return "";
+            }
         }
 
         internal string GetBuiltinFunctionModule(ObjectIdentityHandle function) {
@@ -716,7 +734,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
         internal string GetPropertyDocumentation(ObjectIdentityHandle property) {
             ReflectedProperty prop = (ReflectedProperty)Unwrap(property);
 
-            return prop.__doc__;
+            try {
+                return prop.__doc__;
+            } catch (ArgumentException) {
+                // IronPython can throw here if it can't figure out the 
+                // path of the assembly this type is defined in.
+                return "";
+            }
         }
 
         #endregion
@@ -778,7 +802,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal string GetEventDocumentation(ObjectIdentityHandle value) {
             var eventObj = (ReflectedEvent)Unwrap(value);
-            return eventObj.__doc__;
+            try {
+                return eventObj.__doc__;
+            } catch (ArgumentException) {
+                // IronPython can throw here if it can't figure out the 
+                // path of the assembly this type is defined in.
+                return "";
+            }
         }
 
         internal ObjectIdentityHandle GetEventPythonType(ObjectIdentityHandle value) {
@@ -859,7 +889,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             var value = (TypeGroup)Unwrap(typeGroup);
             StringBuilder res = new StringBuilder();
             foreach (var type in value.Types) {
-                res.Append(PythonType.Get__doc__(CodeContext, DynamicHelpers.GetPythonTypeFromType(type)) as string);
+                try {
+                    res.Append(PythonType.Get__doc__(CodeContext, DynamicHelpers.GetPythonTypeFromType(type)) as string);
+                } catch (ArgumentException) {
+                    // IronPython can throw here if it can't figure out the 
+                    // path of the assembly this type is defined in.
+                }
             }
             return res.ToString();
         }
@@ -930,7 +965,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal string GetExtensionPropertyDocumentation(ObjectIdentityHandle value) {
             var property = (ReflectedExtensionProperty)Unwrap(value);
-            return property.__doc__;
+            try {
+                return property.__doc__;
+            } catch (ArgumentException) {
+                // IronPython can throw here if it can't figure out the 
+                // path of the assembly this type is defined in.
+                return "";
+            }
         }
 
         #endregion
