@@ -122,6 +122,9 @@
     </Reference>
     <Reference Include="microsoft.visualstudio.commonide, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Editor, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.ImportProjectFolderWizard">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\ProjectWizards\Microsoft.VisualStudio.ImportProjectFolderWizard.Dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.NavigateTo.Interfaces, Version=0.0.0.0, Culture=neutral">
       <SpecificVersion>False</SpecificVersion>
@@ -146,6 +149,9 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.VSHelp, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -217,6 +223,7 @@
     <Compile Include="PythonTools\Project\AssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceFolderItem.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\PythonPageManager.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAPythonExtensionReference.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
     <Compile Include="PythonTools\Project\BuildDependency.cs" />
