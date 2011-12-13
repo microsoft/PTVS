@@ -792,8 +792,35 @@ namespace Microsoft.PythonTools.Project
 			LOGON32_PROVIDER_WINNT50
 		}
 
+        [DllImport("msi.dll", CharSet = CharSet.Auto)]
+        internal static extern MsiInstallState MsiGetComponentPath(string szProduct, string szComponent, [Out]StringBuilder lpPathBuf, ref uint pcchBuf);
+
+        /// <summary>
+        /// Buffer for lpProductBuf must be 39 characters long.
+        /// </summary>
+        /// <param name="szComponent"></param>
+        /// <param name="lpProductBuf"></param>
+        /// <returns></returns>
+        [DllImport("msi.dll", CharSet = CharSet.Auto)]
+        internal static extern uint MsiGetProductCode(string szComponent, [Out]StringBuilder lpProductBuf);
 
 
+        internal enum MsiInstallState {
+            NotUsed = -7,  // component disabled
+            BadConfig = -6,  // configuration data corrupt
+            Incomplete = -5,  // installation suspended or in progress
+            SourceAbsent = -4,  // run from source, source is unavailable
+            MoreData = -3,  // return buffer overflow
+            InvalidArg = -2,  // invalid function argument
+            Unknown = -1,  // unrecognized product or feature
+            Broken = 0,  // broken
+            Advertised = 1,  // advertised feature
+            Removed = 1,  // component being removed (action state, not settable)
+            Absent = 2,  // uninstalled (or action state absent but clients remain)
+            Local = 3,  // installed on local drive
+            Source = 4,  // run from source, CD or net
+            Default = 5  // use default, local or source
+        }
 	}
 
 

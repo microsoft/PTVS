@@ -44,6 +44,10 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Use Ctrl-C to copy contents");
             res.AppendLine();
 
+            if (PythonToolsPackage.IsIpyToolsInstalled()) {
+                res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
+            }
+
             var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
             res.AppendLine("Projects: ");
 

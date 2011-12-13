@@ -21,6 +21,8 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor;
@@ -152,7 +154,40 @@ namespace Microsoft.PythonTools {
             foreach (var earlyHandler in _earlyHandlers) {
                 InterpretersChanged += earlyHandler;
             }
-            _earlyHandlers.Clear();            
+            _earlyHandlers.Clear();
+
+            if (IsIpyToolsInstalled()) {
+                MessageBox.Show(
+                    @"WARNING: Both Python Tools for Visual Studio and IronPython Tools are installed.
+
+Only one extension can handle Python source files and having both installed will usually cause both to be broken.
+
+You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visual Studio"" option unchecked.",
+                    "Python Tools for Visual Studio",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+            }
+        }
+
+        internal static bool IsIpyToolsInstalled() {
+            // the component guid which IpyTools is installed under from IronPython 2.7
+            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";  
+
+            // Check if the IpyTools component is known...
+            StringBuilder productBuffer = new StringBuilder(39);
+            if (NativeMethods.MsiGetProductCode(ipyToolsComponentGuid, productBuffer) == 0) {
+                // If it is then make sure that it's installed locally...
+                StringBuilder buffer = new StringBuilder(1024);
+                uint charsReceived = (uint)buffer.Capacity;
+                var res = NativeMethods.MsiGetComponentPath(productBuffer.ToString(), ipyToolsComponentGuid, buffer, ref charsReceived);
+                switch (res) {
+                    case NativeMethods.MsiInstallState.Source:
+                    case NativeMethods.MsiInstallState.Local:
+                        return true;
+                }
+            }
+            return false;
         }
 
         internal static void NavigateTo(string filename, Guid docViewGuidType, int line, int col) {
