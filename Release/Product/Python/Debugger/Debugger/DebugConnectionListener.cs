@@ -18,6 +18,9 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>
@@ -50,6 +53,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
                 _listenerSocket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 _listenerSocket.Listen(0);
+                Debug.WriteLine("Listening for debug connections on port " + ListenerPort);
                 var listenerThread = new Thread(ListenForConnection);
                 listenerThread.Name = "Python Debug Connection Listener";
                 listenerThread.Start();
@@ -80,15 +84,40 @@ namespace Microsoft.PythonTools.Debugger {
                         try {
                             socket.Blocking = true;
                             string debugId = socket.ReadString();
+                            var result = (ConnErrorMessages)socket.ReadInt();
 
                             lock (_targets) {
                                 Guid debugGuid;
                                 WeakReference weakProcess;
                                 PythonProcess targetProcess;
 
-                                if (Guid.TryParse(debugId, out debugGuid) && _targets.TryGetValue(debugGuid, out weakProcess) &&
+                                if (Guid.TryParse(debugId, out debugGuid) && 
+                                    _targets.TryGetValue(debugGuid, out weakProcess) &&
                                     (targetProcess = weakProcess.Target as PythonProcess) != null) {
-                                    targetProcess.Connected(socket);
+
+                                    if (result == ConnErrorMessages.None) {
+                                        targetProcess.Connected(socket);
+                                    } else {
+                                        var outWin = (IVsOutputWindow)Package.GetGlobalService(typeof(IVsOutputWindow));
+
+                                        IVsOutputWindowPane pane;
+                                        if (outWin != null && ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowDebugPane, out pane))) {
+                                            pane.Activate();
+                                            try {
+                                                var process = Process.GetProcessById(targetProcess.Id);
+                                                pane.OutputString(String.Format("Failed to connect to process {0} ({1}): {2}", 
+                                                    targetProcess.Id, 
+                                                    process.MainModule.ModuleName,
+                                                    result.GetErrorMessage())
+                                                );
+                                            } catch (ArgumentException) {
+                                                pane.OutputString(String.Format("Failed to connect to process {0}: {1}", 
+                                                    targetProcess.Id, 
+                                                    result.GetErrorMessage()));
+                                            }
+                                        }
+                                        targetProcess.Unregister();
+                                    }
                                 } else {
                                     Debug.WriteLine("Unknown debug target: {0}", debugId);
                                     socket.Close();

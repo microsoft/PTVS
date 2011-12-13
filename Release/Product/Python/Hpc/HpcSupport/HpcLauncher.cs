@@ -517,10 +517,12 @@ namespace Microsoft.PythonTools.Hpc {
         };
 
         private static readonly string[] _vsAssemblies = new string[] { 
-            typeof(IDebugBinderDirect100).Assembly.Location,
-            typeof(IDebugAddress).Assembly.Location,
-            typeof(VsColors).Assembly.Location,
-            typeof(Microsoft.VisualStudio.OLE.Interop.FILETIME).Assembly.Location    // MODULE_INFO structure refers to a type in this...
+            typeof(IDebugBinderDirect100).Assembly.Location,        // Microsoft.VisualStudio.Debugger.Interop.10.0.dll, v2.0.50727
+            typeof(IDebugAddress).Assembly.Location,                // Microsoft.VisualStudio.Debugger.InteropA.dll, v1.0.3705
+            typeof(IOleMenuCommand).Assembly.Location,              // Microsoft.VisualStudio.Shell.Interop.8.0.dll, v1.1.4322
+            typeof(IOleComponent2).Assembly.Location,               // Microsoft.VisualStudio.Shell.Interop.9.0.dll, v1.0.3705
+            typeof(VsColors).Assembly.Location,                     // Microsoft.VisualStudio.Shell.10.0.dll, v4.0.30319
+            typeof(Microsoft.VisualStudio.OLE.Interop.FILETIME).Assembly.Location    // Microsoft.VisualStudio.OLE.Interop.dll, v1.1.4322, MODULE_INFO structure refers to a type in this...
         };
 
         /// <summary>

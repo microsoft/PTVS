@@ -1356,6 +1356,7 @@ def attach_process(port_num, debug_id, report_and_block = False):
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             conn.connect(('127.0.0.1', port_num))
             write_string(debug_id)
+            conn.send(struct.pack('i', 0))  # success
             break
         except:
             import time

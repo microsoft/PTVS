@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 
 namespace AnalysisTest {
     [TestClass]
@@ -1404,6 +1405,7 @@ namespace AnalysisTest {
                 Process p = Process.Start(Version.Path, "\"" + Path.GetFullPath(@"Python.VS.TestData\DebuggerProject\InfiniteRun.py") + "\"");
                 System.Threading.Thread.Sleep(1000);
 
+                AutoResetEvent attached = new AutoResetEvent(false);
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
 
@@ -1413,12 +1415,19 @@ namespace AnalysisTest {
                         Assert.Fail("Failed to attach {0}", errReason);
                     }
 
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.StartListening();
+
+                    attached.WaitOne();
                     proc.Detach();
                 }
 
                 p.Kill();
             }
         }
+
         /*
         [TestMethod]
         public void AttachReattach64() {
@@ -1446,6 +1455,7 @@ namespace AnalysisTest {
                 Process p = Process.Start(Version.Path, "\"" + Path.GetFullPath(@"Python.VS.TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
                 System.Threading.Thread.Sleep(1000);
 
+                AutoResetEvent attached = new AutoResetEvent(false);
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
 
@@ -1455,6 +1465,12 @@ namespace AnalysisTest {
                         Assert.Fail("Failed to attach {0}", errReason);
                     }
 
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.StartListening();
+
+                    attached.WaitOne();
                     proc.Detach();
                 }
 
@@ -1468,6 +1484,7 @@ namespace AnalysisTest {
                 Process p = Process.Start(Version.Path, "\"" + Path.GetFullPath(@"Python.VS.TestData\DebuggerProject\InfiniteThreads.py") + "\"");
                 System.Threading.Thread.Sleep(1000);
 
+                AutoResetEvent attached = new AutoResetEvent(false);
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
 
@@ -1477,10 +1494,117 @@ namespace AnalysisTest {
                         Assert.Fail("Failed to attach {0}", errReason);
                     }
 
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                    };
+                    proc.StartListening();
+
+                    attached.WaitOne();
                     proc.Detach();
+
                 }
 
                 p.Kill();
+            }
+        }
+
+        [TestMethod]
+        public void AttachTimeout() {
+            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+
+                var hostCode = @"#include <python.h>
+#include <windows.h>
+
+int main(int argc, char* argv[]) {
+	Py_Initialize();
+    auto event = OpenEventA(EVENT_ALL_ACCESS, FALSE, argv[1]);
+	WaitForSingleObject(event, INFINITE);
+
+	auto loc = PyDict_New ();
+	auto glb = PyDict_New ();
+
+	auto src = (PyCodeObject*)Py_CompileString (""while 1:\n    pass"", ""<stdin>"", Py_file_input);
+
+    if(src == nullptr) {
+		printf(""Failed to compile code\r\n"");
+	}
+	printf(""Executing\r\n"");
+	PyEval_EvalCode(src, glb, loc);
+}";
+                File.WriteAllText("test.cpp", hostCode);
+
+                // compile our host code...
+                var startInfo = new ProcessStartInfo(
+                    Path.Combine(GetVCInstallDir(), "bin", "cl.exe"),
+                    String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.Path))
+                );
+                startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
+                startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(GetVCInstallDir(), "INCLUDE") + ";" + Path.Combine(GetWindowsSDKDir(), "Include");
+                startInfo.EnvironmentVariables["LIB"] = Path.Combine(GetVCInstallDir(), "LIB") + ";" + Path.Combine(GetWindowsSDKDir(), "Lib");
+                Debug.WriteLine(startInfo.EnvironmentVariables["LIB"]);
+
+                startInfo.UseShellExecute = false;
+                startInfo.RedirectStandardError = true;
+                startInfo.RedirectStandardOutput = true;                
+                var compileProcess = Process.Start(startInfo);
+                
+                compileProcess.OutputDataReceived += compileProcess_OutputDataReceived; // for debugging if you change the code...
+                compileProcess.ErrorDataReceived += compileProcess_OutputDataReceived;
+                compileProcess.BeginErrorReadLine();
+                compileProcess.BeginOutputReadLine();
+                compileProcess.WaitForExit();
+
+                Assert.AreEqual(0, compileProcess.ExitCode);
+
+                // start the test process w/ our handle
+                var eventName = Guid.NewGuid().ToString();
+                EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.AutoReset, eventName);
+                Process p = Process.Start("test.exe", eventName);
+
+                // start the attach with the GIL held
+                AutoResetEvent attached = new AutoResetEvent(false);                
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                }
+
+                bool isAttached = false;
+                proc.ProcessLoaded += (sender, args) => {
+                    attached.Set();
+                    isAttached = false;
+                };
+                proc.StartListening();
+
+                Assert.AreEqual(false, isAttached); // we shouldn't have attached yet, we should be blocked
+                handle.Set();   // let the code start running
+
+                attached.WaitOne();
+                proc.Detach();
+
+                p.Kill();
+            }
+        }
+
+        void compileProcess_OutputDataReceived(object sender, DataReceivedEventArgs e) {
+            Debug.WriteLine(e.Data);
+        }
+
+        private static string GetVCInstallDir() {
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\10.0\\Setup\\VC")) {
+                return key.GetValue("ProductDir").ToString();
+            }
+        }
+
+        private static string GetWindowsSDKDir() {
+            return (Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0", "InstallationFolder", null) ??
+                Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0a", "InstallationFolder", "C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0")).ToString();
+            
+        }
+
+        private static string GetVSIDEInstallDir() {
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\10.0\\Setup\\VS")) {
+                return key.GetValue("EnvironmentDirectory").ToString();
             }
         }
 

@@ -178,25 +178,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 
                 var attachRes = PythonProcess.TryAttach(processId, out _process);
                 if (attachRes != ConnErrorMessages.None) {
-                    string msg;
-                    switch (attachRes) {
-                        case ConnErrorMessages.CannotInjectThread: msg = "Cannot create thread in debuggee process"; break;
-                        case ConnErrorMessages.CannotOpenProcess: msg = "Cannot open process for debugging"; break;
-                        case ConnErrorMessages.InterpreterNotInitialized: msg = "Python interpreter has not been initialized in this process"; break;
-                        case ConnErrorMessages.LoadDebuggerBadDebugger: msg = "Failed to load debugging script (incorrect version of script?)"; break;
-                        case ConnErrorMessages.LoadDebuggerFailed: msg = "Failed to compile debugging script"; break;
-                        case ConnErrorMessages.OutOfMemory: msg = "Out of memory"; break;
-                        case ConnErrorMessages.PythonNotFound: msg = "Python interpreter not found"; break;
-                        case ConnErrorMessages.TimeOut: msg = "Timeout while attaching"; break;
-                        case ConnErrorMessages.UnknownVersion: msg = "Unknown Python version loaded in process"; break;
-                        case ConnErrorMessages.SysNotFound: msg = "sys module not found"; break;
-                        case ConnErrorMessages.SysSetTraceNotFound: msg = "settrace not found in sys module"; break;
-                        case ConnErrorMessages.SysGetTraceNotFound: msg = "gettrace not found in sys module"; break;
-                        case ConnErrorMessages.PyDebugAttachNotFound: msg = "Cannot find PyDebugAttach.dll at " + attachRes; break;
-                        default: msg = "Unknown error"; break;
-                    }
-
-                    MessageBox.Show("Failed to attach debugger: " + msg, "Python Tools for Visual Studio");
+                    MessageBox.Show("Failed to attach debugger: " + attachRes.GetErrorMessage(), "Python Tools for Visual Studio");
                     return VSConstants.E_FAIL;
                 }
                     

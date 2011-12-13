@@ -1,16 +1,16 @@
 /* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+*
+* Copyright (c) Microsoft Corporation. 
+*
+* This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+* copy of the license can be found in the License.html file at the root of this distribution. If 
+* you cannot locate the Apache License, Version 2.0, please send an email to 
+* vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+* by the terms of the Apache License, Version 2.0.
+*
+* You must not remove this notice, or any other, from this software.
+*
+* ***************************************************************************/
 
 // PyDebugAttach.cpp : Defines the exported functions for the DLL application.
 //
@@ -20,13 +20,14 @@
 #include <Windows.h>
 #include <Psapi.h>
 #include <TlHelp32.h>
-#include <strsafe.h>
 #include <hash_map>
 #include <string>
 #include <fstream>
 #include <hash_set>
+#include <WinSock.h>
 #include "..\VsPyProf\python.h"
-    
+#include <strsafe.h>
+
 using namespace std;
 
 typedef int (Py_IsInitialized) ();
@@ -84,11 +85,13 @@ struct AttachInfo {
     HANDLE Event;
 };
 
+HANDLE g_initedEvent;
 int AttachCallback(void *initThreads) {
     // initialize us for threading, this will acquire the GIL if not already created, and is a nop if the GIL is created.
     // This leaves us in the proper state when we return back to the runtime whether the GIL was created or not before
     // we were called.
     ((PyEval_Lock*)initThreads)();
+    SetEvent(g_initedEvent);
     return 0;
 }
 
@@ -104,7 +107,7 @@ char* ReadDebuggerCode(wchar_t* newName) {
     auto length = filestr.tellg();
     filestr.seekg (0, ios::beg);
 
-    int len = length;
+    int len = (int)length;
     char* buffer = new char[len + 1];
     filestr.read(buffer, len);
     buffer[len] = 0;
@@ -134,21 +137,21 @@ public:
 };
 
 template <typename T> class PrivateHeapAllocator {
-    
+
 public:
-      typedef size_t    size_type;
-      typedef ptrdiff_t difference_type;
-      typedef T*        pointer;
-      typedef const T*  const_pointer;
-      typedef T&        reference;
-      typedef const T&  const_reference;
-      typedef T         value_type;
-      template <class U> struct rebind { typedef allocator<U>
-                                         other; };
+    typedef size_t    size_type;
+    typedef ptrdiff_t difference_type;
+    typedef T*        pointer;
+    typedef const T*  const_pointer;
+    typedef T&        reference;
+    typedef const T&  const_reference;
+    typedef T         value_type;
+    template <class U> struct rebind { typedef allocator<U>
+    other; };
 
     PrivateHeapAllocator() {
     }
-    
+
     pointer allocate(size_type size, allocator<void>::const_pointer hint = 0) {
         HeapAlloc(_heap.heap, 0, size);
     }
@@ -308,11 +311,46 @@ public:
     }
 
     ConnectionInfo(MemoryBuffer *memoryBuffer, HANDLE fileMapping) : 
-        Succeeded(true), Buffer(memoryBuffer), FileMapping(fileMapping) {
+    Succeeded(true), Buffer(memoryBuffer), FileMapping(fileMapping) {
     }
 
+    // Reports an error while we're initially setting up the attach.  These errors can all be 
+    // reported quickly and are reported across the shared memory buffer.
     void ReportError(int errorNum) {
         Buffer->ErrorNumber = errorNum;
+    }
+
+    // Reports an error after we've started the attach via our socket.  These are errors which
+    // may take a while to get to because the GIL is held and we cannot continue with the attach.
+    // Because the UI for attach is gone by the time we report this error it gets reported 
+    // in the debug output pane.
+    // These errors should also be extremely rare - for example a broken PTVS install, or a broken
+    // Python interpreter.  We'd much rather give the user a message box error earlier than the
+    // error logged in the output window which they might miss.
+    void ReportErrorAfterAttachDone(DWORD errorNum) {
+        WSADATA data;
+        if(!WSAStartup(MAKEWORD(2,0), &data)) {
+            auto sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if(sock != INVALID_SOCKET) {
+                sockaddr_in serveraddr = { 0 };
+
+                serveraddr.sin_family = AF_INET;
+                serveraddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+                serveraddr.sin_port = htons(Buffer->PortNumber);
+
+                // connect to our DebugConnectionListener and report the error.
+                if(connect(sock, (sockaddr*)&serveraddr, sizeof(sockaddr_in)) == 0) {
+                    // send our debug ID as an ASCII string.  
+                    send(sock, "A", 1, 0);
+                    DWORD len = strlen(Buffer->DebugId);
+                    send(sock, (const char*)&len, sizeof(DWORD), 0);
+                    send(sock, Buffer->DebugId, len, 0);
+
+                    // send our error number
+                    send(sock, (const char*)&errorNum, sizeof(errorNum), 0);
+                }
+            }
+        }
     }
 
     void SetVersion(int major, int minor) {
@@ -327,7 +365,8 @@ public:
             auto attachDoneEvent = Buffer->AttachDoneEvent;
             UnmapViewOfFile(Buffer);
             CloseHandle(FileMapping);
-        
+
+            // we may set this multiple times, but that doesn't matter...
             SetEvent(attachDoneEvent);
             CloseHandle(attachDoneEvent);
         }
@@ -378,8 +417,20 @@ enum ConnErrorMessages {
     ConnError_CannotInjectThread,
     ConnError_SysNotFound,
     ConnError_SysSetTraceNotFound,
-	ConnError_SysGetTraceNotFound,
-	ConnError_PyDebugAttachNotFound
+    ConnError_SysGetTraceNotFound,
+    ConnError_PyDebugAttachNotFound
+};
+
+// Ensures handles are closed when they go out of scope
+class HandleHolder {
+    HANDLE _handle;
+public:
+    HandleHolder(HANDLE handle) : _handle(handle) {
+    }
+
+    ~HandleHolder() {
+        CloseHandle(_handle);
+    }
 };
 
 long GetPythonThreadId(const char* version, PyThreadState* curThread) {
@@ -466,9 +517,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
             getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr) {
-            // we're missing some APIs, we cannot attach.
-            connInfo.ReportError(ConnError_PythonNotFound);
-            return false;
+                // we're missing some APIs, we cannot attach.
+                connInfo.ReportError(ConnError_PythonNotFound);
+                return false;
         }
 
         auto head = interpHeap();
@@ -479,15 +530,15 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         }        
 
         bool threadSafeAddPendingCall = false;
-        
+
         // check that we're a supported version
         if (strlen(version) < 3 ||                                             // not enough version info
             (version[0] != '2' && version[0] != '3') ||                        // not v2 or v3
             (version[0] == '2' && (version[2] < '4' || version[2] > '7'))  ||  // not v2.4 - v2.7
             (version[0] == '3' && (version[2] < '0' || version[2] > '2'))      // not v3.0 - 3.2
             ) {
-            connInfo.ReportError(ConnError_UnknownVersion);
-            return false;
+                connInfo.ReportError(ConnError_UnknownVersion);
+                return false;
         } else if(version[0] == '3' || (version[0] == '2' && version[2] >= '7')) {
             threadSafeAddPendingCall = true;
         }
@@ -535,8 +586,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             // and we just resume all of the presently suspended threads.
 
             MyHashMap suspendedThreads;            
-            
+
             bool addedPendingCall = false;
+
+            g_initedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+            HandleHolder holder(g_initedEvent);
 
             if(addPendingCall != nullptr && threadSafeAddPendingCall) {
                 // we're on a thread safe Python version, go ahead and pend our call to initialize threading.
@@ -544,10 +598,10 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 addedPendingCall = true;
             }
 
-            #define TICKS_DIFF(prev, cur) ((cur) >= (prev)) ? ((cur)-(prev)) : ((0xFFFFFFFF-(prev))+(cur)) 
-            const int ticksPerSecond = 1000;
+#define TICKS_DIFF(prev, cur) ((cur) >= (prev)) ? ((cur)-(prev)) : ((0xFFFFFFFF-(prev))+(cur)) 
+            const DWORD ticksPerSecond = 1000;
 
-            long startTickCount = GetTickCount();
+            DWORD startTickCount = GetTickCount();
             do {
                 SuspendThreads(suspendedThreads, addPendingCall, threadsInited);
 
@@ -563,13 +617,23 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         addedPendingCall = true;
                     }
                 }
-                printf("%ld %ld %d\r\n", TICKS_DIFF(startTickCount, GetTickCount()), ticksPerSecond * 20, (TICKS_DIFF(startTickCount, GetTickCount())) < (ticksPerSecond * 20));
                 ResumeThreads(suspendedThreads);               
-            }while(!threadsInited() && (TICKS_DIFF(startTickCount, GetTickCount())) < (ticksPerSecond * 20)); 
+            }while(!threadsInited() && 
+                (TICKS_DIFF(startTickCount, GetTickCount())) < (ticksPerSecond * 20) &&
+                !addedPendingCall); 
 
             if(!threadsInited()) {
-                connInfo.ReportError(ConnError_TimeOut);
-                return false;
+                if(addedPendingCall) {
+                    // we've added our call to initialize multi-threading, we can now wait
+                    // until Python code actually starts running.
+                    SetEvent(connInfo.Buffer->AttachDoneEvent);
+                    ::WaitForSingleObject(g_initedEvent, INFINITE);
+                }else{
+                    connInfo.ReportError(ConnError_TimeOut);
+                    return false;
+                }
+            }else{
+                SetEvent(connInfo.Buffer->AttachDoneEvent);
             }
 
             if (intervalCheck != nullptr) {
@@ -601,15 +665,15 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         // run the debugger code...
         auto debuggerCode = ReadDebuggerCode(newName);
         if(debuggerCode == nullptr) {
-            connInfo.ReportError(ConnError_LoadDebuggerFailed);
+            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
             return false;
         }
 
         auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, "visualstudio_py_debugger.py", 257 /*Py_file_input*/));
         delete [] debuggerCode;
 
-        if(*code == nullptr) {                
-            connInfo.ReportError(ConnError_LoadDebuggerFailed);
+        if(*code == nullptr) {
+            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
             return false;
         }
 
@@ -629,28 +693,28 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto new_thread = PyObjectHolder(isDebug, getDictItem(globalsDict.ToPython(), "new_thread"), true);
 
         if (*attach_process == nullptr || *new_thread == nullptr) {
-            connInfo.ReportError(ConnError_LoadDebuggerBadDebugger);
+            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerBadDebugger);
             return false;
         }
 
         auto pyPortNum = PyObjectHolder(isDebug, intFromLong(connInfo.Buffer->PortNumber));
 
         auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
-        
+
         DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), NULL), isDebug);       
 
         auto sysMod = PyObjectHolder(isDebug, pyImportMod("sys"));
         if(*sysMod == nullptr) {
-            connInfo.ReportError(ConnError_SysNotFound);
+            connInfo.ReportErrorAfterAttachDone(ConnError_SysNotFound);
             return false;
         }
 
         auto settrace = PyObjectHolder(isDebug, pyGetAttr(sysMod.ToPython(), "settrace"));
         if(*settrace == nullptr) {
-            connInfo.ReportError(ConnError_SysSetTraceNotFound); 
+            connInfo.ReportErrorAfterAttachDone(ConnError_SysSetTraceNotFound); 
             return false;
         }
-        
+
         auto gettrace = PyObjectHolder(isDebug, pyGetAttr(sysMod.ToPython(), "gettrace"));
 
         // we need to walk the thread list each time after we've initialized a thread so that we are always
@@ -693,7 +757,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 for(auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
                     if(initialThreads.find(curThread) == initialThreads.end() ||
                         seenThreads.insert(curThread).second == false) {
-                        continue;
+                            continue;
                     }
                     foundThread = true;
                     processedThreads++;
@@ -726,7 +790,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         delThreadTls(threadStateIndex);
                         setThreadTls(threadStateIndex, curThread);
                         auto prevThread = threadSwap(curThread);
-                               
+
                         // save and restore the error in case something funky happens...
                         auto errOccured = errOccurred();
                         PyObject *type, *value, *traceback;
@@ -735,7 +799,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         }
 
                         auto traceFunc = PyObjectHolder(isDebug, pyGetAttr(threadObj.ToPython(), "trace_func"));
-                        
+
                         if(*gettrace == NULL) {
                             DecRef(call(settrace.ToPython(), traceFunc.ToPython(), NULL), isDebug);
                         }else{
@@ -760,7 +824,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             curFrame->f_trace = traceFunc.ToPython();
                             curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, curFrame->f_back);
                         }
-                        
+
                         delThreadTls(threadStateIndex);
                         setThreadTls(threadStateIndex, prevThread);
                         threadSwap(prevThread);
