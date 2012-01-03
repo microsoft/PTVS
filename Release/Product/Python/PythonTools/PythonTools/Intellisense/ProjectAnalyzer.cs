@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Refactoring;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
-            _analysisQueue.Scheduler.StartNew(() => _pyAnalyzer.ReloadModules()).ContinueWith(
+            _analysisQueue.Scheduler.StartNew(() => { lock (this) { _pyAnalyzer.ReloadModules(); } }).ContinueWith(
                 task => {
                     // check the exception (which should never happen) rather than crashing 
                     // from throwing on the finalizer thread.
@@ -199,7 +200,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void QueueDirectoryAnalysis(string path) {
-            ThreadPool.QueueUserWorkItem(x => AnalyzeDirectory(Path.GetDirectoryName(Path.GetFullPath(path))));
+            ThreadPool.QueueUserWorkItem(x => { lock (this) { AnalyzeDirectory(Path.GetDirectoryName(Path.GetFullPath(path))); } });
         }
 
         private bool ShouldAnalyzePath(string path) {
@@ -317,8 +318,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var line = snapshot.GetLineFromPosition(loc.Start);
             var lineStart = line.Start;
 
-            
-
             var textLen = loc.End - lineStart.Position;
             if (textLen <= 0) {
                 // Ctrl-Space on an empty line, we just want to get global vars
@@ -333,7 +332,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                return new NormalCompletionAnalysis(String.Empty, loc.Start, parser.Snapshot, parser.Span, parser.Buffer, 0);
+                return new NormalCompletionAnalysis(
+                    String.Empty, 
+                    loc.Start, 
+                    parser.Snapshot, 
+                    parser.Span, 
+                    parser.Buffer, 
+                    intersectMembers, 
+                    hideAdvancedMembers,
+                    true,
+                    true
+                );
             }
 
             return TrySpecialCompletions(snapshot, span) ??
@@ -897,7 +906,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            return CompletionAnalysis.EmptyCompletionContext;
+            return null;
         }
 
         private static CompletionAnalysis GetNormalCompletionContext(ReverseExpressionParser parser, Span loc, bool intersectMembers = true, bool hideAdvancedMembers = false) {
@@ -905,7 +914,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (exprRange == null) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
-            if (IsSpaceCompletion(parser.Snapshot, loc)) {
+            if (IsSpaceCompletion(parser.Snapshot, loc) && !IntellisenseController.ForceCompletions) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
 
@@ -916,15 +925,57 @@ namespace Microsoft.PythonTools.Intellisense {
                 SpanTrackingMode.EdgeExclusive
             );
 
+            // check if we're at the beginning of a line, this includes having a single
+            // name expression which we're hitting Ctrl-Space after.
+            var enumerator = ReverseExpressionParser.ReverseClassificationSpanEnumerator(parser.Classifier, exprRange.Value.End);
+            bool hitName = false, firstToken = true, hitOther = false;
+            while(enumerator.MoveNext()) {
+                if(enumerator.Current == null) {
+                    break;
+                } else if (enumerator.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
+                    !hitName) {
+                    hitName = true;
+                } else {
+                    hitOther = true;
+                    break;
+                }
+
+                firstToken = false;
+            }
+
+            bool includeStmtKeywords = false;
+
+            if (!hitOther && (hitName || firstToken)) {
+                // make sure we're not in a grouping
+                var groupingParser = new ReverseExpressionParser(parser.Snapshot, parser.Buffer, applicableSpan);
+                int paramIndex;
+                SnapshotPoint? sigStart;
+                string lastKeyword;
+                bool isParamName;
+                var groupingExprRange = groupingParser.GetExpressionRange(
+                    1,
+                    out paramIndex,
+                    out sigStart,
+                    out lastKeyword,
+                    out isParamName,
+                    false
+                );
+
+                if (groupingExprRange == null || groupingExprRange == exprRange) {
+                    includeStmtKeywords = true;
+                }
+            }
+
             return new NormalCompletionAnalysis(
                 text,
                 loc.Start,
                 parser.Snapshot,
                 applicableSpan,
                 parser.Buffer,
-                -1,
                 intersectMembers,
-                hideAdvancedMembers
+                hideAdvancedMembers,
+                includeStmtKeywords,
+                true
             );
         }
 
@@ -1296,8 +1347,10 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IDisposable Members
 
         public void Dispose() {
-            ((IDisposable)_pyAnalyzer).Dispose();
             _analysisQueue.Stop();
+            lock (this) {
+                ((IDisposable)_pyAnalyzer).Dispose();
+            }
         }
 
         #endregion

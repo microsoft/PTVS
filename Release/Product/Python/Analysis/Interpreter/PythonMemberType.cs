@@ -84,6 +84,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// A merge of multiple types.
         /// </summary>
-        Multiple
+        Multiple,
+
+        /// <summary>
+        /// The member represents a keyword
+        /// </summary>
+        Keyword
     }
 }

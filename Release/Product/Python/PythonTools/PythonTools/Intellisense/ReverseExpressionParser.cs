@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -173,6 +174,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 lastToken = enumerator.Current;
                 while (ShouldSkipAsLastToken(lastToken, forCompletion) && enumerator.MoveNext()) {
                     // skip trailing new line if the user is hovering at the end of the line
+                    if (lastToken == null && (nesting + otherNesting == 0)) {
+                        // new line out of a grouping...
+                        return _span.GetSpan(_snapshot);
+                    }
                     lastToken = enumerator.Current;
                 }
 
@@ -203,7 +208,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 }
                             }
                         } else {
-                            if (start == null) {
+                            if (start == null && !forCompletion) {
                                 // hovering directly over an open paren, don't provide a tooltip
                                 return null;
                             }
@@ -306,7 +311,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         lastTokenWasCommaOrOperator = true;
                         lastTokenWasKeywordArgAssignment = false;
                         if (nesting == 0 && otherNesting == 0) {
-                            if (start == null) {
+                            if (start == null && !forCompletion) {
                                 return null;
                             }
                             isParameterName = IsParameterNameComma(enumerator);

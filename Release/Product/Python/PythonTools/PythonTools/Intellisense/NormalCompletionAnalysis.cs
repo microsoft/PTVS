@@ -28,16 +28,16 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
 
     internal class NormalCompletionAnalysis : CompletionAnalysis {
-        private readonly int _paramIndex;
         private readonly ITextSnapshot _snapshot;
-        private readonly bool _intersectMembers, _hideAdvancedMembers;
+        private readonly bool _intersectMembers, _hideAdvancedMembers, _includeStatementKeywords, _includeExpressionKeywords;
 
-        internal NormalCompletionAnalysis(string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, int paramIndex, bool intersectMembers = true, bool hideAdvancedMembers = false)
+        internal NormalCompletionAnalysis(string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, bool intersectMembers = true, bool hideAdvancedMembers = false, bool includeStatmentKeywords = false, bool includeExpressionKeywords = false)
             : base(text, pos, span, textBuffer) {
-            _paramIndex = paramIndex;
             _snapshot = snapshot;
             _intersectMembers = intersectMembers;
             _hideAdvancedMembers = hideAdvancedMembers;
+            _includeExpressionKeywords = includeExpressionKeywords;
+            _includeStatementKeywords = includeStatmentKeywords;
         }
 
         private string FixupCompletionText(string exprText) {
@@ -61,20 +61,20 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
-            MemberResult[] members;            
-            
+            MemberResult[] members;
+
             IReplEvaluator eval;
             PythonReplEvaluator pyReplEval = null;
 
-             if (_snapshot.TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
-                 pyReplEval = eval as PythonReplEvaluator;
-             }
+            if (_snapshot.TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
+                pyReplEval = eval as PythonReplEvaluator;
+            }
 
             var analysis = GetAnalysisEntry();
             string fixedText = FixupCompletionText(Text);
             if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 members = analysis.GetMembersByIndex(
-                    fixedText, 
+                    fixedText,
                     _pos,
                     MemberOptions
                 ).ToArray();
@@ -138,7 +138,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private GetMemberOptions MemberOptions {
             get {
                 return (_intersectMembers ? GetMemberOptions.IntersectMultipleResults : GetMemberOptions.None) |
-                        (_hideAdvancedMembers ? GetMemberOptions.HideAdvancedMembers : GetMemberOptions.None);
+                        (_hideAdvancedMembers ? GetMemberOptions.HideAdvancedMembers : GetMemberOptions.None) | 
+                        (_includeExpressionKeywords ? GetMemberOptions.IncludeExpressionKeywords : GetMemberOptions.None) | 
+                        (_includeStatementKeywords ? GetMemberOptions.IncludeStatementKeywords : GetMemberOptions.None); 
             }
         }
 

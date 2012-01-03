@@ -108,6 +108,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_workThread != null) {
                 _unload = true;
                 _workEvent.Set();
+                _workThread.Join();
             }
         }
 

@@ -1853,6 +1853,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     needDefault = true;
                     parameter.DefaultValue = ParseExpression();
+                    parameter.EndIndex = parameter.DefaultValue.EndIndex;
                 } else if (needDefault && !parsedStarArgs) {
                     ReportSyntaxError(parameter.StartIndex, parameter.EndIndex, "default value must be specified here");
                 }

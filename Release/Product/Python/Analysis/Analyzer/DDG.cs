@@ -429,7 +429,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 string importing, saveName;
                 Node nameNode;
                 bool bottom = false;
-                if (curName.Names.Count > 1) {
+                if (curName.Names.Count == 0) {
+                    continue;
+                } else if (curName.Names.Count > 1) {
                     // import foo.bar
                     if (asName != null) {
                         // import foo.bar as baz, baz becomes the value of the bar module

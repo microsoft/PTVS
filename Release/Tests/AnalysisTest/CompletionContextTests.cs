@@ -14,21 +14,94 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using IronPython.Hosting;
-using Microsoft.IronPythonTools.Interpreter;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.Scripting.Hosting;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
-using System.Linq;
 
 namespace AnalysisTest.Mocks {
     [TestClass]
+    [DeploymentItem(@"..\\PythonTools\\CompletionDB\\", "CompletionDB")]
+    [DeploymentItem("PyDebugAttach.dll")]
     public class CompletionContextTests {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
         public static ScriptEngine PythonEngine = Python.CreateEngine();
+
+        [TestMethod]
+        public void Scenario_CtrlSpace() {
+            string code = @"def f(param1, param2):
+    g()";
+
+            var completionList = GetCompletionSetCtrlSpace(code.IndexOf("g(") + 2, code).Completions.Select(x => x.DisplayText).ToArray();
+            Assert.IsTrue(completionList.Contains("param1"));
+            Assert.IsTrue(completionList.Contains("param2"));
+
+            code = @"def f(param1, param2):
+    g(param1, )";
+
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("g(param1, ") + "g(param1, ".Length, code).Completions.Select(x => x.DisplayText).ToArray();
+            Assert.IsTrue(completionList.Contains("param1"));
+            Assert.IsTrue(completionList.Contains("param2"));
+
+            // verify Ctrl-Space inside of a function gives proper completions
+            foreach (var codeSnippet in new[] { @"def f():
+    
+    pass", @"def f():
+    x = (2 + 3)
+    
+    pass
+", @"def f():
+    yield (2 + 3)
+    
+    pass" }) {
+
+                Debug.WriteLine(String.Format("Testing {0}", codeSnippet));
+
+                completionList = GetCompletionSetCtrlSpace(codeSnippet.IndexOf("pass") - 6, codeSnippet).Completions.Select(x => x.DisplayText).ToArray();
+                Assert.IsTrue(completionList.Contains("min"));
+                Assert.IsTrue(completionList.Contains("assert"));
+            }
+        }
+
+        [TestMethod]
+        public void Scenario_Keywords() {
+            string code = @"";
+
+            var completionList = GetCompletionSetCtrlSpace(0, code).Completions.Select(x => x.DisplayText).ToArray();
+
+            // not in a function
+            Assert.IsFalse(completionList.Contains("yield"));
+            Assert.IsFalse(completionList.Contains("return"));
+
+            Assert.IsTrue(completionList.Contains("assert"));
+            Assert.IsTrue(completionList.Contains("and"));
+
+            code = @"def f():
+    
+    pass";
+
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("pass"), code).Completions.Select(x => x.DisplayText).ToArray();
+
+            Assert.IsTrue(completionList.Contains("yield"));
+            Assert.IsTrue(completionList.Contains("return"));
+
+
+            code = @"x = (abc, bar, baz)";
+
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("bar"), code).Completions.Select(x => x.DisplayText).ToArray();
+
+            Assert.IsTrue(completionList.Contains("and"));
+            Assert.IsFalse(completionList.Contains("def"));
+        }
 
         [TestMethod]
         public void Scenario_MemberCompletion() {
@@ -97,7 +170,7 @@ baz
                 Console.WriteLine(i);
                 var analysis = AnalyzeExpression(i, code, forCompletion: false);
 
-                var fact = new IronPythonInterpreterFactory();
+                var fact = new CPythonInterpreterFactory();
                 using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                     var buffer = new MockTextBuffer(code);
                     buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
@@ -178,13 +251,7 @@ e): <no type information available>");
         private static void TestQuickInfo(string code, int start, int end, params string[] expected) {
 
             for (int i = start; i < end; i++) {
-                var analysis = AnalyzeExpression(i, code, forCompletion: false);
-                List<object> quickInfo = new List<object>();
-                ITrackingSpan span;
-                QuickInfoSource.AugmentQuickInfoWorker(
-                    analysis,
-                    quickInfo,
-                    out span);
+                var quickInfo = AnalyzeQuickInfo(i, code, forCompletion: false);
 
                 Assert.AreEqual(expected.Length, quickInfo.Count);
                 for (int j = 0; j < expected.Length; j++) {
@@ -197,20 +264,43 @@ e): <no type information available>");
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-            var fact = new IronPythonInterpreterFactory();
+            var fact = new CPythonInterpreterFactory();
             using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
-                var buffer = new MockTextBuffer(sourceCode);
-                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
-                var textView = new MockTextView(buffer);
-                var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
-                while (!item.ProjectEntry.IsAnalyzed) {
-                    Thread.Sleep(10);
-                }
-
-                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-
-                return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
+                return AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
             }
+        }
+
+        private static List<object> AnalyzeQuickInfo(int location, string sourceCode, bool forCompletion = true) {
+            if (location < 0) {
+                location = sourceCode.Length + location + 1;
+            }
+            var fact = new CPythonInterpreterFactory();
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                var analysis = AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
+
+                List<object> quickInfo = new List<object>();
+                ITrackingSpan span;
+                QuickInfoSource.AugmentQuickInfoWorker(
+                    analysis,
+                    quickInfo,
+                    out span);
+
+                return quickInfo;
+            }
+        }
+
+        private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, ProjectAnalyzer analyzer) {
+            var buffer = new MockTextBuffer(sourceCode);
+            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+            var textView = new MockTextView(buffer);
+            var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
+            while (!item.ProjectEntry.IsAnalyzed) {
+                Thread.Sleep(10);
+            }
+
+            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+
+            return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
         }
 
         private static void MemberCompletionTest(int location, string sourceCode, string expectedExpression) {
@@ -222,25 +312,54 @@ e): <no type information available>");
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-            var fact = new IronPythonInterpreterFactory();
+            var fact = new CPythonInterpreterFactory();
             using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
-                var buffer = new MockTextBuffer(sourceCode);
-                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
-                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-
-                analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
-                analyzer.WaitForCompleteAnalysis(x => true);
-
-                var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
-                return context;
+                return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer);
             }
+        }
+
+        private static CompletionSet GetCompletionSet(int location, string sourceCode, bool intersectMembers = true) {
+            if (location < 0) {
+                location = sourceCode.Length + location + 1;
+            }
+            var fact = new CPythonInterpreterFactory();
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer).GetCompletions(new MockGlyphService());
+            }
+        }
+
+        /// <summary>
+        /// Simulates the user hitting Ctrl-Space to get completions.
+        /// </summary>
+        private static CompletionSet GetCompletionSetCtrlSpace(int location, string sourceCode, bool intersectMembers = true) {
+            IntellisenseController.ForceCompletions = true;
+            try {
+                return GetCompletionSet(location, sourceCode, intersectMembers);
+            } finally {
+                IntellisenseController.ForceCompletions = false;
+            }
+        }
+
+        private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, ProjectAnalyzer analyzer) {
+            var buffer = new MockTextBuffer(sourceCode);
+            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+
+            analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
+            analyzer.WaitForCompleteAnalysis(x => true);
+            while (((IPythonProjectEntry)buffer.GetAnalysis()).Analysis == null) {
+                System.Threading.Thread.Sleep(500);
+            }
+
+            var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
+            return context;
         }
 
         private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex) {
             if (location < 0) {
                 location = sourceCode.Length + location;
             }
-            var fact = new IronPythonInterpreterFactory();
+            var fact = new CPythonInterpreterFactory();
             using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);

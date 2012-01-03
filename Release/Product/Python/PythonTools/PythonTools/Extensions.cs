@@ -56,6 +56,7 @@ namespace Microsoft.PythonTools {
                 case PythonMemberType.Constant: group = StandardGlyphGroup.GlyphGroupVariable; break;
                 case PythonMemberType.EnumInstance: group = StandardGlyphGroup.GlyphGroupEnumMember; break;
                 case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
+                case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
                 case PythonMemberType.Function:
                 case PythonMemberType.Method:
                 default:

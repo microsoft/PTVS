@@ -188,6 +188,17 @@ from nt import *
         }
 
         [TestMethod]
+        public void TestImportTrailingComma() {
+            var entry = ProcessText(@"
+import nt,
+            ");
+
+            var members = entry.GetMembersByIndex("nt", 1).Select(x => x.Name);
+
+            AssertContains(members, "abort");
+        }
+
+        [TestMethod]
         public void ImportStarCorrectRefs() {
             var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
 

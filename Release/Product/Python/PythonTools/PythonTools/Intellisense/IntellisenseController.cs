@@ -347,6 +347,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        [ThreadStatic]
+        internal static bool ForceCompletions;
+
         internal void TriggerCompletionSession(bool completeWord) {
             Dismiss();
 
