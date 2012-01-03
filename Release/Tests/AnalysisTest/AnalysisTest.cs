@@ -2721,6 +2721,24 @@ print(z)";
         }
 
         [TestMethod]
+        public void TestIsInstanceUserDefinedType() {
+            var text = @"
+class C(object):
+    def f(self):
+        pass
+
+def f(a):
+    assert isinstance(a, C)
+    print(a)
+    pass
+";
+
+            var entry = ProcessText(text);
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "a", text.IndexOf("print(a)")), "C instance");
+        }
+
+
+        [TestMethod]
         public void TestQuickInfo() {
             var text = @"
 import sys

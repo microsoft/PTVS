@@ -596,23 +596,25 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return false;
         }
 
-        private void PropagateIsInstanceTypes(Node node, ISet<Namespace> typeObj, VariableDef variable) {
-            ClassInfo classInfo = typeObj as ClassInfo;
-            if (classInfo != null) {
-                variable.AddTypes(node, _unit, classInfo.Instance);
-            } else {
-                BuiltinClassInfo builtinClassInfo = typeObj as BuiltinClassInfo;
-                if (builtinClassInfo != null) {
-                    variable.AddTypes(node, _unit, builtinClassInfo.Instance);
+        private void PropagateIsInstanceTypes(Node node, ISet<Namespace> typeSet, VariableDef variable) {
+            foreach (var typeObj in typeSet) {
+                ClassInfo classInfo = typeObj as ClassInfo;
+                if (classInfo != null) {
+                    variable.AddTypes(node, _unit, classInfo.Instance);
                 } else {
-                    SequenceInfo seqInfo = typeObj as SequenceInfo;
-                    if (seqInfo != null && seqInfo.Push()) {
-                        try {
-                            foreach (var type in seqInfo.IndexTypes) {
-                                PropagateIsInstanceTypes(node, type, variable);
+                    BuiltinClassInfo builtinClassInfo = typeObj as BuiltinClassInfo;
+                    if (builtinClassInfo != null) {
+                        variable.AddTypes(node, _unit, builtinClassInfo.Instance);
+                    } else {
+                        SequenceInfo seqInfo = typeObj as SequenceInfo;
+                        if (seqInfo != null && seqInfo.Push()) {
+                            try {
+                                foreach (var type in seqInfo.IndexTypes) {
+                                    PropagateIsInstanceTypes(node, type, variable);
+                                }
+                            } finally {
+                                seqInfo.Pop();
                             }
-                        } finally {
-                            seqInfo.Pop();
                         }
                     }
                 }
