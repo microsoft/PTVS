@@ -131,30 +131,25 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void AnalyzeStdLib(StreamWriter writer, string outdir) {
-            
             var fileGroups = new List<List<string>>();
             HashSet<string> pthDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             HashSet<string> allFileSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var dir in _dirs) {
-                CollectFiles(pthDirs, dir, fileGroups, allFileSet);
+                CollectStdLib(pthDirs, dir, fileGroups, allFileSet);
             }
 
-            HashSet<string> allPthDirs = new HashSet<string>();
-            while (pthDirs.Count > 0) {
-                allPthDirs.UnionWith(pthDirs);
+            foreach (var dir in pthDirs) {
+                Log(writer, "COLLECTING PATH DIR \"" + dir + "\"");
+                var list = new List<string>();
+                fileGroups.Add(list);
 
-                pthDirs.Clear();
-                foreach (var dir in pthDirs) {
-                    CollectFiles(pthDirs, dir, fileGroups, allFileSet);
-                }
-
-                pthDirs.ExceptWith(allPthDirs);
+                CollectPackage(dir, list, allFileSet);
             }
 
             foreach (var files in fileGroups) {
                 if (files.Count > 0) {
                     Log(writer, "GROUP START \"" + Path.GetDirectoryName(files[0]) + "\"");
-                    Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));                    
+                    Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
                     var fact = new CPythonInterpreterFactory();
                     var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
                     var modules = new List<IPythonProjectEntry>();
@@ -217,7 +212,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
 
-        private static void CollectFiles(HashSet<string> pthDirs, string dir, List<List<string>> files, HashSet<string> allFiles) {
+        private static void CollectStdLib(HashSet<string> pthDirs, string dir, List<List<string>> files, HashSet<string> allFiles) {
             List<string> libFiles = new List<string>();
             files.Add(libFiles);
 
@@ -229,28 +224,33 @@ namespace Microsoft.PythonTools.Analysis {
                         files.Add(list);
                         CollectPackage(sitePackageDir, list, allFiles);
                     }
+
+                    foreach (var file in Directory.GetFiles(subdir)) {
+                        if (IsPthFile(file)) {
+                            string[] lines = File.ReadAllLines(file);
+                            foreach (var line in lines) {
+                                if (line.IndexOfAny(_invalidPathChars) == -1) {
+                                    string pthDir = line.Replace('/', '\\');
+
+                                    if (!Path.IsPathRooted(pthDir)) {
+                                        pthDir = Path.Combine(subdir, pthDir);
+                                    }
+
+                                    if (Directory.Exists(pthDir)) {
+                                        pthDirs.Add(pthDir);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 } else {
                     CollectPackage(subdir, libFiles, allFiles);
                 }
             }
 
-            foreach(var file in Directory.GetFiles(dir)) {
+            foreach (var file in Directory.GetFiles(dir)) {
                 if (IsPythonFile(file)) {
                     libFiles.Add(file);
-                } else if (IsPthFile(file)) {
-                    string[] lines = File.ReadAllLines(file);
-                    foreach (var line in lines) {
-                        if (line.IndexOfAny(_invalidPathChars) == -1) {
-                            string pthDir = line;
-                            if (!Path.IsPathRooted(line)) {
-                                pthDir = Path.Combine(dir, line);
-                            }
-
-                            if (Directory.Exists(pthDir)) {
-                                pthDirs.Add(pthDir);
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -262,8 +262,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         private static void CollectPackage(string dir, List<string> files, HashSet<string> allFiles) {
             foreach (string file in Directory.GetFiles(dir)) {
-                if (IsPythonFile(file) && !allFiles.Contains(file)) { 
+                if (IsPythonFile(file) && !allFiles.Contains(file)) {
                     files.Add(file);
+                    allFiles.Add(file);
                 }
             }
 
@@ -275,7 +276,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
-        
+
         private static bool IsPythonFile(string file) {
             string filename = Path.GetFileName(file);
             return filename.Length > 0 && (Char.IsLetter(filename[0]) || filename[0] == '_') && // distros include things like '1col.py' in tests which aren't valid module names, ignore those.

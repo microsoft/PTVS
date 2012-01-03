@@ -29,6 +29,8 @@ namespace AnalysisTest {
     [DeploymentItem(@"..\\PythonTools\\IronPythonScraper.py")]
     [DeploymentItem(@"..\\PythonTools\\ExtensionScraper.py")]
     [DeploymentItem("PyDebugAttach.dll")]
+    [DeploymentItem("Microsoft.PythonTools.Analyzer.exe")]
+    [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
     public class CompletionDBTest {
         
         [TestMethod]
@@ -64,6 +66,38 @@ namespace AnalysisTest {
                     }
                 }
             }
+        }
+
+        [TestMethod]
+        public void TestPthFiles() {
+            var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(outputPath);
+
+            string args = String.Join(" ",
+                "/dir", '"' + Path.Combine(Environment.CurrentDirectory, "Python.VS.TestData", "PathStdLib") + '"',
+                "/version", "V27",
+                "/outdir", '"' + outputPath + '"',
+                "/indir", '"' + Path.Combine(Environment.CurrentDirectory, "CompletionDB") + '"'
+            );
+
+            // run the analyzer
+            var startInfo = new ProcessStartInfo("Microsoft.PythonTools.Analyzer.exe", args);
+            var proc = Process.Start(startInfo);
+            proc.WaitForExit();
+            Assert.AreEqual(proc.ExitCode, 0);
+
+            File.Copy(Path.Combine(Environment.CurrentDirectory, "CompletionDB", "__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
+
+            var typeDb = new PythonTypeDatabase(outputPath, new Version(2, 7));
+            var module = typeDb.GetModule("SomeLib");
+            Assert.AreNotEqual(null, module);
+            var fooMod = module.GetMember(null, "foo");
+            Assert.AreNotEqual(null, fooMod);
+
+            var cClass = ((IPythonModule)fooMod).GetMember(null, "C");
+            Assert.AreNotEqual(null, cClass);
+
+            Assert.AreEqual(PythonMemberType.Class, cClass.MemberType);
         }
 
         /// <summary>
