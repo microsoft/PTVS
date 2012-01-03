@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.Utilities;
 
 namespace AnalysisTest.Mocks {
-    class MockTextView : ITextView {
+    class MockTextView : IWpfTextView, ITextView {
         private readonly ITextBuffer _buffer;
         private readonly PropertyCollection _props = new PropertyCollection();
         private readonly MockTextSelection _selection;
@@ -209,5 +209,59 @@ namespace AnalysisTest.Mocks {
         public Microsoft.VisualStudio.Utilities.PropertyCollection Properties {
             get { return _props; }
         }
+
+        #region IWpfTextView Members
+
+        public System.Windows.Media.Brush Background {
+            get {
+                throw new NotImplementedException();
+            }
+            set {
+                throw new NotImplementedException();
+            }
+        }
+
+        public event EventHandler<BackgroundBrushChangedEventArgs> BackgroundBrushChanged;
+
+        public Microsoft.VisualStudio.Text.Formatting.IFormattedLineSource FormattedLineSource {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IAdornmentLayer GetAdornmentLayer(string name) {
+            throw new NotImplementedException();
+        }
+
+        public ISpaceReservationManager GetSpaceReservationManager(string name) {
+            throw new NotImplementedException();
+        }
+
+        Microsoft.VisualStudio.Text.Formatting.IWpfTextViewLine IWpfTextView.GetTextViewLineContainingBufferPosition(SnapshotPoint bufferPosition) {
+            throw new NotImplementedException();
+        }
+
+        public Microsoft.VisualStudio.Text.Formatting.ILineTransformSource LineTransformSource {
+            get { throw new NotImplementedException(); }
+        }
+
+        IWpfTextViewLineCollection IWpfTextView.TextViewLines {
+            get { throw new NotImplementedException(); }
+        }
+
+        public System.Windows.FrameworkElement VisualElement {
+            get { throw new NotImplementedException(); }
+        }
+
+        public double ZoomLevel {
+            get {
+                throw new NotImplementedException();
+            }
+            set {
+                throw new NotImplementedException();
+            }
+        }
+
+        public event EventHandler<ZoomLevelChangedEventArgs> ZoomLevelChanged;
+
+        #endregion
     }
 }

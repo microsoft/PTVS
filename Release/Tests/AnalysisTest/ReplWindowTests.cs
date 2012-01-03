@@ -21,8 +21,10 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
+using AnalysisTest.Mocks;
 using AnalysisTest.ProjectSystem;
 using AnalysisTest.UI;
+using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Options;
@@ -2433,5 +2435,27 @@ g()",
         }
 
     }
+
+    [TestClass]
+    [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
+    [DeploymentItem("PyDebugAttach.dll")]
+    [DeploymentItem(@"..\\PythonTools\\visualstudio_py_repl.py")]
+    [DeploymentItem(@"..\\PythonTools\\visualstudio_py_debugger.py")]
+    public class IronPythonReplTests {
+        [TestMethod]
+        public void IronPythonSignatures() {
+            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var execute = replEval.ExecuteText("from System import Array");
+            execute.Wait();
+            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+
+            var sigs = replEval.GetSignatureDocumentation(replEval.ReplAnalyzer, "Array[int]");
+            Assert.AreEqual(sigs.Length, 1);
+            Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
+        }
+    }
+
 }
 

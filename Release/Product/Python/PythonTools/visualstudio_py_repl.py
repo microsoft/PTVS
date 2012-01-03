@@ -225,7 +225,10 @@ actual inspection and introspection."""
                 arg_count = len(args) + (vargs is not None) + (varkw is not None)
                 self.conn.send(struct.pack('i', arg_count))
                 for arg in args:
-                    self._write_string(arg)
+                    if arg is None:
+                        self._write_string('')
+                    else:
+                        self._write_string(arg)
 
                 if vargs is not None:
                     self._write_string('*' + vargs)

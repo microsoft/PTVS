@@ -51,6 +51,7 @@
     <Compile Include="AddImportTests.cs" />
     <Compile Include="CompletionDBTest.cs" />
     <Compile Include="Mocks\MockGlyphService.cs" />
+    <Compile Include="Mocks\MockReplWindow.cs" />
     <Compile Include="ProjectSystem\LinkedFileTests.cs" />
     <Content Include="Python.VS.TestData\AssemblyReference\AssemblyReference.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
