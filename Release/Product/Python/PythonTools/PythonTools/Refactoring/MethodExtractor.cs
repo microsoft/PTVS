@@ -427,8 +427,10 @@ namespace Microsoft.PythonTools.Refactoring {
                 get { return _define; }
             }
 
-            public override bool Walk(FunctionDefinition node) {                
-                _define.WalkName(node.NameExpression, node.GetVariableReference(_root));
+            public override bool Walk(FunctionDefinition node) {
+                if (!node.IsLambda) {
+                    _define.WalkName(node.NameExpression, node.GetVariableReference(_root));
+                }
 
                 bool oldInLoop = _inLoop;
                 _inLoop = false;

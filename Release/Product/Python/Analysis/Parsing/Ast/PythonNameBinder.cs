@@ -395,7 +395,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             node._nameVariable = _globalScope.EnsureGlobalVariable("__name__");
             
             // Name is defined in the enclosing context
-            if (!node.IsLambda && !node.IsGenerator) {
+            if (!node.IsLambda) {
                 node.Variable = DefineName(node.Name);
                 node.AddVariableReference(_globalScope, _bindRefs, Reference(node.Name));
             }

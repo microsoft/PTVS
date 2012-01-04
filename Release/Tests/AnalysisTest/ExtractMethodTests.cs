@@ -83,6 +83,63 @@ def f():
         }
 
         [TestMethod]
+        public void TestExtractLambda() {
+            // lambda is present in the code
+            ExtractMethodTest(
+@"def f():
+    pass
+
+def x():
+    abc = lambda x: 42", "pass", TestResult.Success(
+@"def g():
+    pass
+
+def f():
+    g()
+
+def x():
+    abc = lambda x: 42"));
+
+            // lambda is being extracted
+            ExtractMethodTest(
+@"def f():
+    abc = lambda x: 42", "lambda x: 42", TestResult.Success(
+@"def g():
+    return lambda x: 42
+
+def f():
+    abc = g()"));
+        }
+
+        [TestMethod]
+        public void TestExtractGenerator() {
+            var code = @"def f(imp = imp):
+    yield 42";
+
+            ExtractMethodTest(
+code, () => new Span(code.IndexOf("= imp") + 2, 3), TestResult.Success(
+@"def g():
+    return imp
+
+def f(imp = g()):
+    yield 42"));
+        }
+
+        [TestMethod]
+        public void TestExtractDefaultValue() {
+            var code = @"def f(imp = imp):
+    pass";
+
+            ExtractMethodTest(
+code, () => new Span(code.IndexOf("= imp") + 2, 3), TestResult.Success(
+@"def g():
+    return imp
+
+def f(imp = g()):
+    pass"));
+        }
+
+        [TestMethod]
         public void TestFromImportStar() {
             ExtractMethodTest(
 @"def f():
@@ -1278,6 +1335,23 @@ def f(x):
         }
 
         private void ExtractMethodTest(string input, string extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
+            Func<Span> textRange = () => {
+                if (extract.IndexOf(" .. ") != -1) {
+                    var pieces = extract.Split(new[] { " .. " }, 2, StringSplitOptions.None);
+                    int start = input.IndexOf(pieces[0]);
+                    int end = input.IndexOf(pieces[1]) + pieces[1].Length - 1;
+                    return Span.FromBounds(start, end);
+                } else {
+                    int start = input.IndexOf(extract);
+                    int length = extract.Length;
+                    return new Span(start, length);
+                }
+            };
+
+            ExtractMethodTest(input, textRange, expected, scopeName, targetName, version, parameters);
+        }
+
+        private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = new CPythonInterpreterFactory(version ?? new Version(2, 7), Guid.Empty, "", "", "", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
             using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(input);
@@ -1285,22 +1359,10 @@ def f(x):
                 buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 
-                if (extract.IndexOf(" .. ") != -1) {
-                    var pieces = extract.Split(new[] { " .. " }, 2, StringSplitOptions.None);
-                    int start = input.IndexOf(pieces[0]);
-                    int end = input.IndexOf(pieces[1]) + pieces[1].Length - 1;
-                    view.Selection.Select(
-                        new SnapshotSpan(view.TextBuffer.CurrentSnapshot, Span.FromBounds(start, end)),
-                        false
-                    );
-                } else {
-                    int start = input.IndexOf(extract);
-                    int length = extract.Length;
-                    view.Selection.Select(
-                        new SnapshotSpan(view.TextBuffer.CurrentSnapshot, new Span(start, length)),
-                        false
-                    );
-                }
+                view.Selection.Select(
+                    new SnapshotSpan(view.TextBuffer.CurrentSnapshot, extract()),
+                    false
+                );
 
                 new MethodExtractor(view).ExtractMethod(extractInput);
 

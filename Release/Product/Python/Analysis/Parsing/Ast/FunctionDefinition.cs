@@ -97,6 +97,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             internal set { _decorators = value; }
         }
 
+        /// <summary>
+        /// True is the function is a generator.  Generators contain at least one yield
+        /// expression and instead of returning a value when called they return a generator
+        /// object which implements the iterator protocol.
+        /// </summary>
         public bool IsGenerator {
             get { return _generator; }
             set { _generator = value; }
