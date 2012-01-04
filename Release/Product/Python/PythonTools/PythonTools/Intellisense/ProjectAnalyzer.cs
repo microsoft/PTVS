@@ -1032,7 +1032,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     // _taskProvider can be null if we've never opened a Python file and none of the project files have error
                     _taskProvider.Clear(entry.FilePath);
                 }
+                if (_project != null) {
+                    _project.ErrorFiles.Remove(entry.FilePath);
+                }
                 _pyAnalyzer.RemoveModule(entry);
+                IProjectEntry removed;
+                _projectFiles.TryRemove(entry.FilePath, out removed);
             }
         }
 

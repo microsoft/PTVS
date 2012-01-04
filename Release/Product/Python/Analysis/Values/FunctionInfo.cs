@@ -185,12 +185,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Description {
             get {
-                StringBuilder result = new StringBuilder("def ");
-                result.Append(FunctionDefinition.Name);
-                result.Append("(...)"); // TOOD: Include parameter information?
-                if (!String.IsNullOrEmpty(Documentation)) {
-                    result.AppendLine();
-                    result.Append(Documentation);
+                StringBuilder result;
+                if (FunctionDefinition.IsLambda) {
+                    result = new StringBuilder("lambda ...: ");
+                    if (FunctionDefinition.IsGenerator) {
+                        result.Append(((YieldExpression)((ExpressionStatement)FunctionDefinition.Body).Expression).Expression.ToCodeString(DeclaringModule.Tree));
+                    } else {
+                        result.Append(((ReturnStatement)FunctionDefinition.Body).Expression.ToCodeString(DeclaringModule.Tree));
+                    }
+                } else {
+                    result = new StringBuilder("def ");
+                    result.Append(FunctionDefinition.Name);
+                    result.Append("(...)"); // TOOD: Include parameter information?
+                    if (!String.IsNullOrEmpty(Documentation)) {
+                        result.AppendLine();
+                        result.Append(Documentation);
+                    }
+                }
+
+                var desc = FunctionDescription;
+                if (!String.IsNullOrWhiteSpace(desc)) {
+                    result.Append(desc);
                 }
                 return result.ToString();
             }

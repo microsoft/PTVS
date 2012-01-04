@@ -13,20 +13,22 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 using AnalysisTest.UI;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.TestSccPackage;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using Keyboard = AnalysisTest.UI.Keyboard;
 using Mouse = AnalysisTest.UI.Mouse;
 using Path = System.IO.Path;
-using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace AnalysisTest.ProjectSystem {
     [TestClass]
@@ -36,6 +38,49 @@ namespace AnalysisTest.ProjectSystem {
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DeferredSaveWithDot() {
+            // http://pytools.codeplex.com/workitem/623
+            // enable deferred saving on projects
+            var props = VsIdeTestHostContext.Dte.get_Properties("Environment", "ProjectsAndSolution");
+            var prevValue = props.Item("SaveNewProjects").Value;
+            props.Item("SaveNewProjects").Value = false;
+
+            try {
+                // now run the test
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var newProjDialog = app.FileNewProject();
+
+                var item = newProjDialog.InstalledTemplates.FindItem("Other Languages", "Python");
+                item.SetFocus();
+
+                var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+                consoleApp.SetFocus();
+                newProjDialog.ProjectName = "Foo.Bar";
+                newProjDialog.ClickOK();
+
+                // wait for new solution to load...
+                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("File.SaveAll"));
+
+                var saveProjDialog = new SaveProjectDialog(app.WaitForDialog());
+                saveProjDialog.Save();
+
+                app.WaitForDialogDismissed();
+
+                var fullname = app.Dte.Solution.FullName;
+                app.Dte.Solution.Close(false);
+
+                Directory.Delete(Path.GetDirectoryName(fullname), true);
+            } finally {
+                props.Item("SaveNewProjects").Value = prevValue;
+            }
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -496,7 +541,7 @@ namespace AnalysisTest.ProjectSystem {
 
             Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
             var sccProject = TestSccProvider.LoadedProjects.First();
-            FileInfo fileInfo = null;
+            Microsoft.TestSccPackage.FileInfo fileInfo = null;
             foreach (var curFile in sccProject.Files) {
                 if (curFile.Key.EndsWith("Program.py")) {
                    fileInfo = curFile.Value;

@@ -1037,7 +1037,7 @@ namespace Microsoft.PythonTools.Project {
             IVsSolution vsSolution = (IVsSolution)this.GetService(typeof(SVsSolution));
             
             int canContinue;
-            vsSolution.QueryRenameProject(this, basePath, pszProjectFilename, 0, out canContinue);
+            vsSolution.QueryRenameProject(this, FileName, pszProjectFilename, 0, out canContinue);
             if (canContinue == 0) {
                 return VSConstants.OLE_E_PROMPTSAVECANCELLED;
             }

@@ -215,6 +215,7 @@
     <Compile Include="UI\Python\PythonPerfExplorer.cs" />
     <Compile Include="UI\RemoveItemDialog.cs" />
     <Compile Include="UI\SaveDialog.cs" />
+    <Compile Include="UI\SaveProjectDialog.cs" />
     <Compile Include="UI\SelectCodeTypeDialog.cs" />
     <Compile Include="UI\SolutionExplorerTree.cs" />
     <Compile Include="UI\Table.cs" />

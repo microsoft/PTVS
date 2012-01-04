@@ -2787,7 +2787,7 @@ class return_func_class:
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "c.Length", 1));
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "d", 1), "foo instance");
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "sys", 1), "built-in module sys");
-            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "f", 1), "def f(...)");
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "f", 1), "def f(...) -> str");
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "foo.f", 1), "def f(...)");
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "foo().g", 1), "method g of foo objects ");
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "foo", 1), "class foo");
