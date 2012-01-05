@@ -41,8 +41,12 @@ namespace Microsoft.PythonTools
         public override void Register(RegistrationContext context) {
             var importKey = context.CreateKey("Projects\\" + _guid + "\\ImportTemplates");
             importKey.SetValue("ProjectType", _projectType);
-            importKey.SetValue("WizardPageObjectAssembly", GetType().Assembly.FullName);
-            importKey.SetValue("WizardPageObjectClass", typeof(PythonPageManager).FullName);
+#if DEV11
+            importKey.SetValue("WizardPageObjectAssembly", "Microsoft.VisualStudio.ImportProjectFolderWizard, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+#else
+            importKey.SetValue("WizardPageObjectAssembly", "Microsoft.VisualStudio.ImportProjectFolderWizard, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+#endif
+            importKey.SetValue("WizardPageObjectClass", "Microsoft.VsWizards.ImportProjectFolderWizard.Managed.PageManager");
             importKey.SetValue("ImportProjectsDir", _templateDir);
             importKey.SetValue("WindowsAppProjectFile", _winexeProject);
             importKey.SetValue("ConsoleAppProjectFile", _consoleProject);

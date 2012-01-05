@@ -223,7 +223,6 @@
     <Compile Include="PythonTools\Project\AssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceFolderItem.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />
-    <Compile Include="PythonTools\Project\Automation\PythonPageManager.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAPythonExtensionReference.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
     <Compile Include="PythonTools\Project\BuildDependency.cs" />

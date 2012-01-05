@@ -31,9 +31,6 @@ namespace Microsoft.PythonTools.Project.Automation
 	[ComVisible(true)]
 	public class OAProjectItems : OANavigableProjectItems
 	{
-        [ThreadStatic]
-        internal static bool CreatingFromExistingCode;
-
         #region ctor
 		public OAProjectItems(OAProject project, HierarchyNode nodeWithItems)
 			: base(project, nodeWithItems)
@@ -200,21 +197,19 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <param name="op">The <paramref name="VSADDITEMOPERATION"/> to use when adding the item.</param>
 		/// <returns>A ProjectItem object. </returns>
 		protected virtual EnvDTE.ProjectItem AddItem(string path, VSADDITEMOPERATION op)
-		{
-            if (CreatingFromExistingCode) {
-                string ext = Path.GetExtension(path);
-                if (String.Compare(ext, PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) != 0 &&
-                    String.Compare(ext, PythonConstants.WindowsFileExtension, StringComparison.OrdinalIgnoreCase) != 0) {
-                    // http://pytools.codeplex.com/workitem/617
-                    // We are currently in create project from existing code mode.  The wizard walks all of the top-level
-                    // files and adds them.  It then lets us handle any subdirectories by calling AddFromDirectory.
-                    // But we want to filter the files for both top-level and subdirectories.  Therefore we derive from
-                    // PageManager and track when we're running the wizard and adding files for the wizard.  If we are
-                    // currently adding them ignore anything other than a .py/.pyw files - returnning null is fine
-                    // here, the wizard doesn't care about the result.
-                    return null;
-                }
-            }
+		{            
+            string ext = Path.GetExtension(path);
+            if (String.Compare(ext, PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) != 0 &&
+                String.Compare(ext, PythonConstants.WindowsFileExtension, StringComparison.OrdinalIgnoreCase) != 0) {
+                // http://pytools.codeplex.com/workitem/617
+                // We are currently in create project from existing code mode.  The wizard walks all of the top-level
+                // files and adds them.  It then lets us handle any subdirectories by calling AddFromDirectory.
+                // But we want to filter the files for both top-level and subdirectories.  Therefore we derive from
+                // PageManager and track when we're running the wizard and adding files for the wizard.  If we are
+                // currently adding them ignore anything other than a .py/.pyw files - returnning null is fine
+                // here, the wizard doesn't care about the result.
+                return null;
+            }            
 
 			CheckProjectIsValid();
 
