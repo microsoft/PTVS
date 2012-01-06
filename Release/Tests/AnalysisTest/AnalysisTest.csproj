@@ -83,6 +83,15 @@
     <Content Include="Python.VS.TestData\ErrorProjectUnicode\Program.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\Grammar\InvalidUnicodeLiteral26Up.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\Grammar\InvalidUnicodeLiteral2x.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\Grammar\InvalidUnicodeLiteral.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\Grammar\DedentErrorLargeFile.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

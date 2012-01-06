@@ -1516,7 +1516,7 @@ $cls
                 var textview = interactive.ReplWindow.TextView;
 
                 ((UIElement)textview).Dispatcher.Invoke((Action)(() => {
-                    Clipboard.SetText("pass", TextDataFormat.Text);
+                    Clipboard.SetText("    pass", TextDataFormat.Text);
                 }));
 
                 Keyboard.Type("def f():\rprint('hi')");
@@ -1535,7 +1535,50 @@ $cls
                 //
                 // >>> def f():
                 // ... pass
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "pass");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
+
+                Keyboard.PressAndRelease(Key.Escape);
+
+                interactive.WaitForText(ReplPrompt);
+            }
+        }
+
+        /// <summary>
+        /// Tests pasting when the secondary prompt is highlighted as part of the selection
+        /// 
+        /// Same as EditPasteSecondaryPromptSelected, but the selection is reversed so that the
+        /// caret is in the prompt.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void EditPasteSecondaryPromptSelectedInPromptMargin() {
+            if (SecondPrompt.Length > 0) {
+                var interactive = Prepare();
+
+                var textview = interactive.ReplWindow.TextView;
+
+                ((UIElement)textview).Dispatcher.Invoke((Action)(() => {
+                    Clipboard.SetText("    pass", TextDataFormat.Text);
+                }));
+
+                Keyboard.Type("def f():\rprint('hi')");
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
+
+                Keyboard.Press(Key.LeftShift);
+                Keyboard.PressAndRelease(Key.Home);
+                Keyboard.Type(Key.Home);
+                Keyboard.Type(Key.Left);
+                Keyboard.Release(Key.LeftShift);
+                Keyboard.ControlV();
+
+                // >>> def f():
+                // ...     print('hi')
+                //    ^^^^^^^^^^^^^^^^
+                // replacing selection including the prompt replaces the current line content:
+                //
+                // >>> def f():
+                // ... pass
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -1890,11 +1933,11 @@ $cls
                 string inspectCode = "?x";
                 Keyboard.Type(assignCode + "\r");
                 
-                interactive.WaitForText(ReplPrompt + assignCode, ReplPrompt);
+                interactive.WaitForTextIPython(ReplPrompt + assignCode, ReplPrompt);
                 interactive.WaitForReadyState();
 
                 Keyboard.Type(inspectCode + "\r");
-                interactive.WaitForText(ReplPrompt + assignCode, ReplPrompt + inspectCode, 
+                interactive.WaitForTextIPython(ReplPrompt + assignCode, ReplPrompt + inspectCode, 
                     "Type:       int",
                     "Base Class: <type 'int'>",
                     "String Form:42",
@@ -1937,10 +1980,16 @@ $cls
                 System.Threading.Thread.Sleep(2000);
 
                 interactive.CancelExecution();
-                
-                interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt,
-                    "---------------------------------------------------------------------------",
-                    "KeyboardInterrupt                         Traceback (most recent call last)");
+
+                // we can potentially get different output depending on where the Ctrl-C gets caught.
+                try {
+                    interactive.WaitForTextStartIPython(ReplPrompt + "while True: pass", SecondPrompt,
+                        "KeyboardInterrupt caught in kernel");
+                } catch {
+                    interactive.WaitForTextStartIPython(ReplPrompt + "while True: pass", SecondPrompt,
+                        "---------------------------------------------------------------------------",
+                        "KeyboardInterrupt                         Traceback (most recent call last)");
+                }
 
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
@@ -1973,12 +2022,12 @@ $cls
                 const string code = "x = 42";
                 Keyboard.Type(code + "\r");
 
-                interactive.WaitForText(ReplPrompt + code, ReplPrompt);
+                interactive.WaitForTextIPython(ReplPrompt + code, ReplPrompt);
                 interactive.WaitForReadyState();
 
                 Keyboard.Type("x.");
 
-                interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
+                interactive.WaitForTextIPython(ReplPrompt + code, ReplPrompt + "x.");
 
                 var session = interactive.WaitForSession<ICompletionSession>();
 
@@ -1993,7 +2042,7 @@ $cls
 
                 // commit entry
                 Keyboard.PressAndRelease(Key.Tab);
-                interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.conjugate");
+                interactive.WaitForTextIPython(ReplPrompt + code, ReplPrompt + "x.conjugate");
                 interactive.WaitForSessionDismissed();
 
                 // clear input at repl
@@ -2033,13 +2082,13 @@ $cls
                 const string code = "def f(): pass";
                 Keyboard.Type(code + "\r\r");
 
-                interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt);
+                interactive.WaitForTextIPython(ReplPrompt + code, SecondPrompt, ReplPrompt);
 
                 System.Threading.Thread.Sleep(1000);
 
                 Keyboard.Type("f(");
 
-                interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
+                interactive.WaitForTextIPython(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
                 var helpSession = interactive.WaitForSession<ISignatureHelpSession>();
                 Assert.AreEqual(helpSession.SelectedSignature.Documentation, "<no docstring>");
@@ -2070,7 +2119,7 @@ $cls
 
                 var replWindow = interactive.ReplWindow;
                 replWindow.Submit(new[] { "from pylab import *", "from scipy.special import jn", "x = linspace(0, 4*pi)", "plot(x, jn(0, x))" });
-                interactive.WaitForText(new[] { ReplPrompt + "from pylab import *", ReplPrompt + "from scipy.special import jn", ReplPrompt + "x = linspace(0, 4*pi)", ReplPrompt + "plot(x, jn(0, x))", ReplPrompt });
+                interactive.WaitForTextIPython(new[] { ReplPrompt + "from pylab import *", ReplPrompt + "from scipy.special import jn", ReplPrompt + "x = linspace(0, 4*pi)", ReplPrompt + "plot(x, jn(0, x))", ReplPrompt });
 
                 System.Threading.Thread.Sleep(2000);
 
@@ -2230,6 +2279,77 @@ g()",
                     Assert.AreEqual(testCase.Expected[i], got[i]);
                 }
             }
+        }
+
+        /// <summary>
+        /// x = 42; x.car[enter] – should type “car” not complete to “conjugate”
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void Comments() {
+            var interactive = Prepare();
+
+            const string code = "# foo";
+            Keyboard.Type(code + "\r");
+
+            interactive.WaitForText(ReplPrompt + code, SecondPrompt);
+
+            const string code2 = "# bar";
+            Keyboard.Type(code2 + "\r");
+
+            interactive.WaitForText(ReplPrompt + code, SecondPrompt + code2, SecondPrompt);
+
+            Keyboard.Type("\r");
+            interactive.WaitForText(ReplPrompt + code, SecondPrompt + code2, SecondPrompt, ReplPrompt);
+        }
+
+        /// <summary>
+        /// x = 42; x.car[enter] – should type “car” not complete to “conjugate”
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CommentPaste() {
+            var interactive = Prepare();
+
+            const string comment = "# foo bar baz";
+            PasteTextTest(
+                interactive,
+                comment,
+                ReplPrompt + comment
+            );
+
+            PasteTextTest(
+                interactive,
+                comment + "\r\n",
+                ReplPrompt + comment
+            );
+
+            PasteTextTest(
+                interactive, 
+                comment + "\r\ndef f():\r\n    pass", 
+                ReplPrompt + comment, SecondPrompt + "def f():", SecondPrompt + "    pass"
+            );
+
+            PasteTextTest(
+                interactive,
+                comment + "\r\n" + comment,
+                ReplPrompt + comment, SecondPrompt + comment
+            );
+
+            PasteTextTest(
+                interactive,
+                comment + "\r\n" + comment + "\r\n",
+                ReplPrompt + comment, SecondPrompt + comment, SecondPrompt
+            );
+        }
+
+        private void PasteTextTest(InteractiveWindow interactive, string code, params string[] expected) {
+            ((UIElement)interactive.TextView).Dispatcher.Invoke((Action)(() => {
+                Clipboard.SetText(code, TextDataFormat.Text);
+            }));
+            Keyboard.ControlV();
+            interactive.WaitForText(expected);
+            Keyboard.PressAndRelease(Key.Escape);
         }
 
         /// <summary>

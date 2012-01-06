@@ -680,9 +680,24 @@ namespace Microsoft.PythonTools.Language {
                 PositionAffinity.Successor
             );
 
-            
+
+            // if we didn't find a location then see if we're in a prompt, and if so, then we want
+            // to insert after the prompt.
+            if (caret.Position.BufferPosition != eval.Window.TextView.TextBuffer.CurrentSnapshot.Length) {
+                for (int i = caret.Position.BufferPosition + 1;
+                    inputPoint == null && i <= eval.Window.TextView.TextBuffer.CurrentSnapshot.Length;
+                    i++) {
+                    inputPoint = view.BufferGraph.MapDownToBuffer(
+                        new SnapshotPoint(eval.Window.TextView.TextBuffer.CurrentSnapshot, i),
+                        PointTrackingMode.Positive,
+                        curBuffer,
+                        PositionAffinity.Successor
+                    );
+                }
+            }
+
             if (inputPoint == null) {
-                // if the caret's not in the current input insert at the beginning
+                // we didn't find a point to insert, insert at the beginning.
                 inputPoint = new SnapshotPoint(curBuffer.CurrentSnapshot, 0);
             }
             
@@ -701,7 +716,7 @@ namespace Microsoft.PythonTools.Language {
             if (splitCode.Count == 1) {
                 curBuffer.Insert(0, splitCode[0]);
                 var viewPoint = view.BufferGraph.MapUpToBuffer(
-                    new SnapshotPoint(curBuffer.CurrentSnapshot, inputPoint.Value.Position + pasting.Length),
+                    new SnapshotPoint(curBuffer.CurrentSnapshot, Math.Min(inputPoint.Value.Position + pasting.Length, curBuffer.CurrentSnapshot.Length)),
                     PointTrackingMode.Positive,
                     PositionAffinity.Successor,
                     view.TextBuffer

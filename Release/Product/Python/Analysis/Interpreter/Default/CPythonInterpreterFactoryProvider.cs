@@ -31,7 +31,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         const string PythonCorePath = "SOFTWARE\\Python\\PythonCore";
 
         public CPythonInterpreterFactoryProvider() {
-            Debug.Assert(Instance == null);
             Instance = this;
 
             HashSet<string> registeredPaths = new HashSet<string>();

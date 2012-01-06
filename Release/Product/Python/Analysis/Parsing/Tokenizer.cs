@@ -837,7 +837,14 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             if (makeUnicode) {
-                string contents = LiteralParser.ParseString(_buffer, start, length, isRaw, true, !_disableLineFeedLineSeparator);
+                string contents;
+                try {
+                    contents = LiteralParser.ParseString(_buffer, start, length, isRaw, true, !_disableLineFeedLineSeparator);
+                } catch (DecoderFallbackException e) {
+                    _errors.Add(e.Message, _newLineLocations.ToArray(), _tokenStartIndex, _tokenEndIndex, ErrorCodes.SyntaxError, Severity.Error);
+                    contents = "";
+                }
+                
                 if (Verbatim) {
                     return new VerbatimUnicodeStringToken(contents, GetTokenString());
                 }
@@ -2013,7 +2020,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             public State(TokenizerOptions options) {
                 Indent = new int[MaxIndent]; // TODO
-                LastNewLine = false;
+                LastNewLine = true;
                 BracketLevel = ParenLevel = BraceLevel = PendingDedents = IndentLevel = 0;
                 IndentFormat = null;
                 IncompleteString = null;

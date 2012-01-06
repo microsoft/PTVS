@@ -389,6 +389,31 @@ namespace AnalysisTest {
         }
 
         [TestMethod]
+        public void InvalidUnicodeLiteral() {
+            foreach (var version in V26AndUp) {
+                ParseErrors("InvalidUnicodeLiteral26Up.py",
+                    version,
+                    new ErrorInfo("'unicodeescape' codec can't decode bytes in position 44: truncated \\uXXXX escape", 41, 2, 1, 49, 2, 9)
+                );
+            }
+
+            foreach (var version in V2Versions) {
+                ParseErrors("InvalidUnicodeLiteral2x.py",
+                    version,
+                    new ErrorInfo("'unicodeescape' codec can't decode bytes in position 4: truncated \\uXXXX escape", 0, 1, 1, 9, 1, 10)
+                );
+            }
+
+            foreach (var version in V3Versions) {
+                ParseErrors("InvalidUnicodeLiteral.py",
+                    version,
+                    new ErrorInfo("'unicodeescape' codec can't decode bytes in position 3: truncated \\uXXXX escape", 0, 1, 1, 8, 1, 9)
+                );
+            }
+        }
+
+
+        [TestMethod]
         public void DedentError() {
             foreach (var version in AllVersions) {
                 ParseErrors("DedentError.py",

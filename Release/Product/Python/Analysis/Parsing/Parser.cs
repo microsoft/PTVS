@@ -4322,13 +4322,16 @@ namespace Microsoft.PythonTools.Parsing {
                     s = ParseStmt();
                     EatEndOfInput();
                     break;
-
+                case TokenKind.EndOfFile:
+                    isEmptyStmt = true;
+                    return null;
                 default:
                     //  parseSimpleStmt takes care of one or more simple_stmts and the Newline
                     s = ParseSimpleStmt();
                     MaybeEatNewLine();
                     Eat(TokenKind.EndOfFile);
                     break;
+
             }
             return s;
         }
@@ -4439,6 +4442,10 @@ namespace Microsoft.PythonTools.Parsing {
             _parsingStarted = true;
 
             FetchLookahead();
+
+            while (PeekToken().Kind == TokenKind.NLToken) {
+                NextToken();
+            }
         }
 
         private int GetEnd() {

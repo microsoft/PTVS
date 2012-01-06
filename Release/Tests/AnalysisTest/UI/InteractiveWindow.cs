@@ -103,6 +103,42 @@ namespace AnalysisTest.UI {
             FailWrongText(expected);
         }
 
+        public void WaitForTextIPython(params string[] text) {
+            WaitForTextIPython((IList<string>)text);
+        }
+
+        public void WaitForTextIPython(IList<string> text) {
+            string expected = null;
+            for (int i = 0; i < 100; i++) {
+                WaitForIdleState();
+                expected = GetExpectedText(text);
+                if (expected == GetIPythonText()) {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+
+            FailWrongTextIPython(expected);
+        }
+
+        private string GetIPythonText() {
+            var text = Text;
+            var lines = Text.Split(new[] { "\r\n" }, StringSplitOptions.None);
+            StringBuilder res = new StringBuilder();
+            for (int i = 0; i < lines.Length; i++) {
+                var line = lines[i];
+
+                if (!line.StartsWith("[IPKernelApp] ")) {
+                    if (i != lines.Length - 1 || text.EndsWith("\r\n")) {
+                        res.AppendLine(line);
+                    } else {
+                        res.Append(line);
+                    }
+                }
+            }
+            return res.ToString();            
+        }
+
         public void WaitForTextStart(params string[] text) {
             string expected = GetExpectedText(text);
 
@@ -110,6 +146,21 @@ namespace AnalysisTest.UI {
                 string curText = Text;
 
                 if (Text.StartsWith(expected)) {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+
+            FailWrongText(expected);
+        }
+
+        public void WaitForTextStartIPython(params string[] text) {
+            string expected = GetExpectedText(text);
+
+            for (int i = 0; i < 100; i++) {
+                string curText = Text;
+
+                if (GetIPythonText().StartsWith(expected)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -138,6 +189,14 @@ namespace AnalysisTest.UI {
             AppendRepr(msg, expected);
             msg.Append(" instead got ");
             AppendRepr(msg, Text);
+            Assert.Fail(msg.ToString());
+        }
+
+        private void FailWrongTextIPython(string expected) {
+            StringBuilder msg = new StringBuilder("Did not get text: ");
+            AppendRepr(msg, expected);
+            msg.Append(" instead got ");
+            AppendRepr(msg, GetIPythonText());
             Assert.Fail(msg.ToString());
         }
 

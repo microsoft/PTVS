@@ -15,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
@@ -113,17 +113,19 @@ namespace Microsoft.PythonTools {
         private void BufferChanged(object sender, TextContentChangedEventArgs e) {
             var snapshot = e.After;
 
-            _tokenCache.EnsureCapacity(snapshot.LineCount);
+            if (!snapshot.IsReplBufferWithCommand()) {
+                _tokenCache.EnsureCapacity(snapshot.LineCount);
 
-            var tokenizer = GetTokenizer();
-            foreach (var change in e.Changes) {
-                if (change.LineCountDelta > 0) {
-                    _tokenCache.InsertLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1 - change.LineCountDelta, change.LineCountDelta);
-                } else if (change.LineCountDelta < 0) {
-                    _tokenCache.DeleteLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1, -change.LineCountDelta);
+                var tokenizer = GetTokenizer();
+                foreach (var change in e.Changes) {
+                    if (change.LineCountDelta > 0) {
+                        _tokenCache.InsertLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1 - change.LineCountDelta, change.LineCountDelta);
+                    } else if (change.LineCountDelta < 0) {
+                        _tokenCache.DeleteLines(snapshot.GetLineNumberFromPosition(change.NewEnd) + 1, -change.LineCountDelta);
+                    }
+
+                    ApplyChange(tokenizer, snapshot, change.NewSpan);
                 }
-
-                ApplyChange(tokenizer, snapshot, change.NewSpan);
             }
         }
 

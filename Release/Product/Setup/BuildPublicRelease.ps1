@@ -39,7 +39,7 @@ $request | Out-File -Encoding ascii -FilePath request.txt
 #################################################################
 # Submit managed binaries
 
-$approvers = "smortaz", "mradmila", "johncos", "pavaga"
+$approvers = "smortaz", "mradmila", "pavaga"
 
 $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
 $job.Description = "Python Tools for Visual Studio - managed code"

@@ -1039,11 +1039,12 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            
             var parser = Parser.CreateParser(new StringReader(text), Interpreter.GetLanguageVersion());
             ParseResult result;
             parser.ParseInteractiveCode(out result);
-            if (!(result == ParseResult.Empty || result == ParseResult.Complete || result == ParseResult.Invalid)) {
+            if (result == ParseResult.Empty) {
+                return false;
+            } else if (!(result == ParseResult.Complete || result == ParseResult.Invalid)) {
                 return false;
             }
 
@@ -1296,8 +1297,13 @@ namespace Microsoft.PythonTools.Repl {
                 // then appending more text won't fix things - the code in invalid, the user
                 // needs to fix it, so let's not break it up which would prevent that from happening.
                 if (result == ParseResult.Empty) {
-                    temp.Clear();
-                    continue;
+                    if (!String.IsNullOrWhiteSpace(newCode)) {
+                        // comment line, include w/ following code.
+                        prevText = newCode;
+                        prevParseResult = result;
+                    } else {
+                        temp.Clear();
+                    }
                 } else if (result == ParseResult.Complete) {
                     yield return newCode;
                     temp.Clear();
