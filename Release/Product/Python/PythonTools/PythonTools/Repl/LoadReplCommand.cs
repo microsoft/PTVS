@@ -16,7 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.VisualStudio.Repl {
@@ -27,6 +29,8 @@ namespace Microsoft.VisualStudio.Repl {
 
     [Export(typeof(IReplCommand))]
     class LoadReplCommand : IReplCommand {
+        const string _commentPrefix = "%%";
+
         #region IReplCommand Members
 
         public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
@@ -36,30 +40,40 @@ namespace Microsoft.VisualStudio.Repl {
             // TODO: commmand/comment parsing - in multi-line strings - check if we have a complete statement before splitting?
 
             string commandPrefix = (string)window.GetOptionValue(ReplOptions.CommandPrefix);
-            const string commentPrefix = "%%";
             string lineBreak = window.TextView.Options.GetNewLineCharacter();
+            var eval = window.Evaluator as PythonReplEvaluator;
+            if (eval != null) {
+                window.Submit(eval.SplitCode(File.ReadAllText(arguments)).Where(CommentPrefixPredicate));
+                return ExecutionResult.Succeeded;
+            } else {
+                // v1 beahvior, will probably never be hit, but if someone was developing their own IReplEvaluator
+                // and using this class it would be hit.
+                using (var stream = new StreamReader(arguments)) {
+                    string line;
+                    while ((line = stream.ReadLine()) != null) {
+                        if (line.StartsWith(_commentPrefix)) {
+                            continue;
+                        }
 
-            using (var stream = new StreamReader(arguments)) {
-                string line;
-                while ((line = stream.ReadLine()) != null) {
-                    if (line.StartsWith(commentPrefix)) {
-                        continue;
-                    }
+                        if (line.StartsWith(commandPrefix)) {
+                            AddSubmission(submissions, lines, lineBreak);
 
-                    if (line.StartsWith(commandPrefix)) {
-                        AddSubmission(submissions, lines, lineBreak);
-
-                        submissions.Add(line);
-                        lines.Clear();
-                    } else {
-                        lines.Add(line);
+                            submissions.Add(line);
+                            lines.Clear();
+                        } else {
+                            lines.Add(line);
+                        }
                     }
                 }
-            }
-            AddSubmission(submissions, lines, lineBreak);
+                AddSubmission(submissions, lines, lineBreak);
 
-            window.Submit(submissions);
-            return ExecutionResult.Succeeded;
+                window.Submit(submissions);
+                return ExecutionResult.Succeeded;
+            }
+        }
+
+        private static bool CommentPrefixPredicate(string input) {
+            return !input.StartsWith(_commentPrefix);
         }
 
         private static void AddSubmission(List<string> submissions, List<string> lines, string lineBreak) {

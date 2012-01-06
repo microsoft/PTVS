@@ -251,10 +251,10 @@ namespace AnalysisTest.UI {
         public void CancelExecution(int attempts = 100) {
             Debug.WriteLine("REPL Cancelling Execution");
             _replWindowInfo.ReadyForInput.Reset();
-            for (int i = 0; i < attempts; i++) {
+            for (int i = 0; i < attempts && !_replWindowInfo.ReadyForInput.WaitOne(0); i++) {
                 try {
                     VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
-                    break;
+                    Thread.Sleep(1000); // give abort a chance to run...
                 } catch {
                     // command may not be immediately available
                     Thread.Sleep(1000);

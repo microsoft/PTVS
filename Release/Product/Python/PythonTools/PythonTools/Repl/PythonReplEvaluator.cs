@@ -1305,7 +1305,7 @@ namespace Microsoft.PythonTools.Repl {
                         temp.Clear();
                     }
                 } else if (result == ParseResult.Complete) {
-                    yield return newCode;
+                    yield return FixEndingNewLine(newCode);
                     temp.Clear();
 
                     prevParseResult = null;
@@ -1351,6 +1351,10 @@ namespace Microsoft.PythonTools.Repl {
             if ((prevText.IndexOf('\n') == prevText.LastIndexOf('\n')) &&
                 (prevText.IndexOf('\r') == prevText.LastIndexOf('\r'))) {
                 prevText = prevText.TrimEnd();
+            } else if (prevText.EndsWith("\r\n\r\n")) {
+                prevText = prevText.Substring(0, prevText.Length - 2);
+            } else if (prevText.EndsWith("\n\n") || prevText.EndsWith("\r\r")) {
+                prevText = prevText.Substring(0, prevText.Length - 1);
             }
             return prevText;
         }

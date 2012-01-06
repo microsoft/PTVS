@@ -46,6 +46,7 @@ namespace AnalysisTest {
     [TestClass]
     [DeploymentItem(@"Python.VS.TestData\TestImage.png")]
     [DeploymentItem(@"Python.VS.TestData\TestScript.txt")]
+    [DeploymentItem(@"Python.VS.TestData\TestScriptClass.txt")]
     [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
     public class ReplWindowTests {
 
@@ -424,7 +425,8 @@ namespace AnalysisTest {
 
             interactive.CancelExecution();
 
-            interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "KeyboardInterrupt", ReplPrompt);
+            interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+            interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
         }
 
         /// <summary>
@@ -531,7 +533,8 @@ namespace AnalysisTest {
 
             interactive.CancelExecution();
 
-            interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "KeyboardInterrupt", ReplPrompt);
+            interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+            interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
         }
 
         /// <summary>
@@ -873,31 +876,36 @@ namespace AnalysisTest {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CursorWhileCodeIsRunning() {
             var interactive = Prepare();
+            try {
+                const string code = "while True: pass\r\n";
+                Keyboard.Type(code);
+                interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
 
-            const string code = "while True: pass\r\n";
-            Keyboard.Type(code);
-            interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
+                Keyboard.Type(Key.Up);
+                Keyboard.Type(Key.Up);
+                for (int i = 0; i < ReplPrompt.Length; i++) {
+                    Keyboard.Type(Key.Right);
+                }
 
-            Keyboard.Type(Key.Up);
-            Keyboard.Type(Key.Up);
-            for (int i = 0; i < ReplPrompt.Length; i++) {
-                Keyboard.Type(Key.Right);
+                Keyboard.PressAndRelease(Key.End, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.C, Key.LeftCtrl);
+
+                System.Threading.Thread.Sleep(100);
+
+                interactive.CancelExecution();
+
+                interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+                interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
+
+                interactive.ClearScreen();
+                interactive.WaitForText(ReplPrompt);
+                Keyboard.ControlV();
+
+                interactive.WaitForText(ReplPrompt + "while True: pass");
+            } finally {
+                // make sure we leave the test in a reasonable state, even if the test fails.
+                interactive.Reset();
             }
-            
-            Keyboard.PressAndRelease(Key.End, Key.LeftShift);
-            Keyboard.PressAndRelease(Key.C, Key.LeftCtrl);
-
-            System.Threading.Thread.Sleep(100);
-
-            interactive.CancelExecution();
-
-            interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "KeyboardInterrupt", ReplPrompt);
-
-            interactive.ClearScreen();
-            interactive.WaitForText(ReplPrompt);
-            Keyboard.ControlV();
-
-            interactive.WaitForText(ReplPrompt + "while True: pass");
         }
 
         /// <summary>
@@ -1066,23 +1074,20 @@ namespace AnalysisTest {
 
             interactive.CancelExecution();
 
-            interactive.WaitForText(
+            interactive.WaitForTextStart(
                 ReplPrompt + "while True: pass",
                 SecondPrompt,
-                              "Traceback (most recent call last):",
-                              "  File \"<stdin>\", line 1, in <module>",
-                              "KeyboardInterrupt",
+                "Traceback (most recent call last):"
+            );
+
+            interactive.WaitForTextEnd(
+                "KeyboardInterrupt",
                 ReplPrompt + "1+1"
             );
 
             Keyboard.Type(Key.Enter);
 
-            interactive.WaitForText(
-                ReplPrompt + "while True: pass",
-                SecondPrompt,
-                              "Traceback (most recent call last):",
-                              "  File \"<stdin>\", line 1, in <module>",
-                              "KeyboardInterrupt",
+            interactive.WaitForTextEnd(
                 ReplPrompt + "1+1",
                               "2",
                 ReplPrompt
@@ -1104,7 +1109,7 @@ namespace AnalysisTest {
         }
 
         /// <summary>
-        /// Tests REPL command help
+        /// Tests REPL command $load, with a simple script.
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
@@ -1117,7 +1122,29 @@ namespace AnalysisTest {
             interactive.WaitForTextStart(
                 ReplPrompt + command, 
                 ReplPrompt + "print('hello world')",
-                             "hello world"
+                "hello world"
+            );
+        }
+
+        /// <summary>
+        /// Tests REPL command $load, with multiple statements including a class definition.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CommandsLoadScriptWithClass() {
+            // http://pytools.codeplex.com/workitem/632
+            var interactive = Prepare();
+
+            string command = "$load " + Path.GetFullPath("TestScriptClass.txt");
+            Keyboard.Type(command + "\r");
+
+            interactive.WaitForTextStart(
+                ReplPrompt + command,
+                ReplPrompt + "class C(object):",
+                SecondPrompt + "    pass",
+                SecondPrompt,
+                ReplPrompt + "c = C()",
+                ReplPrompt
             );
         }
 
@@ -1146,10 +1173,11 @@ foo()
                     ReplPrompt   + command,
                     ReplPrompt   + "def foo():",
                     SecondPrompt + "    print('hello')",
+                    SecondPrompt,
                     ReplPrompt   + "$wait 10",
                     ReplPrompt   + "$wait 20",
                     ReplPrompt   + "foo()",
-                                   "hello"
+                    "hello"
                 );
             } finally {
                 File.Delete(tempFile);
@@ -1653,25 +1681,29 @@ $cls
         public void DeleteSelectionInRawInput() {
             var interactive = Prepare();
 
-            interactive.WithStandardInputPrompt("INPUT: ", stdInputPrompt => {
-                Keyboard.Type(RawInput + "()\r");
-                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
-                
-                Keyboard.Type("hel");
-                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hel");
+            try {
+                interactive.WithStandardInputPrompt("INPUT: ", stdInputPrompt => {
+                    Keyboard.Type(RawInput + "()\r");
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
 
-                // attempt to type in the previous submission should move the cursor back to the end of the stdin:
-                Keyboard.Type(Key.Up);
-                Keyboard.Type("lo");
-                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hello");
-                
-                Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
-                Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
-                Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
-                Keyboard.Press(Key.Delete);
+                    Keyboard.Type("hel");
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hel");
 
-                interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "he");
-            });
+                    // attempt to type in the previous submission should move the cursor back to the end of the stdin:
+                    Keyboard.Type(Key.Up);
+                    Keyboard.Type("lo");
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hello");
+
+                    Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                    Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                    Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                    Keyboard.Press(Key.Delete);
+
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "he");
+                });
+            } finally {
+                interactive.Reset();
+            }
         }
 
         /// <summary>
@@ -2224,6 +2256,7 @@ $cls
         /// </summary>
         [TestMethod]
         public void ReplSplitCodeTest() {
+            // http://pytools.codeplex.com/workitem/606
             var eval = new PythonReplEvaluator(
                 InterpFactory,
                 new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"),
@@ -2241,7 +2274,7 @@ def g():
 
 f()
 g()",
-                    Expected = new[] { "def f():\r\n    pass\r\n\r\n", "def g():\r\n    pass\r\n\r\n", "f()\r\n", "g()" }
+                    Expected = new[] { "def f():\r\n    pass\r\n", "def g():\r\n    pass\r\n", "f()", "g()" }
                 },
                 new {
                     Code = @"def f():
@@ -2254,7 +2287,7 @@ def g():
 
 f()
 g()",
-                    Expected = new[] { "def f():\r\n    pass\r\n\r\n", "f()\r\n", "def g():\r\n    pass\r\n\r\n", "f()\r\n", "g()" }
+                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
                 },
                 new {
                     Code = @"def f():
@@ -2268,7 +2301,7 @@ def g():
 
 f()
 g()",
-                    Expected = new[] { "def f():\r\n    pass\r\n\r\n", "f()\r\n", "f()\r\n", "def g():\r\n    pass\r\n\r\n", "f()\r\n", "g()" }
+                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
                 }
             };
 
