@@ -458,7 +458,7 @@ namespace Microsoft.PythonTools.Repl {
                 using (new SocketLock(this)) {
                     Socket.Send(DebugAttachCommandBytes);
 
-                    debugProcess = PythonProcess.AttachRepl(_socket, _process.Id, _eval._replAnalyzer.Project.LanguageVersion);
+                    debugProcess = PythonProcess.AttachRepl(_socket, _process.Id, _eval.ReplAnalyzer.Project.LanguageVersion);
                 }
 
                 // TODO: Surround in SocketUnlock

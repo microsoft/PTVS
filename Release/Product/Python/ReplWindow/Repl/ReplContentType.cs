@@ -17,7 +17,7 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.VisualStudio.Repl {
     class ReplContentType {
-        [Export, Name(ReplConstants.ReplContentTypeName), BaseDefinition("code"), BaseDefinition("projection")]
+        [Export, Name(ReplConstants.ReplContentTypeName), BaseDefinition("text"), BaseDefinition("projection")]
         internal static ContentTypeDefinition ContentTypeDefinition = null;
     }
 }
