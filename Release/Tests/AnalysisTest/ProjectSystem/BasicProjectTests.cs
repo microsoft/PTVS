@@ -703,21 +703,7 @@ namespace AnalysisTest.ProjectSystem {
 
             var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists");
 
-            // Project menu can take a little while to appear...
-            for (int i = 0; i < 10; i++) {
-                Mouse.MoveTo(projectNode.GetClickablePoint());
-                Mouse.Click();
-                projectNode.SetFocus();
-                try {                    
-                    app.Dte.ExecuteCommand("Project.NewFolder");
-                    break;
-                } catch {
-                }
-
-                Mouse.MoveTo(solutionNode.GetClickablePoint());
-                Mouse.Click();
-                System.Threading.Thread.Sleep(1000);
-            }
+            ProjectNewFolder(app, solutionNode, projectNode);
 
             System.Threading.Thread.Sleep(1000);
             Keyboard.Type("."); // bad filename
@@ -743,6 +729,61 @@ namespace AnalysisTest.ProjectSystem {
 
             // item should be successfully added now.
             WaitForItem(project, "X");
+        }
+
+        /// <summary>
+        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
+        /// sure the completion info changes.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddFolderCopyAndPasteFile() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AddFolderCopyAndPasteFile.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var solutionExplorer = app.SolutionExplorerTreeView;
+            var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)");
+
+            var projectNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile");
+
+            ProjectNewFolder(app, solutionNode, projectNode);
+
+            System.Threading.Thread.Sleep(1000);
+            Keyboard.Type("Foo"); // bad filename
+            Keyboard.Type(System.Windows.Input.Key.Enter);
+
+            WaitForItem(project, "Foo");
+
+            var programNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Program.py");
+            Mouse.MoveTo(programNode.GetClickablePoint());
+            Mouse.Click();
+            Keyboard.ControlC();
+
+            var folderNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo");
+            Mouse.MoveTo(folderNode.GetClickablePoint());
+            Mouse.Click();
+
+            Keyboard.ControlV();
+            System.Threading.Thread.Sleep(2000);
+
+            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo", "Program.py"));
+        }
+
+        private static void ProjectNewFolder(VisualStudioApp app, System.Windows.Automation.AutomationElement solutionNode, System.Windows.Automation.AutomationElement projectNode) {
+            // Project menu can take a little while to appear...
+            for (int i = 0; i < 10; i++) {
+                Mouse.MoveTo(projectNode.GetClickablePoint());
+                Mouse.Click();
+                projectNode.SetFocus();
+                try {
+                    app.Dte.ExecuteCommand("Project.NewFolder");
+                    break;
+                } catch {
+                }
+
+                Mouse.MoveTo(solutionNode.GetClickablePoint());
+                Mouse.Click();
+                System.Threading.Thread.Sleep(1000);
+            }
         }
 
         private static ProjectItem WaitForItem(Project project, string name) {

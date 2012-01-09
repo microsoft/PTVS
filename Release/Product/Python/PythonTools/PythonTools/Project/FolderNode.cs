@@ -199,6 +199,7 @@ namespace Microsoft.PythonTools.Project
 				{
 					Directory.CreateDirectory(path);
 					_isBeingCreated = false;
+					this.ItemNode.Rename(filename);
 					this.VirtualNodeName = filename;
 
 					this.OnItemDeleted();
