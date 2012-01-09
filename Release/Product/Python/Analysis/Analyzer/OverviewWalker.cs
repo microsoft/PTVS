@@ -449,7 +449,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                             test.Test.Walk(this);
                         }
                         
-                        if (test.Body != null) {
+                        if (test.Body != null && !(test.Body is ErrorStatement)) {
                             Debug.Assert(test.Body is SuiteStatement);
 
                             PushIsInstanceScope(test, isInstanceNames, (SuiteStatement)test.Body);
@@ -524,8 +524,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 // transform back into a line number and start the new statement scope on the line
                 // after the suite statement.
                 var lineNo = _entry.Tree.IndexToLocation(node.EndIndex).Line;
-                
-                var offset = lineNo < _entry.Tree._lineLocations.Length ? _entry.Tree._lineLocations[lineNo] : _entry.Tree._lineLocations[_entry.Tree._lineLocations.Length - 1];
+
+                int offset;
+                if (_entry.Tree._lineLocations.Length == 0) {
+                    // single line input
+                    offset = 0;
+                } else {
+                    offset = lineNo < _entry.Tree._lineLocations.Length ? _entry.Tree._lineLocations[lineNo] : _entry.Tree._lineLocations[_entry.Tree._lineLocations.Length - 1];
+                }
                 var closingScope = new StatementScope(offset);
                 _scopes.Add(closingScope);
                 declScope.Children.Add(closingScope);

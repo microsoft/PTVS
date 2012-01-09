@@ -2718,6 +2718,13 @@ print(z)";
                 new VariableLocation(7, 5, VariableType.Definition),
                 new VariableLocation(11, 7, VariableType.Reference)
             );
+
+            // http://pytools.codeplex.com/workitem/636
+            
+            // this just shouldn't crash, we should handle the malformed code, not much to inspect afterwards...
+
+            entry = ProcessText("if isinstance(x, list):\r\n");
+            entry = ProcessText("if isinstance(x, list):");
         }
 
         [TestMethod]
