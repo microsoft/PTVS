@@ -103,17 +103,26 @@ namespace Microsoft.PythonTools.Debugger {
                                         IVsOutputWindowPane pane;
                                         if (outWin != null && ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowDebugPane, out pane))) {
                                             pane.Activate();
+                                            string moduleName;
                                             try {
-                                                var process = Process.GetProcessById(targetProcess.Id);
-                                                pane.OutputString(String.Format("Failed to connect to process {0} ({1}): {2}", 
-                                                    targetProcess.Id, 
-                                                    process.MainModule.ModuleName,
+                                                moduleName = Process.GetProcessById(targetProcess.Id).MainModule.ModuleName;
+                                            } catch {
+                                                // either the process is no longer around, or it's a 64-bit process
+                                                // and we can't get the EXE name.
+                                                moduleName = null;
+                                            }
+
+                                            if (moduleName != null) {
+                                                pane.OutputString(String.Format("Failed to connect to process {0} ({1}): {2}",
+                                                    targetProcess.Id,
+                                                    moduleName,
                                                     result.GetErrorMessage())
                                                 );
-                                            } catch (ArgumentException) {
-                                                pane.OutputString(String.Format("Failed to connect to process {0}: {1}", 
-                                                    targetProcess.Id, 
-                                                    result.GetErrorMessage()));
+                                            } else {
+                                                pane.OutputString(String.Format("Failed to connect to process {0}: {1}",
+                                                    targetProcess.Id,
+                                                    result.GetErrorMessage())
+                                                );
                                             }
                                         }
                                         targetProcess.Unregister();
