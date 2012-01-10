@@ -641,6 +641,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             } else if(setSwitchInterval != nullptr) {
                 setSwitchInterval(saveLongIntervalCheck);
             }
+        }else{
+            SetEvent(connInfo.Buffer->AttachDoneEvent);
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
