@@ -281,50 +281,78 @@ namespace Microsoft.PythonTools.Debugger {
                 }
 
                 // load our code into the process...
-                int modSize = IntPtr.Size * 1024;
-
-                IntPtr hMods = Marshal.AllocHGlobal(modSize);
-                if (hMods == IntPtr.Zero) {
-                    return new DebugAttach(ConnErrorMessages.OutOfMemory);
-                }
-                try {
-                    int modsNeeded;
-                    while (!EnumProcessModules(hProcess, hMods, modSize, out modsNeeded)) {
-                        if (modsNeeded == 0) {
-                            // process has exited...
-                            return new DebugAttach(ConnErrorMessages.CannotOpenProcess);
-                        }
-                        // try again w/ more space...
-                        Marshal.FreeHGlobal(hMods);
-                        hMods = Marshal.AllocHGlobal(modsNeeded);
-                        if (hMods == IntPtr.Zero) {
-                            return new DebugAttach(ConnErrorMessages.OutOfMemory);
-                        }
-                        modSize = modsNeeded;
-                    }
-
-                    for (int i = 0; i < modsNeeded / IntPtr.Size; i++) {
-                        StringBuilder modName = new StringBuilder();
-                        modName.Capacity = MAX_PATH;
-                        var curMod = Marshal.ReadIntPtr(hMods, i * IntPtr.Size);
-
-                        if (GetModuleBaseName(hProcess, curMod, modName, MAX_PATH) != 0) {
-                            if (String.Equals(modName.ToString(), "kernel32.dll", StringComparison.OrdinalIgnoreCase)) {
-                                // kernel module, we want to use this to inject ourselves
-                                return InjectDebugger(dllPath, hProcess, curMod, portNum, pid, debugId, attachDoneEvent);
-                            }
-                        }
-                    }
-                } finally {
-                    if (hMods != IntPtr.Zero) {
-                        Marshal.FreeHGlobal(hMods);
+                
+                // http://msdn.microsoft.com/en-us/library/windows/desktop/ms682631(v=vs.85).aspx
+                // If the module list in the target process is corrupted or not yet initialized, 
+                // or if the module list changes during the function call as a result of DLLs 
+                // being loaded or unloaded, EnumProcessModules may fail or return incorrect 
+                // information.
+                // So we'll retry a handful of times to get the attach...
+                ConnErrorMessages? error = null;
+                for (int i = 0; i < 5; i++) {
+                    IntPtr kernelMod;
+                    if ((error = TryAttach(hProcess, out kernelMod)) == null) {
+                        return InjectDebugger(dllPath, hProcess, kernelMod, portNum, pid, debugId, attachDoneEvent);
                     }
                 }
 
-                return new DebugAttach(ConnErrorMessages.CannotInjectThread);
+                return new DebugAttach(error.Value);
             }
 
             return new DebugAttach(ConnErrorMessages.CannotOpenProcess);
+        }
+
+        private static ConnErrorMessages? TryAttach(IntPtr hProcess, out IntPtr kernelMod) {
+            kernelMod = IntPtr.Zero;
+            int modSize = IntPtr.Size * 1024;
+
+            IntPtr hMods = Marshal.AllocHGlobal(modSize);
+            if (hMods == IntPtr.Zero) {
+                return ConnErrorMessages.OutOfMemory;
+            }
+            try {
+                int modsNeeded;
+                bool gotZeroMods = false;
+                while (!EnumProcessModules(hProcess, hMods, modSize, out modsNeeded) || modsNeeded == 0) {
+                    if (modsNeeded == 0) {
+                        if (!gotZeroMods) {
+                            // Give the process a chance to get into a sane state...
+                            Thread.Sleep(100);
+                            gotZeroMods = true;
+                            continue;
+                        } else {
+                            // process has exited?
+                            return ConnErrorMessages.CannotOpenProcess;
+                        }
+                    }
+                    // try again w/ more space...
+                    Marshal.FreeHGlobal(hMods);
+                    hMods = Marshal.AllocHGlobal(modsNeeded);
+                    if (hMods == IntPtr.Zero) {
+                        return ConnErrorMessages.OutOfMemory;
+                    }
+                    modSize = modsNeeded;
+                }
+
+                for (int i = 0; i < modsNeeded / IntPtr.Size; i++) {
+                    StringBuilder modName = new StringBuilder();
+                    modName.Capacity = MAX_PATH;
+                    var curMod = Marshal.ReadIntPtr(hMods, i * IntPtr.Size);
+
+                    if (GetModuleBaseName(hProcess, curMod, modName, MAX_PATH) != 0) {
+                        if (String.Equals(modName.ToString(), "kernel32.dll", StringComparison.OrdinalIgnoreCase)) {
+                            // kernel module, we want to use this to inject ourselves
+                            kernelMod = curMod;
+                            return null;
+                        }
+                    }
+                }
+            } finally {
+                if (hMods != IntPtr.Zero) {
+                    Marshal.FreeHGlobal(hMods);
+                }
+            }
+            return ConnErrorMessages.CannotInjectThread;
         }
 
         // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
