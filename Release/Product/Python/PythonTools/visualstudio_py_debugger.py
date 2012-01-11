@@ -30,8 +30,6 @@ def thread_creator(func, args, kwargs = {}):
     return id
 
 _start_new_thread = thread.start_new_thread
-exit_lock = thread.allocate_lock()
-exit_lock.acquire()
 THREADS = {}
 THREADS_LOCK = thread.allocate_lock()
 MODULES = []
@@ -897,7 +895,6 @@ class DebuggerLoop(object):
     def __init__(self, conn):
         self.conn = conn
         self.command_table = {
-            cmd('exit') : self.command_exit,
             cmd('stpi') : self.command_step_into,
             cmd('stpo') : self.command_step_out,
             cmd('stpv') : self.command_step_over,
@@ -934,9 +931,6 @@ class DebuggerLoop(object):
         except:
             traceback.print_exc()
             
-    def command_exit(self):
-        exit_lock.release()
-
     def command_step_into(self):
         tid = read_int(self.conn)
         thread = get_thread_from_id(tid)
@@ -1186,15 +1180,6 @@ def report_thread_exit(old_thread):
     with _SendLockCtx:
         conn.send(EXTT)
         conn.send(struct.pack('i', ident))
-
-def report_process_exit(exit_code):
-    with _SendLockCtx:
-        conn.send(EXIT)
-        conn.send(struct.pack('i', exit_code))
-
-    # wait for exit event to be received
-    exit_lock.acquire()
-
 
 def report_exception(frame, exc_info, tid, break_type):
     exc_type = exc_info[0]
@@ -1602,7 +1587,6 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
         if wait_on_exit:
             do_wait()
     except SystemExit:
-        report_process_exit(sys.exc_info()[1].code)
         if (wait_on_exception and sys.exc_info()[1].code != 0) or (wait_on_exit and sys.exc_info()[1].code == 0):
             print_exception()
             do_wait()
@@ -1611,7 +1595,4 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
         print_exception()
         if wait_on_exception:
             do_wait()
-        report_process_exit(1)
         raise
-    
-    report_process_exit(0)

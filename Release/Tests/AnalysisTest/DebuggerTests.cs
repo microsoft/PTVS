@@ -848,6 +848,21 @@ namespace AnalysisTest {
         #region Breakpoint Tests
 
         [TestMethod]
+        public void BreakpointNonMainThreadMainThreadExited() {
+            // http://pytools.codeplex.com/workitem/638
+
+            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
+            BreakpointTest(
+                Path.Combine(cwd, "BreakpointMainThreadExited.py"),
+                new[] { 8 },
+                new[] { 8, 8, 8, 8, 8 },
+                cwd: cwd,
+                breakFilename: Path.Combine(cwd, "BreakpointMainThreadExited.py"),
+                checkBound: false,
+                checkThread: false);
+        }
+
+        [TestMethod]
         public void TestBreakpointsFilenameColide() {
             // http://pytools.codeplex.com/workitem/565
 
@@ -973,7 +988,7 @@ namespace AnalysisTest {
         /// in lineHits as break points in the order provided in lineHits.  If lineHits is negative
         /// expects to hit the positive number and then removes the break point.
         /// </summary>
-        private void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, string cwd = null, string breakFilename = null, bool checkBound = true) {
+        private void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             string rootedFilename = filename;
@@ -1035,7 +1050,9 @@ namespace AnalysisTest {
                 } else {
                     Assert.AreEqual(args.Breakpoint.LineNo, lineHits[breakpointHit++]);
                 }
-                Assert.AreEqual(args.Thread, thread);
+                if (checkThread) {
+                    Assert.AreEqual(args.Thread, thread);
+                }
                 process.Continue();
             };
 

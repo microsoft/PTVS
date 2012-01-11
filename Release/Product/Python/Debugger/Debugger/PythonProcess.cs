@@ -348,7 +348,6 @@ namespace Microsoft.PythonTools.Debugger {
                         case "EXTT": HandleThreadExit(socket); break;
                         case "MODL": HandleModuleLoad(socket); break;
                         case "STPD": HandleStepDone(socket); break;
-                        case "EXIT": HandleProcessExit(socket); return;
                         case "BRKS": HandleBreakPointSet(socket); break;
                         case "BRKF": HandleBreakPointFailed(socket); break;
                         case "LOAD": HandleProcessLoad(socket); break;
@@ -364,7 +363,6 @@ namespace Microsoft.PythonTools.Debugger {
                     }
                 }
             } catch (SocketException) {
-                _process_Exited(this, EventArgs.Empty);
             }
         }
 
@@ -637,21 +635,6 @@ namespace Microsoft.PythonTools.Debugger {
                 if (brkEvent != null) {
                     brkEvent(this, new BreakpointEventArgs(unbound));
                 }
-            }
-        }
-
-        private void HandleProcessExit(Socket socket) {
-            // process exit
-            int exitCode = socket.ReadInt();
-            var processExited = ProcessExited;
-            if (processExited != null) {
-                _sentExited = true;
-                processExited(this, new ProcessExitedEventArgs(exitCode));
-            }
-            lock (_socketLock) {
-                _socket.Send(ExitCommandBytes);
-                _socket.Close();
-                _socket = null;
             }
         }
 
