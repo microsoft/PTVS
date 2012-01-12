@@ -1027,7 +1027,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void UnloadFile(IProjectEntry entry) {
-            if (entry.FilePath != null) {
+            if (entry != null && entry.FilePath != null) {
                 if (_taskProvider != null) {
                     // _taskProvider can be null if we've never opened a Python file and none of the project files have error
                     _taskProvider.Clear(entry.FilePath);

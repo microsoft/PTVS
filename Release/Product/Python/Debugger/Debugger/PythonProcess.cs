@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private PythonProcess(int pid) {
             _process = Process.GetProcessById(pid);
+            _process.EnableRaisingEvents = true;
             _process.Exited += new EventHandler(_process_Exited);
 
             ListenForConnection();
@@ -83,6 +84,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private PythonProcess(Socket socket, int pid, PythonLanguageVersion version) {
             _process = Process.GetProcessById(pid);
+            _process.EnableRaisingEvents = true;
             _process.Exited += new EventHandler(_process_Exited);
             
             _delayUnregister = true;
@@ -131,6 +133,7 @@ namespace Microsoft.PythonTools.Debugger {
             Debug.WriteLine(String.Format("Launching: {0} {1}", processInfo.FileName, processInfo.Arguments));
             _process = new Process();
             _process.StartInfo = processInfo;
+            _process.EnableRaisingEvents = true;
             _process.Exited += new EventHandler(_process_Exited);
         }
 

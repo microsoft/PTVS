@@ -124,7 +124,10 @@ namespace AnalysisTest.ProjectSystem {
                 AssertError<InvalidOperationException>(() => project.Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
                 AssertError<InvalidOperationException>(() => project.Name = "             ");
                 AssertError<InvalidOperationException>(() => project.Name = "...............");
-                AssertError<InvalidOperationException>(() => project.Name = ".foo");
+                var oldName = project.Name;
+                project.Name = ".foo";
+                Assert.AreEqual(project.Name, ".foo");
+                project.Name = oldName;
 
                 string projPath = Path.GetFullPath(@"Python.VS.TestData\RenameProjectTest\HelloWorld3.pyproj");
                 string movePath = Path.Combine(Path.GetDirectoryName(projPath), "HelloWorld_moved.pyproj");
@@ -156,7 +159,7 @@ namespace AnalysisTest.ProjectSystem {
                 var project = DebugProject.OpenProject(@"Python.VS.TestData\HelloWorld.sln");
                 string fullPath = Path.GetFullPath(@"Python.VS.TestData\HelloWorld.sln");                
 
-                Assert.AreEqual(2, project.ProjectItems.Count);
+                Assert.AreEqual(3, project.ProjectItems.Count);
                 var item = project.ProjectItems.AddFromFile(Path.GetFullPath(@"Python.VS.TestData\DebuggerProject\LocalsTest.py"));
                 
                 Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
@@ -175,12 +178,12 @@ namespace AnalysisTest.ProjectSystem {
                 Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
                 Assert.AreEqual(VsIdeTestHostContext.Dte, vsProjItem.ProjectItem.DTE);
 
-                Assert.AreEqual(3, project.ProjectItems.Count);
+                Assert.AreEqual(4, project.ProjectItems.Count);
 
                 // add an existing item
                 project.ProjectItems.AddFromFile(Path.GetFullPath(@"Python.VS.TestData\HelloWorld\Program.py"));
 
-                Assert.AreEqual(3, project.ProjectItems.Count);
+                Assert.AreEqual(4, project.ProjectItems.Count);
             } finally {
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();
@@ -257,7 +260,8 @@ namespace AnalysisTest.ProjectSystem {
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "              ");
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "..............");
-                AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = ".foo");
+                project.ProjectItems.Item("ProgramX.py").Name = ".foo";
+                project.ProjectItems.Item(".foo").Name = "ProgramX.py";
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "ProgramY.py");
 
                 project.ProjectItems.Item("ProgramX.py").Name = "PrOgRaMX.py";
@@ -441,15 +445,11 @@ namespace AnalysisTest.ProjectSystem {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestRelativePaths() {
+            // link to outside file should show up as top-level item
             var project = DebugProject.OpenProject(@"Python.VS.TestData\RelativePaths.sln");
 
-            var item = project.ProjectItems.Item("..");
-            Assert.AreEqual(2, project.ProjectItems.Count);
-            Assert.AreEqual(1, item.Collection.Count);
-            var helloWorld = item.Collection.Item("HelloWorld");
-            Assert.AreNotEqual(null, helloWorld);
-            var program = helloWorld.Collection.Item("Program.py");
-            Assert.AreNotEqual(null, program);
+            var item = project.ProjectItems.Item("Program.py");
+            Assert.IsNotNull(item);
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -766,6 +766,33 @@ namespace AnalysisTest.ProjectSystem {
             System.Threading.Thread.Sleep(2000);
 
             Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo", "Program.py"));
+        }
+
+        /// <summary>
+        /// Verify we can copy a folder with multiple items in it.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CopyFolderWithMultipleItems() {
+            // http://mpfproj10.codeplex.com/workitem/11618
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\FolderMultipleItems.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var solutionExplorer = app.SolutionExplorerTreeView;
+            var solutionNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)");
+
+            var projectNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems");
+
+            var folderNode = solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems", "A");
+
+            Mouse.MoveTo(folderNode.GetClickablePoint());
+            Mouse.Click();
+            Keyboard.ControlC();
+
+            Keyboard.ControlV();
+            WaitForItem(project, "A - Copy");
+
+            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems", "A - Copy", "a.py"));
+            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems", "A - Copy", "b.py"));
         }
 
         private static void ProjectNewFolder(VisualStudioApp app, System.Windows.Automation.AutomationElement solutionNode, System.Windows.Automation.AutomationElement projectNode) {

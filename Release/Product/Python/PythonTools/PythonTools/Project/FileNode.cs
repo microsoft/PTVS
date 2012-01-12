@@ -279,7 +279,8 @@ namespace Microsoft.PythonTools.Project
 
             // Verify that the file extension is unchanged
             string strRelPath = Path.GetFileName(this.ItemNode.GetMetadata(ProjectFileConstants.Include));
-            if(String.Compare(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase) != 0 &&
+            if(!Utilities.IsInAutomationFunction(this.ProjectMgr.Site) &&
+                String.Compare(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase) != 0 &&
                 !IsToAndFromValidPythonExtension(label, strRelPath))
             {
                 // Prompt to confirm that they really want to change the extension of the file

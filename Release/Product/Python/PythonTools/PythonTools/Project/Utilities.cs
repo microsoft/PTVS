@@ -629,6 +629,7 @@ namespace Microsoft.PythonTools.Project
 
                 if(String.IsNullOrEmpty(fileNameToVerify))
                 {
+                    // http://pytools.codeplex.com/workitem/497
                     // .foo is ok
                     return false;
                 }

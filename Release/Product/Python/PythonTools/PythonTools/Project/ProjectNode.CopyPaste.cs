@@ -581,7 +581,8 @@ namespace Microsoft.PythonTools.Project
 					while(currentItemID != VSConstants.VSITEMID_NIL)
 					{
 						variant = null;
-						ErrorHandler.ThrowOnFailure(sourceHierarchy.GetProperty(itemId, (int)__VSHPROPID.VSHPROPID_NextVisibleSibling, out variant));
+						// http://mpfproj10.codeplex.com/workitem/11618 - pass currentItemID instead of itemId
+						ErrorHandler.ThrowOnFailure(sourceHierarchy.GetProperty(currentItemID, (int)__VSHPROPID.VSHPROPID_NextVisibleSibling, out variant));
 						currentItemID = (uint)(int)variant;
 						WalkSourceProjectAndAdd(sourceHierarchy, currentItemID, targetNode, true);
 					}
