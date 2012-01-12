@@ -288,8 +288,8 @@ namespace Microsoft.PythonTools.Profiling {
             var process = new ProfiledProcess(interpreter, String.Format("\"{0}\" {1}", script, arguments), workingDir, env, arch);
 
             string baseName = Path.GetFileNameWithoutExtension(session.Filename);
-            string date = DateTime.Now.Year.ToString() + DateTime.Now.Month.ToString() + DateTime.Now.Day.ToString();
-            string outPath = Path.Combine(Path.GetTempPath(), baseName + date + ".vsp");
+            string date = DateTime.Now.ToString("yyyyMMdd");
+            string outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + ".vsp");
 
             int count = 1;
             while (File.Exists(outPath)) {
