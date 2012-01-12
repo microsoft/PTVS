@@ -1416,6 +1416,76 @@ namespace AnalysisTest {
 
         #region Attach Tests
 
+        /// <summary>
+        /// threading module imports thread.start_new_thread, verifies that we patch threading's method
+        /// in addition to patching the thread method so that breakpoints on threads created after
+        /// attach via the threading module can be hit.
+        /// </summary>
+        [TestMethod]
+        public void AttachThreadingStartNewThread() {
+            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+                // http://pytools.codeplex.com/workitem/638
+                // http://pytools.codeplex.com/discussions/285741#post724014
+                var psi = new ProcessStartInfo(Version.Path, "\"" + Path.GetFullPath(@"Python.VS.TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
+                psi.WorkingDirectory = Path.GetFullPath(@"Python.VS.TestData\DebuggerProject");
+                Process p = Process.Start(psi);
+                System.Threading.Thread.Sleep(1000);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent breakpointHit = new AutoResetEvent(false);
+
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                }
+
+                proc.ProcessLoaded += (sender, args) => {
+                    attached.Set();
+                    var bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 9);
+                    bp.Add();
+
+                    bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 5);
+                    bp.Add();
+
+                    proc.Resume();
+                };
+                PythonThread mainThread = null;
+                PythonThread bpThread = null;
+                bool wrongLine = false;
+                proc.BreakpointHit += (sender, args) => {
+                    if (args.Breakpoint.LineNo == 9) {
+                        // stop running the infinite loop
+                        Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
+                        args.Thread.Frames[0].ExecuteText("x = False", (x) => {});
+                        mainThread = args.Thread;
+                    } else if (args.Breakpoint.LineNo == 5) {
+                        // we hit the breakpoint on the new thread
+                        Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
+                        breakpointHit.Set();
+                        bpThread = args.Thread;
+                    } else {
+                        Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
+                        wrongLine = true;
+                        attached.Set();
+                        breakpointHit.Set();
+                    }
+                    proc.Continue();
+                };
+                proc.StartListening();
+
+                Assert.IsTrue(attached.WaitOne(10000));
+                Assert.IsTrue(breakpointHit.WaitOne(10000));
+                Assert.IsFalse(wrongLine);
+
+                Assert.AreNotEqual(mainThread, bpThread);
+                proc.Detach();
+
+                p.Kill();
+            }
+        }
+
+
         [TestMethod]
         public void AttachReattach() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach

@@ -1331,6 +1331,13 @@ _INTERCEPTING_FOR_ATTACH = False
 def intercept_threads(for_attach = False):
     thread.start_new_thread = thread_creator
     thread.start_new = thread_creator
+    global threading
+    if threading is None:
+        # we need to patch threading._start_new_thread so that 
+        # we pick up new threads in the attach case when threading
+        # is already imported.
+        import threading
+        threading._start_new_thread = thread_creator
     global _INTERCEPTING_FOR_ATTACH
     _INTERCEPTING_FOR_ATTACH = for_attach
 

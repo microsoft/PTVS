@@ -89,6 +89,9 @@
     <Content Include="Python.VS.TestData\DebuggerProject\BreakpointMainThreadExited.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\DebuggerProject\ThreadingStartNewThread.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\TestScriptClass.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
