@@ -293,7 +293,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             int count = 1;
             while (File.Exists(outPath)) {
-                outPath = Path.Combine(Path.GetTempPath(), baseName + date + "(" + count + ").vsp");
+                outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + "(" + count + ").vsp");
                 count++;
             }
             
