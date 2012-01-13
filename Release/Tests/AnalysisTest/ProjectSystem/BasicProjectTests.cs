@@ -18,11 +18,15 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices; // Ambiguous with EnvDTE.Thread.
 using AnalysisTest.UI;
+using AnalysisTest.UI.Python;
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using TestUtilities;
@@ -319,6 +323,24 @@ namespace AnalysisTest.ProjectSystem {
                 project.ProjectItems.Item("SubFolder").ProjectItems.Item("SubItem.py").Name = "NewSubItem.py";
 
                 project.ProjectItems.Item("ProgramDelete.py").Delete();
+            } finally {
+                VsIdeTestHostContext.Dte.Solution.Close();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ChangeDefaultInterpreterProjectClosed() {
+            try {
+                var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+                app.SelectDefaultInterpreter("Python 2.6");
+
+                var project = DebugProject.OpenProject(@"Python.VS.TestData\HelloWorld.sln");
+                VsIdeTestHostContext.Dte.Solution.Close();
+
+                app.SelectDefaultInterpreter("Python 2.7");
             } finally {
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();

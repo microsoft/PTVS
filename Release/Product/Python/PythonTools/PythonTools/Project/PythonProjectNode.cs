@@ -341,9 +341,14 @@ namespace Microsoft.PythonTools.Project {
 
             if (fact == null) {
                 fact = allFactories.GetDefaultInterpreter();
-                _defaultInterpreter = true;
+                if (!_defaultInterpreter) {
+                    // http://pytools.codeplex.com/workitem/643
+                    // Don't hook the event multiple times
 
-                PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged += DefaultInterpreterChanged;
+                    _defaultInterpreter = true;
+
+                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged += DefaultInterpreterChanged;
+                }
             } else {
                 if (_defaultInterpreter) {
                     PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;

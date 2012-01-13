@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Windows.Automation;
+using System.Windows.Input;
 using EnvDTE;
 
 namespace AnalysisTest.UI.Python {
@@ -96,6 +97,49 @@ namespace AnalysisTest.UI.Python {
                 }
             }
             throw new InvalidOperationException("Document not opened: " + docName);
+        }
+
+        /// <summary>
+        /// Selects the given source control provider.  Name merely needs to be enough text to disambiguate from other source control providers.
+        /// </summary>
+        public void SelectDefaultInterpreter(string name) {
+            Element.SetFocus();
+
+            // bring up Tools->Options
+            ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Tools.Options"));
+
+            // wait for it...
+            IntPtr dialog = WaitForDialog();
+
+            // go to the tree view which lets us select a set of options...
+            var treeView = new TreeView(AutomationElement.FromHandle(dialog).FindFirst(TreeScope.Descendants,
+                new PropertyCondition(
+                    AutomationElement.ClassNameProperty,
+                    "SysTreeView32")
+                ));
+
+            treeView.FindItem("Python Tools", "Interpreter Options").SetFocus();
+
+            var defaultInterpreter = new ComboBox(
+                AutomationElement.FromHandle(dialog).FindFirst(
+                    TreeScope.Descendants,
+                    new AndCondition(
+                       new PropertyCondition(
+                           AutomationElement.NameProperty,
+                           "Default Interpreter:"
+                       ),
+                       new PropertyCondition(
+                           AutomationElement.ControlTypeProperty,
+                           ControlType.ComboBox
+                       )
+                    )
+                )
+            );
+
+            defaultInterpreter.SelectItem(name);
+
+            Keyboard.PressAndRelease(Key.Enter);
+            WaitForDialogDismissed();
         }
     }
 }
