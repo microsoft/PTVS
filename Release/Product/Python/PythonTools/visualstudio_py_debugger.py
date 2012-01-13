@@ -611,7 +611,7 @@ class Thread(object):
             self.unblock_work()
             self.unblock_work = None
             self._is_working = False
-        
+                
         self._block_starting_lock.acquire()
         assert self._is_blocked
         self._is_blocked = False
@@ -1004,9 +1004,9 @@ class DebuggerLoop(object):
         THREADS_LOCK.release()
         for thread in all_threads:
             thread._block_starting_lock.acquire()
+            if thread.stepping == STEPPING_BREAK or thread.stepping == STEPPING_ATTACH_BREAK:
+                thread.stepping = STEPPING_NONE
             if thread._is_blocked:
-                if thread.stepping == STEPPING_BREAK:
-                    thread.stepping = STEPPING_NONE
                 thread.unblock()
             thread._block_starting_lock.release()
     

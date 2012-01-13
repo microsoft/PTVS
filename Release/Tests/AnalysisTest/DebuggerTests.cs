@@ -1515,6 +1515,45 @@ namespace AnalysisTest {
             }
         }
 
+        /// <summary>
+        /// When we do the attach one thread is blocked in native code.  We attach, resume execution, and that
+        /// thread should eventually wake up.  
+        /// 
+        /// The bug was two issues, when doing a resume all:
+        ///		1) we don't clear the stepping if it's STEPPING_ATTACH_BREAK
+        ///		2) We don't clear the stepping if we haven't yet blocked the thread
+        ///		
+        /// Because the thread is blocked in native code, and we don't clear the stepping, when the user
+        /// hits resume the thread will eventually return back to Python code, and then we'll block it
+        /// because we haven't cleared the stepping bit.
+        /// </summary>
+        [TestMethod]
+        public void AttachMultithreadedSleeper() {
+            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+                // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
+                Process p = Process.Start(Version.Path, "\"" + Path.GetFullPath(@"Python.VS.TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
+                System.Threading.Thread.Sleep(1000);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                }
+
+                proc.ProcessLoaded += (sender, args) => {
+                    attached.Set();
+                };
+                proc.StartListening();
+
+                attached.WaitOne();
+                proc.Resume();
+                Debug.WriteLine("Waiting for exit");
+                Assert.IsTrue(proc.WaitForExit(20000));
+            }
+        }
+
         /*
         [TestMethod]
         public void AttachReattach64() {

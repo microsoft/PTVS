@@ -215,6 +215,10 @@ namespace Microsoft.PythonTools.Debugger {
             _process.WaitForExit();
         }
 
+        public bool WaitForExit(int milliseconds) {
+            return _process.WaitForExit(milliseconds);
+        }
+
         public void Terminate() {
             if (!_process.HasExited) {
                 _socket = null;

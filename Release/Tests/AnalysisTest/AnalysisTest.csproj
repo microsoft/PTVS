@@ -89,6 +89,9 @@
     <None Include="Python.VS.TestData\FolderMultipleItems\FolderMultipleItems.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python.VS.TestData\DebuggerProject\AttachMultithreadedSleeper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\FolderMultipleItems.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
