@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="CopyReferencedFiles"  
+         ToolsVersion="4.0">
+
+  <!-- This resolves Code Analysis references (Warning CA0060) by copying those assemblies to the binaries output folder. --> 
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)'==''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dirs.proj))</BuildRoot>
+  </PropertyGroup>
+
+  <Target Name="CopyReferencedFiles">
+    <CallTarget Targets="CRFCopyFiles" />
+  </Target>
+
+  <Target Name="CRFCopyFiles">
+    <ItemGroup>
+      <RefFiles Include="$(VS100COMNTOOLS)\..\IDE\PrivateAssemblies\Microsoft.VisualStudio.TeamSystem.Licensing.dll" />
+      <RefFiles Include="$(VS100COMNTOOLS)\..\IDE\PrivateAssemblies\Microsoft.VisualStudio.Enterprise.AspNetHelper.dll" />
+    </ItemGroup>
+
+    <Message Text="Copying Code Analysis assembly references to the output folder, $(ActualOutputPath)."></Message>
+    <Copy SourceFiles="@(RefFiles)" DestinationFolder="$(ActualOutputPath)"  ContinueOnError="true" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

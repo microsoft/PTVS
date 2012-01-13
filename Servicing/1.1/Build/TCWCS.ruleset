@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="TCWCS Coding Rules" Description="TCWCS-specific ruleset, with low-value tests disabled." ToolsVersion="10.0">
+  <IncludeAll Action="Error" />
+  <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
+    <Rule Id="CA2204" Action="None" />
+    <Rule Id="CA2210" Action="None" /> <!-- mt.exe problem with signing -->
+  </Rules>
+</RuleSet>

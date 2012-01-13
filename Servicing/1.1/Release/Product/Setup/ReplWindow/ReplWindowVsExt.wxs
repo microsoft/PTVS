@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLLOCATION">
+            <Directory Id="GAC" Name="GAC" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="ReplWindowExt">
+            <!-- Per user components -->
+            <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{D02050BD-AC66-4EFF-AF1C-E5C08A906CF1}">
+                <Condition>NOT ALLUSERS = 1</Condition>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+                    <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,1.1' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Microsoft.VisualStudio.ReplWindow\1.1\'/>
+                </RegistryKey>
+            </Component>
+
+            <!-- All user components -->
+            <Component Id="cmp611C5C5188E94B9CB51E35A2F88A1B9C" Directory="GAC" Guid="{73E54CFD-7518-45ED-BCC1-AE61219537F6}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil0FB175AE7D4745F6A618627DBDE36BD7" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.VisualStudio.ReplWindow.dll" Assembly=".net"/>
+            </Component>
+
+            <!-- Both per user and all user components -->
+            <Component Id="cmp7897622026E04DC3A1564E3FA6552E33" Directory="INSTALLLOCATION" Guid="{743220DE-CB42-4AA3-852D-7E40F9C56461}">
+                <File Id="fil95C98B66C82B4C7FA36687656946D8F2" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.VisualStudio.ReplWindow.dll" />
+            </Component>
+            <Component Id="cmp07AC68DDBC4C4BCB97AF22F10D69711F" Directory="INSTALLLOCATION" Guid="{02263679-9FB3-41ED-8D82-3012D2D48798}">
+                <File Id="fil547E96BD1DCF48D2A0FCCF813F2F84D1" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.VisualStudio.ReplWindow.pkgdef" />
+            </Component>
+            <Component Id="cmpC0DAC603F4014C9CA7DEC97DC16DC674" Directory="INSTALLLOCATION" Guid="{5A5B360E-6B41-4A94-84E1-DC7150E51170}">
+                <File Id="fil157BF1D79D024EDB8EDBFC6175C4A9C0" KeyPath="yes" Source="$(var.ObjDir)\extension.vsixmanifest" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirBEC0D5FD22264A40A922EEF556B688CD" />
+    </Fragment>
+</Wix>

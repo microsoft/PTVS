@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--"Yes" or empty or key not found = do the check. "No" = don't do the check. -->
+<RunTestsSettings>
+  <ConfigurationTitle>TCWCS</ConfigurationTitle>
+  <MaxTestMinutes>60</MaxTestMinutes>
+
+  <Platform>Win32</Platform>
+  <Configuration>Debug</Configuration>
+
+  <RunMSTestTests>Yes</RunMSTestTests>
+  <RunTAEFTests>No</RunTAEFTests>
+</RunTestsSettings>

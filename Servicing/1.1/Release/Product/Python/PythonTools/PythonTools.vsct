@@ -1,0 +1,585 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <Extern href="stdidcmd.h"/>
+  <Extern href="vsshlids.h"/>
+  <Extern href="VSDbgCmd.h"/>
+  <Extern href="VsDebugGuids.h"/>
+
+  <KeyBindings>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" mod1="Alt Shift" key1="VK_F5" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" key1="E" mod1="Control" key2="M" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow" key1="I" mod1="Alt" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" key1="E" mod1="Control" key2="P" mod2="Control" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" key1="K" mod1="Control" key2="1" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" key1="K" mod1="Control" key2="2" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" key1="K" mod1="Control" key2="3" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" key1="K" mod1="Control" key2="4" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" key1="K" mod1="Control" key2="5" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" key1="K" mod1="Control" key2="6" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" key1="K" mod1="Control" key2="7" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" key1="K" mod1="Control" key2="8" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" key1="K" mod1="Control" key2="9" editor="guidVSStd97"/>
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>    
+  </KeyBindings>
+
+  <!--The Commands section is where we the commands, menus and menu groups are defined.
+      This section uses a Guid to identify the package that provides the command defined inside it. -->
+  <Commands package="guidPythonToolsPkg">
+    <!-- Inside this section we have different sub-sections: one for the menus, another  
+    for the menu groups, one for the buttons (the actual commands), one for the combos 
+    and the last one for the bitmaps used. Each element is identified by a command id that  
+    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually  
+    called "command set" and is used to group different command inside a logically related  
+    group; your package should define its own command set in order to avoid collisions  
+    with command ids defined by other packages. -->
+
+    <!-- In this section you can define new menu groups. A menu group is a container for 
+         other menus or buttons (commands); from a visual point of view you can see the 
+         group as the part of a menu contained between two lines. The parent of a group 
+         must be a menu. -->
+    <Groups>
+      <!-- Our group of menu items on the context menu, appears right before Cut/Copy/Paste -->
+      <Group guid="guidPythonToolsCmdSet" id="EditorContextGroup" priority="0x380">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_CODEWIN"/>
+      </Group>
+
+      <!-- Our group of menu items on the Edit menu, appears right before Cut/Copy/Paste -->
+      <Group guid="guidPythonToolsCmdSet" id="EditMenuGroup" priority="0x200">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_EDIT"/>
+      </Group>
+
+      <!-- Our group of menu items which is displayed on Tools/Python Tools/...  -->
+      <Group guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup" priority="0x0800">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenu"/>
+      </Group>
+
+      <!-- Group on normal project items -->
+      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
+      </Group>
+
+      <!-- Group for the Remove Imports context menu -->
+      <Group guid="guidPythonToolsCmdSet" id="RemoveImportsGroup" priority="0x0000">
+        <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsMenu"/>
+      </Group>
+      
+      <Group guid="guidPythonToolsCmdSet" id="SamplesGroup" priority="0x0600">
+        <Parent guid="guidPythonToolsCmdSet" id="SamplesMenu"/>
+      </Group>
+    </Groups>
+
+    <Menus>
+      <Menu guid="guidPythonToolsCmdSet" id="SamplesMenu" priority="0x002" type="Menu">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+        <Strings>
+          <ButtonText>Samples</ButtonText>
+          <CommandName>&amp;Samples</CommandName>
+        </Strings>
+      </Menu>
+
+      <Menu guid="guidPythonToolsCmdSet" id="ToolsMenu" priority="0x8008" type="Menu">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_TOOLS_OTHER2"/>
+        <Strings>
+          <ButtonText>Python Tools</ButtonText>
+          <CommandName>P&amp;ython Tools</CommandName>
+        </Strings>;
+      </Menu>
+
+      <Menu guid="guidPythonToolsCmdSet" id="RemoveImportsMenu" priority="0x0400" type="Context">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CODEWIN_LANGUAGE"/>
+        <Strings>
+          <ButtonText>Rem&amp;ove Imports</ButtonText>
+          <CommandName>Rem&amp;ove Imports</CommandName>
+        </Strings>;
+      </Menu>
+    </Menus>
+
+    <!--Buttons section: buttons include both buttons on toolbars as well as individual menu items -->
+    <Buttons>
+      <!--To define a menu group you have to specify its ID, the parent menu and its display priority. 
+          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
+          the CommandFlag node.
+          You can add more than one CommandFlag node e.g.:
+              <CommandFlag>DefaultInvisible</CommandFlag>
+              <CommandFlag>DynamicVisibility</CommandFlag>
+          If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImportsCurrentScope" priority="0x200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
+        <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Current &amp;Scope</ButtonText>
+          <CommandName>Edit.RemoveImportsCurrentScope</CommandName>
+        </Strings>
+      </Button>
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" priority="0x200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
+        <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;All Scopes</ButtonText>
+          <CommandName>Edit.RemoveImports</CommandName>
+        </Strings>
+      </Button>
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EditMenuGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Send to &amp;Interactive</ButtonText>
+          <CommandName>SendToRepl</CommandName>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" priority="0x201" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="EditMenuGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Send to &amp;Defining Module</ButtonText>
+          <CommandName>SendToModule</CommandName>
+        </Strings>
+      </Button>
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7f00" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow</CommandName>
+          <ButtonText>Python Interactive Default</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x7f01" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow2</CommandName>
+          <ButtonText>Python Interactive 1</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x7f02" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow3</CommandName>
+          <ButtonText>Python Interactive 2</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x7f03" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow4</CommandName>
+          <ButtonText>Python Interactive 3</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x7f04" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow5</CommandName>
+          <ButtonText>Python Interactive 4</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x7f05" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow6</CommandName>
+          <ButtonText>Python Interactive 5</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x7f06" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow7</CommandName>
+          <ButtonText>Python Interactive 6</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x7f07" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow8</CommandName>
+          <ButtonText>Python Interactive 7</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x7f08" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow9</CommandName>
+          <ButtonText>Python Interactive 8</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x7f09" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindowA</CommandName>
+          <ButtonText>Python Interactive 9</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x7f0a" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindowB</CommandName>
+          <ButtonText>Python Interactive 10</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x7f0b" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindowC</CommandName>
+          <ButtonText>Python Interactive 11</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x7f0c" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindowD</CommandName>
+          <ButtonText>Python Interactive 12</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x7f0d" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindowE</CommandName>
+          <ButtonText>Python Interactive 13</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x7f0e" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindowF</CommandName>
+          <ButtonText>Python Interactive 14</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x7f0f" type="Button">
+        <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdidFillParagraph</CommandName>
+          <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" priority="0x0300" type="Button">
+        <Parent guid="guidVSDebugGroup" id="IDG_EXECUTION"/>
+        <Icon guid="guidImages" id="ipyDebugRepl" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <CommandName>cmdidExecuteFileInRepl</CommandName>
+          <ButtonText>Execute File in P&amp;ython Interactive</ButtonText>
+        </Strings>
+      </Button>
+
+      <!--================================================================================================================-->
+      <!--=============================================== Project Commands ===============================================-->
+      <!--================================================================================================================-->
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidSetAsStartupFile" priority="0x0300" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdidSetAsStartupFile</CommandName>
+          <ButtonText>S&amp;et as Startup File</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x0301" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdIdAddSearchPath</CommandName>
+          <ButtonText>Add Search &amp;Path...</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidStartWithoutDebugging" priority="0x0302" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdidStartWithoutDebugging</CommandName>
+          <ButtonText>&amp;Start without Debugging</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidStartDebugging" priority="0x0303" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdidStartDebugging</CommandName>
+          <ButtonText>Start with &amp;Debugging</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidDiagnostics" priority="0x001" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+        <Strings>
+          <ButtonText>Diagnostic Info...</ButtonText>
+          <CommandName>cmdidDiagnostics</CommandName>
+        </Strings>
+      </Button>
+
+    </Buttons>
+
+
+    <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
+    <Bitmaps>
+      <!--  The bitmap id is defined in a way that is a little bit different from the others: 
+            the declaration starts with a guid for the bitmap strip, then there is the resource id of the 
+            bitmap strip containing the bitmaps and then there are the numeric ids of the elements used 
+            inside a button definition. An important aspect of this declaration is that the element id 
+            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
+      <Bitmap guid="guidImages" href="Resources\Images_32bit.bmp" usedList="ipyReplPic, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, ipyDebugRepl"/>
+      <Bitmap guid="guidImagesRefactoring" href="Resources\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"/>
+
+    </Bitmaps>
+  </Commands>
+
+  <CommandPlacements>
+    <!-- Place the Send to REPL item in our context group in addition to it's normal placement in the Edit menu. -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x100">
+      <Parent guid="guidPythonToolsCmdSet" id="EditorContextGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" priority="0x101">
+      <Parent guid="guidPythonToolsCmdSet" id="EditorContextGroup"/>
+    </CommandPlacement>
+
+    <!-- Make some commands also available via Tools/Python Tools menu for discoverability -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x102">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x103">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x104">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x105">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x106">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x107">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x108">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x109">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x10a">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x10b">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x10c">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x10d">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x10e">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x10f">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x110">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x111">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" priority="0x120">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidExecuteFileInRepl" priority="0x121">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x122">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <!-- Project Command Placement -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x600">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x601">
+      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+    </CommandPlacement>
+
+  </CommandPlacements>
+
+  <Symbols>
+    <!-- This is the package guid. -->
+    <GuidSymbol name="guidPythonToolsPkg" value="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" />
+    <GuidSymbol name="guidReplWindow" value="{7EE13E74-F6FD-4C7E-9896-1B89D62A513E}" />
+    
+    <!-- This is our command set GUID and associated commands -->
+    <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
+      <IDSymbol name="cmdidExecuteFileInRepl" value="0x0102" />
+      <IDSymbol name="cmdidSendToRepl" value="0x0103"/>
+      <IDSymbol name="cmdidSendToDefiningModule" value="0x0104"/>
+      <IDSymbol name="cmdidFillParagraph" value="0x0105"/>
+      <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
+      <IDSymbol name="cmdidRemoveImports" value ="0x0107" />
+      <IDSymbol name="cmdidRemoveImportsCurrentScope" value ="0x0108" />
+      
+      <IDSymbol name="cmdidReplWindow" value="0x0201" />
+      <IDSymbol name="cmdidReplWindow2" value="0x0202" />
+      <IDSymbol name="cmdidReplWindow3" value="0x0203" />
+      <IDSymbol name="cmdidReplWindow4" value="0x0204" />
+      <IDSymbol name="cmdidReplWindow5" value="0x0205" />
+      <IDSymbol name="cmdidReplWindow6" value="0x0206" />
+      <IDSymbol name="cmdidReplWindow7" value="0x0207" />
+      <IDSymbol name="cmdidReplWindow8" value="0x0208" />
+      <IDSymbol name="cmdidReplWindow9" value="0x0209" />
+      <IDSymbol name="cmdidReplWindowA" value="0x020A" />
+      <IDSymbol name="cmdidReplWindowB" value="0x020B" />
+      <IDSymbol name="cmdidReplWindowC" value="0x020C" />
+      <IDSymbol name="cmdidReplWindowD" value="0x020D" />
+      <IDSymbol name="cmdidReplWindowE" value="0x020E" />
+      <IDSymbol name="cmdidReplWindowF" value="0x020F" />
+      <IDSymbol name="cmdidSetAsStartupFile" value="0x3001" />
+
+      <IDSymbol name="cmdIdAddSearchPath" value="0x4002" />
+      <IDSymbol name="cmdidStartWithoutDebugging" value="0x4004" />
+      <IDSymbol name="cmdidStartDebugging" value="0x4005" />
+
+      <!-- Groups -->
+      <IDSymbol name="EditorContextGroup" value="0x1010" />
+      <IDSymbol name="EditMenuGroup" value="0x1011" />
+      <IDSymbol name="ToolsMenuItemsGroup" value="0x1012" />
+      <IDSymbol name="CodeFileGroup" value="0x1053" />
+      <IDSymbol name="RemoveImportsGroup" value ="0x1054" />
+      <!-- Menus -->
+      <IDSymbol name="ToolsMenu" value ="0x2001" />
+      <IDSymbol name="RemoveImportsMenu" value ="0x2002" />
+
+
+      <IDSymbol name="SamplesMenu" value="0x4000" />
+      <IDSymbol name="SamplesGroup" value="0x1020" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidImages" value="{7f103a95-8141-4004-a01d-e3f739caa27d}" >
+      <IDSymbol name="ipyReplPic" value="1" />
+      <IDSymbol name="bmpPic2" value="2" />
+      <IDSymbol name="bmpPicSearch" value="3" />
+      <IDSymbol name="bmpPicX" value="4" />
+      <IDSymbol name="bmpPicArrows" value="5" />
+      <IDSymbol name="ipyDebugRepl" value="6" />
+    </GuidSymbol>
+
+    <GuidSymbol name="guidImagesRefactoring" value="{6EE47620-9481-4D89-A56F-104CBD7ED3D2}" >
+      <IDSymbol name="imgRemoveUsing" value="1" />
+      <IDSymbol name="imgSortUsings" value="2" />
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>

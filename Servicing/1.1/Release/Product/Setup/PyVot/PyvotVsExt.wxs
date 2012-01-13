@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLLOCATION">
+            <Directory Id="dir436142373C244AC4A66B8C6ED1FC3150" Name="Templates" />
+            <Directory Id="dir55B286326A5D40B38CA619211B36E74C" Name="Pyvot" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="SamplesVsExt">
+            <!-- Per user components -->
+            <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{9FD7D797-439F-4A33-9FB7-6FEB97CDF3CD}">
+                <Condition>NOT ALLUSERS = 1</Condition>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+                    <RegistryValue Type='string' Name='5034726D-E9C8-4E93-83D6-B61F1B515C12,1.1' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools Pyvot Sample\1.1\'/>
+                </RegistryKey>
+            </Component>
+
+            <!-- Both per user and all user components -->
+            <Component Id="cmp60E9B8B5BE5D4DCF8E9A65468E8A0DFD" Directory="INSTALLLOCATION" Guid="{DE9294BC-F235-444C-8C81-7025975A6453}">
+                <File Id="filAEBF2675DC85484597CE1BC916195DA3" KeyPath="yes" Source="$(var.ObjDir)\extension.vsixmanifest" />
+            </Component>
+            <Component Id="cmpB404FD9A0BF5439BB4886809A88078FE" Directory="INSTALLLOCATION" Guid="{39F04FA1-0286-4215-BD06-355B8A8884AC}">
+                <File Id="filBE21456B2F6C420E9912E7600EEC863A" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Pyvot.dll" />
+            </Component>
+            <Component Id="cmpEFE7B65F84524C6A83582DBEE4D9C3A6" Directory="INSTALLLOCATION" Guid="{E88283D3-884B-4DB1-ABDA-6035F02D0331}">
+                <File Id="filD99E9EC7DC4245D8A49899A9AB980F01" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Pyvot.pkgdef" />
+            </Component>
+            <Component Id="cmpBCCFECD8844643E9926F83F764B752AF" Directory="dir0CC0B1D9E1EF4456A302A4658E12D6BA" Guid="{249D848C-F561-4B6C-8560-3C14BEBCDD1B}">
+                <File Id="filFAE03906AF05E4B6AB766E615F7788059" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\Pyvot\PyvotProject.zip" />
+            </Component>
+            <Component Id="cmp45D33C3A2C2B4DAE8DCD963EF7FB94A9" Directory="INSTALLLOCATION" Guid="{2A87D288-A96E-4655-9DAF-84EBE77B14DC}">
+                <File Id="fil0ACC3F3FFDF345F7A329F278DA43D432" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
+            </Component>
+            <Component Id="cmp0376F73D3D794D8E9048317A852CC35C" Directory="INSTALLLOCATION" Guid="{5C126E3E-9490-475F-8D0A-6DFA8CF42C30}">
+                <File Id="fil8D304F7EE8FA40499AA92DF27F2B782B" KeyPath="yes" Source="$(var.TargetDir)\PythonProjectBig.ico" />
+            </Component>
+
+            <!-- Pyvot -->
+            <Component Id="cmpFCC6B733062744D785E3F8249CA859F3" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{8380F864-7D12-46CA-A2D0-0AFF691C492B}">
+                <File Id="fil6659C9D1DDDC446492BE375F88DEDB3F" KeyPath="yes" Source="$(var.PyvotDir)\setup.py" />
+            </Component>
+            <Component Id="cmp231456696F2C417C9F30A5F2CB00EF0B" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{6F318B8C-50F2-474D-84F2-7967BDF73CDB}">
+              <File Id="fil58B16832E1C349DF89EDB72228D4EB91" KeyPath="yes" Source="$(var.PyvotDir)\MANIFEST.in" />
+            </Component>
+            <Component Id="cmp51A6316E7AEA4F1DB5EAFD755FDDA2E8" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{D4739860-B0FF-48AF-A80F-4B73E7ACAC6F}">
+              <File Id="filA360C0BBC923476E946719420DB9C07A" KeyPath="yes" Source="$(var.PyvotDir)\LICENSE.txt" />
+            </Component>
+            <Component Id="cmp36959AFA95C046568EE57833A0AD7DCC" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{5CFBEF11-CD81-4AE9-B7BA-438C8928F5B6}">
+              <File Id="fil5CFBEF11CD814AE9B7BA438C8928F5B6" KeyPath="yes" Source="$(var.PyvotDir)\setup.cfg" />
+            </Component>
+            <Component Id="cmpFA23EAE0EEAF46469F419D3317A1F12B" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{66EE5E00-8A81-4129-841D-01C3799A0A43}">
+              <File Id="filC20992A623EC4024A64253B6BA40D5BC" KeyPath="yes" Source="$(var.PyvotDir)\setup.py2.cfg" />
+            </Component>
+            <Component Id="cmpB3C9C54314454E6E94E1D541FE2C30A4" Directory="dir55B286326A5D40B38CA619211B36E74C" Guid="{F57EEFE9-B4A3-429E-9196-8F335D30B8A6}">
+              <File Id="fil38F4332FBD224D05B87741652EA80B5B" KeyPath="yes" Source="$(var.PyvotDir)\setup.py3.cfg" />
+            </Component>
+
+            <Component Id="cmpCAB080C190514DF4BFC9CBCA35BB21DE" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{533F5815-8921-4E5B-900B-77D77CC4EDC5}">
+                <File Id="filF51D7932FAD340298E42645370159E0F" KeyPath="yes" Source="$(var.PyvotDir)\xl\__init__.py" />
+            </Component>
+            <Component Id="cmp8F577CC90706434BA80C23186824D751" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{4D614E3A-C98B-46B2-B46C-F907BB0D5BED}">
+              <File Id="filEB5E6092F10C4C2CB74B1C32E8D3E1C2" KeyPath="yes" Source="$(var.PyvotDir)\xl\version.py" />
+            </Component>
+            <Component Id="cmp3BEBD2BE1A094205921DA0275EF8821D" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{242E402D-27AB-4789-B015-D280153D2259}">
+                <File Id="filBEFF98B84C6D4646AEB075D1E054123B" KeyPath="yes" Source="$(var.PyvotDir)\xl\cache.py" />
+            </Component>
+            <Component Id="cmp0AC64CE8FD3C410B95A0DA7489E8EE32" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{C78F8B51-C689-453D-8A0C-2A38ED6DDA81}">
+                <File Id="fil99D5E2AA66424371981CABDCC57B8B69" KeyPath="yes" Source="$(var.PyvotDir)\xl\range.py" />
+            </Component>
+            <Component Id="cmpA7BB541C9EC3451FAF881933A8B9C81B" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{49F94DE4-48A7-4C9E-8D0D-4CF0ABBAC146}">
+                <File Id="fil50402CD91A9E4CEB9988763289C4FC84" KeyPath="yes" Source="$(var.PyvotDir)\xl\sheet.py" />
+            </Component>
+            <Component Id="cmp0FE9E6F080BF401A987EE7DC147DA1B0" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{E97A91C0-2C72-47B7-90F8-C6EDC514ED49}">
+                <File Id="filFF6C4567619E42168234D1F2A04DAE94" KeyPath="yes" Source="$(var.PyvotDir)\xl\shell.py" />
+            </Component>
+            <Component Id="cmpF34412B5CF464FCCA465CC5F8EF6C0A1" Directory="dir996AC28292904A2AAEB5BD3E7690E314" Guid="{88CB851E-8A0A-4080-83FD-88B652FFA2D3}">
+                <File Id="fil108CD26113174109B07BF1A35B146E75" KeyPath="yes" Source="$(var.PyvotDir)\xl\tools.py" />
+            </Component>
+
+            <Component Id="cmpCA9F60167FF74B6DBCD0054E84512D5E" Directory="dir20981893AF4A4AACB649D1963B5EC257" Guid="{FBACC5B9-82F0-42F1-95D5-3BC40758C652}">
+                <File Id="filEE577ACFB4D84AA994FBBC260427D9F7" KeyPath="yes" Source="$(var.PyvotDir)\xl\_impl\__init__.py" />
+            </Component>
+            <Component Id="cmp6608BD6B1AC14470B5F7F549C9251054" Directory="dir20981893AF4A4AACB649D1963B5EC257" Guid="{54CBE957-DE26-4EBD-9EFE-F9BF7B6B2F75}">
+                <File Id="fil2AC10871E03C46DBB58DDCA9117246FA" KeyPath="yes" Source="$(var.PyvotDir)\xl\_impl\collapsed_matrix.py" />
+            </Component>
+            <Component Id="cmpE5170AEDE7D34D058ADEE161AC2BF466" Directory="dir20981893AF4A4AACB649D1963B5EC257" Guid="{CF814052-E04C-47B3-9A10-AF48BC4B8A47}">
+                <File Id="fil62BD2766F32140809ECD512ACA289FFD" KeyPath="yes" Source="$(var.PyvotDir)\xl\_impl\com_utils.py" />
+            </Component>
+            <Component Id="cmp277471AC43A847B3B22A18FFE99A26A9" Directory="dir20981893AF4A4AACB649D1963B5EC257" Guid="{BAA29394-8F29-4EC9-9938-D13EABD5B0C9}">
+                <File Id="filE6A4B9EB04A84622A7B71CB2964B7502" KeyPath="yes" Source="$(var.PyvotDir)\xl\_impl\table.py" />
+            </Component>
+
+        </ComponentGroup>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir436142373C244AC4A66B8C6ED1FC3150">
+            <Directory Id="dir4CFC157C6EEC49548A5F0690FCC9B47B" Name="Projects" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir4CFC157C6EEC49548A5F0690FCC9B47B">
+            <Directory Id="dir0CC0B1D9E1EF4456A302A4658E12D6BA" Name="Pyvot" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir55B286326A5D40B38CA619211B36E74C">
+            <Directory Id="dir996AC28292904A2AAEB5BD3E7690E314" Name="xl" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir996AC28292904A2AAEB5BD3E7690E314">
+            <Directory Id="dir20981893AF4A4AACB649D1963B5EC257" Name="_impl" />
+        </DirectoryRef>
+    </Fragment>
+
+</Wix>

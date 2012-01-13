@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <BuildRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Common.Build.settings))</BuildRoot>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>3.0</ProductVersion>
+    <ProjectGuid>{d5306a0d-9603-4ce2-be65-b1653f2937b4}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>TCTestHostAdapters</OutputName>
+    <OutputType>Package</OutputType>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <WixTargetsPath>$(BuildRoot)\Tools\Wix\3.5\Targets\Wix2010.targets</WixTargetsPath>
+    <!--
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.5\Wix2010.targets</WixTargetsPath>
+    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.5\Wix2010.targets</WixTargetsPath>
+-->
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>Debug</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="TCTestHostAdapters.wxs" />
+    <Compile Include="TCTestHostAdaptersProduct.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>WixUtilExtension</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.TC.TestHostAdaptersFramework\Microsoft.TC.TestHostAdaptersFramework.csproj">
+      <Project>{bd7412a0-a329-44f1-b4ba-6d6a84761343}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.TC.TestHostAdapters\Microsoft.TC.TestHostAdapters.csproj">
+      <Project>{bd7412a0-a329-44f1-b4ba-6d6a84761342}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.TC.RemoteTest\Microsoft.TC.RemoteTest.csproj">
+      <Project>{6679E9D3-4657-44F5-B7A4-66E180C5F889}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TCTestHostAdaptersVars.wxi" />
+  </ItemGroup>
+  <PropertyGroup>
+    <PostBuildEvent>copy $(OutputPath)\TCTestHostAdapters.msi $(BuildRoot)\Release\Public\TCTestHostAdapters
+copy $(OutputPath)\Microsoft.TC.TestHostAdaptersFramework.dll $(BuildRoot)\Release\Public\TCTestHostAdapters
+copy $(OutputPath)\Microsoft.TC.TestHostAdapters.dll $(BuildRoot)\Release\Public\TCTestHostAdapters
+copy $(OutputPath)\Microsoft.TC.RemoteTest.dll $(BuildRoot)\Release\Public\TCTestHostAdapters</PostBuildEvent>
+  </PropertyGroup>
+  <!--
+	To modify your build process, add your task inside one of the targets below and uncomment it.
+	Other similar extension points exist, see Wix.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

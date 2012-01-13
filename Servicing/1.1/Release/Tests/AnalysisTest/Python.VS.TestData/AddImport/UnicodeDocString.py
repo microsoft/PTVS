@@ -1,0 +1,3 @@
+u'''foo'''
+
+itertools
