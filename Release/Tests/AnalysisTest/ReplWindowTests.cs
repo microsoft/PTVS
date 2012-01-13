@@ -1127,6 +1127,24 @@ namespace AnalysisTest {
         }
 
         /// <summary>
+        /// Tests REPL command $load, with a simple script.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CommandsLoadScriptWithQuotes() {
+            var interactive = Prepare();
+
+            string command = "$load " + "\"" + Path.GetFullPath("TestScript.txt") + "\"";
+            Keyboard.Type(command + "\r");
+
+            interactive.WaitForTextStart(
+                ReplPrompt + command,
+                ReplPrompt + "print('hello world')",
+                "hello world"
+            );
+        }
+
+        /// <summary>
         /// Tests REPL command $load, with multiple statements including a class definition.
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]

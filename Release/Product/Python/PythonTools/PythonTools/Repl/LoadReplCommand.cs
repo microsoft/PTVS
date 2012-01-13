@@ -37,7 +37,10 @@ namespace Microsoft.VisualStudio.Repl {
             List<string> submissions = new List<string>();
             List<string> lines = new List<string>();
 
-            // TODO: commmand/comment parsing - in multi-line strings - check if we have a complete statement before splitting?
+            arguments = arguments.Trim();
+            if (arguments.StartsWith("\"") && arguments.EndsWith("\"")) {
+                arguments = arguments.Substring(1, arguments.Length - 2);
+            }
 
             string commandPrefix = (string)window.GetOptionValue(ReplOptions.CommandPrefix);
             string lineBreak = window.TextView.Options.GetNewLineCharacter();
