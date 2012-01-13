@@ -294,6 +294,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (redirectOutput) {
                     _process.OutputDataReceived += new DataReceivedEventHandler(StdOutReceived);
                     _process.ErrorDataReceived += new DataReceivedEventHandler(StdErrReceived);
+                    _process.EnableRaisingEvents = true;
                     _process.Exited += new EventHandler(ProcessExited);
 
                     _process.BeginOutputReadLine();
@@ -302,7 +303,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void ProcessExited(object sender, EventArgs e) {
-                Window.WriteError("Failed to launch REPL process\r\n");
+                Window.WriteError("The Python REPL process has exited\r\n");
                 if (_preConnectionOutput != null) {
                     lock (_preConnectionOutput) {
                         Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
@@ -851,8 +852,11 @@ namespace Microsoft.PythonTools.Repl {
                                 var socket = Socket;
                                 _socket = null;
 
-                                socket.Send(ExitCommandBytes);
-                                socket.Close();
+                                try {
+                                    socket.Send(ExitCommandBytes);
+                                    socket.Close();
+                                } catch (SocketException) {
+                                }
                             }
                         }
                     } finally {

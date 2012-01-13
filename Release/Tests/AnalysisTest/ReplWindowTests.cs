@@ -2394,6 +2394,20 @@ g()",
             );
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void QuitAndReset() {
+            var interactive = Prepare();
+            Keyboard.Type("quit()\n");
+            interactive.WaitForTextEnd("The Python REPL process has exited", ReplPrompt);
+            interactive.Reset();
+
+            interactive.WaitForTextEnd("Resetting execution engine", ReplPrompt);
+            Keyboard.Type("42\n");
+
+            interactive.WaitForTextEnd(ReplPrompt + "42", "42", ReplPrompt);
+        }
+
         private void PasteTextTest(InteractiveWindow interactive, string code, params string[] expected) {
             ((UIElement)interactive.TextView).Dispatcher.Invoke((Action)(() => {
                 Clipboard.SetText(code, TextDataFormat.Text);
