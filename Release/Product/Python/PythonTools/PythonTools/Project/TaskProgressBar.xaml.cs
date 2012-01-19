@@ -17,12 +17,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>
-    partial class TaskProgressBar {
+    partial class TaskProgressBar : DialogWindow {
         private readonly Task _task;
         private readonly DispatcherTimer _timer;
         private readonly CancellationTokenSource _cancelSource;
@@ -30,7 +31,7 @@ namespace Microsoft.PythonTools.Project {
         public TaskProgressBar(Task task, CancellationTokenSource cancelSource, string message) {
             _task = task;
             InitializeComponent();
-            _waitLabel.Content = message;
+            _waitLabel.Text = message;
             _timer = new DispatcherTimer();
             _timer.Interval = new TimeSpan(0, 0, 1);
             _timer.Start();

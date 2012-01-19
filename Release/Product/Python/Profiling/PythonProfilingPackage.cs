@@ -27,6 +27,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using System.Windows.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
@@ -135,12 +136,14 @@ namespace Microsoft.PythonTools.Profiling {
         /// the OleMenuCommandService service and the MenuCommand class.
         /// </summary>
         private void StartProfilingWizard(object sender, EventArgs e) {
-            var profiling = new LaunchProfiling();
-            var res = profiling.ShowDialog();
-            if (res != null && res.Value) {
-                var target = profiling.Target;
-
-                ProfileTarget(target);
+            var targetView = new ProfilingTargetView();
+            var dialog = new LaunchProfiling(targetView);
+            var res = dialog.ShowModal() ?? false;
+            if (res  && targetView.IsValid) {
+                var target = targetView.GetTarget();
+                if (target != null) {
+                    ProfileTarget(target);
+                }
             }
         }
 

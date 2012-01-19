@@ -40,7 +40,22 @@ namespace AnalysisTest.UI.Python {
 
         private AutomationWrapper ComparisonFileTextBox {
             get {
-                return new AutomationWrapper(FindByAutomationId("_comparisonFile"));
+                return new AutomationWrapper(FindByAutomationId("ComparisonFile"));
+            }
+        }
+
+        public string BaselineFile {
+            get {
+                return BaselineFileTextBox.GetValue();
+            }
+            set {
+                BaselineFileTextBox.SetValue(value);
+            }
+        }
+
+        private AutomationWrapper BaselineFileTextBox {
+            get {
+                return new AutomationWrapper(FindByAutomationId("BaselineFile"));
             }
         }
     }

@@ -2410,7 +2410,15 @@ def g(a, b, c):
             }
 
             public RenameVariableRequest GetRenameInfo(string originalName) {
-                return new RenameVariableRequest(_name, _preview, _searchInComments, _searchInStrings);
+                var requestView = new RenameVariableRequestView(originalName);
+                requestView.Name = _name;
+                requestView.PreviewChanges = _preview;
+                requestView.SearchInComments = _searchInComments;
+                requestView.SearchInStrings = _searchInStrings;
+                Assert.IsTrue(requestView.IsValid);
+                var request = requestView.GetRequest();
+                Assert.IsNotNull(request);
+                return request;
             }
 
             public void CannotRename(string message) {

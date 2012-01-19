@@ -135,6 +135,7 @@
     <Compile Include="Profiling\AutomationProfiling.cs" />
     <Compile Include="Profiling\AutomationReport.cs" />
     <Compile Include="Profiling\AutomationSession.cs" />
+    <Compile Include="Profiling\CompareReportsView.cs" />
     <Compile Include="Profiling\CompareReportsWindow.xaml.cs">
       <DependentUpon>CompareReportsWindow.xaml</DependentUpon>
     </Compile>
@@ -142,8 +143,8 @@
     <Compile Include="Profiling\IPythonProfileSession.cs" />
     <Compile Include="Profiling\IPythonProfiling.cs" />
     <Compile Include="Profiling\ProfilingSessionEditorFactory.cs" />
-    <Compile Include="Profiling\AvailableInterpreter.cs" />
-    <Compile Include="Profiling\AvailableProject.cs" />
+    <Compile Include="Profiling\PythonInterpreterView.cs" />
+    <Compile Include="Profiling\ProjectTargetView.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="Profiling\BaseHierarchyNode.cs" />
     <Compile Include="Profiling\LaunchProfiling.xaml.cs">
@@ -154,7 +155,9 @@
     <Compile Include="Profiling\ProfiledProcess.cs" />
     <Compile Include="Profiling\Profile.cs" />
     <Compile Include="Profiling\ProfilingTarget.cs" />
+    <Compile Include="Profiling\ProfilingTargetView.cs" />
     <Compile Include="Profiling\SessionNode.cs" />
+    <Compile Include="Profiling\StandaloneTargetView.cs" />
     <Compile Include="Profiling\TreeViewIconIndex.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="Resources.Designer.cs">

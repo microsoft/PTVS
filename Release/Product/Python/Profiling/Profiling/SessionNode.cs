@@ -17,6 +17,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Interop;
+using Microsoft.PythonTools;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -264,14 +266,15 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal ProfilingTarget OpenTargetProperties() {
-            var tempTarget = _target.Clone();
-            var dialog = new LaunchProfiling(tempTarget);
-            var res = dialog.ShowDialog();
-            if (res != null && res.Value) {
-                if (!ProfilingTarget.IsSame(tempTarget, _target)) {
-                    _target = dialog.Target;
+            var targetView = new ProfilingTargetView(_target);
+            var dialog = new LaunchProfiling(targetView);
+            var res = dialog.ShowModal() ?? false;
+            if (res && targetView.IsValid) {
+                var target = targetView.GetTarget();
+                if (target != null && !ProfilingTarget.IsSame(target, _target)) {
+                    _target = target;
                     MarkDirty();
-                    return dialog.Target;
+                    return _target;
                 }
             }
             return null;
@@ -301,7 +304,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
                 if (pguidCmdGroup == GuidList.guidPythonProfilingCmdSet) {
-                    switch(nCmdID) {
+                    switch (nCmdID) {
                         case PkgCmdIDList.cmdidOpenReport:
                             _node.OpenProfile(_itemid);
                             return VSConstants.S_OK;
@@ -314,17 +317,18 @@ namespace Microsoft.PythonTools.Profiling {
                             _node.StartProfiling();
                             return VSConstants.S_OK;
 
-                        case PkgCmdIDList.cmdidReportsCompareReports:
-                            CompareReportsWindow compare;
+                        case PkgCmdIDList.cmdidReportsCompareReports: {
+                            CompareReportsView compareView;
                             if (_node.IsReportItem(_itemid)) {
                                 var report = _node.GetReport(_itemid);
-                                compare = new CompareReportsWindow(report.Filename);
+                                compareView = new CompareReportsView(report.Filename);
                             } else {
-                                compare = new CompareReportsWindow();
+                                compareView = new CompareReportsView();
                             }
 
-                            var cmpRes = compare.ShowDialog();
-                            if (cmpRes != null && cmpRes.Value) {
+                            var dialog = new CompareReportsWindow(compareView);
+                            var res = dialog.ShowModal() ?? false;
+                            if (res && compareView.IsValid) {
                                 IVsUIShellOpenDocument sod = PythonProfilingPackage.GetGlobalService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
                                 Debug.Assert(sod != null);
                                 Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame frame = null;
@@ -333,7 +337,7 @@ namespace Microsoft.PythonTools.Profiling {
 
                                 sod.OpenSpecificEditor(
                                     (uint)(_VSRDTFLAGS.RDT_CantSave | _VSRDTFLAGS.RDT_DontAddToMRU | _VSRDTFLAGS.RDT_NonCreatable | _VSRDTFLAGS.RDT_NoLock),
-                                    compare.ComparisonUrl,
+                                    compareView.GetComparisonUri(),
                                     ref guid,
                                     null,
                                     ref guidNull,
@@ -350,17 +354,17 @@ namespace Microsoft.PythonTools.Profiling {
                                 }
                             }
                             return VSConstants.S_OK;
-
-                        case PkgCmdIDList.cmdidReportsAddReport:
-                            var open = new OpenFileDialog();
-                            open.Filter = PythonProfilingPackage.PerformanceFileFilter;
-                            open.CheckFileExists = true;
-                            var res = open.ShowDialog();
-                            if (res != null && res.Value) {
-                                _node.AddProfile(open.FileName);
+                        }
+                        case PkgCmdIDList.cmdidReportsAddReport: {
+                            var dialog = new OpenFileDialog();
+                            dialog.Filter = PythonProfilingPackage.PerformanceFileFilter;
+                            dialog.CheckFileExists = true;
+                            var res = dialog.ShowDialog() ?? false;
+                            if (res) {
+                                _node.AddProfile(dialog.FileName);
                             }
-
                             return VSConstants.S_OK;
+                        }
                     }
                 } else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                     switch((VSConstants.VSStd97CmdID)nCmdID) {

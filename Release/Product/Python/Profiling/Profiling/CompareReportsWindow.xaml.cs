@@ -13,65 +13,57 @@
  * ***************************************************************************/
 
 using System;
-using System.IO;
 using System.Windows;
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Interaction logic for CompareReportsWindow.xaml
     /// </summary>
-    public partial class CompareReportsWindow : Window {
-        public CompareReportsWindow() {
-            InitializeComponent();
-        }
+    public partial class CompareReportsWindow : DialogWindow {
+        private readonly CompareReportsView _viewModel;
+        
+        public CompareReportsWindow(CompareReportsView viewModel) {
+            _viewModel = viewModel;
 
-        public CompareReportsWindow(string baselineFile)
-            : this() {
-            _baselineFile.Text = baselineFile;
+            InitializeComponent();
+
+            DataContext = viewModel;
         }
 
         private void OkClick(object sender, RoutedEventArgs e) {
-            if (!File.Exists(_baselineFile.Text)) {
-                MessageBox.Show(String.Format("{0} does not exist, correct the filename or select Cancel.", _baselineFile.Text), "Python Tools for Visual Studio");
-            } else if (!File.Exists(_comparisonFile.Text)) {
-                MessageBox.Show(String.Format("{0} does not exist, correct the filename or select Cancel.", _comparisonFile.Text), "Python Tools for Visual Studio");
-            } else {
-                DialogResult = true;
-                Close();
-            }
+            DialogResult = true;
+            Close();
         }
 
         private void CancelClick(object sender, RoutedEventArgs e) {
+            DialogResult = false;
             Close();
         }
 
         private string OpenFileDialog() {
             OpenFileDialog dialog = new OpenFileDialog();
-            dialog.Filter = PythonProfilingPackage.PerformanceFileFilter;
+            dialog.Filter = _viewModel.PerformanceFileFilter;
             dialog.CheckFileExists = true;
-            var res = dialog.ShowDialog();
-            if (res != null && res.Value) {
+            bool res = dialog.ShowDialog() ?? false;
+            if (res) {
                 return dialog.FileName;
             }
             return null;
         }
 
         private void BaselineBrowseClick(object sender, RoutedEventArgs e) {
-            _baselineFile.Text = OpenFileDialog() ?? _baselineFile.Text;
+            var newFile = OpenFileDialog();
+            if (!string.IsNullOrEmpty(newFile)) {
+                _viewModel.BaselineFile = newFile;
+            }
         }
 
         private void CompareBrowseClick(object sender, RoutedEventArgs e) {
-            _comparisonFile.Text = OpenFileDialog() ?? _comparisonFile.Text;
-        }
-
-        public string ComparisonUrl {
-            get {
-                return String.Format(
-                    "vsp://diff/?baseline={0}&comparison={1}",
-                    Uri.EscapeDataString(_baselineFile.Text),
-                    Uri.EscapeDataString(_comparisonFile.Text)
-                );
+            var newFile = OpenFileDialog();
+            if (!string.IsNullOrEmpty(newFile)) {
+                _viewModel.ComparisonFile = newFile;
             }
         }
     }

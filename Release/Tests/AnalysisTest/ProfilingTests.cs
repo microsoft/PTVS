@@ -59,19 +59,25 @@ namespace AnalysisTest {
             var session = profiling.GetSession(1);
             Assert.AreNotEqual(session, null);
 
+            PythonPerfTarget perfTarget = null;
             try {
                 Mouse.MoveTo(perf.GetClickablePoint());
                 Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
 
                 // wait for the dialog, set some settings, save them.
-                var perfTarget = new PythonPerfTarget(app.WaitForDialog());
+                perfTarget = new PythonPerfTarget(app.WaitForDialog());
 
                 perfTarget.SelectProfileScript();
 
                 perfTarget.InterpreterComboBox.SelectItem("Python 2.6");
                 perfTarget.ScriptName = Path.GetFullPath(@"Python.VS.TestData\ProfileTest\Program.py");
 
-                perfTarget.Ok();
+                try {
+                    perfTarget.Ok();
+                } catch (ElementNotEnabledException) {
+                    Assert.Fail("Settings were invalid:\n  ScriptName = {0}\n  Interpreter = {1}",
+                        perfTarget.ScriptName, perfTarget.SelectedInterpreter);
+                }
                 app.WaitForDialogDismissed();
 
                 Mouse.MoveTo(perf.GetClickablePoint());
@@ -83,8 +89,10 @@ namespace AnalysisTest {
                 Assert.AreEqual("Python 2.6", perfTarget.SelectedInterpreter);
                 Assert.AreEqual(Path.GetFullPath(@"Python.VS.TestData\ProfileTest\Program.py"), perfTarget.ScriptName);
 
-                perfTarget.Ok();
             } finally {
+                if (perfTarget != null) {
+                    perfTarget.Cancel();
+                }
                 profiling.RemoveSession(session, true);
             }
         }
@@ -104,18 +112,24 @@ namespace AnalysisTest {
             var session = profiling.GetSession(1);
             Assert.AreNotEqual(session, null);
 
+            PythonPerfTarget perfTarget = null;
             try {
                 Mouse.MoveTo(perf.GetClickablePoint());
                 Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
 
                 // wait for the dialog, set some settings, save them.
-                var perfTarget = new PythonPerfTarget(app.WaitForDialog());
+                perfTarget = new PythonPerfTarget(app.WaitForDialog());
 
                 perfTarget.SelectProfileProject();
 
                 perfTarget.SelectedProjectComboBox.SelectItem("HelloWorld");
 
-                perfTarget.Ok();
+                try {
+                    perfTarget.Ok();
+                } catch (ElementNotEnabledException) {
+                    Assert.Fail("Settings were invalid:\n  SelectedProject = {0}",
+                        perfTarget.SelectedProjectComboBox.GetSelectedItemName());
+                }
                 app.WaitForDialogDismissed();
 
                 Mouse.MoveTo(perf.GetClickablePoint());
@@ -125,9 +139,10 @@ namespace AnalysisTest {
                 perfTarget = new PythonPerfTarget(app.WaitForDialog());
 
                 Assert.AreEqual("HelloWorld", perfTarget.SelectedProject);
-
-                perfTarget.Ok();
             } finally {
+                if (perfTarget != null) {
+                    perfTarget.Cancel();
+                }
                 profiling.RemoveSession(session, true);
             }
         }
@@ -142,12 +157,24 @@ namespace AnalysisTest {
 
             // wait for the dialog, set some settings, save them.
             var perfTarget = new PythonPerfTarget(app.WaitForDialog());
+            try {
+                perfTarget.SelectProfileProject();
 
-            perfTarget.SelectProfileProject();
+                perfTarget.SelectedProjectComboBox.SelectItem("HelloWorld");
 
-            perfTarget.SelectedProjectComboBox.SelectItem("HelloWorld");
-
-            perfTarget.Ok();
+                try {
+                    perfTarget.Ok();
+                    perfTarget = null;
+                } catch (ElementNotEnabledException) {
+                    Assert.Fail("Settings were invalid:\n  SelectedProject = {0}",
+                        perfTarget.SelectedProjectComboBox.GetSelectedItemName());
+                }
+            } finally {
+                if (perfTarget != null) {
+                    perfTarget.Cancel();
+                    perfTarget = null;
+                }
+            }
             app.WaitForDialogDismissed();
 
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
@@ -299,7 +326,17 @@ namespace AnalysisTest {
 
                 var cmpReports = new ComparePerfReports(app.WaitForDialog());
                 cmpReports.ComparisonFile = session.GetReport(2).Filename;
-                cmpReports.Ok();
+                try {
+                    cmpReports.Ok();
+                    cmpReports = null;
+                } catch (ElementNotEnabledException) {
+                    Assert.Fail("Settings were invalid:\n  BaselineFile = {0}\n  ComparisonFile = {1}", 
+                        cmpReports.BaselineFile, cmpReports.ComparisonFile);
+                } finally {
+                    if (cmpReports != null) {
+                        cmpReports.Cancel();
+                    }
+                }
 
                 app.WaitForDialogDismissed();
 
@@ -527,12 +564,14 @@ namespace AnalysisTest {
                 false
             );
 
+            PythonVisualStudioApp app = null;
+            PythonPerfTarget perfTarget = null;
             try {
                 while (profiling.IsProfiling) {
                     System.Threading.Thread.Sleep(100);
                 }
 
-                var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+                app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
                 app.OpenPythonPerformance();
                 var pyPerf = app.PythonPerformanceExplorerTreeView;
 
@@ -541,16 +580,19 @@ namespace AnalysisTest {
                 Mouse.MoveTo(item.GetClickablePoint());
                 Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
 
-                var perfTarget = new PythonPerfTarget(app.WaitForDialog());
-                Assert.AreEqual("C:\\Python26\\python.exe", perfTarget.EnteredInterpreter);
+                perfTarget = new PythonPerfTarget(app.WaitForDialog());
+                Assert.AreEqual("C:\\Python26\\python.exe", perfTarget.InterpreterPath);
                 Assert.AreEqual("", perfTarget.Arguments);
                 Assert.IsTrue(perfTarget.ScriptName.EndsWith("Program.py"));
                 Assert.IsTrue(perfTarget.ScriptName.StartsWith(perfTarget.WorkingDir));
 
-                perfTarget.Cancel();
-
-                app.WaitForDialogDismissed();
             } finally {
+                if (perfTarget != null) {
+                    perfTarget.Cancel();
+                    if (app != null) {
+                        app.WaitForDialogDismissed();
+                    }
+                }
                 profiling.RemoveSession(session, true);
             }
         }
@@ -1116,7 +1158,7 @@ namespace AnalysisTest {
                     }
                 }
                 File.Delete(csvFilename + "_FunctionSummary.csv");
-                return res;
+                return res ?? new string[0];
             }
             Assert.Fail("Unable to convert to CSV");
             return null;

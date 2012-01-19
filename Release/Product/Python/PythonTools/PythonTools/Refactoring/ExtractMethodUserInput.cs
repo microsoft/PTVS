@@ -35,17 +35,12 @@ Would you like the selection to be extended to a valid expression?",
 
 
         public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer) {
-            var dialog = new ExtractMethodDialog(previewer);
-            var shell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
-            IntPtr owner;
-            if (ErrorHandler.Succeeded(shell.GetDialogOwnerHwnd(out owner))) {
-                WindowInteropHelper helper = new WindowInteropHelper(dialog);
-                helper.Owner = owner;
-            }
+            var requestView = new ExtractMethodRequestView(previewer);
+            var dialog = new ExtractMethodDialog(requestView);
 
-            var res = dialog.ShowDialog();
-            if (res != null && res.Value) {
-                return dialog.GetExtractInfo();
+            bool res = dialog.ShowModal() ?? false;
+            if (res) {
+                return requestView.GetRequest();
             }
 
             return null;

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Linq;
 using AnalysisTest.Mocks;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -1407,7 +1408,16 @@ def f(x):
                 }
 
                 Assert.AreNotEqual(null, scope);
-                return new ExtractMethodRequest(scope, _targetName, _parameters);
+                var requestView = new ExtractMethodRequestView(previewer);
+                requestView.TargetScope = requestView.TargetScopes.Single(s => s == scope);
+                requestView.Name = _targetName;
+                foreach (var cv in requestView.ClosureVariables) {
+                    cv.IsClosure = !_parameters.Contains(cv.Name);
+                }
+                Assert.IsTrue(requestView.IsValid);
+                var request = requestView.GetRequest();
+                Assert.IsNotNull(request);
+                return request;
             }
 
             public void CannotExtract(string reason) {
