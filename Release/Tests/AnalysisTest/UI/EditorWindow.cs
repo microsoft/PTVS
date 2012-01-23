@@ -68,13 +68,28 @@ namespace AnalysisTest.UI {
         }
 
         public void StartSmartTagSessionNoSession() {
-            ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("View.ShowSmartTag"));
+            ShowSmartTag();
             System.Threading.Thread.Sleep(100);
             Assert.IsTrue(!(IntellisenseSessionStack.TopSession is ISmartTagSession));
         }
 
+        private static void ShowSmartTag() {
+            ThreadPool.QueueUserWorkItem(ShowSmartTagWorker);
+        }
+
+        private static void ShowSmartTagWorker(object dummy) {
+            for (int i = 0; i < 20; i++) {
+                try {
+                    VsIdeTestHostContext.Dte.ExecuteCommand("View.ShowSmartTag");
+                    break;
+                } catch {
+                    System.Threading.Thread.Sleep(500);
+                }
+            }
+        }
+
         public ISmartTagSession StartSmartTagSession() {
-            ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("View.ShowSmartTag"));
+            ShowSmartTag();
             return WaitForSession<ISmartTagSession>();
         }
 

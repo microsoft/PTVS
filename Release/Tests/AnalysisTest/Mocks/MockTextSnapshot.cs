@@ -15,15 +15,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using Microsoft.VisualStudio.Text;
 
 namespace AnalysisTest.Mocks {
     class MockTextSnapshot : ITextSnapshot {
-        private readonly string _text;
+        private readonly StringBuilder _text;
         private readonly MockTextBuffer _buffer;
 
         public MockTextSnapshot(MockTextBuffer buffer, string text) {
-            _text = text;
+            _text = new StringBuilder(text);
             _buffer = buffer;
         }
 
@@ -60,11 +61,11 @@ namespace AnalysisTest.Mocks {
         }
 
         private string[] GetLines() {
-            return _text.Split(new[] { "\r\n" }, StringSplitOptions.None);
+            return _text.ToString().Split(new[] { "\r\n" }, StringSplitOptions.None);
         }
 
         public ITextSnapshotLine GetLineFromLineNumber(int lineNumber) {
-            var text = _text;
+            var text = _text.ToString();
             for (int curLine = 0, curPosition = 0; ; curLine++) {
                 int endOfLine = text.IndexOf('\r', curPosition);
                 if (curLine == lineNumber) {
@@ -83,7 +84,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public ITextSnapshotLine GetLineFromPosition(int position) {
-            var text = _text;
+            var text = _text.ToString();
             int lineNo = 0;
             int curPos = 0;
             while (curPos < position) {
@@ -106,7 +107,7 @@ namespace AnalysisTest.Mocks {
         }
 
         public string GetText() {
-            return _text;
+            return _text.ToString();
         }
 
         public string GetText(int startIndex, int length) {
@@ -151,6 +152,12 @@ namespace AnalysisTest.Mocks {
 
         public char this[int position] {
             get { return _text[position]; }
+        }
+
+        public StringBuilder Text {
+            get {
+                return _text;
+            }
         }
     }
 }

@@ -695,7 +695,7 @@ class Thread(object):
                 if isinstance(res, types.GeneratorType):
                     # go to the except block
                     raise Exception('generator')
-                elif hasattr(res, 'items') and hasattr(res, 'has_key'):
+                elif isinstance(res, dict) or (hasattr(res, 'items') and hasattr(res, 'has_key')):
                     # dictionary-like object
                     enum = res.items()
                 else:

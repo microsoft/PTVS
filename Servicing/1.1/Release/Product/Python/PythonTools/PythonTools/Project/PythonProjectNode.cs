@@ -265,6 +265,8 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            DisposeInterpreter();
+
             if (_defaultInterpreter) {
                 PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;
             }
@@ -273,6 +275,14 @@ namespace Microsoft.PythonTools.Project {
                 _analyzer.Dispose();
                 _analyzer = null;
             }            
+        }
+
+        private void DisposeInterpreter() {
+            var dispInterp = _interpreter as IDisposable;
+            if (dispInterp != null) {
+                dispInterp.Dispose();
+            }
+            _interpreter = null;
         }
 
         public IPythonInterpreter GetInterpreter() {
@@ -364,7 +374,7 @@ namespace Microsoft.PythonTools.Project {
         /// Called when default interpreter is changed.  A new interpreter will be lazily created when needed.
         /// </summary>
         internal void ClearInterpreter() {
-            _interpreter = null;
+            DisposeInterpreter();
 
             var analyzer = CreateAnalyzer();
 

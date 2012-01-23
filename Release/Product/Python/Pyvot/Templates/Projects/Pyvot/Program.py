@@ -13,6 +13,6 @@ def main():
     xl.map(doubled, w.get("Values"))
     xl.map(alpha, w.get("doubled"))
 
-    print w.range("C3:E7").get()
+    print(w.range("C3:E7").get())
 
 if __name__ == '__main__': main()

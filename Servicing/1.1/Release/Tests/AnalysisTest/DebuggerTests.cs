@@ -171,7 +171,7 @@ namespace AnalysisTest {
                             break;
                         }
                     }
-                    Assert.IsTrue(foundChild);
+                    Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.Expression)));
                 }
                 Assert.IsTrue(childrenReceived.Count == 0);
             }
@@ -1507,7 +1507,7 @@ namespace AnalysisTest {
                     };
                     proc.StartListening();
 
-                    attached.WaitOne();
+                    Assert.IsTrue(attached.WaitOne(10000));
                     proc.Detach();
                 }
 
@@ -1547,7 +1547,7 @@ namespace AnalysisTest {
                 };
                 proc.StartListening();
 
-                attached.WaitOne();
+                Assert.IsTrue(attached.WaitOne(10000));
                 proc.Resume();
                 Debug.WriteLine("Waiting for exit");
                 Assert.IsTrue(proc.WaitForExit(20000));
@@ -1596,7 +1596,7 @@ namespace AnalysisTest {
                     };
                     proc.StartListening();
 
-                    attached.WaitOne();
+                    Assert.IsTrue(attached.WaitOne(10000));
                     proc.Detach();
                 }
 
@@ -1625,7 +1625,7 @@ namespace AnalysisTest {
                     };
                     proc.StartListening();
 
-                    attached.WaitOne();
+                    Assert.IsTrue(attached.WaitOne(10000));
                     proc.Detach();
 
                 }
@@ -1739,7 +1739,7 @@ int main(int argc, char* argv[]) {
             Assert.AreEqual(false, isAttached); // we shouldn't have attached yet, we should be blocked
             handle.Set();   // let the code start running
 
-            attached.WaitOne();
+            Assert.IsTrue(attached.WaitOne(20000));
             proc.Detach();
 
             p.Kill();

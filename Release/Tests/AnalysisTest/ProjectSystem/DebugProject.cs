@@ -192,7 +192,7 @@ namespace AnalysisTest.ProjectSystem {
             var modulePath = module.Path;
             Assert.IsTrue(modulePath.EndsWith("Program.py"));
             Assert.AreEqual("Program", module.Name);
-            Assert.AreEqual(module.Order, (uint)1);
+            Assert.AreNotEqual(module.Order, (uint)0);
 
             VsIdeTestHostContext.Dte.Debugger.TerminateAll();
             WaitForMode(dbgDebugMode.dbgDesignMode);
@@ -206,8 +206,8 @@ namespace AnalysisTest.ProjectSystem {
             var thread = ((Thread2)VsIdeTestHostContext.Dte.Debugger.CurrentThread);
             Assert.AreEqual("MainThread", thread.Name);
             Assert.AreEqual(0, thread.SuspendCount);
-            Assert.AreEqual("", thread.Priority);
-            Assert.AreEqual("", thread.DisplayName);
+            Assert.AreEqual("Normal", thread.Priority);
+            Assert.AreEqual("MainThread", thread.DisplayName);
             thread.DisplayName = "Hi";
             Assert.AreEqual("Hi", thread.DisplayName);
 
@@ -265,22 +265,22 @@ namespace AnalysisTest.ProjectSystem {
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestException() {
-            ExceptionTest("SimpleException.py", "Exception occurred", "", "exceptions.Exception");
+            ExceptionTest("SimpleException.py", "Exception occurred", "", "exceptions.Exception", 3);
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestException2() {
-            ExceptionTest("SimpleException2.py", "ValueError occurred", "bad value", "exceptions.ValueError");
+            ExceptionTest("SimpleException2.py", "ValueError occurred", "bad value", "exceptions.ValueError", 3);
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestExceptionUnhandled() {
-            ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "exceptions.ValueError");
+            ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "exceptions.ValueError", 2);
         }
 
-        private static void ExceptionTest(string filename, string expectedTitle, string expectedDescription, string exceptionType) {
+        private static void ExceptionTest(string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
             OpenDebuggerProject(filename);
             var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
             var exceptionSettings = debug3.ExceptionGroups.Item("Python Exceptions");
@@ -294,8 +294,6 @@ namespace AnalysisTest.ProjectSystem {
             exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
             debug3.ExceptionGroups.ResetAll();
 
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)2);
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var excepDialog = new ExceptionHelperDialog(AutomationElement.FromHandle(app.WaitForDialog()));
             AutomationWrapper.DumpElement(excepDialog.Element);
@@ -304,6 +302,8 @@ namespace AnalysisTest.ProjectSystem {
             Assert.AreEqual(excepDialog.Title, expectedTitle);
 
             excepDialog.Ok();
+
+            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)expectedLine);
 
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
 

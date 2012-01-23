@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using AnalysisTest.Mocks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Repl;
@@ -160,7 +161,12 @@ namespace AnalysisTest {
         }
 
         class MockReplWindow : IReplWindow {
-            public StringBuilder Output = new StringBuilder();
+            public MockTextView _view = new MockTextView(new MockTextBuffer(""));
+            public StringBuilder Output {
+                get{
+                    return ((MockTextSnapshot)((MockTextBuffer)_view.TextBuffer).CurrentSnapshot).Text;
+                }
+            }
 
             #region IReplWindow Members
 
@@ -172,7 +178,7 @@ namespace AnalysisTest {
             }
 
             public Microsoft.VisualStudio.Text.Editor.IWpfTextView TextView {
-                get { throw new NotImplementedException(); }
+                get { return _view; }
             }
 
             public Microsoft.VisualStudio.Text.ITextBuffer CurrentLanguageBuffer {

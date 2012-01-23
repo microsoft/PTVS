@@ -299,7 +299,7 @@ e): <no type information available>");
             }
 
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-
+            analyzer.StopMonitoringTextBuffer(item.BufferParser);
             return snapshot.AnalyzeExpression(new MockTrackingSpan(snapshot, location, location == snapshot.Length ? 0 : 1), forCompletion);
         }
 
@@ -345,12 +345,12 @@ e): <no type information available>");
             buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
-            analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
+            var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
             analyzer.WaitForCompleteAnalysis(x => true);
             while (((IPythonProjectEntry)buffer.GetAnalysis()).Analysis == null) {
                 System.Threading.Thread.Sleep(500);
             }
-
+            analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
             var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
             return context;
         }

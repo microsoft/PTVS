@@ -39,11 +39,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private DomainUnloader _unloader;
         private IInterpreterState _state;
         private PythonTypeDatabase _typeDb;
+#if DEBUG
+        private int _id;
+        private static int _interpreterCount;
+#endif
 
         public IronPythonInterpreter(IronPythonInterpreterFactory factory) {
+#if DEBUG
+            _id = Interlocked.Increment(ref _interpreterCount);
+            Debug.WriteLine(String.Format("IronPython Interpreter Created {0}", _id));
+            Debug.WriteLine(new StackTrace(true).ToString());
+#endif
             _factory = factory;
 
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
+            AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
 
             InitializeRemoteDomain();
 
@@ -87,11 +96,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return domain;
         }
 
-        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            if (new AssemblyName(args.Name).FullName == typeof(RemoteInterpreter).Assembly.FullName) {
-                return typeof(RemoteInterpreter).Assembly;
+        class AssemblyResolver {
+            internal static AssemblyResolver Instance = new AssemblyResolver();
+
+            public Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+                if (new AssemblyName(args.Name).FullName == typeof(RemoteInterpreter).Assembly.FullName) {
+                    return typeof(RemoteInterpreter).Assembly;
+                }
+                return null;
             }
-            return null;
         }
 
         public RemoteInterpreter Remote {
@@ -476,11 +489,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IDisposable Members
 
         public void Dispose() {
-            AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+            AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
             _unloader.Dispose();
         }
 
         #endregion
+
+#if DEBUG
+        ~IronPythonInterpreter() {
+            Debug.WriteLine(String.Format("IronPythonInterpreter leaked {0}", _id));            
+        }
+#endif
 
         #region IPythonInterpreter2 Members
 

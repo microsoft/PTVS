@@ -476,6 +476,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto gilRelease = (PyGILState_Release*)GetProcAddress(module, "PyGILState_Release");
         auto threadHead = (PyInterpreterState_ThreadHead*)GetProcAddress(module, "PyInterpreterState_ThreadHead");
         auto initThreads = (PyEval_Lock*)GetProcAddress(module, "PyEval_InitThreads");
+        auto acquireLock = (PyEval_Lock*)GetProcAddress(module, "PyEval_AcquireLock");
         auto releaseLock = (PyEval_Lock*)GetProcAddress(module, "PyEval_ReleaseLock");
         auto threadsInited = (PyEval_ThreadsInitialized*)GetProcAddress(module, "PyEval_ThreadsInitialized");
         auto threadNext = (PyThreadState_Next*)GetProcAddress(module, "PyThreadState_Next");
@@ -516,7 +517,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             pyDictNew==nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
-            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr) {
+            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);
                 return false;
@@ -644,6 +645,14 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         }else{
             SetEvent(connInfo.Buffer->AttachDoneEvent);
         }
+
+        // We need to make sure that Py_Initialize has finished executing.  There's a race condition where calling PyGILState_Ensure
+        // while calling Py_Initialize can end up AVing.  This is because the last thing Py_Initialize does is set the autoInterpreterTls
+        // (the interpreter used for the GIL).  But PyGILState_Ensure expects this to be set.  Therefore we can be in a
+        // state where we have partially initialized the interpreter and it's not safe yet to use the ensure API.  Therefore we 
+        // acquire and release the GIL here which will ensure that initialization has to be complete.
+        acquireLock();
+        releaseLock();
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // go ahead and bring in the debugger module and initialize all threads in the process...
