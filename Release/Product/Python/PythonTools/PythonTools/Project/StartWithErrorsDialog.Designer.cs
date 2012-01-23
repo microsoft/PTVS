@@ -37,11 +37,11 @@
             // 
             this._yesButton.AutoSize = true;
             this._yesButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._yesButton.Location = new System.Drawing.Point(193, 50);
+            this._yesButton.Location = new System.Drawing.Point(198, 55);
             this._yesButton.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._yesButton.MinimumSize = new System.Drawing.Size(86, 24);
             this._yesButton.Name = "_yesButton";
-            this._yesButton.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._yesButton.Size = new System.Drawing.Size(59, 29);
+            this._yesButton.Size = new System.Drawing.Size(86, 24);
             this._yesButton.TabIndex = 1;
             this._yesButton.Text = "&Yes";
             this._yesButton.UseVisualStyleBackColor = true;
@@ -52,11 +52,11 @@
             this._noButton.AutoSize = true;
             this._noButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._noButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this._noButton.Location = new System.Drawing.Point(264, 50);
+            this._noButton.Location = new System.Drawing.Point(296, 55);
             this._noButton.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._noButton.MinimumSize = new System.Drawing.Size(86, 24);
             this._noButton.Name = "_noButton";
-            this._noButton.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._noButton.Size = new System.Drawing.Size(55, 29);
+            this._noButton.Size = new System.Drawing.Size(86, 24);
             this._noButton.TabIndex = 2;
             this._noButton.Text = "&No";
             this._noButton.UseVisualStyleBackColor = true;
@@ -106,7 +106,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(325, 105);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(388, 105);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // _buildErrorsText
@@ -116,9 +116,10 @@
             this._buildErrorsText.Location = new System.Drawing.Point(86, 3);
             this._buildErrorsText.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._buildErrorsText.Name = "_buildErrorsText";
-            this._buildErrorsText.Size = new System.Drawing.Size(233, 41);
+            this._buildErrorsText.Size = new System.Drawing.Size(296, 46);
             this._buildErrorsText.TabIndex = 5;
             this._buildErrorsText.Text = "One or more files in your project contain errors. Do you want to launch anyway?";
+            this._buildErrorsText.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // StartWithErrorsDialog
             // 
@@ -126,7 +127,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this._noButton;
-            this.ClientSize = new System.Drawing.Size(325, 105);
+            this.ClientSize = new System.Drawing.Size(388, 105);
             this.Controls.Add(this.tableLayoutPanel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);

@@ -41,7 +41,7 @@
             this._textBox.Name = "_textBox";
             this._textBox.ReadOnly = true;
             this._textBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this._textBox.Size = new System.Drawing.Size(812, 459);
+            this._textBox.Size = new System.Drawing.Size(812, 464);
             this._textBox.TabIndex = 0;
             // 
             // _ok
@@ -50,11 +50,11 @@
             this._ok.AutoSize = true;
             this._ok.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._ok.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this._ok.Location = new System.Drawing.Point(762, 468);
+            this._ok.Location = new System.Drawing.Point(732, 473);
             this._ok.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._ok.MinimumSize = new System.Drawing.Size(86, 24);
             this._ok.Name = "_ok";
-            this._ok.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._ok.Size = new System.Drawing.Size(56, 29);
+            this._ok.Size = new System.Drawing.Size(86, 24);
             this._ok.TabIndex = 1;
             this._ok.Text = "&OK";
             this._ok.UseVisualStyleBackColor = true;
@@ -86,11 +86,11 @@
             this._copy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this._copy.AutoSize = true;
             this._copy.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._copy.Location = new System.Drawing.Point(685, 468);
+            this._copy.Location = new System.Drawing.Point(634, 473);
             this._copy.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._copy.MinimumSize = new System.Drawing.Size(86, 24);
             this._copy.Name = "_copy";
-            this._copy.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._copy.Size = new System.Drawing.Size(65, 29);
+            this._copy.Size = new System.Drawing.Size(86, 24);
             this._copy.TabIndex = 1;
             this._copy.Text = "&Copy";
             this._copy.UseVisualStyleBackColor = true;
