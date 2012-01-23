@@ -325,7 +325,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (!_connected) {
                         AppendPreConnectionOutput(e);
                     } else {
-                        Window.WriteOutput(e.Data + Environment.NewLine);
+                        Window.WriteOutput(FixNewLines(e.Data) + Environment.NewLine);
                     }
                 }
             }
@@ -336,7 +336,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 lock (_preConnectionOutput) {
-                    _preConnectionOutput.Append(e.Data + Environment.NewLine);
+                    _preConnectionOutput.Append(FixNewLines(e.Data) + Environment.NewLine);
                 }
             }
 

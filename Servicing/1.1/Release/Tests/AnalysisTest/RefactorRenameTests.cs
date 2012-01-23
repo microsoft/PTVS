@@ -1950,7 +1950,7 @@ with foo as foo:
     print(foo)
 ",
 @"
-with foo as abc:
+with abc as abc:
     print(abc)
 "                    )
                 }

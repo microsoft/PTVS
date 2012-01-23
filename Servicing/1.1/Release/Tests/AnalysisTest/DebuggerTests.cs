@@ -1058,7 +1058,7 @@ namespace AnalysisTest {
 
             process.Start();
 
-            process.WaitForExit();
+            process.WaitForExit(20000);
 
             Assert.AreEqual(breakpointHit, lineHits.Length);
             if (checkBound) {
@@ -1638,6 +1638,12 @@ namespace AnalysisTest {
         public void AttachTimeout() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
 
+                string cast = "(PyCodeObject*)";
+                if (Version.Version >= PythonLanguageVersion.V32) {
+                    // 3.2 changed the API here...
+                    cast = "";
+                }
+
                 var hostCode = @"#include <python.h>
 #include <windows.h>
 
@@ -1649,7 +1655,7 @@ int main(int argc, char* argv[]) {
 	auto loc = PyDict_New ();
 	auto glb = PyDict_New ();
 
-	auto src = (PyCodeObject*)Py_CompileString (""while 1:\n    pass"", ""<stdin>"", Py_file_input);
+	auto src = " + cast + @"Py_CompileString (""while 1:\n    pass"", ""<stdin>"", Py_file_input);
 
     if(src == nullptr) {
 		printf(""Failed to compile code\r\n"");

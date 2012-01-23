@@ -589,7 +589,7 @@ class Thread(object):
     def block(self, block_lambda):
         """blocks the current thread until the debugger resumes it"""
         assert not self._is_blocked
-        assert self.id == thread.get_ident(), 'wrong thread identity' + str(self.id) + ' ' + str(thread.get_ident())    # we should only ever block ourselves
+        #assert self.id == thread.get_ident(), 'wrong thread identity' + str(self.id) + ' ' + str(thread.get_ident())    # we should only ever block ourselves
         
         # send thread frames before we block
         self.enum_thread_frames_locally()
