@@ -103,6 +103,45 @@ namespace AnalysisTest.Mocks {
             Assert.IsFalse(completionList.Contains("def"));
         }
 
+         [TestMethod]
+        public void Scenario_Exceptions() {
+            foreach (string code in new[] { 
+                @"raise None", 
+                @"try:
+    pass
+except None"}) {
+                var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.DisplayText).ToArray();
+
+                Assert.IsTrue(completionList.Contains("Exception"));
+                Assert.IsTrue(completionList.Contains("KeyboardInterrupt"));
+                Assert.IsTrue(completionList.Contains("GeneratorExit"));
+                Assert.IsTrue(completionList.Contains("StopIteration"));
+                Assert.IsTrue(completionList.Contains("SystemExit"));
+
+                Assert.IsFalse(completionList.Contains("Warning"));
+                Assert.IsFalse(completionList.Contains("str"));
+                Assert.IsFalse(completionList.Contains("int"));
+            }
+
+            foreach (string code in new[] { 
+                @"raise (None)", 
+                @"try:
+    pass
+except (None)"}) {
+                var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.DisplayText).ToArray();
+
+                Assert.IsTrue(completionList.Contains("Exception"));
+                Assert.IsTrue(completionList.Contains("KeyboardInterrupt"));
+                Assert.IsTrue(completionList.Contains("GeneratorExit"));
+                Assert.IsTrue(completionList.Contains("StopIteration"));
+                Assert.IsTrue(completionList.Contains("SystemExit"));
+
+                Assert.IsTrue(completionList.Contains("Warning"));
+                Assert.IsTrue(completionList.Contains("str"));
+                Assert.IsTrue(completionList.Contains("int"));
+            }
+        }
+
         [TestMethod]
         public void Scenario_MemberCompletion() {
             // TODO: Negative tests

@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Refactoring {
             // Access properties rather than underlying variables to ensure dependent properties
             // are also updated.
             Name = _originalName;
+            _previewChanges = true;
         }
 
         /// <summary>

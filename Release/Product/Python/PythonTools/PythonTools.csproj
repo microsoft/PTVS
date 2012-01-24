@@ -210,6 +210,7 @@
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\ExceptionCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\IOrderableContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
