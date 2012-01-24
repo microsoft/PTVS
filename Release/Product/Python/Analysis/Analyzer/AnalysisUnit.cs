@@ -221,14 +221,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             // TODO: __new__ in class should assign returnValue
             ddg.SetCurrentUnit(_outerUnit);
 
-            ClassScope curClass = null;
-            for (int i = Scopes.Length - 1; i >= 0; i--) {
-                if (Scopes[i] is ClassScope) {
-                    curClass = (ClassScope)Scopes[i];
-                    break;
-                }
-            }
-
+            ClassScope curClass = Scopes[Scopes.Length - 1] as ClassScope;
             if (curClass != null) {
                 // wire up information about the class
                 // TODO: Should follow MRO

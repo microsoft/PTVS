@@ -376,15 +376,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 // self is always an instance of the class
                 // TODO: Check for __new__ (auto static) and
                 // @staticmethod and @classmethod and @property
-                InstanceInfo selfInst = null;
-                for (int i = Scopes.Length - 1; i >= 0; i--) {
-                    if (Scopes[i] is ClassScope) {
-                        selfInst = ((ClassScope)Scopes[i]).Class.Instance;
-                        break;
+                if (newScope.ParameterTypes.Length > 0) {
+                    var classScope = Scopes[Scopes.Length - 1] as ClassScope;
+                    if (classScope != null) {
+                        newScope.AddParameterType(_unit, classScope.Class.Instance, 0);
                     }
-                }
-                if (selfInst != null && newScope.ParameterTypes.Length > 0) {
-                    newScope.AddParameterType(_unit, selfInst.SelfSet, 0);
                 }
             }
         }

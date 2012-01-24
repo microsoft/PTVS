@@ -3228,6 +3228,25 @@ class D(object):
             ProcessText("from #   blah");
         }
 
+        [TestMethod]
+        public void TestSelfNestedMethod() {
+            // http://pytools.codeplex.com/workitem/648
+            var code = @"class MyClass:
+    def func1(self):
+        def func2(a, b):
+            return a
+
+        return func2('abc', 123)
+
+x = MyClass().func1()
+";
+
+            var entry = ProcessText(code);
+
+            var values = entry.GetValuesByIndex("x", code.IndexOf("x = ")).Select(x => x.PythonType.Name);
+            AssertContainsExactly(values, "str");
+        }
+
         protected IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
             Dictionary<LocationInfo, IAnalysisVariable> res = new Dictionary<LocationInfo,IAnalysisVariable>();
             foreach (var v in vars) {
