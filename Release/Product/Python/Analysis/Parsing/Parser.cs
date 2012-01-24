@@ -4443,9 +4443,15 @@ namespace Microsoft.PythonTools.Parsing {
 
             FetchLookahead();
 
+            string whitespace = _verbatim ? "" : null;
             while (PeekToken().Kind == TokenKind.NLToken) {
                 NextToken();
+
+                if (whitespace != null) {
+                    whitespace += _tokenWhiteSpace + _token.Token.VerbatimImage;
+                }
             }
+            _lookaheadWhiteSpace = whitespace + _lookaheadWhiteSpace;
         }
 
         private int GetEnd() {

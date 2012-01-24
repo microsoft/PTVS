@@ -57,7 +57,7 @@ foreach($versionedFile in $versionFiles) {
 
 
 $prevOutDir = $outDir
-foreach ($targetVs in ("11.0", "10.0")) {
+foreach ($targetVs in ("10.0")) {
     $asmverfile = dir ..\..\..\Build\AssemblyVersion.cs
 
 

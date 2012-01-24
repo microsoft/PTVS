@@ -499,6 +499,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override bool Walk(WithStatement node) {
             UpdateChildRanges(node);
+            foreach (var item in node.Items) {
+                var assignTo = item.Variable as NameExpression;
+                if (assignTo != null) {
+                    var variable = CreateVariable(assignTo);
+                    _scopes[_scopes.Count - 1].Variables[assignTo.Name] = variable;
+                }
+            }
             return base.Walk(node);
         }
 

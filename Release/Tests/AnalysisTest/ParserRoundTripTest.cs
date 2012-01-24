@@ -990,7 +990,6 @@ def f(): pass");
         [TestMethod]
         public void StdLibTest() {
             var versions = new[] { 
-                new { Path = "C:\\Python24\\Lib", Version = PythonLanguageVersion.V24 },
                 new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
                 new { Path = "C:\\Python26\\Lib", Version = PythonLanguageVersion.V26 },
                 new { Path = "C:\\Python27\\Lib", Version = PythonLanguageVersion.V27 },

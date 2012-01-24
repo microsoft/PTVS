@@ -358,15 +358,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _currentScope.ContainsExceptionHandling = true;
 
             for (int i = 0; i < node.Items.Count; i++) {
-                node.Items[i].ContextManager.Walk(this);
-
                 if (node.Items[i].Variable != null) {
                     node.Items[i].Variable.Walk(_define);
                 }
-
-                node.Body.Walk(this);
             }
-            return false;
+            return true;
         }
 
         // FromImportStatement

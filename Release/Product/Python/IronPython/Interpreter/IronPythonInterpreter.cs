@@ -359,7 +359,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonModule ImportModule(string name) {
             if (!String.IsNullOrWhiteSpace(name)) {
-                if (_typeDb != null) {
+                // clr module needs to be an IronPythonModule, not a CPythonModule, so we can track when it's imported
+                // and make clr completions available.
+                if (_typeDb != null && name != "clr") { 
                     var res = _typeDb.GetModule(name);
                     if (res != null) {
                         return res;

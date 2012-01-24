@@ -278,6 +278,7 @@ namespace Microsoft.PythonTools.Parsing {
                     break;
 
                 case TokenKind.NewLine:
+                case TokenKind.NLToken:
                     result.Category = TokenCategory.WhiteSpace;
                     break;
 

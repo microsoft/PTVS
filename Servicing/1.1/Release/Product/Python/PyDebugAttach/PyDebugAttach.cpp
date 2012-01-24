@@ -646,14 +646,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             SetEvent(connInfo.Buffer->AttachDoneEvent);
         }
 
-        // We need to make sure that Py_Initialize has finished executing.  There's a race condition where calling PyGILState_Ensure
-        // while calling Py_Initialize can end up AVing.  This is because the last thing Py_Initialize does is set the autoInterpreterTls
-        // (the interpreter used for the GIL).  But PyGILState_Ensure expects this to be set.  Therefore we can be in a
-        // state where we have partially initialized the interpreter and it's not safe yet to use the ensure API.  Therefore we 
-        // acquire and release the GIL here which will ensure that initialization has to be complete.
-        acquireLock();
-        releaseLock();
-
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // go ahead and bring in the debugger module and initialize all threads in the process...
         GilHolder gilLock(gilEnsure, gilRelease);   // acquire and hold the GIL until done...

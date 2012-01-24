@@ -276,12 +276,12 @@ namespace AnalysisTest {
 
             var session = profiling.LaunchProject(project, false);
             try {
-                while (profiling.IsProfiling) {
+                for (int i = 0; i < 100 && profiling.IsProfiling; i++) {
                     System.Threading.Thread.Sleep(100);
                 }
 
                 session.Launch(false);
-                while (profiling.IsProfiling) {
+                for (int i = 0; i < 100 && profiling.IsProfiling; i++) {
                     System.Threading.Thread.Sleep(100);
                 }
 
