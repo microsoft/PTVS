@@ -16,12 +16,13 @@ using System;
 using System.Threading;
 using System.Windows;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.PythonTools.Navigation {
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>
-    partial class WaitForCompleteAnalysisDialog {
+    partial class WaitForCompleteAnalysisDialog : DialogWindow {
         private ProjectAnalyzer _analyzer;
 
         public WaitForCompleteAnalysisDialog(ProjectAnalyzer analyzer) {

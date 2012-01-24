@@ -85,9 +85,15 @@ namespace AnalysisTest.UI {
             return Element.FindFirst(
                 TreeScope.Descendants,
                 new AndCondition(
-                    new PropertyCondition(
-                        AutomationElement.NameProperty,
-                        text
+                    new OrCondition(
+                        new PropertyCondition(
+                            AutomationElement.AutomationIdProperty,
+                            text
+                        ),
+                        new PropertyCondition(
+                            AutomationElement.NameProperty,
+                            text
+                        )
                     ),
                     new PropertyCondition(
                         AutomationElement.ClassNameProperty,

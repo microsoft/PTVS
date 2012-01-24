@@ -37,5 +37,10 @@ namespace Microsoft.PythonTools.Commands {
         private void _ok_Click(object sender, EventArgs e) {
             Close();
         }
+
+        private void _copy_Click(object sender, EventArgs e) {
+            _textBox.SelectAll();
+            Clipboard.SetText(_textBox.SelectedText);
+        }
     }
 }

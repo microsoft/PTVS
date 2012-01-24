@@ -626,14 +626,8 @@ namespace Microsoft.PythonTools.Language {
                         var analyzer = _textView.GetAnalyzer();
                         if (analyzer.IsAnalyzing) {
                             var dialog = new WaitForCompleteAnalysisDialog(analyzer);
-                            var shell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
-                            IntPtr owner;
-                            if (ErrorHandler.Succeeded(shell.GetDialogOwnerHwnd(out owner))) {
-                                WindowInteropHelper helper = new WindowInteropHelper(dialog);
-                                helper.Owner = owner;
-                            }
 
-                            var res = dialog.ShowDialog();
+                            var res = dialog.ShowModal();
                             if (res != true) {
                                 // user cancelled dialog before analysis completed...
                                 break;

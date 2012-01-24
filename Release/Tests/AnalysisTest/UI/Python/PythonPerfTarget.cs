@@ -25,20 +25,20 @@ namespace AnalysisTest.UI.Python {
         /// Checks the Profile Project radio box
         /// </summary>
         public void SelectProfileProject() {
-            Select(FindByAutomationId("_profileProject"));
+            Select(FindByAutomationId("ProfileProject"));
         }
 
         /// <summary>
         /// Checks the Profile Script radio box
         /// </summary>
         public void SelectProfileScript() {
-            var elem = FindByAutomationId("_profileScript");
+            var elem = FindByAutomationId("ProfileScript");
             var pats = elem.GetSupportedPatterns();
             string[] names = new string[pats.Length];
             for (int i = 0; i < pats.Length; i++) {
                 names[i] = pats[i].ProgrammaticName;
             }
-            Select(FindByAutomationId("_profileScript"));
+            Select(FindByAutomationId("ProfileScript"));
         }
 
         public string SelectedProject {
@@ -49,7 +49,7 @@ namespace AnalysisTest.UI.Python {
 
         public ComboBox SelectedProjectComboBox {
             get {
-                return new ComboBox(FindByAutomationId("_project"));
+                return new ComboBox(FindByAutomationId("Project"));
             }
         }
 
@@ -67,20 +67,27 @@ namespace AnalysisTest.UI.Python {
         /// </summary>
         public ComboBox InterpreterComboBox {
             get {
-                return new ComboBox(FindByAutomationId("_pythonInterpreter"));
+                return new ComboBox(FindByAutomationId("Standalone.Interpreter"));
             }
         }
 
         /// <summary>
         /// Returns the string the user entered into the interpreter combo box.
         /// </summary>
-        public string EnteredInterpreter {
+        public string InterpreterPath {
             get {
-                return InterpreterComboBox.GetEnteredText();
+                return InterpreterPathTextBox.GetValue();
             }
         }
 
-        public string WorkingDir {
+        private AutomationWrapper InterpreterPathTextBox {
+            get {
+                return new AutomationWrapper(FindByAutomationId("Standalone.InterpreterPath"));
+            }
+        }
+
+        public string WorkingDir
+        {
             get {
                 return WorkingDirectoryTextBox.GetValue();
             }
@@ -91,7 +98,7 @@ namespace AnalysisTest.UI.Python {
 
         private AutomationWrapper WorkingDirectoryTextBox {
             get {
-                return new AutomationWrapper(FindByAutomationId("_workingDir"));
+                return new AutomationWrapper(FindByAutomationId("Standalone.WorkingDirectory"));
             }
         }
 
@@ -106,7 +113,7 @@ namespace AnalysisTest.UI.Python {
 
         private AutomationWrapper ScriptNameTextBox {
             get {
-                return new AutomationWrapper(FindByAutomationId("_scriptName"));
+                return new AutomationWrapper(FindByAutomationId("Standalone.ScriptPath"));
             }
         }
 
@@ -121,7 +128,7 @@ namespace AnalysisTest.UI.Python {
 
         private AutomationWrapper ArgumentsTextBox {
             get {
-                return new AutomationWrapper(FindByAutomationId("_cmdLineArgs"));
+                return new AutomationWrapper(FindByAutomationId("Standalone.Arguments"));
             }
         }
 

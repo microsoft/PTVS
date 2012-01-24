@@ -31,17 +31,11 @@ namespace Microsoft.PythonTools.Refactoring {
         private static readonly Guid RefactorGuid = new Guid(RefactorGuidStr);
 
         public RenameVariableRequest GetRenameInfo(string originalName) {
-            var dialog = new RenameVariableDialog(originalName);
-            var shell = (IVsUIShell)PythonToolsPackage.GetGlobalService(typeof(SVsUIShell));
-            IntPtr owner;
-            if (ErrorHandler.Succeeded(shell.GetDialogOwnerHwnd(out owner))) {
-                WindowInteropHelper helper = new WindowInteropHelper(dialog);
-                helper.Owner = owner;
-            }
-
-            var res = dialog.ShowDialog();
-            if (res != null && res.Value) {
-                return dialog.GetRenameVariableRequest();
+            var requestView = new RenameVariableRequestView(originalName);
+            var dialog = new RenameVariableDialog(requestView);
+            bool res = dialog.ShowModal() ?? false;
+            if (res) {
+                return requestView.GetRequest();
             }
 
             return null;

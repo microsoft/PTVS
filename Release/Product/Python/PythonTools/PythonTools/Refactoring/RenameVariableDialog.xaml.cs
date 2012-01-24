@@ -14,63 +14,40 @@
 
 using System.Windows;
 using System.Windows.Controls;
+using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Interaction logic for RenameVariableDialog.xaml
     /// </summary>
-    partial class RenameVariableDialog {
-        private readonly string _originalName;
+    partial class RenameVariableDialog : DialogWindow {
+        private bool _firstActivation;
 
-        public RenameVariableDialog(string originalName) {
+        public RenameVariableDialog(RenameVariableRequestView viewModel) {
             InitializeComponent();
-            _newName.Text = originalName;
-            _originalName = originalName;
-            _newName.Focus();
-            _newName.SelectAll();
-            _ok.IsEnabled = false;
+
+            DataContext = viewModel;
+
+            _firstActivation = true;
+        }
+
+        protected override void OnActivated(System.EventArgs e) {
+            base.OnActivated(e);
+            if (_firstActivation) {
+                _newName.Focus();
+                _newName.SelectAll();
+                _firstActivation = false;
+            }
         }
 
         private void OkClick(object sender, RoutedEventArgs e) {
             this.DialogResult = true;
-            CloseTooltip();
             Close();
         }
 
         private void CancelClick(object sender, RoutedEventArgs e) {
             this.DialogResult = false;
-            CloseTooltip();
             Close();
-        }
-
-        private void CloseTooltip() {
-            var toolTip = (ToolTip)_newName.ToolTip;
-            toolTip.IsOpen = false;
-        }
-
-        internal RenameVariableRequest GetRenameVariableRequest() {
-            return new RenameVariableRequest(
-                _newName.Text,
-                _previewChanges.IsChecked == true,
-                _searchInComments.IsChecked == true,
-                _searchInStrings.IsChecked == true
-            );
-        }
-
-        private void _newName_TextChanged(object sender, TextChangedEventArgs e) {
-            if (_ok != null) {
-                if (!ExtractMethodDialog._validNameRegex.IsMatch(_newName.Text)) {
-                    var toolTip = (ToolTip)_newName.ToolTip;
-                    toolTip.Visibility = System.Windows.Visibility.Visible;
-                    toolTip.IsOpen = true;
-                    toolTip.IsEnabled = true;
-                    toolTip.PlacementTarget = _newName;
-                    _ok.IsEnabled = false;
-                } else {
-                    CloseTooltip();
-                    _ok.IsEnabled = _originalName != _newName.Text;
-                }
-            }
         }
     }
 }

@@ -113,11 +113,13 @@ namespace Microsoft.PythonTools.Project {
             info.LauncherOptions.LoadSettings();
 
             if (_curLauncher != null) {
-                this.Controls.Remove(_curLauncher);
+                tableLayout.Controls.Remove(_curLauncher);
             }
 
-            Controls.Add(newLauncher);
-            newLauncher.Location = new Point(11, 48);
+            tableLayout.Controls.Add(newLauncher);
+            tableLayout.SetCellPosition(newLauncher, new TableLayoutPanelCellPosition(0, 1));
+            tableLayout.SetColumnSpan(newLauncher, 2);
+            newLauncher.Dock = DockStyle.Fill;
             _curLauncher = newLauncher;
             _debuggerToolTip.SetToolTip(_launchModeCombo, info.Launcher.Description);
         }

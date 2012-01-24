@@ -250,7 +250,9 @@
     <Compile Include="PythonTools\Project\UIThreadSynchronizer.cs" />
     <Compile Include="PythonTools\Project\UpdateSolutionEventsListener.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
+    <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
+    <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\ImpersonationHelper.cs" />
