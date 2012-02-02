@@ -146,22 +146,32 @@ public:
     typedef T&        reference;
     typedef const T&  const_reference;
     typedef T         value_type;
-    template <class U> struct rebind { typedef allocator<U>
+    template <class U> struct rebind { typedef PrivateHeapAllocator<U>
     other; };
 
-    PrivateHeapAllocator() {
-    }
+	inline explicit PrivateHeapAllocator() {}
+    inline ~PrivateHeapAllocator() {}
+    inline PrivateHeapAllocator(PrivateHeapAllocator const&) {}
+    template<typename U>
+    inline  PrivateHeapAllocator(PrivateHeapAllocator<U> const&) {}
 
     pointer allocate(size_type size, allocator<void>::const_pointer hint = 0) {
-        HeapAlloc(_heap.heap, 0, size);
+        return static_cast<pointer>(HeapAlloc(_heap.heap, 0, size));
     }
 
     void deallocate(pointer p, size_type n) {
         HeapFree(_heap.heap, 0, p);
     }
 
+	//    size
+	#undef max
+	inline size_type max_size() const { 
+		return std::numeric_limits<size_type>::max() / sizeof(T);
+	}
+    inline void construct(pointer p, const T& t) { new(p) T(t); }
+    inline void destroy(pointer p) { p->~T(); }
 private:
-    static PrivateHeap _heap;   
+    PrivateHeap _heap;   
 };
 
 typedef hash_map<DWORD, HANDLE, stdext::hash_compare<DWORD, std::less<DWORD> >, PrivateHeapAllocator<pair<DWORD, HANDLE> > > MyHashMap;

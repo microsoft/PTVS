@@ -24,6 +24,13 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>VsPyProf</RootNamespace>
   </PropertyGroup>
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+      <PropertyGroup>
+        <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
+      </PropertyGroup>
+    </When>
+  </Choose>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -38,6 +45,34 @@
     <CharacterSet>Unicode</CharacterSet>
     <OutDir>$(BuildRoot)\Binaries\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'and '$(VisualStudioVersion)' == ''">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64' and '$(VisualStudioVersion)' == ''">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'and '$(VisualStudioVersion)' == ''">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32' and '$(VisualStudioVersion)' == ''">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+      <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+        <PlatformToolset>v110</PlatformToolset>
+      </PropertyGroup>
+    </When>
+  </Choose>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>

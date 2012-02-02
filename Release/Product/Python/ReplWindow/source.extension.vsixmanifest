@@ -7,7 +7,7 @@
     <Description xml:space="preserve">Visual Studio Interactive Window</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
-    <SystemComponent>true</SystemComponent>
+    <SystemComponent>false</SystemComponent>
     <SupportedProducts>
       <VisualStudio Version="10.0">
         <Edition>Ultimate</Edition>
@@ -26,7 +26,7 @@
         <Edition>VSTD</Edition>
       </VisualStudio>
     </SupportedProducts>
-    <SupportedFrameworkRuntimeEdition MinVersion="4.0" MaxVersion="4.0" />
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
   </Identifier>
   <References>
     <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">

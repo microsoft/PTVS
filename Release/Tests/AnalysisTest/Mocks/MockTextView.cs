@@ -221,7 +221,10 @@ namespace AnalysisTest.Mocks {
             }
         }
 
-        public event EventHandler<BackgroundBrushChangedEventArgs> BackgroundBrushChanged;
+        public event EventHandler<BackgroundBrushChangedEventArgs> BackgroundBrushChanged {
+			add { }
+			remove { }
+        }
 
         public Microsoft.VisualStudio.Text.Formatting.IFormattedLineSource FormattedLineSource {
             get { throw new NotImplementedException(); }
@@ -260,7 +263,10 @@ namespace AnalysisTest.Mocks {
             }
         }
 
-        public event EventHandler<ZoomLevelChangedEventArgs> ZoomLevelChanged;
+        public event EventHandler<ZoomLevelChangedEventArgs> ZoomLevelChanged {
+			add { }
+			remove { }
+        }
 
         #endregion
     }

@@ -105,7 +105,8 @@ namespace Microsoft.PythonTools.Intellisense {
             newSession.Start();
 
             SmartTagSource.AbortedAugmentInfo abortInfo;
-            if (newSession.Properties.TryGetProperty<SmartTagSource.AbortedAugmentInfo>(SmartTagSource.AbortedAugment, out abortInfo) && abortInfo != _abortedAugment) {
+            if (!newSession.IsDismissed &&
+                newSession.Properties.TryGetProperty<SmartTagSource.AbortedAugmentInfo>(SmartTagSource.AbortedAugment, out abortInfo) && abortInfo != _abortedAugment) {
                 // we didn't process all of the invalid imports
                 _sessionIsInvalid = true;
                 _abortedAugment = abortInfo;

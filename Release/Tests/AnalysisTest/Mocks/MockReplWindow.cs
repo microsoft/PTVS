@@ -105,7 +105,10 @@ namespace AnalysisTest.Mocks {
             return null;
         }
 
-        public event Action ReadyForInput;
+        public event Action ReadyForInput {
+			add { }
+			remove { }
+        }
 
         #endregion
     }

@@ -20,8 +20,6 @@
     <!--This header contains the command ids for the menus provided by the shell. -->
     <Extern href="vsshlids.h"/>
 
-    <!--Definition of some VSCT specific constants. In this sample we use it for the IDs inside the guidOfficeIcon group. -->
-    <Extern href="msobtnid.h"/>
 
     <KeyBindings>
         <KeyBinding guid="guidReplWindowCmdSet" id="cmdidSmartExecute" key1="VK_RETURN" mod1="C" editor="guidReplWindow" />

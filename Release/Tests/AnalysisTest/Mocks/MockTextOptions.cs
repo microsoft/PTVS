@@ -63,7 +63,10 @@ namespace AnalysisTest.Mocks {
             throw new NotImplementedException();
         }
 
-        public event EventHandler<EditorOptionChangedEventArgs> OptionChanged;
+        public event EventHandler<EditorOptionChangedEventArgs> OptionChanged {
+			add { }
+			remove { }
+        }
 
         public IEditorOptions Parent {
             get {
