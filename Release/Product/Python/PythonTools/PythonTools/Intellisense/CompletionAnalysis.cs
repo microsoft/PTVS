@@ -95,7 +95,16 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal ModuleAnalysis GetAnalysisEntry() {
+        internal static Completion PythonCompletion(IGlyphService service, string name, string completion, string tooltip, StandardGlyphGroup group) {
+            var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
+
+            var result = new LazyCompletion(name, () => completion, () => tooltip, service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic));
+            result.Properties.AddProperty(typeof(IconDescription), icon);
+            return result;
+        }
+
+        internal ModuleAnalysis GetAnalysisEntry()
+        {
             return ((IPythonProjectEntry)TextBuffer.GetAnalysis()).Analysis;
         }
 

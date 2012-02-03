@@ -904,6 +904,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     return new DecoratorCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(lastClass, "raise") || CompletionAnalysis.IsKeyword(lastClass, "except")) {
                     return new ExceptionCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
+                } else if (CompletionAnalysis.IsKeyword(lastClass, "def")) {
+                    return new OverrideCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
                 }
 
                 // Import completions

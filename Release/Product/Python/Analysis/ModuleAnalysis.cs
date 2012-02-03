@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 } else if (v.IsCurrent) {
                     yield return v;
-                }                
+                }
             }
         }
 
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (locatedDef != null &&
                 locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
-                locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {  
+                locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
                 var start = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
                 yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, start.Line, start.Column));
             }
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        
+
         /// <summary>
         /// Gets the variables the given expression evaluates to.  Variables include parameters, locals, and fields assigned on classes, modules and instances.
         /// 
@@ -273,7 +273,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (i == scopes.Count - 2 && scopes[scopes.Count - 1] is FunctionScope) {
                 var funcScope = (FunctionScope)scopes[scopes.Count - 1];
                 var def = funcScope.Function.FunctionDefinition;
-                
+
                 // TODO: Fix me to use indexes
                 int lineNo = def.GlobalParent.IndexToLocation(index).Line;
                 if (lineNo == def.GetStart(def.GlobalParent).Line) {
@@ -306,7 +306,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (exprText.Length == 0) {
                 return GetAllAvailableMembersByIndex(index, options);
             }
-            
+
             var scopes = FindScopes(index).ToArray();
             var privatePrefix = GetPrivatePrefixClassName(scopes);
 
@@ -337,7 +337,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="index">The 0-based absolute index into the file.</param>
         public IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
             try {
-                
+
                 var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(index).ToArray());
                 using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
                     var expr = GetExpression(parser.ParseTopExpression().Body);
@@ -360,6 +360,88 @@ namespace Microsoft.PythonTools.Analysis {
             } catch (Exception) {
                 // TODO: log exception
                 return new[] { new SimpleOverloadResult(new ParameterResult[0], "Unknown", "IntellisenseError_Sigs") };
+            }
+        }
+
+        /// <summary>
+        /// Gets the hierarchy of class and function definitions at the specified index.
+        /// </summary>
+        /// <param name="index">The 0-based absolute index into the file.</param>
+        public IEnumerable<MemberResult> GetDefinitionTreeByIndex(int index) {
+            try {
+                var result = new List<MemberResult>();
+
+                foreach (var scope in FindScopes(index)) {
+                    result.Add(new MemberResult(scope.Name, scope.Namespace.SelfSet));
+                }
+
+                return result;
+            } catch (Exception) {
+                // TODO: log exception
+                return new[] { new MemberResult("Unknown", null) };
+            }
+        }
+
+        /// <summary>
+        /// Gets information about methods defined on base classes but not directly on the current class.
+        /// </summary>
+        /// <param name="index">The 0-based absolute index into the file.</param>
+        public IEnumerable<IOverloadResult> GetOverrideableByIndex(int index) {
+            try {
+                var result = new List<IOverloadResult>();
+
+                var cls = (ClassScope)FindScopes(index).LastOrDefault();
+                var handled = new HashSet<string>(cls.Children.Select(child => child.Name));
+
+                foreach (var baseClass in cls.Class.GetMro().Skip(1).SelectMany(x => x)) {
+                    ClassInfo klass;
+                    BuiltinClassInfo builtinClass;
+                    IEnumerable<Namespace> source;
+
+                    if ((klass = baseClass as ClassInfo) != null) {
+                        source = klass.Scope.Children
+                            .Where(child => child != null && child.Namespace != null)
+                            .Select(child => child.Namespace);
+                    } else if ((builtinClass = baseClass as BuiltinClassInfo) != null) {
+                        source = builtinClass.GetAllMembers(InterpreterContext).Values
+                            .SelectMany(children => children)
+                            .Where(child => child != null);
+
+                        // Signature is object.__init__(self, *..., **...) which is not valid.
+                        if (builtinClass.ShortDescription == "type object") {
+                            source = source.Where(child => !child.Overloads.Any(o => o.Name == "__init__"));
+                        }
+                    } else {
+                        continue;
+                    }
+
+                    foreach (var child in source) {
+                        try {
+                            var overload = child.Overloads.First();
+
+                            foreach (var o in child.Overloads.Skip(1)) {
+                                if (o.Parameters.Length > overload.Parameters.Length) {
+                                    overload = o;
+                                }
+                            }
+
+                            if (handled.Contains(overload.Name)) {
+                                continue;
+                            }
+
+                            handled.Add(overload.Name);
+                            result.Add(overload);
+                        } catch {
+                            // TODO: log exception
+                            // Exceptions only affect the current override. Others may still be offerred.
+                        }
+                    }
+                }
+
+                return result;
+            } catch (Exception) {
+                // TODO: log exception
+                return new IOverloadResult[0];
             }
         }
 
@@ -396,7 +478,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (options.Keywords()) {
                 res = Enumerable.Concat(res, GetKeywordMembers(options, scopes));
             }
-            
+
             return res;
         }
 
@@ -710,7 +792,7 @@ namespace Microsoft.PythonTools.Analysis {
                 for (int i = curScope.Children.Count - 1; i >= 0; i--) {
                     var scope = curScope.Children[i];
                     var curStart = scope.GetBodyStart(parent);
-                    
+
 
                     if (curStart < index) {
                         var curEnd = scope.GetStop(parent);
