@@ -378,6 +378,119 @@ class D(C):
         }
 
         [TestMethod]
+        public void TestMro() {
+            // Successful: MRO is A B C D E F object
+            var code = @"
+O = object
+class F(O): pass
+class E(O): pass
+class D(O): pass
+class C(D,F): pass
+class B(D,E): pass
+class A(B,C): pass
+
+a = A()
+";
+
+            var entry = ProcessText(code);
+
+            var clsA = entry.GetValuesByIndex("A", code.IndexOf("a =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsA);
+            var mroA = clsA.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "type object");
+
+            // Unsuccessful: cannot order X and Y
+            code = @"
+O = object
+class X(O): pass
+class Y(O): pass
+class A(X, Y): pass
+class B(Y, X): pass
+class C(A, B): pass
+
+c = C()
+";
+
+            entry = ProcessText(code);
+
+            var clsC = entry.GetValuesByIndex("C", code.IndexOf("c =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsC);
+            Assert.IsNull(clsC.GetMro());
+
+            // Unsuccessful: cannot order F and E
+            code = @"
+class F(object): remember2buy='spam'
+class E(F): remember2buy='eggs'
+class G(F,E): pass
+G.remember2buy
+";
+
+            entry = ProcessText(code);
+            var clsG = entry.GetValuesByIndex("G", code.IndexOf("G.remember2buy")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsG);
+            Assert.IsNull(clsG.GetMro());
+
+
+            // Successful: exchanging bases of G fixes the ordering issue
+            code = @"
+class F(object): remember2buy='spam'
+class E(F): remember2buy='eggs'
+class G(E,F): pass
+G.remember2buy
+";
+
+            entry = ProcessText(code);
+            clsG = entry.GetValuesByIndex("G", code.IndexOf("G.remember2buy")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsG);
+            var mroG = clsG.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertContainsExactly(mroG, "G", "E", "F", "type object");
+
+            // Successful: MRO is Z K1 K2 K3 D A B C E object
+            code = @"
+class A(object): pass
+class B(object): pass
+class C(object): pass
+class D(object): pass
+class E(object): pass
+class K1(A,B,C): pass
+class K2(D,B,E): pass
+class K3(D,A):   pass
+class Z(K1,K2,K3): pass
+z = Z()
+";
+
+            entry = ProcessText(code);
+            var clsZ = entry.GetValuesByIndex("Z", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsZ);
+            var mroZ = clsZ.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "type object");
+
+            // Successful: MRO is Z K1 K2 K3 D A B C E object
+            code = @"
+class A(int): pass
+class B(float): pass
+class C(str): pass
+z = None
+";
+
+            entry = ProcessText(code);
+            clsA = entry.GetValuesByIndex("A", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsA);
+            mroA = clsA.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertContainsExactly(mroA, "A", "type int");
+
+            var clsB = entry.GetValuesByIndex("B", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsB);
+            var mroB = clsB.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertContainsExactly(mroB, "B", "type float");
+            
+            clsC = entry.GetValuesByIndex("C", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
+            Assert.IsNotNull(clsC);
+            var mroC = clsC.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            AssertContainsExactly(mroC, "C", "type str");
+        }
+
+        [TestMethod]
         public void TestGenerator() {
             var entry = ProcessText(@"
 def f():
