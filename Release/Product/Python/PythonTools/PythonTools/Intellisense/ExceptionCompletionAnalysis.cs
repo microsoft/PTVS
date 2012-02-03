@@ -24,8 +24,8 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ExceptionCompletionAnalysis : CompletionAnalysis {
-        internal ExceptionCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer)
-            : base(text, pos, span, textBuffer) {
+        internal ExceptionCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(text, pos, span, textBuffer, options) {
         }
 
         private static readonly string[] KnownExceptions = new[] { "GeneratorExit", "KeyboardInterrupt", 

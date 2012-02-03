@@ -310,7 +310,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        public static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
+        public static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
@@ -338,15 +338,23 @@ namespace Microsoft.PythonTools.Intellisense {
                     parser.Snapshot, 
                     parser.Span, 
                     parser.Buffer, 
-                    intersectMembers, 
-                    hideAdvancedMembers,
-                    true,
-                    true
+                    options
                 );
             }
 
-            return TrySpecialCompletions(snapshot, span) ??
-                   GetNormalCompletionContext(parser, loc, intersectMembers, hideAdvancedMembers);
+            return TrySpecialCompletions(snapshot, span, options) ??
+                   GetNormalCompletionContext(parser, loc, options);
+        }
+
+        /// <summary>
+        /// Gets a CompletionList providing a list of possible members the user can dot through.
+        /// </summary>
+        [Obsolete("Use GetCompletions with a CompletionOptions instance.")]
+        public static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
+            return GetCompletions(snapshot, span, new CompletionOptions {
+                IntersectMembers = intersectMembers,
+                HideAdvancedMembers = hideAdvancedMembers
+            });
         }
 
         /// <summary>
@@ -870,7 +878,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis TrySpecialCompletions(ITextSnapshot snapshot, ITrackingSpan span) {
+        private static CompletionAnalysis TrySpecialCompletions(ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
             var snapSpan = span.GetSpan(snapshot);
             var buffer = snapshot.TextBuffer;
             var classifier = (PythonClassifier)buffer.Properties.GetProperty(typeof(PythonClassifier));
@@ -885,7 +893,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (lastClass.ClassificationType == classifier.Provider.StringLiteral) {
                     // String completion
                     if (lastClass.Span.Start.GetContainingLine().LineNumber == lastClass.Span.End.GetContainingLine().LineNumber) {
-                        return new StringLiteralCompletionList(lastClass.Span.GetText(), snapSpan.Start, span, buffer);
+                        return new StringLiteralCompletionList(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
                     } else {
                         // multi-line string, no string completions.
                         return CompletionAnalysis.EmptyCompletionContext;
@@ -893,17 +901,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
                     lastClass.Span.GetText() == "@") {
 
-                    return new DecoratorCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer);
+                    return new DecoratorCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(lastClass, "raise") || CompletionAnalysis.IsKeyword(lastClass, "except")) {
-                    return new ExceptionCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer);
+                    return new ExceptionCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
                 }
 
                 // Import completions
                 var first = tokens[0];
                 if (CompletionAnalysis.IsKeyword(first, "import")) {
-                    return ImportCompletionAnalysis.Make(first, lastClass, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan));
+                    return ImportCompletionAnalysis.Make(first, lastClass, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan), options);
                 } else if (CompletionAnalysis.IsKeyword(first, "from")) {
-                    return FromImportCompletionAnalysis.Make(tokens, first, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan));
+                    return FromImportCompletionAnalysis.Make(tokens, first, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan), options);
                 }
                 return null;
             }
@@ -911,7 +919,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private static CompletionAnalysis GetNormalCompletionContext(ReverseExpressionParser parser, Span loc, bool intersectMembers = true, bool hideAdvancedMembers = false) {
+        private static CompletionAnalysis GetNormalCompletionContext(ReverseExpressionParser parser, Span loc, CompletionOptions options) {
             var exprRange = parser.GetExpressionRange();
             if (exprRange == null) {
                 return CompletionAnalysis.EmptyCompletionContext;
@@ -945,7 +953,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 firstToken = false;
             }
 
-            bool includeStmtKeywords = false;
+            options = options.Clone();
+            options.IncludeStatementKeywords = false;
 
             if (!hitOther && (hitName || firstToken)) {
                 // make sure we're not in a grouping
@@ -964,7 +973,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
 
                 if (groupingExprRange == null || groupingExprRange == exprRange) {
-                    includeStmtKeywords = true;
+                    options.IncludeStatementKeywords = true;
                 }
             }
 
@@ -974,10 +983,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 parser.Snapshot,
                 applicableSpan,
                 parser.Buffer,
-                intersectMembers,
-                hideAdvancedMembers,
-                includeStmtKeywords,
-                true
+                options
             );
         }
 

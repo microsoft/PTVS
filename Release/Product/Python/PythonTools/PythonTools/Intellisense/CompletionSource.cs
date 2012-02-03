@@ -14,8 +14,9 @@
 
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Intellisense {
     class CompletionSource : ICompletionSource {
@@ -30,13 +31,20 @@ namespace Microsoft.PythonTools.Intellisense {
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
             var textBuffer = _textBuffer;
             var span = session.CreateTrackingSpan(textBuffer);
-            bool intersectMembers = true;
-            bool hideAdvanced = false;
+            var options = new CompletionOptions {
+                IntersectMembers = true,
+                HideAdvancedMembers = false,
+                IncludeStatementKeywords = true,
+                IncludeExpressionKeywords = true,
+                ConvertTabsToSpaces = session.TextView.Options.IsConvertTabsToSpacesEnabled(),
+                IndentSize = session.TextView.Options.GetIndentSize(),
+                TabSize = session.TextView.Options.GetTabSize()
+            };
             if (PythonToolsPackage.Instance != null) {
-                intersectMembers = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
-                hideAdvanced = PythonToolsPackage.Instance.LangPrefs.HideAdvancedMembers;
+                options.IntersectMembers = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
+                options.HideAdvancedMembers = PythonToolsPackage.Instance.LangPrefs.HideAdvancedMembers;
             }
-            var provider = textBuffer.CurrentSnapshot.GetCompletions(span, intersectMembers, hideAdvanced);
+            var provider = textBuffer.CurrentSnapshot.GetCompletions(span, options);
 
             var completions = provider.GetCompletions(_provider._glyphService);
            

@@ -29,16 +29,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
-        private readonly bool _intersectMembers, _hideAdvancedMembers, _includeStatementKeywords, _includeExpressionKeywords;
+
+        internal NormalCompletionAnalysis(string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(text, pos, span, textBuffer, options) {
+            _snapshot = snapshot;
+        }
 
         internal NormalCompletionAnalysis(string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, bool intersectMembers = true, bool hideAdvancedMembers = false, bool includeStatmentKeywords = false, bool includeExpressionKeywords = false)
-            : base(text, pos, span, textBuffer) {
-            _snapshot = snapshot;
-            _intersectMembers = intersectMembers;
-            _hideAdvancedMembers = hideAdvancedMembers;
-            _includeExpressionKeywords = includeExpressionKeywords;
-            _includeStatementKeywords = includeStatmentKeywords;
-        }
+            : this(text, pos, snapshot, span, textBuffer, new CompletionOptions {
+            IntersectMembers = intersectMembers,
+            HideAdvancedMembers = hideAdvancedMembers,
+            IncludeExpressionKeywords = includeExpressionKeywords,
+            IncludeStatementKeywords = includeStatmentKeywords
+        }) { }
 
         private string FixupCompletionText(string exprText) {
             if (exprText.EndsWith(".")) {
@@ -76,7 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 members = analysis.GetMembersByIndex(
                     fixedText,
                     _pos,
-                    MemberOptions
+                    _options.MemberOptions
                 ).ToArray();
             } else {
                 members = new MemberResult[0];
@@ -135,21 +138,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        private GetMemberOptions MemberOptions {
-            get {
-                return (_intersectMembers ? GetMemberOptions.IntersectMultipleResults : GetMemberOptions.None) |
-                        (_hideAdvancedMembers ? GetMemberOptions.HideAdvancedMembers : GetMemberOptions.None) | 
-                        (_includeExpressionKeywords ? GetMemberOptions.IncludeExpressionKeywords : GetMemberOptions.None) | 
-                        (_includeStatementKeywords ? GetMemberOptions.IncludeStatementKeywords : GetMemberOptions.None); 
-            }
-        }
-
         private IEnumerable<Completion> TransformMembers(IGlyphService glyphService, MemberResult[] members) {
             return members.Select(m => PythonCompletion(glyphService, m));
         }
 
         private MemberResult[] DoFilterCompletions(MemberResult[] members) {
-            if (_hideAdvancedMembers) {
+            if (_options.HideAdvancedMembers) {
                 members = FilterCompletions(members, Text, (completion, filter) => completion.StartsWith(filter) && (!completion.StartsWith("__") || ! completion.EndsWith("__")));
             } else {
                 members = FilterCompletions(members, Text, (x, y) => x.StartsWith(y));

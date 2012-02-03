@@ -225,6 +225,7 @@
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ExceptionCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
