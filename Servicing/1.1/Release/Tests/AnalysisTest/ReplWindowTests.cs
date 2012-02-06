@@ -2594,7 +2594,19 @@ g()",
     [DeploymentItem("PyDebugAttach.dll")]
     [DeploymentItem(@"..\\PythonTools\\visualstudio_py_repl.py")]
     [DeploymentItem(@"..\\PythonTools\\visualstudio_py_debugger.py")]
-    public class IronPythonReplTests {
+    public class IronPythonReplTests : ReplWindowTests {
+        protected override string InterpreterDescription {
+            get {
+                return "IronPython 2.7 Interactive";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return false;
+            }
+        }
+
         [TestMethod]
         public void IronPythonSignatures() {
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
@@ -2607,6 +2619,17 @@ g()",
             var sigs = replEval.GetSignatureDocumentation(replEval.ReplAnalyzer, "Array[int]");
             Assert.AreEqual(sigs.Length, 1);
             Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
+        }
+
+        [TestMethod]
+        public void IronPythonCommentInput() {
+            // http://pytools.codeplex.com/workitem/649
+            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var execute = replEval.ExecuteText("#foo\n1+2");
+            execute.Wait();
+            Assert.AreEqual(execute.Result, ExecutionResult.Success);
         }
     }
 

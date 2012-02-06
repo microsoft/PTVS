@@ -501,7 +501,13 @@ class BasicReplBackend(ReplBackend):
         stripped_code = self.current_code.strip()
 
         if sys.platform == 'cli':
-            code = python_context.CreateSnippet(stripped_code, None, SourceCodeKind.InteractiveCode)
+            code_to_send = ''
+            for line in stripped_code.split('\n'):
+                if line.strip().startswith('#') and not code_to_send:
+                    continue
+                code_to_send += line + '\n'
+
+            code = python_context.CreateSnippet(code_to_send, None, SourceCodeKind.InteractiveCode)
             code.Execute(self.exec_mod)
         else:
             code = compile(self.current_code, '<stdin>', 'single', self.code_flags)

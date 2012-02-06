@@ -133,6 +133,54 @@ namespace AnalysisTest.ProjectSystem {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddNewFolderNested() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\HelloWorld.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            // find Program.py, send copy & paste, verify copy of file is there
+            var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
+            projectNode.SetFocus();
+
+            Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
+            Keyboard.PressAndRelease(Key.D);
+            Keyboard.PressAndRelease(Key.Right);
+            Keyboard.PressAndRelease(Key.D);
+            Keyboard.Type("FolderX");
+            Keyboard.PressAndRelease(Key.Enter);
+
+            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX"));
+
+            var folderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX");
+            folderNode.SetFocus();
+
+            Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
+            Keyboard.PressAndRelease(Key.D);
+            Keyboard.PressAndRelease(Key.Right);
+            Keyboard.PressAndRelease(Key.D);
+            Keyboard.Type("FolderY");
+            Keyboard.PressAndRelease(Key.Enter);
+
+            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY"));
+            var innerFolderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY");
+            innerFolderNode.SetFocus();
+
+            var newItem = project.ProjectItems.Item("FolderX").Collection.Item("FolderY").Collection.AddFromFile(
+                Path.Combine(
+                    System.IO.Directory.GetCurrentDirectory(),
+                    "Python.VS.TestData",
+                    "DebuggerProject",
+                    "BreakpointTest.py"
+                )
+            );
+
+            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY", "BreakpointTest.py"));
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameProjectToExisting() {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\RenameProjectTestUI.sln");
 

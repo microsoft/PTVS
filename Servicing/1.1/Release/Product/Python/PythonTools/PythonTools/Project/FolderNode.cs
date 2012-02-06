@@ -199,7 +199,8 @@ namespace Microsoft.PythonTools.Project
 				{
 					Directory.CreateDirectory(path);
 					_isBeingCreated = false;
-					this.ItemNode.Rename(filename);
+					var relativePath = CommonUtils.CreateFriendlyDirectoryPath(ProjectMgr.ProjectFolder, Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(Url)), label));
+					this.ItemNode.Rename(relativePath);
 					this.VirtualNodeName = filename;
 
 					this.OnItemDeleted();

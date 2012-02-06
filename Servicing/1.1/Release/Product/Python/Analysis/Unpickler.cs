@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -161,10 +162,18 @@ namespace Microsoft.PythonTools.Intellisense {
                         case Opcode.Tuple2: LoadTuple2(); break;
                         case Opcode.Tuple3: LoadTuple3(); break;
                         case Opcode.Unicode: LoadUnicode(); break;
+                        case Opcode.Global: LoadGlobal(); break;
                         case Opcode.Stop: return PopStack();
                         default: throw new InvalidOleVariantTypeException(String.Format("invalid opcode: {0}", opcode));
                     }
                 }
+            }
+
+            private void LoadGlobal() {
+                string module = ReadLineNoNewline();
+                string attr = ReadLineNoNewline();
+				Debug.Fail(String.Format("unexpected global in pickle stream {0}.{1}", module, attr));
+				_stack.Add(null);   // no support for actually loading the globals...
             }
 
             private object PopStack() {
