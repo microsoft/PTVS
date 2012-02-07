@@ -23,19 +23,19 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ImportCompletionAnalysis : CompletionAnalysis {
-        internal ImportCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer)
-            : base(text, pos, span, textBuffer) {
+        internal ImportCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(text, pos, span, textBuffer, options) {
         }
 
         public static CompletionAnalysis Make(ClassificationSpan start, ClassificationSpan end, Span loc,
-                ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer buffer, bool isSpace) {
+                ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer buffer, bool isSpace, CompletionOptions options) {
             if (start == end) {
-                return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer);
+                return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer, options);
             } else if (!isSpace) {
                 int nsLen = end.Span.End - start.Span.End - 1;
                 var nsSpan = new SnapshotSpan(snapshot, start.Span.End + 1, nsLen);
                 var text = nsSpan.GetText().Trim();
-                return new ImportCompletionAnalysis(text, loc.Start, span, buffer);
+                return new ImportCompletionAnalysis(text, loc.Start, span, buffer, options);
             } else {
                 return EmptyCompletionContext;
             }

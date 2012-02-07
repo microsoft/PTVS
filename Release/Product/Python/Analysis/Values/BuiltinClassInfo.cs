@@ -57,6 +57,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Instance.SelfSet;
         }
 
+        public IEnumerable<ISet<Namespace>> GetMro() {
+            return new[] { SelfSet };
+        }
+
         public BuiltinInstanceInfo Instance {
             get {
                 return _inst ?? (_inst = MakeInstance());
@@ -269,6 +273,5 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override ILocatedMember GetLocatedMember() {
             return _type as ILocatedMember;
         }
-
     }
 }

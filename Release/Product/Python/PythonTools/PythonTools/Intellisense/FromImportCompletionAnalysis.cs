@@ -26,15 +26,15 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class FromImportCompletionAnalysis : CompletionAnalysis {
         private readonly string _namespace;
 
-        public FromImportCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, string ns)
-            : base(text, pos, span, textBuffer) {
+        public FromImportCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, string ns, CompletionOptions options)
+            : base(text, pos, span, textBuffer, options) {
             _namespace = ns;
         }
 
         public static CompletionAnalysis Make(IList<ClassificationSpan> classifications, ClassificationSpan start,
-                Span loc, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer buffer, bool isSpace) {
+                Span loc, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer buffer, bool isSpace, CompletionOptions options) {
             if (classifications.Count == 1) {
-                return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer);
+                return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer, options);
             }
 
             ClassificationSpan imp = null;
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // from xxx.[completion]
                 //  or
                 // from xxx[Ctrl-Space completion]
-                return new ImportCompletionAnalysis(GetText(snapshot, start, end, true), loc.Start, span, buffer);
+                return new ImportCompletionAnalysis(GetText(snapshot, start, end, true), loc.Start, span, buffer, options);
             }
 
             // from xyz import [completion]
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            return new FromImportCompletionAnalysis(itemText, loc.Start, span, buffer, nsText);
+            return new FromImportCompletionAnalysis(itemText, loc.Start, span, buffer, nsText, options);
         }
 
         private static string GetText(ITextSnapshot snapshot, ClassificationSpan start, ClassificationSpan target, bool includeEnd) {

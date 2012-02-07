@@ -225,12 +225,14 @@
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ExceptionCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\IOrderableContentTypeMetadata.cs" />
     <Compile Include="PythonTools\Intellisense\MissingImportAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ImportSmartTagAction.cs" />
+    <Compile Include="PythonTools\Intellisense\OverrideCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagAction.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagSource.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagSourceProvider.cs" />

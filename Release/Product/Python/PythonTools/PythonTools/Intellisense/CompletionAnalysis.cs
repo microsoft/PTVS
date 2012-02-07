@@ -38,16 +38,18 @@ namespace Microsoft.PythonTools.Intellisense {
         protected readonly int _pos;
         private readonly ITrackingSpan _span;
         private readonly ITextBuffer _textBuffer;
+        internal readonly CompletionOptions _options;
         internal const Int64 TooMuchTime = 50;
         protected static Stopwatch _stopwatch = MakeStopWatch();
 
-        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(String.Empty, 0, null, null);
+        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(String.Empty, 0, null, null, null);
 
-        internal CompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer) {
+        internal CompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             _text = text ?? String.Empty;
             _pos = pos;
             _span = span;
             _textBuffer = textBuffer;
+            _options = (options == null) ? new CompletionOptions() : options.Clone();
         }
 
         public ITextBuffer TextBuffer {
@@ -93,7 +95,16 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal ModuleAnalysis GetAnalysisEntry() {
+        internal static Completion PythonCompletion(IGlyphService service, string name, string completion, string tooltip, StandardGlyphGroup group) {
+            var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
+
+            var result = new LazyCompletion(name, () => completion, () => tooltip, service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic));
+            result.Properties.AddProperty(typeof(IconDescription), icon);
+            return result;
+        }
+
+        internal ModuleAnalysis GetAnalysisEntry()
+        {
             return ((IPythonProjectEntry)TextBuffer.GetAnalysis()).Analysis;
         }
 

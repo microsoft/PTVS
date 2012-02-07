@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -210,6 +211,78 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 return _bases;
             }
+        }
+
+        /// <summary>
+        /// Calculates the method resolution order according to the C3 rules that have been in use
+        /// since Python 2.3. These rules are described at http://www.python.org/download/releases/2.3/mro/
+        /// </summary>
+        public IEnumerable<ISet<Namespace>> GetMro() {
+            if (!_bases.Any()) {
+                return new[] { SelfSet };
+            }
+
+            var result = new List<ISet<Namespace>>();
+            result.Add(SelfSet);
+
+            var mergeList = new List<List<Namespace>>();
+            var finalMro = new List<Namespace>();
+
+            foreach (var baseClass in _bases.SelectMany(x => x)) {
+                var klass = baseClass as ClassInfo;
+                var builtInClass = baseClass as BuiltinClassInfo;
+                if (klass != null && klass.Push()) {
+                    try {
+                        finalMro.Add(klass);
+                        mergeList.Add(klass.GetMro().SelectMany(x => x).ToList());
+                    } finally {
+                        klass.Pop();
+                    }
+                } else if (builtInClass != null && builtInClass.Push()) {
+                    try {
+                        finalMro.Add(builtInClass);
+                        mergeList.Add(builtInClass.GetMro().SelectMany(x => x).ToList());
+                    } finally {
+                        builtInClass.Pop();
+                    }
+                }
+            }
+            if (finalMro.Any()) {
+                mergeList.Add(finalMro);
+            }
+
+            while (mergeList.Count > 0) {
+                Namespace nextInMro = null;
+
+                for (int i = 0; i < mergeList.Count; ++i) {
+                    // Select candidate head
+                    var candidate = mergeList[i][0];
+
+                    // Look for the candidate in the tails of every other MRO
+                    if (!mergeList.Any(baseMro => baseMro.Skip(1).Contains(candidate))) {
+                        // Candidate is good, so stop searching.
+                        nextInMro = candidate;
+                        break;
+                    }
+                }
+
+                // No valid MRO for this class
+                if (nextInMro == null) {
+                    return null;
+                }
+
+                result.Add(nextInMro);
+
+                // Remove all instances of that class from potentially being returned again
+                foreach (var mro in mergeList) {
+                    mro.RemoveAll(ns => ns == nextInMro);
+                }
+
+                // Remove all lists that are now empty.
+                mergeList.RemoveAll(mro => mro.Count == 0);
+            }
+
+            return result;
         }
 
         public InstanceInfo Instance {

@@ -21,8 +21,8 @@ using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Intellisense {
     class DecoratorCompletionAnalysis : CompletionAnalysis {
-        internal DecoratorCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer)
-            : base(text, pos, span, textBuffer) {
+        internal DecoratorCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(text, pos, span, textBuffer, options) {
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {

@@ -103,7 +103,7 @@ namespace AnalysisTest.Mocks {
             Assert.IsFalse(completionList.Contains("def"));
         }
 
-         [TestMethod]
+        [TestMethod]
         public void Scenario_Exceptions() {
             foreach (string code in new[] { 
                 @"raise None", 
@@ -147,7 +147,7 @@ except (None)"}) {
             // TODO: Negative tests
             //       Import / from import tests
             MemberCompletionTest(-1, "x = 2\r\nx.", "x.");
-            
+
             // combining various partial expressions with previous expressions
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
             var exprs = new[] { "x[0].", "x(0).", "x", "x.y.", "f(x[2]).", "f(x, y).", "f({2:3}).", "f(a + b).", "f(a or b).", "{2:3}.", "f(x if False else y).", /*"(\r\nx\r\n)."*/ };
@@ -158,7 +158,7 @@ except (None)"}) {
                     MemberCompletionTest(-1, test, expr);
                 }
             }
-            
+
             var sigs = new[] { 
                 new { Expr = "f(", Param = 0, Function="f" } ,
                 new { Expr = "f(1,", Param = 1, Function="f" },
@@ -184,10 +184,10 @@ except (None)"}) {
                 new { Expr = "f({1:2", Param = 0, Function="f" } ,
                 new { Expr = "f({1", Param = 0, Function="f" } ,
             };
-            
+
             foreach (var prefix in prefixes) {
                 foreach (var sig in sigs) {
-                    var test  = prefix + sig.Expr;
+                    var test = prefix + sig.Expr;
                     Console.WriteLine("   -- {0}", test);
                     SignatureTest(-1, test, sig.Function, sig.Param);
                 }
@@ -287,6 +287,101 @@ while True:
 e): <no type information available>");
         }
 
+        [TestMethod]
+        public void Scenario_NormalOverrides() {
+            foreach (var code in new[] {
+@"class Foo(object):
+	def func_a(self, a=100): pass
+	def func_b(self, b, *p, **kw): pass
+
+class Baz(Foo):
+	def None
+",
+@"class Foo(object):
+	def func_a(self, a=100): pass
+
+class Bar(Foo):
+	def func_b(self, b, *p, **kw): pass
+
+class Baz(Bar):
+	def None
+",
+@"class Foo(object):
+	def func_a(self, a=100): pass
+
+class Bar(object):
+	def func_b(self, b, *p, **kw): pass
+
+class Baz(Foo, Bar):
+	def None
+",
+@"class Foo(object):
+	def func_a(self, a=100): pass
+	def func_b(self, b, *p, **kw): pass
+	def func_c(self): pass
+
+class Baz(Foo):
+	def func_c(self): pass
+	def None
+",
+@"class Foo(object):
+	def func_a(self, a=100): pass
+	def func_c(self): pass
+
+class Bar(Foo):
+	def func_b(self, b, *p, **kw): pass
+
+class Baz(Bar):
+	def func_c(self): pass
+	def None
+",
+@"class Foo(object):
+	def func_a(self, a=100): pass
+
+class Bar(object):
+	def func_b(self, b, *p, **kw): pass
+	def func_c(self): pass
+
+class Baz(Foo, Bar):
+	def func_c(self): pass
+	def None
+"}) {
+                var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
+
+                Assert.IsTrue(completionList.Contains(@"func_a(self, a = 100):
+		return super(Baz, self).func_a(a)"));
+                Assert.IsTrue(completionList.Contains(@"func_b(self, b, *p, **kw):
+		return super(Baz, self).func_b(b, *p, **kw)"));
+            }
+        }
+
+        [TestMethod]
+        public void Scenario_BuiltinOverrides() {
+            var code = @"class Foo(str):
+	def None
+";
+            var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
+
+            Assert.IsTrue(completionList.Contains(@"capitalize(self):
+		return super(Foo, self).capitalize()"));
+            Assert.IsTrue(completionList.Contains(@"index(self, sub, start, end):
+		return super(Foo, self).index(sub, start, end)"));
+
+            code = @"class Foo(str, list):
+	def None
+";
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
+            Assert.IsTrue(completionList.Contains(@"index(self, sub, start, end):
+		return super(Foo, self).index(sub, start, end)"));
+
+            code = @"class Foo(list, str):
+	def None
+";
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
+            Assert.IsTrue(completionList.Contains(@"index(self, item, start, stop):
+		return super(Foo, self).index(item, start, stop)"));
+        }
+
         private static void TestQuickInfo(string code, int start, int end, params string[] expected) {
 
             for (int i = start; i < end; i++) {
@@ -344,7 +439,7 @@ e): <no type information available>");
 
         private static void MemberCompletionTest(int location, string sourceCode, string expectedExpression) {
             var context = GetCompletions(location, sourceCode);
-            Assert.AreEqual(expectedExpression, context.Text);            
+            Assert.AreEqual(expectedExpression, context.Text);
         }
 
         private static CompletionAnalysis GetCompletions(int location, string sourceCode, bool intersectMembers = true) {
