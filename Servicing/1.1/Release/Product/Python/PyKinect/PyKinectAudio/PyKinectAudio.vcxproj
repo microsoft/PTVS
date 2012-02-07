@@ -46,23 +46,23 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>%KINECTSDK_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>%KINECTSDK_DIR%\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>%KINECTSDK10_DIR%\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>%KINECTSDK_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>%KINECTSDK_DIR%\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>%KINECTSDK10_DIR%\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>%KINECTSDK_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>%KINECTSDK_DIR%\lib\amd64;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>%KINECTSDK10_DIR%\lib\amd64;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>%KINECTSDK_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>%KINECTSDK_DIR%\lib\amd64;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>%KINECTSDK10_DIR%\lib\amd64;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -75,7 +75,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OutputFile>$(OutDir)\$(TargetName)$(TargetExt)</OutputFile>
-      <AdditionalDependencies>Msdmo.lib;dmoguids.lib;mf.lib;mfuuid.lib;mfplat.lib;avrt.lib;MSRKinectNUI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Msdmo.lib;dmoguids.lib;mf.lib;mfuuid.lib;mfplat.lib;avrt.lib;Kinect10.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -93,7 +93,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OutputFile>$(OutDir)\$(TargetName)$(TargetExt)</OutputFile>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Msdmo.lib;dmoguids.lib;mf.lib;mfuuid.lib;mfplat.lib;avrt.lib;MSRKinectNUI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Msdmo.lib;dmoguids.lib;mf.lib;mfuuid.lib;mfplat.lib;avrt.lib;Kinect10.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalOptions>/debugtype:cv,fixup %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>

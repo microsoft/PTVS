@@ -83,6 +83,7 @@ class Vector(ctypes.Structure):
 
 class _NuiLockedRect(ctypes.Structure):
     _fields_ = [('pitch', ctypes.c_int32), 
+                ('size', ctypes.c_int32),
                 ('bits', ctypes.c_voidp)]
 
      
@@ -93,17 +94,17 @@ class _NuiSurfaceDesc(ctypes.Structure):
 
 class PlanarImage(ctypes.c_voidp):
     """Represents a video image."""
-    _BufferLen = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_int32)(0, 'BufferLen')
-    _Pitch = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_int32)(1, 'Pitch')
-    _LockRect = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_uint, ctypes.POINTER(_NuiLockedRect), ctypes.c_voidp, ctypes.c_uint32)(2, '_LockRect')
-    _GetLevelDesc = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_uint32, ctypes.POINTER(_NuiSurfaceDesc))(3, '_GetLevelDesc')
-    _UnlockRect = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_uint32)(4, '_UnlockRect')
+    _BufferLen = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_int32)(3, 'BufferLen')
+    _Pitch = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_int32)(4, 'Pitch')
+    _LockRect = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_uint, ctypes.POINTER(_NuiLockedRect), ctypes.c_voidp, ctypes.c_uint32)(5, '_LockRect')
+    _GetLevelDesc = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_uint32, ctypes.POINTER(_NuiSurfaceDesc))(6, '_GetLevelDesc')
+    _UnlockRect = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_uint32)(7, '_UnlockRect')
 
     @property
     def width(self):
         desc = _NuiSurfaceDesc()
         PlanarImage._GetLevelDesc(self, 0, ctypes.byref(desc))
-        return desc.width.value
+        return desc.width
     
     @property
     def height(self):
@@ -142,7 +143,7 @@ class PlanarImage(ctypes.c_voidp):
         PlanarImage._LockRect(self, 0, ctypes.byref(rect), None, 0)
         res = rect.pitch
         PlanarImage._UnlockRect(self, 0)
-        return res.value
+        return res
 
 
 class ImageType(_Enumeration):

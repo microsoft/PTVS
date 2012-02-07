@@ -11,7 +11,7 @@ import os
 import ctypes
 from os import path
 
-_audiodll_path = os.path.join(os.environ['WINDIR'], 'System32', 'MSRKinectAudio.dll')
+_audiodll_path = os.path.join(os.environ['WINDIR'], 'System32', 'KinectAudio10.dll')
 
 _MAX_STR_LEN = 512
 _AUDIODLL = ctypes.WinDLL(_audiodll_path)
@@ -101,17 +101,17 @@ class AudioDeviceInfo(ctypes.Structure):
                 ('device_index', ctypes.c_int),
                 ]
 
-_GetKinectDeviceInfo = _AUDIODLL.GetKinectDeviceInfo
-_GetKinectDeviceInfo.argtypes = [ctypes.POINTER(AudioDeviceInfo), ctypes.POINTER(ctypes.c_int)]
-_GetKinectDeviceInfo.restype = ctypes.HRESULT
+_NuiGetMicrophoneArrayDevices = _AUDIODLL.NuiGetMicrophoneArrayDevices
+_NuiGetMicrophoneArrayDevices.argtypes = [ctypes.POINTER(AudioDeviceInfo), ctypes.POINTER(ctypes.c_int)]
+_NuiGetMicrophoneArrayDevices.restype = ctypes.HRESULT
 
 def GetKinectDeviceInfo():
     '''returns a sequence of AudioDeviceInfo objects describing the available Kinect audio devices'''
     count = ctypes.c_int()
-    _GetKinectDeviceInfo(None, ctypes.byref(count))
+    _NuiGetMicrophoneArrayDevices(None, 0, ctypes.byref(count))
     deviceArray = (AudioDeviceInfo * count.value)()
 
-    _GetKinectDeviceInfo(deviceArray, ctypes.byref(count))
+    _NuiGetMicrophoneArrayDevices(deviceArray, count.value, ctypes.byref(count))
 
     return [arrayObj for arrayObj in deviceArray]
 
@@ -264,6 +264,7 @@ class _AudioFile(object):
 
 class KinectAudioSource(object):
     def __init__(self, device = None):
+        self._dmo = None
         dmo = ctypes.c_voidp()
         _OpenKinectAudio(ctypes.byref(dmo))
         self._dmo = dmo

@@ -12,8 +12,8 @@ import os
 import thread
 
 # basic initialization, Python specific infrastructure
-_nuidll_path = os.path.join(os.environ['WINDIR'], 'System32', 'MSRKinectNUI.dll')
-_NUIDLL = ctypes.CDLL(_nuidll_path)
+_nuidll_path = os.path.join(os.environ['WINDIR'], 'System32', 'Kinect10.dll')
+_NUIDLL = ctypes.WinDLL(_nuidll_path)
 
 class KinectError(WindowsError):
     """Represents an error from a Kinect sensor"""
@@ -28,8 +28,8 @@ from pykinect.nui.structs import (ImageDigitalZoom, ImageFrame, ImageResolution,
 
 from _interop import (_CreateEvent, _CloseHandle, _WaitForSingleObject, 
                       _WaitForMultipleObjects, _WAIT_OBJECT_0, _INFINITE, 
-                      _SysFreeString, _THISCALLFUNCTYPE, _NuiInstance, _MSR_NuiDestroyInstance,
-                      _NuiCreateInstanceByIndex, _NuiGetDeviceCount)
+                      _SysFreeString, _NuiInstance, _NuiCreateSensorByIndex, 
+                      _NuiGetSensorCount)
 
 
 _NUI_IMAGE_PLAYER_INDEX_SHIFT      =    3
@@ -93,7 +93,7 @@ class Device(object):
     @property
     def count(self):
         """The number of active Kinect sensors that are attached to the system."""
-        return _NuiGetDeviceCount()
+        return _NuiGetSensorCount()
 
 
 class Runtime(object):
@@ -104,13 +104,14 @@ class Runtime(object):
                  index = 0):
         """Creates a new runtime.  By default initialized to the 1st installed kinect device and tracking all events"""
         self._nui = self._skeleton_event = self._image_event = self._depth_event = None
-        self._nui = _NuiCreateInstanceByIndex(index)
+        self._nui = _NuiCreateSensorByIndex(index)
         try:            
             self._nui.NuiInitialize(nui_init_flags)
         except:
             self._nui.NuiShutdown()
-            _MSR_NuiDestroyInstance(self._nui)
-            raise KinectError('Unable to create Kinect runtime')
+            import traceback
+            
+            raise KinectError('Unable to create Kinect runtime '+ traceback.format_exc()) 
 
         self.depth_frame_ready = _event()
         self.skeleton_frame_ready = _event()
@@ -131,7 +132,6 @@ class Runtime(object):
         """closes the current runtime"""
         if self._nui is not None:
             self._nui.NuiShutdown()
-            _MSR_NuiDestroyInstance(self._nui)
             self._nui = None
         
         if self._skeleton_event is not None:

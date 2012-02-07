@@ -113,54 +113,6 @@ _SysFreeString = _oleaut32.SysFreeString
 _SysFreeString.argtypes = [ctypes.c_voidp]
 _SysFreeString.restype = ctypes.HRESULT
 
-if ctypes.sizeof(ctypes.c_voidp) == 4:
-    # assembly thunks (x86 only), go from stdcall to cdecl
-
-    # 58              pop     eax                               // pop return address
-    # 59              pop     ecx                               // pop this pointer
-    # 5a              pop     edx                               // pop the vtable index
-    # 50              push    eax                               // push the return address
-    # 8b01            mov     eax,dword ptr [ecx]               // load the vtable address
-    # 8b1490          mov     edx,dword ptr [eax+edx*4]         // load the final function address
-    # ffe2            jmp     edx                               // jmp
-
-    _stub_template = b'\x58\x59\x5a\x50\x8b\x01\x8b\x14\x90\xff\xe2'
-
-    _VirtualAlloc = _kernel32.VirtualAlloc
-    _VirtualAlloc.argtypes = [ctypes.c_voidp, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_uint32]
-    _VirtualAlloc.restype = ctypes.c_voidp
-
-    _VirtualProtect = _kernel32.VirtualProtect
-    _VirtualProtect.argtypes = [ctypes.c_voidp, ctypes.c_uint32, ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint32)]
-    _VirtualProtect.restype = ctypes.c_bool
-
-    _MEM_COMMIT = 0x1000
-    _MEM_RESERVE = 0x2000
-
-    _PAGE_EXECUTE_READWRITE = 0x40
-    _PAGE_EXECUTE_READ = 0x20
-
-    _stub_addr = _VirtualAlloc(None, 4096, _MEM_COMMIT | _MEM_RESERVE, _PAGE_EXECUTE_READWRITE)
-    if not _stub_addr:
-        raise MemoryError('failed to allocate memory for thunks')
-
-    ctypes.memmove(_stub_addr, _stub_template, len(_stub_template))
-
-    if not _VirtualProtect(_stub_addr, 4096, _PAGE_EXECUTE_READ, ctypes.byref(ctypes.c_uint32())):
-        raise WindowsError('failed to protect memory')
-
-    def _THISCALLFUNCTYPE(restype, *argtypes):
-        def maker(index, name):
-            func = ctypes.WINFUNCTYPE(restype, *(ctypes.c_voidp, ctypes.c_uint32) + argtypes)(_stub_addr)
-            def invoker(self, *args):
-                return func(self, index, *args)
-            return invoker
-        return maker
-
-else:
-    _THISCALLFUNCTYPE = ctypes.CFUNCTYPE
-
-
 class _NuiInstance(ctypes.c_voidp):
     """this interface duplicates exactly the public DLL NUI**** methods that
        work on just device #0. If you want to work with multiple devices,
@@ -168,21 +120,31 @@ class _NuiInstance(ctypes.c_voidp):
        the multiple-device methods below"""
 
     # vtable
-    _InstanceIndex = _THISCALLFUNCTYPE(ctypes.c_int)(0, 'InstanceIndex')
-    _NuiInitialize = _THISCALLFUNCTYPE(ctypes.HRESULT, ctypes.c_uint32)(1, 'NuiInitialize')
-    _NuiShutdown = _THISCALLFUNCTYPE(None)(2, 'NuiShutdown')
-    _NuiImageStreamOpen = _THISCALLFUNCTYPE(_KinectHRESULT, ImageType, ImageResolution, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_voidp, ctypes.POINTER(ctypes.c_voidp))(3, 'NuiImageStreamOpen')
-    _NuiImageStreamGetNextFrame = _THISCALLFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.c_uint32, ctypes.POINTER(ctypes.POINTER(ImageFrame)))(4, 'NuiImageStreamGetNextFrame')
-    _NuiImageStreamReleaseFrame = _THISCALLFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.POINTER(ImageFrame))(5, 'NuiImageStreamReleaseFrame')
-    _NuiImageGetColorPixelCoordinatesFromDepthPixel = _THISCALLFUNCTYPE(ctypes.HRESULT, ImageResolution, ctypes.POINTER(ImageViewArea), ctypes.c_long, ctypes.c_long, ctypes.c_uint16, ctypes.POINTER(ctypes.c_long), ctypes.POINTER(ctypes.c_long))(6, 'NuiImageGetColorPixelCoordinatesFromDepthPixel')
-    _NuiCameraElevationSetAngle = _THISCALLFUNCTYPE(ctypes.HRESULT, ctypes.c_long)(7, 'NuiCameraElevationSetAngle')
-    _NuiCameraElevationGetAngle = _THISCALLFUNCTYPE(ctypes.HRESULT, ctypes.POINTER(ctypes.c_long))(8, 'NuiCameraElevationGetAngle')
-    _NuiSkeletonTrackingEnable = _THISCALLFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.c_uint32)(9, 'NuiSkeletonTrackingEnable')
-    _NuiSkeletonTrackingDisable = _THISCALLFUNCTYPE(ctypes.HRESULT)(10, 'NuiSkeletonTrackingDisable')
-    _NuiSkeletonGetNextFrame = _THISCALLFUNCTYPE(_KinectHRESULT, ctypes.c_uint32, ctypes.POINTER(SkeletonFrame))(11, 'NuiSkeletonGetNextFrame')
-    _NuiTransformSmooth = _THISCALLFUNCTYPE(ctypes.HRESULT, ctypes.POINTER(SkeletonFrame), ctypes.POINTER(TransformSmoothParameters))(12, 'NuiTransformSmooth')
-    _MSR_NuiGetPropsBlob = _THISCALLFUNCTYPE(ctypes.c_bool, _PropsIndex, ctypes.c_voidp, ctypes.POINTER(ctypes.c_uint32))(13, 'MSR_NuiGetPropsBlob')
-    _MSR_NuiGetPropsType = _THISCALLFUNCTYPE(_PropType, _PropsIndex)(14, 'MSR_NuiGetPropsType')
+    _NuiInitialize = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_uint32)(3, 'NuiInitialize')
+    _NuiShutdown = ctypes.WINFUNCTYPE(None)(4, 'NuiShutdown')
+    _NuiSetFrameAndEvent = ctypes.WINFUNCTYPE(_KinectHRESULT, ctypes.c_voidp, ctypes.c_uint32)(5, 'NuiSetFrameEndEvent')
+    _NuiImageStreamOpen = ctypes.WINFUNCTYPE(_KinectHRESULT, ImageType, ImageResolution, ctypes.c_uint32, ctypes.c_uint32, ctypes.c_voidp, ctypes.POINTER(ctypes.c_voidp))(6, 'NuiImageStreamOpen')
+    _NuiImageStreamSetImageFrameFlags = 7
+    _NuiImageStreamGetImageFrameFlags = 8
+    _NuiImageStreamGetNextFrame = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.c_uint32, ctypes.POINTER(ImageFrame))(9, 'NuiImageStreamGetNextFrame')
+    _NuiImageStreamReleaseFrame = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.POINTER(ImageFrame))(10, 'NuiImageStreamReleaseFrame')
+    _NuiImageGetColorPixelCoordinatesFromDepthPixel = ctypes.WINFUNCTYPE(ctypes.HRESULT, ImageResolution, ctypes.POINTER(ImageViewArea), ctypes.c_long, ctypes.c_long, ctypes.c_uint16, ctypes.POINTER(ctypes.c_long), ctypes.POINTER(ctypes.c_long))(11, 'NuiImageGetColorPixelCoordinatesFromDepthPixel')
+    _NuiImageGetColorPixelCoordinatesFromDepthPixelAtResolution = 12
+    _NuiImageGetColorPixelCoordinateFrameFromDepthPixelFrameAtResolution = 13
+    _NuiCameraElevationSetAngle = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_long)(14, 'NuiCameraElevationSetAngle')
+    _NuiCameraElevationGetAngle = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.POINTER(ctypes.c_long))(15, 'NuiCameraElevationGetAngle')
+    _NuiSkeletonTrackingEnable = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.c_uint32)(16, 'NuiSkeletonTrackingEnable')
+    _NuiSkeletonTrackingDisable = ctypes.WINFUNCTYPE(ctypes.HRESULT)(17, 'NuiSkeletonTrackingDisable')
+    _NuiSkeletonSetTrackedSkeletons = 18
+    _NuiSkeletonGetNextFrame = ctypes.WINFUNCTYPE(_KinectHRESULT, ctypes.c_uint32, ctypes.POINTER(SkeletonFrame))(19, 'NuiSkeletonGetNextFrame')
+    _NuiTransformSmooth = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.POINTER(SkeletonFrame), ctypes.POINTER(TransformSmoothParameters))(20, 'NuiTransformSmooth')
+    _NuiGetAudioSource = 21
+    _InstanceIndex = ctypes.WINFUNCTYPE(ctypes.c_int)(22, 'InstanceIndex')
+    _NuiDeviceConnectionId = 23
+    _NuiUniqueId = 24
+    _NuiAudioArrayId = 25
+    _NuiStatus = 26
+    _NuiInitializationFlags = 27
 
     def InstanceIndex(self):
         """which instance # was it created with, in MSR_NuiCreateInstanceByIndex( )/etc?"""
@@ -201,9 +163,9 @@ class _NuiInstance(ctypes.c_voidp):
         return res
 
     def NuiImageStreamGetNextFrame(self, hStream, dwMillisecondsToWait):
-        res = ctypes.POINTER(ImageFrame)()
-        _NuiInstance._NuiImageStreamGetNextFrame(self, hStream, dwMillisecondsToWait, res)
-        return res.contents
+        res = ImageFrame()
+        _NuiInstance._NuiImageStreamGetNextFrame(self, hStream, dwMillisecondsToWait, ctypes.byref(res))
+        return res
 
     def NuiImageStreamReleaseFrame(self, hStream, pImageFrame):
         _NuiInstance._NuiImageStreamReleaseFrame(self, hStream, pImageFrame)
@@ -257,24 +219,20 @@ class _NuiInstance(ctypes.c_voidp):
 ## NUI enumeration function
 ##***********************
 
-_MSR_NUIGetDeviceCount = _NUIDLL.MSR_NUIGetDeviceCount
-_MSR_NUIGetDeviceCount.argtypes = [ctypes.POINTER(ctypes.c_int)]
-_MSR_NUIGetDeviceCount.restype = ctypes.HRESULT
+__NuiGetSensorCount = _NUIDLL.NuiGetSensorCount
+__NuiGetSensorCount.argtypes = [ctypes.POINTER(ctypes.c_int)]
+__NuiGetSensorCount.restype = ctypes.HRESULT
 
-def _NuiGetDeviceCount():
+def _NuiGetSensorCount():
     count = ctypes.c_int()
-    _MSR_NUIGetDeviceCount(ctypes.byref(count))
+    __NuiGetSensorCount(ctypes.byref(count))
     return count.value
     
-_MSR_NuiCreateInstanceByIndex = _NUIDLL.MSR_NuiCreateInstanceByIndex
-_MSR_NuiCreateInstanceByIndex.argtypes = [ctypes.c_int, ctypes.POINTER(_NuiInstance)]
-_MSR_NuiCreateInstanceByIndex.restype = ctypes.HRESULT
+__NuiCreateSensorByIndex = _NUIDLL.NuiCreateSensorByIndex
+__NuiCreateSensorByIndex.argtypes = [ctypes.c_int, ctypes.POINTER(_NuiInstance)]
+__NuiCreateSensorByIndex.restype = ctypes.HRESULT
 
-def _NuiCreateInstanceByIndex(index):
+def _NuiCreateSensorByIndex(index):
     inst = _NuiInstance()
-    _MSR_NuiCreateInstanceByIndex(index, ctypes.byref(inst))
+    __NuiCreateSensorByIndex(index, ctypes.byref(inst))
     return inst
-
-_MSR_NuiDestroyInstance = _NUIDLL.MSR_NuiDestroyInstance
-_MSR_NuiDestroyInstance.argtypes = [_NuiInstance]
-_MSR_NuiDestroyInstance.restype = None
