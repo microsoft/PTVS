@@ -103,8 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal ModuleAnalysis GetAnalysisEntry()
-        {
+        internal ModuleAnalysis GetAnalysisEntry() {
             return ((IPythonProjectEntry)TextBuffer.GetAnalysis()).Analysis;
         }
 
