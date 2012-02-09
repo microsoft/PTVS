@@ -127,14 +127,7 @@ char* ReadDebuggerCode(wchar_t* newName) {
 
 // create a custom heap for our hash map.  This is necessary because if we suspend a thread while in a heap function
 // then we could deadlock here.  We need to be VERY careful about what we do while the threads are suspended.
-class PrivateHeap {
-public:
-    HANDLE heap;
-
-    PrivateHeap() {
-        heap = HeapCreate(0, 0, 0);
-    }
-};
+static HANDLE g_heap = 0;
 
 template <typename T> class PrivateHeapAllocator {
 
@@ -156,11 +149,15 @@ public:
     inline  PrivateHeapAllocator(PrivateHeapAllocator<U> const&) {}
 
     pointer allocate(size_type size, allocator<void>::const_pointer hint = 0) {
-        return static_cast<pointer>(HeapAlloc(_heap.heap, 0, size));
+        if(g_heap == nullptr) {
+            g_heap = HeapCreate(0, 0, 0);
+        }
+        auto mem = HeapAlloc(g_heap, 0, size * sizeof(T));
+        return static_cast<pointer>(mem);
     }
 
     void deallocate(pointer p, size_type n) {
-        HeapFree(_heap.heap, 0, p);
+        HeapFree(g_heap, 0, p);
     }
 
 	//    size
@@ -170,8 +167,6 @@ public:
 	}
     inline void construct(pointer p, const T& t) { new(p) T(t); }
     inline void destroy(pointer p) { p->~T(); }
-private:
-    PrivateHeap _heap;   
 };
 
 typedef hash_map<DWORD, HANDLE, stdext::hash_compare<DWORD, std::less<DWORD> >, PrivateHeapAllocator<pair<DWORD, HANDLE> > > MyHashMap;
@@ -654,6 +649,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             }
         }else{
             SetEvent(connInfo.Buffer->AttachDoneEvent);
+        }
+
+        if(g_heap != nullptr) {
+            HeapDestroy(g_heap);
+            g_heap = nullptr;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
