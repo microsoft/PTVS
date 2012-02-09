@@ -977,7 +977,7 @@ if sys.platform == 'cli':
                     else:
                         self.backend.write_stderr(str(value).replace('\r\n', '\n'))
                 else:
-                    super(DotNetOutput, self).Write(value)
+                    super(DotNetOutput, self).Write.Overloads[object](value)
             else:
                 self.Write(System.String.Format(value, *args))
 
@@ -989,7 +989,7 @@ if sys.platform == 'cli':
                     else:
                         self.backend.write_stderr(str(value).replace('\r\n', '\n') + '\n')
                 else:
-                    super(DotNetOutput, self).WriteLine(value)
+                    super(DotNetOutput, self).WriteLine.Overloads[object](value)
             else:
                 self.WriteLine(System.String.Format(value, *args))
 

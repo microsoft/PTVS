@@ -33,6 +33,12 @@ namespace AnalysisTest.Mocks {
             _view = new MockTextView(new MockTextBuffer(""));
         }
 
+        public string Output {
+            get {
+                return _output.ToString();
+            }
+        }
+
         #region IReplWindow Members
 
         public IWpfTextView TextView {
