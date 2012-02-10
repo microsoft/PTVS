@@ -63,7 +63,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
                     var installPath = python.OpenSubKey(key + "\\InstallPath");
                     if (installPath != null) {
-                        string basePath = installPath.GetValue("").ToString();
+                        var basePathObj = installPath.GetValue("");
+                        if (basePathObj == null) {
+                            // http://pytools.codeplex.com/discussions/301384
+                            // messed up install, we don't know where it lives, we can't use it.
+                            continue;
+                        }
+                        string basePath = basePathObj.ToString();
                         if (!registeredPaths.Add(basePath)) {
                             // registered in both HCKU and HKLM
                             continue;
