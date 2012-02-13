@@ -558,7 +558,6 @@ class BasicReplBackend(ReplBackend):
             self.send_exit()
             return True, None, None, None
         except BaseException:
-            sys.__stdout__.write(traceback.format_exc())
             _debug_write('Exception')
             exc_type, exc_value, exc_tb = sys.exc_info()
             if sys.platform == 'cli':
@@ -580,9 +579,7 @@ class BasicReplBackend(ReplBackend):
                     exc_next = exc_tb.tb_next.tb_next
                 else:
                     exc_next = None
-                sys.__stdout__.write('sending error')
                 sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
-                sys.__stdout__.write('done error')
 
             try:
                 self.send_error()
@@ -1044,7 +1041,8 @@ def _run_repl():
     BACKEND = backend_type(launch_file=options.launch_file)
     BACKEND.connect(int(options.port))
 
-    BACKEND.init_debugger()
+    if options.enable_attach:
+        BACKEND.init_debugger()
 
     if backend_error is not None:
         sys.stderr.write('Error using selected REPL back-end:\n')

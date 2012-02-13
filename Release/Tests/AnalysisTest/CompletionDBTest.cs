@@ -44,9 +44,9 @@ namespace AnalysisTest {
 
                 // run the scraper
                 var startInfo = new ProcessStartInfo(path.Path,
-                    String.Format("\"{2}\" \"{0}\" \"{1}\"", 
-                        testDir, 
-                        Path.Combine(Directory.GetCurrentDirectory(), "CompletionDB"), 
+                    String.Format("\"{2}\" \"{0}\" \"{1}\"",
+                        testDir,
+                        Path.Combine(Directory.GetCurrentDirectory(), "CompletionDB"),
                         Path.Combine(Directory.GetCurrentDirectory(), "PythonScraper.py")
                     )
                 );
@@ -64,6 +64,20 @@ namespace AnalysisTest {
                         Assert.AreEqual(overload["ret_type"][0], "__builtin__");
                         Assert.AreEqual(overload["ret_type"][1], "file");
                     }
+                }
+
+                if (!path.Path.Contains("Iron")) {
+                    dynamic itertoolsDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "itertools.idb"), FileMode.Open, FileAccess.Read));
+                    var tee = itertoolsDb["members"]["tee"]["value"];
+                    var overloads = tee["overloads"];
+                    var nArg = overloads[0]["args"][1];
+                    Assert.AreEqual(nArg["name"], "n");
+                    Assert.AreEqual(nArg["default_value"], "2");
+
+                    dynamic sreDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "_sre.idb"), FileMode.Open, FileAccess.Read));
+                    var members = sreDb["members"];
+                    Assert.IsTrue(members.ContainsKey("SRE_Pattern"));
+                    Assert.IsTrue(members.ContainsKey("SRE_Match"));
                 }
             }
         }

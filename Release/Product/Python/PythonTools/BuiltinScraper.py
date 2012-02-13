@@ -49,7 +49,12 @@ def get_arg_name(arg, cfunc):
 
     colon_index = arg.find(':')
     if colon_index != -1:
-        return arg[:colon_index]
+        arg = arg[:colon_index]
+
+    equal_index = arg.find('=')
+    if equal_index != -1:
+        arg = arg[:equal_index]
+
     return arg
 
 def builtins_keys():
@@ -101,8 +106,11 @@ TYPE_OVERRIDES = {'string': PythonScraper.type_to_name(types.CodeType),
                   'size': PythonScraper.type_to_name(int),
                 }
 
-def type_name_to_type(name, mod):
-    arg_type = TYPE_OVERRIDES.get(name, None)
+RETURN_TYPE_OVERRIDES = dict(TYPE_OVERRIDES)
+RETURN_TYPE_OVERRIDES.update({'string': PythonScraper.type_to_name(str)})
+
+def type_name_to_type(name, mod, type_overrides = TYPE_OVERRIDES):
+    arg_type = type_overrides.get(name, None)
     if arg_type is None:
         if name in BUILTIN_TYPES:
             arg_type = PythonScraper.type_to_name(__builtins__[name])
@@ -204,13 +212,16 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, is_method 
             if func_name is not None and method != func_name:
                 # wrong function name, ignore the match
                 continue
-                
+
+            
             args = [get_arg_info(arg, decl_mod, cfunc) for arg in arg_info[2:-1] if get_arg_name(arg, cfunc)]
+            if mod == 're' and func_name == 'compile':
+                print args
             
             ret_type = arg_info[-1]
             if ret_type:
                 ret_type = ret_type.strip()
-                ret_type = type_name_to_type(ret_type[2:].strip(), decl_mod)  # remove ->
+                ret_type = type_name_to_type(ret_type[2:].strip(), decl_mod, RETURN_TYPE_OVERRIDES)  # remove ->
                 if not ret_type[0]:
                     if ret_type[1] == 'copy' and obj_class is not None:
                         # returns a copy of self

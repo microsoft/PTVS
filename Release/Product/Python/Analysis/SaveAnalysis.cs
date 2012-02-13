@@ -388,7 +388,7 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<string, object> GenerateFunction(FunctionInfo fi) {
             return new Dictionary<string, object>() {
                 {"doc", fi.Documentation },
-                {"overloads", new object[] { GenerateOverload(fi) } },
+                {"overloads", GenerateOverloads(fi) },
                 {"builtin", false},
                 {"static", fi.IsStatic},
                 {"location", GenerateLocation(fi.Location) }
@@ -399,11 +399,17 @@ namespace Microsoft.PythonTools.Analysis {
             return new object[] { location.Line, location.Column };
         }
 
-        private Dictionary<string, object> GenerateOverload(FunctionInfo fi) {
-            return new Dictionary<string, object>() {
-                {"args", GenerateArgInfo(fi) },
-                {"ret_type", GenerateTypeName(fi.ReturnValue.Types) },
-            };
+        private object[] GenerateOverloads(FunctionInfo fi) {
+            List<object> overloads = new List<object>();
+            foreach (var retType in fi.ReturnValue.Types) {
+                overloads.Add(
+                    new Dictionary<string, object>() {
+                        {"args", GenerateArgInfo(fi) },
+                        {"ret_type", GenerateTypeName(retType) },
+                    }
+                );
+            }
+            return overloads.ToArray();
         }
 
         private List<object> GenerateArgInfo(FunctionInfo fi) {

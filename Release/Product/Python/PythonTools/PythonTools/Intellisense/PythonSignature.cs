@@ -53,6 +53,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     content.Append(": ");
                     content.Append(param.Type);
                 }
+                
+                if (!String.IsNullOrWhiteSpace(param.DefaultValue)) {
+                    content.Append(" = ");
+                    content.Append(param.DefaultValue);
+                }
 
                 var paramSpan = new Span(start, content.Length - start);
 

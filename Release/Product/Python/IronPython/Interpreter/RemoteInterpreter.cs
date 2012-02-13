@@ -703,7 +703,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
             foreach (var ov in func.Overloads.Functions) {
                 BuiltinFunction overload = (ov as BuiltinFunction);
                 if (overload.Overloads.Targets[0].DeclaringType.IsAssignableFrom(func.DeclaringType) ||
-                    overload.Overloads.Targets[0].DeclaringType.FullName.StartsWith("IronPython.Runtime.Operations.")) {
+                    (overload.Overloads.Targets[0].DeclaringType.FullName != null &&
+                    overload.Overloads.Targets[0].DeclaringType.FullName.StartsWith("IronPython.Runtime.Operations."))) {
                     result.Add(MakeHandle(overload.Targets[0]));
                 }
             }

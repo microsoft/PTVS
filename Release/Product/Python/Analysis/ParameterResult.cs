@@ -20,6 +20,7 @@ namespace Microsoft.PythonTools.Analysis {
         public string Name { get; private set; }
         public string Documentation { get; private set; }
         public string Type { get; private set; }
+        public string DefaultValue { get; private set; }
         public bool IsOptional { get; private set; }
         public IEnumerable<IAnalysisVariable> Variables { get; private set; }
 
@@ -35,13 +36,18 @@ namespace Microsoft.PythonTools.Analysis {
         public ParameterResult(string name, string doc, string type, bool isOptional)
             : this(name, doc, type, isOptional, null) {
         }
-        public ParameterResult(string name, string doc, string type, bool isOptional, IEnumerable<IAnalysisVariable> variable) {
+        public ParameterResult(string name, string doc, string type, bool isOptional, IEnumerable<IAnalysisVariable> variable) :
+            this(name, doc, type, isOptional, variable, null) {
+        }
+        public ParameterResult(string name, string doc, string type, bool isOptional, IEnumerable<IAnalysisVariable> variable, string defaultValue) {
             Name = name;
             Documentation = Trim(doc);
             Type = type;
             IsOptional = isOptional;
             Variables = variable;
+            DefaultValue = defaultValue;
         }
+
         private const int MaxDocLength = 1000;
         internal static string Trim(string doc) {
             if (doc != null && doc.Length > MaxDocLength) {

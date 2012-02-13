@@ -26,6 +26,7 @@ using AnalysisTest.ProjectSystem;
 using AnalysisTest.UI;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Repl;
@@ -2688,6 +2689,56 @@ g()",
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
 
             Assert.AreEqual(replWindow.Output, "42");
+        }
+
+        [TestMethod]
+        public void GenericMethodCompletions() {
+            // http://pytools.codeplex.com/workitem/661
+            var factProvider = new IronPythonInterpreterFactoryProvider();
+            var fact = factProvider.GetInterpreterFactories().First();
+            var replEval = new PythonReplEvaluator(factProvider, new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
+            execute.Wait();
+            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            replWindow.ClearScreen();
+
+            execute = replEval.ExecuteText("def func1(): print 'hello world'\r\n\r\n");
+            execute.Wait();
+            replWindow.ClearScreen();
+
+            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+
+            execute = replEval.ExecuteText("t = Task.Factory.StartNew(func1)");
+            execute.Wait();
+            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+
+            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(ProjectAnalyzer), analyzer);
+
+                var names = replEval.GetMemberNames(analyzer, "t");
+                foreach (var name in names) {
+                    Debug.WriteLine(name.Name);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void NoTraceFunction() {
+            // http://pytools.codeplex.com/workitem/662
+            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var execute = replEval.ExecuteText("import sys");
+            execute.Wait();
+            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            replWindow.ClearScreen();
+
+            execute = replEval.ExecuteText("sys.gettrace()");
+            execute.Wait();
+            Assert.AreEqual(replWindow.Output, "");
+            replWindow.ClearScreen();
         }
     }
 

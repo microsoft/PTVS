@@ -196,15 +196,12 @@ namespace Microsoft.PythonTools.Analysis {
 
             bool isOptional = false;
             string defaultValue = param.DefaultValue;
-            if (defaultValue != null) {
-                if (defaultValue == String.Empty) {
-                    isOptional = true;
-                } else {
-                    name = name + " " + defaultValue;
-                }
+            if (defaultValue != null && defaultValue == String.Empty) {
+                isOptional = true;
+                defaultValue = null;
             }
 
-            return new ParameterResult(name, "", typeName, isOptional);
+            return new ParameterResult(name, "", typeName, isOptional, null, defaultValue);
         }
     }
 }
