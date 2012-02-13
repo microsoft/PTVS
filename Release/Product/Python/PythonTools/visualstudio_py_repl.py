@@ -503,7 +503,8 @@ class BasicReplBackend(ReplBackend):
         if sys.platform == 'cli':
             code_to_send = ''
             for line in stripped_code.split('\n'):
-                if line.strip().startswith('#') and not code_to_send:
+                stripped = line.strip()
+                if (stripped.startswith('#') or not stripped) and not code_to_send:
                     continue
                 code_to_send += line + '\n'
 

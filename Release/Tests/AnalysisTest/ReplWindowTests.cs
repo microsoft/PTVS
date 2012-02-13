@@ -2740,6 +2740,18 @@ g()",
             Assert.AreEqual(replWindow.Output, "");
             replWindow.ClearScreen();
         }
+
+        [TestMethod]
+        public void CommentFollowedByBlankLine() {
+            // http://pytools.codeplex.com/workitem/659
+            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var execute = replEval.ExecuteText("# foo\r\n\r\n    \r\n\t\t\r\na = 42");
+            execute.Wait();
+            Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            replWindow.ClearScreen();
+        }
     }
 
 }
