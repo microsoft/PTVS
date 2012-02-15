@@ -1873,21 +1873,29 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('12')
+    f.write('13')
     f.close()
 
     # inspect extension modules installed into site-packages
     def package_inspector(site_packages, dirname, fnames):
         for filename in fnames:
-            if filename.endswith('.pyd'):
+            if filename.lower().endswith('.pyd'):
                 # Spawn scraping out to a subprocess incase the module causes a crash.
+                pkg_name = filename[:-4]
+
+                cur_dirname = dirname
+                while os.path.exists(os.path.join(cur_dirname, '__init__.py')):
+                    head, tail = os.path.split(cur_dirname)
+                    pkg_name = tail + '.' + pkg_name
+                    cur_dirname = head
+
                 os.spawnl(os.P_WAIT, 
-                          sys.executable,
-                          sys.executable,
-                          "\"" + os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py') + "\"",
-                          'scrape',
-                          "\"" + os.path.join(dirname, filename) + "\"",
-                          "\"" + outpath + "\""
+                            sys.executable,
+                            sys.executable,
+                            "\"" + os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py') + "\"",
+                            'scrape',
+                            "\"" + os.path.join(dirname, filename) + "\"",
+                            "\"" + os.path.join(outpath, pkg_name) + "\""
                 )
 
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')

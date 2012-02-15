@@ -19,7 +19,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinModule : BuiltinNamespace<IPythonModule>, IReferenceableContainer, IModule {
+    internal sealed class BuiltinModule : BuiltinNamespace<IPythonModule>, IReferenceableContainer, IModule {
         private readonly MemberReferences _references = new MemberReferences();
         private readonly IPythonModule _interpreterModule;
 

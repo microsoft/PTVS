@@ -180,21 +180,37 @@ def get_arg_info(arg, mod, cfunc):
 # which can't handle things like balanced parens such as x [, y [, z]].  But this is better than
 # nothing.
 
+OPT_STAR_ARGS = '(?:(?:\\*)|(?:\\*\\*))?\s*'
+PY_ARG_SIMPLE = ('(?:'
+              '(\.\.\.)|'                                                       # ...
+              '(?:[a-zA-Z_][\\w]*(?::\s*[a-zA-Z_][\\w]*)?)'                    # foo
+              ')'                                        
+             )
+
+PY_ARG = ('(?:'
+          '(\.\.\.)|'                                                       # ...
+          '(?:[a-zA-Z_][\\w]*(?::\s*[a-zA-Z_][\\w]*)?)|'                    # foo
+            '(?:\\(' + PY_ARG_SIMPLE +                                         # (foo, bar)
+            '(?:\s*[[]?\s*,\s*(?:' + PY_ARG_SIMPLE + ')\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*'    
+            '\\))'
+          ')'
+         )
+
 DOC_REGEX = ('([a-zA-Z_][\\w]*\\.)?'                                    # X. (instance/class name)
-            '([a-zA-Z_][\\w]*)\s*\\'                                    # foo   (method name)
-            '(((?:(?:\\*)|(?:\\*\\*))?\s*(?:(\.\.\.)|(?:[a-zA-Z_][\\w]*(?::\s*[a-zA-Z_][\\w]*)?)))?'               # first argument
-            '(\s*[[]?\s*,\s*(?:(?:(?:\\*)|(?:\\*\\*))?\s*(?:(\.\.\.)|(?:[a-zA-Z_][\\w]*(?::\s*[a-zA-Z_][\\w]*)?)))\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*\\)'    # additional args, accepts ", foo", [, foo]"
-            '(\s*->\s*[a-zA-Z_][\\w]*)?')                               #f return type
+            '([a-zA-Z_][\\w]*)\s*\\('                                   # foo   (method name) plus the ( for the sig
+            '(' + OPT_STAR_ARGS + PY_ARG + ')?'                          # first argument
+            '(\s*[[]?\s*,\s*(?:' + OPT_STAR_ARGS + PY_ARG + ')\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*'    # additional args, accepts ", foo", [, foo]"
+            '\\)(\s*(?:->|\:\s*return)\s*[a-zA-Z_][\\w]*)?')                               # ) closing the sig plus return type
 
 # (?:[a-zA-Z_]+\s+)?
 # regex to match a func like (int x, int y)
 DOC_REGEX_CFUNC = ('([a-zA-Z_][\\w]*\\.)?'                                    # X. (instance/class name)
             '([a-zA-Z_][\\w]*)\s*\\'                                    # foo   (method name)
-            '(((?:(?:\\*)|(?:\\*\\*))?\s*(?:[a-zA-Z_]+\s+)[a-zA-Z_][\\w]*)?'               # first argument
-            '(\s*[[]?\s*,\s*(?:[a-zA-Z_]+\s+)?(?:(?:(?:\\*)|(?:\\*\\*))?\s*[a-zA-Z_][\\w]*)\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*\\)'    # additional args, accepts ", foo", [, foo]"
-            '(\s*->\s*[a-zA-Z_][\\w]*)?')                               # return type
+            '((' + OPT_STAR_ARGS + '(?:[a-zA-Z_]+\s+)[a-zA-Z_][\\w]*)?'               # first argument
+            '(\s*[[]?\s*,\s*(?:[a-zA-Z_]+\s+)?(?:' + OPT_STAR_ARGS + '[a-zA-Z_][\\w]*)\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*\\)'    # additional args, accepts ", foo", [, foo]"
+            '(\s*(?:->|\:\s*return)\s*[a-zA-Z_][\\w]*)?')                               # return type
 
-def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, is_method = False):
+def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, extra_args = []):
     decl_mod = None
     if mod is not None:
         decl_mod = sys.modules.get(mod, None)
@@ -215,13 +231,18 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, is_method 
 
             
             args = [get_arg_info(arg, decl_mod, cfunc) for arg in arg_info[2:-1] if get_arg_name(arg, cfunc)]
-            if mod == 're' and func_name == 'compile':
-                print args
-            
             ret_type = arg_info[-1]
             if ret_type:
                 ret_type = ret_type.strip()
-                ret_type = type_name_to_type(ret_type[2:].strip(), decl_mod, RETURN_TYPE_OVERRIDES)  # remove ->
+                if ret_type.startswith('->'):
+                    ret_type_name = ret_type[2:]
+                elif ret_type.startswith(': return'):
+                    ret_type_name = ret_type[8:]
+                else:
+                    ret_type_name = ret_type
+                
+                ret_type = type_name_to_type(ret_type_name.strip(), decl_mod, RETURN_TYPE_OVERRIDES)  # remove ->
+
                 if not ret_type[0]:
                     if ret_type[1] == 'copy' and obj_class is not None:
                         # returns a copy of self
@@ -229,14 +250,14 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, is_method 
             else:
                 ret_type = PythonScraper.type_to_name(type(None))
     
-            if is_method:
-                args = [{'type': PythonScraper.type_to_name(object), 'name': 'self'}] + args
+            if extra_args:
+                args = extra_args + args
 
             overload = {
                 'args': args,
                 'ret_type' : ret_type
             }
-            
+
             res.append(overload)
     
     if not res:
@@ -245,11 +266,16 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, is_method 
     return tuple(res)
 
 def get_overloads(func, is_method = False):
+    if is_method:
+        extra_args = [{'type': PythonScraper.type_to_name(object), 'name': 'self'}]
+    else:
+        extra_args = []
+
     return get_overloads_from_doc_string(func.__doc__, 
                                          getattr(func, '__module__', None), 
                                          getattr(func, '__objclass__', None),
                                          getattr(func, '__name__', None),
-                                         is_method)
+                                         extra_args)
 
 def get_descriptor_type(descriptor):
 	return object
@@ -258,7 +284,9 @@ def get_new_overloads(type_obj, obj):
     res = get_overloads_from_doc_string(type_obj.__doc__, 
                                         getattr(type_obj, '__module__', None), 
                                         type(type_obj), 
-                                        getattr(type_obj, '__name__', None))
+                                        getattr(type_obj, '__name__', None),
+                                        [{'type': PythonScraper.type_to_name(type), 'name': 'cls'}])
+
     if not res:
         res = get_overloads_from_doc_string(obj.__doc__, 
                                             getattr(type_obj, '__module__', None), 

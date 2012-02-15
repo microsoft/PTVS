@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
@@ -21,25 +22,31 @@ namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
         private readonly string _name;
         private string _completion;
-        private readonly IEnumerable<Namespace> _vars;
+        private readonly Func<IEnumerable<Namespace>> _vars;
         private readonly PythonMemberType? _type;
 
         internal MemberResult(string name, IEnumerable<Namespace> vars) {
             _name = _completion = name;
-            _vars = vars;
+            _vars = () => vars;
             _type = null;
         }
 
         public MemberResult(string name, PythonMemberType type) {
             _name = _completion = name;
             _type = type;
-            _vars = Empty;
+            _vars = () => Empty;
         }
 
         internal MemberResult(string name, string completion, IEnumerable<Namespace> vars, PythonMemberType? type) {
             _name = name;
-            _vars = vars;
+            _vars = () => vars;
             _completion = completion;
+            _type = type;
+        }
+
+        internal MemberResult(string name, Func<IEnumerable<Namespace>> vars, PythonMemberType? type) {
+            _name = _completion = name;
+            _vars = vars;
             _type = type;
         }
 
@@ -61,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 var docs = new HashSet<string>();
                 var doc = new StringBuilder();
-                foreach (var ns in _vars) {
+                foreach (var ns in _vars()) {
                     if (docs.Add(ns.Documentation)) {
                         doc.AppendLine(ns.Documentation);
                         doc.AppendLine();
@@ -79,7 +86,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private PythonMemberType GetMemberType() {
             PythonMemberType result = PythonMemberType.Unknown;
-            foreach (var ns in _vars) {
+            foreach (var ns in _vars()) {
                 var nsType = ns.ResultType;
                 if (result == PythonMemberType.Unknown) {
                     result = nsType;
@@ -100,7 +107,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal IEnumerable<Namespace> Namespaces {
             get {
-                return _vars;
+                return _vars();
             }
         }
     }

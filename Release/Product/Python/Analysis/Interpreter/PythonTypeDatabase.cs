@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 12;
+        public static readonly int CurrentVersion = 13;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
@@ -387,17 +387,25 @@ namespace Microsoft.PythonTools.Interpreter {
                     "\"" + Path.Combine(GetPythonToolsInstallPath(), "PythonScraper.py") + "\"" +       // script to run
                     " \"" + outPath + "\"" +                                                // output dir
                     " \"" + GetBaselineDatabasePath() + "\"";           // baseline file
+                psi.RedirectStandardError = true;
+                psi.RedirectStandardOutput = true;
 
                 var proc = new Process();
                 proc.StartInfo = psi;
+                StringBuilder output = new StringBuilder();
                 try {
                     LogEvent(request, "START_SCRAPE");
 
                     proc.Start();
+                    proc.BeginErrorReadLine();
+                    proc.BeginOutputReadLine();
+                    proc.OutputDataReceived += (sender, args) => output.Append(args.Data);
+                    proc.ErrorDataReceived += (sender, args) => output.Append(args.Data);
                     proc.WaitForExit();
                 } catch (Win32Exception ex) {
                     // failed to start process, interpreter doesn't exist?           
                     LogEvent(request, "FAIL_SCRAPE " + ex.ToString().Replace("\r\n", " -- "));
+                    LogEvent(request, "    " + output.Replace("\r\n", "    \r\n"));
                     databaseGenerationCompleted();
                     return;
                 }

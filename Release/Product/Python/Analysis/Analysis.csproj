@@ -4,11 +4,13 @@
     <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags></FileUpgradeFlags>
-        <UpgradeBackupLocation></UpgradeBackupLocation>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
         <OldToolsVersion>4.0</OldToolsVersion>
-       </PropertyGroup>
-	</When>
+      </PropertyGroup>
+    </When>
   </Choose>
   <PropertyGroup>
     <StartupObject />
@@ -77,6 +79,7 @@
     <Compile Include="Interpreter\ProjectReference.cs" />
     <Compile Include="Interpreter\ProjectReferenceKind.cs" />
     <Compile Include="Interpreter\SharedDatabaseState.cs" />
+    <Compile Include="ModuleTable.cs" />
     <Compile Include="SourceLocationResolver.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />

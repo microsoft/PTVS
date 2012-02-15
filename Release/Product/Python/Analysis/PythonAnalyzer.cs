@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public class PythonAnalyzer : IInterpreterState, IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
-        private readonly ConcurrentDictionary<string, ModuleReference> _modules;
+        private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
         private readonly Dictionary<object, object> _itemCache;
         private BuiltinModule _builtinModule;
@@ -59,17 +59,14 @@ namespace Microsoft.PythonTools.Analysis {
         public PythonAnalyzer(IPythonInterpreter pythonInterpreter, PythonLanguageVersion langVersion) {
             _langVersion = langVersion;
             _interpreter = pythonInterpreter;
-            _modules = new ConcurrentDictionary<string, ModuleReference>();
+            _modules = new ModuleTable(this, _interpreter, _interpreter.GetModuleNames());
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _itemCache = new Dictionary<object, object>();
 
-            var allBuiltins = InitializeBuiltinModules();
 
             _queue = new Deque<AnalysisUnit>();
 
             LoadKnownTypes();
-
-            FinishBuiltinsInit(allBuiltins);
 
             pythonInterpreter.Initialize(this);
 
@@ -132,29 +129,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// when the interpreter signals that it's modules have changed.
         /// </summary>
         public void ReloadModules() {
-            var allBuiltins = InitializeBuiltinModules();
-
+            _modules.ReInit();
             LoadKnownTypes();
-
-            FinishBuiltinsInit(allBuiltins);
-
-            var names = new HashSet<string>(_interpreter.GetModuleNames());
-            List<string> removed = null;
-            foreach (var mod in _modules) {
-                var builtinMod = mod.Value.Module as BuiltinModule;
-                if (builtinMod != null && !names.Contains(mod.Key)) {
-                    if (removed == null) {
-                        removed = new List<string>();
-                    }
-                    removed.Add(mod.Key);
-                }
-            }
-            if (removed != null) {
-                foreach (var builtin in removed) {
-                    ModuleReference dummy;
-                    _modules.TryRemove(builtin, out dummy);
-                }
-            }
 
             _interpreter.Initialize(this);
 
@@ -231,7 +207,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <returns></returns>
         public MemberResult[] GetModules(bool topLevelOnly = false) {
-            var d = new Dictionary<string, HashSet<Namespace>>();
+            var d = new Dictionary<string, List<ModuleLoadState>>();
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
@@ -240,14 +216,14 @@ namespace Microsoft.PythonTools.Analysis {
                     continue;
                 }
 
-                if (moduleRef.Module != null || moduleRef.HasEphemeralReferences) {
-                    HashSet<Namespace> l;
+                if (moduleRef.IsValid) {
+                    List<ModuleLoadState> l;
                     if (!d.TryGetValue(modName, out l)) {
-                        d[modName] = l = new HashSet<Namespace>();
+                        d[modName] = l = new List<ModuleLoadState>();
                     }
-                    if (moduleRef.Module != null) {
+                    if (moduleRef.HasModule) {
                         // The REPL shows up here with value=None
-                        l.Add(moduleRef.Module);
+                        l.Add(moduleRef);
                     }
                 }
             }
@@ -255,9 +231,27 @@ namespace Microsoft.PythonTools.Analysis {
             var result = new MemberResult[d.Count];
             int pos = 0;
             foreach (var kvp in d) {
-                result[pos++] = new MemberResult(kvp.Key, kvp.Value);
+                result[pos++] = new MemberResult(
+                    kvp.Key, 
+                    new LazyModuleEnumerator(kvp.Value).GetLazyModules, 
+                    PythonMemberType.Module
+                );
             }
             return result;
+        }
+
+        class LazyModuleEnumerator {
+            private readonly List<ModuleLoadState> _loaded;
+
+            public LazyModuleEnumerator(List<ModuleLoadState> loaded) {
+                _loaded = loaded;
+            }
+
+            public IEnumerable<Namespace> GetLazyModules() {
+                foreach (var value in _loaded) {
+                    yield return value.Module;
+                }
+            }
         }
 
         /// <summary>
@@ -272,7 +266,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (moduleRef.Module != null || moduleRef.HasEphemeralReferences) {
+                if (moduleRef.IsValid) {
                     // include modules which can be imported
                     if (modName == name || PackageNameMatches(name, modName)) {
                         yield return new ExportedMemberInfo(modName, true);
@@ -285,93 +279,15 @@ namespace Microsoft.PythonTools.Analysis {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (moduleRef.Module != null || moduleRef.HasEphemeralReferences) {
-                    if (moduleRef.Module != null) {
-                        // then check for members within the module.
-                        if (ModuleContainsMember(name, moduleRef)) {
-                            yield return new ExportedMemberInfo(modName + "." + name, true);
-                        } else {
-                            yield return new ExportedMemberInfo(modName + "." + name, false);
-                        }
+                if (moduleRef.IsValid) {
+                    // then check for members within the module.
+                    if (moduleRef.ModuleContainsMember(_defaultContext, name)) {
+                        yield return new ExportedMemberInfo(modName + "." + name, true);
+                    } else {
+                        yield return new ExportedMemberInfo(modName + "." + name, false);
                     }
                 }
             }
-        }
-
-        private bool ModuleContainsMember(string name, ModuleReference moduleRef) {
-            BuiltinModule builtin = moduleRef.Module as BuiltinModule;
-            if (builtin != null) {
-                var mem = builtin.InterpreterModule.GetMember(_defaultContext, name);
-                if (mem != null) {
-                    if (IsExcludedBuiltin(builtin, mem)) {
-                        // if a module imports a builtin and exposes it don't report it for purposes of adding imports
-                        return false;
-                    }
-
-                    IPythonMultipleMembers multiMem = mem as IPythonMultipleMembers;
-                    if (multiMem != null) {
-                        foreach (var innerMem in multiMem.Members) {
-                            if (IsExcludedBuiltin(builtin, innerMem)) {
-                                // if something non-excludable aliased w/ something excluable we probably
-                                // only care about the excluable (for example a module and None - timeit.py
-                                // does this in the std lib)
-                                return false;
-                            }
-                        }
-                    }
-
-                    return true;
-                }
-            }
-
-            ModuleInfo modInfo = moduleRef.Module as ModuleInfo;
-            if (modInfo != null) {
-                VariableDef varDef;
-                if (modInfo.Scope.Variables.TryGetValue(name, out varDef) &&
-                    varDef.VariableStillExists &&
-                    varDef.Types.Count > 0) {
-
-                    foreach (var type in varDef.Types) {
-                        if (type is ModuleInfo || type is BuiltinModule) {
-                            // we find modules via our modules list, dont duplicate these
-                            return false;
-                        }
-
-                        foreach (var location in type.Locations) {
-                            if (location.ProjectEntry != modInfo.ProjectEntry) {
-                                // declared in another module
-                                return false;
-                            }
-                        }
-                    }
-
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private static bool IsExcludedBuiltin(BuiltinModule builtin, IMember mem) {
-            IPythonFunction func;
-            IPythonType type;
-            IPythonConstant constant;
-            if (mem is IPythonModule || // modules are handled specially
-                ((func = mem as IPythonFunction) != null && func.DeclaringModule != builtin.InterpreterModule) ||   // function imported into another module
-                ((type = mem as IPythonType) != null && type.DeclaringModule != builtin.InterpreterModule) ||   // type imported into another module
-                ((constant = mem as IPythonConstant) != null && constant.Type.TypeId == BuiltinTypeId.Object)) {    // constant which we have no real type info for.
-                return true;
-            }
-
-            if (constant != null) {
-                if (constant.Type.DeclaringModule.Name == "__future__" && 
-                    constant.Type.Name == "_Feature" && 
-                    builtin.Name != "__future__") {
-                    // someone has done a from __future__ import blah, don't include import in another
-                    // module in the list of places where you can import this from.
-                    return true;
-                }
-            }
-            return false;
         }
 
         private static bool PackageNameMatches(string name, string modName) {
@@ -631,71 +547,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private Dictionary<string, BuiltinModule> InitializeBuiltinModules() {
-            var names = _interpreter.GetModuleNames();
-            Dictionary<string, BuiltinModule> allBuiltins = new Dictionary<string, BuiltinModule>();
-            foreach (string modName in names) {
-                var mod = _interpreter.ImportModule(modName);
-                if (mod != null) {
-                    ModuleReference modRef;
-                    if (Modules.TryGetValue(modName, out modRef)) {
-                        var existingBuiltin = modRef.Module as BuiltinModule;
-                        if (existingBuiltin != null && existingBuiltin._type == mod) {
-                            // don't replace existing module which is the same
-                            continue;
-                        }
-                    }
-
-                    var newMod = new BuiltinModule(mod, this);
-                    Modules[modName] = new ModuleReference(newMod);
-                    if (modName.IndexOf('.') != -1) {
-                        allBuiltins[modName] = newMod;
-                    }
-                }
-            }
-
-            return allBuiltins;
-       }
-
-        private void FinishBuiltinsInit(Dictionary<string, BuiltinModule> allBuiltins) {
-            // now make sure children modules are listed in their parents...
-            foreach (var nameModule in allBuiltins) {
-                var modName = nameModule.Key;
-                var module = nameModule.Value;
-
-                int dotStart = modName.LastIndexOf('.');
-                Debug.Assert(dotStart != -1);
-                string parentName = modName.Substring(0, dotStart);
-                do {
-                    ModuleReference parentRef;
-                    if (!Modules.TryGetValue(parentName, out parentRef)) {
-                        Modules[parentName] = parentRef = new ModuleReference(new BuiltinModule(new EmptyBuiltinModule(parentName), this));
-                    }
-                    BuiltinModule parentModule = parentRef.Module as BuiltinModule;
-                    if (parentModule == null) {
-                        break;
-                    }
-                    int dotEnd;
-                    string curModName;
-                    if ((dotEnd = modName.IndexOf('.', dotStart + 1)) == -1) {
-                        curModName = modName.Substring(dotStart + 1);
-                    } else {
-                        curModName = modName.Substring(dotStart + 1, dotEnd - dotStart - 1);
-                    }
-                    ISet<Namespace> existing;
-                    if (parentModule.TryGetMember(curModName, out existing)) {
-                        // module is aliased w/ a member, merge it in...
-                        var newSet = new HashSet<Namespace>(existing);
-                        newSet.Add(module);
-                        parentModule[curModName] = newSet;
-                    } else {
-                        parentModule[curModName] = module;
-                    }
-                    module = parentModule;
-                } while (dotStart != 0 && (dotStart = parentName.LastIndexOf('.', dotStart - 1)) != -1);
-            }
-        }
-
         internal BuiltinModule ImportBuiltinModule(string modName, bool bottom = true) {
             IPythonModule mod = null;
 
@@ -784,7 +635,7 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (attr is IBuiltinProperty) {
                 return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this));
             } else if (attr is IPythonModule) {
-                return GetCached(attr, () => new BuiltinModule((IPythonModule)attr, this));
+                return _modules.GetBuiltinModule((IPythonModule)attr);
             } else if (attr is IPythonEvent) {
                 return GetCached(attr, () => new BuiltinEventInfo((IPythonEvent)attr, this));
             } else if (attr is IPythonConstant) {
@@ -822,7 +673,7 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        internal ConcurrentDictionary<string, ModuleReference> Modules {
+        internal ModuleTable Modules {
             get { return _modules; }
         }
 
