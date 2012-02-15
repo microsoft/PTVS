@@ -217,6 +217,7 @@ namespace Microsoft.PythonTools.Analysis {
         class UninitializedModuleLoadState : ModuleLoadState {
             private readonly ModuleTable _moduleTable;
             private readonly string _name;
+            private PythonMemberType? _type;
 
             public UninitializedModuleLoadState(ModuleTable moduleTable, string name) {
                 this._moduleTable = moduleTable;
@@ -251,8 +252,22 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            public override PythonMemberType MemberType {
+                get {
+                    if (_type == null) {
+                        var mod = _moduleTable._interpreter.ImportModule(_name);
+                        if (mod != null) {
+                            _type = mod.MemberType;
+                        } else {
+                            _type = PythonMemberType.Module;
+                        }
+                    }
+                    return _type.Value;
+                }
+            }
+
             internal override bool ModuleContainsMember(IModuleContext context, string name) {
-                var mod = _moduleTable._interpreter.ImportModule(name);
+                var mod = _moduleTable._interpreter.ImportModule(_name);
                 if (mod != null) {
                     return BuiltinModuleContainsMember(context, name, mod);
                 }
@@ -289,6 +304,15 @@ namespace Microsoft.PythonTools.Analysis {
             public override bool HasModule {
                 get {
                     return Module != null;
+                }
+            }
+
+            public override PythonMemberType MemberType {
+                get {
+                    if (Module != null) {
+                        return Module.ResultType;
+                    }
+                    return PythonMemberType.Module;
                 }
             }
 
@@ -399,6 +423,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public abstract bool IsValid {
+            get;
+        }
+
+        public abstract PythonMemberType MemberType {
             get;
         }
 

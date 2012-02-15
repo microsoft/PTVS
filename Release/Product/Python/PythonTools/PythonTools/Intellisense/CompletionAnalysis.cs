@@ -79,12 +79,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal static Completion PythonCompletion(IGlyphService service, MemberResult memberResult) {
-            StandardGlyphGroup group = memberResult.MemberType.ToGlyphGroup();
-            var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
-
-            var result = new LazyCompletion(memberResult.Name, () => memberResult.Completion, () => memberResult.Documentation, service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic));
-            result.Properties.AddProperty(typeof(IconDescription), icon);
-            return result;
+            return new LazyCompletion(memberResult.Name, 
+                () => memberResult.Completion, 
+                () => memberResult.Documentation, 
+                () => service.GetGlyph(memberResult.MemberType.ToGlyphGroup(), StandardGlyphItem.GlyphItemPublic)
+            );
         }
 
         internal static Completion PythonCompletion(IGlyphService service, string name, string tooltip, StandardGlyphGroup group) {

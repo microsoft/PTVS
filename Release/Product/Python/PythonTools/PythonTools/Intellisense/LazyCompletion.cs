@@ -21,8 +21,13 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class LazyCompletion : Completion {
         private readonly string _displayText;
         private readonly Func<string> _insertionText, _description;
+        private readonly Func<ImageSource> _glyph;
 
-        public LazyCompletion(string displayText, Func<string> insertionText, Func<string> description, ImageSource glyph) {
+        public LazyCompletion(string displayText, Func<string> insertionText, Func<string> description, ImageSource glyph) :
+            this(displayText, insertionText, description, () => glyph) {
+        }
+
+        public LazyCompletion(string displayText, Func<string> insertionText, Func<string> description, Func<ImageSource> glyph) {
             Debug.Assert(displayText != null);
             Debug.Assert(insertionText != null);
             Debug.Assert(description != null);
@@ -30,8 +35,17 @@ namespace Microsoft.PythonTools.Intellisense {
             _displayText = displayText;
             _insertionText = insertionText;
             _description = description;
-            IconSource = glyph;
+            _glyph = glyph;
             IconAutomationText = "";
+        }
+
+        public override ImageSource IconSource {
+            get {
+                return _glyph();
+            }
+            set {
+                base.IconSource = value;
+            }
         }
 
         public override string DisplayText {

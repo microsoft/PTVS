@@ -23,17 +23,18 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _name;
         private string _completion;
         private readonly Func<IEnumerable<Namespace>> _vars;
-        private readonly PythonMemberType? _type;
+        private readonly Func<PythonMemberType> _type;
 
         internal MemberResult(string name, IEnumerable<Namespace> vars) {
             _name = _completion = name;
             _vars = () => vars;
             _type = null;
+            _type = GetMemberType;
         }
 
         public MemberResult(string name, PythonMemberType type) {
             _name = _completion = name;
-            _type = type;
+            _type = () => type;
             _vars = () => Empty;
         }
 
@@ -41,10 +42,15 @@ namespace Microsoft.PythonTools.Analysis {
             _name = name;
             _vars = () => vars;
             _completion = completion;
-            _type = type;
+            if (type != null) {
+                _type = () => type.Value;
+            } else {
+                _type = null;
+                _type = GetMemberType;
+            }
         }
 
-        internal MemberResult(string name, Func<IEnumerable<Namespace>> vars, PythonMemberType? type) {
+        internal MemberResult(string name, Func<IEnumerable<Namespace>> vars, Func<PythonMemberType> type) {
             _name = _completion = name;
             _vars = vars;
             _type = type;
@@ -80,7 +86,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public PythonMemberType MemberType {
             get {
-                return _type ?? GetMemberType();
+                return _type();
             }
         }
 

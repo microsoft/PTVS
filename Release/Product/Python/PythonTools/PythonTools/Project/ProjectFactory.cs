@@ -95,25 +95,28 @@ namespace Microsoft.PythonTools.Project
 		/// <param name="canceled">Was the project creation canceled</param>
 		protected override void CreateProject(string fileName, string location, string name, uint flags, ref Guid projectGuid, out IntPtr project, out int canceled)
 		{
-			project = IntPtr.Zero;
-			canceled = 0;
+			using (new DebugTimer("CreateProject"))
+			{
+				project = IntPtr.Zero;
+				canceled = 0;
 
-			// Get the list of GUIDs from the project/template
-			string guidsList = this.ProjectTypeGuids(fileName);
+				// Get the list of GUIDs from the project/template
+				string guidsList = this.ProjectTypeGuids(fileName);
 
-			// Launch the aggregate creation process (we should be called back on our IVsAggregatableProjectFactoryCorrected implementation)
-			IVsCreateAggregateProject aggregateProjectFactory = (IVsCreateAggregateProject)this.Site.GetService(typeof(SVsCreateAggregateProject));
-			int hr = aggregateProjectFactory.CreateAggregateProject(guidsList, fileName, location, name, flags, ref projectGuid, out project);
-			if(hr == VSConstants.E_ABORT)
-				canceled = 1;
-			ErrorHandler.ThrowOnFailure(hr);
+				// Launch the aggregate creation process (we should be called back on our IVsAggregatableProjectFactoryCorrected implementation)
+				IVsCreateAggregateProject aggregateProjectFactory = (IVsCreateAggregateProject)this.Site.GetService(typeof(SVsCreateAggregateProject));
+				int hr = aggregateProjectFactory.CreateAggregateProject(guidsList, fileName, location, name, flags, ref projectGuid, out project);
+				if (hr == VSConstants.E_ABORT)
+					canceled = 1;
+				ErrorHandler.ThrowOnFailure(hr);
 
-			// This needs to be done after the aggregation is completed (to avoid creating a non-aggregated CCW) and as a result we have to go through the interface
-			IProjectEventsProvider eventsProvider = (IProjectEventsProvider)Marshal.GetTypedObjectForIUnknown(project, typeof(IProjectEventsProvider));
-			eventsProvider.ProjectEventsProvider = this.GetProjectEventsProvider();
-            eventsProvider.ProjectEventsProvider.BeforeProjectFileClosed += ProjectEventsProviderBeforeProjectFileClosed;
+				// This needs to be done after the aggregation is completed (to avoid creating a non-aggregated CCW) and as a result we have to go through the interface
+				IProjectEventsProvider eventsProvider = (IProjectEventsProvider)Marshal.GetTypedObjectForIUnknown(project, typeof(IProjectEventsProvider));
+				eventsProvider.ProjectEventsProvider = this.GetProjectEventsProvider();
+				eventsProvider.ProjectEventsProvider.BeforeProjectFileClosed += ProjectEventsProviderBeforeProjectFileClosed;
 
-			this.buildProject = null;
+				this.buildProject = null;
+			}
 		}
 
         void ProjectEventsProviderBeforeProjectFileClosed(object sender, BeforeProjectFileClosedEventArgs e) {

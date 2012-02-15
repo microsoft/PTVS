@@ -1500,122 +1500,125 @@ namespace Microsoft.PythonTools.Project
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "iid")]
         public virtual void Load(string fileName, string location, string name, uint flags, ref Guid iidProject, out int canceled)
         {
-            try
+            using (new DebugTimer("ProjectLoad"))
             {
-                this.disableQueryEdit = true;
-
-                // set up internal members and icons
-                canceled = 0;
-
-                this.ProjectMgr = this;
-
-                if ((flags & (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE) == (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE)
+                try
                 {
-                    // we need to generate a new guid for the project
-                    this.projectIdGuid = Guid.NewGuid();
-                }
-                else
-                {
-                    this.SetProjectGuidFromProjectFile();
-                }
+                    this.disableQueryEdit = true;
 
-                // This is almost a No op if the engine has already been instantiated in the factory.
-                this.buildEngine = Utilities.InitializeMsBuildEngine(this.buildEngine, this.Site);
+                    // set up internal members and icons
+                    canceled = 0;
 
-                // based on the passed in flags, this either reloads/loads a project, or tries to create a new one
-                // now we create a new project... we do that by loading the template and then saving under a new name
-                // we also need to copy all the associated files with it.					
-                if ((flags & (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE) == (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE)
-                {
-                    Debug.Assert(!String.IsNullOrEmpty(fileName) && File.Exists(fileName), "Invalid filename passed to load the project. A valid filename is expected");
+                    this.ProjectMgr = this;
 
-                    // This should be a very fast operation if the build project is already initialized by the Factory.
-                    SetBuildProject(Utilities.ReinitializeMsBuildProject(this.buildEngine, fileName, this.buildProject));
-
-                    // Compute the file name
-                    // We try to solve two problems here. When input comes from a wizzard in case of zipped based projects 
-                    // the parameters are different.
-                    // In that case the filename has the new filename in a temporay path.
-
-                    // First get the extension from the template.
-                    // Then get the filename from the name.
-                    // Then create the new full path of the project.
-                    string extension = Path.GetExtension(fileName);
-
-                    string tempName = String.Empty;
-
-                    // We have to be sure that we are not going to loose data here. If the project name is a.b.c then for a project that was based on a zipped template(the wizzard calls us) GetFileNameWithoutExtension will suppress "c".
-                    // We are going to check if the parameter "name" is extension based and the extension is the same as the one from the "filename" parameter.
-                    string tempExtension = Path.GetExtension(name);
-                    if (!String.IsNullOrEmpty(tempExtension))
+                    if ((flags & (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE) == (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE)
                     {
-                        bool isSameExtension = (String.Compare(tempExtension, extension, StringComparison.OrdinalIgnoreCase) == 0);
+                        // we need to generate a new guid for the project
+                        this.projectIdGuid = Guid.NewGuid();
+                    }
+                    else
+                    {
+                        this.SetProjectGuidFromProjectFile();
+                    }
 
-                        if (isSameExtension)
+                    // This is almost a No op if the engine has already been instantiated in the factory.
+                    this.buildEngine = Utilities.InitializeMsBuildEngine(this.buildEngine, this.Site);
+
+                    // based on the passed in flags, this either reloads/loads a project, or tries to create a new one
+                    // now we create a new project... we do that by loading the template and then saving under a new name
+                    // we also need to copy all the associated files with it.					
+                    if ((flags & (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE) == (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE)
+                    {
+                        Debug.Assert(!String.IsNullOrEmpty(fileName) && File.Exists(fileName), "Invalid filename passed to load the project. A valid filename is expected");
+
+                        // This should be a very fast operation if the build project is already initialized by the Factory.
+                        SetBuildProject(Utilities.ReinitializeMsBuildProject(this.buildEngine, fileName, this.buildProject));
+
+                        // Compute the file name
+                        // We try to solve two problems here. When input comes from a wizzard in case of zipped based projects 
+                        // the parameters are different.
+                        // In that case the filename has the new filename in a temporay path.
+
+                        // First get the extension from the template.
+                        // Then get the filename from the name.
+                        // Then create the new full path of the project.
+                        string extension = Path.GetExtension(fileName);
+
+                        string tempName = String.Empty;
+
+                        // We have to be sure that we are not going to loose data here. If the project name is a.b.c then for a project that was based on a zipped template(the wizzard calls us) GetFileNameWithoutExtension will suppress "c".
+                        // We are going to check if the parameter "name" is extension based and the extension is the same as the one from the "filename" parameter.
+                        string tempExtension = Path.GetExtension(name);
+                        if (!String.IsNullOrEmpty(tempExtension))
                         {
-                            tempName = Path.GetFileNameWithoutExtension(name);
+                            bool isSameExtension = (String.Compare(tempExtension, extension, StringComparison.OrdinalIgnoreCase) == 0);
+
+                            if (isSameExtension)
+                            {
+                                tempName = Path.GetFileNameWithoutExtension(name);
+                            }
+                            // If the tempExtension is not the same as the extension that the project name comes from then assume that the project name is a dotted name.
+                            else
+                            {
+                                tempName = Path.GetFileName(name);
+                            }
                         }
-                        // If the tempExtension is not the same as the extension that the project name comes from then assume that the project name is a dotted name.
                         else
                         {
                             tempName = Path.GetFileName(name);
                         }
+
+                        Debug.Assert(!String.IsNullOrEmpty(tempName), "Could not compute project name");
+                        string tempProjectFileName = tempName + extension;
+                        this.filename = Path.Combine(location, tempProjectFileName);
+
+                        // Initialize the common project properties.
+                        this.InitializeProjectProperties();
+
+                        ErrorHandler.ThrowOnFailure(this.Save(this.filename, 1, 0));
+
+                        // now we do have the project file saved. we need to create embedded files.
+                        foreach (MSBuild.ProjectItem item in this.BuildProject.Items)
+                        {
+                            // Ignore the item if it is a reference or folder
+                            if (this.FilterItemTypeToBeAddedToHierarchy(item.ItemType))
+                            {
+                                continue;
+                            }
+
+                            // MSBuilds tasks/targets can create items (such as object files),
+                            // such items are not part of the project per say, and should not be displayed.
+                            // so ignore those items.
+                            if (!this.IsItemTypeFileType(item.ItemType))
+                            {
+                                continue;
+                            }
+
+                            string strRelFilePath = item.EvaluatedInclude;
+                            string basePath = Path.GetDirectoryName(fileName);
+                            string strPathToFile;
+                            string newFileName;
+                            // taking the base name from the project template + the relative pathname,
+                            // and you get the filename
+                            strPathToFile = Path.Combine(basePath, strRelFilePath);
+                            // the new path should be the base dir of the new project (location) + the rel path of the file
+                            newFileName = Path.Combine(location, strRelFilePath);
+                            // now the copy file
+                            AddFileFromTemplate(strPathToFile, newFileName);
+                        }
                     }
                     else
                     {
-                        tempName = Path.GetFileName(name);
+                        this.filename = fileName;
                     }
 
-                    Debug.Assert(!String.IsNullOrEmpty(tempName), "Could not compute project name");
-                    string tempProjectFileName = tempName + extension;
-                    this.filename = Path.Combine(location, tempProjectFileName);
-
-                    // Initialize the common project properties.
-                    this.InitializeProjectProperties();
-
-                    ErrorHandler.ThrowOnFailure(this.Save(this.filename, 1, 0));
-
-                    // now we do have the project file saved. we need to create embedded files.
-                    foreach (MSBuild.ProjectItem item in this.BuildProject.Items)
-                    {
-                        // Ignore the item if it is a reference or folder
-                        if (this.FilterItemTypeToBeAddedToHierarchy(item.ItemType))
-                        {
-                            continue;
-                        }
-
-                        // MSBuilds tasks/targets can create items (such as object files),
-                        // such items are not part of the project per say, and should not be displayed.
-                        // so ignore those items.
-                        if (!this.IsItemTypeFileType(item.ItemType))
-                        {
-                            continue;
-                        }
-
-                        string strRelFilePath = item.EvaluatedInclude;
-                        string basePath = Path.GetDirectoryName(fileName);
-                        string strPathToFile;
-                        string newFileName;
-                        // taking the base name from the project template + the relative pathname,
-                        // and you get the filename
-                        strPathToFile = Path.Combine(basePath, strRelFilePath);
-                        // the new path should be the base dir of the new project (location) + the rel path of the file
-                        newFileName = Path.Combine(location, strRelFilePath);
-                        // now the copy file
-                        AddFileFromTemplate(strPathToFile, newFileName);
-                    }
+                    // now reload to fix up references
+                    this.Reload();
                 }
-                else
+                finally
                 {
-                    this.filename = fileName;
+                    this.disableQueryEdit = false;
                 }
-
-                // now reload to fix up references
-                this.Reload();
-            }
-            finally
-            {
-                this.disableQueryEdit = false;
             }
         }
 

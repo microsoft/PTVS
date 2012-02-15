@@ -231,10 +231,11 @@ namespace Microsoft.PythonTools.Analysis {
             var result = new MemberResult[d.Count];
             int pos = 0;
             foreach (var kvp in d) {
+                var lazyEnumerator = new LazyModuleEnumerator(kvp.Value);
                 result[pos++] = new MemberResult(
-                    kvp.Key, 
-                    new LazyModuleEnumerator(kvp.Value).GetLazyModules, 
-                    PythonMemberType.Module
+                    kvp.Key,
+                    lazyEnumerator.GetLazyModules,
+                    lazyEnumerator.GetModuleType
                 );
             }
             return result;
@@ -251,6 +252,19 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var value in _loaded) {
                     yield return value.Module;
                 }
+            }
+
+            public PythonMemberType GetModuleType() {
+                PythonMemberType? type = null;
+                foreach (var value in _loaded) {
+                    if (type == null) {
+                        type = value.MemberType;
+                    } else if (type != value.MemberType) {
+                        type = PythonMemberType.Multiple;
+                        break;
+                    }
+                }
+                return type ?? PythonMemberType.Unknown;
             }
         }
 
