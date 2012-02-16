@@ -137,7 +137,7 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
 				_registeredModules[module] = moduleName;
 				
 				// make sure we only have valid path chars, vsperfreport doesn't like invalid chars
-				for(int i = 0; i<filenameStr.length(); i++) {
+				for(size_t i = 0; i<filenameStr.length(); i++) {
 					if(filenameStr[i] == '<') {
 						filenameStr[i] = '(';
 					}else if(filenameStr[i] == '>') {

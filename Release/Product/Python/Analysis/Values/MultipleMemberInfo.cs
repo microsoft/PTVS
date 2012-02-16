@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -51,7 +52,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.GetMember(node, unit, name), ref madeSet);
+                res = res.Union(member.GetMember(node, unit, name), ref madeSet);
             }
             return res;
         }
@@ -66,7 +67,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.BinaryOperation(node, unit, operation, rhs), ref madeSet);
+                res = res.Union(member.BinaryOperation(node, unit, operation, rhs), ref madeSet);
             }
             return res;
         }
@@ -75,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.Call(node, unit, args, keywordArgNames), ref madeSet);
+                res = res.Union(member.Call(node, unit, args, keywordArgNames), ref madeSet);
             }
             return res;
         }
@@ -101,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.GetDescriptor(node, instance, context, unit), ref madeSet);
+                res = res.Union(member.GetDescriptor(node, instance, context, unit), ref madeSet);
             }
             return res;
         }
@@ -110,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.GetIndex(node, unit, index), ref madeSet);
+                res = res.Union(member.GetIndex(node, unit, index), ref madeSet);
             }
             return res;
         }
@@ -125,7 +126,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.GetEnumeratorTypes(node, unit), ref madeSet);
+                res = res.Union(member.GetEnumeratorTypes(node, unit), ref madeSet);
             }
             return res;
         }
@@ -144,7 +145,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.GetStaticDescriptor(unit), ref madeSet);
+                res = res.Union(member.GetStaticDescriptor(unit), ref madeSet);
             }
             return res;
         }
@@ -169,9 +170,60 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var member in _members) {
-                res.Union(member.UnaryOperation(node, unit, operation), ref madeSet);
+                res = res.Union(member.UnaryOperation(node, unit, operation), ref madeSet);
             }
             return res;
+        }
+
+        public override string Documentation {
+            get {
+                StringBuilder res = new StringBuilder();
+                foreach (var member in _members) {
+                    if (!String.IsNullOrWhiteSpace(member.Documentation)) {
+                        res.AppendLine(member.Documentation);
+                        res.AppendLine();
+                    }
+                }
+                return res.ToString();
+            }
+        }
+
+        public override string Description {
+            get {
+                StringBuilder res = new StringBuilder();
+                foreach (var member in _members) {
+                    if (!String.IsNullOrWhiteSpace(member.Description)) {
+                        res.AppendLine(member.Description);
+                        res.AppendLine();
+                    }
+                }
+                return res.ToString();
+            }
+        }
+
+        public override string ShortDescription {
+            get {
+                StringBuilder res = new StringBuilder();
+                foreach (var member in _members) {
+                    if (!String.IsNullOrWhiteSpace(member.ShortDescription)) {
+                        if (res.Length != 0) {
+                            res.Append(", ");
+                        }
+                        res.Append(member.ShortDescription);
+                    }
+                }
+                return res.ToString();
+            }
+        }
+
+        public override IEnumerable<LocationInfo> Locations {
+            get {
+                foreach (var member in _members) {
+                    foreach (var loc in member.Locations) {
+                        yield return loc;
+                    }
+                }
+            }
         }
     }
 }

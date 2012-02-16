@@ -84,7 +84,6 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(IncludePath)</IncludePath>
     <LibraryPath>$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(LibraryPath)</LibraryPath>
   </PropertyGroup>

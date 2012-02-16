@@ -347,7 +347,7 @@ public:
                 if(connect(sock, (sockaddr*)&serveraddr, sizeof(sockaddr_in)) == 0) {
                     // send our debug ID as an ASCII string.  
                     send(sock, "A", 1, 0);
-                    DWORD len = strlen(Buffer->DebugId);
+                    DWORD len = (DWORD)strlen(Buffer->DebugId);
                     send(sock, (const char*)&len, sizeof(DWORD), 0);
                     send(sock, Buffer->DebugId, len, 0);
 
@@ -692,10 +692,10 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         // create a globals/locals dict for evaluating the code...
         auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
-        dictSetItem(globalsDict.ToPython(), "__builtins__", getBuiltins());   
-        int size = WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), NULL, 0, NULL, NULL);
+        dictSetItem(globalsDict.ToPython(), "__builtins__", getBuiltins());           
+        auto size = WideCharToMultiByte(CP_UTF8, 0, newName, (DWORD)wcslen(newName), NULL, 0, NULL, NULL);
         char* filenameBuffer = new char[size];
-        if(WideCharToMultiByte(CP_UTF8, 0, newName, wcslen(newName), filenameBuffer, size, NULL, NULL) != 0) {
+        if(WideCharToMultiByte(CP_UTF8, 0, newName, (DWORD)wcslen(newName), filenameBuffer, size, NULL, NULL) != 0) {
             filenameBuffer[size] = 0;
             dictSetItem (globalsDict.ToPython(), "__file__", strFromString(filenameBuffer));
         }
@@ -859,7 +859,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
 DWORD __stdcall AttachWorker(LPVOID arg) {
     HANDLE hProcess = GetCurrentProcess();
-    size_t modSize = sizeof(HMODULE) * 1024;
+    DWORD modSize = sizeof(HMODULE) * 1024;
     HMODULE* hMods = (HMODULE*)_malloca(modSize);
     if(hMods == nullptr) {
         return 0;

@@ -23,7 +23,6 @@ namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Defines an abstract class implementing IVsUpdateSolutionEvents interfaces.
     /// </summary>
-    [CLSCompliant(false)]
     class UpdateSolutionEventsListener : IVsUpdateSolutionEvents3, IVsUpdateSolutionEvents2, IDisposable {
         #region fields
         /// <summary>

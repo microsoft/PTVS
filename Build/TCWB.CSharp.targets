@@ -26,5 +26,9 @@
     <StyleCopOverrideSettingsFile>$(BuildRoot)\Tools\StyleCop\Settings.StyleCop</StyleCopOverrideSettingsFile>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Tools\StyleCop\Microsoft.StyleCop.targets" />
+  
+  <PropertyGroup>
+    <TrackFileAccess>true</TrackFileAccess>
+  </PropertyGroup>
 
 </Project>

@@ -276,7 +276,6 @@ namespace Microsoft.PythonTools.Repl {
             private StringBuilder _preConnectionOutput;
             internal string _currentScope = "__main__";
             private MemberResults _memberResults;
-            private Thread _stdErrReaderThread;
             internal string _prompt1 = ">>> ", _prompt2 = "... ";
 #if DEBUG
             private Thread _socketLockedThread;

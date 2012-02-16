@@ -56,6 +56,19 @@ union = Y()
 
 import nt
 m = max
+
+class FunctionNoRetType(object):
+    def __init__(self, value):
+        pass
+        
+class Aliased(object):
+    '''class doc'''
+    def f(self):
+        pass
+        
+def Aliased(foo):
+    '''function doc'''
+    pass
 ";
 
             using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
@@ -75,6 +88,8 @@ union = test.union
 f1 = test.f1
 f2 = test.f2
 m = test.m
+Aliased = test.Aliased
+FunctionNoRetType = test.FunctionNoRetType
 ";
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
@@ -98,6 +113,15 @@ m = test.m
 
                 result = newMod.Analysis.GetSignaturesByIndex("m", pos).ToArray();
                 Assert.AreEqual(result.Length, 6);
+                
+                var members = newMod.Analysis.GetMembersByIndex("Aliased", pos, GetMemberOptions.None);
+                AssertContains(members.Select(x => x.Name), "f");
+                AssertContains(members.Select(x => x.Name), "__self__");
+
+                var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
+
+                Assert.AreEqual("class doc\r\n\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
+                Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
             }
         }
 

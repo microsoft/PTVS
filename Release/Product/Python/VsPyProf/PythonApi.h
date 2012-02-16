@@ -20,10 +20,10 @@
 #include <stdlib.h>
 #include "python.h"
 #include "VSPerf.h"
-#include <strsafe.h>
 #include <hash_set>
 #include <hash_map>
 #include <string>
+#include <strsafe.h>
 
 using namespace std;
 

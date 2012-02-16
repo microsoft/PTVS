@@ -401,11 +401,19 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object[] GenerateOverloads(FunctionInfo fi) {
             List<object> overloads = new List<object>();
-            foreach (var retType in fi.ReturnValue.Types) {
+            if (fi.ReturnValue.Types.Count > 0) {
+                foreach (var retType in fi.ReturnValue.Types) {
+                    overloads.Add(
+                        new Dictionary<string, object>() {
+                            {"args", GenerateArgInfo(fi) },
+                            {"ret_type", GenerateTypeName(retType) },
+                        }
+                    );
+                }
+            } else {
                 overloads.Add(
                     new Dictionary<string, object>() {
-                        {"args", GenerateArgInfo(fi) },
-                        {"ret_type", GenerateTypeName(retType) },
+                        {"args", GenerateArgInfo(fi) }
                     }
                 );
             }

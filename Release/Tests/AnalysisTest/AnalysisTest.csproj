@@ -1591,6 +1591,6 @@
     </PreBuildEvent>
   </PropertyGroup>
   <Target Name="BeforeCompile">
-    <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" />
+    <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true" />
   </Target>
 </Project>

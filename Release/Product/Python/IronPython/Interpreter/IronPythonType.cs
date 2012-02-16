@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonType : PythonObject, IAdvancedPythonType {
         private IPythonFunction _ctors;
-        private string _doc, _name;
+        private string _name;
         private BuiltinTypeId? _typeId;
         private IList<IPythonType> _propagateOnCall;
         private PythonMemberType _memberType;

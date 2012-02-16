@@ -214,7 +214,9 @@ baz
                     var buffer = new MockTextBuffer(code);
                     buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
                     var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+#pragma warning disable 618
                     var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0));
+#pragma warning restore 618
                     Assert.AreEqual(context, NormalCompletionAnalysis.EmptyCompletionContext);
                 }
             }
@@ -485,7 +487,9 @@ class Baz(Foo, Bar):
                 System.Threading.Thread.Sleep(500);
             }
             analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
+#pragma warning disable 618
             var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
+#pragma warning restore 618
             return context;
         }
 

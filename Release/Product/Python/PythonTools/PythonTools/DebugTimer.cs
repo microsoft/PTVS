@@ -41,7 +41,9 @@ namespace Microsoft.PythonTools {
         #region IDisposable Members
 
         public void Dispose() {
+#if DEBUG
             Debug.WriteLine(String.Format("{0}: {1}ms elapsed", _description, _timer.ElapsedMilliseconds - _start));
+#endif
         }
 
         #endregion

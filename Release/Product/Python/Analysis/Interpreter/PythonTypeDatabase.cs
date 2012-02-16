@@ -194,6 +194,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var proc = Process.Start(psi);
                 OutputDataReceiver receiver = new OutputDataReceiver();
                 proc.OutputDataReceived += receiver.OutputDataReceived;
+                proc.ErrorDataReceived += receiver.OutputDataReceived;
 
                 proc.BeginOutputReadLine();
                 proc.BeginErrorReadLine();
