@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,8 +32,8 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly IPythonInterpreter _interpreter;
         private readonly PythonAnalyzer _analyzer;
         private readonly ConcurrentDictionary<IPythonModule, BuiltinModule> _builtinModuleTable = new ConcurrentDictionary<IPythonModule, BuiltinModule>();
-        private ConcurrentDictionary<string, ModuleReference> _modules = new ConcurrentDictionary<string, ModuleReference>();
-        private HashSet<string> _builtinNames;  // never mutated, always overwritten
+        private ConcurrentDictionary<string, ModuleReference> _modules = new ConcurrentDictionary<string, ModuleReference>(StringComparer.Ordinal);
+        private string[] _builtinNames;
 #if DEBUG
         internal static Stopwatch _timer = new Stopwatch();
 #endif
@@ -40,13 +41,19 @@ namespace Microsoft.PythonTools.Analysis {
         public ModuleTable(PythonAnalyzer analyzer, IPythonInterpreter interpreter, IEnumerable<string> builtinNames) {
             _analyzer = analyzer;
             _interpreter = interpreter;
-            _builtinNames = new HashSet<string>(builtinNames);
+            SaveNames(builtinNames);
         }
 
+        private void SaveNames(IEnumerable<string> builtinNames) {
+            var names = builtinNames.ToArray();
+            Array.Sort(names, StringComparer.Ordinal);
+            _builtinNames = names;
+        }
+        
         public bool TryGetValue(string name, out ModuleReference res) {
             if (_modules.TryGetValue(name, out res)) {
                 return true;
-            } else if (_builtinNames.Contains(name)) {
+            } else if (Array.BinarySearch(_builtinNames, name, StringComparer.Ordinal) >= 0) {
                 res = LoadModule(name);
                 return res != null;
             }
@@ -75,6 +82,9 @@ namespace Microsoft.PythonTools.Analysis {
                 // get or create our BuiltinModule object
                 var newMod = GetBuiltinModule(mod);
                 var res = _modules[name] = new ModuleReference(newMod);
+                
+                // load any of our children (recursively)
+                LoadChildrenModules(name);
 
                 // and then make sure we're published in our parent module, recursively
                 // loading our parent if necessary.
@@ -126,6 +136,43 @@ namespace Microsoft.PythonTools.Analysis {
                 return res;
             }
             return null;
+        }
+
+        private void LoadChildrenModules(string name) {
+            var builtinNames = _builtinNames;
+            int ourIndex = Array.BinarySearch(builtinNames, name, StringComparer.Ordinal);
+            ModuleReference parentRef;
+
+            if(ourIndex >= 0 &&
+                _modules.TryGetValue(name, out parentRef) && 
+                parentRef.Module is BuiltinModule)  {
+                var parentModule = parentRef.Module as BuiltinModule;
+                string baseName = name + ".";
+                for (int i = ourIndex + 1; i < builtinNames.Length; i++) {
+                    var newName = builtinNames[i];
+                    if (newName.StartsWith(baseName, StringComparison.Ordinal)) {
+                        if (newName.IndexOf('.', baseName.Length) != -1) {
+                            // sub-sub module
+                            LoadChildrenModules(newName);
+                        } else {
+                            ModuleReference newRef;
+                            if (!_modules.TryGetValue(newName, out newRef)) {
+                                var newNewMod = _interpreter.ImportModule(newName);
+                                if (newNewMod != null) {
+                                    var builtinMod = GetBuiltinModule(newNewMod);
+                                    if (builtinMod != null) {
+                                        _modules[newName] = new ModuleReference(builtinMod);
+
+                                        parentModule[newName.Substring(baseName.Length)] = builtinMod;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
         }
 
         public bool TryRemove(string name, out ModuleReference res) {
@@ -189,7 +236,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             _modules = newModules;
-            _builtinNames = newNames;
+            SaveNames(newNames);
         }
 
         internal BuiltinModule GetBuiltinModule(IPythonModule attr) {

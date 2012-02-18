@@ -177,7 +177,12 @@ namespace Microsoft.PythonTools.Analysis {
         internal ParameterResult GetParameterResultFromParameterInfo(IParameterInfo param) {
             string name = param.Name;
 
-            string typeName = param.ParameterType != _projectState.Types.None ? param.ParameterType.Name : null;
+            string typeName;
+            if (param.ParameterType != null) {
+                typeName = param.ParameterType != _projectState.Types.None ? param.ParameterType.Name : null;
+            } else {
+                typeName = "object";
+            }
             if (param.IsParamArray) {
                 name = "*" + name;
                 var advType = param.ParameterType as IAdvancedPythonType;

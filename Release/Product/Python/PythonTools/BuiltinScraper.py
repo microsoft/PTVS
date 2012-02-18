@@ -21,42 +21,6 @@ try:
 except:
     import _thread as thread
 
-def get_arg_name_and_type(arg, cfunc):
-    arg = arg.strip()
-    if arg.startswith('['):
-        arg = arg[1:].strip()
-    
-    if arg.endswith(']'):
-        arg = arg[:-1].strip()
-        
-    if arg.startswith(','):
-        arg = arg[1:].strip()
-
-    if arg.startswith('**'):
-        arg = arg[2:].strip()
-    elif arg.startswith('*'):
-        arg = arg[1:].strip()
-
-    return arg
-
-def get_arg_name(arg, cfunc):    
-    arg = get_arg_name_and_type(arg, cfunc)
-
-    if cfunc:
-        space = arg.find(' ')
-        if space != -1:
-            return arg[space+1:]
-
-    colon_index = arg.find(':')
-    if colon_index != -1:
-        arg = arg[:colon_index]
-
-    equal_index = arg.find('=')
-    if equal_index != -1:
-        arg = arg[:equal_index]
-
-    return arg
-
 def builtins_keys():
     if isinstance(__builtins__, dict):
         return __builtins__.keys()
@@ -104,6 +68,12 @@ TYPE_OVERRIDES = {'string': PythonScraper.type_to_name(types.CodeType),
                   'code': PythonScraper.type_to_name(types.CodeType),
                   'module': PythonScraper.type_to_name(types.ModuleType),
                   'size': PythonScraper.type_to_name(int),
+                  'INT': PythonScraper.type_to_name(int),
+                  'STRING': PythonScraper.type_to_name(str),
+                  'TUPLE': PythonScraper.type_to_name(tuple),
+                  'OBJECT': PythonScraper.type_to_name(object),
+                  'LIST': PythonScraper.type_to_name(list),
+                  'DICT': PythonScraper.type_to_name(dict),
                 }
 
 RETURN_TYPE_OVERRIDES = dict(TYPE_OVERRIDES)
@@ -113,7 +83,7 @@ def type_name_to_type(name, mod, type_overrides = TYPE_OVERRIDES):
     arg_type = type_overrides.get(name, None)
     if arg_type is None:
         if name in BUILTIN_TYPES:
-            arg_type = PythonScraper.type_to_name(__builtins__[name])
+            arg_type = PythonScraper.type_to_name(get_builtin(name))
         elif mod is not None and name in mod.__dict__:
             arg_type = PythonScraper.memoize_type_name((mod.__name__, name))
         elif name.startswith('list'):
@@ -128,142 +98,229 @@ def type_name_to_type(name, mod, type_overrides = TYPE_OVERRIDES):
                     arg_type = (mod_name, name)
                     break
             else:
+                first_space = name.find(' ')
+                if first_space != -1:
+                    return type_name_to_type(name[:first_space], mod, type_overrides)
                 arg_type = ('', name)
     return arg_type
 
 OBJECT_TYPE = PythonScraper.type_to_name(object)
-def get_arg_info(arg, mod, cfunc):    
-    name = get_arg_name(arg, cfunc)
-    optional = False
-    arg_format = None
-    if arg.find('[') != -1:
-        optional = True
-    
-    if arg.find('**') != -1:
-        arg_format = '**'
-    elif arg.find('*') != -1 or name == '...':
-        arg_format = '*'
-    
-    arg = arg.strip()
-    default_value = arg.find('=')
-    default_value_repr = None
-    if default_value != -1:
-        if arg.endswith(']'):
-            arg = arg[:-1]
-        default_value_repr = arg[default_value+1:]
-    elif optional:
-        default_value_repr = 'None'
 
-    colon = arg.find(':')
-    if colon != -1:
-        arg_type = type_name_to_type(arg[colon+1:].strip(), mod)
-    elif cfunc:
-        carg = get_arg_name_and_type(arg, cfunc)
-        space = carg.find(' ')
-        if space != -1:
-            arg_type = type_name_to_type(carg[:space], mod)
+TOKENS_REGEX = (
+    '('
+    '(?:[a-zA-Z_][0-9a-zA-Z_-]*)|'  # identifier
+    '(?:[0-9]+[lL]?)|'              # integer value
+    '(?:[0-9]*\.[0-9]+)|'           # floating point value
+    '(?:\.\.\.)|'                   # ellipsis
+    '(?:\.)|'                      # dot
+    '(?:\()|'                      # open paren
+    '(?:\))|'                      # close paren
+    '(?:\:)|'                      # colon
+    '(?:-->)|'                      # return value
+    '(?:->)|'                      # return value
+    '(?:=>)|'                      # return value
+    '(?:[,])|'                      # comma
+    '(?:=)|'                      # assignment (default value)
+    '(?:\.\.\.)|'                      # ellipsis
+    '(?:\[)|'
+    '(?:\])|'
+    '(?:\*\*)|'
+    '(?:\*)|'
+     ')'
+    )
+
+def get_ret_type(ret_type, obj_class, mod):
+    if ret_type is not None:
+        if ret_type == 'copy' and obj_class is not None:
+            # returns a copy of self
+            return PythonScraper.type_to_name(obj_class)
         else:
-            arg_type = OBJECT_TYPE
-    else:
-        arg_type = OBJECT_TYPE
-
-    res = {'type': arg_type, 'name': name}
-    if default_value_repr is not None:
-        res['default_value'] = default_value_repr
-    if arg_format is not None:
-        res['arg_format'] = arg_format
-    return res
+            return type_name_to_type(ret_type, mod, RETURN_TYPE_OVERRIDES)
 
 
- 
-# We could still improve the parsing of doc strings, but we really need a parser, not just a regex
-# which can't handle things like balanced parens such as x [, y [, z]].  But this is better than
-# nothing.
+def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_class = None):    
+    # we split, so as long as we have all tokens every other item is a token, and the
+    # rest are empty space.  If we have unrecognized tokens (for example during the description
+    # of the function) those will show up in the even locations.  We do join's and bring the
+    # entire range together in that case.
+    tokens = re.split(TOKENS_REGEX, input_str) 
+    start_token = 0
+    last_identifier = None
+    cur_token = 1
+    overloads = []
+    while cur_token < len(tokens):
+        token = tokens[cur_token]
+        # see if we have modname.funcname(
+        if (cur_token + 10 < len(tokens) and
+            token == module_name and 
+            tokens[cur_token + 2] == '.' and
+            tokens[cur_token + 4] == func_name and
+            tokens[cur_token + 6] == '('):
+            sig_start = cur_token
+            args, ret_type, cur_token = parse_args(tokens, cur_token + 10, mod)
 
-OPT_STAR_ARGS = '(?:(?:\\*)|(?:\\*\\*))?\s*'
-PY_ARG_SIMPLE = ('(?:'
-              '(\.\.\.)|'                                                       # ...
-              '(?:[a-zA-Z_][\\w]*(?::\s*[a-zA-Z_][\\w]*)?)'                    # foo
-              ')'                                        
-             )
-
-PY_ARG = ('(?:'
-          '(\.\.\.)|'                                                       # ...
-          '(?:[a-zA-Z_][\\w]*(?::\s*[a-zA-Z_][\\w]*)?)|'                    # foo
-            '(?:\\(' + PY_ARG_SIMPLE +                                         # (foo, bar)
-            '(?:\s*[[]?\s*,\s*(?:' + PY_ARG_SIMPLE + ')\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*'    
-            '\\))'
-          ')'
-         )
-
-DOC_REGEX = ('([a-zA-Z_][\\w]*\\.)?'                                    # X. (instance/class name)
-            '([a-zA-Z_][\\w]*)\s*\\('                                   # foo   (method name) plus the ( for the sig
-            '(' + OPT_STAR_ARGS + PY_ARG + ')?'                          # first argument
-            '(\s*[[]?\s*,\s*(?:' + OPT_STAR_ARGS + PY_ARG + ')\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*'    # additional args, accepts ", foo", [, foo]"
-            '\\)(\s*(?:->|\:\s*return)\s*[a-zA-Z_][\\w]*)?')                               # ) closing the sig plus return type
-
-# (?:[a-zA-Z_]+\s+)?
-# regex to match a func like (int x, int y)
-DOC_REGEX_CFUNC = ('([a-zA-Z_][\\w]*\\.)?'                                    # X. (instance/class name)
-            '([a-zA-Z_][\\w]*)\s*\\'                                    # foo   (method name)
-            '((' + OPT_STAR_ARGS + '(?:[a-zA-Z_]+\s+)[a-zA-Z_][\\w]*)?'               # first argument
-            '(\s*[[]?\s*,\s*(?:[a-zA-Z_]+\s+)?(?:' + OPT_STAR_ARGS + '[a-zA-Z_][\\w]*)\s*(?:\s*=\s*[0-9a-zA-Z_\.]+\s*)?[\]]?)*\\)'    # additional args, accepts ", foo", [, foo]"
-            '(\s*(?:->|\:\s*return)\s*[a-zA-Z_][\\w]*)?')                               # return type
-
-def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, extra_args = []):
-    decl_mod = None
-    if mod is not None:
-        decl_mod = sys.modules.get(mod, None)
-
-    res = []
-    if isinstance(doc_str, str):
-        doc_matches = re.findall(DOC_REGEX, doc_str)
-        cfunc = False
-        if not doc_matches:
-            doc_matches = re.findall(DOC_REGEX, doc_str)
-            cfunc = True
-    
-        for arg_info in doc_matches:
-            method = arg_info[1]
-            if func_name is not None and method != func_name:
-                # wrong function name, ignore the match
+            if not args and overloads:
+                # if we already parsed an overload, and are now getting an argless
+                # overload we're likely just seeing a reference to the function in
+                # a doc string, let's ignore that.  This is betting on the idea that
+                # people list overloads first, then doc strings, and that people tend
+                # to list overloads from simplest to more complex. an example of this
+                # is the future_builtins.ascii doc string
                 continue
 
+            doc_str = ''.join(tokens[start_token:sig_start])
+            if doc_str.find(' ') == -1:
+                doc_str = ''
+            start_token = cur_token
+            overload = {'args': extra_args + args, 'doc': doc_str}
+            ret_tuple = get_ret_type(ret_type, obj_class, mod)
+            if ret_tuple is not None:
+                overload['ret_type'] = ret_tuple
+            overloads.append(overload)
+        # see if we have funcname(
+        elif (cur_token + 4 < len(tokens) and
+              token == func_name and
+              tokens[cur_token + 2] == '('):
+            sig_start = cur_token
+            args, ret_type, cur_token = parse_args(tokens, cur_token + 4, mod)
+
+            if not args and overloads:
+                # if we already parsed an overload, and are now getting an argless
+                # overload we're likely just seeing a reference to the function in
+                # a doc string, let's ignore that.  This is betting on the idea that
+                # people list overloads first, then doc strings, and that people tend
+                # to list overloads from simplest to more complex. an example of this
+                # is the future_builtins.ascii doc string
+                continue
             
-            args = [get_arg_info(arg, decl_mod, cfunc) for arg in arg_info[2:-1] if get_arg_name(arg, cfunc)]
-            ret_type = arg_info[-1]
-            if ret_type:
-                ret_type = ret_type.strip()
-                if ret_type.startswith('->'):
-                    ret_type_name = ret_type[2:]
-                elif ret_type.startswith(': return'):
-                    ret_type_name = ret_type[8:]
-                else:
-                    ret_type_name = ret_type
-                
-                ret_type = type_name_to_type(ret_type_name.strip(), decl_mod, RETURN_TYPE_OVERRIDES)  # remove ->
+            doc_str = ''.join(tokens[start_token:sig_start])
+            if doc_str.find(' ') == -1:
+                doc_str = ''
+            start_token = cur_token
+            overload = {'args': extra_args + args, 'doc': doc_str}
+            ret_tuple = get_ret_type(ret_type, obj_class, mod)
+            if ret_tuple is not None:
+                overload['ret_type'] = ret_tuple
+            overloads.append(overload)
 
-                if not ret_type[0]:
-                    if ret_type[1] == 'copy' and obj_class is not None:
-                        # returns a copy of self
-                        ret_type = PythonScraper.type_to_name(obj_class)
-            else:
-                ret_type = PythonScraper.type_to_name(type(None))
-    
-            if extra_args:
-                args = extra_args + args
+        else:
+            # append to doc string
+            cur_token += 2
 
-            overload = {
-                'args': args,
-                'ret_type' : ret_type
-            }
+    finish_doc = ''.join(tokens[start_token:cur_token])
+    if finish_doc:
+        for overload in overloads:
+            overload['doc'] += finish_doc            
+    return overloads
 
-            res.append(overload)
+
+IDENTIFIER_REGEX = re.compile('^[a-zA-Z_][a-zA-Z_0-9-]*$')
+
+def is_identifier(token):
+    if IDENTIFIER_REGEX.match(token):
+        return True
+    return False
+
+RETURN_TOKENS = set(['-->', '->', '=>', 'return'])
+
+def parse_args(tokens, cur_token, module):
+    args = []
+    star_args = None
+    is_optional = False
+    default_value = None
+    annotation = None
+    ret_type = None
+    while cur_token < len(tokens):
+        token = tokens[cur_token]
+        if token == '[':
+            # optional arg
+            is_optional = True
+        elif token == '*':
+            star_args = '*'
+        elif token == '**':
+            star_args = '**'
+        elif token == ')':
+            cur_token += 2
+            break
+        elif token == ',':
+            cur_token += 2
+            continue
+        else:
+            arg_name = token
+            if cur_token + 2 < len(tokens) and is_identifier(tokens[cur_token + 2]):
+                # C cstyle sig, 'int foo'
+                arg_name = tokens[cur_token + 2]
+                annotation = token
+                cur_token += 2
+
+            if cur_token + 4 < len(tokens) and tokens[cur_token + 2] == '=':
+                default_value = tokens[cur_token + 4]
+                cur_token += 4
+            if cur_token + 4 < len(tokens) and tokens[cur_token + 2] == ':':
+                annotation = tokens[cur_token + 4]
+                cur_token += 4
+
+            arg = {'name': arg_name}
+            if default_value is not None:
+                arg['default_value'] = default_value
+            elif is_optional:
+                arg['default_value'] = 'None'
+
+            if annotation is not None:
+                arg['type'] = type_name_to_type(annotation, module)
+            if star_args is not None:
+                arg['arg_format'] = star_args
+            elif token == '...':
+                arg['arg_format'] = '*'
+            
+            while cur_token + 2 < len(tokens) and tokens[cur_token + 2] == ']':
+                cur_token += 2
     
-    if not res:
-        return None
-    
-    return tuple(res)
+            args.append(arg)
+            
+            is_optional = False
+            star_args = None
+            default_value = None
+
+        cur_token += 2
+
+    # end of params, check for ret value
+    if cur_token + 2 < len(tokens) and tokens[cur_token] in RETURN_TOKENS:
+        ret_type_start = cur_token + 2
+        # we might have a descriptive return value, 'list of foo'
+        while ret_type_start < len(tokens) and is_identifier(tokens[ret_type_start]):
+            if tokens[ret_type_start - 1].find('\n') != -1:
+                break
+            ret_type_start += 2
+
+        ret_type = ''.join(tokens[cur_token + 2:ret_type_start]).strip()
+        cur_token = ret_type_start
+    elif (cur_token + 4 < len(tokens) and 
+        tokens[cur_token] == ':' and tokens[cur_token + 2] in RETURN_TOKENS):
+        ret_type_start = cur_token + 4
+        # we might have a descriptive return value, 'list of foo'
+        while ret_type_start < len(tokens) and is_identifier(tokens[ret_type_start]):
+            if tokens[ret_type_start - 1].find('\n') != -1:
+                break
+            ret_type_start += 2
+
+        ret_type = ''.join(tokens[cur_token + 4:ret_type_start]).strip()
+        cur_token = ret_type_start
+
+    return args, ret_type, cur_token
+
+
+def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, extra_args = []):
+    if isinstance(doc_str, (str, unicode)):
+        decl_mod = None
+        if mod is not None:
+            decl_mod = sys.modules.get(mod, None)
+
+        res = parse_doc_str(doc_str, mod, decl_mod, func_name, extra_args, obj_class)
+        if res:
+            return tuple(res)
+    return None
+
 
 def get_overloads(func, is_method = False):
     if is_method:
@@ -293,3 +350,104 @@ def get_new_overloads(type_obj, obj):
                                             type(type_obj), 
                                             getattr(type_obj, '__name__', None))
     return res
+
+
+if __name__ == '__main__':
+    r = parse_doc_str('reduce(function, sequence[, initial]) -> value', '__builtin__', sys.modules['__builtin__'], 'reduce')
+    assert r == [
+           {'args': [
+                {'name': 'function'},
+                {'name': 'sequence'},
+                {'default_value': 'None', 'name': 'initial'}], 
+            'doc': '', 
+            'ret_type': ('', 'value')
+           }
+        ]
+
+    r = parse_doc_str('pygame.draw.arc(Surface, color, Rect, start_angle, stop_angle, width=1): return Rect', 
+                         'draw',
+                         None,
+                         'arc')
+    import pprint
+    assert r == [
+           {'args': [
+               {'name': 'color'},
+               {'name': 'Rect'},
+               {'name': 'start_angle'},
+               {'name': 'stop_angle'},
+               {'default_value': '1', 'name': 'width'}],
+            'doc': '',
+            'ret_type': ('', 'Rect')
+           }
+    ]
+
+    r = parse_doc_str('''B.isdigit() -> bool
+
+Return True if all characters in B are digits
+and there is at least one character in B, False otherwise.''',
+                    'bytes',
+                    None,
+                    'isdigit')
+
+    assert r == [
+        {'args': [],
+         'doc': 'Return True if all characters in B are digits\nand there is at least one character in B, False otherwise.',
+         'ret_type': ('__builtin__', 'bool')}
+    ]
+    r = parse_doc_str('x.__init__(...) initializes x; see help(type(x)) for signature',
+                      'str',
+                      None,
+                      '__init__')
+
+    assert r == [{'args': [{'arg_format': '*', 'name': '...'}],
+                  'doc': 'initializes x; see help(type(x)) for signature'}]
+
+    r = parse_doc_str('S.find(sub [,start [,end]]) -> int',
+                         'str',
+                         None,
+                         'find')
+
+    assert r == [{'args': [{'name': 'sub'},
+                 {'default_value': 'None', 'name': 'start'},
+                 {'default_value': 'None', 'name': 'end'}],
+                  'doc': '',
+                  'ret_type': ('__builtin__', 'int')}]
+
+    r = parse_doc_str('S.format(*args, **kwargs) -> unicode',
+                      'str',
+                      None,
+                      'format')
+    assert r == [
+                 {'args': [
+                           {'arg_format': '*', 'name': 'args'},
+                           {'arg_format': '**', 'name': 'kwargs'}
+                          ],
+                 'doc': '',
+                 'ret_type': ('__builtin__', 'unicode')}
+    ]
+    
+    r = parse_doc_str("'ascii(object) -> string\n\nReturn the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
+            'future_builtins',
+            None,
+            'ascii')
+    assert r == [{'args': [{'name': 'object'}],
+                 'doc': "Return the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
+                 'ret_type': ('__builtin__', 'str')}
+    ]
+
+    r = parse_doc_str('f(INT class_code) => SpaceID',
+                'foo',
+                None,
+                'f')    
+    assert r == [{'args': [{'name': 'class_code', 'type': ('__builtin__', 'int')}],
+        'doc': '',
+        'ret_type': ('', 'SpaceID')}]
+
+    r = parse_doc_str('compress(data, selectors) --> iterator over selected data\n\nReturn data elements',
+                      'itertools',
+                      None,
+                      'compress')
+    assert r == [{'args': [{'name': 'data'}, {'name': 'selectors'}],
+                  'doc': 'Return data elements',
+                  'ret_type': ('', 'iterator')}]
+    

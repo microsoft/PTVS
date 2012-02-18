@@ -1873,7 +1873,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('13')
+    f.write('14')
     f.close()
 
     # inspect extension modules installed into site-packages
