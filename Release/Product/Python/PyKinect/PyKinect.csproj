@@ -20,7 +20,6 @@
   </PropertyGroup>
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Release.Product.settings" />
   <PropertyGroup>
-    <UICulture>en-US</UICulture>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
@@ -223,6 +222,14 @@
     <Content Include="Templates\Projects\PyKinectPyGame\KinectGame.pyproj" />
     <Content Include="Templates\Projects\PyKinectPyGame\KinectGame.vstemplate">
       <SubType>Designer</SubType>
+    </Content>
+    <Content Include="..\PythonTools\PythonProject.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\PythonTools\PythonProjectBig.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Templates\Projects\PyKinectPyGame\__TemplateIcon.ico" />
   </ItemGroup>
