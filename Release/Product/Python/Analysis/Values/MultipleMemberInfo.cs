@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
@@ -42,9 +43,44 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 List<OverloadResult> res = new List<OverloadResult>();
                 foreach (var member in _members) {
-                    res.AddRange(member.Overloads);
+                    AppendOverloads(res, member.Overloads);
                 }
                 return res.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Appends the overloads and avoids adding duplicates.
+        /// </summary>
+        internal static void AppendOverloads(List<OverloadResult> appendTo, IEnumerable<OverloadResult> newOverloads) {
+            bool contains = false;
+            foreach (var overload in newOverloads) {
+                for (int i = 0; i < appendTo.Count; i++) {
+                    if (appendTo[i].Name == overload.Name &&
+                        appendTo[i].Documentation == overload.Documentation &&
+                        appendTo[i].Parameters.Length == overload.Parameters.Length) {
+                        bool differParams = false;
+                        for (int j = 0; j < overload.Parameters.Length; j++) {
+                            if (overload.Parameters[j].DefaultValue != appendTo[i].Parameters[j].DefaultValue ||
+                                overload.Parameters[j].Documentation != appendTo[i].Parameters[j].Documentation ||
+                                overload.Parameters[j].IsOptional != appendTo[i].Parameters[j].IsOptional ||
+                                overload.Parameters[j].Name != appendTo[i].Parameters[j].Name ||
+                                overload.Parameters[j].Type != appendTo[i].Parameters[j].Type) {
+                                differParams = true;
+                                break;
+                            }
+                        }
+
+                        if (!differParams) {
+                            contains = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!contains) {
+                    appendTo.Add(overload);
+                }
             }
         }
 
@@ -91,7 +127,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             Dictionary<string, ISet<Namespace>> res = new Dictionary<string, ISet<Namespace>>();
             foreach(var mem in _members) {
                 foreach (var keyValue in mem.GetAllMembers(moduleContext)) {
-                    res[keyValue.Key] = keyValue.Value;
+                    ISet<Namespace> existing;
+                    if (res.TryGetValue(keyValue.Key, out existing)) {
+                        MultipleMemberInfo existingMultiMember = existing as MultipleMemberInfo;
+                        if (existingMultiMember != null) {
+                            res[keyValue.Key] = new MultipleMemberInfo(existingMultiMember._members.Concat(keyValue.Value).ToArray());
+                        } else {
+                            res[keyValue.Key] = new MultipleMemberInfo(existing.Concat(keyValue.Value).ToArray());
+                        }
+                    } else {
+                        res[keyValue.Key] = keyValue.Value;
+                    }
                 }
             }
 
@@ -178,8 +224,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Documentation {
             get {
                 StringBuilder res = new StringBuilder();
+                HashSet<string> docs = new HashSet<string>();
                 foreach (var member in _members) {
-                    if (!String.IsNullOrWhiteSpace(member.Documentation)) {
+                    if (!String.IsNullOrWhiteSpace(member.Documentation) && !docs.Contains(member.Documentation)) {
+                        docs.Add(member.Documentation);
                         res.AppendLine(member.Documentation);
                         res.AppendLine();
                     }
@@ -191,8 +239,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Description {
             get {
                 StringBuilder res = new StringBuilder();
+                HashSet<string> descs = new HashSet<string>();
                 foreach (var member in _members) {
-                    if (!String.IsNullOrWhiteSpace(member.Description)) {
+                    if (!String.IsNullOrWhiteSpace(member.Description) && !descs.Contains(member.Description)) {
+                        descs.Add(member.Description);
                         res.AppendLine(member.Description);
                         res.AppendLine();
                     }
@@ -204,12 +254,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string ShortDescription {
             get {
                 StringBuilder res = new StringBuilder();
+                HashSet<string> descs = new HashSet<string>();
                 foreach (var member in _members) {
-                    if (!String.IsNullOrWhiteSpace(member.ShortDescription)) {
+                    if (!String.IsNullOrWhiteSpace(member.ShortDescription) && !descs.Contains(member.ShortDescription)) {
                         if (res.Length != 0) {
                             res.Append(", ");
                         }
                         res.Append(member.ShortDescription);
+                        descs.Add(member.ShortDescription);
                     }
                 }
                 return res.ToString();

@@ -333,7 +333,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 for (int i = 0; i < FunctionDefinition.Parameters.Count; i++) {
                     var curParam = FunctionDefinition.Parameters[i];
 
-                    var newParam = MakeParameterResult(ProjectState, curParam, ProjectEntry.Analysis.ToVariables(ParameterTypes[i]));
+                    var newParam = MakeParameterResult(ProjectState, curParam, DeclaringModule.Tree, ProjectEntry.Analysis.ToVariables(ParameterTypes[i]));
                     parameters[i] = newParam;
                 }
 
@@ -343,7 +343,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal static ParameterResult MakeParameterResult(PythonAnalyzer state, Parameter curParam, IEnumerable<IAnalysisVariable> variables = null) {
+        internal static ParameterResult MakeParameterResult(PythonAnalyzer state, Parameter curParam, PythonAst tree, IEnumerable<IAnalysisVariable> variables = null) {
             string name = curParam.Name;
             if (curParam.IsDictionary) {
                 name = "**" + name;
@@ -358,37 +358,43 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
                 if (defaultValue != null) {
                     name = name + " = " + GetConstantRepr(state, defaultValue);
-                }
+                } else {
 
-                NameExpression nameExpr = curParam.DefaultValue as NameExpression;
-                if (nameExpr != null) {
-                    name = name + " = " + nameExpr.Name;
-                }
-
-                DictionaryExpression dict = curParam.DefaultValue as DictionaryExpression;
-                if (dict != null) {
-                    if (dict.Items.Count == 0) {
-                        name = name + " = {}";
+                    NameExpression nameExpr = curParam.DefaultValue as NameExpression;
+                    if (nameExpr != null) {
+                        name = name + " = " + nameExpr.Name;
                     } else {
-                        name = name + " = {...}";
-                    }
-                }
 
-                ListExpression list = curParam.DefaultValue as ListExpression;
-                if (list != null) {
-                    if (list.Items.Count == 0) {
-                        name = name + " = []";
-                    } else {
-                        name = name + " = [...]";
-                    }
-                }
+                        DictionaryExpression dict = curParam.DefaultValue as DictionaryExpression;
+                        if (dict != null) {
+                            if (dict.Items.Count == 0) {
+                                name = name + " = {}";
+                            } else {
+                                name = name + " = {...}";
+                            }
+                        } else {
 
-                TupleExpression tuple = curParam.DefaultValue as TupleExpression;
-                if (tuple != null) {
-                    if (tuple.Items.Count == 0) {
-                        name = name + " = ()";
-                    } else {
-                        name = name + " = (...)";
+                            ListExpression list = curParam.DefaultValue as ListExpression;
+                            if (list != null) {
+                                if (list.Items.Count == 0) {
+                                    name = name + " = []";
+                                } else {
+                                    name = name + " = [...]";
+                                }
+                            } else {
+
+                                TupleExpression tuple = curParam.DefaultValue as TupleExpression;
+                                if (tuple != null) {
+                                    if (tuple.Items.Count == 0) {
+                                        name = name + " = ()";
+                                    } else {
+                                        name = name + " = (...)";
+                                    }
+                                } else {
+                                    name = name + " = " + curParam.DefaultValue.ToCodeString(tree);
+                                }
+                            }
+                        }
                     }
                 }
             }

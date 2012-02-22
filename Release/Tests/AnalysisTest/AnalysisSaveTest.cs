@@ -69,6 +69,19 @@ class Aliased(object):
 def Aliased(foo):
     '''function doc'''
     pass
+
+def Overloaded():
+    '''help 1'''
+    pass
+
+def Overloaded():
+    '''help 2'''
+    pass
+
+def Overloaded():
+    '''help 2'''
+    pass
+
 ";
 
             using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
@@ -90,6 +103,7 @@ f2 = test.f2
 m = test.m
 Aliased = test.Aliased
 FunctionNoRetType = test.FunctionNoRetType
+Overloaded = test.Overloaded
 ";
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
@@ -122,6 +136,8 @@ FunctionNoRetType = test.FunctionNoRetType
 
                 Assert.AreEqual("class doc\r\n\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
                 Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
+
+                Assert.AreEqual("help 1\r\n\r\nhelp 2", newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation);
             }
         }
 

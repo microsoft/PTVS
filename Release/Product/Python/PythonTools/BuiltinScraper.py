@@ -157,20 +157,22 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
             tokens[cur_token + 4] == func_name and
             tokens[cur_token + 6] == '('):
             sig_start = cur_token
-            args, ret_type, cur_token = parse_args(tokens, cur_token + 10, mod)
+            args, ret_type, cur_token = parse_args(tokens, cur_token + 8, mod)
 
-            if not args and overloads:
+            doc_str = ''.join(tokens[start_token:sig_start])
+            if doc_str.find(' ') == -1:
+                doc_str = ''
+            if (not args or doc_str) and overloads:
                 # if we already parsed an overload, and are now getting an argless
                 # overload we're likely just seeing a reference to the function in
                 # a doc string, let's ignore that.  This is betting on the idea that
                 # people list overloads first, then doc strings, and that people tend
                 # to list overloads from simplest to more complex. an example of this
                 # is the future_builtins.ascii doc string
+                # We also skip it if we have a doc string, this comes up in overloads
+                # like isinstance which has example calls embedded in the doc string
                 continue
 
-            doc_str = ''.join(tokens[start_token:sig_start])
-            if doc_str.find(' ') == -1:
-                doc_str = ''
             start_token = cur_token
             overload = {'args': extra_args + args, 'doc': doc_str}
             ret_tuple = get_ret_type(ret_type, obj_class, mod)
@@ -184,18 +186,20 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
             sig_start = cur_token
             args, ret_type, cur_token = parse_args(tokens, cur_token + 4, mod)
 
-            if not args and overloads:
+            doc_str = ''.join(tokens[start_token:sig_start])
+            if doc_str.find(' ') == -1:
+                doc_str = ''
+            if (not args or doc_str) and overloads:
                 # if we already parsed an overload, and are now getting an argless
                 # overload we're likely just seeing a reference to the function in
                 # a doc string, let's ignore that.  This is betting on the idea that
                 # people list overloads first, then doc strings, and that people tend
                 # to list overloads from simplest to more complex. an example of this
                 # is the future_builtins.ascii doc string
+                # We also skip it if we have a doc string, this comes up in overloads
+                # like isinstance which has example calls embedded in the doc string
                 continue
             
-            doc_str = ''.join(tokens[start_token:sig_start])
-            if doc_str.find(' ') == -1:
-                doc_str = ''
             start_token = cur_token
             overload = {'args': extra_args + args, 'doc': doc_str}
             ret_tuple = get_ret_type(ret_type, obj_class, mod)
@@ -230,6 +234,8 @@ def parse_args(tokens, cur_token, module):
     default_value = None
     annotation = None
     ret_type = None
+    is_tuple_param = False
+    last_tuple_param = False
     while cur_token < len(tokens):
         token = tokens[cur_token]
         if token == '[':
@@ -240,11 +246,17 @@ def parse_args(tokens, cur_token, module):
         elif token == '**':
             star_args = '**'
         elif token == ')':
-            cur_token += 2
-            break
+            if is_tuple_param:
+                is_tuple_param = False
+                last_tuple_param = False
+            else:
+                cur_token += 2
+                break
         elif token == ',':
             cur_token += 2
             continue
+        elif token == '(':
+            is_tuple_param = True
         else:
             arg_name = token
             if cur_token + 2 < len(tokens) and is_identifier(tokens[cur_token + 2]):
@@ -256,6 +268,7 @@ def parse_args(tokens, cur_token, module):
             if cur_token + 4 < len(tokens) and tokens[cur_token + 2] == '=':
                 default_value = tokens[cur_token + 4]
                 cur_token += 4
+            
             if cur_token + 4 < len(tokens) and tokens[cur_token + 2] == ':':
                 annotation = tokens[cur_token + 4]
                 cur_token += 4
@@ -276,7 +289,14 @@ def parse_args(tokens, cur_token, module):
             while cur_token + 2 < len(tokens) and tokens[cur_token + 2] == ']':
                 cur_token += 2
     
-            args.append(arg)
+            if is_tuple_param:
+                if last_tuple_param:
+                    args[-1]['name'] = args[-1]['name'] + ', ' + arg_name
+                else:
+                    last_tuple_param = True
+                    args.append(arg)
+            else:
+                args.append(arg)
             
             is_optional = False
             star_args = None
@@ -368,9 +388,10 @@ if __name__ == '__main__':
                          'draw',
                          None,
                          'arc')
-    import pprint
+
     assert r == [
            {'args': [
+               {'name': 'Surface'},
                {'name': 'color'},
                {'name': 'Rect'},
                {'name': 'start_angle'},
@@ -450,4 +471,39 @@ and there is at least one character in B, False otherwise.''',
     assert r == [{'args': [{'name': 'data'}, {'name': 'selectors'}],
                   'doc': 'Return data elements',
                   'ret_type': ('', 'iterator')}]
+                  
+    r = parse_doc_str('isinstance(object, class-or-type-or-tuple) -> bool\n\nReturn whether an object is an '
+                      'instance of a class or of a subclass thereof.\nWith a type as second argument, '
+                      'return whether that is the object\'s type.\nThe form using a tuple, isinstance(x, (A, B, ...)),'
+                      ' is a shortcut for\nisinstance(x, A) or isinstance(x, B) or ... (etc.).',
+                      '__builtin__',
+                      None,
+                      'isinstance')
     
+    assert r == [{'args': [{'name': 'object'}, {'name': 'class-or-type-or-tuple'}],
+                   'doc': "Return whether an object is an instance of a class or of a subclass thereof.\n"
+                          "With a type as second argument, return whether that is the object's type.\n"
+                          "The form using a tuple, isinstance(x, (A, B, ...)), is a shortcut for\n"
+                          "isinstance(x, A) or isinstance(x, B) or ... (etc.).",
+                   'ret_type': ('__builtin__', 'bool')}]
+
+    r = parse_doc_str('pygame.Rect(left, top, width, height): return Rect\n'
+                      'pygame.Rect((left, top), (width, height)): return Rect\n'
+                      'pygame.Rect(object): return Rect\n'
+                      'pygame object for storing rectangular coordinates',
+                      'pygame',
+                      None,
+                      'Rect'
+     )
+    assert r == [{'args': [{'name': 'left'},
+                   {'name': 'top'},
+                   {'name': 'width'},
+                   {'name': 'height'}],
+          'doc': 'pygame object for storing rectangular coordinates',
+          'ret_type': ('', 'Rect')},
+         {'args': [{'name': 'left, top'}, {'name': 'width, height'}],
+          'doc': 'pygame object for storing rectangular coordinates',
+          'ret_type': ('', 'Rect')},
+         {'args': [{'name': 'object'}],
+          'doc': 'pygame object for storing rectangular coordinates',
+          'ret_type': ('', 'Rect')}]

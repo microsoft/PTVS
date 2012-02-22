@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetExtraVerbatimText(ast) ?? (this.GetProceedingWhiteSpace(ast) + (_value == null ? "None" : _value.ToString())));
+            res.Append(this.GetExtraVerbatimText(ast) ?? (this.GetProceedingWhiteSpaceDefaultNull(ast) + (_value == null ? "None" : _value.ToString())));
         }
 
         /// <summary>

@@ -352,7 +352,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                     // TODO: Include relevant type info on the parameter...
                     foreach (var ns in lookup) {
-                        result.AddRange(ns.Overloads);
+                        MultipleMemberInfo.AppendOverloads(result, ns.Overloads);
                     }
 
                     return result.ToArray();

@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
             _target.AppendCodeString(res, ast);
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(this.GetProceedingWhiteSpaceDefaultNull(ast));
             var listWhiteSpace = this.GetListWhiteSpace(ast);
             res.Append('(');
             for (int i = 0; i < _args.Length; i++) {
@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             if (!this.IsMissingCloseGrouping(ast)) {
-                res.Append(this.GetSecondWhiteSpace(ast));
+                res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
                 res.Append(')');
             }
         }

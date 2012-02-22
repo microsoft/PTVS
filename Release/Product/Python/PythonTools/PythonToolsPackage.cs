@@ -442,7 +442,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             connectionPoint.Advise(_langPrefs, out cookie);
 
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
-
+            
             // Add our command handlers for menu (commands must exist in the .vsct file)
             RegisterCommands(new Command[] { 
                 new ExecuteInReplCommand(), 

@@ -1549,6 +1549,8 @@ def j(x = [None]): pass
 def k(x = ()): pass
 
 def l(x = (2, )): pass
+
+def m(x = math.atan2(1, 0)): pass
 ");
 
             var tests = new[] {
@@ -1559,6 +1561,7 @@ def l(x = (2, )): pass
                 new { FuncName = "j", ParamName="x = [...]" },
                 new { FuncName = "k", ParamName="x = ()" },
                 new { FuncName = "l", ParamName="x = (...)" },
+                new { FuncName = "m", ParamName="x = math.atan2(1,0)" },
             };
 
             foreach (var test in tests) {

@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 var pp = p.Count == 0 ? new ParameterResult[0] : new ParameterResult[p.Count - 1];
                 for (int i = 1; i < p.Count; i++) {
-                    pp[i - 1] = FunctionInfo.MakeParameterResult(_function.ProjectState, p[i]);
+                    pp[i - 1] = FunctionInfo.MakeParameterResult(_function.ProjectState, p[i], DeclaringModule.Tree);
                 }
                 string doc = _function.Documentation;
 
