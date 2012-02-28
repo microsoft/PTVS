@@ -257,12 +257,12 @@ namespace AnalysisTest.UI {
             get {
                 if (_solutionExplorerTreeView == null) {
                     AutomationElement element = null;
-                    for (int i = 0; i < 10 && element == null; i++) {
+                    for (int i = 0; i < 20 && element == null; i++) {
                         element = Element.FindFirst(TreeScope.Descendants,
                             new AndCondition(
                                 new PropertyCondition(
-                                    AutomationElement.ClassNameProperty,
-                                    "SysTreeView32"
+                                    AutomationElement.ControlTypeProperty,
+                                    ControlType.Pane
                                 ),
                                 new PropertyCondition(
                                     AutomationElement.NameProperty,
@@ -271,10 +271,24 @@ namespace AnalysisTest.UI {
                             )
                         );
                         if (element == null) {
-                            System.Threading.Thread.Sleep(100);
+                            System.Threading.Thread.Sleep(500);
                         }
                     }
-                    _solutionExplorerTreeView = new SolutionExplorerTree(element);
+                    AutomationElement treeElement = null;
+                    if (element != null) {
+                        for (int i = 0; i < 20 && treeElement == null; i++) {
+                            treeElement = element.FindFirst(TreeScope.Descendants,
+                                new PropertyCondition(
+                                    AutomationElement.ControlTypeProperty,
+                                    ControlType.Tree
+                                )
+                            );
+                            if (treeElement == null) {
+                                System.Threading.Thread.Sleep(500);
+                            }
+                        }
+                    }
+                    _solutionExplorerTreeView = new SolutionExplorerTree(treeElement);
                 }
                 return _solutionExplorerTreeView;
             }

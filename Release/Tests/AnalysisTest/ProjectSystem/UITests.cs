@@ -84,6 +84,24 @@ namespace AnalysisTest.ProjectSystem {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AbsolutePaths() {
+            var proj = File.ReadAllText(Path.Combine("Python.VS.TestData", "AbsolutePath", "AbsolutePath.pyproj"));
+            proj = proj.Replace("[ABSPATH]", Path.GetFullPath(Path.Combine("Python.VS.TestData", "AbsolutePath")));
+            File.WriteAllText(Path.Combine("Python.VS.TestData", "AbsolutePath", "AbsolutePath.pyproj"), proj);
+
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AbsolutePath.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            // find Program.py, send copy & paste, verify copy of file is there
+            var programPy = window.WaitForItem("Solution 'AbsolutePath' (1 project)", "AbsolutePath", "Program.py");
+            Assert.AreNotEqual(null, programPy);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyPasteFile() {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\HelloWorld.sln");
             
@@ -663,7 +681,8 @@ namespace AnalysisTest.ProjectSystem {
             }
 
             Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("Program.py"));
+            
+            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
         }
 
         private static void FocusPythonLanguageNode(NewProjectDialog newProjDialog) {

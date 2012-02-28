@@ -5252,15 +5252,19 @@ If the files in the existing folder have the same names as files in the folder y
             if (!String.IsNullOrWhiteSpace(link)) {
                 strPath = Path.GetDirectoryName(link);
             } else {
+                string rootedPath;
                 if (!Path.IsPathRooted(strPath)) {
-                    var itemPath = Path.Combine(ProjectFolder, item.EvaluatedInclude);
-                    var itemCanonicalPath = new Uri(itemPath).LocalPath;
-                    if (String.Compare(ProjectFolder, 0, itemCanonicalPath, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) == 0) {
-                        strPath = Path.GetDirectoryName(strPath);
-                    } else {
-                        // file lives outside of the project, w/o a link it's just at the top level.
-                        return this;
-                    }
+                    rootedPath = Path.Combine(ProjectFolder, strPath);
+                } else {
+                    rootedPath = strPath;
+                }
+
+                var itemCanonicalPath = new Uri(rootedPath).LocalPath;
+                if (String.Compare(ProjectFolder, 0, itemCanonicalPath, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) == 0) {
+                    strPath = Path.GetDirectoryName(strPath);
+                } else {
+                    // file lives outside of the project, w/o a link it's just at the top level.
+                    return this;
                 }
             }
 

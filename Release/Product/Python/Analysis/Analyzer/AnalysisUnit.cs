@@ -216,11 +216,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         protected override void AnalyzeWorker(DDG ddg) {
-        	InterpreterScope interpreterScope;
-			if (!DeclaringModule.NodeScopes.TryGetValue(Ast, out interpreterScope)) {
-				return;
-			}
-        	var newScope = (interpreterScope as FunctionScope).Function;
+            InterpreterScope interpreterScope;
+            if (!DeclaringModule.NodeScopes.TryGetValue(Ast, out interpreterScope)) {
+                return;
+            }
+            var newScope = (interpreterScope as FunctionScope).Function;
             Debug.Assert(newScope != null);
             // TODO: __new__ in class should assign returnValue
             ddg.SetCurrentUnit(_outerUnit);
@@ -274,12 +274,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         protected override void AnalyzeWorker(DDG ddg) {
-        	InterpreterScope scope;
-			if (!DeclaringModule.NodeScopes.TryGetValue(Ast, out scope)) {
-				return;
-			}
-			
-			var newScope = (scope as ClassScope).Class;
+            InterpreterScope scope;
+            if (!DeclaringModule.NodeScopes.TryGetValue(Ast, out scope)) {
+                return;
+            }
+            
+            var newScope = (scope as ClassScope).Class;
 
             newScope.Bases.Clear();
             if (Ast.Bases.Count == 0) {
