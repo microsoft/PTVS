@@ -59,7 +59,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             LoadAssemblies();
 
             LoadModules();
-            
+
             if (factory.ConfigurableDatabaseExists()) {
                 LoadNewTypeDb();
             }
@@ -82,13 +82,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
             //
             // So setup the application base to be Extensions\Microsoft\, and then add the other 2 dirs to the private bin path.
             setup.ApplicationBase = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));
-            setup.PrivateBinPath = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.Location) + ";" + 
+            setup.PrivateBinPath = Path.GetDirectoryName(typeof(IronPythonInterpreter).Assembly.Location) + ";" +
                                    Path.GetDirectoryName(typeof(IPythonFunction).Assembly.Location);
 
             setup.PrivateBinPathProbe = "";
 
             var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
-            
+
             remoteInterpreter = (RemoteInterpreter)domain.CreateInstanceAndUnwrap(
                 typeof(RemoteInterpreter).Assembly.FullName,
                 typeof(RemoteInterpreter).FullName);
@@ -132,7 +132,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     continue;
                 }
             }
-       }
+        }
 
         public void Initialize(IInterpreterState state) {
             PythonAnalyzer analyzer = _state as PythonAnalyzer;
@@ -158,8 +158,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void AnalysisDirectoryChanged(object sender, EventArgs e) {
-            switch(_remote.SetAnalysisDirectories(_state.AnalysisDirectories.ToArray())) {
-                case SetAnalysisDirectoriesResult.NoChange: 
+            switch (_remote.SetAnalysisDirectories(_state.AnalysisDirectories.ToArray())) {
+                case SetAnalysisDirectoriesResult.NoChange:
                     break;
                 case SetAnalysisDirectoriesResult.ModulesChanged:
                     ClearAssemblyLoadSet();
@@ -189,7 +189,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                 InitializeRemoteDomain();
 
-                LoadModules();                
+                LoadModules();
             }
 
             RaiseModuleNamesChanged();
@@ -346,7 +346,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     res.Add(name);
                 }
             }
-            
+
             return res;
         }
 
@@ -361,7 +361,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (!String.IsNullOrWhiteSpace(name)) {
                 // clr module needs to be an IronPythonModule, not a CPythonModule, so we can track when it's imported
                 // and make clr completions available.
-                if (_typeDb != null && name != "clr") { 
+                if (_typeDb != null && name != "clr") {
                     var res = _typeDb.GetModule(name);
                     if (res != null) {
                         return res;
@@ -372,7 +372,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 if (_modules.TryGetValue(name, out mod)) {
                     return mod;
                 }
-                
+
                 var handle = Remote.LookupNamespace(name);
                 if (!handle.IsNull) {
                     return MakeObject(handle) as IPythonModule;
@@ -387,7 +387,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         #endregion
-        
+
         internal IPythonType GetTypeFromType(ObjectIdentityHandle type) {
             if (type.IsNull) {
                 return null;
@@ -499,7 +499,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
 #if DEBUG
         ~IronPythonInterpreter() {
-            Debug.WriteLine(String.Format("IronPythonInterpreter leaked {0}", _id));            
+            Debug.WriteLine(String.Format("IronPythonInterpreter leaked {0}", _id));
         }
 #endif
 
@@ -512,7 +512,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                     return Task.Factory.StartNew(() => {
                         if (!Remote.LoadAssemblyReference(asmRef.Name)) {
-                            throw new Exception("Failed to load assembly: "+ asmRef.Name);
+                            throw new Exception("Failed to load assembly: " + asmRef.Name);
                         }
 
                         lock (_projectReferenceSet) {
@@ -527,9 +527,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         RaiseModuleNamesChanged();
                     });
             }
-            return Task.Factory.StartNew(() => {});
+            return Task.Factory.StartNew(() => { });
         }
-        
+
         public void RemoveReference(ProjectReference reference) {
             switch (reference.Kind) {
                 case ProjectReferenceKind.Assembly:
@@ -537,10 +537,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                     if (Remote.UnloadAssemblyReference(asmRef.Name)) {
                         ReloadRemoteDomain();
-                        
+
                         lock (_projectReferenceSet) {
                             _projectReferenceSet.Remove(reference);
-                            
+
                             foreach (var prevRef in _projectReferenceSet) {
                                 Remote.LoadAssemblyReference(prevRef.Name);
                             }

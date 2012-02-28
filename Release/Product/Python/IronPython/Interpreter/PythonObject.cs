@@ -88,7 +88,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 if (!(this is IronPythonNamespace)) {   // namespaces always show all of their members...
                     switch (member.ClrOnly) {
                         case IsClrOnly.NotChecked:
-                            // TODO: Check
                             CreateNonClrAttrs();
                             if (_attrs.ContainsKey(name) && 
                                 _attrs[name].ClrOnly == IsClrOnly.Yes) {

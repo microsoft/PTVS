@@ -44,26 +44,29 @@ namespace Microsoft.PythonTools.Project {
         protected override void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
             base.OnAssemblyReferenceChangedOnDisk(sender, e);
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreter2;
-            if (interp != null && NativeMethods.IsSamePath(e.FileName, Url)) {
+            var analyzer = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+            if (analyzer != null && NativeMethods.IsSamePath(e.FileName, Url)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
-                    interp.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
+                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
 
-                    AnalyzeReference(interp);
+                    AnalyzeReference(analyzer.Interpreter);
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
-                    interp.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
+                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
                 }
             }
         }
 
-        private void AnalyzeReference(IPythonInterpreter2 interp) {
-            _failedToAnalyze = false;
-            var task = interp.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
+        private void AnalyzeReference(IPythonInterpreter interp) {
+            var interp2 = interp as IPythonInterpreter2;
+            if (interp2 != null) {
+                _failedToAnalyze = false;
+                var task = interp2.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
 
-            // check if we get an exception, and if so mark ourselves as a dangling reference.
-            task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
+                // check if we get an exception, and if so mark ourselves as a dangling reference.
+                task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
+            }
         }
 
         protected override bool CanShowDefaultIcon() {
