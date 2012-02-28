@@ -92,7 +92,11 @@ namespace Microsoft.PythonTools.Project {
         public string InterpreterPath
         {
             get {
-                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
+                var res = this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
+                if (!System.IO.Path.IsPathRooted(res) && Node.ProjectMgr is CommonProjectNode) {
+                    res = System.IO.Path.Combine(((CommonProjectNode)this.Node.ProjectMgr).GetWorkingDirectory(), res);
+                }
+                return res;
             }
         }
 

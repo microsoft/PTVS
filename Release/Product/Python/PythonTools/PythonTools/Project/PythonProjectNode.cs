@@ -34,7 +34,7 @@ using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    public class PythonProjectNode : CommonProjectNode, IPythonProject {
+    public class PythonProjectNode : CommonProjectNode, IPythonProject, IPythonProject2 {
 #if !DEV11
         private DesignerContext _designerContext;
 #endif
@@ -491,6 +491,14 @@ namespace Microsoft.PythonTools.Project {
 
         bool IPythonProject.Publish(PublishProjectOptions options) {
             return base.Publish(options, false);
+        }
+
+        #endregion
+
+        #region IPythonProject2 Members
+
+        string IPythonProject2.GetUnevaluatedProperty(string name) {
+            return base.GetUnevaluatedProperty(name);
         }
 
         #endregion

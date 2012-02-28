@@ -60,6 +60,34 @@ namespace AnalysisTest.ProjectSystem {
             Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
         }
 
+        /// <summary>
+        /// Tests using a custom interpreter path that is relative
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DebugPythonCustomInterpreter() {
+            // try once when the interpreter doesn't exist...
+            var project = OpenProject(@"Python.VS.TestData\RelativeInterpreterPath.sln", "Program.py");
+
+            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var dialog = app.WaitForDialog();
+            VisualStudioApp.CheckMessageBox(UI.MessageBoxButton.Ok, "Interpreter specified in the project does not exist:",  "Interpreter.exe'");
+
+            VsIdeTestHostContext.Dte.Solution.Close(false);
+
+            // copy an interpreter over and try again
+            File.Copy(PythonPaths.Python27.Path, Path.Combine(Path.GetFullPath("Python.VS.TestData"), "Interpreter.exe"));
+            try {
+                OpenProjectAndBreak(@"Python.VS.TestData\RelativeInterpreterPath.sln", "Program.py", 1);
+                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+            } finally {
+                File.Delete(Path.Combine(Path.GetFullPath("Python.VS.TestData"), "Interpreter.exe"));
+            }
+        }
+
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStep() {

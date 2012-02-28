@@ -209,6 +209,9 @@ namespace Microsoft.IronPythonTools.Debugger {
             string result;
             result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? "").Trim();
             if (!String.IsNullOrEmpty(result)) {
+                if (!Path.IsPathRooted(result)) {
+                    result = Path.Combine(_project.GetWorkingDirectory(), result);
+                }
                 if (!File.Exists(result)) {
                     throw new FileNotFoundException(String.Format("Interpreter specified in the project does not exist: '{0}'", result), result);
                 }

@@ -1741,6 +1741,23 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// Return the value of a project property in it's unevalauted form.
+        /// 
+        /// New in 1.5.
+        /// </summary>
+        /// <param name="propertyName">Name of the property to get</param>
+        public virtual string GetUnevaluatedProperty(string propertyName) 
+        {
+            var res = this.buildProject.GetProperty(propertyName);
+
+            if (res != null) 
+            {
+                return res.UnevaluatedValue;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Set value of project property
         /// </summary>
         /// <param name="propertyName">Name of property</param>

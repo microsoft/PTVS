@@ -60,18 +60,18 @@ namespace Microsoft.IronPythonTools.Debugger {
 
         public void LoadSettings() {
             _loadingSettings = true;
-            SearchPaths = _properties.GetProperty(CommonConstants.SearchPath);
-            InterpreterPath = _properties.GetProperty(CommonConstants.InterpreterPath);
-            Arguments = _properties.GetProperty(CommonConstants.CommandLineArguments);
+            SearchPaths = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.SearchPath);
+            InterpreterPath = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.InterpreterPath);
+            Arguments = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
             DebugStandardLibrary = Convert.ToBoolean(_properties.GetProperty(DebugStandardLibrarySetting));
-            _interpArgs.Text = _properties.GetProperty(CommonConstants.InterpreterArguments);
+            _interpArgs.Text = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
             _loadingSettings = false;
         }
 
         public void ReloadSetting(string settingName) {
             switch (settingName) {
                 case CommonConstants.SearchPath:
-                    SearchPaths = _properties.GetProperty(CommonConstants.SearchPath);
+                    SearchPaths = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.SearchPath);
                     break;
             }
         }
