@@ -156,12 +156,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public ProjectEntry ProjectEntry {
             get { return _projectEntry; }
         }
-        /*
-        public Dictionary<Node, ImportInfo> Imports {
-            get {
-                return _imports;
-            }
-        }*/
 
         public override PythonMemberType ResultType {
             get {

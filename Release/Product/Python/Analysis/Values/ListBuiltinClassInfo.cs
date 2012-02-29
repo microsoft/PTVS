@@ -21,8 +21,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(classObj, projectState) {
         }
 
-        public override SequenceInfo MakeFromIndexes(ISet<Namespace>[] types) {
-            return new ListInfo(types, this);
+        public override SequenceInfo MakeFromIndexes() {
+            return new ListInfo(VariableDef.EmptyArray, this);
         }
     }
 }

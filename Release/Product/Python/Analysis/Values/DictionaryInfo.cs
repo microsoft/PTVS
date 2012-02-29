@@ -23,80 +23,104 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class DictionaryInfo : BuiltinInstanceInfo {
-        private readonly TypeUnion _keyTypes;
-        private readonly TypeUnion _valueTypes;
+        private readonly VariableDef _keyTypes;
+        private readonly VariableDef _valueTypes;
         private SequenceInfo _keyValueTuple;
-        private ISet<Namespace> _getMethod, _itemsMethod, _keysMethod, _valuesMethod, _iterKeysMethod, _iterValuesMethod, _popMethod, _popItemMethod, _iterItemsMethod;
+        private VariableDef _keyValueTupleVariable;
+        private readonly ProjectEntry _declaringModule;
+        private readonly int _declVersion;
+        private SpecializedDictionaryMethod _getMethod, _itemsMethod, _keysMethod, _valuesMethod, _iterKeysMethod, _iterValuesMethod, _popMethod, _popItemMethod, _iterItemsMethod;
 
-        public DictionaryInfo(HashSet<Namespace> keyTypes, HashSet<Namespace> valueTypes, PythonAnalyzer projectState)
-            : base(projectState._dictType) {
-            _keyTypes = new TypeUnion(keyTypes);
-            _valueTypes = new TypeUnion(valueTypes);
+        public DictionaryInfo(ProjectEntry declaringModule)
+            : base(declaringModule.ProjectState._dictType) {
+            _keyTypes = new VariableDef();
+            _valueTypes = new VariableDef();
+            _declaringModule = declaringModule;
+            _declVersion = declaringModule.AnalysisVersion;
         }
+
         
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            return _valueTypes.ToSetNoCopy();
+            return _valueTypes.Types;
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
             foreach (var indexVal in index) {
-                _keyTypes.Add(indexVal, unit.ProjectState);
+                AddKeyType(node, unit, indexVal);
             }
             foreach (var valueVal in value) {
-                _valueTypes.Add(valueVal, unit.ProjectState);
+                AddValueType(node, unit, valueVal);
             }
         }
 
-        public bool AddValueTypes(ISet<Namespace> value) {
-            int count = _valueTypes.Count;
-            foreach (var valueVal in value) {
-                _valueTypes.Add(valueVal, ProjectState);
+        internal bool AddValueType(Node node, AnalysisUnit unit, Namespace valueVal) {
+            if (_valueTypes.AddTypes(node, unit, valueVal)) {
+                if (_iterValuesMethod != null) {
+                    _iterValuesMethod.Update();
+                }
+                if (_valuesMethod != null) {
+                    _valuesMethod.Update();
+                }
+                return true;
             }
-            return count != _valueTypes.Count;
+            return false;
+        }
+
+        internal bool AddKeyType(Node node, AnalysisUnit unit, Namespace indexVal) {
+            if (_keyTypes.AddTypes(node, unit, indexVal)) {
+                if (_iterKeysMethod != null) {
+                    _iterKeysMethod.Update();
+                }
+                if (_keysMethod != null) {
+                    _keysMethod.Update();
+                }
+                return true;
+            }
+            return false;
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             ISet<Namespace> res = null;
             switch (name) {
                 case "get":
-                    res = GetOrMakeSpecializedMethod(ref _getMethod, "get", method => new DictionaryGetBoundMethod(method, this).SelfSet);
+                    res = GetOrMakeSpecializedMethod(ref _getMethod, "get", method => new DictionaryGetBoundMethod(method, this));
                     break;
                 case "items":
-                    res = GetOrMakeSpecializedMethod(ref _itemsMethod, "items", method => new DictionaryItemsBoundMethod(method, this).SelfSet);
+                    res = GetOrMakeSpecializedMethod(ref _itemsMethod, "items", method => new DictionaryItemsBoundMethod(method, this));
                     break;
                 case "keys":
                     if (unit.ProjectState.LanguageVersion.Is3x()) {
-                        res = GetOrMakeSpecializedMethod(ref _keysMethod, "keys", method => new DictionaryKeysIterableBoundMethod(method, this).SelfSet);
+                        res = GetOrMakeSpecializedMethod(ref _keysMethod, "keys", method => new DictionaryKeysIterableBoundMethod(method, this));
                     } else {
-                        res = GetOrMakeSpecializedMethod(ref _keysMethod, "keys", method => new DictionaryKeysListBoundMethod(method, this).SelfSet);
+                        res = GetOrMakeSpecializedMethod(ref _keysMethod, "keys", method => new DictionaryKeysListBoundMethod(method, this));
                     }
                     break;
                 case "values":
                     if (unit.ProjectState.LanguageVersion.Is3x()) {
-                        res = GetOrMakeSpecializedMethod(ref _valuesMethod, "values", method => new DictionaryValuesIterableBoundMethod(method, this).SelfSet);
+                        res = GetOrMakeSpecializedMethod(ref _valuesMethod, "values", method => new DictionaryValuesIterableBoundMethod(method, this));
                     } else {
-                        res = GetOrMakeSpecializedMethod(ref _valuesMethod, "values", method => new DictionaryValuesListBoundMethod(method, this).SelfSet);
+                        res = GetOrMakeSpecializedMethod(ref _valuesMethod, "values", method => new DictionaryValuesListBoundMethod(method, this));
                     }
                     break;
                 case "pop":
-                    res = GetOrMakeSpecializedMethod(ref _popMethod, "pop", method => new DictionaryValuesBoundMethod(method, this).SelfSet);
+                    res = GetOrMakeSpecializedMethod(ref _popMethod, "pop", method => new DictionaryValuesBoundMethod(method, this));
                     break;
                 case "popitem":
-                    res = GetOrMakeSpecializedMethod(ref _popItemMethod, "popitem", method => new DictionaryKeyValueTupleBoundMethod(method, this).SelfSet);
+                    res = GetOrMakeSpecializedMethod(ref _popItemMethod, "popitem", method => new DictionaryKeyValueTupleBoundMethod(method, this));
                     break;
                 case "iterkeys":
                     if (!unit.ProjectState.LanguageVersion.Is3x()) {
-                        res = GetOrMakeSpecializedMethod(ref _iterKeysMethod, "iterkeys", method => new DictionaryKeysIterableBoundMethod(method, this).SelfSet);
+                        res = GetOrMakeSpecializedMethod(ref _iterKeysMethod, "iterkeys", method => new DictionaryKeysIterableBoundMethod(method, this));
                     }
                     break;
                 case "itervalues":
                     if (!unit.ProjectState.LanguageVersion.Is3x()) {
-                        res = GetOrMakeSpecializedMethod(ref _iterValuesMethod, "itervalues", method => new DictionaryValuesIterableBoundMethod(method, this).SelfSet);
+                        res = GetOrMakeSpecializedMethod(ref _iterValuesMethod, "itervalues", method => new DictionaryValuesIterableBoundMethod(method, this));
                     }
                     break;
                 case "iteritems":
                     if (!unit.ProjectState.LanguageVersion.Is3x()) {
-                        res = GetOrMakeSpecializedMethod(ref _iterItemsMethod, "iteritems", method => new DictionaryItemsIterableBoundMethod(method, this).SelfSet);
+                        res = GetOrMakeSpecializedMethod(ref _iterItemsMethod, "iteritems", method => new DictionaryItemsIterableBoundMethod(method, this));
                     }
                     break;
             }
@@ -104,7 +128,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res ?? base.GetMember(node, unit, name);
         }
 
-        private ISet<Namespace> GetOrMakeSpecializedMethod(ref ISet<Namespace> method, string name, Func<BuiltinMethodInfo, ISet<Namespace>> maker) {
+        private ISet<Namespace> GetOrMakeSpecializedMethod(ref SpecializedDictionaryMethod method, string name, Func<BuiltinMethodInfo, SpecializedDictionaryMethod> maker) {
             if (method == null) {
                 ISet<Namespace> itemsMeth;
                 if (TryGetMember(name, out itemsMeth)) {
@@ -123,9 +147,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Description {
             get {
                 // dict({k : v})
-                Namespace keyType = _keyTypes.ToSetNoCopy().GetUnionType();
+                Namespace keyType = _keyTypes.Types.GetUnionType();
                 string keyName = keyType == null ? null : keyType.ShortDescription;
-                Namespace valueType = _valueTypes.ToSetNoCopy().GetUnionType();
+                Namespace valueType = _valueTypes.Types.GetUnionType();
                 string valueName = valueType == null ? null : valueType.ShortDescription;
 
                 if (keyName != null || valueName != null) {
@@ -154,6 +178,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override ProjectEntry DeclaringModule {
+            get {
+                return _declaringModule;
+            }
+        }
+
+        public override int DeclaringVersion {
+            get {
+                return _declVersion;
+            }
+        }
+
         /// <summary>
         /// Gets a type which represents the tuple of (keyTypes, valueTypes)
         /// </summary>
@@ -161,29 +197,52 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_keyValueTuple == null) {
                     _keyValueTuple = new SequenceInfo(
-                        new[] { _keyTypes.ToSetNoCopy(), _valueTypes.ToSetNoCopy() },
+                        new[] { _keyTypes, _valueTypes },
                         ProjectState._tupleType
                     );
                 }
                 return _keyValueTuple;
             }
         }
-        
-        #region Specialized functions
 
-        class DictionaryItemsBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
-            private SequenceInfo _list;
+        private VariableDef KeyValueTupleVariable {
+            get {
+                if (_keyValueTupleVariable == null) {
+                    _keyValueTupleVariable = new VariableDef();
+                    _keyValueTupleVariable.AddTypes(DeclaringModule, KeyValueTuple.SelfSet);
+                }
+                return _keyValueTupleVariable;
+            }
+        }
 
-            internal DictionaryItemsBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
+        class SpecializedDictionaryMethod : BoundBuiltinMethodInfo {
+            internal readonly DictionaryInfo _myDict;
+
+            internal SpecializedDictionaryMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
                 : base(method) {
                 _myDict = myDict;
             }
 
+            public virtual void Update() {
+            }
+        }
+
+        #region Specialized functions
+
+        class DictionaryItemsBoundMethod : SpecializedDictionaryMethod {
+            private ListInfo _list;
+
+            internal DictionaryItemsBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
+                : base(method, myDict) {
+            }
+
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._valueTypes.AddDependency(unit);
+                _myDict._keyTypes.AddDependency(unit);
+
                 if (_list == null) {
                     _list = new ListInfo(
-                        new ISet<Namespace>[] { _myDict.KeyValueTuple },
+                        new[] { _myDict.KeyValueTupleVariable },
                         unit.ProjectState._listType
                     );
                 }
@@ -192,132 +251,153 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        class DictionaryGetBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
-
+        class DictionaryGetBoundMethod : SpecializedDictionaryMethod {
             internal DictionaryGetBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._valueTypes.AddDependency(unit);
+
                 if (args.Length <= 1) {
-                    return _myDict._valueTypes.ToSetNoCopy();
+                    return _myDict._valueTypes.Types;
                 }
 
-                return _myDict._valueTypes.ToSetNoCopy().Union(args[1]);
+                return _myDict._valueTypes.Types.Union(args[1]);
             }
         }
 
-        class DictionaryKeysListBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
+        class DictionaryKeysListBoundMethod : SpecializedDictionaryMethod {
             private ListInfo _list;
 
             internal DictionaryKeysListBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
-                
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._keyTypes.AddDependency(unit);
+
                 if (_list == null) {
-                    _list = new ListInfo(new[] { _myDict._keyTypes.ToSetNoCopy() }, unit.ProjectState._listType);
+                    _list = new ListInfo(new[] { _myDict._keyTypes }, unit.ProjectState._listType);
                 }
                 return _list;
             }
+
+            public override void Update() {
+                if (_list != null) {
+                    _list.UnionType = null;
+                }
+            }
         }
 
-        class DictionaryValuesListBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
+        class DictionaryValuesListBoundMethod : SpecializedDictionaryMethod {
             private ListInfo _list;
             
             internal DictionaryValuesListBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._valueTypes.AddDependency(unit);
+
                 if (_list == null) {
-                    _list = new ListInfo(new[] { _myDict._valueTypes.ToSetNoCopy() }, unit.ProjectState._listType);
+                    _list = new ListInfo(new[] { _myDict._valueTypes }, unit.ProjectState._listType);
                 }
                 return _list;
             }
+            
+            public override void Update() {
+                if (_list != null) {
+                    _list.UnionType = null;
+                }
+            }
         }
 
-        class DictionaryKeysIterableBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
+        class DictionaryKeysIterableBoundMethod : SpecializedDictionaryMethod {
             private IterableInfo _list;
 
             internal DictionaryKeysIterableBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
-
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._keyTypes.AddDependency(unit);
+
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict._keyTypes.ToSetNoCopy() }, unit.ProjectState._dictKeysType);
+                    _list = new IteratorInfo(new[] { _myDict._keyTypes }, unit.ProjectState._dictKeysType);
                 }
                 return _list;
             }
+
+            public override void Update() {
+                if (_list != null) {
+                    _list.UnionType = null;
+                }
+            }
         }
 
-        class DictionaryValuesIterableBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
+        class DictionaryValuesIterableBoundMethod : SpecializedDictionaryMethod {
             private IterableInfo _list;
 
             internal DictionaryValuesIterableBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._valueTypes.AddDependency(unit);
+
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict._valueTypes.ToSetNoCopy() }, unit.ProjectState._dictValuesType);
+                    _list = new IteratorInfo(new[] { _myDict._valueTypes }, unit.ProjectState._dictValuesType);
                 }
                 return _list;
             }
+
+            public override void Update() {
+                if (_list != null) {
+                    _list.UnionType = null;
+                }
+            }
         }
 
-        class DictionaryItemsIterableBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
+        class DictionaryItemsIterableBoundMethod : SpecializedDictionaryMethod {
             private IterableInfo _list;
 
             internal DictionaryItemsIterableBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._valueTypes.AddDependency(unit);
+                _myDict._keyTypes.AddDependency(unit);
+
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict.KeyValueTuple }, unit.ProjectState._dictValuesType);
+                    _list = new IteratorInfo(new[] { _myDict.KeyValueTupleVariable }, unit.ProjectState._dictValuesType);
                 }
                 return _list;
             }
         }
 
-        class DictionaryValuesBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
-
+        class DictionaryValuesBoundMethod : SpecializedDictionaryMethod {
             internal DictionaryValuesBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
-                return _myDict._valueTypes.ToSetNoCopy();
+                _myDict._valueTypes.AddDependency(unit);
+
+                return _myDict._valueTypes.Types;
             }
         }
 
-        class DictionaryKeyValueTupleBoundMethod : BoundBuiltinMethodInfo {
-            private readonly DictionaryInfo _myDict;
-
+        class DictionaryKeyValueTupleBoundMethod : SpecializedDictionaryMethod {
             internal DictionaryKeyValueTupleBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
-                : base(method) {
-                _myDict = myDict;
+                : base(method, myDict) {
             }
 
             public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                _myDict._valueTypes.AddDependency(unit);
+                _myDict._keyTypes.AddDependency(unit);
+
                 return _myDict.KeyValueTuple;
             }
         }
@@ -327,7 +407,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string ToString() {
             StringBuilder sb = new StringBuilder();
             sb.Append("dict(keys=(");
-            foreach (var type in _keyTypes) {
+            foreach (var type in _keyTypes.Types) {
                 if (type.Push()) {
                     sb.Append(type.ToString());
                     sb.Append(", ");
@@ -335,7 +415,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
             sb.Append("), values = (");
-            foreach (var type in _valueTypes) {
+            foreach (var type in _valueTypes.Types) {
                 if (type.Push()) {
                     sb.Append(type.ToString());
                     sb.Append(", ");

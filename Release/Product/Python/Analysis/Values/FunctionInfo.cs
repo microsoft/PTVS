@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                         int paramIndex = lastPos + j;
                                         if (paramIndex >= ParameterTypes.Length) {
                                             break;
-                                        } else if (AddParameterType(unit, indexType, lastPos + j)) {
+                                        } else if (AddParameterType(node, unit, indexType, lastPos + j)) {
                                             added = true;
                                         }
                                     }
@@ -125,7 +125,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 string paramName = GetParameterName(j);
                                 if (paramName == curArg.Name) {
                                     ParameterTypes[j].AddReference(curArg, unit);
-                                    added = AddParameterType(unit, args[i], j) || added;
+                                    added = AddParameterType(node, unit, args[i], j) || added;
                                     found = true;
                                     break;
                                 }
@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 for (int j = ParameterTypes.Length - 1; j >= 0; j--) {
                                     var curFuncArg = FunctionDefinition.Parameters[j];
                                     if (curFuncArg.IsDictionary) {
-                                        AddParameterType(unit, args[i], j);
+                                        AddParameterType(node, unit, args[i], j);
                                         break;
                                     } else if (!curFuncArg.IsKeywordOnly) {
                                         break;
@@ -148,12 +148,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 } else if (i < ParameterTypes.Length) {
                     // positional argument
-                    added = AddParameterType(unit, args[i], i) || added;
+                    added = AddParameterType(node, unit, args[i], i) || added;
                 } else {
                     for (int j = ParameterTypes.Length - 1; j >= 0; j--) {
                         var curArg = FunctionDefinition.Parameters[j];
                         if (curArg.IsList) {
-                            AddParameterType(unit, args[i], j);
+                            AddParameterType(node, unit, args[i], j);
                             break;
                         } else if (!curArg.IsDictionary && !curArg.IsKeywordOnly) {
                             break;
@@ -164,16 +164,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return added;
         }
 
-        internal bool AddParameterType(AnalysisUnit unit, ISet<Namespace> arg, int parameterIndex) {
+        internal bool AddParameterType(Node node, AnalysisUnit unit, ISet<Namespace> arg, int parameterIndex) {
             switch (FunctionDefinition.Parameters[parameterIndex].Kind) {
                 case ParameterKind.Dictionary:
                     Debug.Assert(ParameterTypes[parameterIndex] is DictParameterVariableDef);
 
-                    return ((DictParameterVariableDef)ParameterTypes[parameterIndex]).Dict.AddValueTypes(arg);
+                    bool res = false;
+                    foreach (var type in arg) {
+                        res = ((DictParameterVariableDef)ParameterTypes[parameterIndex]).Dict.AddValueType(null, unit, type) || res;
+                    }
+                    return res;
                 case ParameterKind.List:
                     Debug.Assert(ParameterTypes[parameterIndex] is ListParameterVariableDef);
 
-                    return ((ListParameterVariableDef)ParameterTypes[parameterIndex]).List.AddTypes(new[] { arg });
+                    return ((ListParameterVariableDef)ParameterTypes[parameterIndex]).List.AddTypes(node, unit, new[] { arg });
                 case ParameterKind.Normal:
                     if (ParameterTypes[parameterIndex].AddTypes(FunctionDefinition.Parameters[parameterIndex], unit, arg)) {
                         return true;

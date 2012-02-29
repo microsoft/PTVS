@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class SequenceInfo : IterableInfo {
-        public SequenceInfo(ISet<Namespace>[] indexTypes, BuiltinClassInfo seqType)
+        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
             : base(indexTypes, seqType) {
         }
 
@@ -58,18 +58,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            ReturnValue.AddDependency(unit);
             int? constIndex = GetConstantIndex(index);
 
             if (constIndex != null && constIndex.Value < IndexTypes.Length) {
                 // TODO: Warn if outside known index and no appends?
-                return IndexTypes[constIndex.Value];
+                IndexTypes[constIndex.Value].AddDependency(unit);
+                return IndexTypes[constIndex.Value].Types;
             }
 
             SliceInfo sliceInfo = GetSliceIndex(index);
             if (sliceInfo != null) {
                 return this.SelfSet;
             }
+
+            if (IndexTypes.Length == 0) {
+                IndexTypes = new[] { new VariableDef() };
+            }
+
+            IndexTypes[0].AddDependency(unit);
 
             EnsureUnionType();
             return UnionType;

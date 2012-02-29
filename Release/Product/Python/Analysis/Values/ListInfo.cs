@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private ListInsertBoundBuiltinMethodInfo _insertMethod;
         private ListExtendBoundBuiltinMethodInfo _extendMethod;
 
-        public ListInfo(ISet<Namespace>[] indexTypes, BuiltinClassInfo seqType)
+        public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
             : base(indexTypes, seqType) {
                 EnsureAppend();
         }
@@ -63,19 +63,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetMember(node, unit, name);
         }
 
-        internal void AppendItem(ISet<Namespace> set) {
-            ISet<Namespace> newTypes = set;
-            bool madeSet = false;
-            foreach (var type in IndexTypes) {
-                newTypes = newTypes.Union(type, ref madeSet);
-            }
-            
-            if (IndexTypes.Length < 1 || IndexTypes[0].Count != newTypes.Count) {
-                ReturnValue.EnqueueDependents();
-            }
+        internal void AppendItem(Node node, AnalysisUnit unit, ISet<Namespace> set) {
+            if (IndexTypes.Length == 0) {
+                IndexTypes = new[] { new VariableDef() };
+            } 
 
-            UnionType = newTypes;
-            AddTypes(new[] { newTypes });
+            IndexTypes[0].AddTypes(node, unit, set);
+
+            UnionType = null;
         }
 
         private void EnsureAppend() {

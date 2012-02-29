@@ -132,11 +132,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public bool AddTypes(Node node, AnalysisUnit unit, IEnumerable<T> newTypes) {
+            var projectEntry = unit.ProjectEntry;
+            return AddTypes(projectEntry, newTypes);
+        }
+
+        public bool AddTypes(ProjectEntry projectEntry, IEnumerable<T> newTypes) {
+            var dependencies = GetDependentItems(projectEntry);
+            var projectState = projectEntry.ProjectState;
+
             bool added = false;
 
-            var dependencies = GetDependentItems(unit.ProjectEntry);
             foreach (var value in newTypes) {
-                if (dependencies.Types.Add(value, unit.ProjectState)) {
+                if (dependencies.Types.Add(value, projectState)) {
                     added = true;
                 }
             }
@@ -214,6 +221,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     class VariableDef : VariableDef<Namespace> {
+        internal static VariableDef[] EmptyArray = new VariableDef[0];
+
         public virtual bool IsEphemeral {
             get {
                 return false;
@@ -300,13 +309,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {            
-            List = new SequenceInfo(new ISet<Namespace>[0], unit.ProjectState._tupleType);
+            List = new SequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType);
             AddTypes(location, unit, List.SelfSet);
         }
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            List = new SequenceInfo(new ISet<Namespace>[0], unit.ProjectState._tupleType);
+            List = new SequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType);
             AddTypes(location, unit, List.SelfSet);
         }
     }
@@ -320,13 +329,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public DictParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {
-            Dict = new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), unit.ProjectState);
+            Dict = new DictionaryInfo(unit.ProjectEntry);
             AddTypes(location, unit, Dict.SelfSet);
         }
 
         public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            Dict = new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), unit.ProjectState);
+            Dict = new DictionaryInfo(unit.ProjectEntry);
             AddTypes(location, unit, Dict.SelfSet);
         }
     }

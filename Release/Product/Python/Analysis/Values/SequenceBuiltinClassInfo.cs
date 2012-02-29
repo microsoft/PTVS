@@ -28,16 +28,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
-                List<ISet<Namespace>> seqTypes = new List<ISet<Namespace>>();
+                var res = unit.DeclaringModule.GetOrMakeNodeVariable(
+                    node,
+                    (node_) => MakeFromIndexes()
+                ) as SequenceInfo;
 
+                List<ISet<Namespace>> seqTypes = new List<ISet<Namespace>>();
                 foreach (var type in args[0]) {
                     SequenceInfo seqInfo = type as SequenceInfo;
                     if (seqInfo != null) {
                         for (int i = 0; i < seqInfo.IndexTypes.Length; i++) {
                             if (seqTypes.Count == i) {
-                                seqTypes.Add(seqInfo.IndexTypes[i]);
+                                seqTypes.Add(seqInfo.IndexTypes[i].Types);
                             } else {
-                                seqTypes[i] = seqTypes[i].Union(seqInfo.IndexTypes[i]);
+                                seqTypes[i] = seqTypes[i].Union(seqInfo.IndexTypes[i].Types);
                             }
                         }
                     } else {
@@ -50,12 +54,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
 
-                var res = unit.DeclaringModule.GetOrMakeNodeVariable(
-                    node,
-                    (node_) => MakeFromIndexes(seqTypes.ToArray())
-                ) as SequenceInfo;
-
-                res.AddTypes(seqTypes.ToArray());
+                res.AddTypes(node, unit, seqTypes.ToArray());
 
                 return res;
             }
@@ -63,6 +62,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.Call(node, unit, args, keywordArgNames);
         }
 
-        public abstract SequenceInfo MakeFromIndexes(ISet<Namespace>[] types);
+        public abstract SequenceInfo MakeFromIndexes();
     }
 }

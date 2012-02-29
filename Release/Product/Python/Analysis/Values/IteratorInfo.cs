@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class IteratorInfo : IterableInfo {
         private NextBoundMethod _next;
 
-        public IteratorInfo(ISet<Namespace>[] indexTypes, BuiltinClassInfo seqType)
+        public IteratorInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
             : base(indexTypes, seqType) {
         }
 

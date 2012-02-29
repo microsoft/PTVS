@@ -13,19 +13,26 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class SetInfo : BuiltinInstanceInfo {
-        private ISet<Namespace> _valueTypes;
+        private VariableDef _valueTypes;
 
-        public SetInfo(ISet<Namespace> valueTypes, PythonAnalyzer projectState)
+        public SetInfo(PythonAnalyzer projectState)
             : base(projectState._setType) {
-            _valueTypes = valueTypes;
+            _valueTypes = new VariableDef();
         }
 
-        public void AddTypes(ISet<Namespace> types) {
-            _valueTypes = _valueTypes.Union(types);
+        public void AddTypes(Node node, AnalysisUnit unit, ISet<Namespace> types) {
+            _valueTypes.AddTypes(node, unit, types);
+        }
+
+        public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            _valueTypes.AddDependency(unit);
+            return _valueTypes.Types;
         }
 
         public override string ShortDescription {
@@ -37,13 +44,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Description {
             get {
                 // set({k})
-                Namespace valueType = _valueTypes.GetUnionType();
+                Namespace valueType = _valueTypes.Types.GetUnionType();
                 string valueName = valueType == null ? null : valueType.ShortDescription;
 
                 if (valueName != null) {
-                    return "{" +
-                        (valueName ?? "unknown") +
-                        "}";
+                    return "set({" + valueName + "})";
                 }
 
                 return "set";

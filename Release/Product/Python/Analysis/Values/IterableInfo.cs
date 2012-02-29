@@ -23,16 +23,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     internal class IterableInfo : BuiltinInstanceInfo {
         private ISet<Namespace> _unionType;        // all types that have been seen
-        private ISet<Namespace>[] _indexTypes;     // types for known indices
-        private DependentData _returnValue;
+        private VariableDef[] _indexTypes;     // types for known indices
 
-        public IterableInfo(ISet<Namespace>[] indexTypes, BuiltinClassInfo seqType)
+        public IterableInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
             : base(seqType) {
             _indexTypes = indexTypes;
         }
 
-        public ISet<Namespace>[] IndexTypes {
+        public VariableDef[] IndexTypes {
             get { return _indexTypes; }
+            set { _indexTypes = value; }
         }
 
         public ISet<Namespace> UnionType {
@@ -40,56 +40,43 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 EnsureUnionType();
                 return _unionType; 
             }
-            protected set { _unionType = value; }
+            set { _unionType = value; }
         }
 
         public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            ReturnValue.AddDependency(unit);
-
-            // TODO: This should be a union of the index types
             if (_indexTypes.Length == 0) {
+                _indexTypes = new[] { new VariableDef() };
+                _indexTypes[0].AddDependency(unit);
                 return EmptySet<Namespace>.Instance;
+            } else {
+                _indexTypes[0].AddDependency(unit);
             }
 
-            return _indexTypes[0];
+            EnsureUnionType();
+            return _unionType;
         }
 
-        public DependentData ReturnValue {
-            get {
-                if (_returnValue == null) {
-                    _returnValue = new DependentData();
-                }
-                return _returnValue;
-            }
-        }
-
-        internal bool AddTypes(ISet<Namespace>[] types) {
+        internal bool AddTypes(Node node, AnalysisUnit unit, ISet<Namespace>[] types) {
             if (_indexTypes.Length < types.Length) {
-                ISet<Namespace>[] newTypes = new ISet<Namespace>[types.Length];
+                VariableDef[] newTypes = new VariableDef[types.Length];
                 for (int i = 0; i < _indexTypes.Length; i++) {
                     newTypes[i] = _indexTypes[i];
                 }
                 for (int i = _indexTypes.Length; i < types.Length; i++) {
-                    newTypes[i] = EmptySet<Namespace>.Instance;
+                    newTypes[i] = new VariableDef();
                 }
                 _indexTypes = newTypes;
             }
 
             bool added = false;
             for (int i = 0; i < types.Length; i++) {
-                bool madeSet = false;
-                int oldCount = _indexTypes[i].Count;
-                _indexTypes[i] = _indexTypes[i].Union(types[i], ref madeSet);
-
-                if (_indexTypes[i].Count != oldCount) {
-                    added = true;
-                }
+                added = _indexTypes[i].AddTypes(node, unit, types[i]) || added;
             }
-
+            
             if (added) {
-                ReturnValue.EnqueueDependents();
                 _unionType = null;
             }
+
             return added;
         }
 
@@ -113,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 ISet<Namespace> unionType = EmptySet<Namespace>.Instance;
                 bool setMade = false;
                 foreach (var set in _indexTypes) {
-                    unionType = unionType.Union(set, ref setMade);
+                    unionType = unionType.Union(set.Types, ref setMade);
                 }
                 _unionType = unionType;
             }

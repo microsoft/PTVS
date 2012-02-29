@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private static List<IPythonType>[] GetSequenceTypes(SequenceInfo seq) {
             List<IPythonType>[] types = new List<IPythonType>[seq.IndexTypes.Length];
             for (int i = 0; i < types.Length; i++) {
-                foreach (var seqIndexType in seq.IndexTypes[i]) {
+                foreach (var seqIndexType in seq.IndexTypes[i].Types) {
                     if (seqIndexType is BuiltinClassInfo) {
                         if (types[i] == null) {
                             types[i] = new List<IPythonType>();

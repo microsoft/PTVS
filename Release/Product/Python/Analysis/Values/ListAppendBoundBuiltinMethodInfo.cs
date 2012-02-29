@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
-                _list.AppendItem(args[0]);
+                _list.AppendItem(node, unit, args[0]);
             }
 
             return ProjectState._noneInst.SelfSet;

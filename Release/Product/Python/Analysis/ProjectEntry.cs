@@ -31,8 +31,8 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonAnalyzer _projectState;
         private readonly string _moduleName;
         private readonly string _filePath;
+        private readonly ModuleInfo _myScope;
         private IAnalysisCookie _cookie;
-        private ModuleInfo _myScope;
         private PythonAst _tree;
         private Stack<InterpreterScope> _scopeTree;
         private ModuleAnalysis _currentAnalysis;
@@ -194,6 +194,8 @@ namespace Microsoft.PythonTools.Analysis {
             _scopeTree = new Stack<InterpreterScope>();
             _scopeTree.Push(MyScope.Scope);
             MyScope.Scope.Children.Clear();
+            MyScope.NodeScopes.Clear();
+            MyScope.NodeVariables.Clear();
 
             // create new analysis object and add to the queue to be analyzed
             var newAnalysis = new ModuleAnalysis(_unit, _scopeTree);

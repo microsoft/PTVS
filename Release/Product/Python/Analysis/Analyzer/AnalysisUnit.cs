@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (p.DefaultValue != null) {
                     var val = ddg._eval.Evaluate(p.DefaultValue);
                     if (val != null) {
-                        newScope.AddParameterType(this, val, i);
+                        newScope.AddParameterType(p.DefaultValue, this, val, i);
                     }
                 }
                 ddg._eval.EvaluateMaybeNull(p.Annotation);
@@ -376,7 +376,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             var node = (SetComprehension)Ast;
 
-            set.AddTypes(ddg._eval.Evaluate(node.Item));
+            set.AddTypes(node, this, ddg._eval.Evaluate(node.Item));
         }
     }
 
@@ -408,7 +408,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             var list = (ListInfo)((ComprehensionScope)Scopes[Scopes.Length - 1]).Namespace;
             var node = (ListComprehension)Ast;
 
-            list.AddTypes(new[] { ddg._eval.Evaluate(node.Item) });
+            list.AddTypes(node, this, new[] { ddg._eval.Evaluate(node.Item) });
         }
     }
 }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -21,7 +22,6 @@ using System.Text;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.Scripting.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1570,6 +1570,169 @@ def m(x = math.atan2(1, 0)): pass
                 Assert.AreEqual(result[0].Parameters.Length, 1);
                 Assert.AreEqual(result[0].Parameters[0].Name, test.ParamName);
             }
+        }
+
+        [TestMethod]
+        public void SpecialDictMethodsCrossUnitAnalysis() {
+            // dict methods which return lists
+            foreach (var method in new[] { "x.itervalues()", "x.keys()", "x.iterkeys()", "x.values()"}) {
+                Debug.WriteLine(method);
+
+                var code = @"x = {}
+abc = " + method + @"
+def f(z):
+    z[42] = 100
+
+f(x)
+for foo in abc:
+    print(foo)";
+
+                var entry = ProcessText(code);
+                var values = entry.GetValuesByIndex("foo", code.IndexOf("print(foo)")).ToArray();
+                Assert.AreEqual(1, values.Length);
+                Assert.AreEqual(Interpreter.GetBuiltinType(BuiltinTypeId.Int), values[0].PythonType);
+            }
+
+            // dict methods which return a key or value
+            foreach (var method in new[] { "x.get(42)", "x.pop()" }) {
+                Debug.WriteLine(method);
+
+                var code = @"x = {}
+abc = " + method + @"
+def f(z):
+    z[42] = 100
+
+f(x)
+foo = abc";
+
+                var entry = ProcessText(code);
+                var values = entry.GetValuesByIndex("foo", code.IndexOf("foo =")).ToArray();
+                Assert.AreEqual(1, values.Length);
+                Assert.AreEqual(Interpreter.GetBuiltinType(BuiltinTypeId.Int), values[0].PythonType);
+            }
+
+            // dict methods which return a key/value tuple
+            // dict methods which return a key or value
+            foreach (var method in new[] { "x.popitem()" }) {
+                Debug.WriteLine(method);
+
+                var code = @"x = {}
+abc = " + method + @"
+def f(z):
+    z[42] = 100
+
+f(x)
+foo = abc";
+
+                var entry = ProcessText(code);
+                var values = entry.GetValuesByIndex("foo", code.IndexOf("foo =")).ToArray();
+                Assert.AreEqual(1, values.Length);
+                Assert.AreEqual("tuple of int", values[0].Description);
+            }
+
+            // dict methods which return a list of key/value tuple
+            foreach (var method in new[] { "x.iteritems()", "x.items()" }) {
+                Debug.WriteLine(method);
+
+                var code = @"x = {}
+abc = " + method + @"
+def f(z):
+    z[42] = 100
+
+f(x)
+for foo in abc:
+    print(foo)";
+
+                var entry = ProcessText(code);
+                var values = entry.GetValuesByIndex("foo", code.IndexOf("print(foo)")).ToArray();
+                Assert.AreEqual(1, values.Length);
+                Assert.AreEqual("tuple of int", values[0].Description);
+            }
+        }
+
+        /// <summary>
+        /// Verifies that list indicies don't accumulate classes across multiple analysis
+        /// </summary>
+        [TestMethod]
+        public void ListIndiciesCrossModuleAnalysis() {
+            for (int i = 0; i < 2; i++) {
+                var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+                var code1 = "l = []";
+                var code2 = @"class C(object):
+    pass
+
+a = C()
+import mod1
+mod1.l.append(a)
+";
+
+                var mod1 = state.AddModule("mod1", "mod1", null);
+                Prepare(mod1, GetSourceUnit(code1, "mod1"));
+                var mod2 = state.AddModule("mod2", "mod2", null);
+                Prepare(mod2, GetSourceUnit(code2, "mod2"));
+
+                mod1.Analyze(true);
+                mod2.Analyze(true);
+                
+                mod1.AnalysisGroup.AnalyzeQueuedEntries();
+                if (i == 0) {
+                    // re-preparing shouldn't be necessary
+                    Prepare(mod2, GetSourceUnit(code2, "mod2"));
+                }
+
+                mod2.Analyze(true);
+                mod2.AnalysisGroup.AnalyzeQueuedEntries();
+
+                var listValue = mod1.Analysis.GetValuesByIndex("l", 0).ToArray();
+                Assert.AreEqual(1, listValue.Length);
+                Assert.AreEqual("list of C instance", listValue[0].Description);
+
+                var values = mod1.Analysis.GetValuesByIndex("l[0]", 0).ToArray();
+                Assert.AreEqual(1, values.Length);
+                Assert.AreEqual("C instance", values[0].Description);
+            }
+        }
+
+        [TestMethod]
+        public void SpecialListMethodsCrossUnitAnalysis() {
+            var code = @"x = []
+def f(z):
+    z.append(100)
+    
+f(x)
+for foo in x:
+    print(foo)
+
+
+bar = x.pop()
+";
+
+            var entry = ProcessText(code);
+            var values = entry.GetValuesByIndex("foo", code.IndexOf("print(foo)")).ToArray();
+            Assert.AreEqual(1, values.Length);
+            Assert.AreEqual(Interpreter.GetBuiltinType(BuiltinTypeId.Int), values[0].PythonType);
+
+            values = entry.GetValuesByIndex("bar", code.IndexOf("bar = ")).ToArray();
+            Assert.AreEqual(1, values.Length);
+            Assert.AreEqual(Interpreter.GetBuiltinType(BuiltinTypeId.Int), values[0].PythonType);
+        }
+
+        [TestMethod]
+        public void SetLiteral() {
+            var code = @"
+x = {2, 3, 4}
+for abc in x:
+    print(abc)
+";
+            var entry = ProcessText(code);
+            var values = entry.GetValuesByIndex("x", code.IndexOf("x = ")).ToArray();
+            Assert.AreEqual(values.Length, 1);
+            Assert.AreEqual(values[0].ShortDescription, "set");
+            Assert.AreEqual("set({int})", values[0].Description);
+
+            values = entry.GetValuesByIndex("abc", code.IndexOf("print(abc)")).ToArray();
+            Assert.AreEqual(values.Length, 3);
+            Assert.AreEqual(values[0].ShortDescription, "int");
         }
 
         [TestMethod]

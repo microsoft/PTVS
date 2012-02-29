@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
                 foreach (var type in args[0]) {
-                    _list.AppendItem(type.GetEnumeratorTypes(node, unit));
+                    _list.AppendItem(node, unit, type.GetEnumeratorTypes(node, unit));
                 }
             }
 

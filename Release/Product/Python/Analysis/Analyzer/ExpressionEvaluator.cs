@@ -192,17 +192,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private static ISet<Namespace> EvaluateSet(ExpressionEvaluator ee, Node node) {
             var n = (SetExpression)node;
-            ISet<Namespace> result;
-            if (!ee.GlobalScope.NodeVariables.TryGetValue(node, out result)) {
-                var values = new HashSet<Namespace>();
-                foreach (var x in n.Items) {
-                    values.Union(ee.Evaluate(x));
-                }
-
-                result = new DictionaryInfo(values, values, ee.ProjectState).SelfSet;
-                ee.GlobalScope.NodeVariables[node] = result;
+            
+            var setInfo = (SetInfo)ee.GlobalScope.GetOrMakeNodeVariable(node, x => new SetInfo(ee.ProjectState));            
+            foreach (var x in n.Items) {
+                setInfo.AddTypes(node, ee._unit, ee.Evaluate(x));
             }
-            return result;
+
+            return setInfo;
         }
 
         private static ISet<Namespace> EvaluateSetComp(ExpressionEvaluator ee, Node node) {
@@ -215,22 +211,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             var n = (DictionaryExpression)node;
             ISet<Namespace> result;
             if (!ee.GlobalScope.NodeVariables.TryGetValue(node, out result)) {
+                var dictInfo = new DictionaryInfo(ee._unit.ProjectEntry);
+                result = dictInfo.SelfSet;
+
                 var keys = new HashSet<Namespace>();
                 var values = new HashSet<Namespace>();
                 foreach (var x in n.Items) {
                     if (x.SliceStart != null) {
                         foreach (var keyVal in ee.Evaluate(x.SliceStart)) {
-                            keys.Add(keyVal);
+                            dictInfo.AddKeyType(x.SliceStart, ee._unit, keyVal);
                         }
                     }
                     if (x.SliceStop != null) {
                         foreach (var itemVal in ee.Evaluate(x.SliceStop)) {
-                            values.Add(itemVal);
+                            dictInfo.AddValueType(x.SliceStart, ee._unit, itemVal);
                         }
                     }
                 }
-
-                result = new DictionaryInfo(keys, values, ee.ProjectState).SelfSet;
+                
                 ee.GlobalScope.NodeVariables[node] = result;
             }
             return result;
@@ -331,9 +329,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 WalkComprehension(ee, listComp);
 
-                return ee.GlobalScope.GetOrMakeNodeVariable(
+                var listInfo = (ListInfo)ee.GlobalScope.GetOrMakeNodeVariable(
                     node,
-                    (x) => new ListInfo(new[] { ee.Evaluate(listComp.Item) }, ee._unit.ProjectState._listType).SelfSet);
+                    (x) => new ListInfo(VariableDef.EmptyArray, ee._unit.ProjectState._listType).SelfSet);
+
+                listInfo.AddTypes(node, ee._unit, new[] { ee.Evaluate(listComp.Item) });
+                
+                return listInfo.SelfSet;
             } else {
                 // list comprehension has its own scope in 3.x
                 ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
@@ -439,27 +441,22 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private ISet<Namespace> MakeSequence(ExpressionEvaluator ee, Node node) {
-            ISet<Namespace> result;
-            if (!ee.GlobalScope.NodeVariables.TryGetValue(node, out result)) {
-                var seqItems = ((SequenceExpression)node).Items;
-                var indexValues = new ISet<Namespace>[seqItems.Count];
-
-                for (int i = 0; i < seqItems.Count; i++) {
-                    indexValues[i] = Evaluate(seqItems[i]);
-                }
-
-                ISet<Namespace> sequence;
+            var sequence = (SequenceInfo)ee.GlobalScope.GetOrMakeNodeVariable(node, x => {
                 if (node is ListExpression) {
-                    sequence = new ListInfo(indexValues, _unit.ProjectState._listType).SelfSet;
+                    return new ListInfo(VariableDef.EmptyArray, _unit.ProjectState._listType).SelfSet;
                 } else {
                     Debug.Assert(node is TupleExpression);
-                    sequence = new SequenceInfo(indexValues, _unit.ProjectState._tupleType).SelfSet;
+                    return new SequenceInfo(VariableDef.EmptyArray, _unit.ProjectState._tupleType).SelfSet;
                 }
+            });
+            var seqItems = ((SequenceExpression)node).Items;
+            var indexValues = new ISet<Namespace>[seqItems.Count];
 
-                ee.GlobalScope.NodeVariables[node] = result = sequence;
+            for (int i = 0; i < seqItems.Count; i++) {
+                indexValues[i] = Evaluate(seqItems[i]);
             }
-
-            return result;
+            sequence.AddTypes(node, ee._unit, indexValues);
+            return sequence.SelfSet;
         }
 
         internal InterpreterScope[] PushScope(InterpreterScope scope) {

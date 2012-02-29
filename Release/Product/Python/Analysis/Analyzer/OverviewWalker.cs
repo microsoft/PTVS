@@ -178,9 +178,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     var variable = newParams[index++] = funcScope.AddLocatedVariable(param.Name, param, unit, param.Kind);
                     
                     if (param.IsList) {
-                        variable.AddTypes(param, unit, new SequenceInfo(new ISet<Namespace>[0], outerUnit.ProjectState._tupleType));
+                        variable.AddTypes(param, unit, new SequenceInfo(VariableDef.EmptyArray, outerUnit.ProjectState._tupleType));
                     } else if (param.IsDictionary) {
-                        variable.AddTypes(param, unit, new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), outerUnit.ProjectState));
+                        variable.AddTypes(param, unit, new DictionaryInfo(outerUnit.ProjectEntry));
                     }
                 }
 
@@ -252,7 +252,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private ComprehensionScope MakeListComprehensionScope(Comprehension node, InterpreterScope[] scopes) {
             var unit = new ListComprehensionAnalysisUnit(node, _entry.Tree, scopes, _curUnit);
-            var setInfo = new ListInfo(new ISet<Namespace>[0], _curUnit.ProjectState._listType);
+            var setInfo = new ListInfo(VariableDef.EmptyArray, _curUnit.ProjectState._listType);
             var compScope = new ComprehensionScope(setInfo, node);
             unit.Enqueue();
             return compScope;
@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private ComprehensionScope MakeSetComprehensionScope(Comprehension node, InterpreterScope[] scopes) {
             var unit = new SetComprehensionAnalysisUnit(node, _entry.Tree, scopes, _curUnit);
-            var setInfo = new SetInfo(EmptySet<Namespace>.Instance, _curUnit.ProjectState);
+            var setInfo = new SetInfo(_curUnit.ProjectState);
             var compScope = new ComprehensionScope(setInfo, node);
             unit.Enqueue();
             return compScope;
@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private ComprehensionScope MakeDictComprehensionScope(Comprehension node, InterpreterScope[] scopes) {
             var unit = new DictionaryComprehensionAnalysisUnit(node, _entry.Tree, scopes, _curUnit);
-            var dictInfo = new DictionaryInfo(new HashSet<Namespace>(), new HashSet<Namespace>(), _curUnit.ProjectState);
+            var dictInfo = new DictionaryInfo(_curUnit.ProjectEntry);
             var compScope = new ComprehensionScope(dictInfo, node);
             unit.Enqueue();
             return compScope;

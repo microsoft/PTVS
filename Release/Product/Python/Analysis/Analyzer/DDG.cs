@@ -340,7 +340,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     for (int i = 0; i < p.Length; i++) {
                         var baseParam = p[i];
                         var baseType = ProjectState.GetNamespaceFromObjects(baseParam.ParameterType);
-                        newScope.AddParameterType(_unit, baseType, i);
+                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[i], _unit, baseType, i);
                     }
                 }
             }
@@ -367,9 +367,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (newScope.ParameterTypes.Length > 0) {
                     var outerScope = Scopes[Scopes.Length - 1] as ClassScope;
                     if (outerScope != null) {
-                        newScope.AddParameterType(_unit, outerScope.Class.SelfSet, 0);
+                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[0], _unit, outerScope.Class.SelfSet, 0);
                     } else {
-                        newScope.AddParameterType(_unit, ProjectState._typeObj.SelfSet, 0);
+                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[0], _unit, ProjectState._typeObj.SelfSet, 0);
                     }
                 }
             } else if (!newScope.IsStatic) {
@@ -379,7 +379,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (newScope.ParameterTypes.Length > 0) {
                     var classScope = Scopes[Scopes.Length - 1] as ClassScope;
                     if (classScope != null) {
-                        newScope.AddParameterType(_unit, classScope.Class.Instance, 0);
+                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[0], _unit, classScope.Class.Instance, 0);
                     }
                 }
             }
@@ -605,8 +605,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         SequenceInfo seqInfo = typeObj as SequenceInfo;
                         if (seqInfo != null && seqInfo.Push()) {
                             try {
-                                foreach (var type in seqInfo.IndexTypes) {
-                                    PropagateIsInstanceTypes(node, type, variable);
+                                foreach (var indexVar in seqInfo.IndexTypes) {
+                                    foreach (var type in indexVar.Types) {
+                                        PropagateIsInstanceTypes(node, type, variable);
+                                    }
                                 }
                             } finally {
                                 seqInfo.Pop();
