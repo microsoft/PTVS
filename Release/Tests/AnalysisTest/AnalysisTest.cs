@@ -3007,6 +3007,30 @@ print(z)";
         }
 
         [TestMethod]
+        public void NestedIsInstance() {
+            var code = @"
+def f():
+    x = None
+    y = None
+
+    assert isinstance(x, int)
+    z = x
+
+    assert isinstance(y, int)
+    w = y
+
+    pass";
+
+            var entry = ProcessText(code);
+            var values = entry.GetValuesByIndex("z", code.IndexOf("z = x")).ToArray();
+            Assert.AreEqual(1, values.Length);
+            Assert.AreEqual("int", values.First().Description);
+
+            values = entry.GetValuesByIndex("w", code.IndexOf("w = y")).ToArray();
+            Assert.AreEqual("int", values.First().Description);
+        }
+
+        [TestMethod]
         public void TestIsInstanceUserDefinedType() {
             var text = @"
 class C(object):
