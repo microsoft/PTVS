@@ -101,13 +101,15 @@ namespace Microsoft.PythonTools.Refactoring {
             // then on code which follows our extracted body
             var afterStmts = walker.Target.GetStatementsAfter(_ast);
             HashSet<PythonVariable> readByFollowingCodeBeforeInit = null;
-            if (afterStmts != null) {
-                var parentNode = walker.Target.Parents[walker.Target.Parents.Length - 1];
-                if (parentNode.ScopeVariables != null) {
-                    var checker = new FlowChecker(parentNode);
-                    afterStmts.Walk(checker);
-                    readByFollowingCodeBeforeInit = checker.ReadBeforeInitializedVariables;
+            var parentNode = walker.Target.Parents[walker.Target.Parents.Length - 1];
+            if (parentNode.ScopeVariables != null) {
+                var checker = new FlowChecker(parentNode);
+
+                foreach (var afterStmt in afterStmts) {
+                    afterStmt.Walk(checker);
                 }
+
+                readByFollowingCodeBeforeInit = checker.ReadBeforeInitializedVariables;
             }
 
             // discover any variables which are consumed and need to be available as outputs...

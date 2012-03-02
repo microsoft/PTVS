@@ -84,6 +84,51 @@ def f():
         }
 
         [TestMethod]
+        public void AssignInIfStatementReadAfter() {
+            ExtractMethodTest(@"class C:
+    def foo(self):
+        if False: 
+            bar = player = Player()
+        else:                
+            player.update()
+", "bar = player = Player()", TestResult.Success(
+ @"class C:
+    def g(self):
+        bar = player = Player()
+
+    def foo(self):
+        if False: 
+            self.g()
+        else:                
+            player.update()
+"
+ ), scopeName: "C");
+
+            ExtractMethodTest(@"class C:
+    def foo(self):
+        if False: 
+            bar = player = Player()
+                
+        player.update()
+", "bar = player = Player()", TestResult.Success(
+@"class C:
+    def g(self):
+        bar = player = Player()
+            
+        return player
+
+    def foo(self):
+        if False: 
+            player = self.g()
+                
+        player.update()
+"
+), scopeName: "C");
+
+
+        }
+
+        [TestMethod]
         public void TestExtractLambda() {
             // lambda is present in the code
             ExtractMethodTest(

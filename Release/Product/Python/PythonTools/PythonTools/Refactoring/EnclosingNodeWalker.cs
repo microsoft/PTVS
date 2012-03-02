@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly Span _selectedSpan;
         private SelectionTarget _targetNode;
         private List<ScopeStatement> _parents = new List<ScopeStatement>();
+        private List<SuiteStatement> _suites = new List<SuiteStatement>();
         private Dictionary<ScopeStatement, int> _insertLocations = new Dictionary<ScopeStatement, int>();
 
         public EnclosingNodeWalker(PythonAst root, SnapshotPoint start, SnapshotPoint end) {
@@ -50,6 +51,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private bool ShouldWalkWorker(Node node) {
             if (node is ScopeStatement) {
+                _suites.Add(null);  // marker for a function/class boundary
                 _parents.Add((ScopeStatement)node);
             }
             return _selectedSpan.IntersectsWith(Span.FromBounds(GetStartIndex(node), node.EndIndex));
@@ -72,6 +74,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private bool ShouldWalkWorker(SuiteStatement node) {
             if (ShouldWalkWorker((Node)node)) {
+                _suites.Add(node);
                 foreach (var stmt in node.Statements) {
                     stmt.Walk(this);
                     if (_targetNode != null) {
@@ -81,6 +84,7 @@ namespace Microsoft.PythonTools.Refactoring {
                         break;
                     }
                 }
+                _suites.Pop();
 
             }
             return false;
@@ -102,7 +106,27 @@ namespace Microsoft.PythonTools.Refactoring {
                         break;
                     }
                 }
-                _targetNode = new SuiteTarget(_insertLocations, _parents.ToArray(), node, startIndex, endIndex);
+                List<SuiteStatement> followingSuites = new List<SuiteStatement>();
+                for (int i = _suites.Count - 1; i >= 0; i--) {
+                    if (_suites[i] == null) {
+                        // we hit our marker, this is a function/class boundary
+                        // We don't care about any suites which come before the marker
+                        // because they live in a different scope.  We insert the marker in 
+                        // ShouldWalkWorker(Node node) when we have a ScopeStatement.
+                        break;
+                    }
+
+                    followingSuites.Add(_suites[i]);
+                }
+                _targetNode = new SuiteTarget(
+                    _insertLocations, 
+                    _parents.ToArray(), 
+                    node, 
+                    followingSuites.ToArray(), 
+                    _selectedSpan, 
+                    startIndex, 
+                    endIndex
+                );
                 _insertLocations[_parents[_parents.Count - 1]] = GetStartIndex(node.Statements[startIndex]);
             }
         }
@@ -112,6 +136,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         private void PostWalkWorker(Node node) {
             if (node is ScopeStatement) {
+                _suites.Pop();
                 _parents.Remove((ScopeStatement)node);
             }
             if (_targetNode == null &&

@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Refactoring {
     abstract class SelectionTarget {
@@ -40,8 +41,8 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public abstract Statement GetBody(PythonAst root);
 
-        public virtual SuiteStatement GetStatementsAfter(PythonAst root) {
-            return null;
+        public virtual IEnumerable<Statement> GetStatementsAfter(PythonAst root) {
+            return new Statement[0];
         }
 
         public abstract int Start {
@@ -116,13 +117,17 @@ namespace Microsoft.PythonTools.Refactoring {
 
     class SuiteTarget : SelectionTarget {
         private readonly SuiteStatement _suite;
+        private readonly SuiteStatement[] _followingSuites;
         private readonly int _start, _end;
+        private readonly Span _selectedSpan;
 
-        public SuiteTarget(Dictionary<ScopeStatement, int> insertLocations, ScopeStatement[] parents, SuiteStatement suite, int startIndex, int endIndex)
+        public SuiteTarget(Dictionary<ScopeStatement, int> insertLocations, ScopeStatement[] parents, SuiteStatement suite, SuiteStatement[] followingSuites, Span selectedSpan, int startIndex, int endIndex)
             : base(insertLocations, parents) {
             _suite = suite;
             _start = startIndex;
             _end = endIndex;
+            _followingSuites = followingSuites;
+            _selectedSpan = selectedSpan;
         }
 
         public override bool IsExpression {
@@ -137,12 +142,19 @@ namespace Microsoft.PythonTools.Refactoring {
             return ast;
         }
 
-        public override SuiteStatement GetStatementsAfter(PythonAst root) {
+        public override IEnumerable<Statement> GetStatementsAfter(PythonAst root) {
             var ast = _suite.CloneSubset(Parents[0] as PythonAst, _end + 1, _suite.Statements.Count - 1);
             if (!_suite.IsFunctionOrClassSuite(root)) {
                 ast = new SuiteStatement(new[] { ast });
             }
-            return ast;
+            yield return ast;
+            foreach (var suite in _followingSuites) {
+                foreach (var stmt in suite.Statements) {
+                    if (stmt.StartIndex > _selectedSpan.End) {
+                        yield return stmt;
+                    }
+                }
+            }
         }
 
         public override int Start {
