@@ -60,6 +60,7 @@ namespace Microsoft.PythonTools.Repl {
         private IReplWindow _window;
         private bool _multipleScopes = true, _enableAttach, _attached, _ownsAnalyzer;
         private ProjectAnalyzer _replAnalyzer;
+        private PythonInteractiveOptions _options;
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
 
@@ -958,13 +959,20 @@ namespace Microsoft.PythonTools.Repl {
             return new string(new char[] { (char)cmd_buffer[0], (char)cmd_buffer[1], (char)cmd_buffer[2], (char)cmd_buffer[3] });
         }
 
+
         internal PythonInteractiveOptions CurrentOptions {
             get {
                 if (PythonToolsPackage.Instance == null) {
                     // running outside of VS, make this work for tests.
-                    return new PythonInteractiveOptions();
+                    if (_options == null) {
+                        _options = new PythonInteractiveOptions();
+                    }
+                    return _options;
                 }
                 return PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(Interpreter);
+            }
+            set {
+                _options = value;
             }
         }
 

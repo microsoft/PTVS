@@ -2752,6 +2752,36 @@ g()",
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
             replWindow.ClearScreen();
         }
+
+
+        [TestMethod]
+        public void AttachSupportMultiThreaded() {
+            // http://pytools.codeplex.com/workitem/663
+            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            replEval.CurrentOptions = new PythonInteractiveOptions();
+            replEval.CurrentOptions.EnableAttach = true;
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var code = new[] {
+                "import threading",
+                "def sayHello():\r\n    pass",
+                "t1 = threading.Thread(target=sayHello)",
+                "t1.start()",
+                "t2 = threading.Thread(target=sayHello)",
+                "t2.start()"
+            };
+            foreach (var line in code) {
+                var execute = replEval.ExecuteText(line);
+                execute.Wait();
+                Assert.AreEqual(execute.Result, ExecutionResult.Success);
+            }
+
+            replWindow.ClearScreen();
+            var finalExecute = replEval.ExecuteText("42");
+            finalExecute.Wait();
+            Assert.AreEqual(finalExecute.Result, ExecutionResult.Success);
+            Assert.AreEqual(replWindow.Output, "42\r\n");
+        }
     }
 
 }
