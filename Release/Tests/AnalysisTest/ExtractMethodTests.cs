@@ -129,6 +129,24 @@ def f():
         }
 
         [TestMethod]
+        public void ExtractMethodIndexExpr() {
+            ExtractMethodTest(@"class C:
+    def process_kinect_event(self, e):
+        for skeleton in e.skeletons:         
+            foo[skeleton.dwTrackingID] = Player()
+", "foo[skeleton.dwTrackingID] = Player()", TestResult.Success(
+ @"class C:
+    def g(self, skeleton):
+        foo[skeleton.dwTrackingID] = Player()
+
+    def process_kinect_event(self, e):
+        for skeleton in e.skeletons:         
+            self.g(skeleton)
+"
+ ), scopeName: "C");
+        }
+
+        [TestMethod]
         public void TestExtractLambda() {
             // lambda is present in the code
             ExtractMethodTest(

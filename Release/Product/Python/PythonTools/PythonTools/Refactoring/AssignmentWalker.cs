@@ -33,20 +33,31 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public override bool Walk(AssignmentStatement node) {
             foreach (var lhs in node.Left) {
-                lhs.Walk(Define);
+                DefineExpr(lhs);
             }
             node.Right.Walk(this);
             return false;
         }
 
+        private void DefineExpr(Expression lhs) {
+            if (lhs is NameExpression) {
+                lhs.Walk(Define);
+            } else {
+                // foo.bar = 42, foo[bar] = 42, we don't actually define any variables
+                lhs.Walk(this);
+            }
+        }
+
         public override bool Walk(AugmentedAssignStatement node) {
-            node.Left.Walk(Define);
+            DefineExpr(node.Left);
             node.Right.Walk(this);
             return false;
         }
 
         public override bool Walk(DelStatement node) {
-            node.Walk(Define);
+            foreach (var expr in node.Expressions) {
+                DefineExpr(expr);
+            }
             return false;
         }
 
@@ -70,12 +81,10 @@ namespace Microsoft.PythonTools.Refactoring {
             return false;
         }
 
-
         public override bool Walk(ForStatement node) {
             if (node.Left != null) {
                 node.Left.Walk(Define);
             }
-
             if (node.List != null) {
                 node.List.Walk(this);
             }
