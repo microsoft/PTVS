@@ -82,6 +82,9 @@ def Overloaded():
     '''help 2'''
     pass
 
+class WithInstanceMembers(object):
+    def __init__(self):
+        self.foo = 42
 ";
 
             using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
@@ -104,6 +107,7 @@ m = test.m
 Aliased = test.Aliased
 FunctionNoRetType = test.FunctionNoRetType
 Overloaded = test.Overloaded
+WithInstanceMembers = test.WithInstanceMembers
 ";
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
@@ -138,6 +142,11 @@ Overloaded = test.Overloaded
                 Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
 
                 Assert.AreEqual("help 1\r\n\r\nhelp 2", newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation);
+
+                // instance attributes are present
+                var instMembers = newMod.Analysis.GetMembersByIndex("WithInstanceMembers", pos);
+                var fooMembers = instMembers.Where(x => x.Name == "foo");
+                Assert.AreNotEqual(null, fooMembers.FirstOrDefault().Name);
             }
         }
 

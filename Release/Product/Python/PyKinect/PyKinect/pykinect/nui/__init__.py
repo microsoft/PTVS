@@ -288,7 +288,9 @@ class SkeletonEngine(object):
             self._enabled = False
 
     def get_next_frame(self, timeout = -1):
-        return self.runtime._nui.NuiSkeletonGetNextFrame(timeout)
+        res = self.runtime._nui.NuiSkeletonGetNextFrame(timeout)
+        assert isinstance(res, SkeletonFrame)
+        return res
 
     @staticmethod
     def depth_image_to_skeleton(fDepthX, fDepthY, usDepthValue):

@@ -332,6 +332,11 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var keyValue in ci.Scope.Variables) {
                 memTable[keyValue.Key] = GenerateMember(keyValue.Value, declModule, true);
             }
+            if (ci.Instance.InstanceAttributes != null) {
+                foreach (var keyValue in ci.Instance.InstanceAttributes) {
+                    memTable[keyValue.Key] = GenerateMember(keyValue.Value, declModule, true);
+                }
+            }
 
             return memTable;
         }
