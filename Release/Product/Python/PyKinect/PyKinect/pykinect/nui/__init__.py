@@ -79,6 +79,7 @@ class RuntimeOptions(object):
     UseDepth = 0x20
     UseDepthAndPlayerIndex = 1
     UseSkeletalTracking = 8
+    UsesAudio = 0x10000000
 
 
 class Device(object):
