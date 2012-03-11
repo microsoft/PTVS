@@ -54,7 +54,6 @@ namespace Microsoft.PythonTools.Project {
         private CommonSearchPathContainerNode _searchPathContainer;
         private FileSystemWatcher _watcher;
         private int _suppressFileWatcherCount;
-        private string _projectDir;
         private bool _isRefreshing;
         private object _automationObject;
         private CommonPropertyPage _propPage;
@@ -126,13 +125,6 @@ namespace Microsoft.PythonTools.Project {
                 IVsHierarchy hier = Marshal.GetObjectForIUnknown(unknownPtr) as IVsHierarchy;
                 return hier;
             }
-        }
-
-        /// <summary>
-        /// Returns project's directory name.
-        /// </summary>
-        public string ProjectDir {
-            get { return _projectDir; }
         }
 
         /// <summary>
@@ -270,7 +262,7 @@ namespace Microsoft.PythonTools.Project {
                         Publish(PublishProjectOptions.Default, true);
                         return VSConstants.S_OK;
                     case CommonConstants.OpenFolderInExplorerCmdId:
-                        Process.Start(this.ProjectDir);
+                        Process.Start(this.ProjectHome);
                         return VSConstants.S_OK;
                 }
             }
@@ -353,7 +345,6 @@ namespace Microsoft.PythonTools.Project {
         /// Overriding main project loading method to inject our hierarachy of nodes.
         /// </summary>
         protected override void Reload() {
-            _projectDir = Path.GetDirectoryName(this.BaseURI.Uri.LocalPath);
             _searchPathContainer = new CommonSearchPathContainerNode(this);
             this.AddChild(_searchPathContainer);
             base.Reload();
@@ -369,7 +360,7 @@ namespace Microsoft.PythonTools.Project {
                 _watcher.Dispose();
             }
 
-            _watcher = new FileSystemWatcher(ProjectDir);
+            _watcher = new FileSystemWatcher(ProjectHome);
             _watcher.IncludeSubdirectories = true;
             _watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
             _watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
@@ -508,7 +499,7 @@ namespace Microsoft.PythonTools.Project {
 
             string link = item.GetMetadata(ProjectFileConstants.Link);
             if (!String.IsNullOrWhiteSpace(link) || 
-                String.Compare(ProjectDir, 0, item.GetFullPathForElement(), 0, ProjectDir.Length, StringComparison.OrdinalIgnoreCase) != 0) {
+                !CommonUtils.IsSubpathOf(ProjectHome, item.GetFullPathForElement())) {
                 newNode.SetIsLinkFile(true);
             }
 
@@ -535,19 +526,11 @@ namespace Microsoft.PythonTools.Project {
         public override FileNode CreateFileNode(string absFileName) {
             // Avoid adding files to the project multiple times.  Ultimately           
             // we should not use project items and instead should have virtual items.       
-            string path = absFileName;
-            if (absFileName.Length > ProjectDir.Length &&
-                String.Compare(ProjectDir, 0, absFileName, 0, ProjectDir.Length, StringComparison.OrdinalIgnoreCase) == 0) {
-                path = absFileName.Substring(ProjectDir.Length);
-                if (path.StartsWith("\\")) {
-                    path = path.Substring(1);
-                }
-            }
-
 
             var prjItem = GetExistingItem(absFileName);
 
             if (prjItem == null) {
+                string path = CommonUtils.GetRelativeFilePath(ProjectHome, absFileName);
                 if (IsCodeFile(absFileName)) {
                     prjItem = BuildProject.AddItem("Compile", path)[0];
                 } else {
@@ -559,14 +542,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected Microsoft.Build.Evaluation.ProjectItem GetExistingItem(string absFileName) {
-            Microsoft.Build.Evaluation.ProjectItem prjItem = null;
             foreach (var item in BuildProject.Items) {
-                if (item.UnevaluatedInclude == absFileName) {
-                    prjItem = item;
-                    break;
+                string absItemPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude);
+                if (CommonUtils.IsSamePath(absItemPath, absFileName)) {
+                    return item;
                 }
             }
-            return prjItem;
+            return null;
         }
 
         public ProjectElement MakeProjectElement(string type, string path) {
@@ -630,17 +612,17 @@ namespace Microsoft.PythonTools.Project {
         private void RefreshCurrentWorkingDirectory() {
             try {
                 _isRefreshing = true;
-                string projHome = GetProjectHomeDir();
+                string projHome = ProjectHome;
                 string workDir = GetWorkingDirectory();
 
                 //Refresh CWD node
-                bool needCWD = !CommonUtils.AreTheSameDirectories(projHome, workDir);
+                bool needCWD = !CommonUtils.IsSameDirectory(projHome, workDir);
                 var cwdNode = FindImmediateChild<CurrentWorkingDirectoryNode>(_searchPathContainer);
                 if (needCWD) {
                     if (cwdNode == null) {
                         //No cwd node yet
                         _searchPathContainer.AddChild(new CurrentWorkingDirectoryNode(this, workDir));
-                    } else if (!CommonUtils.AreTheSameDirectories(cwdNode.Url, workDir)) {
+                    } else if (!CommonUtils.IsSameDirectory(cwdNode.Url, workDir)) {
                         //CWD has changed, recreate the node
                         cwdNode.Remove(false);
                         _searchPathContainer.AddChild(new CurrentWorkingDirectoryNode(this, workDir));
@@ -660,7 +642,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 _isRefreshing = true;
 
-                string projHome = GetProjectHomeDir();
+                string projHome = ProjectHome;
                 string workDir = GetWorkingDirectory();
                 IList<string> searchPath = ParseSearchPath();
 
@@ -682,8 +664,8 @@ namespace Microsoft.PythonTools.Project {
                     //ParseSearchPath() must resolve all paths
                     Debug.Assert(Path.IsPathRooted(path));
                     var node = FindSearchPathNodeByPath(searchPathNodes, path, out index);
-                    bool alreadyShown = CommonUtils.AreTheSameDirectories(workDir, path) ||
-                                        CommonUtils.AreTheSameDirectories(projHome, path);
+                    bool alreadyShown = CommonUtils.IsSameDirectory(workDir, path) ||
+                                        CommonUtils.IsSameDirectory(projHome, path);
                     if (!alreadyShown) {
                         if (node != null) {
                             //existing path, update index (sort order)
@@ -712,29 +694,8 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public string GetWorkingDirectory() {
             string workDir = this.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
-            if (string.IsNullOrEmpty(workDir)) {
-                //If empty - take project directory as working directory
-                workDir = _projectDir;
-            } else if (!Path.IsPathRooted(workDir)) {
-                //If relative path - resolve it based on project home
-                workDir = Path.Combine(_projectDir, workDir);
-            }
-            return CommonUtils.NormalizeDirectoryPath(workDir);
-        }
 
-        /// <summary>
-        /// Returns resolved value of the project home directory property.
-        /// </summary>
-        internal string GetProjectHomeDir() {
-            string projHome = this.ProjectMgr.GetProjectProperty(CommonConstants.ProjectHome, true);
-            if (string.IsNullOrEmpty(projHome)) {
-                //If empty - take project directory as project home
-                projHome = _projectDir;
-            } else if (!Path.IsPathRooted(projHome)) {
-                //If relative path - resolve it based on project directory
-                projHome = Path.Combine(_projectDir, projHome);
-            }
-            return CommonUtils.NormalizeDirectoryPath(projHome);
+            return CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, workDir);
         }
 
         /// <summary>
@@ -742,14 +703,13 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         internal string GetStartupFile() {
             string startupFile = ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
+            
             if (string.IsNullOrEmpty(startupFile)) {
                 //No startup file is assigned
                 return null;
-            } else if (!Path.IsPathRooted(startupFile)) {
-                //If relative path - resolve it based on project home
-                return Path.Combine(GetProjectHomeDir(), startupFile);
             }
-            return startupFile;
+            
+            return CommonUtils.GetAbsoluteFilePath(ProjectHome, startupFile);
         }
 
         /// <summary>
@@ -758,7 +718,9 @@ namespace Microsoft.PythonTools.Project {
         private void CommonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
             switch (e.PropertyName) {
                 case CommonConstants.StartupFile:
-                    RefreshStartupFile(this, MakeAbsolutePath(e.OldValue), MakeAbsolutePath(e.NewValue));
+                    RefreshStartupFile(this, 
+                        CommonUtils.GetAbsoluteFilePath(ProjectHome, e.OldValue), 
+                        CommonUtils.GetAbsoluteFilePath(ProjectHome, e.NewValue));
                     break;
                 case CommonConstants.WorkingDirectory:
                     RefreshCurrentWorkingDirectory();
@@ -769,20 +731,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private string MakeAbsolutePath(string relativePath) {
-            string path = relativePath;
-            if (!Path.IsPathRooted(path)) {
-                path = Path.Combine(ProjectDir, path);
-            }
-            return path;
-        }
-
         /// <summary>
         /// Returns first immediate child node (non-recursive) of a given type.
         /// </summary>
         private static void RefreshStartupFile(HierarchyNode parent, string oldFile, string newFile) {
             for (HierarchyNode n = parent.FirstChild; n != null; n = n.NextSibling) {
-                if (NativeMethods.IsSamePath(oldFile, n.Url) || NativeMethods.IsSamePath(newFile, n.Url)) {
+                // TODO: Distinguish between real Urls and fake ones (eg. "References")
+                var absUrl = CommonUtils.GetAbsoluteFilePath(parent.ProjectMgr.ProjectHome, n.Url);
+                if (CommonUtils.IsSamePath(oldFile, absUrl) || CommonUtils.IsSamePath(newFile, absUrl)) {
                     n.ReDraw(UIHierarchyElement.Icon);
                 }
 
@@ -809,7 +765,7 @@ namespace Microsoft.PythonTools.Project {
         private CommonSearchPathNode FindSearchPathNodeByPath(IList<CommonSearchPathNode> nodes, string path, out int index) {
             index = 0;
             for (int j = 0; j < nodes.Count; j++) {
-                if (CommonUtils.AreTheSameDirectories(nodes[j].Url, path)) {
+                if (CommonUtils.IsSameDirectory(nodes[j].Url, path)) {
                     index = j;
                     return nodes[j];
                 }
@@ -852,7 +808,7 @@ namespace Microsoft.PythonTools.Project {
             List<string> parsedPaths = new List<string>();
             if (!string.IsNullOrEmpty(searchPath)) {
                 foreach (string path in searchPath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    string resolvedPath = CommonUtils.NormalizeDirectoryPath(Path.Combine(_projectDir, path));
+                    string resolvedPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
                     if (!parsedPaths.Contains(resolvedPath)) {
                         parsedPaths.Add(resolvedPath);
                     }
@@ -936,7 +892,7 @@ namespace Microsoft.PythonTools.Project {
             //Dialog title
             browseInfo[0].pwzDlgTitle = DynamicProjectSR.GetString(DynamicProjectSR.SelectFolderForSearchPath);
             //Initial directory - project directory
-            browseInfo[0].pwzInitialDir = _projectDir;
+            browseInfo[0].pwzInitialDir = ProjectHome;
             //Parent window
             uiShell.GetDialogOwnerHwnd(out browseInfo[0].hwndOwner);
             //Max path length
@@ -1030,7 +986,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public virtual int SaveProjectToLocation(string pszProjectFilename) {
             string oldName = Url;
-            string basePath = Path.GetDirectoryName(this.FileName) + Path.DirectorySeparatorChar;
+            string basePath = CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(this.FileName));
             string newName = Path.GetDirectoryName(pszProjectFilename);
 
             IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
@@ -1048,9 +1004,6 @@ namespace Microsoft.PythonTools.Project {
 
             // save the new project to to disk
             SaveMSBuildProjectFileAs(pszProjectFilename);
-
-            _projectDir = newName;
-
 
             // save the project again w/ updated file info
             BuildProjectLocationChanged();
@@ -1081,13 +1034,6 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        private static string GetNewFilePathForDeferredSave(string baseOldPath, string baseNewPath, string itemPath) {
-            if (!baseNewPath.EndsWith("\\", StringComparison.Ordinal) && !baseNewPath.EndsWith("/", StringComparison.Ordinal))
-                baseNewPath += "\\";
-
-            return new Url(new Url(baseNewPath), itemPath).AbsoluteUrl;
-        }
-
         private void MoveFilesForDeferredSave(HierarchyNode node, string basePath, string baseNewPath) {
             if (node != null) {
                 for (var child = node.FirstChild; child != null; child = child.NextSibling) {
@@ -1104,18 +1050,17 @@ namespace Microsoft.PythonTools.Project {
                                                 
                         FileNode fn = child as FileNode;
                         if (fn != null) {
-                            string newLoc = GetNewFilePathForDeferredSave(basePath, baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
+                            string oldLoc = CommonUtils.GetAbsoluteFilePath(basePath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
+                            string newLoc = CommonUtils.GetAbsoluteFilePath(baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
                             
                             // make sure the directory is there
                             Directory.CreateDirectory(Path.GetDirectoryName(newLoc));
-                            fn.RenameDocument(GetNewFilePathForDeferredSave(baseNewPath, basePath, child.ItemNode.GetMetadata(ProjectFileConstants.Include)), newLoc);
+                            fn.RenameDocument(oldLoc, newLoc);
                         }
 
                         FolderNode folder = child as FolderNode;
                         if (folder != null) {
-
-
-                            folder.VirtualNodeName = GetNewFilePathForDeferredSave(basePath, baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
+                            folder.VirtualNodeName = CommonUtils.GetAbsoluteDirectoryPath(baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
                         }
                     }
 

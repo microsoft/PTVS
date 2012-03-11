@@ -14,6 +14,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools {
@@ -203,8 +204,8 @@ namespace Microsoft.PythonTools {
                     if (_templateDir.Length != 0) {
                         Uri url = new Uri(context.ComponentType.Assembly.CodeBase);
                         string templates = url.LocalPath;
-                        templates = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(templates), _templateDir);
-                        templates = context.EscapePath(System.IO.Path.GetFullPath(templates));
+                        templates = CommonUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(templates), _templateDir);
+                        templates = context.EscapePath(templates);
                         projectKey.SetValue("TemplatesDir", templates);
                     }
                     projectKey.SetValue("SortPriority", Priority);

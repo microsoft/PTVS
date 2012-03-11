@@ -176,9 +176,7 @@ namespace Microsoft.PythonTools.Project
 
             //add the output path
             string outputBasePath = this.ProjectMgr.OutputBaseRelativePath;
-            if(outputBasePath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
-                outputBasePath = Path.GetDirectoryName(outputBasePath);
-            newConfig.AddProperty("OutputPath", Path.Combine(outputBasePath, name) + Path.DirectorySeparatorChar.ToString());
+            newConfig.AddProperty("OutputPath", CommonUtils.NormalizeDirectoryPath(Path.Combine(outputBasePath, name)));
 
             // Set the condition that will define the new configuration
             string newCondition = String.Format(CultureInfo.InvariantCulture, configString, name);

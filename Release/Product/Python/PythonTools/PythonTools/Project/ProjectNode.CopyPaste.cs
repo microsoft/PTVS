@@ -55,9 +55,9 @@ namespace Microsoft.PythonTools.Project
 		{
 			pdwEffect = (uint)DropEffect.None;
 
-            // changed from MPFProj:
-            // http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=8145
-            /*
+			// changed from MPFProj:
+			// http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=8145
+			/*
 			if(this.SourceDraggedOrCutOrCopied)
 			{
 				return VSConstants.S_OK;
@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Project
 				uint docCookie;
 				IVsPersistDocData ppIVsPersistDocData;
 				DocumentManager manager = node.GetDocumentManager();
-				if (node.IsLinkFile)
+				if(node.IsLinkFile)
 				{
 					continue;
 				}
@@ -450,10 +450,10 @@ namespace Microsoft.PythonTools.Project
 		/// <param name="targetNode">Node to add the new folder to</param>
 		protected internal virtual bool AddFolderFromOtherProject(string folderToAdd, HierarchyNode targetNode, bool drop)
 		{
-            Utilities.ArgumentNotNullOrEmpty(folderToAdd, "folderToAdd");
-            Utilities.ArgumentNotNull("targetNode", targetNode);
+			Utilities.ArgumentNotNullOrEmpty(folderToAdd, "folderToAdd");
+			Utilities.ArgumentNotNull("targetNode", targetNode);
 
-            var targetFolderNode = targetNode.GetDragTargetHandlerNode();
+			var targetFolderNode = targetNode.GetDragTargetHandlerNode();
 
 			// Split the reference in its 3 parts
 			int index1 = Guid.Empty.ToString("B").Length;
@@ -474,7 +474,7 @@ namespace Microsoft.PythonTools.Project
 
 			// Get the target path
 			string folderName = Path.GetFileName(Path.GetDirectoryName(folder));
-            string targetPath = Path.Combine(GetBaseDirectoryForAddingFiles(targetFolderNode), folderName);
+			string targetPath = Path.Combine(GetBaseDirectoryForAddingFiles(targetFolderNode), folderName);
 
 			// Retrieve the project from which the items are being copied
 			IVsHierarchy sourceHierarchy;
@@ -483,52 +483,50 @@ namespace Microsoft.PythonTools.Project
 
 			// Then retrieve the item ID of the item to copy
 			uint itemID = VSConstants.VSITEMID_ROOT;
-            ErrorHandler.ThrowOnFailure(sourceHierarchy.ParseCanonicalName(folder, out itemID));
+			ErrorHandler.ThrowOnFailure(sourceHierarchy.ParseCanonicalName(folder, out itemID));
 
-            string name = folderName;
+			string name = folderName;
 			// Ensure we don't end up in an endless recursion
 			if(Utilities.IsSameComObject(this, sourceHierarchy)) {
-                // copy file onto its self, we should make a copy of the folder
-                if (String.Compare(folder, targetNode.GetMkDocument(), StringComparison.OrdinalIgnoreCase) == 0) {
-                    if (drop) {
-                        // cancelled drag and drop
-                        return false;
-                    }
-                    string newDir;
-                    string baseName = folder;
-                    if (folder.EndsWith("\\")) {
-                        folder = folder.Substring(0, folder.Length - 1);
-                    }
-                    int copyCount = 0;
-                    do {
-                        name = folderName + " - Copy";
-                        if (copyCount != 0) {
-                            name += " (" + copyCount + ")";
-                        }
-                        copyCount++;
-                        newDir = Path.Combine(Path.GetDirectoryName(folder), name);
-                    } while (Directory.Exists(newDir));
+				// copy file onto its self, we should make a copy of the folder
+				if (String.Equals(folder, targetNode.GetMkDocument(), StringComparison.OrdinalIgnoreCase)) {
+					if (drop) {
+						// cancelled drag and drop
+						return false;
+					}
+					string newDir;
+					string baseName = folder;
+					folder = CommonUtils.TrimEndSeparator(folder);
+					int copyCount = 0;
+					do {
+						name = folderName + " - Copy";
+						if (copyCount != 0) {
+							name += " (" + copyCount + ")";
+						}
+						copyCount++;
+						newDir = Path.Combine(Path.GetDirectoryName(folder), name);
+					} while (Directory.Exists(newDir));
 
-                    targetPath = newDir;
-                    targetFolderNode = targetNode.Parent;
-                } else {
-                    HierarchyNode cursorNode = targetFolderNode;
-                    while (cursorNode != null) {
-                        if (String.Compare(folder, cursorNode.GetMkDocument(), StringComparison.OrdinalIgnoreCase) == 0) {
-                            throw new InvalidOperationException(String.Format("Cannot copy '{0}'. The destination folder is a subfolder of the source folder.", folderName));
-                        }
-                        cursorNode = cursorNode.Parent;
-                    }
-                }
+					targetPath = newDir;
+					targetFolderNode = targetNode.Parent;
+				} else {
+					HierarchyNode cursorNode = targetFolderNode;
+					while (cursorNode != null) {
+						if (String.Equals(folder, cursorNode.GetMkDocument(), StringComparison.OrdinalIgnoreCase)) {
+							throw new InvalidOperationException(String.Format("Cannot copy '{0}'. The destination folder is a subfolder of the source folder.", folderName));
+						}
+						cursorNode = cursorNode.Parent;
+					}
+				}
 			}
 
-            // Recursively copy the directory to the new location
-            Utilities.RecursivelyCopyDirectory(folder, targetPath);
+			// Recursively copy the directory to the new location
+			Utilities.RecursivelyCopyDirectory(folder, targetPath);
 
 			// Now walk the source project hierarchy to see which node needs to be added.
-            WalkSourceProjectAndAdd(sourceHierarchy, itemID, targetFolderNode, false, name);
+			WalkSourceProjectAndAdd(sourceHierarchy, itemID, targetFolderNode, false, name);
 
-            return true;
+			return true;
 		}
 
 		/// <summary>
@@ -541,9 +539,9 @@ namespace Microsoft.PythonTools.Project
 		/// <param name="addSibblings">Typically false on first call and true after that</param>
 		protected virtual void WalkSourceProjectAndAdd(IVsHierarchy sourceHierarchy, uint itemId, HierarchyNode targetNode, bool addSiblings, string name = null)
 		{
-            Utilities.ArgumentNotNull("sourceHierarchy", sourceHierarchy);
+			Utilities.ArgumentNotNull("sourceHierarchy", sourceHierarchy);
 			
-            // Before we start the walk, add the current node
+			// Before we start the walk, add the current node
 			object variant = null;
 			HierarchyNode newNode = targetNode;
 			if(itemId != VSConstants.VSITEMID_NIL)
@@ -551,9 +549,9 @@ namespace Microsoft.PythonTools.Project
 				// Calculate the corresponding path in our project
 				string source;
 				ErrorHandler.ThrowOnFailure(((IVsProject)sourceHierarchy).GetMkDocument(itemId, out source));
-                if (name == null) {
-                    name = Path.GetFileName(source.TrimEnd(new char[] { '/', '\\' }));
-                }
+				if (name == null) {
+					name = Path.GetFileName(CommonUtils.TrimEndSeparator(source));
+				}
 				string targetPath = Path.Combine(GetBaseDirectoryForAddingFiles(targetNode), name);
 
 				// See if this is a linked item (file can be linked, not folders)
@@ -599,12 +597,12 @@ namespace Microsoft.PythonTools.Project
 		/// <returns>Node that was added</returns>
 		protected virtual HierarchyNode AddNodeIfTargetExistInStorage(HierarchyNode parentNode, string name, string targetPath)
 		{
-            if (parentNode == null)
-            {
-                return null;
-            }
+			if (parentNode == null)
+			{
+				return null;
+			}
 			
-            HierarchyNode newNode = parentNode;
+			HierarchyNode newNode = parentNode;
 			// If the file/directory exist, add a node for it
 			if(File.Exists(targetPath))
 			{
@@ -633,7 +631,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			int returnValue = (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
 
-            this.RegisterClipboardNotifications(true);
+			this.RegisterClipboardNotifications(true);
 
 			// Create our data object and change the selection to show item(s) being cut
 			IOleDataObject dataObject = this.PackageSelectionDataObject(true);
@@ -691,13 +689,13 @@ namespace Microsoft.PythonTools.Project
 		protected internal int PasteFromClipboard(HierarchyNode targetNode)
 		{
 			int returnValue = (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
-            
-            if (targetNode == null)
-            {
-                return VSConstants.E_INVALIDARG;
-            }
 			
-            //Get the clipboardhelper service and use it after processing dataobject
+			if (targetNode == null)
+			{
+				return VSConstants.E_INVALIDARG;
+			}
+			
+			//Get the clipboardhelper service and use it after processing dataobject
 			IVsUIHierWinClipboardHelper clipboardHelper = (IVsUIHierWinClipboardHelper)GetService(typeof(SVsUIHierWinClipboardHelper));
 			if(clipboardHelper == null)
 			{
@@ -812,13 +810,13 @@ namespace Microsoft.PythonTools.Project
 
 		/// <summary>
 		/// Process dataobject from Drag/Drop/Cut/Copy/Paste operation
-        /// 
-        /// drop indicates if it is a drag/drop or a cut/copy/paste.
+		/// 
+		/// drop indicates if it is a drag/drop or a cut/copy/paste.
 		/// </summary>
 		/// <remarks>The targetNode is set if the method is called from a drop operation, otherwise it is null</remarks>
 		internal DropDataType ProcessSelectionDataObject(IOleDataObject dataObject, HierarchyNode targetNode, bool drop)
 		{
-            Debug.Assert(targetNode != null);
+			Debug.Assert(targetNode != null);
 
 			DropDataType dropDataType = DropDataType.None;
 			bool isWindowsFormat = false;
@@ -844,7 +842,7 @@ namespace Microsoft.PythonTools.Project
 				// For directory based projects the content of the clipboard is a double-NULL terminated list of Projref strings.
 				if(isWindowsFormat)
 				{
-                    node = node.GetDragTargetHandlerNode();
+					node = node.GetDragTargetHandlerNode();
 
 					// This is the code path when source is windows explorer
 					VSADDRESULT[] vsaddresults = new VSADDRESULT[1];
@@ -1043,9 +1041,9 @@ namespace Microsoft.PythonTools.Project
 		/// <returns>true if succeeded</returns>
 		internal bool AddFilesFromProjectReferences(HierarchyNode targetNode, string[] projectReferences, bool drop)
 		{
-            //Validate input
-            Utilities.ArgumentNotNull("projectReferences", projectReferences);
-            Utilities.CheckNotNull(targetNode);
+			//Validate input
+			Utilities.ArgumentNotNull("projectReferences", projectReferences);
+			Utilities.CheckNotNull(targetNode);
 
 			//Iteratively add files from projectref
 			foreach(string projectReference in projectReferences)
@@ -1055,11 +1053,12 @@ namespace Microsoft.PythonTools.Project
 					// bad projectref, bail out
 					return false;
 				}
-				if(projectReference.EndsWith("/", StringComparison.Ordinal) || projectReference.EndsWith("\\", StringComparison.Ordinal))
+				if(CommonUtils.HasEndSeparator(projectReference))
 				{
-                    if (!AddFolderFromOtherProject(projectReference, targetNode, drop)) {
-                        return false;
-                    }
+					if(!AddFolderFromOtherProject(projectReference, targetNode, drop))
+					{
+						return false;
+					}
 				}
 				else if(!AddFileToNodeFromProjectReference(projectReference, targetNode, drop))
 				{
@@ -1088,7 +1087,7 @@ namespace Microsoft.PythonTools.Project
 
 			string sourceProjectPath = DragDropHelper.GetSourceProjectPath(oleDataObject);
 
-			if(!String.IsNullOrEmpty(sourceProjectPath) && NativeMethods.IsSamePath(sourceProjectPath, this.GetMkDocument()))
+			if(!String.IsNullOrEmpty(sourceProjectPath) && CommonUtils.IsSamePath(sourceProjectPath, this.GetMkDocument()))
 			{
 				ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleFlushClipboard());
 				int clipboardOpened = 0;
@@ -1152,5 +1151,5 @@ namespace Microsoft.PythonTools.Project
 		}
 
 		#endregion
-    }
+	}
 }

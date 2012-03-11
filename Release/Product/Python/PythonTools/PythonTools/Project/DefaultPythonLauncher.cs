@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Returns full path of the language specififc iterpreter executable file.
+        /// Returns full path of the language specific interpreter executable file.
         /// </summary>
         public string GetInterpreterExecutable(out bool isWindows) {
             isWindows = Convert.ToBoolean(_project.GetProperty(CommonConstants.IsWindowsApplication));
@@ -88,9 +88,7 @@ namespace Microsoft.PythonTools.Project {
             string result;
             result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? "").Trim();
             if (!String.IsNullOrEmpty(result)) {
-                if (!Path.IsPathRooted(result)) {
-                    result = Path.Combine(_project.GetWorkingDirectory(), result);
-                }
+                result = CommonUtils.GetAbsoluteFilePath(_project.GetWorkingDirectory(), result);
 
                 if (!File.Exists(result)) {
                     throw new FileNotFoundException(String.Format("Interpreter specified in the project does not exist: '{0}'", result), result);
@@ -234,7 +232,7 @@ namespace Microsoft.PythonTools.Project {
                 var paths = searchPath.Split(';');
                 for (int i = 0; i < paths.Length; i++) {
                     if (!Path.IsPathRooted(paths[i])) {
-                        paths[i] = Path.Combine(_project.ProjectDirectory, paths[i]);
+                        paths[i] = CommonUtils.GetAbsoluteDirectoryPath(_project.ProjectDirectory, paths[i]);
                     }
                 }
 

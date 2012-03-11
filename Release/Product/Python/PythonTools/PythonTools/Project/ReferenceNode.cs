@@ -256,7 +256,7 @@ namespace Microsoft.PythonTools.Project
 				if(null != refererenceNode)
 				{
 					// We check if the Url of the assemblies is the same.
-					if(NativeMethods.IsSamePath(refererenceNode.Url, this.Url))
+					if(CommonUtils.IsSamePath(refererenceNode.Url, this.Url))
 					{
 						return true;
 					}

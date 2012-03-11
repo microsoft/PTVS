@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			get
 			{
-				return new DirectoryInfo(this.Node.Url).Name;
+				return Path.GetFileName(CommonUtils.TrimEndSeparator(this.Node.Url));
 			}
 		}
 

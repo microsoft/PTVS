@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public string GetText(VisualStudio.Shell.Interop.VSTREETEXTOPTIONS options) {
-            return System.IO.Path.GetFileName(Filename);
+            return Path.GetFileName(Filename);
         }
 
         public _VSTREESTATECHANGEREFRESH ToggleState() {

@@ -50,9 +50,7 @@ namespace Microsoft.PythonTools.Project {
             Debug.Assert(!String.IsNullOrEmpty(pbstrCanonicalName), "Output Assembly not defined");
 
             // Make sure we have a full path
-            if (!System.IO.Path.IsPathRooted(pbstrCanonicalName)) {
-                pbstrCanonicalName = new Url(project.BaseURI, pbstrCanonicalName).AbsoluteUrl;
-            }
+            pbstrCanonicalName = CommonUtils.GetAbsoluteFilePath(project.ProjectHome, pbstrCanonicalName);
             return VSConstants.S_OK;
         }
 
@@ -101,6 +99,7 @@ namespace Microsoft.PythonTools.Project {
             return String.IsNullOrEmpty(value) ? VSConstants.E_NOTIMPL : VSConstants.S_OK;
         }
 
+        // TODO: Should RootRelativeURL be based on ProjectHome?
         public int get_RootRelativeURL(out string pbstrRelativePath) {
             if (output == null) {
                 pbstrRelativePath = Path.GetDirectoryName(project.Url);
@@ -120,11 +119,9 @@ namespace Microsoft.PythonTools.Project {
             } else {
                 string baseDir = output.Project.Directory;
                 string fullPath = output.GetMetadataValue("FullPath");
-                if (fullPath.StartsWith(baseDir)) {
-                    pbstrRelativePath = fullPath.Substring(baseDir.Length);
-                    if (pbstrRelativePath.StartsWith("\\")) {
-                        pbstrRelativePath = pbstrRelativePath.Substring(1);
-                    }
+                if (CommonUtils.IsSubpathOf(baseDir, fullPath)) {
+                    // TODO: Maybe GetRelativeFilePath?
+                    pbstrRelativePath = CommonUtils.GetRelativeDirectoryPath(baseDir, fullPath);
                 }
             }
 

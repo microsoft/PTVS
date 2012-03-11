@@ -67,6 +67,7 @@ namespace Microsoft.PythonTools.Project {
         /// Gets the absolute path for this node.         
         /// </summary>
         public override string Url {
+            // TODO: This node is not real - should we return null for Url?
             get { return this.VirtualNodeName; }
         }
 

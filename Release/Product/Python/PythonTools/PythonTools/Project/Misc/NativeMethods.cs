@@ -557,7 +557,7 @@ namespace Microsoft.PythonTools.Project
 		/// <devdoc>
 		/// Please use this "approved" method to compare file names.
 		/// </devdoc>
-		public static bool IsSamePath(string file1, string file2)
+		/*public static bool IsSamePath(string file1, string file2)
 		{
 			if (file1 == null || file1.Length == 0)
 			{
@@ -587,7 +587,7 @@ namespace Microsoft.PythonTools.Project
 			}
 
 			return false;
-		}
+		}*/
 
 		public static void SetErrorDescription(string description, params object[] args)
 		{
@@ -792,35 +792,35 @@ namespace Microsoft.PythonTools.Project
 			LOGON32_PROVIDER_WINNT50
 		}
 
-        [DllImport("msi.dll", CharSet = CharSet.Auto)]
-        internal static extern MsiInstallState MsiGetComponentPath(string szProduct, string szComponent, [Out]StringBuilder lpPathBuf, ref uint pcchBuf);
+		[DllImport("msi.dll", CharSet = CharSet.Auto)]
+		internal static extern MsiInstallState MsiGetComponentPath(string szProduct, string szComponent, [Out]StringBuilder lpPathBuf, ref uint pcchBuf);
 
-        /// <summary>
-        /// Buffer for lpProductBuf must be 39 characters long.
-        /// </summary>
-        /// <param name="szComponent"></param>
-        /// <param name="lpProductBuf"></param>
-        /// <returns></returns>
-        [DllImport("msi.dll", CharSet = CharSet.Auto)]
-        internal static extern uint MsiGetProductCode(string szComponent, [Out]StringBuilder lpProductBuf);
+		/// <summary>
+		/// Buffer for lpProductBuf must be 39 characters long.
+		/// </summary>
+		/// <param name="szComponent"></param>
+		/// <param name="lpProductBuf"></param>
+		/// <returns></returns>
+		[DllImport("msi.dll", CharSet = CharSet.Auto)]
+		internal static extern uint MsiGetProductCode(string szComponent, [Out]StringBuilder lpProductBuf);
 
 
-        internal enum MsiInstallState {
-            NotUsed = -7,  // component disabled
-            BadConfig = -6,  // configuration data corrupt
-            Incomplete = -5,  // installation suspended or in progress
-            SourceAbsent = -4,  // run from source, source is unavailable
-            MoreData = -3,  // return buffer overflow
-            InvalidArg = -2,  // invalid function argument
-            Unknown = -1,  // unrecognized product or feature
-            Broken = 0,  // broken
-            Advertised = 1,  // advertised feature
-            Removed = 1,  // component being removed (action state, not settable)
-            Absent = 2,  // uninstalled (or action state absent but clients remain)
-            Local = 3,  // installed on local drive
-            Source = 4,  // run from source, CD or net
-            Default = 5  // use default, local or source
-        }
+		internal enum MsiInstallState {
+			NotUsed = -7,  // component disabled
+			BadConfig = -6,  // configuration data corrupt
+			Incomplete = -5,  // installation suspended or in progress
+			SourceAbsent = -4,  // run from source, source is unavailable
+			MoreData = -3,  // return buffer overflow
+			InvalidArg = -2,  // invalid function argument
+			Unknown = -1,  // unrecognized product or feature
+			Broken = 0,  // broken
+			Advertised = 1,  // advertised feature
+			Removed = 1,  // component being removed (action state, not settable)
+			Absent = 2,  // uninstalled (or action state absent but clients remain)
+			Local = 3,  // installed on local drive
+			Source = 4,  // run from source, CD or net
+			Default = 5  // use default, local or source
+		}
 	}
 
 
@@ -938,11 +938,11 @@ namespace Microsoft.PythonTools.Project
 		public static extern bool
 		CredRead(
 			[MarshalAs(UnmanagedType.LPWStr)]
-            string targetName,
+			string targetName,
 			[MarshalAs(UnmanagedType.U4)]
-            uint type,
+			uint type,
 			[MarshalAs(UnmanagedType.U4)]
-            uint flags,
+			uint flags,
 			out IntPtr credential
 			);
 
@@ -951,7 +951,7 @@ namespace Microsoft.PythonTools.Project
 		CredWrite(
 			ref NativeCredential Credential,
 			[MarshalAs(UnmanagedType.U4)]
-            uint flags
+			uint flags
 			);
 
 		[DllImport(advapi32Dll, SetLastError = true)]
@@ -964,17 +964,17 @@ namespace Microsoft.PythonTools.Project
 		public static extern CredUIReturnCodes CredUIPromptForCredentials(
 			CREDUI_INFO pUiInfo,  // Optional (one can pass null here)
 			[MarshalAs(UnmanagedType.LPWStr)]
-            string targetName,
+			string targetName,
 			IntPtr Reserved,      // Must be 0 (IntPtr.Zero)
 			int iError,
 			[MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder pszUserName,
+			StringBuilder pszUserName,
 			[MarshalAs(UnmanagedType.U4)]
-            uint ulUserNameMaxChars,
+			uint ulUserNameMaxChars,
 			[MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder pszPassword,
+			StringBuilder pszPassword,
 			[MarshalAs(UnmanagedType.U4)]
-            uint ulPasswordMaxChars,
+			uint ulPasswordMaxChars,
 			ref int pfSave,
 			CREDUI_FLAGS dwFlags);
 
@@ -988,15 +988,15 @@ namespace Microsoft.PythonTools.Project
 		[DllImport(credUIDll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredUIParseUserNameW")]
 		public static extern CredUIReturnCodes CredUIParseUserName(
 			[MarshalAs(UnmanagedType.LPWStr)]
-            string strUserName,
+			string strUserName,
 			[MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder strUser,
+			StringBuilder strUser,
 			[MarshalAs(UnmanagedType.U4)]
-            uint iUserMaxChars,
+			uint iUserMaxChars,
 			[MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder strDomain,
+			StringBuilder strDomain,
 			[MarshalAs(UnmanagedType.U4)]
-            uint iDomainMaxChars
+			uint iDomainMaxChars
 			);
 	}
 

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Project {
             base.OnAssemblyReferenceChangedOnDisk(sender, e);
 
             var analyzer = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
-            if (analyzer != null && NativeMethods.IsSamePath(e.FileName, Url)) {
+            if (analyzer != null && CommonUtils.IsSamePath(e.FileName, Url)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
                     analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));

@@ -59,8 +59,10 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        public override string GetEditLabel() {
-            if (IsLinkFile) {
+        public override string GetEditLabel()
+        {
+            if (IsLinkFile)
+            {
                 // cannot rename link files
                 return null;
             }
@@ -79,7 +81,7 @@ namespace Microsoft.PythonTools.Project
 
                 //Check for known extensions
                 int imageIndex;
-                string extension = System.IO.Path.GetExtension(this.FileName);
+                string extension = Path.GetExtension(this.FileName);
                 if((string.IsNullOrEmpty(extension)) || (!extensionIcons.TryGetValue(extension, out imageIndex)))
                 {
                     // Missing or unknown extension; let the base class handle this case.
@@ -104,7 +106,8 @@ namespace Microsoft.PythonTools.Project
             _isLinkFile = value;
         }
 
-        protected override VSOVERLAYICON OverlayIconIndex {
+        protected override VSOVERLAYICON OverlayIconIndex
+        {
             get 
             {
                 if (IsLinkFile) 
@@ -197,7 +200,8 @@ namespace Microsoft.PythonTools.Project
         #region overridden methods
         protected override NodeProperties CreatePropertiesObject()
         {
-            if (IsLinkFile) {
+            if (IsLinkFile)
+            {
                 return new LinkFileNodeProperties(this);
             }
             return new FileNodeProperties(this);
@@ -236,7 +240,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>An errorcode for failure or S_OK.</returns>
         /// <exception cref="InvalidOperationException" if the file cannot be validated>
         /// <devremark> 
-        /// We are going to throw instaed of showing messageboxes, since this method is called from various places where a dialog box does not make sense.
+        /// We are going to throw instead of showing messageboxes, since this method is called from various places where a dialog box does not make sense.
         /// For example the FileNodeProperties are also calling this method. That should not show directly a messagebox.
         /// Also the automation methods are also calling SetEditLabel
         /// </devremark>
@@ -254,7 +258,7 @@ namespace Microsoft.PythonTools.Project
             // Validate the filename. 
             if(String.IsNullOrEmpty(label))
             {
-                throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
+                throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
             }
             else if(label.Length > NativeMethods.MAX_PATH)
             {
@@ -262,12 +266,13 @@ namespace Microsoft.PythonTools.Project
             }
             else if(Utilities.IsFileNameInvalid(label))
             {
-                throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
+                throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), label));
             }
 
             for(HierarchyNode n = this.Parent.FirstChild; n != null; n = n.NextSibling)
             {
-                if(n != this && String.Compare(n.Caption, label, StringComparison.OrdinalIgnoreCase) == 0)
+                // TODO: Distinguish between real Urls and fake ones (eg. "References")
+                if(n != this && String.Equals(n.Caption, label, StringComparison.OrdinalIgnoreCase))
                 {
                     //A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
                     //If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.
@@ -280,11 +285,11 @@ namespace Microsoft.PythonTools.Project
             // Verify that the file extension is unchanged
             string strRelPath = Path.GetFileName(this.ItemNode.GetMetadata(ProjectFileConstants.Include));
             if(!Utilities.IsInAutomationFunction(this.ProjectMgr.Site) &&
-                String.Compare(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase) != 0 &&
+                !String.Equals(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase) &&
                 !IsToAndFromValidPythonExtension(label, strRelPath))
             {
                 // Prompt to confirm that they really want to change the extension of the file
-                string message = SR.GetString(SR.ConfirmExtensionChange, CultureInfo.CurrentUICulture, new string[] { label });
+                string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ConfirmExtensionChange, CultureInfo.CurrentUICulture), label);
                 IVsUIShell shell = this.ProjectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
                 Debug.Assert(shell != null, "Could not get the ui shell from the project");
@@ -314,7 +319,8 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// Checks if both the to and from file extensions are valid Python code file extensions.
         /// </summary>
-        private static bool IsToAndFromValidPythonExtension(string label, string strRelPath) {
+        private static bool IsToAndFromValidPythonExtension(string label, string strRelPath)
+        {
             return ((Path.GetExtension(strRelPath).Equals(".py", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(label).Equals(".pyw", StringComparison.OrdinalIgnoreCase)) ||
                 (Path.GetExtension(strRelPath).Equals(".pyw", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(label).Equals(".py", StringComparison.OrdinalIgnoreCase))
                 );
@@ -322,7 +328,8 @@ namespace Microsoft.PythonTools.Project
 
         public override string GetMkDocument()
         {
-            Debug.Assert(this.Url != null, "No url sepcified for this node");
+            Debug.Assert(!string.IsNullOrEmpty(this.Url), "No url specified for this node");
+            Debug.Assert(Path.IsPathRooted(this.Url), "Url should not be a relative path");
 
             return this.Url;
         }
@@ -341,11 +348,14 @@ namespace Microsoft.PythonTools.Project
         }
 
         [System.ComponentModel.BrowsableAttribute(false)]
-        internal new MsBuildProjectElement ItemNode {
-            get {
+        internal new MsBuildProjectElement ItemNode
+        {
+            get
+            {
                 return (MsBuildProjectElement)base.ItemNode;
             }
-            set {
+            set
+            {
                 base.ItemNode = value;
             }
         }
@@ -359,25 +369,24 @@ namespace Microsoft.PythonTools.Project
             uint oldId = this.ID;
             string strSavePath = Path.GetDirectoryName(relativePath);
 
-            if(!Path.IsPathRooted(relativePath))
-            {
-                strSavePath = Path.Combine(Path.GetDirectoryName(this.ProjectMgr.BaseURI.Uri.LocalPath), strSavePath);
-            }
-
+            strSavePath = CommonUtils.GetAbsoluteDirectoryPath(this.ProjectMgr.ProjectHome, strSavePath);
             string newName = Path.Combine(strSavePath, label);
 
-            if(NativeMethods.IsSamePath(newName, this.Url))
+            if(String.Equals(newName, this.Url, StringComparison.Ordinal))
             {
-                // If this is really a no-op, then nothing to do
-                if(String.Compare(newName, this.Url, StringComparison.Ordinal) == 0)
+                // This is really a no-op (including changing case), so there is nothing to do
                     return VSConstants.S_FALSE;
+            }
+            else if (String.Equals(newName, this.Url, StringComparison.OrdinalIgnoreCase))
+            {
+                // This is a change of file casing only.
             }
             else
             {
                 // If the renamed file already exists then quit (unless it is the result of the parent having done the move).
                 if(IsFileOnDisk(newName)
                     && (IsFileOnDisk(this.Url)
-                    || String.Compare(Path.GetFileName(newName), Path.GetFileName(this.Url), StringComparison.Ordinal) != 0))
+                    || !String.Equals(Path.GetFileName(newName), Path.GetFileName(this.Url), StringComparison.OrdinalIgnoreCase)))
                 {
                     throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileCannotBeRenamedToAnExistingFile, CultureInfo.CurrentUICulture), label));
                 }
@@ -385,7 +394,6 @@ namespace Microsoft.PythonTools.Project
                 {
                     throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.PathTooLong, CultureInfo.CurrentUICulture), label));
                 }
-
             }
 
             string oldName = this.Url;
@@ -544,31 +552,25 @@ namespace Microsoft.PythonTools.Project
             newFilePath = newFilePath.Trim();
 
             //Identify if Path or FileName are the same for old and new file
-            string newDirectoryName = Path.GetDirectoryName(newFilePath);
-            Uri newDirectoryUri = new Uri(newDirectoryName);
-            string newCanonicalDirectoryName = newDirectoryUri.LocalPath;
-            newCanonicalDirectoryName = newCanonicalDirectoryName.TrimEnd(Path.DirectorySeparatorChar);
-            string oldCanonicalDirectoryName = new Uri(Path.GetDirectoryName(this.GetMkDocument())).LocalPath;
-            oldCanonicalDirectoryName = oldCanonicalDirectoryName.TrimEnd(Path.DirectorySeparatorChar);
+            string newDirectoryName = CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(newFilePath));
+            string oldDirectoryName = CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(this.GetMkDocument()));
             string errorMessage = String.Empty;
-            bool isSamePath = NativeMethods.IsSamePath(newCanonicalDirectoryName, oldCanonicalDirectoryName);
-            bool isSameFile = NativeMethods.IsSamePath(newFilePath, this.Url);
+            bool isSamePath = CommonUtils.IsSameDirectory(newDirectoryName, oldDirectoryName);
+            bool isSameFile = CommonUtils.IsSamePath(newFilePath, this.Url);
 
-            // Currently we do not support if the new directory is located outside the project cone
-            string projectCannonicalDirecoryName = new Uri(this.ProjectMgr.ProjectFolder).LocalPath;
-            projectCannonicalDirecoryName = projectCannonicalDirecoryName.TrimEnd(Path.DirectorySeparatorChar);
             //Get target container
             HierarchyNode targetContainer = null;
             bool isLink = false;
-            if(!isSamePath && newCanonicalDirectoryName.IndexOf(projectCannonicalDirecoryName, StringComparison.OrdinalIgnoreCase) == -1)
-            {
-                targetContainer = this.Parent;
-                isLink = true;
-            } else if(isSamePath)
+            if (isSamePath)
             {
                 targetContainer = this.Parent;
             }
-            else if(NativeMethods.IsSamePath(newCanonicalDirectoryName, projectCannonicalDirecoryName))
+            else if(!CommonUtils.IsSubpathOf(this.ProjectMgr.ProjectHome, newDirectoryName))
+            {
+                targetContainer = this.Parent;
+                isLink = true;
+            }
+            else if (CommonUtils.IsSameDirectory(this.ProjectMgr.ProjectHome, newDirectoryName))
             {
                 //the projectnode is the target container
                 targetContainer = this.ProjectMgr;
@@ -580,7 +582,7 @@ namespace Microsoft.PythonTools.Project
                 if(targetContainer != null && (targetContainer is FileNode))
                 {
                     // We already have a file node with this name in the hierarchy.
-                    errorMessage = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileAlreadyExistsAndCannotBeRenamed, CultureInfo.CurrentUICulture), Path.GetFileNameWithoutExtension(newFilePath));
+                    errorMessage = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileAlreadyExistsAndCannotBeRenamed, CultureInfo.CurrentUICulture), Path.GetFileName(newFilePath));
                     throw new InvalidOperationException(errorMessage);
                 }
             }
@@ -588,15 +590,14 @@ namespace Microsoft.PythonTools.Project
             if(targetContainer == null)
             {
                 // Add a chain of subdirectories to the project.
-                string relativeUri = PackageUtilities.GetPathDistance(this.ProjectMgr.BaseURI.Uri, newDirectoryUri);
-                Debug.Assert(!String.IsNullOrEmpty(relativeUri) && relativeUri != newDirectoryUri.LocalPath, "Could not make pat distance of " + this.ProjectMgr.BaseURI.Uri.LocalPath + " and " + newDirectoryUri);
+                string relativeUri = CommonUtils.GetRelativeDirectoryPath(this.ProjectMgr.ProjectHome, newDirectoryName);
                 targetContainer = this.ProjectMgr.CreateFolderNodes(relativeUri);
             }
             Debug.Assert(targetContainer != null, "We should have found a target node by now");
 
             //Suspend file changes while we rename the document
             string oldrelPath = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
-            string oldName = Path.Combine(this.ProjectMgr.ProjectFolder, oldrelPath);
+            string oldName = CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, oldrelPath);
             SuspendFileChanges sfc = new SuspendFileChanges(this.ProjectMgr.Site, oldName);
             sfc.Suspend();
 
@@ -611,15 +612,19 @@ namespace Microsoft.PythonTools.Project
                 {
                     // The path of the file is changed or its parent is changed; in both cases we have
                     // to rename the item.
-                    if (isLink != IsLinkFile) {
-                        if (isLink) {
-                            var newPath = CommonUtils.CreateFriendlyFilePath(
-                                this.ProjectMgr.ProjectFolder,
+                    if (isLink != IsLinkFile)
+                    {
+                        if (isLink)
+                        {
+                            var newPath = CommonUtils.GetRelativeFilePath(
+                                this.ProjectMgr.ProjectHome,
                                 Path.Combine(Path.GetDirectoryName(Url), Path.GetFileName(newFilePath))
                             );
 
                             ItemNode.SetMetadata(ProjectFileConstants.Link, newPath);
-                        } else {
+                        }
+                        else
+                        {
                             ItemNode.SetMetadata(ProjectFileConstants.Link, null);
                         }
                         SetIsLinkFile(isLink);
@@ -717,7 +722,7 @@ namespace Microsoft.PythonTools.Project
         /// <remarks>While a new node will be used to represent the item, the underlying MSBuild item will be the same and as a result file properties saved in the project file will not be lost.</remarks>
         protected virtual FileNode RenameFileNode(string oldFileName, string newFileName, uint newParentId)
         {
-            if(string.Compare(oldFileName, newFileName, StringComparison.Ordinal) == 0)
+            if(CommonUtils.IsSamePath(oldFileName, newFileName))
             {
                 // We do not want to rename the same file
                 return null;
@@ -726,13 +731,16 @@ namespace Microsoft.PythonTools.Project
             this.OnItemDeleted();
             this.Parent.RemoveChild(this);
             this.ID = this.ProjectMgr.ItemIdMap.Add(this);
-            this.ItemNode.Item.Xml.Include = CommonUtils.CreateFriendlyFilePath(ProjectMgr.BaseURI.Uri.LocalPath, newFileName);
+            this.ItemNode.Item.Xml.Include = CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, newFileName);
             this.ItemNode.RefreshProperties();
             this.ProjectMgr.SetProjectFileDirty(true);
             HierarchyNode newParent;
-            if (newParentId == VSConstants.VSITEMID_ROOT) {
+            if (newParentId == VSConstants.VSITEMID_ROOT)
+            {
                 newParent = ProjectMgr;
-            } else {
+            }
+            else
+            {
                 newParent = ((HierarchyNode)this.ProjectMgr.ItemIdMap[newParentId]);
             }
             newParent.AddChild(this);
@@ -771,11 +779,11 @@ namespace Microsoft.PythonTools.Project
                     string relationalName = childNode.Parent.GetRelationalName();
                     string extension = childNode.GetRelationNameExtension();
                     newfilename = relationalName + extension;
-                    newfilename = Path.Combine(Path.GetDirectoryName(childNode.Parent.GetMkDocument()), newfilename);
+                    newfilename = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(childNode.Parent.GetMkDocument()), newfilename);
                 }
                 else
                 {
-                    newfilename = Path.Combine(Path.GetDirectoryName(childNode.Parent.GetMkDocument()), childNode.Caption);
+                    newfilename = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(childNode.Parent.GetMkDocument()), childNode.Caption);
                 }
 
                 childNode.RenameDocument(childNode.GetMkDocument(), newfilename);
@@ -851,7 +859,7 @@ namespace Microsoft.PythonTools.Project
 
         #region Helper methods
         /// <summary>
-        /// Get's called to rename the eventually running document this hierarchyitem points to
+        /// Gets called to rename the eventually running document this hierarchyitem points to
         /// </summary>
         /// returns FALSE if the doc can not be renamed
         internal bool RenameDocument(string oldName, string newName)
@@ -865,7 +873,8 @@ namespace Microsoft.PythonTools.Project
 
             SuspendFileChanges sfc = null;
 
-            if (File.Exists(oldName)) {
+            if (File.Exists(oldName))
+            {
                 sfc = new SuspendFileChanges(this.ProjectMgr.Site, oldName);
                 sfc.Suspend();
             }
@@ -903,7 +912,7 @@ namespace Microsoft.PythonTools.Project
 
                 string newFileName = Path.GetFileName(newName);
                     
-                bool caseOnlyChange = NativeMethods.IsSamePath(oldName, newName);
+                bool caseOnlyChange = String.Equals(oldName, newName, StringComparison.OrdinalIgnoreCase);
                 if(!caseOnlyChange)
                 {
                     // Check out the project file if necessary.
@@ -916,7 +925,7 @@ namespace Microsoft.PythonTools.Project
                 }
                 else
                 {
-                    this.RenameCaseOnlyChange(newFileName);
+                    this.RenameCaseOnlyChange(oldName, newName);
                 }
 
                 DocumentManager.UpdateCaption(this.ProjectMgr.Site, Caption, docData);                
@@ -927,7 +936,8 @@ namespace Microsoft.PythonTools.Project
             }
             finally
             {
-                if (sfc != null) {
+                if (sfc != null)
+                {
                     sfc.Resume();
                 }
                 if(docData != IntPtr.Zero)
@@ -948,21 +958,16 @@ namespace Microsoft.PythonTools.Project
         /// Renames the file node for a case only change.
         /// </summary>
         /// <param name="newFileName">The new file name.</param>
-        private void RenameCaseOnlyChange(string newFileName)
+        private void RenameCaseOnlyChange(string oldName, string newName)
         {
             //Update the include for this item.
-            string include = this.ItemNode.Item.EvaluatedInclude;
-            if(String.Compare(include, newFileName, StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                this.ItemNode.Item.Xml.Include = newFileName;
-            }
-            else
-            {
-                string includeDir = Path.GetDirectoryName(include);
-                this.ItemNode.Item.Xml.Include = Path.Combine(includeDir, newFileName);
-            }
+            string relName = CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, newName);
+            Debug.Assert(String.Equals(this.ItemNode.Item.EvaluatedInclude, relName, StringComparison.OrdinalIgnoreCase),
+                "Not just changing the filename case");
 
+            this.ItemNode.Item.Xml.Include = relName;
             this.ItemNode.RefreshProperties();
+            this.ProjectMgr.SetProjectFileDirty(true);
 
             this.ReDraw(UIHierarchyElement.Caption);
             this.RenameChildNodes(this);

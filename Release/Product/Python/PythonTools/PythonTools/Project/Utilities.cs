@@ -504,7 +504,7 @@ namespace Microsoft.PythonTools.Project
             Utilities.ArgumentNotNullOrEmpty("fullProjectPath", fullProjectPath);
 
             // Call GetFullPath to expand any relative path passed into this method.
-            fullProjectPath = Path.GetFullPath(fullProjectPath);
+            fullProjectPath = CommonUtils.NormalizePath(fullProjectPath);
 
 
             // Check if the project already has been loaded with the fullProjectPath. If yes return the build project associated to it.
@@ -531,7 +531,7 @@ namespace Microsoft.PythonTools.Project
             // If we have a build project that has been loaded with another file unload it.
             try
             {
-                if(exitingBuildProject != null && exitingBuildProject.ProjectCollection != null && !NativeMethods.IsSamePath(exitingBuildProject.FullPath, fullProjectPath))
+                if(exitingBuildProject != null && exitingBuildProject.ProjectCollection != null && !CommonUtils.IsSamePath(exitingBuildProject.FullPath, fullProjectPath))
                 {
                     buildEngine.UnloadProject(exitingBuildProject);
                 }
@@ -636,7 +636,7 @@ namespace Microsoft.PythonTools.Project
             }
 
             // We verify CLOCK$ outside the regex since for some reason the regex is not matching the clock\\$ added.
-            if(String.Compare(fileNameToVerify, "CLOCK$", StringComparison.OrdinalIgnoreCase) == 0)
+            if(String.Equals(fileNameToVerify, "CLOCK$", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -689,7 +689,7 @@ namespace Microsoft.PythonTools.Project
             string fullPath = fileInfo.FullName;
 
             // Cast to upper-case
-            fullPath = fullPath.ToUpper(CultureInfo.CurrentCulture);
+            fullPath = fullPath.ToUpperInvariant();
 
             return fullPath;
         }
@@ -707,7 +707,7 @@ namespace Microsoft.PythonTools.Project
             }
 
             string extension = Path.GetExtension(fileName);
-            return (String.Compare(extension, ".vstemplate", StringComparison.OrdinalIgnoreCase) == 0 || string.Compare(extension, ".vsz", StringComparison.OrdinalIgnoreCase) == 0);
+            return (String.Equals(extension, ".vstemplate", StringComparison.OrdinalIgnoreCase) || string.Equals(extension, ".vsz", StringComparison.OrdinalIgnoreCase));
         }
 
     }

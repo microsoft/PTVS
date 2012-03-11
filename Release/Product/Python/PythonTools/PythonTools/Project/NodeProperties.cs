@@ -647,15 +647,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                string fullPath = this.Node.ProjectMgr.ProjectFolder;
-                if (!fullPath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
-                {
-                    return fullPath + Path.DirectorySeparatorChar;
-                }
-                else
-                {
-                    return fullPath;
-                }
+                return CommonUtils.NormalizeDirectoryPath(this.Node.ProjectMgr.ProjectFolder);
             }
         }
         #endregion
@@ -753,15 +745,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                string fullPath = this.Node.GetMkDocument();
-                if (!fullPath.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
-                {
-                    return fullPath + Path.DirectorySeparatorChar;
-                }
-                else
-                {
-                    return fullPath;
-                }
+                return CommonUtils.NormalizeDirectoryPath(this.Node.GetMkDocument());
             }
         }
         #endregion

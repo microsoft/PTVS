@@ -126,11 +126,9 @@ namespace Microsoft.PythonTools.Project {
         /// <returns>FullPath</returns>
         public string GetFullPathForElement() {
             string path = this.GetMetadata(ProjectFileConstants.Include);
-            if (!Path.IsPathRooted(path))
-                path = Path.Combine(_itemProject.ProjectFolder, path);
 
-            // If any part of the path used relative paths, resolve this now
-            path = Path.GetFullPath(path);
+            path = CommonUtils.GetAbsoluteFilePath(_itemProject.ProjectHome, path);
+            
             return path;
         }
 

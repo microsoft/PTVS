@@ -374,7 +374,7 @@ namespace AnalysisTest.UI {
             projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile", "ExistingItem.py");
             Assert.IsNotNull(projectNode);
 
-            var searchPathNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Search Path", "..\\");
+            var searchPathNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Search Path", "..");
             Assert.IsNotNull(searchPathNode);
         }
 

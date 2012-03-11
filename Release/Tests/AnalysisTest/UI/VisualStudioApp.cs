@@ -245,7 +245,7 @@ namespace AnalysisTest.UI {
 
             string t = title.ToString();
             foreach (string expected in text) {
-                Assert.IsTrue(t.Contains(expected));
+                Assert.IsTrue(t.Contains(expected), string.Format("Did not find '{0}' in '{1}'", expected, t));
             }
             NativeMethods.EndDialog(hwnd, buttonId);
         }

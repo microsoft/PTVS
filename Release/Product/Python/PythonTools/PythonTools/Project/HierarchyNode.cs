@@ -61,20 +61,20 @@ namespace Microsoft.PythonTools.Project
 		};
 		#endregion
 
-        #region Events
-        internal event EventHandler<HierarchyNodeEventArgs> OnChildAdded 
-        {
-            add { onChildAdded += value; }
-            remove { onChildAdded -= value; }
-        }
-        internal event EventHandler<HierarchyNodeEventArgs> OnChildRemoved 
-        {
-            add { onChildRemoved += value; }
-            remove { onChildRemoved -= value; }
-        }
-        #endregion
+		#region Events
+		internal event EventHandler<HierarchyNodeEventArgs> OnChildAdded 
+		{
+			add { onChildAdded += value; }
+			remove { onChildAdded -= value; }
+		}
+		internal event EventHandler<HierarchyNodeEventArgs> OnChildRemoved 
+		{
+			add { onChildRemoved += value; }
+			remove { onChildRemoved -= value; }
+		}
+		#endregion
 
-        #region static/const fields
+		#region static/const fields
 		public static readonly Guid SolutionExplorer = new Guid(EnvDTE.Constants.vsWindowKindSolutionExplorer);
 		public const int NoImage = -1;
 #if DEBUG
@@ -100,9 +100,9 @@ namespace Microsoft.PythonTools.Project
 		private NodeProperties nodeProperties;
 		private OleServiceProvider oleServiceProvider = new OleServiceProvider();
 		private bool excludeNodeFromScc;
-        private EventHandler<HierarchyNodeEventArgs> onChildAdded;
-        private EventHandler<HierarchyNodeEventArgs> onChildRemoved;
-        private bool hasParentNodeNameRelation;
+		private EventHandler<HierarchyNodeEventArgs> onChildAdded;
+		private EventHandler<HierarchyNodeEventArgs> onChildRemoved;
+		private bool hasParentNodeNameRelation;
 		private List<HierarchyNode> itemsDraggedOrCutOrCopied;
 		private bool sourceDraggedOrCutOrCopied;
 
@@ -382,18 +382,7 @@ namespace Microsoft.PythonTools.Project
 				return String.Empty;
 			}
 
-			Url url;
-			if (Path.IsPathRooted(path)) 
-			{
-				// Use absolute path
-				url = new Microsoft.VisualStudio.Shell.Url(path);
-			} 
-			else 
-			{
-				// Path is relative, so make it relative to project path
-				url = new Url(this.ProjectMgr.BaseURI, path);
-			}
-			return url.AbsoluteUrl;
+			return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, path);
 		}
 
 		[System.ComponentModel.BrowsableAttribute(false)]
@@ -516,6 +505,7 @@ namespace Microsoft.PythonTools.Project
 
 		protected HierarchyNode()
 		{
+			// TODO: Ban this constructor? (Since we assume elsewhere that ProjectMgr is not null)
 			this.IsExpanded = true;
 		}
 
@@ -836,7 +826,7 @@ namespace Microsoft.PythonTools.Project
 							if(browseObject is DispatchWrapper)
 								browseObject = ((DispatchWrapper)browseObject).WrappedObject;
 							result = this.ProjectMgr.GetCATIDForType(browseObject.GetType()).ToString("B");
-							if(String.CompareOrdinal(result as string, Guid.Empty.ToString("B")) == 0)
+							if(String.Equals(result as string, Guid.Empty.ToString("B"), StringComparison.Ordinal))
 								result = null;
 						}
 						break;
@@ -850,7 +840,7 @@ namespace Microsoft.PythonTools.Project
 							if(extObject is DispatchWrapper)
 								extObject = ((DispatchWrapper)extObject).WrappedObject;
 							result = this.ProjectMgr.GetCATIDForType(extObject.GetType()).ToString("B");
-							if(String.CompareOrdinal(result as string, Guid.Empty.ToString("B")) == 0)
+							if(String.Equals(result as string, Guid.Empty.ToString("B"), StringComparison.Ordinal))
 								result = null;
 						}
 						break;
@@ -915,7 +905,7 @@ namespace Microsoft.PythonTools.Project
 				guid = this.ItemTypeGuid;
 			}
 
-			if(guid.CompareTo(Guid.Empty) == 0)
+			if(guid.Equals(Guid.Empty))
 			{
 				return VSConstants.DISP_E_MEMBERNOTFOUND;
 			}
@@ -997,11 +987,11 @@ namespace Microsoft.PythonTools.Project
 				}
 			}
 
-            RemoveNonDocument(removeFromStorage);
+			RemoveNonDocument(removeFromStorage);
 
 			if(removeFromStorage)
 			{
-                this.DeleteFromStorage(documentToRemove);
+				this.DeleteFromStorage(documentToRemove);
 			}
 
 			// Close the document window if opened.
@@ -1019,32 +1009,32 @@ namespace Microsoft.PythonTools.Project
 			this.Dispose(true);
 		}
 
-        internal void RemoveNonDocument(bool removeFromStorage) 
-        {
-            // Check out the project file.
-            if (!this.ProjectMgr.QueryEditProjectFile(false)) 
-            {
-                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-            }
+		internal void RemoveNonDocument(bool removeFromStorage) 
+		{
+			// Check out the project file.
+			if (!this.ProjectMgr.QueryEditProjectFile(false)) 
+			{
+				throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+			}
 
-            // Notify hierarchy event listeners that the file is going to be removed.
-            OnItemDeleted();
+			// Notify hierarchy event listeners that the file is going to be removed.
+			OnItemDeleted();
 
-            // Remove child if any before removing from the hierarchy
-            for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) 
-            {
-                child.Remove(removeFromStorage);
-            }
+			// Remove child if any before removing from the hierarchy
+			for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) 
+			{
+				child.Remove(removeFromStorage);
+			}
 
-            // the project node has no parentNode
-            if (this.parentNode != null) 
-            {
-                // Remove from the Hierarchy
-                this.parentNode.RemoveChild(this);
-            }
+			// the project node has no parentNode
+			if (this.parentNode != null) 
+			{
+				// Remove from the Hierarchy
+				this.parentNode.RemoveChild(this);
+			}
 
-            this.itemNode.RemoveFromProjectFile();
-        }
+			this.itemNode.RemoveFromProjectFile();
+		}
 
 		/// <summary>
 		/// Returns the relational name which is defined as the first part of the caption until indexof NameRelationSeparator
@@ -1208,7 +1198,7 @@ namespace Microsoft.PythonTools.Project
 			uint uiFlags;
 			IVsProject3 project = (IVsProject3)this.projectMgr;
 
-			string strBrowseLocations = Path.GetDirectoryName(this.projectMgr.BaseURI.Uri.LocalPath);
+			string strBrowseLocations = this.projectMgr.ProjectHome;
 
 			System.Guid projectGuid = this.projectMgr.ProjectGuid;
 
@@ -1570,10 +1560,10 @@ namespace Microsoft.PythonTools.Project
 					case VsCommands2K.SHOWALLFILES:
 						handled = true;
 						return this.projectMgr.ShowAllFiles();
-                    case VsCommands2K.ADDREFERENCE:
-                        handled = true;
-                        return this.projectMgr.AddProjectReference();
-                }
+					case VsCommands2K.ADDREFERENCE:
+						handled = true;
+						return this.projectMgr.AddProjectReference();
+				}
 			}
 
 			return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
@@ -2516,7 +2506,7 @@ namespace Microsoft.PythonTools.Project
 			itemId = 0;
 
 			// The default implemenation will check for case insensitive comparision.
-			if(String.Compare(name, this.Url, StringComparison.OrdinalIgnoreCase) == 0)
+			if(String.Equals(name, this.Url, StringComparison.OrdinalIgnoreCase))
 			{
 				itemId = this.hierarchyId;
 				return VSConstants.S_OK;
@@ -2729,7 +2719,7 @@ namespace Microsoft.PythonTools.Project
 					// 2. a silent save specifying a new document name
 					// 3. a save command was triggered but was not possible because the file has a read only attrib. Therefore
 					//    the user has chosen to do a save as in the dialog that showed up
-					bool emptyOrSamePath = String.IsNullOrEmpty(docNew) || NativeMethods.IsSamePath(existingFileMoniker, docNew);
+					bool emptyOrSamePath = String.IsNullOrEmpty(docNew) || CommonUtils.IsSamePath(existingFileMoniker, docNew);
 					bool saveAs = ((saveFlag == VSSAVEFLAGS.VSSAVE_SaveAs)) ||
 						((saveFlag == VSSAVEFLAGS.VSSAVE_SilentSave) && !emptyOrSamePath) ||
 						((saveFlag == VSSAVEFLAGS.VSSAVE_Save) && !emptyOrSamePath);
@@ -2994,13 +2984,13 @@ namespace Microsoft.PythonTools.Project
 			HierarchyNode result;
 			for (HierarchyNode child = this.firstChild; child != null; child = child.NextSibling)
 			{
-				if (!String.IsNullOrEmpty(child.VirtualNodeName) && String.Compare(child.VirtualNodeName, name, StringComparison.OrdinalIgnoreCase) == 0)
+				if (!String.IsNullOrEmpty(child.VirtualNodeName) && String.Equals(child.VirtualNodeName, name, StringComparison.OrdinalIgnoreCase))
 				{
 					return child;
 				}
 				// If it is a foldernode then it has a virtual name but we want to find folder nodes by the document moniker or url
 				else if ((String.IsNullOrEmpty(child.VirtualNodeName) || (child is FolderNode)) &&
-						(NativeMethods.IsSamePath(child.GetMkDocument(), name) || NativeMethods.IsSamePath(child.Url, name)))
+						(CommonUtils.IsSamePath(child.GetMkDocument(), name) || CommonUtils.IsSamePath(child.Url, name)))
 				{
 					return child;
 				}
@@ -3083,12 +3073,10 @@ namespace Microsoft.PythonTools.Project
 			ErrorHandler.ThrowOnFailure(project.GetMkDocument(itemidLoc, out moniker));
 			string folderMoniker;
 			ErrorHandler.ThrowOnFailure(project.GetMkDocument(targetFolder.ID, out folderMoniker));
-			if (folderMoniker.EndsWith("\\")) {
-				folderMoniker = folderMoniker.Substring(0, folderMoniker.Length - 1);
-			}
+			folderMoniker = CommonUtils.TrimEndSeparator(folderMoniker);
 			if (drop &&
-				(Directory.Exists(folderMoniker) &&  Path.GetFullPath(Path.GetDirectoryName(moniker)) == Path.GetFullPath(folderMoniker) ||
-				File.Exists(folderMoniker) && Path.GetDirectoryName(moniker) == Path.GetDirectoryName(folderMoniker))) {
+				(Directory.Exists(folderMoniker) && CommonUtils.IsSameDirectory(Path.GetDirectoryName(moniker), folderMoniker)) ||
+				File.Exists(folderMoniker) && CommonUtils.IsSameDirectory(Path.GetDirectoryName(moniker), Path.GetDirectoryName(folderMoniker))) {
 				return false;
 			}
 

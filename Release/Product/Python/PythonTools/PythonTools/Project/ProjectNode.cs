@@ -208,6 +208,8 @@ namespace Microsoft.PythonTools.Project
 
         private Microsoft.VisualStudio.Shell.Url baseUri;
 
+        private string projectHome;
+
         private bool isDirty;
 
         private bool projectOpened;
@@ -549,6 +551,25 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// Gets the path to the root folder of the project.
+        /// </summary>
+        public string ProjectHome
+        {
+            get
+            {
+                if (projectHome == null)
+                {
+                    projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+                        this.ProjectFolder,
+                        this.ProjectMgr.GetProjectProperty(CommonConstants.ProjectHome, true));
+                }
+
+                Debug.Assert(projectHome != null, "ProjectHome should not be null");
+                return projectHome;
+            }
+        }
+
+        /// <summary>
         /// Gets the path to the folder containing the project.
         /// </summary>
         public string ProjectFolder
@@ -584,10 +605,7 @@ namespace Microsoft.PythonTools.Project
             {
                 if (baseUri == null && this.buildProject != null)
                 {
-                    string path = System.IO.Path.GetDirectoryName(this.buildProject.FullPath);
-                    // Uri/Url behave differently when you have trailing slash and when you dont
-                    if (!path.EndsWith("\\", StringComparison.Ordinal) && !path.EndsWith("/", StringComparison.Ordinal))
-                        path += "\\";
+                    string path = CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(this.buildProject.FullPath));
                     baseUri = new Url(path);
                 }
 
@@ -598,6 +616,7 @@ namespace Microsoft.PythonTools.Project
 
         protected void BuildProjectLocationChanged() {
             baseUri = null;
+            projectHome = null;
         }
 
         /// <summary>
@@ -624,7 +643,8 @@ namespace Microsoft.PythonTools.Project
             {
                 if (Path.IsPathRooted(value))
                 {
-                    throw new ArgumentException("Path must not be rooted.");
+                    // TODO: Maybe bring the exception back instead of automatically fixing this?
+                    this.outputBaseRelativePath = CommonUtils.GetRelativeDirectoryPath(ProjectHome, value);
                 }
 
                 this.outputBaseRelativePath = value;
@@ -834,11 +854,12 @@ namespace Microsoft.PythonTools.Project
             }
             
 
+            // TODO: Take file extension into account?
             string fileName = Path.GetFileNameWithoutExtension(label);
 
             // Nothing to do if the name is the same
             string oldFileName = Path.GetFileNameWithoutExtension(this.Url);
-            if (String.Compare(oldFileName, label, StringComparison.Ordinal) == 0)
+            if (String.Equals(oldFileName, label, StringComparison.Ordinal))
             {
                 return VSConstants.S_FALSE;
             }
@@ -854,7 +875,7 @@ namespace Microsoft.PythonTools.Project
             string extension = Path.GetExtension(this.Url);
 
             // Make sure it has the correct extension
-            if (String.Compare(Path.GetExtension(newFile), extension, StringComparison.OrdinalIgnoreCase) != 0)
+            if (!String.Equals(Path.GetExtension(newFile), extension, StringComparison.OrdinalIgnoreCase))
             {
                 newFile += extension;
             }
@@ -1061,7 +1082,7 @@ namespace Microsoft.PythonTools.Project
         {
             Debug.Assert(!String.IsNullOrEmpty(this.filename));
             Debug.Assert(this.BaseURI != null && !String.IsNullOrEmpty(this.BaseURI.AbsoluteUrl));
-            return Path.Combine(this.BaseURI.AbsoluteUrl, this.filename);
+            return CommonUtils.GetAbsoluteFilePath(this.BaseURI.AbsoluteUrl, this.filename);
         }
 
         /// <summary>
@@ -1275,13 +1296,13 @@ namespace Microsoft.PythonTools.Project
         public virtual VSADDRESULT RunWizard(HierarchyNode parentNode, string itemName, string wizardToRun, IntPtr dlgOwner)
         {
             Debug.Assert(!String.IsNullOrEmpty(itemName), "The Add item dialog was passing in a null or empty item to be added to the hierrachy.");
-            Debug.Assert(!String.IsNullOrEmpty(this.ProjectFolder), "The Project Folder is not specified for this project.");
+            Debug.Assert(!String.IsNullOrEmpty(this.ProjectHome), "ProjectHome is not specified for this project.");
 
             Utilities.ArgumentNotNull("parentNode", parentNode);
             Utilities.ArgumentNotNullOrEmpty("itemName", itemName);
 
             // We just validate for length, since we assume other validation has been performed by the dlgOwner.
-            if (this.ProjectFolder.Length + itemName.Length + 1 > NativeMethods.MAX_PATH)
+            if (CommonUtils.GetAbsoluteFilePath(this.ProjectHome, itemName).Length >= NativeMethods.MAX_PATH)
             {
                 string errorMessage = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.PathTooLong, CultureInfo.CurrentUICulture), itemName);
                 if (!Utilities.IsInAutomationFunction(this.Site))
@@ -1325,20 +1346,14 @@ namespace Microsoft.PythonTools.Project
                 contextParams[2] = item.ProjectItems;
             }
 
-            contextParams[3] = this.ProjectFolder;
+            contextParams[3] = this.ProjectHome;
 
             contextParams[4] = itemName;
 
             object objInstallationDir = null;
             IVsShell shell = (IVsShell)this.GetService(typeof(IVsShell));
             ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out objInstallationDir));
-            string installDir = (string)objInstallationDir;
-
-            // append a '\' to the install dir to mimic what the shell does (though it doesn't add one to destination dir)
-            if (!installDir.EndsWith("\\", StringComparison.Ordinal))
-            {
-                installDir += "\\";
-            }
+            string installDir = CommonUtils.NormalizeDirectoryPath((string)objInstallationDir);
 
             contextParams[5] = installDir;
 
@@ -1402,7 +1417,7 @@ namespace Microsoft.PythonTools.Project
             IVsComponentSelectorDlg2 componentDialog;
             Guid guidEmpty = Guid.Empty;
             VSCOMPONENTSELECTORTABINIT[] tabInit = new VSCOMPONENTSELECTORTABINIT[3];
-            string strBrowseLocations = Path.GetDirectoryName(BaseURI.Uri.LocalPath);
+            string strBrowseLocations = Path.GetDirectoryName(ProjectHome);
 
             //Add the Project page
             tabInit[0].dwSize = (uint)Marshal.SizeOf(typeof(VSCOMPONENTSELECTORTABINIT));
@@ -1546,12 +1561,12 @@ namespace Microsoft.PythonTools.Project
 
                         string tempName = String.Empty;
 
-                        // We have to be sure that we are not going to loose data here. If the project name is a.b.c then for a project that was based on a zipped template(the wizzard calls us) GetFileNameWithoutExtension will suppress "c".
+                        // We have to be sure that we are not going to lose data here. If the project name is a.b.c then for a project that was based on a zipped template(the wizard calls us) GetFileNameWithoutExtension will suppress "c".
                         // We are going to check if the parameter "name" is extension based and the extension is the same as the one from the "filename" parameter.
                         string tempExtension = Path.GetExtension(name);
                         if (!String.IsNullOrEmpty(tempExtension))
                         {
-                            bool isSameExtension = (String.Compare(tempExtension, extension, StringComparison.OrdinalIgnoreCase) == 0);
+                            bool isSameExtension = (String.Equals(tempExtension, extension, StringComparison.OrdinalIgnoreCase));
 
                             if (isSameExtension)
                             {
@@ -1570,7 +1585,7 @@ namespace Microsoft.PythonTools.Project
 
                         Debug.Assert(!String.IsNullOrEmpty(tempName), "Could not compute project name");
                         string tempProjectFileName = tempName + extension;
-                        this.filename = Path.Combine(location, tempProjectFileName);
+                        this.filename = CommonUtils.GetAbsoluteFilePath(location, tempProjectFileName);
 
                         // Initialize the common project properties.
                         this.InitializeProjectProperties();
@@ -1600,9 +1615,9 @@ namespace Microsoft.PythonTools.Project
                             string newFileName;
                             // taking the base name from the project template + the relative pathname,
                             // and you get the filename
-                            strPathToFile = Path.Combine(basePath, strRelFilePath);
+                            strPathToFile = CommonUtils.GetAbsoluteFilePath(basePath, strRelFilePath);
                             // the new path should be the base dir of the new project (location) + the rel path of the file
-                            newFileName = Path.Combine(location, strRelFilePath);
+                            newFileName = CommonUtils.GetAbsoluteFilePath(location, strRelFilePath);
                             // now the copy file
                             AddFileFromTemplate(strPathToFile, newFileName);
                         }
@@ -1701,7 +1716,7 @@ namespace Microsoft.PythonTools.Project
             {
                 // See if the parent node already exist in the hierarchy
                 uint parentItemID;
-                string path = Path.Combine(this.ProjectFolder, dependentOf);
+                string path = CommonUtils.GetAbsoluteFilePath(this.ProjectHome, dependentOf);
                 ErrorHandler.ThrowOnFailure(this.ParseCanonicalName(path, out parentItemID));
                 if (parentItemID != 0)
                     parent = this.NodeFromItemId(parentItemID);
@@ -1824,7 +1839,7 @@ namespace Microsoft.PythonTools.Project
             if (!String.IsNullOrEmpty(outputPath))
             {
                 // absolutize relative to project folder location
-                outputPath = Path.Combine(this.ProjectFolder, outputPath);
+                outputPath = CommonUtils.GetAbsoluteDirectoryPath(this.ProjectHome, outputPath);
             }
 
             // Set some default values
@@ -1901,12 +1916,6 @@ namespace Microsoft.PythonTools.Project
             this.currentConfig = properties;
             string outputPath = GetProjectProperty("OutputPath");
 
-            if (!String.IsNullOrEmpty(outputPath)) {
-                outputPath = outputPath.Replace('/', Path.DirectorySeparatorChar);
-                if (outputPath[outputPath.Length - 1] != Path.DirectorySeparatorChar)
-                    outputPath += Path.DirectorySeparatorChar;
-            }
-
             return outputPath;
         }
 
@@ -1952,9 +1961,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>true if the file is a resx file, otherwise false.</returns>
         public virtual bool IsEmbeddedResource(string fileName)
         {
-            if (String.Compare(Path.GetExtension(fileName), ".ResX", StringComparison.OrdinalIgnoreCase) == 0)
-                return true;
-            return false;
+            return String.Equals(Path.GetExtension(fileName), ".ResX", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -2002,18 +2009,18 @@ namespace Microsoft.PythonTools.Project
 
             if (Path.IsPathRooted(path))
             {
-                // Ensure we are using a relative path
-                if (String.Compare(this.ProjectFolder, 0, path, 0, this.ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) != 0)
-                    throw new ArgumentException("The path is not relative", "path");
+                // Ensure we are using a path deeper than ProjectHome
+                if (!CommonUtils.IsSubpathOf(ProjectHome, path))
+                    throw new ArgumentException("The path is not within the project", "path");
 
-                path = path.Substring(this.ProjectFolder.Length);
+                path = CommonUtils.GetRelativeDirectoryPath(ProjectHome, path);
             }
 
             string[] parts;
             HierarchyNode curParent;
 
             parts = path.Split(Path.DirectorySeparatorChar);
-            path = String.Empty;
+            path = ProjectHome;
             curParent = this;
 
             // now we have an array of subparts....
@@ -2021,7 +2028,7 @@ namespace Microsoft.PythonTools.Project
             {
                 if (parts[i].Length > 0)
                 {
-                    path += parts[i] + "\\";
+                    path = Path.Combine(path, parts[i]);
                     curParent = VerifySubFolderExists(path, curParent);
                 }
             }
@@ -2078,9 +2085,7 @@ namespace Microsoft.PythonTools.Project
         {
             FolderNode folderNode = null;
             uint uiItemId;
-            Url url = new Url(this.BaseURI, path);
-            string strFullPath = url.AbsoluteUrl;
-            // Folders end in our storage with a backslash, so add one...
+            string strFullPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
             ErrorHandler.ThrowOnFailure(this.ParseCanonicalName(strFullPath, out uiItemId));
             if (uiItemId != 0)
             {
@@ -2095,7 +2100,8 @@ namespace Microsoft.PythonTools.Project
                 ProjectElement item = null;
                 foreach (MSBuild.ProjectItem folder in buildProject.GetItems(ProjectFileConstants.Folder))
                 {
-                    if (String.Compare(folder.EvaluatedInclude.TrimEnd('\\'), path.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase) == 0)
+                    var absPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, folder.EvaluatedInclude);
+                    if (CommonUtils.IsSameDirectory(absPath, path))
                     {
                         item = new MsBuildProjectElement(this, folder);
                         break;
@@ -2309,7 +2315,7 @@ namespace Microsoft.PythonTools.Project
             if (ErrorHandler.Succeeded(vsSolution.QueryRenameProject(this, oldFile, newFile, 0, out canContinue))
                 && canContinue != 0)
             {
-                bool isFileSame = NativeMethods.IsSamePath(oldFile, newFile);
+                bool isFileSame = CommonUtils.IsSamePath(oldFile, newFile);
 
                 // If file already exist and is not the same file with different casing
                 if (!isFileSame && File.Exists(newFile))
@@ -2605,16 +2611,6 @@ namespace Microsoft.PythonTools.Project
                     {
                         errorMessage = String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), newFileName);
                     }
-                    else
-                    {
-                        string url = Path.GetDirectoryName(newFileName);
-                        string oldUrl = Path.GetDirectoryName(this.Url);
-
-                        if (!NativeMethods.IsSamePath(oldUrl, url))
-                        {
-                            errorMessage = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.SaveOfProjectFileOutsideCurrentDirectory, CultureInfo.CurrentUICulture), this.ProjectFolder);
-                        }
-                    }
                 }
             }
             if (errorMessage.Length > 0)
@@ -2656,7 +2652,6 @@ namespace Microsoft.PythonTools.Project
 
                 this.SetProjectFileDirty(false);
 
-
                 // TODO: If source control is enabled check out the project file.
 
                 //Redraw.
@@ -2688,7 +2683,11 @@ namespace Microsoft.PythonTools.Project
         {
             Debug.Assert(!String.IsNullOrEmpty(newFileName), "Cannot save project file for an empty or null file name");
 
+            string newProjectHome = CommonUtils.GetRelativeDirectoryPath(Path.GetDirectoryName(newFileName), ProjectHome);
+            this.buildProject.SetProperty(CommonConstants.ProjectHome, newProjectHome);
+
             this.buildProject.FullPath = newFileName;
+
 
             this.filename = newFileName;
 
@@ -2713,7 +2712,7 @@ namespace Microsoft.PythonTools.Project
         {
             MsBuildProjectElement newItem;
 
-            string itemPath = PackageUtilities.MakeRelativeIfRooted(file, this.BaseURI);
+            string itemPath = CommonUtils.GetRelativeFilePath(ProjectHome, file);
             Debug.Assert(!Path.IsPathRooted(itemPath), "Cannot add item with full path.");
 
             if (this.IsCodeFile(itemPath))
@@ -2738,17 +2737,19 @@ namespace Microsoft.PythonTools.Project
         /// Adds a folder to the msbuild project.
         /// </summary>
         /// <param name="folder">The folder to be added.</param>
-        /// <returns>A Projectelement describing the newly added folder.</returns>
+        /// <returns>A ProjectElement describing the newly added folder.</returns>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ToMs")]
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
         protected virtual ProjectElement AddFolderToMsBuild(string folder)
         {
             ProjectElement newItem;
 
-            string itemPath = PackageUtilities.MakeRelativeIfRooted(folder, this.BaseURI);
-            Debug.Assert(!Path.IsPathRooted(itemPath), "Cannot add item with full path.");
+            if (Path.IsPathRooted(folder)) {
+                folder = CommonUtils.GetRelativeDirectoryPath(ProjectHome, folder);
+                Debug.Assert(!Path.IsPathRooted(folder), "Cannot add item with full path.");
+            }
 
-            newItem = this.CreateMsBuildFileItem(itemPath, ProjectFileConstants.Folder);
+            newItem = this.CreateMsBuildFileItem(folder, ProjectFileConstants.Folder);
 
             return newItem;
         }
@@ -3056,17 +3057,15 @@ namespace Microsoft.PythonTools.Project
                     }
 
                     if (!Path.IsPathRooted(item.EvaluatedInclude)) {
-                        var itemPath = Path.Combine(ProjectFolder, item.EvaluatedInclude);
-                        var itemCanonicalPath = new Uri(itemPath).LocalPath;
-                        if (String.Compare(ProjectFolder + Path.DirectorySeparatorChar, 0, itemCanonicalPath, 0, ProjectFolder.Length + 1, StringComparison.OrdinalIgnoreCase) == 0) {
+                        var itemPath = CommonUtils.GetAbsoluteFilePath(ProjectFolder, item.EvaluatedInclude);
+                        if (CommonUtils.IsSubpathOf(ProjectHome, itemPath)) {
                             // linked file which lives in our directory, don't allow that.
                             continue;
                         }
                     }
 
-                    var relPath = Path.Combine(ProjectFolder, link);
-                    var url = new Uri(relPath).LocalPath;
-                    if (String.Compare(ProjectFolder, 0, url, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) != 0) {
+                    var linkPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, link);
+                    if (!CommonUtils.IsSubpathOf(ProjectHome, linkPath)) {
                         // relative path outside of project, don't allow that.
                         continue;
                     }
@@ -3078,7 +3077,7 @@ namespace Microsoft.PythonTools.Project
                     string filename = Path.GetFileName(item.EvaluatedInclude);
                     HierarchyNode existingChild = null;
                     for (HierarchyNode child = parent.FirstChild; child != null; child = child.NextSibling) {
-                        if (Path.GetFileName(child.Url) == filename) {
+                        if (String.Equals(Path.GetFileName(child.Url), filename, StringComparison.OrdinalIgnoreCase)) {
                             existingChild = child;
                             break;
                         }
@@ -3093,7 +3092,7 @@ namespace Microsoft.PythonTools.Project
                             continue;
                         }
                     }
-                    var duplicatedChild = FindChild(item.EvaluatedInclude);
+                    var duplicatedChild = FindChild(CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude));
                     if (duplicatedChild != null) {
                         // don't add duplicate files/links
                         continue;
@@ -3374,7 +3373,7 @@ namespace Microsoft.PythonTools.Project
                         queryTrack.OnQueryAddDirectories(
                             this,
                             1,
-                            new[] { Path.Combine(GetBaseDirectoryForAddingFiles(targetFolder), Path.GetFileName(path)) },
+                            new[] { CommonUtils.GetAbsoluteFilePath(GetBaseDirectoryForAddingFiles(targetFolder), Path.GetFileName(path)) },
                             new[] { VSQUERYADDDIRECTORYFLAGS.VSQUERYADDDIRECTORYFLAGS_padding },
                             res,
                             res
@@ -3840,7 +3839,7 @@ namespace Microsoft.PythonTools.Project
 
             int result = VSConstants.S_OK;
             bool saveAs = true;
-            if (NativeMethods.IsSamePath(tempFileToBeSaved, this.filename))
+            if (CommonUtils.IsSamePath(tempFileToBeSaved, this.filename))
             {
                 saveAs = false;
             }
@@ -4004,17 +4003,17 @@ namespace Microsoft.PythonTools.Project
                 switch (op) {
                     case VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE: {
                             string fileName = Path.GetFileName(itemName ?? file);
-                            newFileName = Path.Combine(baseDir, fileName);
+                            newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
                         }
                         break;
                     case VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE:
                     case VSADDITEMOPERATION.VSADDITEMOP_OPENFILE: {
                             string fileName = Path.GetFileName(file);
-                            newFileName = Path.Combine(baseDir, fileName);
+                            newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
 
                             var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, file);
 
-                            if (isLink && String.Compare(ProjectFolder, 0, file, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) == 0) {
+                            if (isLink && CommonUtils.IsSubpathOf(ProjectFolder, file)) {
                                 // creating a link to a file that's actually in the project, it's not really a link.
                                 isLink = false;
                                 newFileName = file;
@@ -4050,12 +4049,12 @@ namespace Microsoft.PythonTools.Project
                 child = this.FindChild(newFileName);
                 if (child != null) {
                     // If the file to be added is an existing file part of the hierarchy then continue.
-                    if (NativeMethods.IsSamePath(file, newFileName)) {
+                    if (CommonUtils.IsSamePath(file, newFileName)) {
                         if (!alwaysCopy) {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
                             continue;
                         } else {
-                            string tmpName = Path.Combine(Path.GetDirectoryName(newFileName), Path.GetFileNameWithoutExtension(newFileName) + " - Copy" + Path.GetExtension(newFileName));
+                            string tmpName = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(newFileName), Path.GetFileNameWithoutExtension(newFileName) + " - Copy" + Path.GetExtension(newFileName));
                             if (File.Exists(tmpName)) {
                                 int count = 2;
                                 while (File.Exists(GetIncrementedFileName(newFileName, count))) {
@@ -4123,7 +4122,7 @@ namespace Microsoft.PythonTools.Project
                     var folder = this.FindChild(dirName);
                     if (folder != null) {
                         for (var folderChild = folder.FirstChild; folderChild != null; folderChild = folderChild.NextSibling) {
-                            if (Path.GetFileName(folderChild.Url) == filename) {
+                            if (CommonUtils.IsSamePath(folderChild.Url, CommonUtils.GetAbsoluteFilePath(this.Url, filename))) {
                                 string message = "There is already a file of the same name in this folder.";
                                 string title = string.Empty;
                                 OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
@@ -4141,7 +4140,7 @@ namespace Microsoft.PythonTools.Project
                 }
 
                 // If the file to be added is not in the same path copy it.
-                if (NativeMethods.IsSamePath(file, newFileName) == false) {
+                if (!CommonUtils.IsSamePath(file, newFileName)) {
                     if (!overwrite && File.Exists(newFileName)) {
                         var existingChild = this.FindChild(file);
                         if (existingChild == null || !existingChild.IsLinkFile) {
@@ -4344,7 +4343,7 @@ If the files in the existing folder have the same names as files in the folder y
         }
 
         private static string GetIncrementedFileName(string newFileName, int count) {
-            return Path.Combine(Path.GetDirectoryName(newFileName), Path.GetFileNameWithoutExtension(newFileName) + " - Copy (" + count + ")" + Path.GetExtension(newFileName));
+            return CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(newFileName), Path.GetFileNameWithoutExtension(newFileName) + " - Copy (" + count + ")" + Path.GetExtension(newFileName));
         }
 
         /// <summary>
@@ -4404,10 +4403,11 @@ If the files in the existing folder have the same names as files in the folder y
 
                     //if parent is a folder, we need the whole url
                     string parentFolder = parent.Url;
-                    if (parent is ProjectNode)
-                        parentFolder = Path.GetDirectoryName(parent.Url);
+                    ProjectNode parentProj = parent as ProjectNode;
+                    if (parentProj != null)
+                        parentFolder = parentProj.ProjectHome;
 
-                    string checkFile = Path.Combine(parentFolder, rootName);
+                    string checkFile = CommonUtils.GetAbsoluteFilePath(parentFolder, rootName);
 
                     if (fFolderCase)
                     {
@@ -4455,7 +4455,7 @@ If the files in the existing folder have the same names as files in the folder y
             itemId = 0;
 
             // If it is the project file just return.
-            if (NativeMethods.IsSamePath(mkDoc, this.GetMkDocument()))
+            if (CommonUtils.IsSamePath(mkDoc, this.GetMkDocument()))
             {
                 found = 1;
                 itemId = VSConstants.VSITEMID_ROOT;
@@ -5252,16 +5252,10 @@ If the files in the existing folder have the same names as files in the folder y
             if (!String.IsNullOrWhiteSpace(link)) {
                 strPath = Path.GetDirectoryName(link);
             } else {
-                string rootedPath;
-                if (!Path.IsPathRooted(strPath)) {
-                    rootedPath = Path.Combine(ProjectFolder, strPath);
-                } else {
-                    rootedPath = strPath;
-                }
+                string absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, strPath);
 
-                var itemCanonicalPath = new Uri(rootedPath).LocalPath;
-                if (String.Compare(ProjectFolder, 0, itemCanonicalPath, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) == 0) {
-                    strPath = Path.GetDirectoryName(strPath);
+                if (CommonUtils.IsSubpathOf(ProjectHome, absPath)) {
+                    strPath = CommonUtils.GetRelativeDirectoryPath(ProjectHome, Path.GetDirectoryName(absPath));
                 } else {
                     // file lives outside of the project, w/o a link it's just at the top level.
                     return this;
@@ -5474,15 +5468,9 @@ If the files in the existing folder have the same names as files in the folder y
                 solutionFile = String.Empty;
             }
 
-            string solutionFileName = (solutionFile.Length == 0) ? String.Empty : Path.GetFileName(solutionFile);
-
-            string solutionName = (solutionFile.Length == 0) ? String.Empty : Path.GetFileNameWithoutExtension(solutionFile);
-
-            string solutionExtension = String.Empty;
-            if (solutionFile.Length > 0 && Path.HasExtension(solutionFile))
-            {
-                solutionExtension = Path.GetExtension(solutionFile);
-            }
+            string solutionFileName = Path.GetFileName(solutionFile);
+            string solutionName = Path.GetFileNameWithoutExtension(solutionFile);
+            string solutionExtension = Path.GetExtension(solutionFile);
 
             this.buildProject.SetGlobalProperty(GlobalProperty.SolutionDir.ToString(), solutionDirectory);
             this.buildProject.SetGlobalProperty(GlobalProperty.SolutionPath.ToString(), solutionFile);
@@ -5505,20 +5493,8 @@ If the files in the existing folder have the same names as files in the folder y
                 shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out installDirAsObject);
             }
 
-            string installDir = ((string)installDirAsObject);
-
-            if (String.IsNullOrEmpty(installDir))
-            {
-                installDir = String.Empty;
-            }
-            else
-            {
                 // Ensure that we have traimnling backslash as this is done for the langproj macros too.
-                if (installDir[installDir.Length - 1] != Path.DirectorySeparatorChar)
-                {
-                    installDir += Path.DirectorySeparatorChar;
-                }
-            }
+            string installDir = CommonUtils.NormalizeDirectoryPath((string)installDirAsObject) ?? String.Empty;
 
             this.buildProject.SetGlobalProperty(GlobalProperty.DevEnvDir.ToString(), installDir);
         }

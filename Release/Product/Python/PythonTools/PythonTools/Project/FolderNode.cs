@@ -46,7 +46,11 @@ namespace Microsoft.PythonTools.Project
 		{
             Utilities.ArgumentNotNull("relativePath", relativePath);
 
-			this.VirtualNodeName = relativePath.TrimEnd('\\');
+            if (Path.IsPathRooted(relativePath)) {
+                relativePath = CommonUtils.GetRelativeDirectoryPath(root.ProjectHome, relativePath);
+            }
+
+            this.VirtualNodeName = CommonUtils.TrimEndSeparator(relativePath);
 		}
 		#endregion
 
@@ -119,27 +123,28 @@ namespace Microsoft.PythonTools.Project
 			}
 			else
 			{
-				if (String.Compare(Path.GetFileName(this.Url.TrimEnd('\\')), label, StringComparison.Ordinal) == 0)
+                if (String.Equals(Path.GetFileName(CommonUtils.TrimEndSeparator(this.Url)), label, StringComparison.Ordinal))
 				{
 					// Label matches current Name
 					return VSConstants.S_OK;
 				}
 
-				string newPath = Path.Combine(new DirectoryInfo(this.Url).Parent.FullName, label);
+                string newPath = CommonUtils.NormalizeDirectoryPath(Path.Combine(
+                    Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), label));
 
 				// Verify that No Directory/file already exists with the new name among current children
 				for (HierarchyNode n = Parent.FirstChild; n != null; n = n.NextSibling)
 				{
-					if (n != this && String.Compare(n.Caption, label, StringComparison.OrdinalIgnoreCase) == 0)
+                    if (n != this && String.Equals(n.Caption, label, StringComparison.OrdinalIgnoreCase))
 					{
-						return ShowFileOrFolderAlreadExistsErrorMessage(newPath);
+                        return ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
 					}
 				}
 
 				// Verify that No Directory/file already exists with the new name on disk
 				if (Directory.Exists(newPath) || File.Exists(newPath))
 				{
-					return ShowFileOrFolderAlreadExistsErrorMessage(newPath);
+                    return ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
 				}
 
 				if (!ProjectMgr.Tracker.CanRenameItem(Url, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory))
@@ -199,7 +204,9 @@ namespace Microsoft.PythonTools.Project
 				{
 					Directory.CreateDirectory(path);
 					_isBeingCreated = false;
-					var relativePath = CommonUtils.CreateFriendlyDirectoryPath(ProjectMgr.ProjectFolder, Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(Url)), label));
+                    var relativePath = CommonUtils.GetRelativeDirectoryPath(
+                        ProjectMgr.ProjectHome,
+                        Path.Combine(Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), label));
 					this.ItemNode.Rename(relativePath);
 					this.VirtualNodeName = filename;
 
@@ -235,12 +242,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			get
 			{
-				var url = GetAbsoluteUrlFromMsbuild();
-				if (!url.EndsWith("\\")) 
-				{
-					return url + "\\";
-				}
-				return url;
+                return CommonUtils.NormalizeDirectoryPath(GetAbsoluteUrlFromMsbuild());
 			}
 		}
 
@@ -250,23 +252,20 @@ namespace Microsoft.PythonTools.Project
 			{
 				// it might have a backslash at the end... 
 				// and it might consist of Grandparent\parent\this\
-				string caption = this.VirtualNodeName;
-				string[] parts;
-				parts = caption.Split(Path.DirectorySeparatorChar);
-				caption = parts[parts.GetUpperBound(0)];
-				return caption;
+                return Path.GetFileName(CommonUtils.TrimEndSeparator(this.VirtualNodeName));
 			}
 		}
 
 		public override string GetMkDocument()
 		{
-			Debug.Assert(this.Url != null, "No url sepcified for this node");
+            Debug.Assert(!string.IsNullOrEmpty(this.Url), "No url specified for this node");
+            Debug.Assert(Path.IsPathRooted(this.Url), "Url should not be a relative path");
 
 			return this.Url;
 		}
 
 		/// <summary>
-		/// Recursevily walks the folder nodes and redraws the state icons
+        /// Recursively walks the folder nodes and redraws the state icons
 		/// </summary>
 		protected internal override void UpdateSccStateIcons()
 		{
@@ -348,7 +347,6 @@ namespace Microsoft.PythonTools.Project
 		/// creates the physical directory for a folder node
 		/// Override if your node does not use file system folder
 		/// </summary>
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "e")]
 		public virtual void CreateDirectory()
 		{
 			if(Directory.Exists(this.Url) == false)
@@ -362,7 +360,6 @@ namespace Microsoft.PythonTools.Project
 		/// </summary>
 		/// <param name="newName"></param>
 		/// <returns></returns>
-		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "e")]
 		public virtual void CreateDirectory(string newName)
 		{
 			if(String.IsNullOrEmpty(newName))
@@ -371,13 +368,9 @@ namespace Microsoft.PythonTools.Project
 			}
 
 			// on a new dir && enter, we get called with the same name (so do nothing if name is the same
-			char[] dummy = new char[1];
-			dummy[0] = Path.DirectorySeparatorChar;
-			string oldDir = this.Url;
-			oldDir = oldDir.TrimEnd(dummy);
-			string strNewDir = Path.Combine(Path.GetDirectoryName(oldDir), newName);
+            string strNewDir = CommonUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), newName);
 
-			if(String.Compare(strNewDir, oldDir, StringComparison.OrdinalIgnoreCase) != 0)
+            if(!CommonUtils.IsSameDirectory(this.Url, strNewDir))
 			{
 				if(Directory.Exists(strNewDir))
 				{
@@ -398,7 +391,7 @@ namespace Microsoft.PythonTools.Project
 			{
 				if(Directory.Exists(newPath))
 				{
-					ShowFileOrFolderAlreadExistsErrorMessage(newPath);
+                    ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
 				}
 
 				Directory.Move(this.Url, newPath);
@@ -413,9 +406,9 @@ namespace Microsoft.PythonTools.Project
 		{
 			// Do the rename (note that we only do the physical rename if the leaf name changed)
 			string newPath = Path.Combine(this.Parent.VirtualNodeName, newName);
-			if(String.Compare(Path.GetFileName(VirtualNodeName), newName, StringComparison.Ordinal) != 0)
+            if(!String.Equals(Path.GetFileName(VirtualNodeName), newName, StringComparison.Ordinal))
 			{
-				this.RenameDirectory(Path.Combine(this.ProjectMgr.ProjectFolder, newPath));
+                this.RenameDirectory(CommonUtils.GetAbsoluteDirectoryPath(this.ProjectMgr.ProjectHome, newPath));
 			}
 			this.VirtualNodeName = newPath;
 
@@ -447,7 +440,7 @@ namespace Microsoft.PythonTools.Project
 		/// </summary>
 		/// <param name="newPath">path of file or folder already existing on disk</param>
 		/// <returns>S_OK</returns>
-		private int ShowFileOrFolderAlreadExistsErrorMessage(string newPath)
+        private int ShowFileOrFolderAlreadyExistsErrorMessage(string newPath)
 		{
 			//A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
 			//If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.

@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Project.Automation
 			}
 			set
 			{
-                CheckProjectIsValid();
+				CheckProjectIsValid();
 
 				using(AutomationScope scope = new AutomationScope(this.project.Site))
 				{
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.Project.Automation
 			}
 			set
 			{
-                CheckProjectIsValid();
+				CheckProjectIsValid();
 
 				using(AutomationScope scope = new AutomationScope(this.project.Site))
 				{
@@ -99,11 +99,11 @@ namespace Microsoft.PythonTools.Project.Automation
 			}
 		}
 
-        internal void CheckProjectIsValid() {
-            if (this.project == null || this.project.Site == null || this.project.IsClosed) {
-                throw new InvalidOperationException();
-            }
-        }
+		internal void CheckProjectIsValid() {
+			if (this.project == null || this.project.Site == null || this.project.IsClosed) {
+				throw new InvalidOperationException();
+			}
+		}
 
 		/// <summary>
 		/// Gets the Projects collection containing the Project object supporting this property.
@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Project.Automation
 				{
 					// Get Solution service
 					IVsSolution solution = this.project.GetService(typeof(IVsSolution)) as IVsSolution;
-                    Utilities.CheckNotNull(solution);					
+					Utilities.CheckNotNull(solution);					
 
 					// Ask solution for unique name of project
 					string uniqueName = string.Empty;
@@ -195,9 +195,9 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <returns>An Extender object. </returns>
 		public virtual object get_Extender(string name)
 		{
-            Utilities.ArgumentNotNull("name", name);
+			Utilities.ArgumentNotNull("name", name);
 
-            return DTE.ObjectExtenders.GetExtender(project.NodeProperties.ExtenderCATID.ToUpper(), name, project.NodeProperties);
+			return DTE.ObjectExtenders.GetExtender(project.NodeProperties.ExtenderCATID.ToUpper(), name, project.NodeProperties);
 		}
 
 		/// <summary>
@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// </summary>
 		public virtual object ExtenderNames
 		{
-            get { return DTE.ObjectExtenders.GetExtenderNames(project.NodeProperties.ExtenderCATID.ToUpper(), project.NodeProperties); }
+			get { return DTE.ObjectExtenders.GetExtenderNames(project.NodeProperties.ExtenderCATID.ToUpper(), project.NodeProperties); }
 		}
 
 		/// <summary>
@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// </summary>
 		public virtual string ExtenderCATID
 		{
-            get { return project.NodeProperties.ExtenderCATID; }
+			get { return project.NodeProperties.ExtenderCATID; }
 		}
 
 		/// <summary>
@@ -241,7 +241,7 @@ namespace Microsoft.PythonTools.Project.Automation
 			}
 			set
 			{
-                IsDirty = !value;
+				IsDirty = !value;
 			}
 		}
 
@@ -256,12 +256,12 @@ namespace Microsoft.PythonTools.Project.Automation
 				{
 					IVsExtensibility3 extensibility = this.project.Site.GetService(typeof(IVsExtensibility)) as IVsExtensibility3;
 
-                    Utilities.CheckNotNull(extensibility);
+					Utilities.CheckNotNull(extensibility);
 
 					object configurationManagerAsObject;
 					ErrorHandler.ThrowOnFailure(extensibility.GetConfigMgr(this.project, VSConstants.VSITEMID_ROOT, out configurationManagerAsObject));
 
-                    Utilities.CheckNotNull(configurationManagerAsObject);
+					Utilities.CheckNotNull(configurationManagerAsObject);
 
 					this.configurationManager = (ConfigurationManager)configurationManagerAsObject;
 				}
@@ -321,7 +321,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// </summary>
 		public virtual void Delete()
 		{
-            CheckProjectIsValid();
+			CheckProjectIsValid();
 
 			using(AutomationScope scope = new AutomationScope(this.project.Site))
 			{
@@ -347,9 +347,9 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <param name="fileName">The name of the project file.</param>        
 		private void DoSave(bool isCalledFromSaveAs, string fileName)
 		{
-            Utilities.ArgumentNotNull("fileName", fileName);
+			Utilities.ArgumentNotNull("fileName", fileName);
 
-            CheckProjectIsValid();
+			CheckProjectIsValid();
 
 			using(AutomationScope scope = new AutomationScope(this.project.Site))
 			{
@@ -362,7 +362,7 @@ namespace Microsoft.PythonTools.Project.Automation
 
 					// Get the cookie of the project file from the RTD.
 					IVsRunningDocumentTable rdt = this.project.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                    Utilities.CheckNotNull(rdt);
+					Utilities.CheckNotNull(rdt);
 
 					IVsHierarchy hier;
 					uint itemid;
@@ -387,9 +387,9 @@ namespace Microsoft.PythonTools.Project.Automation
 
 					// Now get the soulution.
 					IVsSolution solution = this.project.Site.GetService(typeof(SVsSolution)) as IVsSolution;
-                    // Verify that we have both solution and hierarchy.
-                    Utilities.CheckNotNull(prjHierarchy);
-                    Utilities.CheckNotNull(solution);
+					// Verify that we have both solution and hierarchy.
+					Utilities.CheckNotNull(prjHierarchy);
+					Utilities.CheckNotNull(solution);
 
 
 					ErrorHandler.ThrowOnFailure(solution.SaveSolutionElement((uint)__VSSLNSAVEOPTIONS.SLNSAVEOPT_SaveIfDirty, prjHierarchy, cookie));
@@ -399,22 +399,19 @@ namespace Microsoft.PythonTools.Project.Automation
 
 					// We need to make some checks before we can call the save method on the project node.
 					// This is mainly because it is now us and not the caller like in  case of SaveAs or Save that should validate the file name.
-					// The IPersistFileFormat.Save method only does a validation that is necesseray to be performed. Example: in case of Save As the  
+					// The IPersistFileFormat.Save method only does a validation that is necessary to be performed. Example: in case of Save As the  
 					// file name itself is not validated only the whole path. (thus a file name like file\file is accepted, since as a path is valid)
 
 					// 1. The file name has to be valid. 
 					string fullPath = fileName;
 					try
 					{
-						if(!Path.IsPathRooted(fileName))
-						{
-							fullPath = Path.Combine(this.project.ProjectFolder, fileName);
-						}
+						fullPath = CommonUtils.GetAbsoluteFilePath(this.Project.ProjectFolder, fileName);
 					}
 					// We want to be consistent in the error message and exception we throw. fileName could be for example #¤&%"¤&"%  and that would trigger an ArgumentException on Path.IsRooted.
-					catch(ArgumentException)
+					catch(ArgumentException ex)
 					{
-						throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), fileName));
+						throw new InvalidOperationException(String.Format(SR.GetString(SR.ErrorInvalidFileName, CultureInfo.CurrentUICulture), fileName), ex);
 					}
 
 					// It might be redundant but we validate the file and the full path of the file being valid. The SaveAs would also validate the path.
@@ -424,7 +421,7 @@ namespace Microsoft.PythonTools.Project.Automation
 					if(!isCalledFromSaveAs)
 					{
 						// 2. The file name has to be the same 
-						if(!NativeMethods.IsSamePath(fullPath, this.project.Url))
+						if(!CommonUtils.IsSamePath(fullPath, this.project.Url))
 						{
 							throw new InvalidOperationException();
 						}

@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Project
 	[CLSCompliant(false), ComVisible(true)]
 	public class ProjectReferenceNode : ReferenceNode
 	{
-		#region fieds
+		#region fields
 		/// <summary>
 		/// The name of the assembly this refernce represents
 		/// </summary>
@@ -124,85 +124,85 @@ namespace Microsoft.PythonTools.Project
 		/// <summary>
 		/// Gets the automation object for the referenced project.
 		/// </summary>
-        internal EnvDTE.Project ReferencedProjectObject
-        {
-            get
-            {
-                // If the referenced project is null then re-read.
-                if (this.referencedProject == null)
-                {
+		internal EnvDTE.Project ReferencedProjectObject
+		{
+			get
+			{
+				// If the referenced project is null then re-read.
+				if (this.referencedProject == null)
+				{
 
-                    // Search for the project in the collection of the projects in the
-                    // current solution.
-                    EnvDTE.DTE dte = (EnvDTE.DTE)this.ProjectMgr.GetService(typeof(EnvDTE.DTE));
-                    if ((null == dte) || (null == dte.Solution))
-                    {
-                        return null;
-                    }
-                    foreach (EnvDTE.Project prj in dte.Solution.Projects)
-                    {
-                        //Skip this project if it is an umodeled project (unloaded)
-                        if (string.Compare(EnvDTE.Constants.vsProjectKindUnmodeled, prj.Kind, StringComparison.OrdinalIgnoreCase) == 0)
-                        {
-                            continue;
-                        }
+					// Search for the project in the collection of the projects in the
+					// current solution.
+					EnvDTE.DTE dte = (EnvDTE.DTE)this.ProjectMgr.GetService(typeof(EnvDTE.DTE));
+					if ((null == dte) || (null == dte.Solution))
+					{
+						return null;
+					}
+					foreach (EnvDTE.Project prj in dte.Solution.Projects)
+					{
+						//Skip this project if it is an umodeled project (unloaded)
+						if (string.Compare(EnvDTE.Constants.vsProjectKindUnmodeled, prj.Kind, StringComparison.OrdinalIgnoreCase) == 0)
+						{
+							continue;
+						}
 
-                        // Get the full path of the current project.
-                        EnvDTE.Property pathProperty = null;
-                        try
-                        {
-                            if (prj.Properties == null)
-                            {
-                                continue;
-                            }
+						// Get the full path of the current project.
+						EnvDTE.Property pathProperty = null;
+						try
+						{
+							if (prj.Properties == null)
+							{
+								continue;
+							}
 
-                            pathProperty = prj.Properties.Item("FullPath");
-                            if (null == pathProperty)
-                            {
-                                // The full path should alway be availabe, but if this is not the
-                                // case then we have to skip it.
-                                continue;
-                            }
-                        }
-                        catch (ArgumentException)
-                        {
-                            continue;
-                        }
-                        string prjPath = pathProperty.Value.ToString();
-                        EnvDTE.Property fileNameProperty = null;
-                        // Get the name of the project file.
-                        try
-                        {
-                            fileNameProperty = prj.Properties.Item("FileName");
-                            if (null == fileNameProperty)
-                            {
-                                // Again, this should never be the case, but we handle it anyway.
-                                continue;
-                            }
-                        }
-                        catch (ArgumentException)
-                        {
-                            continue;
-                        }
-                        prjPath = System.IO.Path.Combine(prjPath, fileNameProperty.Value.ToString());
+							pathProperty = prj.Properties.Item("FullPath");
+							if (null == pathProperty)
+							{
+								// The full path should alway be availabe, but if this is not the
+								// case then we have to skip it.
+								continue;
+							}
+						}
+						catch (ArgumentException)
+						{
+							continue;
+						}
+						string prjPath = pathProperty.Value.ToString();
+						EnvDTE.Property fileNameProperty = null;
+						// Get the name of the project file.
+						try
+						{
+							fileNameProperty = prj.Properties.Item("FileName");
+							if (null == fileNameProperty)
+							{
+								// Again, this should never be the case, but we handle it anyway.
+								continue;
+							}
+						}
+						catch (ArgumentException)
+						{
+							continue;
+						}
+						prjPath = Path.Combine(prjPath, fileNameProperty.Value.ToString());
 
-                        // If the full path of this project is the same as the one of this
-                        // reference, then we have found the right project.
-                        if (NativeMethods.IsSamePath(prjPath, referencedProjectFullPath))
-                        {
-                            this.referencedProject = prj;
-                            break;
-                        }
-                    }
-                }
+						// If the full path of this project is the same as the one of this
+						// reference, then we have found the right project.
+						if (CommonUtils.IsSamePath(prjPath, referencedProjectFullPath))
+						{
+							this.referencedProject = prj;
+							break;
+						}
+					}
+				}
 
-                return this.referencedProject;
-            }
-            set
-            {
-                this.referencedProject = value;
-            }
-        }
+				return this.referencedProject;
+			}
+			set
+			{
+				this.referencedProject = value;
+			}
+		}
 
 		/// <summary>
 		/// Gets the full path to the assembly generated by this project.
@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Project
 				{
 					return null;
 				}
-                
+				
 				// Get the active configuration.
 				EnvDTE.Configuration config = confManager.ActiveConfiguration;                
 				if(null == config)
@@ -232,28 +232,23 @@ namespace Microsoft.PythonTools.Project
 				}
 
 
-                if (null == config.Properties) 
-                {
-                    return null;
-                }
-
-				// Get the output path for the current configuration.
-				EnvDTE.Property outputPathProperty = config.Properties.Item("OutputPath");
-                if (null == outputPathProperty || outputPathProperty.Value == null)
+				if (null == config.Properties) 
 				{
 					return null;
 				}
 
-				string outputPath = outputPathProperty.Value.ToString();
-
-				// Ususally the output path is relative to the project path, but it is possible
-				// to set it as an absolute path. If it is not absolute, then evaluate its value
-				// based on the project directory.
-				if(!System.IO.Path.IsPathRooted(outputPath))
+				// Get the output path for the current configuration.
+				EnvDTE.Property outputPathProperty = config.Properties.Item("OutputPath");
+				if (null == outputPathProperty || outputPathProperty.Value == null)
 				{
-					string projectDir = System.IO.Path.GetDirectoryName(referencedProjectFullPath);
-					outputPath = System.IO.Path.Combine(projectDir, outputPath);
+					return null;
 				}
+
+				// Usually the output path is relative to the project path. If it is set as an
+				// absolute path, this call has no effect.
+				string outputPath = CommonUtils.GetAbsoluteDirectoryPath(
+					Path.GetDirectoryName(referencedProjectFullPath), 
+					outputPathProperty.Value.ToString());
 
 				// Now get the name of the assembly from the project.
 				// Some project system throw if the property does not exist. We expect an ArgumentException.
@@ -271,7 +266,7 @@ namespace Microsoft.PythonTools.Project
 					return null;
 				}
 				// build the full path adding the name of the assembly to the output path.
-				outputPath = System.IO.Path.Combine(outputPath, assemblyNameProperty.Value.ToString());
+				outputPath = Path.Combine(outputPath, assemblyNameProperty.Value.ToString());
 
 				return outputPath;
 			}
@@ -346,12 +341,8 @@ namespace Microsoft.PythonTools.Project
 				Debug.Assert(!String.IsNullOrEmpty(this.referencedProjectName), "Could not retrive referenced project name form project file");
 			}
 
-			Uri uri = new Uri(this.ProjectMgr.BaseURI.Uri, this.referencedProjectRelativePath);
-
-			if(uri != null)
-			{
-				this.referencedProjectFullPath = Microsoft.VisualStudio.Shell.Url.Unescape(uri.LocalPath, true);
-			}
+			// TODO: Maybe referenced projects should be relative to ProjectDir?
+			this.referencedProjectFullPath = CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, this.referencedProjectRelativePath);
 		}
 
 		/// <summary>
@@ -363,12 +354,12 @@ namespace Microsoft.PythonTools.Project
 			Debug.Assert(root != null && !String.IsNullOrEmpty(referencedProjectName) && !String.IsNullOrEmpty(projectReference)
 				&& !String.IsNullOrEmpty(projectPath), "Can not add a reference because the input for adding one is invalid.");
 
-            if (projectReference == null)
-            {
-                throw new ArgumentNullException("projectReference");
-            }
+			if (projectReference == null)
+			{
+				throw new ArgumentNullException("projectReference");
+			}
 			
-            this.referencedProjectName = referencedProjectName;
+			this.referencedProjectName = referencedProjectName;
 
 			int indexOfSeparator = projectReference.IndexOf('|');
 
@@ -398,17 +389,10 @@ namespace Microsoft.PythonTools.Project
 
 			Debug.Assert(!String.IsNullOrEmpty(fileName), "Can not add a project reference because the input for adding one is invalid.");
 
-			// Did we get just a file or a relative path?
-			Uri uri = new Uri(projectPath);
-
-			string referenceDir = PackageUtilities.GetPathDistance(this.ProjectMgr.BaseURI.Uri, uri);
-
-			Debug.Assert(!String.IsNullOrEmpty(referenceDir), "Can not add a project reference because the input for adding one is invalid.");
-
 			string justTheFileName = Path.GetFileName(fileName);
-			this.referencedProjectRelativePath = Path.Combine(referenceDir, justTheFileName);
-
-			this.referencedProjectFullPath = Path.Combine(projectPath, justTheFileName);
+			this.referencedProjectFullPath = CommonUtils.GetAbsoluteFilePath(projectPath, justTheFileName);
+			// TODO: Maybe referenced projects should be relative to ProjectDir?
+			this.referencedProjectRelativePath = CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, this.referencedProjectFullPath);
 
 			this.buildDependency = new BuildDependency(this.ProjectMgr, this.referencedProjectGuid);
 
@@ -457,7 +441,7 @@ namespace Microsoft.PythonTools.Project
 			Debug.Assert(!String.IsNullOrEmpty(this.referencedProjectName), "The referencedProjectName field has not been initialized");
 			Debug.Assert(this.referencedProjectGuid != Guid.Empty, "The referencedProjectName field has not been initialized");
 
-            this.ItemNode = new MsBuildProjectElement(this.ProjectMgr, this.referencedProjectRelativePath, ProjectFileConstants.ProjectReference);
+			this.ItemNode = new MsBuildProjectElement(this.ProjectMgr, this.referencedProjectRelativePath, ProjectFileConstants.ProjectReference);
 
 			this.ItemNode.SetMetadata(ProjectFileConstants.Name, this.referencedProjectName);
 			this.ItemNode.SetMetadata(ProjectFileConstants.Project, this.referencedProjectGuid.ToString("B"));

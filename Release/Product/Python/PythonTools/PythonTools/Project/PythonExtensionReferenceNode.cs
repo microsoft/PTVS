@@ -125,11 +125,7 @@ namespace Microsoft.PythonTools.Project {
 
             // Set the basic information we know about
             ItemNode.SetMetadata(ProjectFileConstants.Name, Path.GetFileName(_filename));
-            string relativePath = CommonUtils.CreateFriendlyFilePath(ProjectMgr.ProjectFolder, _filename);
-            if (relativePath.StartsWith("file:\\")) {
-                // we can't make a relative path
-                relativePath = _filename;
-            }
+            string relativePath = CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectFolder, _filename);
             ItemNode.SetMetadata(PythonConstants.PythonExtension, relativePath);
         }
 
@@ -157,14 +153,13 @@ namespace Microsoft.PythonTools.Project {
         protected override bool IsAlreadyAdded() {
             ReferenceContainerNode referencesFolder = ProjectMgr.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
-            bool shouldCheckPath = !string.IsNullOrEmpty(Url);
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling) {
                 var extensionRefNode = n as PythonExtensionReferenceNode;
                 if (null != extensionRefNode) {
-                    // We will check if the full assemblynames are the same or if the Url of the assemblies is the same.
-                    if (String.Compare(extensionRefNode.Url, Url, StringComparison.OrdinalIgnoreCase) == 0 ||
-                        (shouldCheckPath && NativeMethods.IsSamePath(extensionRefNode.Url, Url))) {
+                    // We will check if Url of the assemblies is the same.
+                    // TODO: Check full assembly name?
+                    if (CommonUtils.IsSamePath(extensionRefNode.Url, Url)) {
                         return true;
                     }
                 }
@@ -211,7 +206,7 @@ namespace Microsoft.PythonTools.Project {
 
 
             var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreter2;
-            if (interp != null && NativeMethods.IsSamePath(e.FileName, _filename)) {
+            if (interp != null && CommonUtils.IsSamePath(e.FileName, _filename)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
                     interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));

@@ -52,14 +52,14 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-                CheckProjectIsValid();
+				CheckProjectIsValid();
 
 				bool isDirty = false;
 
 				using(AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site))
 				{
 					DocumentManager manager = this.Node.GetDocumentManager();
-                    Utilities.CheckNotNull(manager);
+					Utilities.CheckNotNull(manager);
 
 					bool isOpen, isOpenedByUs;
 					uint docCookie;
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-                CheckProjectIsValid();
+				CheckProjectIsValid();
 
 				EnvDTE.Document document = null;
 
@@ -97,9 +97,9 @@ namespace Microsoft.PythonTools.Project.Automation
 						ErrorHandler.ThrowOnFailure(windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_DocCookie, out var));
 						object documentAsObject;
 						ErrorHandler.ThrowOnFailure(scope.Extensibility.GetDocumentFromDocCookie((int)var, out documentAsObject));
-                        Utilities.CheckNotNull(documentAsObject);
+						Utilities.CheckNotNull(documentAsObject);
 						
-                        document = (Document)documentAsObject;
+						document = (Document)documentAsObject;
 					}
 
 				}
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <returns>Window object</returns>
 		public override EnvDTE.Window Open(string viewKind)
 		{
-            CheckProjectIsValid();
+			CheckProjectIsValid();
 
 			IVsWindowFrame windowFrame = null;
 			IntPtr docData = IntPtr.Zero;
@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Project.Automation
 					uint docCookie;
 					IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
 					Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
-                    Utilities.CheckNotNull(rdt);
+					Utilities.CheckNotNull(rdt);
 
 					ErrorHandler.ThrowOnFailure(rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, this.Node.Url, out ivsHierarchy, out itemid, out docData, out docCookie));
 
@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <returns>A Boolean value indicating true if the project is open in the given view type; false if not. </returns>
 		public override bool get_IsOpen(string viewKind)
 		{
-            CheckProjectIsValid();
+			CheckProjectIsValid();
 
 			// Validate input params
 			Guid logicalViewGuid = VSConstants.LOGVIEWID_Primary;
@@ -264,9 +264,9 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <param name="fileName">The name of the project file.</param>        
 		private void DoSave(bool isCalledFromSaveAs, string fileName)
 		{
-            Utilities.ArgumentNotNull("fileName", fileName);
+			Utilities.ArgumentNotNull("fileName", fileName);
 
-            CheckProjectIsValid();
+			CheckProjectIsValid();
 
 			using(AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site))
 			{
@@ -276,7 +276,7 @@ namespace Microsoft.PythonTools.Project.Automation
 				{
 					IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
 					Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
-                    Utilities.CheckNotNull(rdt);
+					Utilities.CheckNotNull(rdt);
 
 					// First we see if someone else has opened the requested view of the file.
 					uint itemid;
@@ -297,16 +297,11 @@ namespace Microsoft.PythonTools.Project.Automation
 						Utilities.ValidateFileName(this.Node.ProjectMgr.Site, fileName);
 
 						// Compute the fullpath from the directory of the existing Url.
-						string fullPath = fileName;
-						if(!Path.IsPathRooted(fileName))
-						{
-							string directory = Path.GetDirectoryName(url);
-							fullPath = Path.Combine(directory, fileName);
-						}
+						string fullPath = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(url), fileName);
 
 						if(!isCalledFromSaveAs)
 						{
-							if(!NativeMethods.IsSamePath(this.Node.Url, fullPath))
+							if(!CommonUtils.IsSamePath(this.Node.Url, fullPath))
 							{
 								throw new InvalidOperationException();
 							}

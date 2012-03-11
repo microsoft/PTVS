@@ -193,14 +193,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void QueueDirectoryAnalysis(string path) {
-            ThreadPool.QueueUserWorkItem(x => { lock (this) { AnalyzeDirectory(Path.GetDirectoryName(Path.GetFullPath(path))); } });
+            ThreadPool.QueueUserWorkItem(x => { lock (this) { AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))); } });
         }
 
         private bool ShouldAnalyzePath(string path) {
             foreach (var fact in _allFactories) {
                 if (!String.IsNullOrWhiteSpace(fact.Configuration.InterpreterPath) &&
                        fact.Configuration.InterpreterPath.IndexOfAny(_invalidPathChars) == -1 &&
-                       Path.GetFullPath(path).StartsWith(Path.GetDirectoryName(fact.Configuration.InterpreterPath), StringComparison.OrdinalIgnoreCase)) {
+                       CommonUtils.IsSubpathOf(Path.GetDirectoryName(fact.Configuration.InterpreterPath), path)) {
                     return false;
                 }
             }

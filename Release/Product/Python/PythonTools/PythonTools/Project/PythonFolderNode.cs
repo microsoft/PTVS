@@ -38,7 +38,8 @@ namespace Microsoft.PythonTools.Project {
 
         public override object GetIconHandle(bool open) {
             for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) {
-                if (child.Url.EndsWith("\\__init__.py")) {
+                // TODO: Check whether Python is case-sensitive for __init__.py files
+                if (child.Url.EndsWith("\\__init__.py", StringComparison.OrdinalIgnoreCase)) {
                     if (_imageList == null) {
                         _imageList = Utilities.GetImageList(Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.Resources.PythonPackageIcons.bmp"));
                     }

@@ -60,7 +60,17 @@ namespace Microsoft.PythonTools.Interpreter {
         #region IEquatable<ProjectReference> Members
 
         public virtual bool Equals(ProjectReference other) {
-            return other.Kind == Kind && other.Name == Name;
+            if (other.Kind != Kind) {
+                return false;
+            }
+
+            switch (Kind) {
+                case ProjectReferenceKind.Assembly:
+                case ProjectReferenceKind.ExtensionModule:
+                    return String.Equals(other.Name, Name, StringComparison.OrdinalIgnoreCase);
+                default:
+                    return String.Equals(other.Name, Name, StringComparison.Ordinal);
+            }
         }
 
         #endregion

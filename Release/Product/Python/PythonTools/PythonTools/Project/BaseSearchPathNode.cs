@@ -31,11 +31,7 @@ namespace Microsoft.PythonTools.Project {
         public BaseSearchPathNode(CommonProjectNode project, string path, ProjectElement element)
             : base(project, path, element) {
             _project = project;
-            if (path.EndsWith("\\")) {
-                this.VirtualNodeName = path.Substring(0, path.Length - 1);
-            } else {
-                this.VirtualNodeName = path;
-            }
+            VirtualNodeName = CommonUtils.TrimEndSeparator(path);
             this.ExcludeNodeFromScc = true;
         }
 
@@ -45,8 +41,7 @@ namespace Microsoft.PythonTools.Project {
         public override string Caption {
             get {
                 if (_caption == null) {
-                    _caption = CommonUtils.CreateFriendlyDirectoryPath(
-                        Path.GetDirectoryName(this.ProjectMgr.BaseURI.Uri.LocalPath), this.Url);
+                    _caption = CommonUtils.CreateFriendlyDirectoryPath(this.ProjectMgr.ProjectHome, this.Url);
                 }
                 return _caption;
             }
@@ -98,7 +93,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
-                return Path.Combine(Path.GetDirectoryName(this.ProjectMgr.Url), this.VirtualNodeName) + "\\";
+                return CommonUtils.GetAbsoluteDirectoryPath(this.ProjectMgr.ProjectHome, this.VirtualNodeName);
             }
         }
 

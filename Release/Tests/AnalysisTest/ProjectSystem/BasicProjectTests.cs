@@ -93,9 +93,12 @@ namespace AnalysisTest.ProjectSystem {
                 try {
                     project.SaveAs("C:\\TempFile.pyproj");
                     Assert.Fail();
-                } catch (InvalidOperationException e) {
-                    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
-                }
+                } catch (UnauthorizedAccessException e) {
+                    // Saving to a new location is now permitted, but this location will not succeed.
+                    Assert.IsTrue(e.ToString().Contains("Access to the path 'C:\\TempFile.pyproj' is denied."));
+                } //catch (InvalidOperationException e) {
+                //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
+                //}
 
                 project.Delete();
                 AssertError<InvalidOperationException>(() => project.Saved = true);
@@ -753,10 +756,6 @@ namespace AnalysisTest.ProjectSystem {
             WaitForItem(project, "X");
         }
 
-        /// <summary>
-        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
-        /// sure the completion info changes.
-        /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddFolderCopyAndPasteFile() {
@@ -770,7 +769,7 @@ namespace AnalysisTest.ProjectSystem {
             ProjectNewFolder(app, solutionNode, projectNode);
 
             System.Threading.Thread.Sleep(1000);
-            Keyboard.Type("Foo"); // bad filename
+            Keyboard.Type("Foo");
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
             WaitForItem(project, "Foo");

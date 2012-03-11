@@ -66,6 +66,7 @@
     <Compile Include="AnalysisSaveTest.cs" />
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
+    <Compile Include="CommonUtilsTests.cs" />
     <Compile Include="CompletionContextTests.cs" />
     <Compile Include="AddImportTests.cs" />
     <Compile Include="CompletionDBTest.cs" />

@@ -265,7 +265,7 @@ namespace Microsoft.PythonTools.Project
 				{
 					// We will check if the full assemblynames are the same or if the Url of the assemblies is the same.
 					if(String.Compare(assemblyRefererenceNode.AssemblyName.FullName, this.assemblyName.FullName, StringComparison.OrdinalIgnoreCase) == 0 ||
-						(shouldCheckPath && NativeMethods.IsSamePath(assemblyRefererenceNode.Url, this.Url)))
+						(shouldCheckPath && CommonUtils.IsSamePath(assemblyRefererenceNode.Url, this.Url)))
 					{
 						return true;
 					}
@@ -307,27 +307,8 @@ namespace Microsoft.PythonTools.Project
 			}
 			else
 			{
-				this.assemblyPath = this.GetFullPathFromPath(result);
+				this.assemblyPath = CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, result);
 			}
-		}
-
-		private string GetFullPathFromPath(string path)
-		{
-			if(Path.IsPathRooted(path))
-			{
-				return path;
-			}
-			else
-			{
-				Uri uri = new Uri(this.ProjectMgr.BaseURI.Uri, path);
-
-				if(uri != null)
-				{
-					return Microsoft.VisualStudio.Shell.Url.Unescape(uri.LocalPath, true);
-				}
-			}
-
-			return String.Empty;
 		}
 
 		protected override void ResolveReference()
@@ -362,10 +343,7 @@ namespace Microsoft.PythonTools.Project
 					string hintPath = reference.GetMetadataValue(ProjectFileConstants.HintPath);
 					if (!String.IsNullOrEmpty(hintPath))
 					{
-						if (Path.IsPathRooted(hintPath))
-						{
-							hintPath = PackageUtilities.GetPathDistance(this.ProjectMgr.BaseURI.Uri, new Uri(hintPath));
-						}
+						hintPath = CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, hintPath);
 
 						this.ItemNode.SetMetadata(ProjectFileConstants.HintPath, hintPath);
 						// If this is not already set, we default to true
@@ -415,39 +393,39 @@ namespace Microsoft.PythonTools.Project
 		/// Does the actual job of resolving an assembly reference. We need a private method that does not violate 
 		/// calling virtual method from the constructor.
 		/// </summary>
-        private void ResolveAssemblyReference()
-        {
-            if (this.ProjectMgr == null || this.ProjectMgr.IsClosed)
-            {
-                return;
-            }
+		private void ResolveAssemblyReference()
+		{
+			if (this.ProjectMgr == null || this.ProjectMgr.IsClosed)
+			{
+				return;
+			}
 
-            var group = this.ProjectMgr.CurrentConfig.GetItems(ProjectFileConstants.ReferencePath);
-            foreach (var item in group)
-            {
-                string fullPath = this.GetFullPathFromPath(item.EvaluatedInclude);
+			var group = this.ProjectMgr.CurrentConfig.GetItems(ProjectFileConstants.ReferencePath);
+			foreach (var item in group)
+			{
+				string fullPath = CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, item.EvaluatedInclude);
 
-                System.Reflection.AssemblyName name = System.Reflection.AssemblyName.GetAssemblyName(fullPath);
+				System.Reflection.AssemblyName name = System.Reflection.AssemblyName.GetAssemblyName(fullPath);
 
-                // Try with full assembly name and then with weak assembly name.
-                if (String.Equals(name.FullName, this.assemblyName.FullName, StringComparison.OrdinalIgnoreCase) || String.Equals(name.Name, this.assemblyName.Name, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (!NativeMethods.IsSamePath(fullPath, this.assemblyPath))
-                    {
-                        // set the full path now.
-                        this.assemblyPath = fullPath;
+				// Try with full assembly name and then with weak assembly name.
+				if (String.Equals(name.FullName, this.assemblyName.FullName, StringComparison.OrdinalIgnoreCase) || String.Equals(name.Name, this.assemblyName.Name, StringComparison.OrdinalIgnoreCase))
+				{
+					if (!CommonUtils.IsSamePath(fullPath, this.assemblyPath))
+					{
+						// set the full path now.
+						this.assemblyPath = fullPath;
 
-                        // We have a new item to listen too, since the assembly reference is resolved from a different place.
-                        this.fileChangeListener.ObserveItem(this.assemblyPath);
-                    }
+						// We have a new item to listen too, since the assembly reference is resolved from a different place.
+						this.fileChangeListener.ObserveItem(this.assemblyPath);
+					}
 
-                    this.resolvedAssemblyName = name;
+					this.resolvedAssemblyName = name;
 
-                    // No hint path is needed since the assembly path will always be resolved.
-                    return;
-                }
-            }
-        }
+					// No hint path is needed since the assembly path will always be resolved.
+					return;
+				}
+			}
+		}
 
 		/// <summary>
 		/// Registers with File change events
@@ -483,28 +461,28 @@ namespace Microsoft.PythonTools.Project
 			}
 
 
-			if(NativeMethods.IsSamePath(e.FileName, this.assemblyPath))
+			if (CommonUtils.IsSamePath(e.FileName, this.assemblyPath))
 			{
 				this.OnInvalidateItems(this.Parent);
 			}
 		}
 
-        /// <summary>
-        /// Overridden method. The method updates the build dependency list before removing the node from the hierarchy.
-        /// </summary>
-        public override void Remove(bool removeFromStorage) {
-            if (this.ProjectMgr == null) {
-                return;
-            }
-            base.RemoveNonDocument(removeFromStorage);
-            this.ItemNode.RemoveFromProjectFile();
-            
-            // Notify hierarchy event listeners that items have been invalidated
-            OnInvalidateItems(this);
+		/// <summary>
+		/// Overridden method. The method updates the build dependency list before removing the node from the hierarchy.
+		/// </summary>
+		public override void Remove(bool removeFromStorage) {
+			if (this.ProjectMgr == null) {
+				return;
+			}
+			base.RemoveNonDocument(removeFromStorage);
+			this.ItemNode.RemoveFromProjectFile();
+			
+			// Notify hierarchy event listeners that items have been invalidated
+			OnInvalidateItems(this);
 
-            // Dispose the node now that is deleted.
-            Dispose(true);
-        }
+			// Dispose the node now that is deleted.
+			Dispose(true);
+		}
 
 
 		#endregion

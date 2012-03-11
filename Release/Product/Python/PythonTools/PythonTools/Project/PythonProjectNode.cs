@@ -157,10 +157,7 @@ namespace Microsoft.PythonTools.Project {
                         // remove the file if directly included, or if included via a package or series of packages.
                         string dirName = Path.GetDirectoryName(file);
                         do {
-                            string tmpDir = dirName;
-                            if (!tmpDir.EndsWith("\\")) {
-                                tmpDir = tmpDir + "\\";
-                            }
+                            string tmpDir = CommonUtils.NormalizeDirectoryPath(dirName);
                             if (oldDirs.Contains(tmpDir)) {
                                 if (!newDirs.Contains(tmpDir)) {
                                     // path removed
@@ -469,7 +466,7 @@ namespace Microsoft.PythonTools.Project {
 
         string IPythonProject.ProjectDirectory {
             get {
-                return ProjectDir;
+                return ProjectHome;
             }
         }
 

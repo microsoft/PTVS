@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static void CopyOneFile(Uri destination, IPublishFile item, ref ImpersonationHelper impersonate, NetworkCredential creds) {
-            var destFile = Path.Combine(destination.LocalPath, item.DestinationFile);
+            var destFile = CommonUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
             string destDir = Path.GetDirectoryName(destFile);
             if (!Directory.Exists(destDir)) {
                 // don't create a file share (\\foo\bar)

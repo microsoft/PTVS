@@ -50,12 +50,8 @@ namespace Microsoft.PythonTools.Project {
                             string file = item.GetMetadataValue("FullPath");
 
                             string destFile = Path.GetFileName(file);
-                            if (file.StartsWith(_node.ProjectDir, StringComparison.OrdinalIgnoreCase)) {
-                                int len = _node.ProjectDir.Length;
-                                if (!_node.ProjectDir.EndsWith("\\")) {
-                                    len++;
-                                }
-                                destFile = file.Substring(len);
+                            if (CommonUtils.IsSubpathOf(_node.ProjectHome, file)) {
+                                destFile = CommonUtils.GetRelativeFilePath(_node.ProjectHome, file);
                             } else {
                                 destFile = Path.GetFileName(file);
                             }

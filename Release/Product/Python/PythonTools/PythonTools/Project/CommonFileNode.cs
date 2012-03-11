@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Project {
                 } else if (IsFormSubType) {
                     return (int)ProjectNode.ImageName.WindowsForm;
                 } else if (this._project.IsCodeFile(FileName)) {
-                    if (NativeMethods.IsSamePath(this.Url, _project.GetStartupFile())) {
+                    if (CommonUtils.IsSamePath(this.Url, _project.GetStartupFile())) {
                         return CommonProjectNode.ImageOffset + (int)CommonImageName.StartupFile;
                     } else {
                         return CommonProjectNode.ImageOffset + (int)CommonImageName.File;
@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.Project {
                         // Set the StartupFile project property to the Url of this node
                         ProjectMgr.SetProjectProperty(
                             CommonConstants.StartupFile, 
-                            CommonUtils.CreateFriendlyFilePath(this.ProjectMgr.ProjectFolder, Url)
+                            CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
                         );
                         break;
                     case CommonConstants.StartDebuggingCmdId:
@@ -250,8 +250,7 @@ namespace Microsoft.PythonTools.Project {
                             //We enable "Set as StartUp File" command only on current language code files, 
                             //the file is in project home dir and if the file is not the startup file already.
                             string startupFile = _project.GetStartupFile();
-                            if (IsInProjectHome() &&
-                                (string.IsNullOrEmpty(startupFile) || !NativeMethods.IsSamePath(startupFile, this.Url))) {
+                            if (IsInProjectHome() && !CommonUtils.IsSamePath(startupFile, this.Url)) {
                                 result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             }
                             break;

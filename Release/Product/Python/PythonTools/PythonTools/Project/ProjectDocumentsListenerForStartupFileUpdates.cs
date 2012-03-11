@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.IO;
 using Microsoft.VisualStudio;
 
 using Microsoft.VisualStudio.Shell;
@@ -43,21 +42,22 @@ namespace Microsoft.PythonTools.Project {
             if (!_project.IsRefreshing) {
                 //Get the current value of the StartupFile Property
                 string currentStartupFile = _project.GetProjectProperty(CommonConstants.StartupFile, true);
-                string fullPathToStartupFile = Path.Combine(_project.ProjectDir, currentStartupFile);
+                string fullPathToStartupFile = CommonUtils.GetAbsoluteFilePath(_project.ProjectHome, currentStartupFile);
 
                 //Investigate all of the oldFileNames if they are equal to the current StartupFile
                 int index = 0;
                 foreach (string oldfile in oldFileNames) {
                     //Compare the files and update the StartupFile Property if the currentStartupFile is an old file
-                    if (NativeMethods.IsSamePath(oldfile, fullPathToStartupFile)) {
+                    if (CommonUtils.IsSamePath(oldfile, fullPathToStartupFile)) {
                         //Get the newfilename and update the StartupFile property
                         string newfilename = newFileNames[index];
                         CommonFileNode node = _project.FindChild(newfilename) as CommonFileNode;
                         if (node == null)
                             throw new InvalidOperationException("Could not find the CommonFileNode object");
                         //Startup file has been renamed
-                        _project.SetProjectProperty(CommonConstants.StartupFile, 
-                            CommonUtils.CreateFriendlyFilePath(_project.ProjectFolder, node.Url));
+                        _project.SetProjectProperty(
+                            CommonConstants.StartupFile, 
+                            CommonUtils.GetRelativeFilePath(_project.ProjectHome, node.Url));
                         break;
                     }
                     index++;
@@ -70,13 +70,13 @@ namespace Microsoft.PythonTools.Project {
             if (!_project.IsRefreshing) {
                 //Get the current value of the StartupFile Property
                 string currentStartupFile = _project.GetProjectProperty(CommonConstants.StartupFile, true);
-                string fullPathToStartupFile = Path.Combine(_project.ProjectDir, currentStartupFile);
+                string fullPathToStartupFile = CommonUtils.GetAbsoluteFilePath(_project.ProjectHome, currentStartupFile);
 
                 //Investigate all of the oldFileNames if they are equal to the current StartupFile
                 int index = 0;
                 foreach (string oldfile in oldFileNames) {
                     //Compare the files and update the StartupFile Property if the currentStartupFile is an old file
-                    if (NativeMethods.IsSamePath(oldfile, fullPathToStartupFile)) {
+                    if (CommonUtils.IsSamePath(oldfile, fullPathToStartupFile)) {
                         //Startup file has been removed
                         _project.SetProjectProperty(CommonConstants.StartupFile, null);
                         break;
