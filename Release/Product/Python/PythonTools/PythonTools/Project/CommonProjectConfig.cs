@@ -17,8 +17,8 @@ using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project {    
-    
+namespace Microsoft.PythonTools.Project {
+
     [ComVisible(true)]
     public class CommonProjectConfig : ProjectConfig {
         private readonly CommonProjectNode/*!*/ _project;
@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int DebugLaunch(uint flags) {
-            IProjectLauncher starter =  _project.GetLauncher();
+            IProjectLauncher starter = _project.GetLauncher();
 
             __VSDBGLAUNCHFLAGS launchFlags = (__VSDBGLAUNCHFLAGS)flags;
             if ((launchFlags & __VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug) == __VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug) {

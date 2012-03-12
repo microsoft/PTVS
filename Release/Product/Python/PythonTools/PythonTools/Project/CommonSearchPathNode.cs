@@ -33,11 +33,11 @@ namespace Microsoft.PythonTools.Project {
         public override int SortPriority {
             get {
                 return CommonConstants.SearchPathNodeMaxSortPriority + _index;
-            }            
+            }
         }
 
         public int Index {
-            get { return _index;  }
+            get { return _index; }
             set { _index = value; }
         }
 
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Project {
                     case VsCommands.Delete:
                     case VsCommands.Remove:
                         string message = string.Format(
-                            DynamicProjectSR.GetString(DynamicProjectSR.SearchPathRemoveConfirmation), 
+                            DynamicProjectSR.GetString(DynamicProjectSR.SearchPathRemoveConfirmation),
                             this.Caption);
                         string title = string.Empty;
                         OLEMSGICON icon = OLEMSGICON.OLEMSGICON_WARNING;
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Project {
         protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
         }
-        
+
         public override void Remove(bool removeFromStorage) {
             //Save this search path, because the node can be deleted after call to base Remove()
             string path = this.Url;

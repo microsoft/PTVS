@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.Utilities;
 namespace Microsoft.PythonTools.Project {
     [ContentType(PythonCoreConstants.ContentType)]
     [Export(typeof(IEncodingDetector))]
-    [Order(Before="XmlEncodingDetector")]
+    [Order(Before = "XmlEncodingDetector")]
     [Name("PythonEncodingDetector")]
     class PythonEncodingDetector : IEncodingDetector {
         public Encoding GetStreamEncoding(Stream stream) {

@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
             : base(node) {
         }
 
-        
+
         [Browsable(false)]
         public string InterpreterId {
             get {

@@ -34,7 +34,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 */
 namespace Microsoft.PythonTools.Project
 {
-    
+
     [ComVisible(true)]
     public abstract class ConfigProvider : IVsCfgProvider2
     {
@@ -47,7 +47,8 @@ namespace Microsoft.PythonTools.Project
         private List<KeyValuePair<KeyValuePair<string, string>, string>> newCfgProps = new List<KeyValuePair<KeyValuePair<string, string>, string>>();
         private Dictionary<string, ProjectConfig> configurationsList = new Dictionary<string, ProjectConfig>();
 
-        public ConfigProvider(ProjectNode manager) {
+        public ConfigProvider(ProjectNode manager)
+        {
             this.project = manager;
         }
 
@@ -88,7 +89,7 @@ namespace Microsoft.PythonTools.Project
         protected ProjectConfig GetProjectConfiguration(string configName)
         {
             // if we already created it, return the cached one
-            if(configurationsList.ContainsKey(configName))
+            if (configurationsList.ContainsKey(configName))
             {
                 return configurationsList[configName];
             }
@@ -113,7 +114,7 @@ namespace Microsoft.PythonTools.Project
         public virtual int AddCfgsOfCfgName(string name, string cloneName, int fPrivate)
         {
             // We need to QE/QS the project file
-            if(!this.ProjectMgr.QueryEditProjectFile(false))
+            if (!this.ProjectMgr.QueryEditProjectFile(false))
             {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
@@ -125,17 +126,17 @@ namespace Microsoft.PythonTools.Project
             List<ProjectPropertyGroupElement> configGroup = new List<ProjectPropertyGroupElement>(this.project.BuildProject.Xml.PropertyGroups);
             ProjectPropertyGroupElement configToClone = null;
 
-            if(cloneName != null)
+            if (cloneName != null)
             {
                 // Find the configuration to clone
                 foreach (ProjectPropertyGroupElement currentConfig in configGroup)
                 {
                     // Only care about conditional property groups
-                    if(currentConfig.Condition == null || currentConfig.Condition.Length == 0)
+                    if (currentConfig.Condition == null || currentConfig.Condition.Length == 0)
                         continue;
 
                     // Skip if it isn't the group we want
-                    if(String.Compare(currentConfig.Condition.Trim(), condition, StringComparison.OrdinalIgnoreCase) != 0)
+                    if (String.Compare(currentConfig.Condition.Trim(), condition, StringComparison.OrdinalIgnoreCase) != 0)
                         continue;
 
                     configToClone = currentConfig;
@@ -143,7 +144,7 @@ namespace Microsoft.PythonTools.Project
             }
 
             ProjectPropertyGroupElement newConfig = null;
-            if(configToClone != null)
+            if (configToClone != null)
             {
                 // Clone the configuration settings
                 newConfig = this.project.ClonePropertyGroup(configToClone);
@@ -163,12 +164,12 @@ namespace Microsoft.PythonTools.Project
                 newConfig = this.project.BuildProject.Xml.AddPropertyGroup();
                 // Get the list of property name, condition value from the config provider
                 IList<KeyValuePair<KeyValuePair<string, string>, string>> propVals = this.NewConfigProperties;
-                foreach(KeyValuePair<KeyValuePair<string, string>, string> data in propVals)
+                foreach (KeyValuePair<KeyValuePair<string, string>, string> data in propVals)
                 {
                     KeyValuePair<string, string> propData = data.Key;
                     string value = data.Value;
                     ProjectPropertyElement newProperty = newConfig.AddProperty(propData.Key, value);
-                    if(!String.IsNullOrEmpty(propData.Value))
+                    if (!String.IsNullOrEmpty(propData.Value))
                         newProperty.Condition = propData.Value;
                 }
             }
@@ -205,12 +206,12 @@ namespace Microsoft.PythonTools.Project
         public virtual int DeleteCfgsOfCfgName(string name)
         {
             // We need to QE/QS the project file
-            if(!this.ProjectMgr.QueryEditProjectFile(false))
+            if (!this.ProjectMgr.QueryEditProjectFile(false))
             {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            if(name == null)
+            if (name == null)
             {
                 // The configuration " '$(Configuration)' ==  " does not exist, so technically the goal
                 // is achieved so return S_OK
@@ -218,16 +219,16 @@ namespace Microsoft.PythonTools.Project
             }
             // Verify that this config exist
             string[] configs = GetPropertiesConditionedOn(ProjectFileConstants.Configuration);
-            foreach(string config in configs)
+            foreach (string config in configs)
             {
-                if(String.Compare(config, name, StringComparison.OrdinalIgnoreCase) == 0)
+                if (String.Compare(config, name, StringComparison.OrdinalIgnoreCase) == 0)
                 {
                     // Create condition of config to remove
                     string condition = String.Format(CultureInfo.InvariantCulture, configString, config);
 
                     foreach (ProjectPropertyGroupElement element in this.project.BuildProject.Xml.PropertyGroups)
                     {
-                        if(String.Equals(element.Condition, condition, StringComparison.OrdinalIgnoreCase))
+                        if (String.Equals(element.Condition, condition, StringComparison.OrdinalIgnoreCase))
                         {
                             element.Parent.RemoveChild(element);
                         }
@@ -265,19 +266,19 @@ namespace Microsoft.PythonTools.Project
 
             string[] configList = GetPropertiesConditionedOn(ProjectFileConstants.Configuration);
 
-            if(names != null)
+            if (names != null)
             {
-                foreach(string config in configList)
+                foreach (string config in configList)
                 {
                     names[i++] = config;
-                    if(i == celt)
+                    if (i == celt)
                         break;
                 }
             }
             else
                 i = configList.Length;
 
-            if(actual != null)
+            if (actual != null)
             {
                 actual[0] = (uint)i;
             }
@@ -309,7 +310,7 @@ namespace Microsoft.PythonTools.Project
         public virtual int GetCfgProviderProperty(int propid, out object var)
         {
             var = false;
-            switch((__VSCFGPROPID)propid)
+            switch ((__VSCFGPROPID)propid)
             {
                 case __VSCFGPROPID.VSCFGPROPID_SupportsCfgAdd:
                     var = true;
@@ -344,27 +345,27 @@ namespace Microsoft.PythonTools.Project
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         public virtual int GetCfgs(uint celt, IVsCfg[] a, uint[] actual, uint[] flags)
         {
-            if(flags != null)
+            if (flags != null)
                 flags[0] = 0;
 
             int i = 0;
             string[] configList = GetPropertiesConditionedOn(ProjectFileConstants.Configuration);
 
-            if(a != null)
+            if (a != null)
             {
-                foreach(string configName in configList)
+                foreach (string configName in configList)
                 {
                     a[i] = this.GetProjectConfiguration(configName);
 
                     i++;
-                    if(i == celt)
+                    if (i == celt)
                         break;
                 }
             }
             else
                 i = configList.Length;
 
-            if(actual != null)
+            if (actual != null)
                 actual[0] = (uint)i;
 
             return VSConstants.S_OK;
@@ -410,17 +411,17 @@ namespace Microsoft.PythonTools.Project
             foreach (ProjectPropertyGroupElement config in this.project.BuildProject.Xml.PropertyGroups)
             {
                 // Only care about conditional property groups
-                if(config.Condition == null || config.Condition.Length == 0)
+                if (config.Condition == null || config.Condition.Length == 0)
                     continue;
 
                 // Skip if it isn't the group we want
-                if(String.Compare(config.Condition.Trim(), condition, StringComparison.OrdinalIgnoreCase) != 0)
+                if (String.Compare(config.Condition.Trim(), condition, StringComparison.OrdinalIgnoreCase) != 0)
                     continue;
 
                 // Change the name 
                 config.Condition = String.Format(CultureInfo.InvariantCulture, configString, newname);
                 // Update the name in our config list
-                if(configurationsList.ContainsKey(old))
+                if (configurationsList.ContainsKey(old))
                 {
                     ProjectConfig configuration = configurationsList[old];
                     configurationsList.Remove(old);
@@ -467,7 +468,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="name">The name of configuration just added.</param>
         private void NotifyOnCfgNameAdded(string name)
         {
-            foreach(IVsCfgProviderEvents sink in this.cfgEventSinks)
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
             {
                 ErrorHandler.ThrowOnFailure(sink.OnCfgNameAdded(name));
             }
@@ -479,7 +480,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="name">The name of the configuration.</param>
         private void NotifyOnCfgNameDeleted(string name)
         {
-            foreach(IVsCfgProviderEvents sink in this.cfgEventSinks)
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
             {
                 ErrorHandler.ThrowOnFailure(sink.OnCfgNameDeleted(name));
             }
@@ -492,7 +493,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="newName">New configuration name</param>
         private void NotifyOnCfgNameRenamed(string oldName, string newName)
         {
-            foreach(IVsCfgProviderEvents sink in this.cfgEventSinks)
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
             {
                 ErrorHandler.ThrowOnFailure(sink.OnCfgNameRenamed(oldName, newName));
             }
@@ -505,7 +506,7 @@ namespace Microsoft.PythonTools.Project
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         private void NotifyOnPlatformNameAdded(string platformName)
         {
-            foreach(IVsCfgProviderEvents sink in this.cfgEventSinks)
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
             {
                 ErrorHandler.ThrowOnFailure(sink.OnPlatformNameAdded(platformName));
             }
@@ -518,7 +519,7 @@ namespace Microsoft.PythonTools.Project
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         private void NotifyOnPlatformNameDeleted(string platformName)
         {
-            foreach(IVsCfgProviderEvents sink in this.cfgEventSinks)
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
             {
                 ErrorHandler.ThrowOnFailure(sink.OnPlatformNameDeleted(platformName));
             }
@@ -532,12 +533,12 @@ namespace Microsoft.PythonTools.Project
         {
             string[] platforms = GetPropertiesConditionedOn(ProjectFileConstants.Platform);
 
-            if(platforms == null || platforms.Length == 0)
+            if (platforms == null || platforms.Length == 0)
             {
                 return new string[] { x86Platform, AnyCPUPlatform };
             }
 
-            for(int i = 0; i < platforms.Length; i++)
+            for (int i = 0; i < platforms.Length; i++)
             {
                 platforms[i] = ConvertPlatformToVsProject(platforms[i]);
             }
@@ -553,12 +554,12 @@ namespace Microsoft.PythonTools.Project
         {
             string platforms = this.ProjectMgr.BuildProject.GetPropertyValue(ProjectFileConstants.AvailablePlatforms);
 
-            if(platforms == null)
+            if (platforms == null)
             {
                 return new string[] { };
             }
 
-            if(platforms.Contains(","))
+            if (platforms.Contains(","))
             {
                 return platforms.Split(',');
             }
@@ -573,7 +574,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>The new name.</returns>
         private static string ConvertPlatformToVsProject(string oldPlatformName)
         {
-            if(String.Compare(oldPlatformName, ProjectFileValues.AnyCPU, StringComparison.OrdinalIgnoreCase) == 0)
+            if (String.Compare(oldPlatformName, ProjectFileValues.AnyCPU, StringComparison.OrdinalIgnoreCase) == 0)
             {
                 return AnyCPUPlatform;
             }
@@ -593,9 +594,9 @@ namespace Microsoft.PythonTools.Project
         private static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms)
         {
             Debug.Assert(platforms != null, "The plaforms array should never be null");
-            if(names == null)
+            if (names == null)
             {
-                if(actual == null || actual.Length == 0)
+                if (actual == null || actual.Length == 0)
                 {
                     throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "actual");
                 }
@@ -605,9 +606,9 @@ namespace Microsoft.PythonTools.Project
             }
 
             //Degenarate case
-            if(celt == 0)
+            if (celt == 0)
             {
-                if(actual != null && actual.Length != 0)
+                if (actual != null && actual.Length != 0)
                 {
                     actual[0] = (uint)platforms.Length;
                 }
@@ -616,18 +617,18 @@ namespace Microsoft.PythonTools.Project
             }
 
             uint returned = 0;
-            for(int i = 0; i < platforms.Length && names.Length > returned; i++)
+            for (int i = 0; i < platforms.Length && names.Length > returned; i++)
             {
                 names[returned] = platforms[i];
                 returned++;
             }
 
-            if(actual != null && actual.Length != 0)
+            if (actual != null && actual.Length != 0)
             {
                 actual[0] = returned;
             }
 
-            if(celt > returned)
+            if (celt > returned)
             {
                 return VSConstants.S_FALSE;
             }

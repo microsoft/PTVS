@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                if(null == references)
+                if (null == references)
                 {
                     references = new Automation.OAReferences(this);
                 }
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>An intance of the Automation.OAReferenceFolderItem type if succeeeded</returns>
         public override object GetAutomationObject()
         {
-            if(this.ProjectMgr == null || this.ProjectMgr.IsClosed)
+            if (this.ProjectMgr == null || this.ProjectMgr.IsClosed)
             {
                 return null;
             }
@@ -158,9 +158,9 @@ namespace Microsoft.PythonTools.Project
 
         protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
         {
-            if(cmdGroup == VsMenus.guidStandardCommandSet97)
+            if (cmdGroup == VsMenus.guidStandardCommandSet97)
             {
-                switch((VsCommands)cmd)
+                switch ((VsCommands)cmd)
                 {
                     case VsCommands.AddNewItem:
                     case VsCommands.AddExistingItem:
@@ -168,9 +168,9 @@ namespace Microsoft.PythonTools.Project
                         return VSConstants.S_OK;
                 }
             }
-            else if(cmdGroup == VsMenus.guidStandardCommandSet2K)
+            else if (cmdGroup == VsMenus.guidStandardCommandSet2K)
             {
-                if((VsCommands2K)cmd == VsCommands2K.ADDREFERENCE)
+                if ((VsCommands2K)cmd == VsCommands2K.ADDREFERENCE)
                 {
                     result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                     return VSConstants.S_OK;
@@ -185,9 +185,9 @@ namespace Microsoft.PythonTools.Project
 
         protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
-            if(cmdGroup == VsMenus.guidStandardCommandSet2K)
+            if (cmdGroup == VsMenus.guidStandardCommandSet2K)
             {
-                switch((VsCommands2K)cmd)
+                switch ((VsCommands2K)cmd)
                 {
                     case VsCommands2K.ADDREFERENCE:
                         return this.ProjectMgr.AddProjectReference();
@@ -212,7 +212,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns></returns>
         protected override bool CanShowDefaultIcon()
         {
-            if(!String.IsNullOrEmpty(this.VirtualNodeName))
+            if (!String.IsNullOrEmpty(this.VirtualNodeName))
             {
                 return true;
             }
@@ -225,10 +225,10 @@ namespace Microsoft.PythonTools.Project
         public IList<ReferenceNode> EnumReferences()
         {
             List<ReferenceNode> refs = new List<ReferenceNode>();
-            for(HierarchyNode node = this.FirstChild; node != null; node = node.NextSibling)
+            for (HierarchyNode node = this.FirstChild; node != null; node = node.NextSibling)
             {
                 ReferenceNode refNode = node as ReferenceNode;
-                if(refNode != null)
+                if (refNode != null)
                 {
                     refs.Add(refNode);
                 }
@@ -241,13 +241,13 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         public void LoadReferencesFromBuildProject(MSBuild.Project buildProject)
         {
-            foreach(string referenceType in SupportedReferenceTypes)
+            foreach (string referenceType in SupportedReferenceTypes)
             {
                 IEnumerable<MSBuild.ProjectItem> refererncesGroup = this.ProjectMgr.BuildProject.GetItems(referenceType);
 
                 bool isAssemblyReference = referenceType == ProjectFileConstants.Reference;
                 // If the project was loaded for browsing we should still create the nodes but as not resolved.
-                if(isAssemblyReference && 
+                if (isAssemblyReference &&
                     (!ProjectMgr.BuildProject.Targets.ContainsKey(MsBuildTarget.ResolveAssemblyReferences) || this.ProjectMgr.Build(MsBuildTarget.ResolveAssemblyReferences) != MSBuildResult.Successful))
                 {
                     continue;
@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Project
 
                     ReferenceNode node = CreateReferenceNode(referenceType, element);
 
-                    if(node != null)
+                    if (node != null)
                     {
                         // Make sure that we do not want to add the item twice to the ui hierarchy
                         // We are using here the UI representation of the Node namely the Caption to find that out, in order to
@@ -267,15 +267,15 @@ namespace Microsoft.PythonTools.Project
                         // Example :<Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
                         //		  <Reference Include="EnvDTE80" />
                         bool found = false;
-                        for(HierarchyNode n = this.FirstChild; n != null && !found; n = n.NextSibling)
+                        for (HierarchyNode n = this.FirstChild; n != null && !found; n = n.NextSibling)
                         {
-                            if(String.Compare(n.Caption, node.Caption, StringComparison.OrdinalIgnoreCase) == 0)
+                            if (String.Compare(n.Caption, node.Caption, StringComparison.OrdinalIgnoreCase) == 0)
                             {
                                 found = true;
                             }
                         }
 
-                        if(!found)
+                        if (!found)
                         {
                             this.AddChild(node);
                         }
@@ -292,7 +292,7 @@ namespace Microsoft.PythonTools.Project
         public ReferenceNode AddReferenceFromSelectorData(VSCOMPONENTSELECTORDATA selectorData)
         {
             //Make sure we can edit the project file
-            if(!this.ProjectMgr.QueryEditProjectFile(false))
+            if (!this.ProjectMgr.QueryEditProjectFile(false))
             {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
@@ -303,18 +303,18 @@ namespace Microsoft.PythonTools.Project
             {
                 node = CreateReferenceNode(selectorData);
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
                 // Some selector data was not valid. 
             }
 
             //Add the reference node to the project if we have a valid reference node
-            if(node != null)
+            if (node != null)
             {
                 // This call will find if the reference is in the project and, in this case
                 // will not add it again, so the parent node will not be set.
                 node.AddReference();
-                if(null == node.Parent)
+                if (null == node.Parent)
                 {
                     // The reference was not added, so we can not return this item because it
                     // is not inside the project.
@@ -337,22 +337,22 @@ namespace Microsoft.PythonTools.Project
             }
             else 
 #endif
-            if(referenceType == ProjectFileConstants.Reference)
+            if (referenceType == ProjectFileConstants.Reference)
             {
                 node = this.CreateAssemblyReferenceNode(element);
             }
-            else if(referenceType == ProjectFileConstants.ProjectReference)
+            else if (referenceType == ProjectFileConstants.ProjectReference)
             {
                 node = this.CreateProjectReferenceNode(element);
             }
 
             return node;
         }
-        
+
         protected virtual ReferenceNode CreateReferenceNode(VSCOMPONENTSELECTORDATA selectorData)
         {
             ReferenceNode node = null;
-            switch(selectorData.type)
+            switch (selectorData.type)
             {
                 case VSCOMPONENTTYPE.VSCOMPONENTTYPE_Project:
                     node = this.CreateProjectReferenceNode(selectorData);
@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         protected virtual ReferenceNode CreateFileComponent(VSCOMPONENTSELECTORDATA selectorData)
         {
-            if(null == selectorData.bstrFile)
+            if (null == selectorData.bstrFile)
             {
                 throw new ArgumentNullException("selectorData");
             }
@@ -402,7 +402,7 @@ namespace Microsoft.PythonTools.Project
             // We have a path to a file, it could be anything
             // First see if it is a managed assembly
             bool tryToCreateAnAssemblyReference = true;
-            if(File.Exists(selectorData.bstrFile))
+            if (File.Exists(selectorData.bstrFile))
             {
                 try
                 {
@@ -417,13 +417,13 @@ namespace Microsoft.PythonTools.Project
                     // GetAssemblyName is assured not to load the assembly.
                     tryToCreateAnAssemblyReference = (AssemblyName.GetAssemblyName(selectorData.bstrFile) != null);
                 }
-                catch(BadImageFormatException)
+                catch (BadImageFormatException)
                 {
                     // We have found the file and it is not a .NET assembly; no need to try to
                     // load it again.
                     tryToCreateAnAssemblyReference = false;
                 }
-                catch(FileLoadException)
+                catch (FileLoadException)
                 {
                     // We must still try to load from here because this exception is thrown if we want 
                     // to add the same assembly refererence from different locations.
@@ -433,7 +433,7 @@ namespace Microsoft.PythonTools.Project
 
             ReferenceNode node = null;
 
-            if(tryToCreateAnAssemblyReference)
+            if (tryToCreateAnAssemblyReference)
             {
                 // This might be a candidate for an assembly reference node. Try to load it.
                 // CreateAssemblyReferenceNode will suppress BadImageFormatException if the node cannot be created.
@@ -441,9 +441,9 @@ namespace Microsoft.PythonTools.Project
             }
 
             // If no node has been created try to create a com reference node.
-            if(node == null)
+            if (node == null)
             {
-                if(!File.Exists(selectorData.bstrFile))
+                if (!File.Exists(selectorData.bstrFile))
                 {
                     return null;
                 }
@@ -464,23 +464,23 @@ namespace Microsoft.PythonTools.Project
             {
                 node = new AssemblyReferenceNode(this.ProjectMgr, element);
             }
-            catch(ArgumentNullException e)
+            catch (ArgumentNullException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(FileNotFoundException e)
+            catch (FileNotFoundException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(BadImageFormatException e)
+            catch (BadImageFormatException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(FileLoadException e)
+            catch (FileLoadException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(System.Security.SecurityException e)
+            catch (System.Security.SecurityException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
@@ -497,23 +497,23 @@ namespace Microsoft.PythonTools.Project
             {
                 node = new AssemblyReferenceNode(this.ProjectMgr, fileName);
             }
-            catch(ArgumentNullException e)
+            catch (ArgumentNullException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(FileNotFoundException e)
+            catch (FileNotFoundException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(BadImageFormatException e)
+            catch (BadImageFormatException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(FileLoadException e)
+            catch (FileLoadException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }
-            catch(System.Security.SecurityException e)
+            catch (System.Security.SecurityException e)
             {
                 Trace.WriteLine("Exception : " + e.Message);
             }

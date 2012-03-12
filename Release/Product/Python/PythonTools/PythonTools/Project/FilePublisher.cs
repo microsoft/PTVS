@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 },
                 null
-            );           
+            );
         }
 
         private static void CopyOneFile(Uri destination, IPublishFile item, ref ImpersonationHelper impersonate, NetworkCredential creds) {
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public string DestinationDescription {
-            get { return "file path";  }
+            get { return "file path"; }
         }
 
         public string Schema {

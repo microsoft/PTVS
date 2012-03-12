@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Project {
                             throw new InvalidOperationException("Could not find the CommonFileNode object");
                         //Startup file has been renamed
                         _project.SetProjectProperty(
-                            CommonConstants.StartupFile, 
+                            CommonConstants.StartupFile,
                             CommonUtils.GetRelativeFilePath(_project.ProjectHome, node.Url));
                         break;
                     }
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
             return VSConstants.S_OK;
-        }        
+        }
         #endregion
     }
 }

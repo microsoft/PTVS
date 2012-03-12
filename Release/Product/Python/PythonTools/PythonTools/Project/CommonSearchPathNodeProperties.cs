@@ -17,60 +17,51 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Project
-{
-	[ComVisible(true)]
-	[Guid(CommonConstants.SearchPathsPropertiesGuid)]
-	public class CommonSearchPathNodeProperties : NodeProperties
-	{
-		#region properties
-		[SRCategoryAttribute(SR.Misc)]
-		[LocDisplayName(SR.FolderName)]
-		[SRDescriptionAttribute(SR.FolderNameDescription)]
-		[AutomationBrowsable(false)]
-		public string FolderName
-		{
-			get
-			{
-				return Path.GetFileName(CommonUtils.TrimEndSeparator(this.Node.Url));
-			}
-		}
+namespace Microsoft.PythonTools.Project {
+    [ComVisible(true)]
+    [Guid(CommonConstants.SearchPathsPropertiesGuid)]
+    public class CommonSearchPathNodeProperties : NodeProperties {
+        #region properties
+        [SRCategoryAttribute(SR.Misc)]
+        [LocDisplayName(SR.FolderName)]
+        [SRDescriptionAttribute(SR.FolderNameDescription)]
+        [AutomationBrowsable(false)]
+        public string FolderName {
+            get {
+                return Path.GetFileName(CommonUtils.TrimEndSeparator(this.Node.Url));
+            }
+        }
 
-		[SRCategoryAttribute(SR.Misc)]
-		[LocDisplayName(SR.FullPath)]
-		[SRDescriptionAttribute(SR.FullPathDescription)]
-		[AutomationBrowsable(true)]
-		public string FullPath
-		{
-			get
-			{
-				return this.Node.VirtualNodeName;
-			}
-		}
+        [SRCategoryAttribute(SR.Misc)]
+        [LocDisplayName(SR.FullPath)]
+        [SRDescriptionAttribute(SR.FullPathDescription)]
+        [AutomationBrowsable(true)]
+        public string FullPath {
+            get {
+                return this.Node.VirtualNodeName;
+            }
+        }
 
-		#region properties - used for automation only
-		[Browsable(false)]
-		[AutomationBrowsable(true)]
-		public string FileName
-		{
-			get
-			{
-				return this.Node.VirtualNodeName;
-			}
-		}
+        #region properties - used for automation only
+        [Browsable(false)]
+        [AutomationBrowsable(true)]
+        public string FileName {
+            get {
+                return this.Node.VirtualNodeName;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#endregion
+        #endregion
 
-		#region ctors
-		public CommonSearchPathNodeProperties(HierarchyNode node)
-			: base(node) { }
-		#endregion
+        #region ctors
+        public CommonSearchPathNodeProperties(HierarchyNode node)
+            : base(node) { }
+        #endregion
 
-		public override string GetClassName()
-		{
-			return "Search Path Properties";
-		}
-	}
+        public override string GetClassName() {
+            return "Search Path Properties";
+        }
+    }
 }

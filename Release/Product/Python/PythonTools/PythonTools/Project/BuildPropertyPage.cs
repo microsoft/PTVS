@@ -20,12 +20,12 @@ using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Project
 {
-	/// <summary>
-	/// Enumerated list of the properties shown on the build property page
-	/// </summary>
-	internal enum BuildPropertyPageTag
-	{
-		OutputPath
-	}
+    /// <summary>
+    /// Enumerated list of the properties shown on the build property page
+    /// </summary>
+    internal enum BuildPropertyPageTag
+    {
+        OutputPath
+    }
 
 }

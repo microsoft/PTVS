@@ -18,38 +18,38 @@ using EnvDTE;
 
 namespace Microsoft.PythonTools.Project.Automation
 {
-	/// <summary>
-	/// Represents an automation object for a folder in a project
-	/// </summary>
-	[SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
-	[ComVisible(true)]
-	public class OAFolderItem : OAProjectItem<FolderNode>
-	{
-		#region ctors
-		public OAFolderItem(OAProject project, FolderNode node)
-			: base(project, node)
-		{
-		}
+    /// <summary>
+    /// Represents an automation object for a folder in a project
+    /// </summary>
+    [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
+    [ComVisible(true)]
+    public class OAFolderItem : OAProjectItem<FolderNode>
+    {
+        #region ctors
+        public OAFolderItem(OAProject project, FolderNode node)
+            : base(project, node)
+        {
+        }
 
-		#endregion
+        #endregion
 
-		#region overridden methods
-		public override ProjectItems Collection
-		{
-			get
-			{
-				ProjectItems items = new OAProjectItems(this.Project, this.Node);
-				return items;
-			}
-		}
+        #region overridden methods
+        public override ProjectItems Collection
+        {
+            get
+            {
+                ProjectItems items = new OAProjectItems(this.Project, this.Node);
+                return items;
+            }
+        }
 
-		public override ProjectItems ProjectItems
-		{
-			get
-			{
-				return this.Collection;
-			}
-		}
-		#endregion
-	}
+        public override ProjectItems ProjectItems
+        {
+            get
+            {
+                return this.Collection;
+            }
+        }
+        #endregion
+    }
 }

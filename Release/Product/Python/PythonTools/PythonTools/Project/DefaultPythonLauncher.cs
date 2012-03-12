@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Project {
                 if (!File.Exists(result)) {
                     throw new FileNotFoundException(String.Format("Interpreter specified in the project does not exist: '{0}'", result), result);
                 }
-                
+
                 isWindows = false;
                 return result;
             }
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Project {
         /// Creates language specific command line for starting the project with debigging.
         /// </summary>
         public string CreateCommandLineDebug(string startupFile) {
-            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);            
+            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
 
             return String.Format("\"{0}\" {1}", startupFile, cmdLineArgs);
         }
@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Project {
         private void StartWithDebugger(string startupFile) {
             VsDebugTargetInfo dbgInfo = new VsDebugTargetInfo();
             dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
-            
+
             SetupDebugInfo(ref dbgInfo, startupFile);
 
             LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools.Project {
                 dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
             }
             if (PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero) {
-                dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero  + "=True";
+                dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero + "=True";
             }
             if (PythonToolsPackage.Instance.OptionsPage.DebugStdLib) {
                 dbgInfo.bstrOptions += ";" + AD7Engine.DebugStdLib + "=True";
@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Project {
                 } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
                     command += " & if errorlevel 1 pause";
                 }
-                
+
                 command += "\"";
                 startInfo = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"), command);
             } else {

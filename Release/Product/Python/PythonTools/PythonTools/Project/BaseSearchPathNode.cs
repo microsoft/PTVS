@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return _caption;
             }
-        }        
+        }
 
         /// <summary>
         /// Disable inline editing of Caption of a Search Path Node
@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override object GetIconHandle(bool open) {
             return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (Directory.Exists(this.Url)? 
+                CommonProjectNode.ImageOffset + (Directory.Exists(this.Url) ?
                 (int)CommonImageName.SearchPath :
                 (int)CommonImageName.MissingSearchPath));
         }

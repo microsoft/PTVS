@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Project {
             foreach (var interpreter in _interpreters) {
                 _defaultInterpreter.Items.Add(interpreter.GetInterpreterDisplay());
             }
-            
+
             if (_defaultInterpreter.Items.Count == 0) {
                 _defaultInterpreter.Enabled = false;
                 _defaultInterpreter.Items.Add("No Python Interpreters Installed");
@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void InterpreterOptionsPage_InterpretersChanged(object sender, EventArgs e) {
             _defaultInterpreter.SelectedIndexChanged -= Changed;
-            
+
             _interpreters.Clear();
             _defaultInterpreter.Items.Clear();
             InitializeInterpreters();
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Project {
 
             _defaultInterpreter.SelectedIndexChanged += Changed;
         }
-        
+
         protected override void OnHandleDestroyed(EventArgs e) {
             base.OnHandleDestroyed(e);
             PythonToolsPackage.Instance.InterpreterOptionsPage.InterpretersChanged -= InterpreterOptionsPage_InterpretersChanged;

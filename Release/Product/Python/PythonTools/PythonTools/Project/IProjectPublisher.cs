@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
         /// <param name="project">The project to be published.</param>
         /// <param name="destination">The destination URI for the project.</param>
         void PublishFiles(IPublishProject project, Uri destination);
-        
+
         /// <summary>
         /// Gets a localized description of the destination type (web site, file share, etc...)
         /// </summary>

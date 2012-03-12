@@ -27,8 +27,8 @@ namespace Microsoft.PythonTools.Project {
         private int _progress;
 
         public PublishProject(CommonProjectNode node, PublishProjectOptions options) {
-            _statusBar = (IVsStatusbar) CommonPackage.GetGlobalService(typeof(SVsStatusbar));
-            _statusBar.SetText("Starting publish..."); 
+            _statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+            _statusBar.SetText("Starting publish...");
             _node = node;
             _options = options;
         }
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Project {
 
                         // publish if we're a Compile node and we haven't been disabled or if 
                         // we've been specifically enabled.
-                        if ((item.ItemType == "Compile" && (publish == null || publish.Value))  ||
+                        if ((item.ItemType == "Compile" && (publish == null || publish.Value)) ||
                             (publish != null && publish.Value)) {
 
                             string file = item.GetMetadataValue("FullPath");
@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Project {
             }
             set {
                 _progress = value;
-                _statusBar.SetText(String.Format("Publish {0}% done...", _progress)); 
+                _statusBar.SetText(String.Format("Publish {0}% done...", _progress));
             }
         }
 

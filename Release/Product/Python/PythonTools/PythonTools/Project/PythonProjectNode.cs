@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.Project {
             base.Reload();
         }
 
-        private void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {            
+        private void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
             switch (e.PropertyName) {
                 case CommonConstants.StartupFile:
                     var genProp = GeneralPropertyPageControl;
@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Project {
                             dirName = Path.GetDirectoryName(dirName);
                         } while (dirName != null && File.Exists(Path.Combine(dirName, "__init__.py")));
                     }
-                    
+
                     // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
                     oldDirs.ExceptWith(newDirs);
                     foreach (var dir in oldDirs) {
@@ -271,7 +271,7 @@ namespace Microsoft.PythonTools.Project {
             if (_analyzer != null) {
                 _analyzer.Dispose();
                 _analyzer = null;
-            }            
+            }
         }
 
         private void DisposeInterpreter() {
@@ -306,12 +306,12 @@ namespace Microsoft.PythonTools.Project {
             ErrorHandler.ThrowOnFailure((vsSolution.GetProjectEnum((uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_ALLPROJECTS), ref guid, out hierarchies)));
             IVsHierarchy[] hierarchy = new IVsHierarchy[1];
             uint fetched;
-            var curFactory = GetInterpreterFactory();            
+            var curFactory = GetInterpreterFactory();
             while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
                 var pyProj = hierarchy[0].GetProject().GetPythonProject();
-                
-                if (pyProj != this && 
-                    pyProj._analyzer != null && 
+
+                if (pyProj != this &&
+                    pyProj._analyzer != null &&
                     pyProj._analyzer.InterpreterFactory == curFactory) {
                     // we have the same interpreter, we'll share analysis engines across projects.
                     return pyProj._analyzer;
@@ -403,7 +403,7 @@ namespace Microsoft.PythonTools.Project {
             var interp = this.GetInterpreter() as IPythonInterpreter2;
             CancellationTokenSource cancelSource = new CancellationTokenSource();
             var task = interp.AddReferenceAsync(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
-            
+
             // try to complete synchronously w/o flashing the dialog...
             if (!task.Wait(100)) {
                 var progress = new TaskProgressBar(task, cancelSource, "Waiting for analysis of extension module to complete...");
@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.Project {
                     msg = GetErrorMessage((AggregateException)inner);
                 } else if (msg == null || inner is CannotAnalyzeExtensionException) {
                     msg = inner.Message;
-                } 
+                }
             }
             return msg;
         }

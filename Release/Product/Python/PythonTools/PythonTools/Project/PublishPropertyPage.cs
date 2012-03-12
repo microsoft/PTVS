@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Project {
     public sealed class PublishPropertyPage : CommonPropertyPage {
         private readonly PublishPropertyControl _control;
 
-        public PublishPropertyPage() {            
+        public PublishPropertyPage() {
             _control = new PublishPropertyControl(this);
         }
 

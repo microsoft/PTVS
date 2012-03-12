@@ -21,10 +21,10 @@ namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     public class CommonSearchPathContainerNodeProperties : NodeProperties {
         public CommonSearchPathContainerNodeProperties(HierarchyNode node)
-			: base(node) { }
+            : base(node) { }
 
         public override string GetClassName() {
             return "Search Paths Properties";
         }
-    }    
+    }
 }

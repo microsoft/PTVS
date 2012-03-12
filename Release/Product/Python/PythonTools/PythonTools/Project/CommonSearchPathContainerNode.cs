@@ -19,7 +19,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
-namespace Microsoft.PythonTools.Project {   
+namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Search path container node.
     /// </summary>

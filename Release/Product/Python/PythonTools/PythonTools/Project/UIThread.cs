@@ -114,8 +114,7 @@ namespace Microsoft.PythonTools.Project
 #if DEBUG
             StackTrace stackTrace = new StackTrace(true);
 #endif
-            this.synchronizationContext.Post(delegate(object ignore)
-            {
+            this.synchronizationContext.Post(delegate(object ignore) {
                 try
                 {
                     this.MustBeCalledFromUIThread();
@@ -151,10 +150,9 @@ namespace Microsoft.PythonTools.Project
             }
             Exception exn = null; ;
             Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");
-            
+
             // Send on UI thread will execute immediately.
-            this.synchronizationContext.Send(ignore =>
-            {
+            this.synchronizationContext.Send(ignore => {
                 try
                 {
                     this.MustBeCalledFromUIThread();
@@ -185,26 +183,25 @@ namespace Microsoft.PythonTools.Project
             if (this.synchronizationContext == null)
             {
 #if DEBUG
-                 // This is a handy place to do this, since the product and all interesting unit tests
-                 // must go through this code path.
-                 AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(delegate(object sender, UnhandledExceptionEventArgs args)
-                 {
-                     if (args.IsTerminating)
-                     {
-                         string s = String.Format(CultureInfo.InvariantCulture, "An unhandled exception is about to terminate the process.  Exception info:\n{0}", args.ExceptionObject.ToString());
-                         Debug.Assert(false, s);
-                     }
-                 });
+                // This is a handy place to do this, since the product and all interesting unit tests
+                // must go through this code path.
+                AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(delegate(object sender, UnhandledExceptionEventArgs args) {
+                    if (args.IsTerminating)
+                    {
+                        string s = String.Format(CultureInfo.InvariantCulture, "An unhandled exception is about to terminate the process.  Exception info:\n{0}", args.ExceptionObject.ToString());
+                        Debug.Assert(false, s);
+                    }
+                });
 
-                 this.captureStackTrace = new StackTrace(true);
+                this.captureStackTrace = new StackTrace(true);
 #endif
                 this.synchronizationContext = new WindowsFormsSynchronizationContext();
             }
             else
             {
-                 // Make sure we are always capturing the same thread.
-                 Debug.Assert(this.uithread == Thread.CurrentThread);
+                // Make sure we are always capturing the same thread.
+                Debug.Assert(this.uithread == Thread.CurrentThread);
             }
-        }       
+        }
     }
 }

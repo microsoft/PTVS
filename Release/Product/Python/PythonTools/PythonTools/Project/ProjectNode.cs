@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Project
     /// <summary>
     /// Manages the persistent state of the project (References, options, files, etc.) and deals with user interaction via a GUI in the form a hierarchy.
     /// </summary>
-    
+
     [ComVisible(true)]
     public abstract partial class ProjectNode : HierarchyNode,
         IVsGetCfgProvider,
@@ -342,8 +342,10 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        public override bool CanAddFiles {
-            get {
+        public override bool CanAddFiles
+        {
+            get
+            {
                 return true;
             }
         }
@@ -352,8 +354,10 @@ namespace Microsoft.PythonTools.Project
 
         #region properties
 
-        public MSBuildExecution.ProjectInstance CurrentConfig {
-            get {
+        public MSBuildExecution.ProjectInstance CurrentConfig
+        {
+            get
+            {
                 return currentConfig;
             }
         }
@@ -614,7 +618,8 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        protected void BuildProjectLocationChanged() {
+        protected void BuildProjectLocationChanged()
+        {
             baseUri = null;
             projectHome = null;
         }
@@ -815,7 +820,7 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region overridden methods
-        
+
         /// <summary>
         /// Sets the properties for the project node.
         /// </summary>
@@ -852,7 +857,7 @@ namespace Microsoft.PythonTools.Project
             {
                 throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.PathTooLong, CultureInfo.CurrentUICulture), label));
             }
-            
+
 
             // TODO: Take file extension into account?
             string fileName = Path.GetFileNameWithoutExtension(label);
@@ -1198,7 +1203,8 @@ namespace Microsoft.PythonTools.Project
             else if (cmdGroup == VsMenus.guidStandardCommandSet2K)
             {
 
-                switch ((VsCommands2K)cmd) {
+                switch ((VsCommands2K)cmd)
+                {
                     case VsCommands2K.ADDREFERENCE:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
@@ -1208,7 +1214,9 @@ namespace Microsoft.PythonTools.Project
                         return VSConstants.S_OK;
 
                 }
-            } else {
+            }
+            else
+            {
                 return (int)OleConstants.OLECMDERR_E_UNKNOWNGROUP;
             }
 
@@ -1277,7 +1285,8 @@ namespace Microsoft.PythonTools.Project
         /// Creates a reference node for the given file returning the node, or returns null
         /// if the file doesn't represent a valid file which can be referenced.
         /// </summary>
-        public virtual ReferenceNode CreateReferenceNodeForFile(string filename) {
+        public virtual ReferenceNode CreateReferenceNodeForFile(string filename)
+        {
 #if FALSE
             return new ComReferenceNode(this.ProjectMgr, selectorData);
 #endif
@@ -1477,8 +1486,10 @@ namespace Microsoft.PythonTools.Project
             return VSConstants.S_OK;
         }
 
-        protected virtual string AddReferenceExtensions {
-            get {
+        protected virtual string AddReferenceExtensions
+        {
+            get
+            {
                 return "*.dll";
             }
         }
@@ -1730,7 +1741,7 @@ namespace Microsoft.PythonTools.Project
                 newNode = this.AddIndependentFileNode(item, GetItemParentNode(item));
 
             return newNode;
-        }        
+        }
 
         /// <summary>
         /// Do the build by invoking msbuild
@@ -1761,11 +1772,11 @@ namespace Microsoft.PythonTools.Project
         /// New in 1.5.
         /// </summary>
         /// <param name="propertyName">Name of the property to get</param>
-        public virtual string GetUnevaluatedProperty(string propertyName) 
+        public virtual string GetUnevaluatedProperty(string propertyName)
         {
             var res = this.buildProject.GetProperty(propertyName);
 
-            if (res != null) 
+            if (res != null)
             {
                 return res.UnevaluatedValue;
             }
@@ -1803,7 +1814,7 @@ namespace Microsoft.PythonTools.Project
                     throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
 
-                var newProp = this.buildProject.SetProperty(propertyName, propertyValue);                
+                var newProp = this.buildProject.SetProperty(propertyName, propertyValue);
                 RaiseProjectPropertyChanged(propertyName, oldValue, propertyValue);
 
                 // property cache will need to be updated
@@ -1912,14 +1923,16 @@ namespace Microsoft.PythonTools.Project
             return options;
         }
 
-        private string GetOutputPath(MSBuildExecution.ProjectInstance properties) {
+        private string GetOutputPath(MSBuildExecution.ProjectInstance properties)
+        {
             this.currentConfig = properties;
             string outputPath = GetProjectProperty("OutputPath");
 
             return outputPath;
         }
 
-        private bool GetBoolAttr(MSBuildExecution.ProjectInstance properties, string name) {
+        private bool GetBoolAttr(MSBuildExecution.ProjectInstance properties, string name)
+        {
             this.currentConfig = properties;
             string s = GetProjectProperty(name);
 
@@ -1928,7 +1941,8 @@ namespace Microsoft.PythonTools.Project
 
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Attr")]
         [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "bool")]
-        public virtual bool GetBoolAttr(string config, string name) {
+        public virtual bool GetBoolAttr(string config, string name)
+        {
             this.SetConfiguration(config);
             return this.GetBoolAttr(this.currentConfig, name);
         }
@@ -2223,7 +2237,7 @@ namespace Microsoft.PythonTools.Project
             {
                 return;
             }
-            
+
             for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling)
             {
                 n.UpdateSccStateIcons();
@@ -2413,16 +2427,21 @@ namespace Microsoft.PythonTools.Project
         /// Associate window output pane to the build logger
         /// </summary>
         /// <param name="output"></param>
-        protected virtual void SetOutputLogger(IVsOutputWindowPane output) {
+        protected virtual void SetOutputLogger(IVsOutputWindowPane output)
+        {
             // Create our logger, if it was not specified
-            if (!this.useProvidedLogger || this.buildLogger == null) {
+            if (!this.useProvidedLogger || this.buildLogger == null)
+            {
                 // Because we may be aggregated, we need to make sure to get the outer IVsHierarchy
                 IntPtr unknown = IntPtr.Zero;
                 IVsHierarchy hierarchy = null;
-                try {
+                try
+                {
                     unknown = Marshal.GetIUnknownForObject(this);
                     hierarchy = Marshal.GetTypedObjectForIUnknown(unknown, typeof(IVsHierarchy)) as IVsHierarchy;
-                } finally {
+                }
+                finally
+                {
                     if (unknown != IntPtr.Zero)
                         Marshal.Release(unknown);
                 }
@@ -2432,17 +2451,21 @@ namespace Microsoft.PythonTools.Project
                 // To retrive the verbosity level, the build logger depends on the registry root 
                 // (otherwise it will used an hardcoded default)
                 ILocalRegistry2 registry = this.GetService(typeof(SLocalRegistry)) as ILocalRegistry2;
-                if (null != registry) {
+                if (null != registry)
+                {
                     string registryRoot;
                     ErrorHandler.ThrowOnFailure(registry.GetLocalRegistryRoot(out registryRoot));
                     IDEBuildLogger logger = this.BuildLogger as IDEBuildLogger;
-                    if (!String.IsNullOrEmpty(registryRoot) && (null != logger)) {
+                    if (!String.IsNullOrEmpty(registryRoot) && (null != logger))
+                    {
                         logger.BuildVerbosityRegistryRoot = registryRoot;
                         logger.ErrorString = this.ErrorString;
                         logger.WarningString = this.WarningString;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 ((IDEBuildLogger)this.BuildLogger).OutputWindowPane = output;
             }
         }
@@ -2451,14 +2474,17 @@ namespace Microsoft.PythonTools.Project
         /// Set configuration properties for a specific configuration
         /// </summary>
         /// <param name="config">configuration name</param>
-        protected virtual void SetBuildConfigurationProperties(string config) {
+        protected virtual void SetBuildConfigurationProperties(string config)
+        {
             CompilerParameters options = null;
 
-            if (!String.IsNullOrEmpty(config)) {
+            if (!String.IsNullOrEmpty(config))
+            {
                 options = this.GetProjectOptions(config);
             }
 
-            if (options != null && this.buildProject != null) {
+            if (options != null && this.buildProject != null)
+            {
                 // Make sure the project configuration is set properly
                 this.SetConfiguration(config);
             }
@@ -2563,7 +2589,8 @@ namespace Microsoft.PythonTools.Project
         /// Factory method for reference container node
         /// </summary>
         /// <returns>ReferenceContainerNode created</returns>
-        protected virtual ReferenceContainerNode CreateReferenceContainerNode() {
+        protected virtual ReferenceContainerNode CreateReferenceContainerNode()
+        {
             return new ReferenceContainerNode(this);
         }
 
@@ -2744,7 +2771,8 @@ namespace Microsoft.PythonTools.Project
         {
             ProjectElement newItem;
 
-            if (Path.IsPathRooted(folder)) {
+            if (Path.IsPathRooted(folder))
+            {
                 folder = CommonUtils.GetRelativeDirectoryPath(ProjectHome, folder);
                 Debug.Assert(!Path.IsPathRooted(folder), "Cannot add item with full path.");
             }
@@ -2780,14 +2808,16 @@ namespace Microsoft.PythonTools.Project
         /// <param name="computedNewFileName"></param>
         /// <param name="canCancel"></param>
         /// <returns></returns>
-        protected virtual int CanOverwriteExistingItem(string originalFileName, string computedNewFileName, bool canCancel) {
-            if (String.IsNullOrEmpty(originalFileName) || String.IsNullOrEmpty(computedNewFileName)) {
+        protected virtual int CanOverwriteExistingItem(string originalFileName, string computedNewFileName, bool canCancel)
+        {
+            if (String.IsNullOrEmpty(originalFileName) || String.IsNullOrEmpty(computedNewFileName))
+            {
                 return VSConstants.E_INVALIDARG;
             }
-            
+
             string message = String.Empty;
             string title = String.Empty;
-            OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;            
+            OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
             OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
             OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
 
@@ -2798,7 +2828,8 @@ namespace Microsoft.PythonTools.Project
 
             bool isOpen = VsShellUtilities.IsDocumentOpen(this.Site, computedNewFileName, Guid.Empty, out hier, out itemid, out windowFrame);
 
-            if (isOpen) {
+            if (isOpen)
+            {
                 message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.CannotAddFileThatIsOpenInEditor, CultureInfo.CurrentUICulture), Path.GetFileName(computedNewFileName));
                 VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
                 return VSConstants.E_ABORT;
@@ -2809,13 +2840,17 @@ namespace Microsoft.PythonTools.Project
             message = String.Format(SR.GetString(SR.FileAlreadyInProject, CultureInfo.CurrentUICulture), Path.GetFileName(originalFileName));
             icon = OLEMSGICON.OLEMSGICON_QUERY;
             buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNO;
-            if (canCancel) {
+            if (canCancel)
+            {
                 buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNOCANCEL;
             }
             int msgboxResult = VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
-            if (msgboxResult == NativeMethods.IDCANCEL) {
+            if (msgboxResult == NativeMethods.IDCANCEL)
+            {
                 return (int)E_CANCEL_FILE_ADD;
-            } else if (msgboxResult != NativeMethods.IDYES) {
+            }
+            else if (msgboxResult != NativeMethods.IDYES)
+            {
                 return (int)OleConstants.OLECMDERR_E_CANCELED;
             }
 
@@ -3047,53 +3082,66 @@ namespace Microsoft.PythonTools.Project
 
                 string dependentOf = item.GetMetadataValue(ProjectFileConstants.DependentUpon);
                 string link = item.GetMetadataValue(ProjectFileConstants.Link);
-                if (!String.IsNullOrWhiteSpace(link)) {
-                    if (Path.IsPathRooted(link)) {
+                if (!String.IsNullOrWhiteSpace(link))
+                {
+                    if (Path.IsPathRooted(link))
+                    {
                         // ignore fully rooted link paths.
                         continue;
                     }
-                    if (Path.IsPathRooted(item.UnevaluatedInclude)) {
+                    if (Path.IsPathRooted(item.UnevaluatedInclude))
+                    {
                         continue;
                     }
 
-                    if (!Path.IsPathRooted(item.EvaluatedInclude)) {
+                    if (!Path.IsPathRooted(item.EvaluatedInclude))
+                    {
                         var itemPath = CommonUtils.GetAbsoluteFilePath(ProjectFolder, item.EvaluatedInclude);
-                        if (CommonUtils.IsSubpathOf(ProjectHome, itemPath)) {
+                        if (CommonUtils.IsSubpathOf(ProjectHome, itemPath))
+                        {
                             // linked file which lives in our directory, don't allow that.
                             continue;
                         }
                     }
 
                     var linkPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, link);
-                    if (!CommonUtils.IsSubpathOf(ProjectHome, linkPath)) {
+                    if (!CommonUtils.IsSubpathOf(ProjectHome, linkPath))
+                    {
                         // relative path outside of project, don't allow that.
                         continue;
                     }
-                } 
+                }
 
                 if (!this.CanFileNodesHaveChilds || String.IsNullOrEmpty(dependentOf))
                 {
                     var parent = GetItemParentNode(item);
                     string filename = Path.GetFileName(item.EvaluatedInclude);
                     HierarchyNode existingChild = null;
-                    for (HierarchyNode child = parent.FirstChild; child != null; child = child.NextSibling) {
-                        if (String.Equals(Path.GetFileName(child.Url), filename, StringComparison.OrdinalIgnoreCase)) {
+                    for (HierarchyNode child = parent.FirstChild; child != null; child = child.NextSibling)
+                    {
+                        if (String.Equals(Path.GetFileName(child.Url), filename, StringComparison.OrdinalIgnoreCase))
+                        {
                             existingChild = child;
                             break;
                         }
                     }
 
-                    if (existingChild != null) {
-                        if (existingChild.IsLinkFile) {
+                    if (existingChild != null)
+                    {
+                        if (existingChild.IsLinkFile)
+                        {
                             // remove link node.
                             existingChild.Parent.RemoveChild(existingChild);
-                        } else {
+                        }
+                        else
+                        {
                             // we have duplicate entries, or this is a link file.
                             continue;
                         }
                     }
                     var duplicatedChild = FindChild(CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude));
-                    if (duplicatedChild != null) {
+                    if (duplicatedChild != null)
+                    {
                         // don't add duplicate files/links
                         continue;
                     }
@@ -3364,10 +3412,13 @@ namespace Microsoft.PythonTools.Project
             return result;
         }
 
-        internal bool QueryFolderAdd(HierarchyNode targetFolder, FolderNode existingFolder, string path) {
-            if (!disableQueryEdit) {
+        internal bool QueryFolderAdd(HierarchyNode targetFolder, FolderNode existingFolder, string path)
+        {
+            if (!disableQueryEdit)
+            {
                 var queryTrack = this.GetService(typeof(SVsTrackProjectDocuments)) as IVsTrackProjectDocuments2;
-                if (queryTrack != null) {
+                if (queryTrack != null)
+                {
                     VSQUERYADDDIRECTORYRESULTS[] res = new VSQUERYADDDIRECTORYRESULTS[1];
                     ErrorHandler.ThrowOnFailure(
                         queryTrack.OnQueryAddDirectories(
@@ -3380,7 +3431,8 @@ namespace Microsoft.PythonTools.Project
                         )
                     );
 
-                    if (res[0] == VSQUERYADDDIRECTORYRESULTS.VSQUERYADDDIRECTORYRESULTS_AddNotOK) {
+                    if (res[0] == VSQUERYADDDIRECTORYRESULTS.VSQUERYADDDIRECTORYRESULTS_AddNotOK)
+                    {
                         return false;
                     }
                 }
@@ -3951,8 +4003,10 @@ namespace Microsoft.PythonTools.Project
         }
 
         // TODO: Refactor me into something sane
-        internal int AddItemWithSpecificInternal(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result, bool alwaysCopy = false, bool? promptOverwrite = null) {
-            if (files == null || result == null || files.Length == 0 || result.Length == 0) {
+        internal int AddItemWithSpecificInternal(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result, bool alwaysCopy = false, bool? promptOverwrite = null)
+        {
+            if (files == null || result == null || files.Length == 0 || result.Length == 0)
+            {
                 return VSConstants.E_INVALIDARG;
             }
 
@@ -3960,18 +4014,21 @@ namespace Microsoft.PythonTools.Project
             // only projectnode or foldernode and file nodes are valid container nodes
             // We need to locate the parent since the item wizard expects the parent to be passed.
             HierarchyNode n = this.NodeFromItemId(itemIdLoc);
-            if (n == null) {
+            if (n == null)
+            {
                 return VSConstants.E_INVALIDARG;
             }
 
-            while (!n.CanAddFiles && (!this.CanFileNodesHaveChilds || !(n is FileNode))) {
+            while (!n.CanAddFiles && (!this.CanFileNodesHaveChilds || !(n is FileNode)))
+            {
                 n = n.Parent;
             }
             Debug.Assert(n != null, "We should at this point have either a ProjectNode or FolderNode or a FileNode as a container for the new filenodes");
 
             // handle link and runwizard operations at this point
             bool isLink = false;
-            switch (op) {
+            switch (op)
+            {
                 case VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE:
                     // we do not support this right now
                     isLink = true;
@@ -3989,31 +4046,37 @@ namespace Microsoft.PythonTools.Project
 
             string baseDir = this.GetBaseDirectoryForAddingFiles(n);
             // If we did not get a directory for node that is the parent of the item then fail.
-            if (String.IsNullOrEmpty(baseDir)) {
+            if (String.IsNullOrEmpty(baseDir))
+            {
                 return VSConstants.E_FAIL;
             }
 
             // Pre-calculates some paths that we can use when calling CanAddItems
             List<string> filesToAdd = new List<string>();
-            for (int index = 0; index < files.Length; index++) {
+            for (int index = 0; index < files.Length; index++)
+            {
                 string newFileName = String.Empty;
 
                 string file = files[index];
 
-                switch (op) {
-                    case VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE: {
+                switch (op)
+                {
+                    case VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE:
+                        {
                             string fileName = Path.GetFileName(itemName ?? file);
                             newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
                         }
                         break;
                     case VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE:
-                    case VSADDITEMOPERATION.VSADDITEMOP_OPENFILE: {
+                    case VSADDITEMOPERATION.VSADDITEMOP_OPENFILE:
+                        {
                             string fileName = Path.GetFileName(file);
                             newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
 
                             var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, file);
 
-                            if (isLink && CommonUtils.IsSubpathOf(ProjectFolder, file)) {
+                            if (isLink && CommonUtils.IsSubpathOf(ProjectFolder, file))
+                            {
                                 // creating a link to a file that's actually in the project, it's not really a link.
                                 isLink = false;
                                 newFileName = file;
@@ -4026,18 +4089,21 @@ namespace Microsoft.PythonTools.Project
             }
 
             // Ask tracker objects if we can add files
-            if (!this.tracker.CanAddItems(filesToAdd.ToArray(), flags)) {
+            if (!this.tracker.CanAddItems(filesToAdd.ToArray(), flags))
+            {
                 // We were not allowed to add the files
                 return VSConstants.E_FAIL;
             }
 
-            if (!this.ProjectMgr.QueryEditProjectFile(false)) {
+            if (!this.ProjectMgr.QueryEditProjectFile(false))
+            {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
             // Add the files to the hierarchy
             int actualFilesAddedIndex = 0;
-            for (int index = 0; index < filesToAdd.Count; index++) {
+            for (int index = 0; index < filesToAdd.Count; index++)
+            {
                 HierarchyNode child;
                 bool overwrite = false;
                 MsBuildProjectElement linkedFile = null;
@@ -4047,25 +4113,36 @@ namespace Microsoft.PythonTools.Project
                 result[0] = VSADDRESULT.ADDRESULT_Failure;
 
                 child = this.FindChild(newFileName);
-                if (child != null) {
+                if (child != null)
+                {
                     // If the file to be added is an existing file part of the hierarchy then continue.
-                    if (CommonUtils.IsSamePath(file, newFileName)) {
-                        if (!alwaysCopy) {
+                    if (CommonUtils.IsSamePath(file, newFileName))
+                    {
+                        if (!alwaysCopy)
+                        {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
                             continue;
-                        } else {
+                        }
+                        else
+                        {
                             string tmpName = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(newFileName), Path.GetFileNameWithoutExtension(newFileName) + " - Copy" + Path.GetExtension(newFileName));
-                            if (File.Exists(tmpName)) {
+                            if (File.Exists(tmpName))
+                            {
                                 int count = 2;
-                                while (File.Exists(GetIncrementedFileName(newFileName, count))) {
+                                while (File.Exists(GetIncrementedFileName(newFileName, count)))
+                                {
                                     count++;
                                 }
                                 newFileName = GetIncrementedFileName(newFileName, count);
-                            } else {
+                            }
+                            else
+                            {
                                 newFileName = tmpName;
                             }
                         }
-                    } else if (isLink) {
+                    }
+                    else if (isLink)
+                    {
                         string message = "There is already a file of the same name in this folder.";
                         string title = string.Empty;
                         OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
@@ -4076,31 +4153,46 @@ namespace Microsoft.PythonTools.Project
 
                         result[0] = VSADDRESULT.ADDRESULT_Cancel;
                         return (int)OleConstants.OLECMDERR_E_CANCELED;
-                    } else {
-                        if (promptOverwrite != null && !promptOverwrite.Value) {
+                    }
+                    else
+                    {
+                        if (promptOverwrite != null && !promptOverwrite.Value)
+                        {
                             continue;
                         }
 
                         int canOverWriteExistingItem = CanOverwriteExistingItem(file, newFileName, promptOverwrite != null && promptOverwrite.Value);
-                        if (canOverWriteExistingItem == E_CANCEL_FILE_ADD) {
+                        if (canOverWriteExistingItem == E_CANCEL_FILE_ADD)
+                        {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
                             return (int)OleConstants.OLECMDERR_E_CANCELED;
-                        } else if (canOverWriteExistingItem == (int)OleConstants.OLECMDERR_E_CANCELED) {
+                        }
+                        else if (canOverWriteExistingItem == (int)OleConstants.OLECMDERR_E_CANCELED)
+                        {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
-                            if (promptOverwrite != null && promptOverwrite.Value) {
+                            if (promptOverwrite != null && promptOverwrite.Value)
+                            {
                                 continue;
                             }
                             return canOverWriteExistingItem;
-                        } else if (canOverWriteExistingItem == VSConstants.S_OK) {
+                        }
+                        else if (canOverWriteExistingItem == VSConstants.S_OK)
+                        {
                             overwrite = true;
-                        } else {
+                        }
+                        else
+                        {
                             return canOverWriteExistingItem;
                         }
                     }
-                } else {
-                    if (isLink) {
+                }
+                else
+                {
+                    if (isLink)
+                    {
                         child = this.FindChild(file);
-                        if (child != null) {
+                        if (child != null)
+                        {
                             string message = String.Format("There is already a link to '{0}'. A project cannot have more than one link to the same file.", file);
                             string title = string.Empty;
                             OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
@@ -4120,9 +4212,12 @@ namespace Microsoft.PythonTools.Project
                     var dirName = Path.GetDirectoryName(friendlyPath);
                     string filename = Path.GetFileName(newFileName);
                     var folder = this.FindChild(dirName);
-                    if (folder != null) {
-                        for (var folderChild = folder.FirstChild; folderChild != null; folderChild = folderChild.NextSibling) {
-                            if (CommonUtils.IsSamePath(folderChild.Url, CommonUtils.GetAbsoluteFilePath(this.Url, filename))) {
+                    if (folder != null)
+                    {
+                        for (var folderChild = folder.FirstChild; folderChild != null; folderChild = folderChild.NextSibling)
+                        {
+                            if (CommonUtils.IsSamePath(folderChild.Url, CommonUtils.GetAbsoluteFilePath(this.Url, filename)))
+                            {
                                 string message = "There is already a file of the same name in this folder.";
                                 string title = string.Empty;
                                 OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
@@ -4140,22 +4235,27 @@ namespace Microsoft.PythonTools.Project
                 }
 
                 // If the file to be added is not in the same path copy it.
-                if (!CommonUtils.IsSamePath(file, newFileName)) {
-                    if (!overwrite && File.Exists(newFileName)) {
+                if (!CommonUtils.IsSamePath(file, newFileName))
+                {
+                    if (!overwrite && File.Exists(newFileName))
+                    {
                         var existingChild = this.FindChild(file);
-                        if (existingChild == null || !existingChild.IsLinkFile) {
+                        if (existingChild == null || !existingChild.IsLinkFile)
+                        {
                             string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileAlreadyExists, CultureInfo.CurrentUICulture), newFileName);
                             string title = string.Empty;
                             OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
                             OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNO;
                             OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-                            if (isLink) {
+                            if (isLink)
+                            {
                                 message = "There is already a file of the same name in this folder.";
                                 buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
                             }
 
                             int messageboxResult = VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
-                            if (messageboxResult != NativeMethods.IDYES) {
+                            if (messageboxResult != NativeMethods.IDYES)
+                            {
                                 result[0] = VSADDRESULT.ADDRESULT_Cancel;
                                 return (int)OleConstants.OLECMDERR_E_CANCELED;
                             }
@@ -4163,45 +4263,62 @@ namespace Microsoft.PythonTools.Project
                     }
 
                     var updatingNode = this.FindChild(file);
-                    if (updatingNode != null && updatingNode.IsLinkFile) {
+                    if (updatingNode != null && updatingNode.IsLinkFile)
+                    {
                         // we just need to update the link to the new path.
                         linkedFile = updatingNode.ItemNode as MsBuildProjectElement;
-                    } else if (Directory.Exists(file)) {
+                    }
+                    else if (Directory.Exists(file))
+                    {
                         // http://pytools.codeplex.com/workitem/546
                         return AddDirectory(result, n, file, promptOverwrite);
-                    } else if (!isLink) {
+                    }
+                    else if (!isLink)
+                    {
                         // Copy the file to the correct location.
                         // We will suppress the file change events to be triggered to this item, since we are going to copy over the existing file and thus we will trigger a file change event. 
                         // We do not want the filechange event to ocur in this case, similar that we do not want a file change event to occur when saving a file.
                         IVsFileChangeEx fileChange = this.site.GetService(typeof(SVsFileChangeEx)) as IVsFileChangeEx;
                         Utilities.CheckNotNull(fileChange);
 
-                        try {
+                        try
+                        {
                             ErrorHandler.ThrowOnFailure(fileChange.IgnoreFile(VSConstants.VSCOOKIE_NIL, newFileName, 1));
-                            if (op == VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE) {
+                            if (op == VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE)
+                            {
                                 this.AddFileFromTemplate(file, newFileName);
-                            } else {
+                            }
+                            else
+                            {
                                 PackageUtilities.CopyUrlToLocal(new Uri(file), newFileName);
                             }
-                        } finally {
+                        }
+                        finally
+                        {
                             ErrorHandler.ThrowOnFailure(fileChange.IgnoreFile(VSConstants.VSCOOKIE_NIL, newFileName, 0));
                         }
                     }
                 }
 
-                if (overwrite) {
+                if (overwrite)
+                {
                     this.OverwriteExistingItem(child);
-                } else if (linkedFile != null || isLink) {
+                }
+                else if (linkedFile != null || isLink)
+                {
                     // files not moving, add the old name, and set the link.
                     var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, file);
                     FileNode newChild;
-                    if (linkedFile == null) {
+                    if (linkedFile == null)
+                    {
                         Debug.Assert(String.Compare(ProjectFolder, 0, file, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) != 0, "Should have cleared isLink above for file in project dir");
                         newChild = CreateFileNode(file);
-                    } else {
+                    }
+                    else
+                    {
                         newChild = CreateFileNode(linkedFile);
                     }
-                    
+
                     newChild.SetIsLinkFile(true);
                     newChild.ItemNode.SetMetadata(ProjectFileConstants.Link, CommonUtils.CreateFriendlyFilePath(ProjectFolder, newFileName));
                     n.AddChild(newChild);
@@ -4211,7 +4328,9 @@ namespace Microsoft.PythonTools.Project
                     LinkFileAdded(file);
 
                     SetProjectFileDirty(true);
-                } else {
+                }
+                else
+                {
                     //Add new filenode/dependentfilenode
                     this.AddNewFileNodeToHierarchy(n, newFileName);
                 }
@@ -4226,23 +4345,31 @@ namespace Microsoft.PythonTools.Project
 
             //Open files if this was requested through the editorFlags
             bool openFiles = (editorFlags & (uint)__VSSPECIFICEDITORFLAGS.VSSPECIFICEDITOR_DoOpen) != 0;
-            if (openFiles && actualFiles.Length <= filesToOpen) {
-                for (int i = 0; i < filesToOpen; i++) {
-                    if (!String.IsNullOrEmpty(actualFiles[i])) {
+            if (openFiles && actualFiles.Length <= filesToOpen)
+            {
+                for (int i = 0; i < filesToOpen; i++)
+                {
+                    if (!String.IsNullOrEmpty(actualFiles[i]))
+                    {
                         string name = actualFiles[i];
                         HierarchyNode child = this.FindChild(name);
                         Debug.Assert(child != null, "We should have been able to find the new element in the hierarchy");
-                        if (child != null) {
+                        if (child != null)
+                        {
                             IVsWindowFrame frame;
-                            if (editorType == Guid.Empty) {
+                            if (editorType == Guid.Empty)
+                            {
                                 Guid view = Guid.Empty;
                                 ErrorHandler.ThrowOnFailure(this.OpenItem(child.ID, ref view, IntPtr.Zero, out frame));
-                            } else {
+                            }
+                            else
+                            {
                                 ErrorHandler.ThrowOnFailure(this.OpenItemWithSpecific(child.ID, editorFlags, ref editorType, physicalView, ref logicalView, IntPtr.Zero, out frame));
                             }
 
                             // Show the window frame in the UI and make it the active window
-                            if (frame != null) {
+                            if (frame != null)
+                            {
                                 ErrorHandler.ThrowOnFailure(frame.Show());
                             }
                         }
@@ -4261,15 +4388,19 @@ namespace Microsoft.PythonTools.Project
         /// we'll set promptOverwrite to false and when we recurse we won't prompt.  If they say
         /// yes then we'll set it to true and we will prompt for individual files.  
         /// </summary>
-        private int AddDirectory(VSADDRESULT[] result, HierarchyNode n, string file, bool? promptOverwrite) {
+        private int AddDirectory(VSADDRESULT[] result, HierarchyNode n, string file, bool? promptOverwrite)
+        {
             // need to recursively add all of the directory contents
 
             HierarchyNode targetFolder = n.FindChild(Path.GetFileName(file), false);
-            if (targetFolder == null) {
+            if (targetFolder == null)
+            {
                 var newChild = CreateFolderNode(Path.GetFileName(file));
                 n.AddChild(newChild);
                 targetFolder = newChild;
-            } else if (promptOverwrite == null) {
+            }
+            else if (promptOverwrite == null)
+            {
                 var res = MessageBox.Show(
                     String.Format(
                     @"This folder already contains a folder called '{0}'.
@@ -4283,7 +4414,8 @@ If the files in the existing folder have the same names as files in the folder y
                 // no means don't prompt for any of the files
                 // cancel means forget what I'm doing
 
-                switch (res) {
+                switch (res)
+                {
                     case DialogResult.Cancel:
                         result[0] = VSADDRESULT.ADDRESULT_Cancel;
                         return (int)OleConstants.OLECMDERR_E_CANCELED;
@@ -4315,7 +4447,8 @@ If the files in the existing folder have the same names as files in the folder y
                 promptOverwrite: promptOverwrite
             );
 
-            if (ErrorHandler.Failed(subRes)) {
+            if (ErrorHandler.Failed(subRes))
+            {
                 return subRes;
             }
 
@@ -4339,10 +4472,12 @@ If the files in the existing folder have the same names as files in the folder y
             );
         }
 
-        protected virtual void LinkFileAdded(string filename) {
+        protected virtual void LinkFileAdded(string filename)
+        {
         }
 
-        private static string GetIncrementedFileName(string newFileName, int count) {
+        private static string GetIncrementedFileName(string newFileName, int count)
+        {
             return CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(newFileName), Path.GetFileNameWithoutExtension(newFileName) + " - Copy (" + count + ")" + Path.GetExtension(newFileName));
         }
 
@@ -4556,7 +4691,7 @@ If the files in the existing folder have the same names as files in the folder y
             // Delegate to the document manager object that knows how to open the item
             DocumentManager documentManager = n.GetDocumentManager();
             if (documentManager != null)
-            {                
+            {
                 return documentManager.ReOpenWithSpecific(0, ref editorType, physicalView, ref logicalView, docDataExisting, out frame, WindowFrameShowAction.DoNotShow);
             }
 
@@ -4650,7 +4785,7 @@ If the files in the existing folder have the same names as files in the folder y
             return hr;
         }
 
-        #endregion        
+        #endregion
 
         #region IVsDependencyProvider Members
         public int EnumDependencies(out IVsEnumDependencies enumDependencies)
@@ -4710,7 +4845,7 @@ If the files in the existing folder have the same names as files in the folder y
             }
             return VSConstants.S_OK;
         }
-        
+
         #endregion
 
         #region IVsSccProject2 Members
@@ -4726,13 +4861,17 @@ If the files in the existing folder have the same names as files in the folder y
             if (itemid == VSConstants.VSITEMID_SELECTION)
             {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "itemid");
-            } else if (itemid == VSConstants.VSITEMID_ROOT) {
+            }
+            else if (itemid == VSConstants.VSITEMID_ROOT)
+            {
                 // Root node.  Return our project file path.
-                if (stringsOut != null && stringsOut.Length > 0) {
+                if (stringsOut != null && stringsOut.Length > 0)
+                {
                     stringsOut[0] = Utilities.CreateCALPOLESTR(new[] { filename });
                 }
 
-                if (flagsOut != null && flagsOut.Length > 0) {
+                if (flagsOut != null && flagsOut.Length > 0)
+                {
                     flagsOut[0] = Utilities.CreateCADWORD(new[] { tagVsSccFilesFlags.SFF_NoFlags });
                 }
                 return VSConstants.S_OK;
@@ -4763,14 +4902,18 @@ If the files in the existing folder have the same names as files in the folder y
             return VSConstants.S_OK;
         }
 
-        protected internal override void GetSccFiles(IList<string> files, IList<tagVsSccFilesFlags> flags) {
-            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
+        protected internal override void GetSccFiles(IList<string> files, IList<tagVsSccFilesFlags> flags)
+        {
+            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling)
+            {
                 n.GetSccFiles(files, flags);
             }
         }
 
-        protected internal override void GetSccSpecialFiles(string sccFile, IList<string> files, IList<tagVsSccFilesFlags> flags) {
-            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
+        protected internal override void GetSccSpecialFiles(string sccFile, IList<string> files, IList<tagVsSccFilesFlags> flags)
+        {
+            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling)
+            {
                 n.GetSccSpecialFiles(sccFile, files, flags);
             }
         }
@@ -4786,12 +4929,14 @@ If the files in the existing folder have the same names as files in the folder y
         /// <remarks>This method is called to discover any special or hidden files associated with an item in the project hierarchy. It is called when GetSccFiles returns with the SFF_HasSpecialFiles flag set for any of the files associated with the node.</remarks>
         public virtual int GetSccSpecialFiles(uint itemid, string sccFile, CALPOLESTR[] stringsOut, CADWORD[] flagsOut)
         {
-            if (itemid == VSConstants.VSITEMID_SELECTION) {
+            if (itemid == VSConstants.VSITEMID_SELECTION)
+            {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "itemid");
             }
 
             HierarchyNode n = this.NodeFromItemId(itemid);
-            if (n == null) {
+            if (n == null)
+            {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "itemid");
             }
 
@@ -4801,11 +4946,13 @@ If the files in the existing folder have the same names as files in the folder y
 
             n.GetSccSpecialFiles(sccFile, files, flags);
 
-            if (stringsOut != null && stringsOut.Length > 0) {
+            if (stringsOut != null && stringsOut.Length > 0)
+            {
                 stringsOut[0] = Utilities.CreateCALPOLESTR(files);
             }
 
-            if (flagsOut != null && flagsOut.Length > 0) {
+            if (flagsOut != null && flagsOut.Length > 0)
+            {
                 flagsOut[0] = Utilities.CreateCADWORD(flags);
             }
 
@@ -4838,7 +4985,7 @@ If the files in the existing folder have the same names as files in the folder y
                     {
                         throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "itemidAffectedNodes");
                     }
-                    
+
                     n.ReDraw(UIHierarchyElement.SccState);
                 }
             }
@@ -4997,7 +5144,7 @@ If the files in the existing folder have the same names as files in the folder y
                 }
             }
         }
-        
+
         #endregion
 
         #region IVsAggregatableProject Members
@@ -5249,14 +5396,20 @@ If the files in the existing folder have the same names as files in the folder y
             HierarchyNode currentParent = this;
             string strPath = item.EvaluatedInclude;
 
-            if (!String.IsNullOrWhiteSpace(link)) {
+            if (!String.IsNullOrWhiteSpace(link))
+            {
                 strPath = Path.GetDirectoryName(link);
-            } else {
+            }
+            else
+            {
                 string absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, strPath);
 
-                if (CommonUtils.IsSubpathOf(ProjectHome, absPath)) {
+                if (CommonUtils.IsSubpathOf(ProjectHome, absPath))
+                {
                     strPath = CommonUtils.GetRelativeDirectoryPath(ProjectHome, Path.GetDirectoryName(absPath));
-                } else {
+                }
+                else
+                {
                     // file lives outside of the project, w/o a link it's just at the top level.
                     return this;
                 }
@@ -5493,7 +5646,7 @@ If the files in the existing folder have the same names as files in the folder y
                 shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out installDirAsObject);
             }
 
-                // Ensure that we have traimnling backslash as this is done for the langproj macros too.
+            // Ensure that we have traimnling backslash as this is done for the langproj macros too.
             string installDir = CommonUtils.NormalizeDirectoryPath((string)installDirAsObject) ?? String.Empty;
 
             this.buildProject.SetGlobalProperty(GlobalProperty.DevEnvDir.ToString(), installDir);
@@ -5666,7 +5819,8 @@ If the files in the existing folder have the same names as files in the folder y
 
         #region IProjectEventsCallback Members
 
-        public virtual void BeforeClose() {
+        public virtual void BeforeClose()
+        {
         }
 
         #endregion

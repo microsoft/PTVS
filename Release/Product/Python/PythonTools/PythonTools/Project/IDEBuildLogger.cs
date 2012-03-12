@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Project
         internal string BuildVerbosityRegistryRoot
         {
             get { return this.buildVerbosityRegistryRoot; }
-            set 
+            set
             {
                 this.buildVerbosityRegistryRoot = value;
             }
@@ -364,8 +364,7 @@ namespace Microsoft.PythonTools.Project
         {
             // NOTE: This may run on a background thread!
             // We need to output this on the main thread. We must use BeginInvoke because the main thread may not be pumping events yet.
-            BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, () =>
-            {
+            BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, () => {
                 if (this.OutputWindowPane != null)
                 {
                     string outputString;
@@ -390,8 +389,7 @@ namespace Microsoft.PythonTools.Project
 
         protected void QueueTaskEvent(BuildEventArgs errorEvent)
         {
-            this.taskQueue.Enqueue(() =>
-            {
+            this.taskQueue.Enqueue(() => {
                 ErrorTask task = new ErrorTask();
 
                 if (errorEvent is BuildErrorEventArgs)
@@ -428,8 +426,7 @@ namespace Microsoft.PythonTools.Project
         {
             // NOTE: This may run on a background thread!
             // We need to output this on the main thread. We must use BeginInvoke because the main thread may not be pumping events yet.
-            BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, () =>
-            {
+            BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, () => {
                 this.taskProvider.SuspendRefresh();
                 try
                 {
@@ -459,8 +456,7 @@ namespace Microsoft.PythonTools.Project
             if (this.InteractiveBuild)
             {
                 // We need to clear this on the main thread. We must use BeginInvoke because the main thread may not be pumping events yet.
-                BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, () =>
-                {
+                BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, () => {
                     this.taskProvider.Tasks.Clear();
                 });
             }

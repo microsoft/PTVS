@@ -95,6 +95,6 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string GetProductVersion() {
             return this.GetType().Assembly.GetName().Version.ToString();
-        }       
+        }
     }
 }

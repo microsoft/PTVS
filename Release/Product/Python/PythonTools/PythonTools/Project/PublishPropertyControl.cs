@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
 
                 if (i == publishers.Length - 2) {
                     res.Append(" or ");
-                } else if(i != publishers.Length - 1) {
+                } else if (i != publishers.Length - 1) {
                     res.Append(", ");
                 }
             }

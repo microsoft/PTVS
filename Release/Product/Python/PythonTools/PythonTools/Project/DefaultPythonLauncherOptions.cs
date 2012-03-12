@@ -33,10 +33,10 @@ namespace Microsoft.PythonTools.Project {
 
             _toolTip.SetToolTip(_arguments, argumentsHelp);
             _toolTip.SetToolTip(_argumentsLabel, argumentsHelp);
-            
+
             _toolTip.SetToolTip(_interpArgsLabel, interpArgsHelp);
             _toolTip.SetToolTip(_interpArgs, interpArgsHelp);
-            
+
             _toolTip.SetToolTip(_interpreterPath, interpPathHelp);
             _toolTip.SetToolTip(_interpreterPathLabel, interpPathHelp);
         }
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Project {
 
         public void SaveSettings() {
             _properties.SetProperty(CommonConstants.SearchPath, SearchPaths);
-            _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);            
+            _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);
             _properties.SetProperty(CommonConstants.InterpreterPath, InterpreterPath);
             _properties.SetProperty(CommonConstants.InterpreterArguments, InterpreterArguments);
             RaiseIsSaved();
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
             get { return _searchPaths.Text; }
             set { _searchPaths.Text = value; }
         }
-        
+
         public string Arguments {
             get { return _arguments.Text; }
             set { _arguments.Text = value; }

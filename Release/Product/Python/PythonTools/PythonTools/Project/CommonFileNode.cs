@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Project {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
             Debug.Assert(manager != null, "Could not get the FileDocumentManager");
 
-            Guid viewGuid =                 
+            Guid viewGuid =
                 (IsFormSubType ? VSConstants.LOGVIEWID_Designer : VSConstants.LOGVIEWID_Code);
             IVsWindowFrame frame;
             manager.Open(false, false, viewGuid, out frame, WindowFrameShowAction.Show);
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Project {
                         Guid iid = VSConstants.IID_IUnknown;
                         cookie = 0;
                         docInRdt = false;
-                        ILocalRegistry localReg = this.ProjectMgr.GetService(typeof(SLocalRegistry)) as ILocalRegistry;                        
+                        ILocalRegistry localReg = this.ProjectMgr.GetService(typeof(SLocalRegistry)) as ILocalRegistry;
                         ErrorHandler.ThrowOnFailure(localReg.CreateInstance(CLSID_VsTextBuffer, null, ref iid, (uint)CLSCTX.CLSCTX_INPROC_SERVER, out docData));
                     }
 
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Project {
 
                 //Try to get the Text lines
                 IVsTextLines srpTextLines = persistDocData as IVsTextLines;
-                
+
                 if (srpTextLines == null) {
                     // Try getting a text buffer provider first
                     IVsTextBufferProvider srpTextBufferProvider = persistDocData as IVsTextBufferProvider;
@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             IWpfTextView view = GetTextView();
-                
+
             return view.TextBuffer;
 
         }
@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Project {
             IVsUIShellOpenDocument uiShellOpenDocument = GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
             IVsUIHierarchy hierarchy;
             IVsWindowFrame pWindowFrame;
-            
+
             VsShellUtilities.OpenDocument(
                 ProjectMgr.Site,
                 this.GetMkDocument(),
@@ -214,7 +214,7 @@ namespace Microsoft.PythonTools.Project {
                     case CommonConstants.SetAsStartupFileCmdId:
                         // Set the StartupFile project property to the Url of this node
                         ProjectMgr.SetProjectProperty(
-                            CommonConstants.StartupFile, 
+                            CommonConstants.StartupFile,
                             CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
                         );
                         break;

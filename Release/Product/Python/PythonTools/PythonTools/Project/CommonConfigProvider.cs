@@ -20,7 +20,7 @@ namespace Microsoft.PythonTools.Project {
     /// Hooks language specific project config.
     /// </summary>
     public class CommonConfigProvider : ConfigProvider {
-        private CommonProjectNode _project;        
+        private CommonProjectNode _project;
 
         public CommonConfigProvider(CommonProjectNode project)
             : base(project) {

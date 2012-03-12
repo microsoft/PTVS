@@ -99,9 +99,9 @@ namespace Microsoft.PythonTools.Project {
                 if (analysis != null) {
                     analyzer.UnloadFile(analysis);
                 }
-                
+
                 var textBuffer = GetTextBuffer();
-                
+
                 BufferParser parser;
                 if (textBuffer != null && textBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser)) {
                     analyzer.ReAnalyzeTextBuffers(parser);

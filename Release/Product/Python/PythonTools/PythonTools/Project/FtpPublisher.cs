@@ -35,13 +35,13 @@ namespace Microsoft.PythonTools.Project {
                 // try copying without impersonating first...
                 CopyOneFile(destination, item);
 
-                project.Progress = (int) (((double)i / (double)files.Count) * 100);
-            }                
+                project.Progress = (int)(((double)i / (double)files.Count) * 100);
+            }
         }
 
         private static void CopyOneFile(Uri destination, IPublishFile item) {
             var destFile = item.DestinationFile;
-            
+
             // get the destination file URI, the root path, and the destination directory
             string newLoc = "ftp://";
             if (!String.IsNullOrEmpty(destination.UserInfo)) {
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public string DestinationDescription {
-            get { return "ftp server";  }
+            get { return "ftp server"; }
         }
 
         public string Schema {

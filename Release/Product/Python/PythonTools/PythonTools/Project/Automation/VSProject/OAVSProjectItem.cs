@@ -19,62 +19,63 @@ using VSLangProj;
 
 namespace Microsoft.PythonTools.Project.Automation
 {
-	/// <summary>
-	/// Represents a language-specific project item
-	/// </summary>
-	[SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "OAVS")]
-	[ComVisible(true)]
-	public class OAVSProjectItem : VSProjectItem
-	{
-		#region fields
-		private FileNode fileNode;
-		#endregion
+    /// <summary>
+    /// Represents a language-specific project item
+    /// </summary>
+    [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "OAVS")]
+    [ComVisible(true)]
+    public class OAVSProjectItem : VSProjectItem
+    {
+        #region fields
+        private FileNode fileNode;
+        #endregion
 
-		#region ctors
-		public OAVSProjectItem(FileNode fileNode)
-		{
-			this.FileNode = fileNode;
-		}
-		#endregion
+        #region ctors
+        public OAVSProjectItem(FileNode fileNode)
+        {
+            this.FileNode = fileNode;
+        }
+        #endregion
 
-		#region VSProjectItem Members
+        #region VSProjectItem Members
 
-		public virtual EnvDTE.Project ContainingProject
-		{
-			get { return fileNode.ProjectMgr.GetAutomationObject() as EnvDTE.Project; }
-		}
-
-		public virtual ProjectItem ProjectItem
-		{
-			get { return fileNode.GetAutomationObject() as ProjectItem; }
-		}
-
-		public virtual DTE DTE
-		{
-			get { return (DTE)this.fileNode.ProjectMgr.Site.GetService(typeof(DTE)); }
-		}
-
-        public void RunCustomTool() {
+        public virtual EnvDTE.Project ContainingProject
+        {
+            get { return fileNode.ProjectMgr.GetAutomationObject() as EnvDTE.Project; }
         }
 
-		#endregion
+        public virtual ProjectItem ProjectItem
+        {
+            get { return fileNode.GetAutomationObject() as ProjectItem; }
+        }
 
-		#region public properties
-		/// <summary>
-		/// File Node property
-		/// </summary>
-		public FileNode FileNode
-		{
-			get
-			{
-				return fileNode;
-			}
-			set
-			{
-				fileNode = value;
-			}
-		}
-		#endregion
+        public virtual DTE DTE
+        {
+            get { return (DTE)this.fileNode.ProjectMgr.Site.GetService(typeof(DTE)); }
+        }
 
-	}
+        public void RunCustomTool()
+        {
+        }
+
+        #endregion
+
+        #region public properties
+        /// <summary>
+        /// File Node property
+        /// </summary>
+        public FileNode FileNode
+        {
+            get
+            {
+                return fileNode;
+            }
+            set
+            {
+                fileNode = value;
+            }
+        }
+        #endregion
+
+    }
 }

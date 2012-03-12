@@ -19,34 +19,34 @@ using System.Globalization;
 
 namespace Microsoft.PythonTools.Project
 {
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-	internal sealed class LocDisplayNameAttribute : DisplayNameAttribute
-	{
-		#region fields
-		string name;
-		#endregion
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+    internal sealed class LocDisplayNameAttribute : DisplayNameAttribute
+    {
+        #region fields
+        string name;
+        #endregion
 
-		#region ctors
-		public LocDisplayNameAttribute(string name)
-		{
-			this.name = name;
-		}
-		#endregion
+        #region ctors
+        public LocDisplayNameAttribute(string name)
+        {
+            this.name = name;
+        }
+        #endregion
 
-		#region properties
-		public override string DisplayName
-		{
-			get
-			{
-				string result = SR.GetString(this.name, CultureInfo.CurrentUICulture);
-				if(result == null)
-				{
-					Debug.Assert(false, "String resource '" + this.name + "' is missing");
-					result = this.name;
-				}
-				return result;
-			}
-		}
-		#endregion
-	}
+        #region properties
+        public override string DisplayName
+        {
+            get
+            {
+                string result = SR.GetString(this.name, CultureInfo.CurrentUICulture);
+                if (result == null)
+                {
+                    Debug.Assert(false, "String resource '" + this.name + "' is missing");
+                    result = this.name;
+                }
+                return result;
+            }
+        }
+        #endregion
+    }
 }

@@ -71,9 +71,12 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        protected IList<OutputGroup> OutputGroups {
-            get {
-                if (null == this.outputGroups) {
+        protected IList<OutputGroup> OutputGroups
+        {
+            get
+            {
+                if (null == this.outputGroups)
+                {
                     // Initialize output groups
                     this.outputGroups = new List<OutputGroup>();
 
@@ -82,9 +85,11 @@ namespace Microsoft.PythonTools.Project
                     // it by simply overriding that method and providing the correct MSBuild target(s).
                     IList<KeyValuePair<string, string>> groupNames = project.GetOutputGroupNames();
 
-                    if (groupNames != null) {
+                    if (groupNames != null)
+                    {
                         // Populate the output array
-                        foreach (KeyValuePair<string, string> group in groupNames) {
+                        foreach (KeyValuePair<string, string> group in groupNames)
+                        {
                             OutputGroup outputGroup = CreateOutputGroup(project, group);
                             this.outputGroups.Add(outputGroup);
                         }
@@ -110,17 +115,17 @@ namespace Microsoft.PythonTools.Project
             {
                 IVsProjectFlavorCfgProvider flavorCfgProvider = (IVsProjectFlavorCfgProvider)Marshal.GetTypedObjectForIUnknown(projectUnknown, typeof(IVsProjectFlavorCfgProvider));
                 ErrorHandler.ThrowOnFailure(flavorCfgProvider.CreateProjectFlavorCfg(this, out flavoredCfg));
-                if(flavoredCfg == null)
+                if (flavoredCfg == null)
                     throw new COMException();
             }
             finally
             {
-                if(projectUnknown != IntPtr.Zero)
+                if (projectUnknown != IntPtr.Zero)
                     Marshal.Release(projectUnknown);
             }
             // if the flavored object support XML fragment, initialize it
             IPersistXMLFragment persistXML = flavoredCfg as IPersistXMLFragment;
-            if(null != persistXML)
+            if (null != persistXML)
             {
                 this.project.LoadXmlFragment(persistXML, this.DisplayName);
             }
@@ -129,7 +134,8 @@ namespace Microsoft.PythonTools.Project
 
         #region methods
 
-        protected virtual OutputGroup CreateOutputGroup(ProjectNode project, KeyValuePair<string, string> group) {
+        protected virtual OutputGroup CreateOutputGroup(ProjectNode project, KeyValuePair<string, string> group)
+        {
             OutputGroup outputGroup = new OutputGroup(group.Key, group.Value, project, this);
             return outputGroup;
         }
@@ -145,7 +151,7 @@ namespace Microsoft.PythonTools.Project
 
         public virtual void SetConfigurationProperty(string propertyName, string propertyValue)
         {
-            if(!this.project.QueryEditProjectFile(false))
+            if (!this.project.QueryEditProjectFile(false))
             {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
@@ -153,10 +159,10 @@ namespace Microsoft.PythonTools.Project
             string condition = String.Format(CultureInfo.InvariantCulture, ConfigProvider.configString, this.ConfigName);
 
             SetPropertyUnderCondition(propertyName, propertyValue, condition);
-            
+
             // property cache will need to be updated
             this.currentConfig = null;
-           
+
             this.project.SetProjectFileDirty(true);
 
             return;
@@ -215,7 +221,7 @@ namespace Microsoft.PythonTools.Project
         internal int IsFlavorDirty(_PersistStorageType storageType)
         {
             int isDirty = 0;
-            if(this.flavoredCfg != null && this.flavoredCfg is IPersistXMLFragment)
+            if (this.flavoredCfg != null && this.flavoredCfg is IPersistXMLFragment)
             {
                 ErrorHandler.ThrowOnFailure(((IPersistXMLFragment)this.flavoredCfg).IsFragmentDirty((uint)storageType, out isDirty));
             }
@@ -233,7 +239,7 @@ namespace Microsoft.PythonTools.Project
         {
             fragment = null;
             int hr = VSConstants.S_OK;
-            if(this.flavoredCfg != null && this.flavoredCfg is IPersistXMLFragment)
+            if (this.flavoredCfg != null && this.flavoredCfg is IPersistXMLFragment)
             {
                 Guid flavorGuid = flavor;
                 hr = ((IPersistXMLFragment)this.flavoredCfg).Save(ref flavorGuid, (uint)storageType, out fragment, 1);
@@ -285,7 +291,7 @@ namespace Microsoft.PythonTools.Project
                 IVsCfgProvider provider;
                 ErrorHandler.ThrowOnFailure(project.GetCfgProvider(out provider));
                 ErrorHandler.ThrowOnFailure(((IVsCfgProvider2)provider).GetPlatformNames(1, platform, actual));
-                if(!string.IsNullOrEmpty(platform[0]))
+                if (!string.IsNullOrEmpty(platform[0]))
                 {
                     name += "|" + platform[0];
                 }
@@ -295,7 +301,7 @@ namespace Microsoft.PythonTools.Project
         public virtual int get_IsDebugOnly(out int fDebug)
         {
             fDebug = 0;
-            if(this.configName == "Debug")
+            if (this.configName == "Debug")
             {
                 fDebug = 1;
             }
@@ -304,7 +310,7 @@ namespace Microsoft.PythonTools.Project
         public virtual int get_IsReleaseOnly(out int fRelease)
         {
             fRelease = 0;
-            if(this.configName == "Release")
+            if (this.configName == "Release")
             {
                 fRelease = 1;
             }
@@ -320,7 +326,7 @@ namespace Microsoft.PythonTools.Project
         }
 
         public virtual int get_BuildableProjectCfg(out IVsBuildableProjectCfg pb)
-        {            
+        {
             pb = null;
             return VSConstants.E_NOTIMPL;
         }
@@ -353,7 +359,7 @@ namespace Microsoft.PythonTools.Project
             p = null;
             IVsCfgProvider cfgProvider = null;
             this.project.GetCfgProvider(out cfgProvider);
-            if(cfgProvider != null)
+            if (cfgProvider != null)
             {
                 p = cfgProvider as IVsProjectCfgProvider;
             }
@@ -391,13 +397,16 @@ namespace Microsoft.PythonTools.Project
 
         #region IVsProjectCfg2 Members
 
-        public virtual int OpenOutputGroup(string szCanonicalName, out IVsOutputGroup ppIVsOutputGroup) {
+        public virtual int OpenOutputGroup(string szCanonicalName, out IVsOutputGroup ppIVsOutputGroup)
+        {
             ppIVsOutputGroup = null;
             // Search through our list of groups to find the one they are looking forgroupName
-            foreach (OutputGroup group in OutputGroups) {
+            foreach (OutputGroup group in OutputGroups)
+            {
                 string groupName;
                 group.get_CanonicalName(out groupName);
-                if (String.Compare(groupName, szCanonicalName, StringComparison.OrdinalIgnoreCase) == 0) {
+                if (String.Compare(groupName, szCanonicalName, StringComparison.OrdinalIgnoreCase) == 0)
+                {
                     ppIVsOutputGroup = group;
                     break;
                 }
@@ -405,12 +414,14 @@ namespace Microsoft.PythonTools.Project
             return (ppIVsOutputGroup != null) ? VSConstants.S_OK : VSConstants.E_FAIL;
         }
 
-        public virtual int OutputsRequireAppRoot(out int pfRequiresAppRoot) {
+        public virtual int OutputsRequireAppRoot(out int pfRequiresAppRoot)
+        {
             pfRequiresAppRoot = 0;
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int get_CfgType(ref Guid iidCfg, out IntPtr ppCfg) {
+        public virtual int get_CfgType(ref Guid iidCfg, out IntPtr ppCfg)
+        {
             // Delegate to the flavored configuration (to enable a flavor to take control)
             // Since we can be asked for Configuration we don't support, avoid throwing and return the HRESULT directly
             int hr = flavoredCfg.get_CfgType(ref iidCfg, out ppCfg);
@@ -418,15 +429,19 @@ namespace Microsoft.PythonTools.Project
             return hr;
         }
 
-        public virtual int get_IsPrivate(out int pfPrivate) {
+        public virtual int get_IsPrivate(out int pfPrivate)
+        {
             pfPrivate = 0;
             return VSConstants.S_OK;
         }
 
-        public virtual int get_OutputGroups(uint celt, IVsOutputGroup[] rgpcfg, uint[] pcActual) {
+        public virtual int get_OutputGroups(uint celt, IVsOutputGroup[] rgpcfg, uint[] pcActual)
+        {
             // Are they only asking for the number of groups?
-            if (celt == 0) {
-                if ((null == pcActual) || (0 == pcActual.Length)) {
+            if (celt == 0)
+            {
+                if ((null == pcActual) || (0 == pcActual.Length))
+                {
                     throw new ArgumentNullException("pcActual");
                 }
                 pcActual[0] = (uint)OutputGroups.Count;
@@ -434,14 +449,17 @@ namespace Microsoft.PythonTools.Project
             }
 
             // Check that the array of output groups is not null
-            if ((null == rgpcfg) || (rgpcfg.Length == 0)) {
+            if ((null == rgpcfg) || (rgpcfg.Length == 0))
+            {
                 throw new ArgumentNullException("rgpcfg");
             }
 
             // Fill the array with our output groups
             uint count = 0;
-            foreach (OutputGroup group in OutputGroups) {
-                if (rgpcfg.Length > count && celt > count && group != null) {
+            foreach (OutputGroup group in OutputGroups)
+            {
+                if (rgpcfg.Length > count && celt > count && group != null)
+                {
                     rgpcfg[count] = group;
                     ++count;
                 }
@@ -454,7 +472,8 @@ namespace Microsoft.PythonTools.Project
             return (count == celt) ? VSConstants.S_OK : VSConstants.S_FALSE;
         }
 
-        public virtual int get_VirtualRoot(out string pbstrVRoot) {
+        public virtual int get_VirtualRoot(out string pbstrVRoot)
+        {
             pbstrVRoot = null;
             return VSConstants.E_NOTIMPL;
         }
@@ -482,7 +501,7 @@ namespace Microsoft.PythonTools.Project
         {
             string assembly = this.project.GetAssemblyName(this.ConfigName);
             fCanLaunch = (assembly != null && assembly.ToUpperInvariant().EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) ? 1 : 0;
-            if(fCanLaunch == 0)
+            if (fCanLaunch == 0)
             {
                 string property = GetConfigurationProperty("StartProgram", true);
                 fCanLaunch = (property != null && property.Length > 0) ? 1 : 0;
@@ -522,7 +541,7 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region helper methods
-        
+
         private MSBuildExecution.ProjectPropertyInstance GetMsBuildProperty(string propertyName, bool resetCache)
         {
             if (resetCache || this.currentConfig == null)
@@ -555,7 +574,7 @@ namespace Microsoft.PythonTools.Project
             Utilities.ArgumentNotNull("pages", pages);
 
 
-            if(pages.Length == 0)
+            if (pages.Length == 0)
             {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "pages");
             }
@@ -569,7 +588,7 @@ namespace Microsoft.PythonTools.Project
             guidsList = (string)variant;
 
             Guid[] guids = Utilities.GuidsArrayFromSemicolonDelimitedStringOfGuids(guidsList);
-            if(guids == null || guids.Length == 0)
+            if (guids == null || guids.Length == 0)
             {
                 pages[0] = new CAUUID();
                 pages[0].cElems = 0;
@@ -608,12 +627,13 @@ namespace Microsoft.PythonTools.Project
             ppCfg = IntPtr.Zero;
 
             // See if this is an interface we support
-            if (iidCfg == typeof(IVsDebuggableProjectCfg).GUID) {
+            if (iidCfg == typeof(IVsDebuggableProjectCfg).GUID)
+            {
                 ppCfg = Marshal.GetComInterfaceForObject(this, typeof(IVsDebuggableProjectCfg));
             }
 
             // If not supported
-            if(ppCfg == IntPtr.Zero)
+            if (ppCfg == IntPtr.Zero)
                 return VSConstants.E_NOINTERFACE;
 
             return VSConstants.S_OK;
@@ -622,5 +642,5 @@ namespace Microsoft.PythonTools.Project
         #endregion
     }
 
-    
+
 }

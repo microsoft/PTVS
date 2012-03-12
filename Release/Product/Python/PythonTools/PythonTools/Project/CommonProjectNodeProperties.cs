@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 
 
 namespace Microsoft.PythonTools.Project {
-    [ComVisible(true)]    
+    [ComVisible(true)]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class CommonProjectNodeProperties : ProjectNodeProperties {
 
@@ -89,8 +89,7 @@ namespace Microsoft.PythonTools.Project {
         /// Gets the override for the interpreter path to used for launching the project.
         /// </summary>
         [Browsable(false)]
-        public string InterpreterPath
-        {
+        public string InterpreterPath {
             get {
                 var res = this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
                 if (!string.IsNullOrEmpty(res)) {

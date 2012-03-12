@@ -17,7 +17,7 @@ namespace Microsoft.PythonTools.Project {
     /// Represents Current Working Directory node.
     /// </summary>
     public class CurrentWorkingDirectoryNode : BaseSearchPathNode {
-        
+
         public CurrentWorkingDirectoryNode(CommonProjectNode project, string path)
             : base(project, path, new VirtualProjectElement(project)) { }
 
@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int SortPriority {
-            get {                
+            get {
                 return CommonConstants.WorkingDirectorySortPriority;
             }
         }

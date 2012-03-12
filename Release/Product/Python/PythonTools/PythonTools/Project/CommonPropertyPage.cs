@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Project {
             get {
                 return _loading;
             }
-            set{
+            set {
                 _loading = value;
             }
         }
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Project {
                 LoadSettings();
             }
         }
-        
+
         void IPropertyPage.SetPageSite(IPropertyPageSite pPageSite) {
             _site = pPageSite;
         }

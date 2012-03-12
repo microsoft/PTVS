@@ -19,52 +19,52 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Project.Automation
 {
-	/// <summary>
-	/// Contains OAReferenceItem objects 
-	/// </summary>
-	[SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
-	[ComVisible(true), CLSCompliant(false)]
-	public class OAReferenceFolderItem : OAProjectItem<ReferenceContainerNode>
-	{
-		#region ctors
-		public OAReferenceFolderItem(OAProject project, ReferenceContainerNode node)
-			: base(project, node)
-		{
-		}
+    /// <summary>
+    /// Contains OAReferenceItem objects 
+    /// </summary>
+    [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
+    [ComVisible(true), CLSCompliant(false)]
+    public class OAReferenceFolderItem : OAProjectItem<ReferenceContainerNode>
+    {
+        #region ctors
+        public OAReferenceFolderItem(OAProject project, ReferenceContainerNode node)
+            : base(project, node)
+        {
+        }
 
-		#endregion
+        #endregion
 
-		#region overridden methods
-		/// <summary>
-		/// Returns the project items collection of all the references defined for this project.
-		/// </summary>
-		public override EnvDTE.ProjectItems ProjectItems
-		{
-			get
-			{
-				return new OANavigableProjectItems(this.Project, this.GetListOfProjectItems(), this.Node);
-			}
-		}
+        #region overridden methods
+        /// <summary>
+        /// Returns the project items collection of all the references defined for this project.
+        /// </summary>
+        public override EnvDTE.ProjectItems ProjectItems
+        {
+            get
+            {
+                return new OANavigableProjectItems(this.Project, this.GetListOfProjectItems(), this.Node);
+            }
+        }
 
 
-		#endregion
+        #endregion
 
-		#region Helper methods
-		private List<EnvDTE.ProjectItem> GetListOfProjectItems()
-		{
-			List<EnvDTE.ProjectItem> list = new List<EnvDTE.ProjectItem>();
-			for(HierarchyNode child = this.Node.FirstChild; child != null; child = child.NextSibling)
-			{
-				ReferenceNode node = child as ReferenceNode;
+        #region Helper methods
+        private List<EnvDTE.ProjectItem> GetListOfProjectItems()
+        {
+            List<EnvDTE.ProjectItem> list = new List<EnvDTE.ProjectItem>();
+            for (HierarchyNode child = this.Node.FirstChild; child != null; child = child.NextSibling)
+            {
+                ReferenceNode node = child as ReferenceNode;
 
-				if(node != null)
-				{
-					list.Add(new OAReferenceItem(this.Project, node));
-				}
-			}
+                if (node != null)
+                {
+                    list.Add(new OAReferenceItem(this.Project, node));
+                }
+            }
 
-			return list;
-		}
-		#endregion
-	}
+            return list;
+        }
+        #endregion
+    }
 }

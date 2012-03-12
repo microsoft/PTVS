@@ -52,17 +52,17 @@ namespace Microsoft.PythonTools.Project {
         public override void Apply() {
             Project.SetProjectProperty(PythonConstants.LaunchProvider, _control.CurrentLauncher);
             _control.SaveSettings();
-            
+
             IsDirty = false;
         }
 
         public override void LoadSettings() {
-             Loading = true;
-             try {
-                 _control.LoadSettings();
-             } finally {
-                 Loading = false;
-             }
+            Loading = true;
+            try {
+                _control.LoadSettings();
+            } finally {
+                Loading = false;
+            }
         }
     }
 }

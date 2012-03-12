@@ -22,68 +22,68 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Project
 {
-	/// <summary>
-	/// Defines abstract package.
-	/// </summary>
-	[ComVisible(true)]
-	
-	public abstract class ProjectPackage : Microsoft.VisualStudio.Shell.Package
-	{
-		#region fields
-		/// <summary>
-		/// This is the place to register all the solution listeners.
-		/// </summary>
-		private List<SolutionListener> solutionListeners = new List<SolutionListener>();
-		#endregion
+    /// <summary>
+    /// Defines abstract package.
+    /// </summary>
+    [ComVisible(true)]
 
-		#region properties
-		/// <summary>
-		/// Add your listener to this list. They should be added in the overridden Initialize befaore calling the base.
-		/// </summary>
-		protected internal IList<SolutionListener> SolutionListeners
-		{
-			get
-			{
-				return this.solutionListeners;
-			}
-		}
-		#endregion
+    public abstract class ProjectPackage : Microsoft.VisualStudio.Shell.Package
+    {
+        #region fields
+        /// <summary>
+        /// This is the place to register all the solution listeners.
+        /// </summary>
+        private List<SolutionListener> solutionListeners = new List<SolutionListener>();
+        #endregion
 
-		#region methods
-		protected override void Initialize()
-		{
-			base.Initialize();
+        #region properties
+        /// <summary>
+        /// Add your listener to this list. They should be added in the overridden Initialize befaore calling the base.
+        /// </summary>
+        protected internal IList<SolutionListener> SolutionListeners
+        {
+            get
+            {
+                return this.solutionListeners;
+            }
+        }
+        #endregion
 
-			// Subscribe to the solution events
-			this.solutionListeners.Add(new SolutionListenerForProjectOpen(this));
-			this.solutionListeners.Add(new SolutionListenerForBuildDependencyUpdate(this));
-			this.solutionListeners.Add(new SolutionListenerForProjectEvents(this));
+        #region methods
+        protected override void Initialize()
+        {
+            base.Initialize();
 
-			foreach(SolutionListener solutionListener in this.solutionListeners)
-			{
-				solutionListener.Init();
-			}
-		}
+            // Subscribe to the solution events
+            this.solutionListeners.Add(new SolutionListenerForProjectOpen(this));
+            this.solutionListeners.Add(new SolutionListenerForBuildDependencyUpdate(this));
+            this.solutionListeners.Add(new SolutionListenerForProjectEvents(this));
 
-		protected override void Dispose(bool disposing)
-		{
-			// Unadvise solution listeners.
-			try
-			{
-				if(disposing)
-				{
-					foreach(SolutionListener solutionListener in this.solutionListeners)
-					{
-						solutionListener.Dispose();
-					}
-				}
-			}
-			finally
-			{
+            foreach (SolutionListener solutionListener in this.solutionListeners)
+            {
+                solutionListener.Init();
+            }
+        }
 
-				base.Dispose(disposing);
-			}
-		}
-		#endregion
-	}
+        protected override void Dispose(bool disposing)
+        {
+            // Unadvise solution listeners.
+            try
+            {
+                if (disposing)
+                {
+                    foreach (SolutionListener solutionListener in this.solutionListeners)
+                    {
+                        solutionListener.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+
+                base.Dispose(disposing);
+            }
+        }
+        #endregion
+    }
 }

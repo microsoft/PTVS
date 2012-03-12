@@ -19,7 +19,7 @@ using System.Globalization;
 using System.Resources;
 using System.Threading;
 
-namespace Microsoft.PythonTools.Project {    
+namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Specifies the localizable display name for a property, event, or public void method which takes no arguments. 
     /// First looks up the name in local string resources than falls back to MPFProj resources.
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Project {
         public const string ProjectFolder = "ProjectFolder";
         public const string ProjectFolderDescription = "ProjectFolderDescription";
         public const string StartupFile = "StartupFile";
-        public const string StartupFileDescription = "StartupFileDescription";        
+        public const string StartupFileDescription = "StartupFileDescription";
         public const string SelectFolderForSearchPath = "SelectFolderForSearchPath";
         public const string SearchPathRemoveConfirmation = "SearchPathRemoveConfirmation";
         public const string WorkingDirectory = "WorkingDirectory";
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Project {
         private static DynamicProjectSR _loader = null;
         private ResourceManager _resources;
         private static Object _internalSyncObject;
-        
+
         private static Object InternalSyncObject {
             get {
                 if (_internalSyncObject == null) {

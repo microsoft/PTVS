@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Project {
         public UIThreadSynchronizer()
             : this(TaskScheduler.FromCurrentSynchronizationContext()) {
         }
-        
+
         public UIThreadSynchronizer(TaskScheduler scheduler) {
             _scheduler = scheduler;
         }

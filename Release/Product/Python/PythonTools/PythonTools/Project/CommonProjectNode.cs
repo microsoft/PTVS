@@ -34,7 +34,7 @@ using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Project {
-    
+
     public enum CommonImageName {
         File = 0,
         Project = 1,
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Project {
                 ImageHandler.AddImage(img);
             }
 
-            InitializeCATIDs();            
+            InitializeCATIDs();
         }
 
         #region abstract methods
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Project {
                 return _vsProject;
             }
         }
-        
+
         private IVsHierarchy InteropSafeHierarchy {
             get {
                 IntPtr unknownPtr = Utilities.QueryInterfaceIUnknown(this);
@@ -146,9 +146,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public CommonPropertyPage PropertyPage { 
-            get { return _propPage; } 
-            set { _propPage = value; } 
+        public CommonPropertyPage PropertyPage {
+            get { return _propPage; }
+            set { _propPage = value; }
         }
 
         #endregion
@@ -378,7 +378,7 @@ namespace Microsoft.PythonTools.Project {
             if (!File.Exists(oldPath) && Directory.Exists(oldPath)) {
                 oldPath = oldPath + "\\";
             }
-            
+
             var child = FindChild(oldPath);
             if (child != null) {
                 child.ReDraw(UIHierarchyElement.Icon);
@@ -391,7 +391,7 @@ namespace Microsoft.PythonTools.Project {
             child = FindChild(newPath);
             if (child != null) {
                 child.ReDraw(UIHierarchyElement.Icon);
-            }            
+            }
         }
 
         private void FileExistanceChanged(object sender, FileSystemEventArgs e) {
@@ -482,7 +482,7 @@ namespace Microsoft.PythonTools.Project {
                 typeof(PublishPropertyPage).GUID
             };
         }
-        
+
         /// <summary>
         /// Create a file node based on an msbuild item.
         /// </summary>
@@ -498,7 +498,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             string link = item.GetMetadata(ProjectFileConstants.Link);
-            if (!String.IsNullOrWhiteSpace(link) || 
+            if (!String.IsNullOrWhiteSpace(link) ||
                 !CommonUtils.IsSubpathOf(ProjectHome, item.GetFullPathForElement())) {
                 newNode.SetIsLinkFile(true);
             }
@@ -555,7 +555,7 @@ namespace Microsoft.PythonTools.Project {
             var item = BuildProject.AddItem(type, path)[0];
             return new MsBuildProjectElement(this, item);
         }
-        
+
         public override int IsDirty(out int isDirty) {
             isDirty = 0;
             if (IsProjectFileDirty) {
@@ -566,7 +566,7 @@ namespace Microsoft.PythonTools.Project {
             isDirty = IsFlavorDirty();
             return VSConstants.S_OK;
         }
-        
+
         protected override void AddNewFileNodeToHierarchy(HierarchyNode parentNode, string fileName) {
             base.AddNewFileNodeToHierarchy(parentNode, fileName);
 
@@ -677,7 +677,7 @@ namespace Microsoft.PythonTools.Project {
                         }
                     }
                 }
-                
+
                 //Refresh nodes and remove non-updated ones
                 for (int i = 0; i < searchPathNodes.Count; i++) {
                     if (!updatedNodes[i]) {
@@ -703,12 +703,12 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         internal string GetStartupFile() {
             string startupFile = ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
-            
+
             if (string.IsNullOrEmpty(startupFile)) {
                 //No startup file is assigned
                 return null;
             }
-            
+
             return CommonUtils.GetAbsoluteFilePath(ProjectHome, startupFile);
         }
 
@@ -718,8 +718,8 @@ namespace Microsoft.PythonTools.Project {
         private void CommonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
             switch (e.PropertyName) {
                 case CommonConstants.StartupFile:
-                    RefreshStartupFile(this, 
-                        CommonUtils.GetAbsoluteFilePath(ProjectHome, e.OldValue), 
+                    RefreshStartupFile(this,
+                        CommonUtils.GetAbsoluteFilePath(ProjectHome, e.OldValue),
                         CommonUtils.GetAbsoluteFilePath(ProjectHome, e.NewValue));
                     break;
                 case CommonConstants.WorkingDirectory:
@@ -859,7 +859,7 @@ namespace Microsoft.PythonTools.Project {
             object service = null;
             if (typeof(VSLangProj.VSProject) == serviceType) {
                 service = VSProject;
-            }else if (typeof(EnvDTE.Project) == serviceType) {
+            } else if (typeof(EnvDTE.Project) == serviceType) {
                 service = GetAutomationObject();
 #if !DEV11
             } else if (typeof(DesignerContext) == serviceType) {
@@ -991,13 +991,13 @@ namespace Microsoft.PythonTools.Project {
 
             IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
             IVsSolution vsSolution = (IVsSolution)this.GetService(typeof(SVsSolution));
-            
+
             int canContinue;
             vsSolution.QueryRenameProject(this, FileName, pszProjectFilename, 0, out canContinue);
             if (canContinue == 0) {
                 return VSConstants.OLE_E_PROMPTSAVECANCELLED;
             }
-            
+
             // we don't use RenameProjectFile because it sends the OnAfterRenameProject event too soon
             // and causes VS to think the solution has changed on disk.  We need to send it after all 
             // updates are complete.
@@ -1047,12 +1047,12 @@ namespace Microsoft.PythonTools.Project {
                         if (isDirty) {
                             child.SaveItem(VSSAVEFLAGS.VSSAVE_Save, null, docCookie, IntPtr.Zero, out cancelled);
                         }
-                                                
+
                         FileNode fn = child as FileNode;
                         if (fn != null) {
                             string oldLoc = CommonUtils.GetAbsoluteFilePath(basePath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
                             string newLoc = CommonUtils.GetAbsoluteFilePath(baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
-                            
+
                             // make sure the directory is there
                             Directory.CreateDirectory(Path.GetDirectoryName(newLoc));
                             fn.RenameDocument(oldLoc, newLoc);

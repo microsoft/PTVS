@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Common factory for creating our editor
     /// </summary>    
-    public abstract class CommonEditorFactory : IVsEditorFactory {        
+    public abstract class CommonEditorFactory : IVsEditorFactory {
         private CommonProjectPackage _package;
         private ServiceProvider _serviceProvider;
         private readonly bool _promptEncodingOnLoad;
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Project {
         public virtual int MapLogicalView(ref Guid logicalView, out string physicalView) {
             // initialize out parameter
             physicalView = null;
-            
+
             bool isSupportedView = false;
             // Determine the physical view
             if (VSConstants.LOGVIEWID_Primary == logicalView ||
@@ -299,7 +299,7 @@ namespace Microsoft.PythonTools.Project {
         /// 
         /// New in 1.1
         /// </summary>
-        protected virtual void InitializeLanguageService(IVsTextLines textLines) {            
+        protected virtual void InitializeLanguageService(IVsTextLines textLines) {
         }
 
         #endregion
