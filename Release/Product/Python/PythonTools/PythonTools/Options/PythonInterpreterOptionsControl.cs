@@ -55,9 +55,9 @@ namespace Microsoft.PythonTools.Options {
 
         internal static bool IsDefaultInterpreter(InterpreterOptions interpreter) {
             Version vers;
-            return interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreter &&
+            return interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue &&
                     Version.TryParse(interpreter.Version, out vers) &&
-                    vers == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersion;
+                    vers == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
         }
 
         private void LoadNewOptions() {

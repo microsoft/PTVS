@@ -328,8 +328,8 @@ namespace AnalysisTest.ProjectSystem {
                 return Path.GetFullPath(interpreter);
             }
             // use the VS instance's default interpreter if there is one
-            if (TryGetInterpreter(PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersion, 
-                                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreter,
+            if (TryGetInterpreter(PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue, 
+                                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue,
                                     out interpreter, out searchPathEnvVarName, out arch)) {
                 return Path.GetFullPath(interpreter);
             }
