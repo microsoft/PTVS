@@ -68,7 +68,9 @@ namespace Microsoft.PythonTools.Project {
                     dirToAdd = Path.GetDirectoryName(dirToAdd);
                 }
 
-                AddSearchPathEntry(CommonUtils.CreateFriendlyDirectoryPath(ProjectFolder, dirToAdd));
+                // Search paths are 'friendly' to ensure that they are never blank and don't end in
+                // a directory separator.
+                AddSearchPathEntry(CommonUtils.CreateFriendlyDirectoryPath(ProjectHome, dirToAdd));
             }
 
             base.LinkFileAdded(filename);
