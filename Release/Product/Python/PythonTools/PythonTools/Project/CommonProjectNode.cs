@@ -835,7 +835,7 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNull("newpath", newpath);
 
             IList<string> searchPath = ParseSearchPath();
-            if (searchPath.Contains(newpath, StringComparer.CurrentCultureIgnoreCase)) {
+            if (searchPath.Contains(newpath, StringComparer.OrdinalIgnoreCase)) {
                 return;
             }
             searchPath.Add(newpath);
@@ -1004,6 +1004,10 @@ namespace Microsoft.PythonTools.Project {
 
             // save the new project to to disk
             SaveMSBuildProjectFileAs(pszProjectFilename);
+
+            // ProjectHome is always "." initially, but was set by SaveMSBuildProjectFileAs to point to
+            // the temporary directory.
+            BuildProject.SetProperty(CommonConstants.ProjectHome, ".");
 
             // save the project again w/ updated file info
             BuildProjectLocationChanged();

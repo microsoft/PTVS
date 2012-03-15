@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Project {
 
         public string ProjectDir {
             get {
-                return _node.ProjectFolder;
+                return _node.ProjectHome;
             }
         }
 

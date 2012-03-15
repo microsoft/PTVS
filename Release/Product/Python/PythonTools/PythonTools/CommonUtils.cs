@@ -291,10 +291,10 @@ namespace Microsoft.PythonTools {
 
             if (string.IsNullOrEmpty(relativePath)) {
                 relativePath = ".";
-        }
+            }
 
             return relativePath;
-            }
+        }
 
         /// <summary>
         /// Tries to create a friendly file path.
@@ -310,7 +310,7 @@ namespace Microsoft.PythonTools {
             return (!string.IsNullOrEmpty(path) &&
                 (path[path.Length - 1] == Path.DirectorySeparatorChar ||
                  path[path.Length - 1] == Path.AltDirectorySeparatorChar));
-    }
+        }
 
         /// <summary>
         /// Removes up to one directory separator character from the end of path.
@@ -320,7 +320,7 @@ namespace Microsoft.PythonTools {
                 return path.Remove(path.Length - 1);
             } else {
                 return path;
-}
+            }
         }
 
         /// <summary>
@@ -336,7 +336,7 @@ namespace Microsoft.PythonTools {
                     break;
                 }
             }
-            
+
             return (actualStart > 0) ? path.Substring(actualStart) : path;
         }
     }

@@ -3096,7 +3096,7 @@ namespace Microsoft.PythonTools.Project
 
                     if (!Path.IsPathRooted(item.EvaluatedInclude))
                     {
-                        var itemPath = CommonUtils.GetAbsoluteFilePath(ProjectFolder, item.EvaluatedInclude);
+                        var itemPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude);
                         if (CommonUtils.IsSubpathOf(ProjectHome, itemPath))
                         {
                             // linked file which lives in our directory, don't allow that.
@@ -3457,7 +3457,7 @@ namespace Microsoft.PythonTools.Project
             }
             else if (nodeToAddFile is ProjectNode)
             {
-                baseDir = this.ProjectFolder;
+                baseDir = this.ProjectHome;
             }
             else if (nodeToAddFile != null)
             {
@@ -4073,9 +4073,9 @@ namespace Microsoft.PythonTools.Project
                             string fileName = Path.GetFileName(file);
                             newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
 
-                            var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, file);
+                            var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectHome, file);
 
-                            if (isLink && CommonUtils.IsSubpathOf(ProjectFolder, file))
+                            if (isLink && CommonUtils.IsSubpathOf(ProjectHome, file))
                             {
                                 // creating a link to a file that's actually in the project, it's not really a link.
                                 isLink = false;
@@ -4208,7 +4208,7 @@ namespace Microsoft.PythonTools.Project
 
                     // we need to figure out where this file would be added and make sure there's
                     // not an existing link node at the same location
-                    var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, newFileName);
+                    var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectHome, newFileName);
                     var dirName = Path.GetDirectoryName(friendlyPath);
                     string filename = Path.GetFileName(newFileName);
                     var folder = this.FindChild(dirName);
@@ -4307,11 +4307,11 @@ namespace Microsoft.PythonTools.Project
                 else if (linkedFile != null || isLink)
                 {
                     // files not moving, add the old name, and set the link.
-                    var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectFolder, file);
+                    var friendlyPath = CommonUtils.GetRelativeFilePath(ProjectHome, file);
                     FileNode newChild;
                     if (linkedFile == null)
                     {
-                        Debug.Assert(String.Compare(ProjectFolder, 0, file, 0, ProjectFolder.Length, StringComparison.OrdinalIgnoreCase) != 0, "Should have cleared isLink above for file in project dir");
+                        Debug.Assert(!CommonUtils.IsSubpathOf(ProjectHome, file), "Should have cleared isLink above for file in project dir");
                         newChild = CreateFileNode(file);
                     }
                     else
