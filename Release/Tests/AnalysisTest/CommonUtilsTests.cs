@@ -455,6 +455,34 @@ namespace AnalysisTest
             }
         }
 
+        [TestMethod]
+        public void TestIsSubpathOf() {
+            // Positive tests
+            foreach (var testCase in Pairs(
+                @"C:\a\b", @"C:\A\B",
+                @"C:\a\b\", @"C:\A\B",      // IsSubpathOf has a special case for this
+                @"C:\a\b", @"C:\A\B\C",
+                @"C:\a\b\", @"C:\a\b\c",    // IsSubpathOf has a quick path for this
+                @"C:\a\b\", @"C:\A\B\C",    // Quick path should not be taken
+                @"C:", @"C:\a\b\",
+                @"C:\a\b", @"C:\A\X\..\B\C"
+                )) {
+                Assert.IsTrue(CommonUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should be subpath of {1}", testCase.Item2, testCase.Item1));
+            }
+
+            // Negative tests
+            foreach (var testCase in Pairs(
+                @"C:\a\b\c", @"C:\A\B",
+                @"C:\a\bcd", @"c:\a\b\cd",  // Quick path should not be taken
+                @"C:\a\bcd", @"C:\A\B\CD",  // Quick path should not be taken
+                @"C:\a\b", @"D:\A\B\C",
+                @"C:\a\b\c", @"C:\B\A\C\D",
+                @"C:\a\b\", @"C:\a\b\..\x\c" // Quick path should not be taken
+                )) {
+                Assert.IsFalse(CommonUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should not be subpath of {1}", testCase.Item2, testCase.Item1));
+            }
+        }
+
         private IEnumerable<Tuple<string, string>> Pairs(params string[] items) {
             using (var e = items.Cast<string>().GetEnumerator()) {
                 while (e.MoveNext()) {

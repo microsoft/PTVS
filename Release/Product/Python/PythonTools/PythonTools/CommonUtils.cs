@@ -119,14 +119,27 @@ namespace Microsoft.PythonTools {
         /// root or a subdirectory of root.
         /// </summary>
         public static bool IsSubpathOf(string root, string path) {
-            if (HasEndSeparator(root) && path.StartsWith(root, StringComparison.Ordinal)) {
+            if (HasEndSeparator(root) && !path.Contains("..") && path.StartsWith(root, StringComparison.Ordinal)) {
                 // Quick return, but only where the paths are already normalized and
                 // have matching case.
                 return true;
             }
 
-            return MakeUri(root, true, UriKind.Absolute, "root").IsBaseOf(
-                MakeUri(path, false, UriKind.Absolute, "path"));
+            var uri1 = MakeUri(root, true, UriKind.Absolute, "root");
+            var uri2 = MakeUri(path, false, UriKind.Absolute, "path");
+
+            if (uri1.Equals(uri2) || uri1.IsBaseOf(uri2)) {
+                return true;
+            }
+
+            // Special case where root and path are the same, but path was provided
+            // without a terminating separator.
+            var uri3 = MakeUri(path, true, UriKind.Absolute, "path");
+            if (uri1.Equals(uri3)) {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
