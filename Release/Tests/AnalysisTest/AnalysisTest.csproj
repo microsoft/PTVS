@@ -109,6 +109,36 @@
     <None Include="Python.VS.TestData\FolderMultipleItems\FolderMultipleItems.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\ProjectA.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\ProjectBDownOne.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\ProjectSlnUpOne.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\ProjectAUpOne.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\ProjectB.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\ProjectSlnUpTwo.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\Subsubfolder\ProjectAUpTwo.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\Subsubfolder\ProjectBUpOne.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\Subsubfolder\ProjectSlnUpThree.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\ProjectSingle.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Python.VS.TestData\RelativeInterpreterPath\RelativeInterpreterPath.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -122,6 +152,21 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\ParentProgram.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\ProgramA.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\ProgramB.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeProjects\Subfolder\Subsubfolder\ProgramC.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\ProjectHomeSingleProject.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\RelativeInterpreterPath.sln">
@@ -220,6 +265,7 @@
     <Content Include="Python.VS.TestData\AssemblyReference\PythonApplication\ClassLibrary2Char.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Compile Include="ProjectSystem\ProjectHomeTests.cs" />
     <Compile Include="RemoveImportTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ExtractMethodTests.cs" />
