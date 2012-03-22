@@ -496,6 +496,13 @@ class BasicReplBackend(ReplBackend):
             self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
             exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
 
+    def python_executor(self, code):
+        """we can't close over unbound variables in execute_code_work_item 
+due to the exec, so we do it here"""
+        def func():
+            code.Execute(self.exec_mod)
+        return func
+    
     def execute_code_work_item(self):
         _debug_write('Executing: ' + repr(self.current_code))
         stripped_code = self.current_code.strip()
@@ -509,7 +516,11 @@ class BasicReplBackend(ReplBackend):
                 code_to_send += line + '\n'
 
             code = python_context.CreateSnippet(code_to_send, None, SourceCodeKind.InteractiveCode)
-            code.Execute(self.exec_mod)
+            dispatcher = clr.GetCurrentRuntime().GetLanguage(PythonContext).GetCommandDispatcher()
+            if dispatcher is not None:
+                dispatcher(self.python_executor(code))
+            else:
+                code.Execute(self.exec_mod)
         else:
             code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
             self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
