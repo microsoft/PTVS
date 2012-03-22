@@ -125,17 +125,17 @@ namespace Microsoft.PythonTools {
                 return true;
             }
 
-            var uri1 = MakeUri(root, true, UriKind.Absolute, "root");
-            var uri2 = MakeUri(path, false, UriKind.Absolute, "path");
+            var uriRoot = MakeUri(root, true, UriKind.Absolute, "root");
+            var uriPath = MakeUri(path, false, UriKind.Absolute, "path");
 
-            if (uri1.Equals(uri2) || uri1.IsBaseOf(uri2)) {
+            if (uriRoot.Equals(uriPath) || uriRoot.IsBaseOf(uriPath)) {
                 return true;
             }
 
             // Special case where root and path are the same, but path was provided
             // without a terminating separator.
-            var uri3 = MakeUri(path, true, UriKind.Absolute, "path");
-            if (uri1.Equals(uri3)) {
+            var uriDirectoryPath = MakeUri(path, true, UriKind.Absolute, "path");
+            if (uriRoot.Equals(uriDirectoryPath)) {
                 return true;
             }
 
@@ -157,24 +157,24 @@ namespace Microsoft.PythonTools {
                 return NormalizeDirectoryPath(root);
             }
 
-            var uri2 = MakeUri(relativePath, true, UriKind.RelativeOrAbsolute, "relativePath");
-            Uri uri3;
+            var relUri = MakeUri(relativePath, true, UriKind.RelativeOrAbsolute, "relativePath");
+            Uri absUri;
 
-            if (uri2.IsAbsoluteUri) {
-                uri3 = uri2;
+            if (relUri.IsAbsoluteUri) {
+                absUri = relUri;
             } else {
-                var uri1 = MakeUri(root, true, UriKind.Absolute, "root");
+                var rootUri = MakeUri(root, true, UriKind.Absolute, "root");
                 try {
-                    uri3 = new Uri(uri1, uri2);
+                    absUri = new Uri(rootUri, relUri);
                 } catch (UriFormatException ex) {
                     throw new InvalidOperationException("Cannot create absolute path", ex);
                 }
             }
 
-            absPath = uri3.IsFile ? uri3.LocalPath : uri3.AbsoluteUri;
+            absPath = absUri.IsFile ? absUri.LocalPath : absUri.AbsoluteUri;
 
             if (!string.IsNullOrEmpty(absPath) && !HasEndSeparator(absPath)) {
-                absPath += uri3.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
+                absPath += absUri.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
             }
 
             return absPath;
@@ -187,22 +187,22 @@ namespace Microsoft.PythonTools {
         /// <exception cref="ArgumentException">root is not an absolute path, or
         /// either path is invalid.</exception>
         public static string GetAbsoluteFilePath(string root, string relativePath) {
-            var uri1 = MakeUri(root, true, UriKind.Absolute, "root");
-            var uri2 = MakeUri(relativePath, false, UriKind.RelativeOrAbsolute, "relativePath");
+            var rootUri = MakeUri(root, true, UriKind.Absolute, "root");
+            var relUri = MakeUri(relativePath, false, UriKind.RelativeOrAbsolute, "relativePath");
 
-            Uri uri3;
+            Uri absUri;
 
-            if (uri2.IsAbsoluteUri) {
-                uri3 = uri2;
+            if (relUri.IsAbsoluteUri) {
+                absUri = relUri;
             } else {
                 try {
-                    uri3 = new Uri(uri1, uri2);
+                    absUri = new Uri(rootUri, relUri);
                 } catch (UriFormatException ex) {
                     throw new InvalidOperationException("Cannot create absolute path", ex);
                 }
             }
 
-            return uri3.IsFile ? uri3.LocalPath : uri3.AbsoluteUri;
+            return absUri.IsFile ? absUri.LocalPath : absUri.AbsoluteUri;
         }
 
         /// <summary>
@@ -213,38 +213,38 @@ namespace Microsoft.PythonTools {
         /// <exception cref="ArgumentException">Either parameter was an invalid or a
         /// relative path.</exception>
         public static string GetRelativeDirectoryPath(string fromDirectory, string toDirectory) {
-            var uri1 = MakeUri(fromDirectory, true, UriKind.Absolute, "fromDirectory");
-            var uri2 = MakeUri(toDirectory, true, UriKind.Absolute, "toDirectory");
+            var fromUri = MakeUri(fromDirectory, true, UriKind.Absolute, "fromDirectory");
+            var toUri = MakeUri(toDirectory, true, UriKind.Absolute, "toDirectory");
 
             string relPath;
-            var sep = uri2.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
+            var sep = toUri.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
 
             try {
-                var uri3 = uri1.MakeRelativeUri(uri2);
-                if (uri3.IsAbsoluteUri) {
-                    relPath = uri3.IsFile ? uri3.LocalPath : uri3.AbsoluteUri;
+                var relUri = fromUri.MakeRelativeUri(toUri);
+                if (relUri.IsAbsoluteUri) {
+                    relPath = relUri.IsFile ? relUri.LocalPath : relUri.AbsoluteUri;
                 } else {
-                    relPath = Uri.UnescapeDataString(uri3.ToString());
+                    relPath = Uri.UnescapeDataString(relUri.ToString());
 
                     var rootedPath = TrimUpPaths(relPath);
                     if (rootedPath != relPath) {
                         rootedPath = sep + rootedPath;
-                        if (new Uri(uri1, rootedPath) == uri2) {
+                        if (new Uri(fromUri, rootedPath) == toUri) {
                             relPath = rootedPath;
                         }
                     }
                 }
             } catch (InvalidOperationException ex) {
-                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", uri1, uri2));
+                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
                 Trace.WriteLine(ex);
-                relPath = uri2.IsFile ? uri2.LocalPath : uri2.AbsoluteUri;
+                relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
             }
 
             if (!string.IsNullOrEmpty(relPath) && !HasEndSeparator(relPath)) {
                 relPath += Path.DirectorySeparatorChar;
             }
 
-            if (uri2.IsFile) {
+            if (toUri.IsFile) {
                 return relPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             } else {
                 return relPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -257,34 +257,34 @@ namespace Microsoft.PythonTools {
         /// for UI strings.
         /// </summary>
         public static string GetRelativeFilePath(string fromDirectory, string toFile) {
-            var uri1 = MakeUri(fromDirectory, true, UriKind.Absolute, "fromDirectory");
-            var uri2 = MakeUri(toFile, false, UriKind.Absolute, "toFile");
+            var fromUri = MakeUri(fromDirectory, true, UriKind.Absolute, "fromDirectory");
+            var toUri = MakeUri(toFile, false, UriKind.Absolute, "toFile");
 
             string relPath;
-            var sep = uri2.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
+            var sep = toUri.IsFile ? Path.DirectorySeparatorChar : Path.AltDirectorySeparatorChar;
 
             try {
-                var uri3 = uri1.MakeRelativeUri(uri2);
-                if (uri3.IsAbsoluteUri) {
-                    relPath = uri3.IsFile ? uri3.LocalPath : uri3.AbsoluteUri;
+                var relUri = fromUri.MakeRelativeUri(toUri);
+                if (relUri.IsAbsoluteUri) {
+                    relPath = relUri.IsFile ? relUri.LocalPath : relUri.AbsoluteUri;
                 } else {
-                    relPath = Uri.UnescapeDataString(uri3.ToString());
+                    relPath = Uri.UnescapeDataString(relUri.ToString());
 
                     var rootedPath = TrimUpPaths(relPath);
                     if (rootedPath != relPath) {
                         rootedPath = sep + rootedPath;
-                        if (new Uri(uri1, rootedPath) == uri2) {
+                        if (new Uri(fromUri, rootedPath) == toUri) {
                             relPath = rootedPath;
                         }
                     }
                 }
             } catch (InvalidOperationException ex) {
-                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", uri1, uri2));
+                Trace.WriteLine(string.Format("Error finding path from {0} to {1}", fromUri, toUri));
                 Trace.WriteLine(ex);
-                relPath = uri2.IsFile ? uri2.LocalPath : uri2.AbsoluteUri;
+                relPath = toUri.IsFile ? toUri.LocalPath : toUri.AbsoluteUri;
             }
 
-            if (uri2.IsFile) {
+            if (toUri.IsFile) {
                 return relPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
             } else {
                 return relPath.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);

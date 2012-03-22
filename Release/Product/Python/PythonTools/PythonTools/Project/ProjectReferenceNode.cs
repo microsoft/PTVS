@@ -320,7 +320,7 @@ namespace Microsoft.PythonTools.Project
             : base(root, element)
         {
             this.referencedProjectRelativePath = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
-            Debug.Assert(!String.IsNullOrEmpty(this.referencedProjectRelativePath), "Could not retrive referenced project path form project file");
+            Debug.Assert(!String.IsNullOrEmpty(this.referencedProjectRelativePath), "Could not retrieve referenced project path form project file");
 
             string guidString = this.ItemNode.GetMetadata(ProjectFileConstants.Project);
 

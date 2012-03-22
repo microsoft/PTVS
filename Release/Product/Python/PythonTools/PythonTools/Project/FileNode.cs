@@ -910,10 +910,7 @@ namespace Microsoft.PythonTools.Project
                     RenameInStorage(oldName, newName);
                 }
 
-                string newFileName = Path.GetFileName(newName);
-
-                bool caseOnlyChange = String.Equals(oldName, newName, StringComparison.OrdinalIgnoreCase);
-                if (!caseOnlyChange)
+                if (!CommonUtils.IsSamePath(oldName, newName))
                 {
                     // Check out the project file if necessary.
                     if (!this.ProjectMgr.QueryEditProjectFile(false))

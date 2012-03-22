@@ -503,9 +503,9 @@ namespace Microsoft.PythonTools.Project
 
         #region ctors
 
+        [Obsolete("Provide the root ProjectNode to HierarchyNode's constructor")]
         protected HierarchyNode()
         {
-            // TODO: Ban this constructor? (Since we assume elsewhere that ProjectMgr is not null)
             this.IsExpanded = true;
         }
 
