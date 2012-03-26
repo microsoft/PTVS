@@ -330,8 +330,8 @@ namespace Microsoft.PythonTools {
                 foreach (var interpreter in factories) {
                     lastInterpreter = interpreter;
 
-                    if (interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreter &&
-                        interpreter.Configuration.Version == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersion) {
+                    if (interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue &&
+                        interpreter.Configuration.Version == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue) {
                         defaultInterpreter = interpreter;
                         break;
                     }
@@ -340,8 +340,8 @@ namespace Microsoft.PythonTools {
                 if (defaultInterpreter == null && lastInterpreter != null) {
                     // default interpreter not configured, just select the last one and make it the default.
                     defaultInterpreter = lastInterpreter;
-                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreter = defaultInterpreter.Id;
-                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersion = defaultInterpreter.Configuration.Version;
+                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue = defaultInterpreter.Id;
+                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue = defaultInterpreter.Configuration.Version;
                     PythonToolsPackage.Instance.InterpreterOptionsPage.SaveSettingsToStorage();
                 }
             }

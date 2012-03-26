@@ -40,8 +40,8 @@ namespace Microsoft.PythonTools.Options {
                 _factories.Add(interpreter);
                 _showSettingsFor.Items.Add(display);
 
-                if (interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreter &&
-                    interpreter.Configuration.Version == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersion) {
+                if (interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue &&
+                    interpreter.Configuration.Version == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue) {
                     _showSettingsFor.SelectedIndex = _showSettingsFor.Items.Count - 1;
                 }
             }

@@ -1884,6 +1884,9 @@ class cls(cls):
             entry.GetMembersFromNameByIndex("cls", 1);
             AssertContainsExactly(entry.GetMembersByIndex("cls().abc", 1).Select(member => member.Name), _intMembers);
             AssertContainsExactly(entry.GetMembersByIndex("cls.abc", 1).Select(member => member.Name), _intMembers);
+            var sigs = entry.GetSignaturesByIndex("cls", 1).ToArray();
+            Assert.AreEqual(1, sigs.Length);
+            Assert.AreEqual(null, sigs.First().Documentation);            
         }
 
         [TestMethod]

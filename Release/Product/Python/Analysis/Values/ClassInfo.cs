@@ -167,13 +167,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (result.Count == 0) {
                     foreach (var baseClass in _bases) {
                         foreach (var ns in baseClass) {
-                            foreach (var overload in ns.Overloads) {
-                                result.Add(
-                                    new OverloadResult(
-                                        overload.Parameters,
-                                        ClassDefinition.Name
-                                    )
-                                );
+                            if (ns.Push()) {
+                                try {
+                                    foreach (var overload in ns.Overloads) {
+                                        result.Add(
+                                            new OverloadResult(
+                                                overload.Parameters,
+                                                ClassDefinition.Name
+                                            )
+                                        );
+                                    }
+                                } finally {
+                                    ns.Pop();
+                                }
                             }
                         }
                     }

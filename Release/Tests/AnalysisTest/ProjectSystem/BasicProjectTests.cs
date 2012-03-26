@@ -43,6 +43,26 @@ namespace AnalysisTest.ProjectSystem {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestSetDefaultInterpreter() {
+            var props = VsIdeTestHostContext.Dte.get_Properties("Python Tools", "Interpreters");
+            Assert.IsNotNull(props);
+
+            var oldDefaultInterp = props.Item("DefaultInterpreter").Value;
+            var oldDefaultVersion = props.Item("DefaultInterpreterVersion").Value;
+            try {
+                props.Item("DefaultInterpreter").Value = Guid.Empty;
+                props.Item("DefaultInterpreterVersion").Value = "2.7";
+
+                Assert.AreEqual(Guid.Empty, props.Item("DefaultInterpreter").Value);
+                Assert.AreEqual("2.7", props.Item("DefaultInterpreterVersion").Value);
+            } finally {
+                props.Item("DefaultInterpreter").Value = oldDefaultInterp;
+                props.Item("DefaultInterpreterVersion").Value = oldDefaultVersion;
+            }
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadPythonProject() {
             string fullPath = Path.GetFullPath(@"Python.VS.TestData\HelloWorld.sln");
             Assert.IsTrue(File.Exists(fullPath), "Can't find project file");

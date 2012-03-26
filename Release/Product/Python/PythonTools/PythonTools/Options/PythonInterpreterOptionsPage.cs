@@ -15,11 +15,22 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Options {
-    class PythonInterpreterOptionsPage : PythonDialogPage {
+    /// <summary>
+    /// Provides the dialog page for configuring the interpreter options.  Accessible via automation via 
+    /// dte.get_Properties("Python Tools", "Interpreters") and exposes the following values:
+    /// 
+    ///     DefaultInterpreter  -       Guid   - The ID of the default interpreter
+    ///     DefaultInterpreterVersion - string - The version number of the default interpreter
+    ///     
+    /// New in 1.5.
+    /// </summary>
+    [ComVisible(true)]
+    public sealed class PythonInterpreterOptionsPage : PythonDialogPage {
         private PythonInterpreterOptionsControl _window;
         internal List<InterpreterOptions> _options = new List<InterpreterOptions>();
         private Guid _defaultInterpreter;
@@ -197,19 +208,51 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        public event EventHandler InterpretersChanged;
-        public event EventHandler DefaultInterpreterChanged;
+        internal event EventHandler InterpretersChanged;
+        internal event EventHandler DefaultInterpreterChanged;
 
         private static string GetInterpreterSettingPath(Guid id, Version version) {
             return id.ToString() + "\\" + version.ToString() + "\\";
         }
 
         public Guid DefaultInterpreter {
+            get {
+                return DefaultInterpreterValue;
+            }
+            set {
+                if (value != DefaultInterpreterValue) {
+                    DefaultInterpreterValue = value;
+                    RaiseDefaultInterpreterChanged();
+                }
+            }
+        }
+
+        public string DefaultInterpreterVersion {
+            get {
+                return DefaultInterpreterVersionValue.ToString();
+            }
+            set {
+                var newValue = Version.Parse(value);
+                if (newValue != DefaultInterpreterVersionValue) {
+                    DefaultInterpreterVersionValue = newValue;
+                    RaiseDefaultInterpreterChanged();
+                }
+            }
+        }
+
+        private void RaiseDefaultInterpreterChanged() {
+            var changed = DefaultInterpreterChanged;
+            if (changed != null) {
+                DefaultInterpreterChanged(this, EventArgs.Empty);
+            }
+        }
+
+        internal Guid DefaultInterpreterValue {
             get { return _defaultInterpreter; }
             set { _defaultInterpreter = value; }
         }
 
-        public Version DefaultInterpreterVersion {
+        internal Version DefaultInterpreterVersionValue {
             get { return _defaultInterpreterVersion; }
             set { _defaultInterpreterVersion = value; }
         }
