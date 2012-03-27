@@ -79,6 +79,7 @@ class RuntimeOptions(object):
     UseDepth = 0x20
     UseDepthAndPlayerIndex = 1
     UseSkeletalTracking = 8
+    UsesAudio = 0x10000000
 
 
 class Device(object):
@@ -288,7 +289,9 @@ class SkeletonEngine(object):
             self._enabled = False
 
     def get_next_frame(self, timeout = -1):
-        return self.runtime._nui.NuiSkeletonGetNextFrame(timeout)
+        res = self.runtime._nui.NuiSkeletonGetNextFrame(timeout)
+        assert isinstance(res, SkeletonFrame)
+        return res
 
     @staticmethod
     def depth_image_to_skeleton(fDepthX, fDepthY, usDepthValue):

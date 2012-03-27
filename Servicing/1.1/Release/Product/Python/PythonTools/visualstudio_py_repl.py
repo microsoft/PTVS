@@ -503,7 +503,8 @@ class BasicReplBackend(ReplBackend):
         if sys.platform == 'cli':
             code_to_send = ''
             for line in stripped_code.split('\n'):
-                if line.strip().startswith('#') and not code_to_send:
+                stripped = line.strip()
+                if (stripped.startswith('#') or not stripped) and not code_to_send:
                     continue
                 code_to_send += line + '\n'
 
@@ -558,7 +559,6 @@ class BasicReplBackend(ReplBackend):
             self.send_exit()
             return True, None, None, None
         except BaseException:
-            sys.__stdout__.write(traceback.format_exc())
             _debug_write('Exception')
             exc_type, exc_value, exc_tb = sys.exc_info()
             if sys.platform == 'cli':
@@ -580,9 +580,7 @@ class BasicReplBackend(ReplBackend):
                     exc_next = exc_tb.tb_next.tb_next
                 else:
                     exc_next = None
-                sys.__stdout__.write('sending error')
                 sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
-                sys.__stdout__.write('done error')
 
             try:
                 self.send_error()
@@ -977,7 +975,7 @@ if sys.platform == 'cli':
                     else:
                         self.backend.write_stderr(str(value).replace('\r\n', '\n'))
                 else:
-                    super(DotNetOutput, self).Write(value)
+                    super(DotNetOutput, self).Write.Overloads[object](value)
             else:
                 self.Write(System.String.Format(value, *args))
 
@@ -989,7 +987,7 @@ if sys.platform == 'cli':
                     else:
                         self.backend.write_stderr(str(value).replace('\r\n', '\n') + '\n')
                 else:
-                    super(DotNetOutput, self).WriteLine(value)
+                    super(DotNetOutput, self).WriteLine.Overloads[object](value)
             else:
                 self.WriteLine(System.String.Format(value, *args))
 

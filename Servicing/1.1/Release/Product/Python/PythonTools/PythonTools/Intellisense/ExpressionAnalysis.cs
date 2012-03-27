@@ -26,13 +26,16 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ModuleAnalysis _analysis;
         private readonly ITrackingSpan _span;
         private readonly int _index;
-        public static readonly ExpressionAnalysis Empty = new ExpressionAnalysis("", null, 0, null);
+        private readonly ProjectAnalyzer _analyzer;
+        public static readonly ExpressionAnalysis Empty = new ExpressionAnalysis(null, "", null, 0, null);
+
         
-        internal ExpressionAnalysis(string expression, ModuleAnalysis analysis, int index, ITrackingSpan span) {
+        internal ExpressionAnalysis(ProjectAnalyzer analyzer, string expression, ModuleAnalysis analysis, int index, ITrackingSpan span) {
             _expr = expression;
             _analysis = analysis;
             _index = index;
             _span = span;
+            _analyzer = analyzer;
         }
 
         /// <summary>
@@ -59,7 +62,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public IEnumerable<IAnalysisVariable> Variables {
             get {
                 if (_analysis != null) {
-                    return _analysis.GetVariablesByIndex(_expr, _index);
+                    lock (_analyzer) {
+                        return _analysis.GetVariablesByIndex(_expr, _index);
+                    }
                 }
                 return new IAnalysisVariable[0];
             }
@@ -71,7 +76,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public IEnumerable<IAnalysisValue> Values {
             get {
                 if (_analysis != null) {
-                    return _analysis.GetValuesByIndex(_expr, _index);
+                    lock (_analyzer) {
+                        return _analysis.GetValuesByIndex(_expr, _index);
+                    }
                 }
                 return new IAnalysisValue[0];
             }

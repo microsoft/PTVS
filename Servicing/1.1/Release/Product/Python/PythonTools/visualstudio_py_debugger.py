@@ -1139,9 +1139,11 @@ def new_thread_wrapper(func, *posargs, **kwargs):
     finally:
         THREADS_LOCK.acquire()
         if not cur_thread.detach:
-            del THREADS[cur_thread.id]
-            report_thread_exit(cur_thread)
+            del THREADS[cur_thread.id]            
         THREADS_LOCK.release()
+
+        if not DETACHED:
+            report_thread_exit(cur_thread)
 
 def write_string(string):
     if string is None:

@@ -87,20 +87,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
-            _analysisQueue.Scheduler.StartNew(() => { lock (this) { _pyAnalyzer.ReloadModules(); } }).ContinueWith(
-                task => {
-                    // check the exception (which should never happen) rather than crashing 
-                    // from throwing on the finalizer thread.
-                    if (task.Exception != null) {
-                        Console.WriteLine(task.Exception);
-                        Debug.Fail(task.Exception.ToString());
-                    }
-                }
-            );
+            lock (this) {
+                _pyAnalyzer.ReloadModules();
 
-            // re-analyze all of the modules when we get a new set of modules loaded...
-            foreach (var nameAndEntry in _projectFiles) {
-                _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
+                // re-analyze all of the modules when we get a new set of modules loaded...
+                foreach (var nameAndEntry in _projectFiles) {
+                    _queue.EnqueueFile(nameAndEntry.Value, nameAndEntry.Key);
+                }
             }
         }
 
@@ -297,6 +290,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     var lineNo = parser.Snapshot.GetLineNumberFromPosition(loc.Start);
                     return new ExpressionAnalysis(
+                        snapshot.TextBuffer.GetAnalyzer(),
                         text,
                         analysis,
                         loc.Start,
@@ -333,12 +327,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 return new NormalCompletionAnalysis(
+                    snapshot.TextBuffer.GetAnalyzer(),
                     String.Empty, 
                     loc.Start, 
                     parser.Snapshot, 
                     parser.Span, 
-                    parser.Buffer, 
-                    intersectMembers, 
+                    parser.Buffer,
+                    intersectMembers,
                     hideAdvancedMembers,
                     true,
                     true
@@ -357,11 +352,11 @@ namespace Microsoft.PythonTools.Intellisense {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
             var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-
+            
             int paramIndex;
             SnapshotPoint? sigStart;
             string lastKeywordArg;
-            bool isParameterName;
+            bool isParameterName;            
             var exprRange = parser.GetExpressionRange(1, out paramIndex, out sigStart, out lastKeywordArg, out isParameterName);
             if (exprRange == null || sigStart == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
@@ -387,7 +382,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     int index = loc.Start;
 
-                    var sigs = analysis.GetSignaturesByIndex(text, index);
+                    IEnumerable<IOverloadResult> sigs;
+                    lock (snapshot.TextBuffer.GetAnalyzer()) {
+                        sigs = analysis.GetSignaturesByIndex(text, index);
+                    }
                     var end = Stopwatch.ElapsedMilliseconds;
 
                     if (/*Logging &&*/ (end - start) > CompletionAnalysis.TooMuchTime) {
@@ -442,16 +440,18 @@ namespace Microsoft.PythonTools.Intellisense {
                         SpanTrackingMode.EdgeExclusive
                     );
 
-                    var variables = analysis.GetVariablesByIndex(text, index).Where(IsDefinition).Count();                    
-                    var values = analysis.GetValuesByIndex(text, index).ToArray();
+                    lock (snapshot.TextBuffer.GetAnalyzer()) {
+                        var variables = analysis.GetVariablesByIndex(text, index).Where(IsDefinition).Count();
+                        var values = analysis.GetValuesByIndex(text, index).ToArray();
 
-                    // if we have type information or an assignment to the variable we won't offer 
-                    // an import smart tag.
-                    if (values.Length == 0 && variables == 0) {
-                        string name = nameExpr.Name;
-                        var imports = analysis.ProjectState.FindNameInAllModules(name);
+                        // if we have type information or an assignment to the variable we won't offer 
+                        // an import smart tag.
+                        if (values.Length == 0 && variables == 0) {
+                            string name = nameExpr.Name;
+                            var imports = analysis.ProjectState.FindNameInAllModules(name);
 
-                        return new MissingImportAnalysis(imports, applicableSpan);
+                            return new MissingImportAnalysis(imports, applicableSpan);
+                        }
                     }
                 }
             }
@@ -967,6 +967,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new NormalCompletionAnalysis(
+                parser.Snapshot.TextBuffer.GetAnalyzer(),
                 text,
                 loc.Start,
                 parser.Snapshot,
@@ -995,7 +996,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public void AnalyzeDirectory(string dir, bool addDir = true) {
             if (addDir) {
-                _pyAnalyzer.AddAnalysisDirectory(dir);
+                lock (this) {
+                    _pyAnalyzer.AddAnalysisDirectory(dir);
+                }
             }
 
             try {
@@ -1023,7 +1026,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void StopAnalyzingDirectory(string directory) {
-            _pyAnalyzer.RemoveAnalysisDirectory(directory);
+            lock (this) {
+                _pyAnalyzer.RemoveAnalysisDirectory(directory);
+            }
         }
 
         internal void UnloadFile(IProjectEntry entry) {
@@ -1359,5 +1364,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
+
+        internal void RemoveReference(ProjectAssemblyReference reference) {
+            lock (this) {
+                IPythonInterpreter2 interp2 = Interpreter as IPythonInterpreter2;
+                if (interp2 != null) {
+                    interp2.RemoveReference(reference);
+                }
+            }
+        }
     }
 }

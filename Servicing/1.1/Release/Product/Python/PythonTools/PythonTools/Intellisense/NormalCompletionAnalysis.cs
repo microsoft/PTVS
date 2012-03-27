@@ -30,10 +30,12 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
         private readonly bool _intersectMembers, _hideAdvancedMembers, _includeStatementKeywords, _includeExpressionKeywords;
+        private readonly ProjectAnalyzer _analyzer;
 
-        internal NormalCompletionAnalysis(string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, bool intersectMembers = true, bool hideAdvancedMembers = false, bool includeStatmentKeywords = false, bool includeExpressionKeywords = false)
+        internal NormalCompletionAnalysis(ProjectAnalyzer analyzer, string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, bool intersectMembers = true, bool hideAdvancedMembers = false, bool includeStatmentKeywords = false, bool includeExpressionKeywords = false)
             : base(text, pos, span, textBuffer) {
             _snapshot = snapshot;
+            _analyzer = analyzer;
             _intersectMembers = intersectMembers;
             _hideAdvancedMembers = hideAdvancedMembers;
             _includeExpressionKeywords = includeExpressionKeywords;
@@ -73,11 +75,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = GetAnalysisEntry();
             string fixedText = FixupCompletionText(Text);
             if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                members = analysis.GetMembersByIndex(
-                    fixedText,
-                    _pos,
-                    MemberOptions
-                ).ToArray();
+                lock (_analyzer) {
+                    members = analysis.GetMembersByIndex(
+                        fixedText,
+                        _pos,
+                        MemberOptions
+                    ).ToArray();
+                }
             } else {
                 members = new MemberResult[0];
             }
@@ -138,9 +142,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private GetMemberOptions MemberOptions {
             get {
                 return (_intersectMembers ? GetMemberOptions.IntersectMultipleResults : GetMemberOptions.None) |
-                        (_hideAdvancedMembers ? GetMemberOptions.HideAdvancedMembers : GetMemberOptions.None) | 
-                        (_includeExpressionKeywords ? GetMemberOptions.IncludeExpressionKeywords : GetMemberOptions.None) | 
-                        (_includeStatementKeywords ? GetMemberOptions.IncludeStatementKeywords : GetMemberOptions.None); 
+                        (_hideAdvancedMembers ? GetMemberOptions.HideAdvancedMembers : GetMemberOptions.None) |
+                        (_includeExpressionKeywords ? GetMemberOptions.IncludeExpressionKeywords : GetMemberOptions.None) |
+                        (_includeStatementKeywords ? GetMemberOptions.IncludeStatementKeywords : GetMemberOptions.None);
             }
         }
 

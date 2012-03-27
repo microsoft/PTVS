@@ -370,7 +370,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             InterpreterScope scope;
             if (!_curUnit.DeclaringModule.NodeScopes.TryGetValue(node, out scope)) {
                 scope = new IsInstanceScope(node.StartIndex, effectiveSuite);
-                var declScope = _curUnit.Scopes[_curUnit.Scopes.Length - 1];
+                // find our parent scope, it may not be just the last entry in _scopes
+                // because that can be a StatementScope and we would start a new range.
+                InterpreterScope declScope = null;
+                for (int i = _scopes.Count - 1; i >= 0; i--) {
+                    declScope = _scopes[i];
+                    if (!(declScope is StatementScope)) {
+                        break;
+                    }
+                }
                 declScope.Children.Add(scope);
                 _scopes.Add(scope);
                 _curUnit.DeclaringModule.NodeScopes[node] = scope;

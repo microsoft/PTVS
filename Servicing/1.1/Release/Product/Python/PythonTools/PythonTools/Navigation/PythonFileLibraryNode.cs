@@ -50,6 +50,7 @@ namespace Microsoft.PythonTools.Navigation {
 
                 if (analysis != null) {
                     var exprAnalysis = new ExpressionAnalysis(
+                        ((PythonProjectNode)node.ProjectMgr).GetAnalyzer(),
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
                         analysis.Analysis,
                         0,
