@@ -36,5 +36,7 @@
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
+    <Assembly AssemblyName="Microsoft.VisualStudio.ReplWindow, Version=1.8.50330.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">|%CurrentProject%|</Assembly>
   </Content>
+
 </Vsix>

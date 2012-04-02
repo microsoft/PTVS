@@ -167,11 +167,20 @@
     <CustomAction Id="CustomWixSetPerUserFolder" Property="APPLICATIONFOLDER" Value="[WixPerUserFolder]" Execute="immediate" />
     <CustomAction Id="CustomWixSetPerMachineFolder" Property="APPLICATIONFOLDER" Value="[WixPerMachineFolder]" Execute="immediate" />
 
+    <?if "$(var.VSTargetVersion)" != "10.0" ?>
+      <CustomAction Id="DevEnvSetup_Cmd"  Property="DevEnv_Setup" Value='"[DEVENV_PATH]\devenv.exe" /setup' Execute="immediate" />
+      <CustomAction Id="DevEnv_Setup" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="check" Impersonate="no"/>
+    <?endif ?>
+  
     <InstallExecuteSequence>
         <Custom Action="CustomWixSetDefaultPerUserFolder" Before="CostFinalize" />
         <Custom Action="CustomWixSetDefaultPerMachineFolder" After="CustomWixSetDefaultPerUserFolder" />
         <Custom Action="CustomWixSetPerUserFolder" After="CustomWixSetDefaultPerMachineFolder">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS="" OR (ALLUSERS=2 AND (NOT Privileged)))</Custom>
         <Custom Action="CustomWixSetPerMachineFolder" After="CustomWixSetPerUserFolder">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS=1 OR (ALLUSERS=2 AND Privileged))</Custom>
+        <?if "$(var.VSTargetVersion)" != "10.0" ?>
+	  <Custom Action="DevEnvSetup_Cmd" After="CostFinalize"/>
+	  <Custom Action="DevEnv_Setup" Before="InstallFinalize"/>
+        <?endif ?>
     </InstallExecuteSequence>
     <InstallUISequence>
         <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="CostInitialize">NOT Installed</Show>

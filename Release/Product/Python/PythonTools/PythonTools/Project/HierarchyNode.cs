@@ -503,7 +503,6 @@ namespace Microsoft.PythonTools.Project
 
         #region ctors
 
-        [Obsolete("Provide the root ProjectNode to HierarchyNode's constructor")]
         protected HierarchyNode()
         {
             this.IsExpanded = true;

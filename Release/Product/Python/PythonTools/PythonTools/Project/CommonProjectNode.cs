@@ -27,9 +27,7 @@ using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-#if !DEV11
 using Microsoft.Windows.Design.Host;
-#endif
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
@@ -464,11 +462,9 @@ namespace Microsoft.PythonTools.Project {
                 libraryManager.RegisterHierarchy(InteropSafeHierarchy);
             }
 
-#if !DEV11
             //If this is a WPFFlavor-ed project, then add a project-level DesignerContext service to provide
             //event handler generation (EventBindingProvider) for the XAML designer.
             this.OleServiceProvider.AddService(typeof(DesignerContext), new OleServiceProvider.ServiceCreatorCallback(this.CreateServices), false);
-#endif
         }
 
         /// <summary>
@@ -508,12 +504,11 @@ namespace Microsoft.PythonTools.Project {
             newNode.OleServiceProvider.AddService(typeof(EnvDTE.Project),
                 new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
             newNode.OleServiceProvider.AddService(typeof(EnvDTE.ProjectItem), newNode.ServiceCreator, false);
-#if !DEV11
+
             if (!string.IsNullOrEmpty(include) && Path.GetExtension(include).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
                 //Create a DesignerContext for the XAML designer for this file
                 newNode.OleServiceProvider.AddService(typeof(DesignerContext), newNode.ServiceCreator, false);
             }
-#endif
 
             newNode.OleServiceProvider.AddService(typeof(VSLangProj.VSProject),
                 new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
@@ -861,22 +856,18 @@ namespace Microsoft.PythonTools.Project {
                 service = VSProject;
             } else if (typeof(EnvDTE.Project) == serviceType) {
                 service = GetAutomationObject();
-#if !DEV11
             } else if (typeof(DesignerContext) == serviceType) {
                 service = this.DesignerContext;
-#endif
             }
 
             return service;
         }
 
-#if !DEV11
         protected virtual internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
             get {
                 return null;
             }
         }
-#endif
 
         /// <summary>
         /// Executes Add Search Path menu command.

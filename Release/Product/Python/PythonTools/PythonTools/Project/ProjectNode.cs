@@ -817,6 +817,7 @@ namespace Microsoft.PythonTools.Project
         {
             this.Initialize();
         }
+
         #endregion
 
         #region overridden methods

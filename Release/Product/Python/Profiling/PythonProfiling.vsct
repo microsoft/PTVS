@@ -19,7 +19,6 @@
 
   <!--This header contains the command ids for the menus provided by the shell. -->
   <Extern href="vsshlids.h"/>
-
   <!--The Commands section is where we the commands, menus and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
   <Commands package="guidPythonProfilingPkg">
@@ -165,9 +164,16 @@
       </Button>
       
       <!-- Context menu items for reports folder -->
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button">
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
         <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
         <Icon guid="guidOfficeIcon" id="msotcidOpen"/>
+        <Strings>
+          <ButtonText>&amp;Add Report...</ButtonText>
+          <MenuText>&amp;Add Report...</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button" Condition="%(VSTARGET)!='10.0'">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Add Report...</ButtonText>
           <MenuText>&amp;Add Report...</MenuText>
@@ -183,9 +189,16 @@
       </Button>
       
       <!-- Context menu items for report item -->
-      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button">
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
         <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
         <Icon guid="guidOfficeIcon" id="msotcidViewReports"/>
+        <Strings>
+          <ButtonText>&amp;Open</ButtonText>
+          <MenuText>&amp;Open</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button" Condition="%(VSTARGET)!='10.0'">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Open</ButtonText>
           <MenuText>&amp;Open</MenuText>

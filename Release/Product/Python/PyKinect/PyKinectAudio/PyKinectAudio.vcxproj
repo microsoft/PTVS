@@ -45,7 +45,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
     <LibraryPath>%KINECTSDK10_DIR%\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -55,7 +55,7 @@
     <LibraryPath>%KINECTSDK10_DIR%\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
     <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
     <LibraryPath>%KINECTSDK10_DIR%\lib\amd64;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>

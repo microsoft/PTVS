@@ -8,7 +8,7 @@
     <Locale>1033</Locale>
     <MoreInfoUrl>http://pytools.codeplex.com</MoreInfoUrl>
     <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
-    <InstalledByMsi>false</InstalledByMsi>
+    <InstalledByMsi>true</InstalledByMsi>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
     <SupportedProducts>
@@ -37,8 +37,8 @@
     </Reference>
   </References>
   <Content>
-    <VsPackage>|%CurrentProject%|</VsPackage>
-    <Assembly AssemblyName="|%CurrentProject%|">|%CurrentProject%|</Assembly>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <Assembly AssemblyName="Microsoft.PythonTools, Version=1.8.50330.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">|%CurrentProject%|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>

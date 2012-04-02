@@ -29,11 +29,11 @@
     <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="1.1" MaxVersion="1.1">
       <Name>Python Tools for Visual Studio</Name>
       <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
-    </Reference>
+    </Reference>  
   </References>
   <Content>
     <Assembly AssemblyName="Microsoft.PythonTools.IronPython">Microsoft.PythonTools.IronPython</Assembly>
-    <VsPackage>|%CurrentProject%|</VsPackage>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
     <ProjectTemplate>Templates\Projects\SilverlightProject</ProjectTemplate>
     <ProjectTemplate>Templates\Projects\WinformsProject</ProjectTemplate>

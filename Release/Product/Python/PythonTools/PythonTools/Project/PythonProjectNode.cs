@@ -28,16 +28,12 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
-#if !DEV11
 using Microsoft.Windows.Design.Host;
-#endif
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
     public class PythonProjectNode : CommonProjectNode, IPythonProject, IPythonProject2 {
-#if !DEV11
         private DesignerContext _designerContext;
-#endif
         private IPythonInterpreter _interpreter;
         private ProjectAnalyzer _analyzer;
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
@@ -213,7 +209,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-#if !DEV11
         protected override internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
             get {
                 if (_designerContext == null) {
@@ -229,7 +224,6 @@ namespace Microsoft.PythonTools.Project {
                 return _designerContext;
             }
         }
-#endif
 
         public override IProjectLauncher GetLauncher() {
             var compModel = PythonToolsPackage.ComponentModel;
