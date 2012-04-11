@@ -21,10 +21,6 @@
       <ComponentSearch Id="Comp_VSTools" Guid="2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951" Type="file" />
     </Property>
 
-    <Property Id="IPY_INSTALLED">
-      <ComponentSearch Id="Comp_Core.B25C469D_12C7_4327_AEF1_B2D3505E115E" Guid="655DFFDE-C66A-4650-8369-5447CFC1942F" Type="file" />
-    </Property>
-
     <?include ..\InstallPath.wxi ?>
     
     <Property Id="VSLAUNCHER" >
@@ -142,7 +138,6 @@
       </Feature>
       
       <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
-        <Condition Level="2">NOT IPY_INSTALLED</Condition>
         <MergeRef Id="IronPythonInterpreter"/>
       </Feature>
       
