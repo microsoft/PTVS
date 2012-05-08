@@ -307,8 +307,11 @@ if __name__ == '__main__':
             record = read_fastcgi_record(sys.stdin)
             if record:
                 record.params['wsgi.input'] = cStringIO.StringIO(record.params['wsgi.input'])
+                
                 def start_response(status, headers, exc_info = None):
-                    pass
+                    global response_headers, status_line
+                    response_headers = headers
+                    status_line = status
                 
                 sys.stdout = sys.stderr = sys.__stdout__ = sys.__stderr__ = output = cStringIO.StringIO()
                 record.params['SCRIPT_NAME'] = ''
@@ -317,7 +320,10 @@ if __name__ == '__main__':
                 except:
                     send_response(record.req_id, FCGI_STDERR, output.getvalue())
                 else:
-                    send_response(record.req_id, FCGI_STDOUT, response)
+                    status = 'HTTP/1.1 ' + status_line + '\r\n'
+                    headers = ''.join('%s: %s\n' % (name, value) for name, value in response_headers)
+                    full_response = status + headers + '\r\n' + response
+                    send_response(record.req_id, FCGI_STDOUT, full_response)
 
                 # for testing of throughput of fastcgi handler vs static pages
                 #send_response(record.req_id, FCGI_STDOUT, 'Content-type: text/html\r\n\r\n\r\n<html>\n<body>bar</body></html>')
@@ -326,5 +332,3 @@ if __name__ == '__main__':
                 del _REQUESTS[record.req_id]
         except:
             log(traceback.format_exc())        
-
-
