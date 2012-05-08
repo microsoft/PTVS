@@ -26,11 +26,11 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ModuleAnalysis _analysis;
         private readonly ITrackingSpan _span;
         private readonly int _index;
-        private readonly ProjectAnalyzer _analyzer;
+        private readonly VsProjectAnalyzer _analyzer;
         public static readonly ExpressionAnalysis Empty = new ExpressionAnalysis(null, "", null, 0, null);
 
         
-        internal ExpressionAnalysis(ProjectAnalyzer analyzer, string expression, ModuleAnalysis analysis, int index, ITrackingSpan span) {
+        internal ExpressionAnalysis(VsProjectAnalyzer analyzer, string expression, ModuleAnalysis analysis, int index, ITrackingSpan span) {
             _expr = expression;
             _analysis = analysis;
             _index = index;

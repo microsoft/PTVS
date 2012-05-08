@@ -204,6 +204,7 @@ namespace Microsoft.PythonTools.Analysis {
             // collect top-level definitions first
             var walker = new OverviewWalker(this, unit);
             _tree.Walk(walker);
+            _myScope.Specialize();
 
             PublishPackageChildrenInPackage();
 

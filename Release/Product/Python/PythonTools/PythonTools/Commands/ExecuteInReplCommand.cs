@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command for starting a file or the start item of a project in the REPL window.
     /// </summary>
     internal sealed class ExecuteInReplCommand : Command {
-        internal static IReplWindow/*!*/ EnsureReplWindow(ProjectAnalyzer analyzer) {
+        internal static IReplWindow/*!*/ EnsureReplWindow(VsProjectAnalyzer analyzer) {
             return EnsureReplWindow(analyzer.InterpreterFactory);
         }
 
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Commands {
 
         private void QueryStatusMethod(object sender, EventArgs args) {
             var oleMenu = sender as OleMenuCommand;
-            ProjectAnalyzer analyzer;
+            VsProjectAnalyzer analyzer;
             string filename, dir;
             if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer) ||
                 analyzer.InterpreterFactory.Id == PythonToolsPackage._noInterpretersFactoryGuid) {
@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            ProjectAnalyzer analyzer;
+            VsProjectAnalyzer analyzer;
             string filename, dir;
             if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer)) {
                 // TODO: Error reporting

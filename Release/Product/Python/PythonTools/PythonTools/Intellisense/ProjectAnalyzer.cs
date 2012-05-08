@@ -44,9 +44,19 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
 
     /// <summary>
-    /// Performs centralized parsing and analysis of Python source code.
+    /// Performs centralized parsing and analysis of Python source code within Visual Studio.
+    /// 
+    /// This class is responsible for maintaining the up-to-date analysis of the active files being worked
+    /// on inside of a Visual Studio project.  
+    /// 
+    /// This class is built upon the core PythonAnalyzer class which provides basic analysis services.  This class
+    /// maintains the thread safety invarients of working with that class, handles parsing of files as they're
+    /// updated via interfacing w/ the Visual Studio editor APIs, and supports adding additional files to the 
+    /// analysis.
+    /// 
+    /// New in 1.5.
     /// </summary>
-    internal class ProjectAnalyzer : IDisposable {
+    public sealed class VsProjectAnalyzer : IDisposable {
         private readonly ParseQueue _queue;
         private readonly AnalysisQueue _analysisQueue;
         private readonly IPythonInterpreterFactory _interpreterFactory;
@@ -54,19 +64,19 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IErrorProviderFactory _errorProvider;
         private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
         private readonly PythonAnalyzer _pyAnalyzer;
-        private readonly Dictionary<Type, Command> _commands = new Dictionary<Type, Command>();
         private readonly IVsErrorList _errorList;
         private readonly PythonProjectNode _project;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
-        private static TaskProvider _taskProvider;
         private readonly IPythonInterpreterFactory[] _allFactories;
+
+        private static TaskProvider _taskProvider;
         private static char[] _invalidPathChars = Path.GetInvalidPathChars();
 
-        public ProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
+        internal VsProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
         }
 
-        public ProjectAnalyzer(IPythonInterpreter interpreter, IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider, PythonProjectNode project = null) {
+        internal VsProjectAnalyzer(IPythonInterpreter interpreter, IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider, PythonProjectNode project = null) {
             _errorProvider = errorProvider;
 
             _queue = new ParseQueue(this);
@@ -130,7 +140,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void SwitchAnalyzers(ProjectAnalyzer oldAnalyzer) {
+        internal void SwitchAnalyzers(VsProjectAnalyzer oldAnalyzer) {
             lock (_openFiles) {
                 foreach (var bufferParser in oldAnalyzer._openFiles.Keys) {
                     ReAnalyzeTextBuffers(bufferParser);
@@ -142,7 +152,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Starts monitoring a buffer for changes so we will re-parse the buffer to update the analysis
         /// as the text changes.
         /// </summary>
-        public MonitoredBufferResult MonitorTextBuffer(ITextView textView, ITextBuffer buffer) {
+        internal MonitoredBufferResult MonitorTextBuffer(ITextView textView, ITextBuffer buffer) {
             IProjectEntry projEntry = CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot));
 
             // kick off initial processing on the buffer        
@@ -207,7 +217,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return true;
         }
 
-        public void StopMonitoringTextBuffer(BufferParser bufferParser) {
+        internal void StopMonitoringTextBuffer(BufferParser bufferParser) {
             bufferParser.StopMonitoring();
             lock (_openFiles) {
                 _openFiles.Remove(bufferParser);
@@ -219,7 +229,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public IProjectEntry AnalyzeFile(string path) {
+        internal IProjectEntry AnalyzeFile(string path) {
             IProjectEntry item;
             if (!_projectFiles.TryGetValue(path, out item)) {
                 if (PythonProjectNode.IsPythonFile(path)) {
@@ -247,13 +257,13 @@ namespace Microsoft.PythonTools.Intellisense {
             return item;
         }
 
-        public IEnumerable<KeyValuePair<string, IProjectEntry>> LoadedFiles {
+        internal IEnumerable<KeyValuePair<string, IProjectEntry>> LoadedFiles {
             get {
                 return _projectFiles;
             }
         }
 
-        public IProjectEntry GetAnalysisFromFile(string path) {
+        internal IProjectEntry GetAnalysisFromFile(string path) {
             IProjectEntry res;
             if (_projectFiles.TryGetValue(path, out res)) {
                 return res;
@@ -265,7 +275,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a ExpressionAnalysis for the expression at the provided span.  If the span is in
         /// part of an identifier then the expression is extended to complete the identifier.
         /// </summary>
-        public static ExpressionAnalysis AnalyzeExpression(ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
+        internal static ExpressionAnalysis AnalyzeExpression(ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
@@ -304,7 +314,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        public static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
+        internal static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
@@ -345,7 +355,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
         [Obsolete("Use GetCompletions with a CompletionOptions instance.")]
-        public static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
+        internal static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
             return GetCompletions(snapshot, span, new CompletionOptions {
                 IntersectMembers = intersectMembers,
                 HideAdvancedMembers = hideAdvancedMembers
@@ -355,7 +365,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
         /// </summary>
-        public static SignatureAnalysis GetSignatures(ITextSnapshot snapshot, ITrackingSpan span) {
+        internal static SignatureAnalysis GetSignatures(ITextSnapshot snapshot, ITrackingSpan span) {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
@@ -416,7 +426,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new SignatureAnalysis(text, paramIndex, new ISignature[0]);
         }
 
-        public static MissingImportAnalysis GetMissingImports(ITextSnapshot snapshot, ITrackingSpan span) {
+        internal static MissingImportAnalysis GetMissingImports(ITextSnapshot snapshot, ITrackingSpan span) {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
             var loc = span.GetSpan(snapshot.Version);
             int dummy;
@@ -479,13 +489,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 nameExpr.Name == "__name__";
         }
 
-        public bool IsAnalyzing {
+        internal bool IsAnalyzing {
             get {
                 return _queue.IsParsing || _analysisQueue.IsAnalyzing;
             }
         }
 
-        public void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
+        internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
             if (_queue.IsParsing || _analysisQueue.IsAnalyzing) {
                 while (_queue.IsParsing || _analysisQueue.IsAnalyzing) {
                     _queueActivityEvent.WaitOne(1000);
@@ -501,31 +511,31 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public AutoResetEvent QueueActivityEvent {
+        internal AutoResetEvent QueueActivityEvent {
             get {
                 return _queueActivityEvent;
             }
         }
 
-        public bool ImplicitProject {
+        internal bool ImplicitProject {
             get {
                 return _project == null;
             }
         }
 
-        public IPythonInterpreterFactory InterpreterFactory {
+        internal IPythonInterpreterFactory InterpreterFactory {
             get {
                 return _interpreterFactory;
             }
         }
 
-        public IPythonInterpreter Interpreter {
+        internal IPythonInterpreter Interpreter {
             get {
                 return _pyAnalyzer.Interpreter;
             }
         }
 
-        public PythonAnalyzer Project {
+        internal PythonAnalyzer Project {
             get {
                 return _pyAnalyzer;
             }
@@ -545,7 +555,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         }
 
-        public void ParseFile(IProjectEntry projectEntry, string filename, FileStream content, Severity indentationSeverity) {
+        internal void ParseFile(IProjectEntry projectEntry, string filename, FileStream content, Severity indentationSeverity) {
             IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
 
@@ -577,7 +587,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void ParseBuffers(BufferParser bufferParser, Severity indentationSeverity, params ITextSnapshot[] snapshots) {
+        internal void ParseBuffers(BufferParser bufferParser, Severity indentationSeverity, params ITextSnapshot[] snapshots) {
             IProjectEntry analysis = bufferParser._currentProjEntry;
 
             IPythonProjectEntry pyProjEntry = analysis as IPythonProjectEntry;
@@ -1004,7 +1014,11 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Analyzes a complete directory including all of the contained files and packages.
         /// </summary>
-        public void AnalyzeDirectory(string dir, bool addDir = true) {
+        public void AnalyzeDirectory(string dir) {
+            AnalyzeDirectoryWorker(dir, true);
+        }
+
+        private void AnalyzeDirectoryWorker(string dir, bool addDir) {
             if (addDir) {
                 lock (this) {
                     _pyAnalyzer.AddAnalysisDirectory(dir);
@@ -1028,14 +1042,14 @@ namespace Microsoft.PythonTools.Intellisense {
             try {
                 foreach (string innerDir in Directory.GetDirectories(dir)) {
                     if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
-                        AnalyzeDirectory(innerDir, false);
+                        AnalyzeDirectoryWorker(innerDir, false);
                     }
                 }
             } catch (DirectoryNotFoundException) {
             }
         }
 
-        public void StopAnalyzingDirectory(string directory) {
+        internal void StopAnalyzingDirectory(string directory) {
             lock (this) {
                 _pyAnalyzer.RemoveAnalysisDirectory(directory);
             }
@@ -1057,16 +1071,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
-        internal T GetCommand<T>() where T : Command {
-            return (T)_commands[typeof(T)];
-        }
-
-        public IEnumerable<Command> Commands {
-            get {
-                return _commands.Values;
-            }
-        }
 
         class TaskProvider : IVsTaskProvider {
             private readonly Dictionary<string, List<ErrorResult>> _warnings = new Dictionary<string, List<ErrorResult>>();

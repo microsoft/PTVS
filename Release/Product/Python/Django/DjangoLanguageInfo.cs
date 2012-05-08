@@ -14,6 +14,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -38,6 +39,17 @@ namespace Microsoft.PythonTools.Django {
         }
 
         public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
+            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+            var service = model.GetService<IVsEditorAdaptersFactoryService>();
+
+            IVsTextView textView;
+            if (ErrorHandler.Succeeded(pCodeWin.GetPrimaryView(out textView))) {
+                var wpfView = service.GetWpfTextView(textView);
+
+                var controller = DjangoIntellisenseControllerProvider.GetOrCreateController(model, wpfView);
+                controller.AttachKeyboardFilter();
+            }
+
             ppCodeWinMgr = null;
             return VSConstants.E_FAIL;
         }

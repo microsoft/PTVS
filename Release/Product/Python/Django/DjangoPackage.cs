@@ -64,6 +64,7 @@ namespace Microsoft.PythonTools.Django {
         internal const string DjangoTemplateLanguageId = "{918E5764-7026-4D57-918D-19D86AD73AC4}";
         internal const string DjangoExpressionEvaluatorGuid = "64F20547-C246-487F-83A6-587BC54BAB2F";
         internal static Guid DjangoTemplateLanguageGuid = new Guid(DjangoTemplateLanguageId);
+        internal static DjangoPackage Instance;
 
         /// <summary>
         /// Default constructor of the package.
@@ -74,6 +75,7 @@ namespace Microsoft.PythonTools.Django {
         /// </summary>
         public DjangoPackage() {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
+            Instance = this;
         }
 
         /////////////////////////////////////////////////////////////////////////////
@@ -130,5 +132,38 @@ namespace Microsoft.PythonTools.Django {
         internal new object GetService(Type serviceType) {
             return base.GetService(serviceType);
         }
+
+        public EnvDTE.DTE DTE {
+            get {
+                return (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+            }
+        }
+
+        internal static DjangoProject GetProject(string filename) {
+            IVsHierarchy hierarchy;
+            IVsRunningDocumentTable rdt = GetGlobalService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            uint itemid;
+            IntPtr docData = IntPtr.Zero;
+            uint cookie;
+            try {
+                int hr = rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_ReadLock,
+                    filename,
+                    out hierarchy,
+                    out itemid,
+                    out docData,
+                    out cookie);
+
+                if (ErrorHandler.Succeeded(hr)) {
+                    rdt.UnlockDocument((uint)_VSRDTFLAGS.RDT_ReadLock, cookie);
+                }
+                return hierarchy as DjangoProject;
+            } finally {
+                if (docData != IntPtr.Zero) {
+                    Marshal.Release(docData);
+                }
+            }
+            return null;
+        }
+
     }
 }

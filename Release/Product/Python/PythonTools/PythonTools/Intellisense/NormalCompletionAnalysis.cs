@@ -29,15 +29,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
-        private readonly ProjectAnalyzer _analyzer;
+        private readonly VsProjectAnalyzer _analyzer;
 
-        internal NormalCompletionAnalysis(ProjectAnalyzer analyzer, string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
             : base(text, pos, span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
         }
 
-        internal NormalCompletionAnalysis(ProjectAnalyzer analyzer, string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, bool intersectMembers = true, bool hideAdvancedMembers = false, bool includeStatmentKeywords = false, bool includeExpressionKeywords = false)
+        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, bool intersectMembers = true, bool hideAdvancedMembers = false, bool includeStatmentKeywords = false, bool includeExpressionKeywords = false)
             : this(analyzer, text, pos, snapshot, span, textBuffer, new CompletionOptions {
             IntersectMembers = intersectMembers,
             HideAdvancedMembers = hideAdvancedMembers,

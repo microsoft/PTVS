@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly WeakReference _weakModule;
         private readonly IModuleContext _context;
         private Dictionary<string, WeakReference> _packageModules;
+        private Dictionary<string, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>> _specialized;
         private ModuleInfo _parentPackage;
         private DependentData _definition = new DependentData();
 
@@ -111,6 +112,50 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _packageModules.Remove(name);
             }
             return null;
+        }
+
+        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg) {
+            if (_specialized == null) {
+                _specialized = new Dictionary<string, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>>();
+            }
+            _specialized[name] = dlg;
+        }
+
+        internal void Specialize() {
+            if (_specialized != null) {
+                foreach (var keyValue in _specialized) {
+                    SpecializeOneFunction(keyValue.Key, keyValue.Value);
+                }
+            }
+        }
+
+        private void SpecializeOneFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg) {
+            int lastIndex;
+            VariableDef def;
+            if (Scope.Variables.TryGetValue(name, out def)) {
+                SpecializeVariableDef(dlg, def);
+            } else if ((lastIndex = name.LastIndexOf('.')) != -1 && 
+                Scope.Variables.TryGetValue(name.Substring(0, lastIndex), out def)) {
+                    var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
+                    foreach (var v in def.Types) {
+                        ClassInfo ci = v as ClassInfo;
+                        if (ci != null) {
+                            VariableDef methodDef;
+                            if (ci.Scope.Variables.TryGetValue(methodName, out methodDef)) {
+                                SpecializeVariableDef(dlg, methodDef);
+                            }
+                        }
+                    }
+            }
+        }
+
+        private static void SpecializeVariableDef(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, VariableDef def) {
+            foreach (var v in def.Types) {
+                if (!(v is SpecializedNamespace) && v.DeclaringModule != null) {
+                    def.AddTypes(v.DeclaringModule, new SpecializedCallable(v, dlg).SelfSet);
+                    break;
+                }
+            }
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
@@ -238,5 +283,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         #endregion
+
     }
 }

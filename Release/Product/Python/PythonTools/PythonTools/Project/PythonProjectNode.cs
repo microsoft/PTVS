@@ -21,6 +21,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -35,7 +36,7 @@ namespace Microsoft.PythonTools.Project {
     public class PythonProjectNode : CommonProjectNode, IPythonProject, IPythonProject2 {
         private DesignerContext _designerContext;
         private IPythonInterpreter _interpreter;
-        private ProjectAnalyzer _analyzer;
+        private VsProjectAnalyzer _analyzer;
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
         private bool _defaultInterpreter;
         private PythonDebugPropertyPage _debugPropPage;
@@ -225,6 +226,10 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public PythonAnalyzer GetProjectAnalyzer() {
+            return GetAnalyzer().Project;
+        }
+
         public override IProjectLauncher GetLauncher() {
             var compModel = PythonToolsPackage.ComponentModel;
             var launchers = compModel.GetExtensions<IPythonLauncherProvider>();
@@ -285,7 +290,7 @@ namespace Microsoft.PythonTools.Project {
             return _interpreter;
         }
 
-        internal ProjectAnalyzer GetAnalyzer() {
+        public VsProjectAnalyzer GetAnalyzer() {
             if (_analyzer == null) {
                 _analyzer = CreateAnalyzer();
                 AnalyzeSearchPaths(ParseSearchPath());
@@ -293,7 +298,7 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
-        private ProjectAnalyzer CreateAnalyzer() {
+        private VsProjectAnalyzer CreateAnalyzer() {
             // check to see if we should share our analyzer with another project in the same solution.  This enables
             // refactoring, find all refs, and intellisense across projects.
             var vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
@@ -315,7 +320,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
-            return new ProjectAnalyzer(GetInterpreter(), GetInterpreterFactory(), model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>(), this);
+            return new VsProjectAnalyzer(GetInterpreter(), GetInterpreterFactory(), model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>(), this);
         }
 
         private void CreateInterpreter() {
@@ -383,7 +388,7 @@ namespace Microsoft.PythonTools.Project {
             _analyzer = analyzer;
         }
 
-        private void Reanalyze(HierarchyNode node, ProjectAnalyzer newAnalyzer) {
+        private void Reanalyze(HierarchyNode node, VsProjectAnalyzer newAnalyzer) {
             if (node != null) {
                 for (var child = node.FirstChild; child != null; child = child.NextSibling) {
                     if (child is FileNode) {

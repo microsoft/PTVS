@@ -19,5 +19,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     interface IModule {
         IModule GetChildPackage(IModuleContext context, string name);
         IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext context);
+
+        void SpecializeFunction(string name, System.Func<Parsing.Ast.CallExpression, Interpreter.AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg);
     }
 }

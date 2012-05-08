@@ -12,24 +12,23 @@
  *
  * ***************************************************************************/
 
-
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    [Export(typeof(ICompletionSourceProvider)), ContentType("HTML"), Order, Name("HtmlCompletionProvider")]
-    internal class HtmlCompletionSourceProvider : ICompletionSourceProvider {
+namespace Microsoft.PythonTools.Django.Intellisense {
+    [Export(typeof(ICompletionSourceProvider)), ContentType(TemplateContentType.ContentTypeName), Order, Name("DjangoCompletionSourceProvider")]
+    internal class DjangoCompletionSourceProvider : ICompletionSourceProvider {
         internal readonly IGlyphService _glyphService;
-        
+
         [ImportingConstructor]
-        public HtmlCompletionSourceProvider(IGlyphService glyphService) {
+        public DjangoCompletionSourceProvider(IGlyphService glyphService) {
             _glyphService = glyphService;
         }
-        
+
         public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
-            return new HtmlCompletionSource(this, textBuffer);
+            return new DjangoCompletionSource(this, textBuffer);
         }
     }
 }

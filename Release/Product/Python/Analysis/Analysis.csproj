@@ -264,6 +264,7 @@
     <Compile Include="Analyzer\AnalysisUnit.cs" />
     <Compile Include="Parsing\SourceLocation.cs" />
     <Compile Include="Unpickler.cs" />
+    <Compile Include="AnalysisValue.cs" />
     <Compile Include="Values\BoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\BuiltinClassInfo.cs" />
     <Compile Include="Values\BuiltinEventInfo.cs" />
@@ -273,6 +274,7 @@
     <Compile Include="Values\BuiltinModule.cs" />
     <Compile Include="Values\BuiltinNamespace.cs" />
     <Compile Include="Values\BuiltinPropertyInfo.cs" />
+    <Compile Include="CallInfo.cs" />
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
     <Compile Include="Values\GeneratorFunctionInfo.cs" />
@@ -307,7 +309,8 @@
     <Compile Include="Values\SequenceInfo.cs" />
     <Compile Include="Values\SetInfo.cs" />
     <Compile Include="Values\SliceInfo.cs" />
-    <Compile Include="Values\SpecializedBuiltinFunction.cs" />
+    <Compile Include="Values\SpecializedCallable.cs" />
+    <Compile Include="Values\SpecializedNamespace.cs" />
     <Compile Include="Values\TupleBuiltinClassInfo.cs" />
     <Compile Include="Values\UserDefinedInfo.cs" />
     <Compile Include="Values\Utils.cs" />

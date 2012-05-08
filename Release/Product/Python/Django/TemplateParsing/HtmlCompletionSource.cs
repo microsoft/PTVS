@@ -39,24 +39,38 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         #region ICompletionSource Members
 
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
-            List<Completion> completions = new List<Completion>();
-            foreach (var tag in _htmlTags) {
-                completions.Add(new Completion(
-                    tag, 
-                    "<" + tag, 
-                    "", 
-                    _completionSourceProvider._glyphService.GetGlyph(StandardGlyphGroup.GlyphXmlAttribute, StandardGlyphItem.GlyphItemPublic), 
-                    "")
+            HtmlProjectionBuffer projBuffer;
+            if (_textBuffer.Properties.TryGetProperty<HtmlProjectionBuffer>(typeof(HtmlProjectionBuffer), out projBuffer)) {
+                List<Completion> completions = new List<Completion>();
+                foreach (var tag in _htmlTags) {
+                    completions.Add(new Completion(
+                        tag,
+                        "<" + tag,
+                        "",
+                        _completionSourceProvider._glyphService.GetGlyph(StandardGlyphGroup.GlyphXmlAttribute, StandardGlyphItem.GlyphItemPublic),
+                        "")
+                    );
+                }
+
+                //
+                var triggerPoint = session.GetTriggerPoint(_textBuffer);
+
+                var position = triggerPoint.GetPosition(_textBuffer.CurrentSnapshot);
+
+                var span = _textBuffer.CurrentSnapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
+
+                var match = projBuffer.BufferGraph.MapUpToFirstMatch(
+                    new SnapshotPoint(_textBuffer.CurrentSnapshot, position),
+                    PointTrackingMode.Positive,
+                    x => x.TextBuffer != _textBuffer,
+                    PositionAffinity.Predecessor
                 );
+                
+                if (match == null ||
+                    !match.Value.Snapshot.TextBuffer.ContentType.IsOfType(TemplateContentType.ContentTypeName)) {
+                    completionSets.Add(new HtmlCompletionSet("", "", span, completions, new Completion[0]));
+                }
             }
-
-            var triggerPoint = session.GetTriggerPoint(_textBuffer);
-
-            var position = triggerPoint.GetPosition(_textBuffer.CurrentSnapshot);
-
-            var span = _textBuffer.CurrentSnapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
-            
-            completionSets.Add(new HtmlCompletionSet("", "", span, completions, new Completion[0]));
         }
 
         class HtmlCompletionSet : CompletionSet {

@@ -2714,8 +2714,8 @@ g()",
             execute.Wait();
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
 
-            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
-                replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(ProjectAnalyzer), analyzer);
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
                 var names = replEval.GetMemberNames(analyzer, "t");
                 foreach (var name in names) {

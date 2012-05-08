@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void PropagateAnalyzer(ITextBuffer subjectBuffer) {
             PythonReplEvaluator replEvaluator;
             if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
-                subjectBuffer.Properties.AddProperty(typeof(ProjectAnalyzer), replEvaluator.ReplAnalyzer);
+                subjectBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEvaluator.ReplAnalyzer);
             }
         }
 

@@ -2337,7 +2337,7 @@ def g(a, b, c):
 
         private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
             var fact = new CPythonInterpreterFactory(version ?? new Version(2, 6), new Guid(), "test interpreter", "C:\\foo\\python.exe", "C:\\foo\\pythonw.exe", "PYTHONPATH", ProcessorArchitecture.X86);
-            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 for (int loops = 0; loops < 2; loops++) {
                     MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
                     MockTextView[] views = new MockTextView[inputs.Length];
@@ -2346,7 +2346,7 @@ def g(a, b, c):
                     for (int i = 0; i < inputs.Length; i++) {
                         buffers[i] = new MockTextBuffer(inputs[i].Input, inputs[i].Filename);
                         views[i] = new MockTextView(buffers[i]);
-                        buffers[i].AddProperty(typeof(ProjectAnalyzer), analyzer);
+                        buffers[i].AddProperty(typeof(VsProjectAnalyzer), analyzer);
                         bufferTable[inputs[i].Filename] = buffers[i];
                         analysis.Add(analyzer.MonitorTextBuffer(views[i], buffers[i]));
                     }

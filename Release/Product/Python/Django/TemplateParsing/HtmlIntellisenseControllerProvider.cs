@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             HtmlIntellisenseController controller = null;
             if (!textView.Properties.TryGetProperty<HtmlIntellisenseController>(typeof(HtmlIntellisenseController), out controller)) {
                 foreach (var buffer in subjectBuffers) {
-                    if (buffer.Properties.ContainsProperty(typeof(DjangoEditorFactory))) { // it's one of our buffers
+                    if (buffer.Properties.ContainsProperty(typeof(HtmlProjectionBuffer))) { // it's one of our buffers
                         controller = new HtmlIntellisenseController(this, textView);
                         textView.Properties.AddProperty(typeof(HtmlIntellisenseController), controller);
                     }

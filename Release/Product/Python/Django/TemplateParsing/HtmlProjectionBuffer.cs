@@ -52,7 +52,19 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 return _projBuffer;
             }
         }
-        
+
+        public IBufferGraph BufferGraph {
+            get {
+                return _bufferGraph;
+            }
+        }
+
+        public ITextBuffer DiskBuffer {
+            get {
+                return _diskBuffer;
+            }
+        }
+
         public void DiskBufferChanged(object sender, TextContentChangedEventArgs e) {
             foreach (var change in e.Changes) {
                 int closest;
@@ -249,6 +261,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         
                         // TODO: Should we only create one of these and share it amongst the buffers?
                         var tempProjectionBuffer = _bufferFactory.CreateProjectionBuffer(this, new object[] { span }, ProjectionBufferOptions.None, contentType);
+                        tempProjectionBuffer.Properties.AddProperty(typeof(TemplateTokenKind), curToken.Kind);
+                        tempProjectionBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), this);
 
                         var projSpan = tempProjectionBuffer.CurrentSnapshot.CreateTrackingSpan(
                             new Span(0, tempProjectionBuffer.CurrentSnapshot.Length),

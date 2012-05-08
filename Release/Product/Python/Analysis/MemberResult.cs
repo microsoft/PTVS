@@ -116,5 +116,20 @@ namespace Microsoft.PythonTools.Analysis {
                 return _vars();
             }
         }
+
+        /// <summary>
+        /// Gets the location(s) for the member(s) if they are available.
+        /// 
+        /// New in 1.5.
+        /// </summary>
+        public IEnumerable<LocationInfo> Locations {
+            get {
+                foreach (var ns in _vars()) {
+                    foreach (var location in ns.Locations) {
+                        yield return location;
+                    }
+                }
+            }
+        }
     }
 }

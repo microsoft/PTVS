@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools {
     public sealed class PythonToolsPackage : CommonPackage {
         private LanguagePreferences _langPrefs;
         public static PythonToolsPackage Instance;
-        private ProjectAnalyzer _analyzer;
+        private VsProjectAnalyzer _analyzer;
         private static Dictionary<Command, MenuCommand> _commands = new Dictionary<Command,MenuCommand>();
         private PythonAutomation _autoObject = new PythonAutomation();
         private IContentType _contentType;
@@ -324,7 +324,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         /// <summary>
         /// The analyzer which is used for loose files.
         /// </summary>
-        internal ProjectAnalyzer DefaultAnalyzer {
+        internal VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
                     _analyzer = CreateAnalyzer();
@@ -340,12 +340,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             _analyzer = CreateAnalyzer();
         }
 
-        private ProjectAnalyzer CreateAnalyzer() {
+        private VsProjectAnalyzer CreateAnalyzer() {
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
 
             var defaultFactory = model.GetAllPythonInterpreterFactories().GetDefaultInterpreter();
             EnsureCompletionDb(defaultFactory);
-            return new ProjectAnalyzer(defaultFactory.CreateInterpreter(), defaultFactory, model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>());
+            return new VsProjectAnalyzer(defaultFactory.CreateInterpreter(), defaultFactory, model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>());
         }
 
         /// <summary>
@@ -544,7 +544,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return replCommands;
         }
 
-        internal static bool TryGetStartupFileAndDirectory(out string filename, out string dir, out ProjectAnalyzer analyzer) {
+        internal static bool TryGetStartupFileAndDirectory(out string filename, out string dir, out VsProjectAnalyzer analyzer) {
             var startupProject = GetStartupProject();
             if (startupProject != null) {
                 filename = startupProject.GetStartupFile();

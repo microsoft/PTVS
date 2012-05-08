@@ -22,21 +22,21 @@ namespace Microsoft.PythonTools.Intellisense {
         /// part of an identifier then the expression is extended to complete the identifier.
         /// </summary>
         public static ExpressionAnalysis AnalyzeExpression(this ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
-            return ProjectAnalyzer.AnalyzeExpression(snapshot, span, forCompletion);
+            return VsProjectAnalyzer.AnalyzeExpression(snapshot, span, forCompletion);
         }
 
         /// <summary>
         /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
         /// </summary>
         public static SignatureAnalysis GetSignatures(this ITextSnapshot snapshot, ITrackingSpan span) {
-            return ProjectAnalyzer.GetSignatures(snapshot, span);
+            return VsProjectAnalyzer.GetSignatures(snapshot, span);
         }
 
         /// <summary>
         /// Gets a CompletionAnalysis providing a list of possible members the user can dot through.
         /// </summary>
         public static CompletionAnalysis GetCompletions(this ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
-            return ProjectAnalyzer.GetCompletions(snapshot, span, options);
+            return VsProjectAnalyzer.GetCompletions(snapshot, span, options);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         [Obsolete("Use GetCompletions with a CompletionOptions instance")]
         public static CompletionAnalysis GetCompletions(this ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
-            return ProjectAnalyzer.GetCompletions(snapshot, span, intersectMembers, hideAdvancedMembers);
+            return VsProjectAnalyzer.GetCompletions(snapshot, span, intersectMembers, hideAdvancedMembers);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// New in v1.1.
         /// </summary>
         public static MissingImportAnalysis GetMissingImports(this ITextSnapshot snapshot, ITrackingSpan span) {
-            return ProjectAnalyzer.GetMissingImports(snapshot, span);
+            return VsProjectAnalyzer.GetMissingImports(snapshot, span);
         }
     }
 }

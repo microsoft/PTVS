@@ -12,18 +12,25 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Utilities;
-using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Analysis.Values;
 
-namespace Microsoft.PythonTools.Django {
-    internal static class TemplateContentType {
-        public const string ContentTypeName = "DjangoTemplate";
+namespace Microsoft.PythonTools.Analysis {
+    public struct CallInfo {
+        private readonly ISet<Namespace>[] _args;
 
-        [Export, Name(ContentTypeName), BaseDefinition("code")]
-        internal static ContentTypeDefinition ContentTypeDefinition = null; // set via MEF
+        internal CallInfo(ISet<Namespace>[] args) {
+            _args = args;
+        }
+
+        public int NormalArgumentCount {
+            get {
+                return _args.Length;
+            }
+        }
+
+        public IEnumerable<AnalysisValue> GetArgument(int arg) {
+            return _args[arg];
+        }
     }
 }

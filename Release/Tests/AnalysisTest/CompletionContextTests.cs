@@ -210,9 +210,9 @@ baz
                 var analysis = AnalyzeExpression(i, code, forCompletion: false);
 
                 var fact = new CPythonInterpreterFactory();
-                using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                     var buffer = new MockTextBuffer(code);
-                    buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                    buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                     var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 #pragma warning disable 618
                     var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0));
@@ -401,7 +401,7 @@ class Baz(Foo, Bar):
                 location = sourceCode.Length + location + 1;
             }
             var fact = new CPythonInterpreterFactory();
-            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 return AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
             }
         }
@@ -411,7 +411,7 @@ class Baz(Foo, Bar):
                 location = sourceCode.Length + location + 1;
             }
             var fact = new CPythonInterpreterFactory();
-            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var analysis = AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
 
                 List<object> quickInfo = new List<object>();
@@ -425,9 +425,9 @@ class Baz(Foo, Bar):
             }
         }
 
-        private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, ProjectAnalyzer analyzer) {
+        private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, VsProjectAnalyzer analyzer) {
             var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
             var textView = new MockTextView(buffer);
             var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
             while (!item.ProjectEntry.IsAnalyzed) {
@@ -449,7 +449,7 @@ class Baz(Foo, Bar):
                 location = sourceCode.Length + location + 1;
             }
             var fact = new CPythonInterpreterFactory();
-            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer);
             }
         }
@@ -459,7 +459,7 @@ class Baz(Foo, Bar):
                 location = sourceCode.Length + location + 1;
             }
             var fact = new CPythonInterpreterFactory();
-            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer).GetCompletions(new MockGlyphService());
             }
         }
@@ -476,9 +476,9 @@ class Baz(Foo, Bar):
             }
         }
 
-        private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, ProjectAnalyzer analyzer) {
+        private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, VsProjectAnalyzer analyzer) {
             var buffer = new MockTextBuffer(sourceCode);
-            buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
             var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
@@ -498,9 +498,9 @@ class Baz(Foo, Bar):
                 location = sourceCode.Length + location;
             }
             var fact = new CPythonInterpreterFactory();
-            using (var analyzer = new ProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(sourceCode);
-                buffer.AddProperty(typeof(ProjectAnalyzer), analyzer);
+                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
                 var context = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
                 Assert.AreEqual(context.Text, expectedExpression);

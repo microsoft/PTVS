@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Intellisense {
     sealed class AnalysisQueue : IDisposable {
         private readonly Thread _workThread;
         private readonly AutoResetEvent _workEvent;
-        private readonly ProjectAnalyzer _analyzer;
+        private readonly VsProjectAnalyzer _analyzer;
         private readonly object _queueLock = new object();
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
-        internal AnalysisQueue(ProjectAnalyzer analyzer) {
+        internal AnalysisQueue(VsProjectAnalyzer analyzer) {
             _workEvent = new AutoResetEvent(false);
             _analyzer = analyzer;
 

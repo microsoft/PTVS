@@ -309,7 +309,7 @@ namespace Microsoft.PythonTools.Django {
 
                 var projBuffer = new HtmlProjectionBuffer(contentRegistry, factService, diskBuffer, _compModel.GetService<IBufferGraphFactoryService>());
                 diskBuffer.ChangedHighPriority += projBuffer.DiskBufferChanged;
-                diskBuffer.Properties.AddProperty(typeof(DjangoEditorFactory), typeof(DjangoEditorFactory));
+                diskBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), projBuffer);
 
                 Guid langSvcGuid;
                 IContentType contentType = SniffContentType(diskBuffer, out langSvcGuid) ??
@@ -329,7 +329,6 @@ namespace Microsoft.PythonTools.Django {
                     var newView = editAdapter.GetWpfTextView(view);
                     var intellisenseController = HtmlIntellisenseControllerProvider.GetOrCreateController(_compModel, newView);
                     intellisenseController.AttachKeyboardFilter();
-                    newView.Properties.AddProperty(typeof(DjangoEditorFactory), typeof(DjangoEditorFactory));
                 }
 
                 return VSConstants.S_OK;

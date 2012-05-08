@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Repl {
         private ListenerThread _curListener;
         private IReplWindow _window;
         private bool _multipleScopes = true, _enableAttach, _attached, _ownsAnalyzer;
-        private ProjectAnalyzer _replAnalyzer;
+        private VsProjectAnalyzer _replAnalyzer;
         private PythonInteractiveOptions _options;
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
@@ -100,10 +100,10 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal ProjectAnalyzer ReplAnalyzer {
+        internal VsProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null) {
-                    _replAnalyzer = new ProjectAnalyzer(Interpreter, _factProvider.GetInterpreterFactories().ToArray(), _errorProviderFactory);
+                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, _factProvider.GetInterpreterFactories().ToArray(), _errorProviderFactory);
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             string filename, dir, extraArgs = null;
-            ProjectAnalyzer analyzer;
+            VsProjectAnalyzer analyzer;
             if (PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer)) {
                 processInfo.WorkingDirectory = dir;
                 var startupProj = PythonToolsPackage.GetStartupProject();
@@ -736,7 +736,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            public OverloadDoc[] GetSignatureDocumentation(ProjectAnalyzer analyzer, string text) {
+            public OverloadDoc[] GetSignatureDocumentation(VsProjectAnalyzer analyzer, string text) {
                 using (new SocketLock(this)) {
                     if (!Socket.Connected || !_connected) {
                         return new OverloadDoc[0];
@@ -757,7 +757,7 @@ namespace Microsoft.PythonTools.Repl {
                 return null;
             }
 
-            public MemberResult[] GetMemberNames(ProjectAnalyzer analyzer, string text) {
+            public MemberResult[] GetMemberNames(VsProjectAnalyzer analyzer, string text) {
                 _completionResultEvent.Reset();
                 _memberResults = null;
                 
@@ -1205,11 +1205,11 @@ namespace Microsoft.PythonTools.Repl {
 
         #endregion
 
-        internal MemberResult[] GetMemberNames(ProjectAnalyzer analyzer, string text) {
+        internal MemberResult[] GetMemberNames(VsProjectAnalyzer analyzer, string text) {
             return _curListener.GetMemberNames(analyzer, text);
         }
 
-        private static MemberResult CreateMemberResult(ProjectAnalyzer analyzer, string name, string typeName) {
+        private static MemberResult CreateMemberResult(VsProjectAnalyzer analyzer, string name, string typeName) {
             switch (typeName) {
                 case "__builtin__.method-wrapper":
                 case "__builtin__.builtin_function_or_method":
@@ -1228,7 +1228,7 @@ namespace Microsoft.PythonTools.Repl {
             return new MemberResult(name, PythonMemberType.Field);
         }
 
-        internal OverloadDoc[] GetSignatureDocumentation(ProjectAnalyzer analyzer, string text) {
+        internal OverloadDoc[] GetSignatureDocumentation(VsProjectAnalyzer analyzer, string text) {
             return _curListener.GetSignatureDocumentation(analyzer, text);
         }
 

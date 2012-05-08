@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// A namespace represents a set of variables and code.  Examples of 
     /// namespaces include top-level code, classes, and functions.
     /// </summary>
-    internal class Namespace : ISet<Namespace>, IAnalysisValue {
+    internal class Namespace : AnalysisValue, ISet<Namespace>, IAnalysisValue {
         [ThreadStatic] private static HashSet<Namespace> _processing;
 
         public Namespace() { }
@@ -45,10 +45,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
             }
         }*/
-
-        public virtual IEnumerable<LocationInfo> Locations {
-            get { return LocationInfo.Empty; }
-        }
 
         public LocationInfo Location {
             get {
@@ -81,10 +77,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public virtual PythonMemberType ResultType {
             get { return PythonMemberType.Unknown; }
-        }
-
-        public virtual object GetConstantValue() {
-            return Type.Missing;
         }
 
         public virtual IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {

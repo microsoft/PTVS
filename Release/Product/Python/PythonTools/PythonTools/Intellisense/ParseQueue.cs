@@ -32,14 +32,14 @@ namespace Microsoft.PythonTools.Intellisense {
     /// the parser is called when the buffer should be re-parsed.
     /// </summary>
     internal class ParseQueue {
-        internal readonly ProjectAnalyzer _parser;
+        internal readonly VsProjectAnalyzer _parser;
         private int _analysisPending;
 
         /// <summary>
         /// Creates a new parse queue which will parse using the provided parser.
         /// </summary>
         /// <param name="parser"></param>
-        public ParseQueue(ProjectAnalyzer parser) {
+        public ParseQueue(VsProjectAnalyzer parser) {
             _parser = parser;
         }
 
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     class BufferParser {
-        internal ProjectAnalyzer _parser;
+        internal VsProjectAnalyzer _parser;
         private readonly Timer _timer;
         private readonly Dispatcher _dispatcher;
         private IList<ITextBuffer> _buffers;
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(Dispatcher dispatcher, IProjectEntry initialProjectEntry, ProjectAnalyzer parser, ITextBuffer buffer) {
+        public BufferParser(Dispatcher dispatcher, IProjectEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };

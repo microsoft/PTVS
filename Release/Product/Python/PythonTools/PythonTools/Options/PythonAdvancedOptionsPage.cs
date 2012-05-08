@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Options {
         private const string WaitOnNormalExitSetting = "WaitOnNormalExit";
         private const string AutoAnalysisSetting = "AutoAnalysis";
         private const string TeeStandardOutSetting = "TeeStandardOut";
-        private const string CrossModulAnalysisLimitSetting = "CrossModulAnalysisLimit";
+        private const string CrossModuleAnalysisLimitSetting = "CrossModuleAnalysisLimit";
         private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
         private const string UpdateSearchPathsWhenAddingLinkedFilesSetting = "UpdateSearchPathsWhenAddingLinkedFiles";
         private const string DebugStdLibSetting = "DebugStdLib";
@@ -152,9 +152,9 @@ namespace Microsoft.PythonTools.Options {
             _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
             _updateSearchPathsWhenAddingLinkedFiles = LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting) ?? true;
             _debugStdLib = LoadBool(DebugStdLibSetting) ?? false;
-            var analysisLimit = LoadString(CrossModulAnalysisLimitSetting);
+            var analysisLimit = LoadString(CrossModuleAnalysisLimitSetting);
             if (analysisLimit == null) {
-                _crossModuleAnalysisLimit = 300;    // default analysis limit
+                _crossModuleAnalysisLimit = 1000;    // default analysis limit
             } else if (analysisLimit == "-") {
                 _crossModuleAnalysisLimit = null;
             } else {
@@ -173,9 +173,9 @@ namespace Microsoft.PythonTools.Options {
             SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
             SaveBool(DebugStdLibSetting, _debugStdLib);
             if (_crossModuleAnalysisLimit != null) {
-                SaveInt(CrossModulAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);
+                SaveInt(CrossModuleAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);
             } else {
-                SaveString(CrossModulAnalysisLimitSetting, "-");
+                SaveString(CrossModuleAnalysisLimitSetting, "-");
             }
 
         }

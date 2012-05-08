@@ -24,6 +24,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -57,12 +60,113 @@ namespace Microsoft.PythonTools.Django.Project {
                 menuService.AddCommand(menuItem);
             }
 
+            var pyProj = this.innerVsHierarchy.GetProject().GetPythonProject();
+            if (pyProj != null) {
+                var analyzer = pyProj.GetProjectAnalyzer();
+                var projAnalyzer = pyProj.GetAnalyzer();
+                var djangoMod = analyzer.GetModule("django");
+                foreach (var mod in djangoMod) {
 
+                    foreach (var loc in mod.Locations) {
+                        // replace any cached analysis w/ a live one...
+                        var dirName = Path.GetDirectoryName(loc.FilePath);
+                        projAnalyzer.AnalyzeDirectory(dirName);
+                        analyzer.SpecializeFunction("django.template.loader", "render_to_string", RenderToStringProcessor);
+                        analyzer.SpecializeFunction("django.template.base.Library", "filter", FilterProcessor);
+                        analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor);
+                        break;
+                    }
+                }
+            }
             // Load the icon we will be using for our nodes
             /*Assembly assembly = Assembly.GetExecutingAssembly();
             nodeIcon = new Icon(assembly.GetManifestResourceStream("Microsoft.VisualStudio.VSIP.Samples.Flavor.Node.ico"));
             this.FileAdded += new EventHandler<ProjectDocumentsChangeEventArgs>(this.UpdateIcons);
             this.FileRenamed += new EventHandler<ProjectDocumentsChangeEventArgs>(this.UpdateIcons);*/
+        }
+
+        internal Dictionary<string, string> _tags = new Dictionary<string,string>();
+        internal Dictionary<string, string> _filters = new Dictionary<string, string>();
+        private void FilterProcessor(CallExpression call, CallInfo callInfo) {
+            if (callInfo.NormalArgumentCount >= 3) {
+                foreach (var name in callInfo.GetArgument(1)) {
+                    var constName = name.GetConstantValue();
+                    string unicodeName = constName as string;
+                    if (unicodeName != null) {
+                        _filters[unicodeName] = unicodeName;
+                    }
+
+                    AsciiString asciiName = constName as AsciiString;
+                    if (asciiName != null) {
+                        _filters[asciiName.String] = asciiName.String;
+                    }
+                }
+            }
+        }
+
+        private void TagProcessor(CallExpression call, CallInfo callInfo) {
+            if (callInfo.NormalArgumentCount >= 3) {
+                foreach (var name in callInfo.GetArgument(1)) {
+                    var constName = name.GetConstantValue();
+                    string unicodeName = constName as string;
+                    if (unicodeName != null) {
+                        _tags[unicodeName] = unicodeName;
+                    }
+
+                    AsciiString asciiName = constName as AsciiString;
+                    if (asciiName != null) {
+                        _tags[asciiName.String] = asciiName.String;
+                    }
+                }
+            }
+        }
+
+        private void RenderToStringProcessor(CallExpression call, CallInfo callInfo) {
+            if (call.Args.Count == 2) {
+                var templateName = call.Args[0].Expression as ConstantExpression;
+                if (templateName != null) {
+                    var variablesList = call.Args[1].Expression as DictionaryExpression;
+                    if (variablesList != null) {
+
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Analyzes a complete directory including all of the contained files and packages.
+        /// </summary>
+        public void AnalyzeDirectory(PythonAnalyzer analyzer, string dir) {
+            try {
+                foreach (string filename in Directory.GetFiles(dir, "*.py")) {
+                    analyzer.AddModule(
+                        PythonAnalyzer.PathToModuleName(filename),
+                        filename,
+                        null
+                    );
+                }
+            } catch (DirectoryNotFoundException) {
+            }
+
+            try {
+                foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
+                    analyzer.AddModule(
+                        PythonAnalyzer.PathToModuleName(filename),
+                        filename,
+                        null
+                    );
+                }
+            } catch (DirectoryNotFoundException) {
+            }
+
+            try {
+                foreach (string innerDir in Directory.GetDirectories(dir)) {
+                    if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
+                        AnalyzeDirectory(analyzer, innerDir);
+                    }
+                }
+            } catch (DirectoryNotFoundException) {
+            }
         }
 
         private void OpenFileBeforeQueryStatus(object sender, EventArgs e) {
@@ -179,7 +283,6 @@ namespace Microsoft.PythonTools.Django.Project {
             }
             return hr;
         }
-
 
         private int OpenWithDjangoEditor(uint selectionItemId) {
             Guid ourEditor = typeof(DjangoEditorFactory).GUID;
@@ -423,7 +526,6 @@ namespace Microsoft.PythonTools.Django.Project {
 
             return ShowContextMenu(ctxMenu, VsMenus.guidSHLMainMenu, points);
         }
-
 
         /// <summary>
         /// Shows the specified context menu at a specified location.

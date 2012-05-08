@@ -214,12 +214,15 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public string FilePath {
-            get { return _filename; }
+            get {
+                EnsureLoaded();
+                return _filename; 
+            }
         }
 
         public string GetLine(int lineNo) {
             lineNo--; // line is 1 based
-            string[] lines = File.ReadAllLines(_filename);
+            string[] lines = File.ReadAllLines(FilePath);
             if (lineNo < lines.Length) {
                 return lines[lineNo];
             }
@@ -247,7 +250,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region ILocatedMember Members
 
         public IEnumerable<LocationInfo> Locations {
-            get { yield return new LocationInfo(this, 1, 1); }
+            get {
+                EnsureLoaded();
+                yield return new LocationInfo(this, 1, 1); 
+            }
         }
 
         #endregion

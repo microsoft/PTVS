@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
             return entry;
         }
-
+        
         /// <summary>
         /// Removes the specified project entry from the current analysis.
         /// 
@@ -203,16 +203,27 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// Looks up the specified module by name.
+        /// </summary>
+        public MemberResult[] GetModule(string name) {
+            return GetModules(modName => modName != name);
+        }
+
+        /// <summary>
         /// Gets a top-level list of all the available modules as a list of MemberResults.
         /// </summary>
         /// <returns></returns>
         public MemberResult[] GetModules(bool topLevelOnly = false) {
+            return GetModules(modName => topLevelOnly && modName.IndexOf('.') != -1);
+        }
+
+        private MemberResult[] GetModules(Func<string, bool> excludedPredicate) {
             var d = new Dictionary<string, List<ModuleLoadState>>();
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (topLevelOnly && modName.IndexOf('.') != -1) {
+                if (excludedPredicate(modName)) {
                     continue;
                 }
 
@@ -228,6 +239,10 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
+            return ModuleDictToMemberResult(d);
+        }
+
+        private static MemberResult[] ModuleDictToMemberResult(Dictionary<string, List<ModuleLoadState>> d) {
             var result = new MemberResult[d.Count];
             int pos = 0;
             foreach (var kvp in d) {
@@ -363,8 +378,16 @@ namespace Microsoft.PythonTools.Analysis {
             return new MemberResult[0];
         }
 
+        public void SpecializeFunction(string moduleName, string name, Action<CallExpression, CallInfo> dlg) {
+            SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(call, new CallInfo(types)); return null; });
+        }
+
         public void SpecializeFunction(string moduleName, string name, Action<CallExpression> dlg) {
             SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(call); return null; });
+        }
+
+        public void SpecializeFunction(string moduleName, string name, Action<PythonAnalyzer, CallExpression> dlg) {
+            SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(this, call); return null; });
         }
 
         /// <summary>
@@ -448,17 +471,20 @@ namespace Microsoft.PythonTools.Analysis {
         private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg) {
             ModuleReference module;
 
+            int lastDot;
             if (Modules.TryGetValue(moduleName, out module)) {
-                BuiltinModule builtin = module.Module as BuiltinModule;
-                Debug.Assert(builtin != null);
-                if (builtin != null) {
-                    foreach (var v in builtin[name]) {
-                        BuiltinFunctionInfo funcInfo = v as BuiltinFunctionInfo;
-                        if (funcInfo != null && !(funcInfo is SpecializedBuiltinFunction)) {
-                            builtin[name] = new SpecializedBuiltinFunction(this, funcInfo.Function, dlg).SelfSet;
-                            break;
-                        }
-                    }
+                IModule mod = module.Module as IModule;
+                Debug.Assert(mod != null);
+                if (mod != null) {
+                    mod.SpecializeFunction(name, dlg);
+                }
+            } else if ((lastDot = moduleName.LastIndexOf('.')) != -1 && 
+                Modules.TryGetValue(moduleName.Substring(0, lastDot), out module)) {
+
+                IModule mod = module.Module as IModule;
+                Debug.Assert(mod != null);
+                if (mod != null) {
+                    mod.SpecializeFunction(moduleName.Substring(lastDot + 1, moduleName.Length - (lastDot + 1)) + "." + name, dlg);
                 }
             }
         }

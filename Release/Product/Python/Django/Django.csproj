@@ -165,7 +165,12 @@
       <DependentUpon>DjangoLauncherOptions.cs</DependentUpon>
     </Compile>
     <Compile Include="DjangoEditorFactory.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="Intellisense\DjangoCompletionSource.cs" />
+    <Compile Include="Intellisense\DjangoCompletionSourceProvider.cs" />
+    <Compile Include="Intellisense\DjangoIntellisenseController.cs" />
+    <Compile Include="Intellisense\DjangoIntellisenseControllerProvider.cs" />
     <Compile Include="Project\DjangoProjectFactory.cs" />
     <Compile Include="Project\DjangoProject.cs" />
     <Compile Include="Project\NewAppDialog.xaml.cs">
