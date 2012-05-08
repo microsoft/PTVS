@@ -349,6 +349,8 @@ class DjangoBreakpointInfo(object):
                 line_info = []
                 file_len = 0
                 for line in contents:
+                    if not line_info and line.startswith('\xef\xbb\xbf'):
+                        line = line[3:] # Strip the BOM, Django seems to ignore this...
                     file_len += len(line)
                     line_info.append(file_len)
                 contents.close()
@@ -419,6 +421,7 @@ class Thread(object):
         self.prev_trace_func = None
         self.trace_func_stack = []
         self.reported_process_loaded = False
+        self.django_stepping = None
         if sys.platform == 'cli':
             self.frames = []
     
@@ -467,12 +470,17 @@ class Thread(object):
                 origin, (start, end) = source_obj
                     
                 active_bps = DJANGO_BREAKPOINTS.get(origin.name)
+                should_break = False
                 if active_bps is not None:
                     should_break, bkpt_id = active_bps.should_break(start, end)
                     if should_break:
                         probe_stack()
                         update_all_thread_stacks(self)
                         self.block(lambda: (report_breakpoint_hit(bkpt_id, self.id), mark_all_threads_for_break()))
+                if not should_break and self.django_stepping:
+                    self.django_stepping = None
+                    self.stepping = STEPPING_OVER
+                    self.block_maybe_attach()
 
         if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
             probe_stack()
@@ -1095,6 +1103,13 @@ class DebuggerLoop(object):
         tid = read_int(self.conn)
         thread = get_thread_from_id(tid)
         if thread is not None:
+            if DJANGO_DEBUG:
+                source_obj = get_django_frame_source(thread.cur_frame)
+                if source_obj is not None:
+                    thread.django_stepping = True
+                    self.command_resume_all()
+                    return
+
             thread.stepping = STEPPING_OVER
             self.command_resume_all()
 

@@ -227,5 +227,115 @@ namespace AnalysisTest {
                 return PythonPaths.Python26;
             }
         }
+
+        internal enum StepKind {
+            Into,
+            Out,
+            Over,
+            Resume
+        }
+
+        internal class ExpectedStep {
+            public readonly StepKind Kind;
+            public readonly int StartLine;
+
+            public ExpectedStep(StepKind kind, int startLine) {
+                Kind = kind;
+                StartLine = startLine;
+            }
+        }
+
+        internal void StepTest(string filename, params ExpectedStep[] kinds) {
+            StepTest(filename, new int[0], new Action<PythonProcess>[0], kinds);
+        }
+
+        internal void StepTest(string filename, int[] breakLines, Action<PythonProcess>[] breakAction, params ExpectedStep[] kinds) {
+            StepTest(filename, null, null, breakLines, breakAction, null, PythonDebugOptions.None, true, kinds);
+        }
+
+        internal void StepTest(string filename, string breakFile, string arguments, int[] breakLines, Action<PythonProcess>[] breakAction, Action processLoaded, PythonDebugOptions options = PythonDebugOptions.None, bool waitForExit = true, params ExpectedStep[] kinds) {
+            var debugger = new PythonDebugger();
+            if (breakFile == null) {
+                breakFile = filename;
+            }
+
+            string fullPath = Path.GetFullPath(filename);
+            string dir = Path.GetDirectoryName(filename);
+            var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\" " + (arguments ?? ""), dir, "", null, options);
+            PythonThread thread = null;
+            process.ThreadCreated += (sender, args) => {
+                thread = args.Thread;
+            };
+
+
+            AutoResetEvent processEvent = new AutoResetEvent(false);
+
+            bool processLoad = false, stepComplete = false;
+            process.ProcessLoaded += (sender, args) => {
+                foreach (var breakLine in breakLines) {
+                    var bp = AddBreakPoint(process, breakLine, breakFile);
+                    bp.Add();
+                }
+
+                processLoad = true;
+                processEvent.Set();
+
+                if (processLoaded != null) {
+                    processLoaded();
+                }
+            };
+
+            process.StepComplete += (sender, args) => {
+                stepComplete = true;
+                processEvent.Set();
+            };
+
+            int breakHits = 0;
+            process.BreakpointHit += (sender, args) => {
+                breakAction[breakHits++](process);
+                stepComplete = true;
+                processEvent.Set();
+            };
+
+            process.Start();
+
+            for (int curStep = 0; curStep < kinds.Length; curStep++) {
+                // process the stepping events as they occur, we cannot callback during the
+                // event because the notificaiton happens on the debugger thread and we 
+                // need to callback to get the frames.
+                AssertWaited(processEvent);
+
+                // first time through we hit process load, each additional time we should hit step complete.
+                Debug.Assert((processLoad == true && stepComplete == false && curStep == 0) ||
+                            (stepComplete == true && processLoad == false && curStep != 0));
+
+                processLoad = stepComplete = false;
+
+                var frames = thread.Frames;
+                var stepInfo = kinds[curStep];
+                Assert.AreEqual(stepInfo.StartLine, frames[0].LineNo, String.Format("{0} != {1} on {2} step", stepInfo.StartLine, frames[0].LineNo, curStep));
+
+                switch (stepInfo.Kind) {
+                    case StepKind.Into:
+                        thread.StepInto();
+                        break;
+                    case StepKind.Out:
+                        thread.StepOut();
+                        break;
+                    case StepKind.Over:
+                        thread.StepOver();
+                        break;
+                    case StepKind.Resume:
+                        process.Resume();
+                        break;
+                }
+            }
+
+            if (waitForExit) {
+                process.WaitForExit();
+            } else {
+                process.Terminate();
+            }
+        }
     }
 }

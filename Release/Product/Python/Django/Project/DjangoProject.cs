@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.Django.Project {
         internal Dictionary<string, HashSet<AnalysisValue>> _tags = new Dictionary<string, HashSet<AnalysisValue>>();
         internal Dictionary<string, HashSet<AnalysisValue>> _filters = new Dictionary<string, HashSet<AnalysisValue>>();
         internal Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>> _templateFiles = new Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>>(StringComparer.OrdinalIgnoreCase);
+        private ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>> _contextTable = new ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>>();
 
         private static ImageList _images;
 
@@ -264,8 +265,6 @@ namespace Microsoft.PythonTools.Django.Project {
                 Arguments = new HashSet<AnalysisValue>();
             }
         }
-
-        private ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>> _contextTable = new ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>>();
 
         private IEnumerable<AnalysisValue> ContextClassProcessor(CallExpression call, CallInfo callInfo) {
             HashSet<AnalysisValue> res = new HashSet<AnalysisValue>();
@@ -524,7 +523,7 @@ namespace Microsoft.PythonTools.Django.Project {
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.cmdidValidateDjangoApp:
-                        ValidateDjangoApp(); ;
+                        ValidateDjangoApp();
                         return VSConstants.S_OK;
                     case PkgCmdIDList.cmdidStartNewApp:
                         StartNewApp();

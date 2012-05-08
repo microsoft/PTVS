@@ -66,6 +66,47 @@ namespace AnalysisTest.Django {
         }
 
         [TestMethod]
+        public void TemplateStepping() {
+            StepTest(
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "manage.py"),
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "Templates\\polls\\loop.html"),
+                "runserver --noreload",
+                new[] { 1 }, // break on line 1,
+                new Action<PythonProcess>[] { x => {  } },
+                new WebPageRequester("http://127.0.0.1:8000/loop/").DoRequest,
+                PythonDebugOptions.DjangoDebugging,
+                false,
+                new ExpectedStep(StepKind.Resume, 2),     // first line in manage.py
+                new ExpectedStep(StepKind.Over, 1),     // step over for
+                new ExpectedStep(StepKind.Over, 2),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 3),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 2),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 3),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 2),     // step over {{ color }}
+                new ExpectedStep(StepKind.Resume, 3)     // step over {{ color }}
+            );
+
+            StepTest(
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "manage.py"),
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "Templates\\polls\\loop_nobom.html"),
+                "runserver --noreload",
+                new[] { 1 }, // break on line 1,
+                new Action<PythonProcess>[] { x => { } },
+                new WebPageRequester("http://127.0.0.1:8000/loop_nobom/").DoRequest,
+                PythonDebugOptions.DjangoDebugging,
+                false,
+                new ExpectedStep(StepKind.Resume, 2),     // first line in manage.py
+                new ExpectedStep(StepKind.Over, 1),     // step over for
+                new ExpectedStep(StepKind.Over, 2),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 3),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 2),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 3),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 2),     // step over {{ color }}
+                new ExpectedStep(StepKind.Resume, 3)     // step over {{ color }}
+            );
+        }
+
+        [TestMethod]
         public void BreakInTemplate() {
             Init(DbState.BarApp);
 
@@ -119,6 +160,7 @@ namespace AnalysisTest.Django {
             }
 
             public void DoRequestWorker(object data) {
+                Console.WriteLine("Waiting for port to open...");
                 var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 socket.Blocking = true;
                 for (int i = 0; i < 200; i++) {
@@ -131,6 +173,7 @@ namespace AnalysisTest.Django {
                 }
                 socket.Close();
 
+                Console.WriteLine("Requesting {0}", _url);
                 HttpWebRequest myReq = (HttpWebRequest)WebRequest.Create(_url);
                 try {
                     myReq.GetResponse();
