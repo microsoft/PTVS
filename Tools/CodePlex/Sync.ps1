@@ -1,4 +1,4 @@
-param( [string] $direction, [string]$hg_repo, [string]$tfs_repo, [string]$commit_msg = "")
+param( [string] $direction, [string]$hg_repo, [string]$tfs_repo, [string]$commit_msg = "", [string]$suppress_push = "")
 
 pushd
 
@@ -55,7 +55,9 @@ function commit_hg($hg_repo) {
     } else {
         hg commit
     }    
-	hg push 
+    if ($suppress_push -eq "") {
+        hg push 
+	}
 }
 
 function test_build($target_repo) {
