@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private VariableDef _keyValueTupleVariable;
         private readonly ProjectEntry _declaringModule;
         private readonly int _declVersion;
-        private SpecializedDictionaryMethod _getMethod, _itemsMethod, _keysMethod, _valuesMethod, _iterKeysMethod, _iterValuesMethod, _popMethod, _popItemMethod, _iterItemsMethod;
+        private SpecializedDictionaryMethod _getMethod, _itemsMethod, _keysMethod, _valuesMethod, _iterKeysMethod, _iterValuesMethod, _popMethod, _popItemMethod, _iterItemsMethod, _updateMethod;
 
         public DictionaryInfo(ProjectEntry declaringModule)
             : base(declaringModule.ProjectState._dictType) {
@@ -38,7 +38,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _declaringModule = declaringModule;
             _declVersion = declaringModule.AnalysisVersion;
         }
-
         
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
             return _valueTypes.Types;
@@ -122,6 +121,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (!unit.ProjectState.LanguageVersion.Is3x()) {
                         res = GetOrMakeSpecializedMethod(ref _iterItemsMethod, "iteritems", method => new DictionaryItemsIterableBoundMethod(method, this));
                     }
+                    break;
+                case "update":
+                    res = GetOrMakeSpecializedMethod(ref _updateMethod, "update", method => new DictionaryUpdateBoundMethod(method, this));
                     break;
             }
 
@@ -399,6 +401,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _myDict._keyTypes.AddDependency(unit);
 
                 return _myDict.KeyValueTuple;
+            }
+        }
+
+        class DictionaryUpdateBoundMethod : SpecializedDictionaryMethod {
+            internal DictionaryUpdateBoundMethod(BuiltinMethodInfo method, DictionaryInfo myDict)
+                : base(method, myDict) {
+            }
+
+            public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+                if (args.Length >= 1) {
+                    foreach (var type in args[0]) {
+                        DictionaryInfo otherDict = type as DictionaryInfo;
+                        if (otherDict != null) {
+                            _myDict._valueTypes.AddTypes(node, unit, otherDict._valueTypes.Types);
+                            _myDict._keyTypes.AddTypes(node, unit, otherDict._keyTypes.Types);
+                        }
+                    }
+                }
+                // TODO: Process keyword args and add those values to our dictionary, plus a string key
+
+                return EmptySet<Namespace>.Instance;
             }
         }
 

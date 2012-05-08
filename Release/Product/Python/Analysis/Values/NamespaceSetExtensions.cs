@@ -239,7 +239,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
             Namespace type = null;
             if (types.Count == 1) {
                 type = System.Linq.Enumerable.First(types);
-            } else if (types.Count > 0) {
+            } else if(types.Count == 2) {
+                var enumer = types.GetEnumerator();
+                Namespace first = null, second = null;
+                if (enumer.MoveNext()) {
+                    first = enumer.Current;
+                }
+                if (enumer.MoveNext()) {
+                    second = enumer.Current;
+                }
+
+                if (first != null && second != null) {
+                    if (first.GetConstantValue() == null) {
+                        return second;
+                    } else if (second.GetConstantValue() == null) {
+                        return first;
+                    }
+                }
+            } 
+            
+            if (types.Count > 0) {
                 // simplify the types.
                 var set = new HashSet<Namespace>(types, TypeUnion.UnionComparer);
                 if (set.Count == 1) {

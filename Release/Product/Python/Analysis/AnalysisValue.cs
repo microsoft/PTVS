@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -23,6 +24,18 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public class AnalysisValue {
         internal AnalysisValue() {
+        }
+
+        /// <summary>
+        /// Gets the name of the value if it has one, or null if it's a non-named item.
+        /// 
+        /// The name property here is typically the same value you'd get by accessing __name__
+        /// on the real Python object.
+        /// </summary>
+        public virtual string Name {
+            get {
+                return null;
+            }
         }
 
         /// <summary>
@@ -41,6 +54,34 @@ namespace Microsoft.PythonTools.Analysis {
         /// <returns></returns>
         public virtual object GetConstantValue() {
             return Type.Missing;
+        }
+
+        /// <summary>
+        /// Returns the constant value as a string.  This returns a string if the constant
+        /// value is either a unicode or ASCII string.
+        /// </summary>
+        public string GetConstantValueAsString() {
+            var constName = GetConstantValue();
+            if (constName != null) {
+                string unicodeName = constName as string;
+                AsciiString asciiName;
+                if (unicodeName != null) {
+                    return unicodeName;
+                } else if ((asciiName = constName as AsciiString) != null) {
+                    return asciiName.String;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a list of key/value pairs stored in the this object which are retrivable using
+        /// indexing.  For lists the key values will be integers (potentially constant, potentially not), 
+        /// for dicts the key values will be arbitrary analysis values.
+        /// </summary>
+        /// <returns></returns>
+        public virtual IEnumerable<KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>> GetItems() {
+            yield break;
         }
     }
 }

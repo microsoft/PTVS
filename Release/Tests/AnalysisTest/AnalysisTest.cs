@@ -647,6 +647,24 @@ c = y().abc
             AssertContainsExactly(entry.GetTypesFromNameByIndex("b", 1), StringType);
             AssertContainsExactly(entry.GetTypesFromNameByIndex("c", 1), StringType);
         }
+
+        [TestMethod]
+        public void TestGetAttr() {
+            var entry = ProcessText(@"
+class x(object):
+    def __init__(self, value):
+        self.value = value
+        
+a = x(42)
+b = getattr(a, 'value')
+c = getattr(a, 'dne', 'foo')
+d = getattr(a, 'value', 'foo')
+");
+
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("c", 1), StringType);
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("d", 1), IntType, StringType);
+        }
         
         [TestMethod]
         public void TestListAppend() {
@@ -1763,6 +1781,18 @@ x = {42:'abc'}
             Assert.AreEqual(entry.GetValuesByIndex("x.itervalues().next()", 1).Select(x => x.PythonType).First(), StringType);
             Assert.AreEqual(entry.GetValuesByIndex("x.iteritems().next()[0]", 1).Select(x => x.PythonType).First(), IntType);
             Assert.AreEqual(entry.GetValuesByIndex("x.iteritems().next()[1]", 1).Select(x => x.PythonType).First(), StringType);
+        }
+
+        [TestMethod]
+        public void TestDictUpdate() {
+            var entry = ProcessText(@"
+a = {42:100}
+b = {}
+b.update(a)
+");
+
+            Assert.AreEqual(entry.GetValuesByIndex("b.items()[0][0]", 1).Select(x => x.PythonType).First(), IntType);
+            Assert.AreEqual(entry.GetValuesByIndex("b.items()[0][1]", 1).Select(x => x.PythonType).First(), IntType);
         }
 
         [TestMethod]
@@ -3077,6 +3107,9 @@ def f():
 def g():
     return c.Length
 
+def h():
+    return f
+    return g
 
 class return_func_class:
     def return_func(self):
@@ -3109,6 +3142,7 @@ class return_func_class:
             //AssertContainsExactly(GetVariableDescriptions(entry, "System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "None", 1), "None");
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "f.func_name", 1), "property of type str");
+            AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "h", 1), "def h(...) -> def f(...) -> str, def g(...)");
 
             // method which returns it's self, we shouldn't stack overflow producing the help...
             AssertContainsExactly(GetVariableDescriptionsByIndex(entry, "return_func_class().return_func", 1), @"method return_func of return_func_class objects  -> method return_func of return_func_class objects ...

@@ -39,6 +39,8 @@ namespace Microsoft.PythonTools.Django.Project {
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
         private static ImageList _images;
+        internal Dictionary<string, string> _tags = new Dictionary<string, string>();
+        internal Dictionary<string, string> _filters = new Dictionary<string, string>();
 
         #region IVsAggregatableProject
 
@@ -74,60 +76,98 @@ namespace Microsoft.PythonTools.Django.Project {
                         analyzer.SpecializeFunction("django.template.loader", "render_to_string", RenderToStringProcessor);
                         analyzer.SpecializeFunction("django.template.base.Library", "filter", FilterProcessor);
                         analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor);
+                        analyzer.SpecializeFunction("django.template.base.Parser", "parse", ParseProcessor);
+                        analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library");
                         break;
                     }
                 }
             }
-            // Load the icon we will be using for our nodes
-            /*Assembly assembly = Assembly.GetExecutingAssembly();
-            nodeIcon = new Icon(assembly.GetManifestResourceStream("Microsoft.VisualStudio.VSIP.Samples.Flavor.Node.ico"));
-            this.FileAdded += new EventHandler<ProjectDocumentsChangeEventArgs>(this.UpdateIcons);
-            this.FileRenamed += new EventHandler<ProjectDocumentsChangeEventArgs>(this.UpdateIcons);*/
         }
 
-        internal Dictionary<string, string> _tags = new Dictionary<string,string>();
-        internal Dictionary<string, string> _filters = new Dictionary<string, string>();
-        private void FilterProcessor(CallExpression call, CallInfo callInfo) {
-            if (callInfo.NormalArgumentCount >= 3) {
-                foreach (var name in callInfo.GetArgument(1)) {
-                    var constName = name.GetConstantValue();
-                    string unicodeName = constName as string;
-                    if (unicodeName != null) {
-                        _filters[unicodeName] = unicodeName;
-                    }
-
-                    AsciiString asciiName = constName as AsciiString;
-                    if (asciiName != null) {
-                        _filters[asciiName.String] = asciiName.String;
+        private void ParseProcessor(CallExpression call, CallInfo callInfo) {
+            // def parse(self, parse_until=None):
+            // We want to find closing tags here passed to parse_until...
+            if (callInfo.NormalArgumentCount >= 2) {
+                foreach (var tuple in callInfo.GetArgument(1)) {
+                    foreach (var indexValue in tuple.GetItems()) {
+                        var values = indexValue.Value;
+                        foreach (var value in values) {
+                            var str = value.GetConstantValueAsString();
+                            if (str != null) {
+                                RegisterTag(_tags, str);
+                            }
+                        }
                     }
                 }
             }
+        }
+
+        private static string GetConstantString(AnalysisValue value) {
+            var constName = value.GetConstantValue();
+            if (constName != null) {
+                string unicodeName = constName as string;
+                AsciiString asciiName;
+                if (unicodeName != null) {
+                    return unicodeName;
+                } else if ((asciiName = constName as AsciiString) != null) {
+                    return asciiName.String;
+                }
+            } 
+            return null;
+        }
+
+        private void FilterProcessor(CallExpression call, CallInfo callInfo) {
+            ProcessTags(callInfo, _filters);
         }
 
         private void TagProcessor(CallExpression call, CallInfo callInfo) {
+            ProcessTags(callInfo, _tags);
+        }
+
+        private static void ProcessTags(CallInfo callInfo, Dictionary<string, string> tags) {
             if (callInfo.NormalArgumentCount >= 3) {
+                // library.filter(name, value)
                 foreach (var name in callInfo.GetArgument(1)) {
                     var constName = name.GetConstantValue();
-                    string unicodeName = constName as string;
-                    if (unicodeName != null) {
-                        _tags[unicodeName] = unicodeName;
-                    }
-
-                    AsciiString asciiName = constName as AsciiString;
-                    if (asciiName != null) {
-                        _tags[asciiName.String] = asciiName.String;
+                    if (constName == Type.Missing) {
+                        if (name.Name != null) {
+                            RegisterTag(tags, name.Name);
+                        }
+                    } else {
+                        var strName = name.GetConstantValueAsString();
+                        if (strName != null) {
+                            RegisterTag(tags, strName);
+                        }
                     }
                 }
-            }
+            } else if (callInfo.NormalArgumentCount >= 2) {
+                // library.filter(value)
+                foreach (var name in callInfo.GetArgument(1)) {
+                    if (name.Name != null) {
+                        RegisterTag(tags, name.Name);
+                    }
+                }
+            }            
+        }
+
+        private static void RegisterTag(Dictionary<string, string> tags, string name) {
+            tags[name] = name;
         }
 
         private void RenderToStringProcessor(CallExpression call, CallInfo callInfo) {
-            if (call.Args.Count == 2) {
-                var templateName = call.Args[0].Expression as ConstantExpression;
-                if (templateName != null) {
-                    var variablesList = call.Args[1].Expression as DictionaryExpression;
-                    if (variablesList != null) {
+            if (callInfo.NormalArgumentCount == 2) {
+                foreach (var name in callInfo.GetArgument(0)) {
+                    var constName = name.GetConstantValue();
+                    var strName = constName as string;
+                    AsciiString asciiName;
+                    if (strName != null) {
+                    } else if ((asciiName = constName as AsciiString) != null) {
+                        strName = asciiName.String;
+                    } else {
+                        continue;
+                    }
 
+                    foreach (var dict in callInfo.GetArgument(1)) {
                     }
                 }
             }

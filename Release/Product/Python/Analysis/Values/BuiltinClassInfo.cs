@@ -57,6 +57,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Instance.SelfSet;
         }
 
+        public override string Name {
+            get {
+                return _type.Name;
+            }
+        }
+
         public IEnumerable<ISet<Namespace>> GetMro() {
             return new[] { SelfSet };
         }

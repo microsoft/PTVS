@@ -214,6 +214,13 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <EmbeddedResource Include="Resources\imagelis.bmp" />
+    <Content Include="FastCgiTutorial\FastCGI Getting Started.html" />
+    <Resource Include="FastCgiTutorial\images\IIS - Enable FastCGI Role.png" />
+    <Resource Include="FastCgiTutorial\images\CGI in Vista.png" />
+    <Resource Include="FastCgiTutorial\images\handler mappings.jpg" />
+    <Resource Include="FastCgiTutorial\images\PyFastCgiMapping.png" />
+    <Resource Include="FastCgiTutorial\images\AddModuleMapping.jpg" />
+    <Content Include="wfastcgi.py" />
     <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
     </Content>

@@ -20,6 +20,8 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
+    using AnalysisKeyValuePair = KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>;
+
     /// <summary>
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
@@ -139,6 +141,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override int UnionHashCode() {
             return IndexTypes.Length;
+        }
+
+        public override IEnumerable<AnalysisKeyValuePair> GetItems() {
+            for (int i = 0; i < IndexTypes.Length; i++) {
+                var value = IndexTypes[i];
+
+                yield return new AnalysisKeyValuePair(
+                    ProjectState.GetConstant(i),
+                    value.Types
+                );
+            }
         }
     }
 }

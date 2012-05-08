@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return SelfSet;
         }
 
-        internal static ISet<Namespace> NumericOp(Node node, Namespace lhs, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+        internal static ISet<Namespace> NumericOp(Node node, BuiltinInstanceInfo lhs, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
             BuiltinTypeId curType = lhs.TypeId;
             switch (operation) {
                 case PythonOperator.TrueDivide:
@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     break;
                 case PythonOperator.Mod:
                     if (lhs.TypeId == BuiltinTypeId.Str || lhs.TypeId == BuiltinTypeId.Bytes) {
-                        return lhs.SelfSet;
+                        return lhs.ClassInfo.Instance;
                     }
                     goto case PythonOperator.Add;
                 case PythonOperator.Multiply:
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         foreach (var type in rhs) {
                             var rhsType = type.TypeId;
                             if (rhsType == BuiltinTypeId.Int || rhsType == BuiltinTypeId.Long) {
-                                return lhs.SelfSet;
+                                return lhs.ClassInfo.Instance;
                             }
                         }
                     } else if (curType == BuiltinTypeId.Int || curType == BuiltinTypeId.Long) {
@@ -243,7 +243,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override string ToString() {
-            return "<ConstantInfo object '" + Description + "'>"; // " at " + hex(id(self))
+            return "<ConstantInfo object '" + Description + "'" + (_value == null ? "" : (" '" + _value.ToString() + "' ")) + ">"; // " at " + hex(id(self))
         }
 
         public override object GetConstantValue() {

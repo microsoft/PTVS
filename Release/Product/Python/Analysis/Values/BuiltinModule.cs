@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public string Name {
+        public override string Name {
             get {
                 return _interpreterModule.Name;
             }

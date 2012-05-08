@@ -116,10 +116,33 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("__builtin__", "range", (n, unit, args) => unit.DeclaringModule.GetOrMakeNodeVariable(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet));
             SpecializeFunction("__builtin__", "min", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "max", ReturnUnionOfInputs);
+            SpecializeFunction("__builtin__", "getattr", SpecialGetAttr);
 
             // cached for quick checks to see if we're a call to clr.AddReference
 
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
+        }
+
+        private ISet<Namespace> SpecialGetAttr(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+            ISet<Namespace> res = EmptySet<Namespace>.Instance;
+            bool madeSet = false;
+            if (args.Length >= 2) {
+                if (args.Length >= 3) {
+                    // getattr(foo, 'bar', baz), baz is a possible return value.
+                    res = args[2];
+                }
+
+                foreach (var value in args[0]) {
+                    foreach (var name in args[1]) {
+                        // getattr(foo, 'bar') - attempt to do the getattr and return the proper value
+                        var strValue = name.GetConstantValueAsString();
+                        if (strValue != null) {
+                            res = res.Union(value.GetMember(call, unit, strValue), ref madeSet);
+                        }
+                    }
+                }
+            }
+            return res;
         }
         
         /// <summary>
@@ -376,6 +399,43 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
             return new MemberResult[0];
+        }
+
+        /// <summary>
+        /// Specializes the provided function in the given module name to return an instance of the given type.
+        /// 
+        /// The type is a fully qualified module name (e.g. thread.LockType).  
+        /// </summary>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        /// <param name="returnType"></param>
+        public void SpecializeFunction(string moduleName, string name, string returnType) {
+            int lastDot;
+            if ((lastDot = returnType.LastIndexOf('.')) == -1) {
+                throw new ArgumentException(String.Format("Expected module.typename for return type, got '{0}'", returnType));
+            }
+
+            string retModule = returnType.Substring(0, lastDot);
+            string typeName = returnType.Substring(lastDot + 1);
+
+            SpecializeFunction(moduleName, name, (call, unit, types) => {
+                ModuleReference modRef;
+                if (Modules.TryGetValue(retModule, out modRef)) {
+                    if (modRef.Module != null) {
+                        ISet<Namespace> res = EmptySet<Namespace>.Instance;
+                        bool madeSet = false;
+                        foreach (var value in modRef.Module.GetMember(call, unit, typeName)) {
+                            if (value is ClassInfo) {
+                                res = res.Union(((ClassInfo)value).Instance.SelfSet, ref madeSet);
+                            } else {
+                                res = res.Union(value.SelfSet, ref madeSet);
+                            }
+                        }
+                        return res;
+                    }
+                }
+                return null;
+            });
         }
 
         public void SpecializeFunction(string moduleName, string name, Action<CallExpression, CallInfo> dlg) {

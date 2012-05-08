@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public string Name { get { return _function.Name; } }
+        public override string Name { get { return _function.Name; } }
 
         public override ILocatedMember GetLocatedMember() {
             return _function as ILocatedMember;

@@ -187,6 +187,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return false;
         }
 
+        public override string Name {
+            get {
+                return FunctionDefinition.Name;
+            }
+        }
+
         public override string Description {
             get {
                 StringBuilder result;
@@ -219,29 +225,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 StringBuilder result = new StringBuilder();
                 bool first = true;
-                foreach (var ns in ReturnValue.Types) {
-                    if (ns == null) {
-                        continue;
-                    }
+                if (ReturnValue.Types.Count <= 10) {
+                    foreach (var ns in ReturnValue.Types) {
+                        if (ns == null) {
+                            continue;
+                        }
 
-                    if (ns.Push()) {
-                        try {
-                            if (ns.Description == null) {
-                                continue;
-                            }
+                        if (ns.Push()) {
+                            try {
+                                if (ns.ShortDescription == null) {
+                                    continue;
+                                }
 
-                            if (first) {
-                                result.Append(" -> ");
-                                first = false;
-                            } else {
-                                result.Append(", ");
-                            }
-                            AppendDescription(result, ns);
-                        } finally {
+                                if (first) {
+                                    result.Append(" -> ");
+                                    first = false;
+                                } else {
+                                    result.Append(", ");
+                                }
+                                AppendDescription(result, ns);
+                            } finally {
                             ns.Pop();
                         }
-                    } else {
-                        result.Append("...");
+                        } else {
+                            result.Append("...");
+                        }
                     }
                 }
                 
@@ -255,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else {
                 DescriptionStack.Add(key);
                 try {
-                    result.Append(key.Description);
+                    result.Append(key.ShortDescription);
                 } finally {
                     DescriptionStack.Pop();
                 }

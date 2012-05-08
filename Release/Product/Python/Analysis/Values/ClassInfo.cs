@@ -83,6 +83,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override string Name {
+            get {
+                return ClassDefinition.Name;
+            }
+        }
+
         public VariableDef<ClassInfo> SubClasses {
             get {
                 if (_subclasses == null) {

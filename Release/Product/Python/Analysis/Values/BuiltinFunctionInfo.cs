@@ -56,6 +56,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override string Name {
+            get {
+                return _function.Name;
+            }
+        }
+
         public override string Description {
             get {
                 if (_function.IsBuiltin) {
