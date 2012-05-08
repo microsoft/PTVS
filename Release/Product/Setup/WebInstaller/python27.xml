@@ -1,0 +1,969 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <webpiFile version="4.0.0.0" />
+  <title>Python 2.7 Installer 4.0 Feed</title>
+  <!-- TODO -->
+  <link href="http://pytools/demos/scottgu/python27.xml" />
+  <!-- TODO -->
+  <updated>2012-4-5T00:00:00Z</updated>
+  <author>
+    <name>Microsoft</name>
+    <uri>http://pytools.codeplex.com</uri>
+  </author>
+  <id>http://pytools/demos/scottgu/python27.xml</id>
+  
+  <!-- ##PTVS############################################################## -->
+  <entry>
+    <productId>PythonToolsForVS</productId>
+    <title>Python Tools for Visual Studio 2010</title>
+    <version>1.1.1</version>
+    <published>2012-4-11T00:00:00Z</published>
+    <updated>2012-4-11T00:00:00Z</updated>
+    <summary>Adds support for Python to Visual Studio.</summary>
+    <longSummary>
+Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <link href="http://pytools.codeplex.com" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://pytools.codeplex.com/</uri>
+    </author>
+    <images>
+      <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+    
+    <discoveryHint>
+      <or>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.1.50409.0</valueValue>
+        </registry>
+      </discoveryHint>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.1.50409.0</valueValue> 
+        </registry>
+      </discoveryHint>
+     </or>
+    </discoveryHint>
+    <dependency>
+      <productId>VS2010SP1Prerequisite</productId>
+    </dependency>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+	        <x64 />
+        </architectures>
+        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <installerFile>
+          <fileSize>2008</fileSize>
+          <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
+          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
+        </installerFile>
+        <installCommands> 
+          <msiInstall>
+            <!-- TODO command-line options? -->
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
+  <!-- ##CPython######################################################### -->
+  <entry>
+    <productId>Python27</productId>
+    <title>Python 2.7</title>
+    <version>2.7.3</version>
+    <summary>Python programming language</summary>
+    <id>http://www.python.org</id>
+    <!-- TODO -->
+    <updated>2012-4-10T00:00:00Z</updated>
+    <longSummary>
+Python is a programming language that lets you work more quickly and integrate your systems more effectively. You can learn to use Python and see almost immediate gains in productivity and lower maintenance costs.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <published>2012-4-10T00:00:00Z</published>
+    <link href="http://wiki.python.org/moin/BeginnersGuide" />
+    <images>
+      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
+    </images>
+    <keywords>
+      <keywordId>FrameworkRuntime</keywordId>
+      <keywordId>ProductTools</keywordId>
+    </keywords>
+    <author>
+      <name>Python Community</name>
+      <uri>http://www.python.org/</uri>
+    </author>
+
+    <discoveryHint>
+      <or>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\2.7\InstallPath</keyPath>
+        </registry>
+      </discoveryHint>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\WoW6432Node\Python\PythonCore\2.7\InstallPath</keyPath>
+        </registry>
+      </discoveryHint>
+      <discoveryHint>
+        <file>
+          <filePath>%SystemDrive%\python27\python.exe</filePath>
+        </file>
+      </discoveryHint>
+     </or>
+    </discoveryHint>
+    
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+	        <x64 />
+        </architectures>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        
+        <eulaURL>http://docs.python.org/license.html</eulaURL>
+        
+        <installerFile>
+          <fileSize>15868</fileSize>
+          <installerURL>http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi</installerURL>
+          <sha1>239bf7790b2f50581a96bebfcea536bdc1f385c8</sha1>
+        </installerFile>
+        <installCommands> 
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+            <properties>ALLUSERS=1</properties>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://www.python.org/doc</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Install Helpers################################################### -->
+  <entry>
+    <productId>FindPythonHelper</productId>
+    <title>Python Installation Helpers</title>
+    <version>0.1</version>
+    <summary>Helper tools for installing Python</summary>
+    <!-- TODO need an 'id' element? -->
+    <!-- TODO -->
+    <updated>2012-4-10T00:00:00Z</updated>
+    <longSummary>
+      Includes a set of tools useful for installing CPython and PyPI-based packages.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <published>2012-4-10T00:00:00Z</published>
+    <!-- TODO -->
+    <link href="http://pytools.codeplex.com" />
+    <images>
+      <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
+    </images>
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://pytools.codeplex.com/</uri>
+    </author>
+    <searchExclude />
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PowerShell</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
+        <installerFile>
+          <fileSize>2</fileSize>
+          <installerURL>http://pytools/demos/scottgu/FindPython.ps1</installerURL>
+          <sha1>eb7345e196844a5e9bce9e86236cf5ac07d76dc4</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdLine>
+            <exe>powershell</exe>
+            <commandLineArguments>-command "if ((get-executionpolicy) -eq 'Restricted') {set-executionpolicy RemoteSigned}"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+          <cmdLine>
+            <exe>powershell</exe>
+            <commandLineArguments>-File "%InstallerFile%" 2.7 x86</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Distribute Module############################################### -->
+  <entry>
+    <productId>PyDistributeModule</productId>
+    <title>distribute module (Python)</title>
+    <version>0.6.25</version>
+    <summary>Python's distribute module (prereq for installing PyPI)</summary>
+    <id>http://packages.python.org/distribute/</id>
+    <!-- TODO -->
+    <updated>2012-4-10T00:00:00Z</updated>
+    <longSummary>
+Distribute is a fork of the Setuptools project.
+
+Distribute is intended to replace Setuptools as the standard method for working with Python module distributions.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <published>2011-11-29T00:00:00Z</published>
+    <link href="http://packages.python.org/distribute/" />
+    <images>
+      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
+    </images>
+    <author>
+      <name>Python Community</name>
+      <uri>http://packages.python.org/distribute/</uri>
+    </author>
+    <searchExclude />
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\distribute-0.6.25-py2.7.egg\site.py</filePath>
+      </file>
+    </discoveryHint>
+    <dependency>
+      <and>
+        <dependency>
+          <productId>FindPythonHelper</productId>
+        </dependency>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+	        <x64 />
+        </architectures>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <eulaURL>http://docs.python.org/license.html</eulaURL>
+        <installerFile>
+          <fileSize>15</fileSize>
+          <installerURL>https://bitbucket.org/tarek/distribute/raw/6124053afb5c/distribute_setup.py</installerURL>
+          <sha1>624c16d9c59327f95ead3be82e305a5b330abd32</sha1>
+        </installerFile>
+        <installCommands> 
+          <cmdLine>
+            <exe>%TMP%\python_27_x86.bat</exe>
+            <commandLineArguments>"%InstallerFile%"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://pypi.python.org/pypi/distribute</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  
+  
+  <!-- ##PyPI############################################################## -->
+  <entry>
+    <productId>PyPI</productId>
+    <title>PyPI</title>
+    <version>1.0.2</version>
+    <summary>Python's package index repository</summary>
+    <id>http://pypi.python.org/pypi</id>
+    <!-- TODO -->
+    <updated>2011-7-16T00:00:00Z</updated>
+    <longSummary>
+The Python Package Index is a repository of software for the Python programming language.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <published>2011-7-16T00:00:00Z</published>
+    <link href="http://pypi.python.org/pypi" />
+    <images>
+      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
+    </images>
+    <keywords>
+      <keywordId>FrameworkRuntime</keywordId>
+    </keywords>
+    <author>
+      <name>Python Community</name>
+      <uri>http://pypi.python.org/pypi/</uri>
+    </author>
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\pip\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>FindPythonHelper</productId>
+        </dependency>
+        <dependency>
+          <productId>PyDistributeModule</productId>
+        </dependency>
+      </and>
+    </dependency>
+    
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+	        <x64 />
+        </architectures>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <eulaURL>http://docs.python.org/license.html</eulaURL>
+        <installerFile>
+          <fileSize>84</fileSize>
+          <installerURL>https://raw.github.com/pypa/pip/1.0.2/contrib/get-pip.py</installerURL>
+          <sha1>660a8e6bd324cf238bc38f74527dc5ca2b1c67ab</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdLine>
+            <exe>%TMP%\python_27_x86.bat</exe>
+            <commandLineArguments>"%InstallerFile%"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://www.pip-installer.org/en/latest/installing.html</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Django############################################################ -->
+  <entry>
+    <productId>Django</productId>
+    <title>Django 1.4</title>
+    <version>1.4</version>
+    <summary>Python Web framework</summary>
+    <id>https://www.djangoproject.com/</id>
+    <!-- TODO -->
+    <updated>2012-3-23T00:00:00Z</updated>
+    <longSummary>
+Django is a high-level Python Web framework that encourages rapid development and clean, pragmatic design.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <images>
+      <icon>https://www.djangoproject.com/m/img/site/hdr_logo.gif</icon>
+    </images>
+    <keywords>
+      <keywordId>Server</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+    <published>2012-3-23T00:00:00Z</published>
+    <link href="https://www.djangoproject.com/" />
+    <author>
+      <name>Django Community</name>
+      <uri>https://www.djangoproject.com/community/</uri>
+    </author>
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\django\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>FindPythonHelper</productId>
+        </dependency>
+        <dependency>
+          <productId>PyPI</productId>
+        </dependency>
+      </and>
+    </dependency>
+    
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+  	      <x64 />
+        </architectures>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>        
+        <eulaURL>https://code.djangoproject.com/browser/django/trunk/LICENSE</eulaURL>
+        <installCommands> 
+          <cmdLine>
+            <exe>%TMP%\pip_27_x86.bat</exe>
+            <commandLineArguments>install django==1.4</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://pypi.python.org/pypi/Django/1.4</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##NumPy############################################################# -->
+  <entry>
+    <productId>NumPy</productId>
+    <title>NumPy</title>
+    <version>1.6.1</version>
+    <published>2011-7-21T00:00:00Z</published>
+    <updated>2011-7-21T00:00:00Z</updated>
+    <summary>Numerical libraries for the Python programming language.</summary>
+    <longSummary>
+NumPy is the fundamental package for scientific computing with Python.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <link href="http://numpy.scipy.org/" />
+    <author>
+      <name>NumPy Community</name>
+      <uri>http://www.scipy.org/Mailing_Lists</uri>
+    </author>
+    <images>
+      <icon>http://numpy.scipy.org/_static/numpy_logo.png</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\numpy\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PyDistributeModule</productId>
+        </dependency>
+      </and>
+    </dependency>
+    
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <eulaURL>http://numpy.scipy.org/license.html#license</eulaURL>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <installerFile>
+          <fileSize>6105</fileSize>
+          <installerURL>http://downloads.sourceforge.net/project/numpy/NumPy/1.6.1/numpy-1.6.1-win32-superpack-python2.7.exe?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fnumpy%2Ffiles%2FNumPy%2F1.6.1%2F&amp;ts=1335236920&amp;use_mirror=superb-sea2</installerURL>
+          <sha1>52be0693862b1beb0dd272b0352d21365a0a0e24</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdLine>
+            <exe>"%InstallerFile%"</exe>
+            <commandLineArguments></commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://www.scipy.org/Tentative_NumPy_Tutorial</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##SciPy############################################################# -->
+  <entry>
+    <productId>SciPy</productId>
+    <title>SciPy</title>
+    <version>0.10.1</version>
+    <published>2012-2-28T00:00:00Z</published>
+    <updated>2012-2-28T00:00:00Z</updated>
+    <summary>Scientific libraries for the Python programming language.</summary>
+    <longSummary>
+SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, and engineering.
+    </longSummary>
+    <productFamily>Python</productFamily>
+    <link href="http://www.scipy.org/SciPy" />
+    <author>
+      <name>SciPy Community</name>
+      <uri>http://www.scipy.org/Mailing_Lists</uri>
+    </author>
+    <images>
+      <icon>http://www.scipy.org/images/scipy_logo.gif</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\scipy\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PyDistributeModule</productId>
+        </dependency>
+        <dependency>
+          <productId>NumPy</productId>
+        </dependency>
+      </and>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <eulaURL>http://www.scipy.org/License_Compatibility</eulaURL>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <installerFile>
+          <fileSize>45981</fileSize>
+          <installerURL>http://downloads.sourceforge.net/project/scipy/scipy/0.10.1/scipy-0.10.1-win32-superpack-python2.7.exe?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fscipy%2Ffiles%2Fscipy%2F0.10.1%2F&amp;ts=1335237545&amp;use_mirror=voxel</installerURL>
+          <sha1>1c16c4b6fe5d44456fbf34224fa3afc2da04a975</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdLine>
+            <exe>"%InstallerFile%"</exe>
+            <commandLineArguments></commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://docs.scipy.org/doc/</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Windows Azure SDK for Python Standard############################# -->
+  <entry>
+    <productId>WindowsAzurePythonSDKStd</productId>
+    <!-- TODO - update date-->
+    <title>Windows Azure SDK for Python - Standard</title>
+    <version>0.1</version>
+    <!-- TODO -->
+    <published>2012-4-11T00:00:00Z</published>
+    <!-- TODO -->
+    <updated>2012-6-11T00:00:00Z</updated>
+    <summary>Python development support for Windows Azure.</summary>
+    <longSummary>
+      The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.
+    </longSummary>
+    <productFamily>Python</productFamily>
+
+    <!-- TODO we'll likely want this on www.windowsazure.com -->
+    <link href="http://pytools.codeplex.com" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://pytools.codeplex.com/</uri>
+    </author>
+    <images>
+      <!-- TODO permanently host this somewhere and get LCA approval on it-->
+      <icon>http://pytools/demos/scottgu/PythonAzureSDK01.png</icon>
+      <!-- TODO remove this
+      <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
+      -->
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+    </keywords>
+
+    <!-- TODO 'pyzure' package?-->
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>FindPythonHelper</productId>
+        </dependency>
+      </and>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
+        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <!-- TODO - talk to Dino 
+        <installerFile>
+          <fileSize>2008</fileSize>
+          <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
+          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
+        </installerFile>
+        -->
+        <!-- TODO talk to Dino -->
+        <installCommands>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C mkdir %SystemDrive%\Python27\Lib\site-packages\pyzure</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C type nul >> %SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</commandLineArguments>
+          </cmdline>
+        </installCommands>
+        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
+        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Windows Azure SDK for Python Premium############################## -->
+  <entry>
+    <productId>WindowsAzurePythonSDKPremium</productId>
+    <!-- TODO - update date-->
+    <title>Windows Azure SDK for Python - Premium</title>
+    <version>0.1</version>
+    <!-- TODO -->
+    <published>2012-4-11T00:00:00Z</published>
+    <!-- TODO -->
+    <updated>2012-6-11T00:00:00Z</updated>
+    <summary>Python development support for Windows Azure.</summary>
+    <longSummary>
+The Windows Azure SDK for Python provides developers with Python frameworks, packages, and Microsoft Visual Studio tools for building scalable services for deployment to Windows Azure.
+    </longSummary>
+    <productFamily>Python</productFamily>
+
+    <!-- TODO we'll likely want this on www.windowsazure.com -->
+    <link href="http://pytools.codeplex.com" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://pytools.codeplex.com/</uri>
+    </author>
+    <images>
+      <!-- TODO permanently host this somewhere and get LCA approval on it-->
+      <icon>http://df5/PythonAzureSDK01.png</icon>
+    <!-- TODO remove this
+      <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
+      -->
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+
+    <!-- TODO 'pyzure' package?-->
+    <discoveryHint>
+      <and>
+        <discoveryHint>
+          <file>
+            <filePath>%SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</filePath>
+          </file>
+        </discoveryHint>
+        <!-- Python Tools for VS -->
+        <discoveryHint>
+          <or>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+                <valueName>DisplayVersion</valueName>
+                <valueValue>1.1.50409.0</valueValue>
+              </registry>
+            </discoveryHint>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+                <valueName>DisplayVersion</valueName>
+                <valueValue>1.1.50409.0</valueValue>
+              </registry>
+            </discoveryHint>
+          </or>
+        </discoveryHint>
+      </and>
+    </discoveryHint>
+
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>FindPythonHelper</productId>
+        </dependency>
+        <dependency>
+          <productId>PythonToolsForVS</productId>
+        </dependency>
+        <dependency>
+          <productId>PyPI</productId>
+        </dependency>
+        <dependency>
+          <productId>Django</productId>
+        </dependency>
+      </and>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
+        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <!-- TODO - talk to Dino 
+        <installerFile>
+          <fileSize>2008</fileSize>
+          <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
+          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
+        </installerFile>
+        -->
+        <!-- TODO talk to Dino -->
+        <installCommands>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C mkdir %SystemDrive%\Python27\Lib\site-packages\pyzure</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C type nul >> %SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</commandLineArguments>
+          </cmdline>
+        </installCommands>
+        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
+        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+
+  <!-- ##UI: new TAB Definition############################################ -->
+  <tabs>
+    <tab>
+      <pillarTab>
+        <id>Python</id>
+        <name>Python</name>
+        <description>Click "Customize" to select which version you want to install</description>
+        <pillar>
+          <id>GeneralPython</id>
+          <name>General</name>
+          <description>Install Python Tools for Visual Studio, Python, Django, and Windows Azure Python support.</description>
+          <groupingId>PythonGrouping</groupingId>
+          <recommended>
+            <productId>Python27</productId>
+            <productId>WindowsAzurePythonSDKPremium</productId>
+            <productId>Django</productId>
+            <productId>PythonToolsForVS</productId>
+            <productId>NumPy</productId>
+            <productId>SciPy</productId>
+          </recommended>
+        </pillar>
+      </pillarTab>
+    </tab>
+  </tabs>
+  
+  <groupings>
+    <grouping>
+      <id>PythonGrouping</id>
+      <attribute>productFamily</attribute>
+      <include>
+        <item>Python</item>
+      </include>
+    </grouping>
+  </groupings>
+</feed>
