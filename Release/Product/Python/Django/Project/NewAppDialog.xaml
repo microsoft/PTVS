@@ -3,15 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.10.0"
         x:ClassModifier="internal"
-        Title="Add Django App..." Height="110" Width="595" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Background="{x:Static SystemColors.ControlBrush}" TextOptions.TextFormattingMode="Display">
-    <StackPanel Orientation="Vertical" Height="76" Width="577">        
-        <DockPanel LastChildFill="true" HorizontalAlignment="Stretch">
+        Title="Add Django App..." Height="110" Width="381" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Background="{x:Static SystemColors.ControlBrush}" TextOptions.TextFormattingMode="Display" MinHeight="110">
+    <DockPanel>        
+        <DockPanel LastChildFill="true" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
             <TextBlock Text="New App Name:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,6,6,6" DockPanel.Dock="Left"/>
-            <TextBox Height="23" Name="_newAppName" Width="Auto"  IsReadOnly="False" TextWrapping="NoWrap" Margin="6,6,6,6" VerticalAlignment="Center" Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}"/>
-        </DockPanel>        
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="6,6,6,6">
-            <Button IsDefault="True" Width="86" Height="24" Name="_ok" Margin="3,3,3,3" Click="_ok_Click" IsEnabled="{Binding IsValid}">Ok</Button>
-            <Button IsCancel="True" Width="86" Height="24" Name="_cancel" Margin="3,3,3,3" Click="_cancel_Click">Cancel</Button>
+            <TextBox Height="23" Name="_newAppName" Width="Auto"  IsReadOnly="False" TextWrapping="NoWrap" Margin="6,6,6,6" VerticalAlignment="Center" Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" />
+        </DockPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,4,4" DockPanel.Dock="Bottom" VerticalAlignment="Bottom">
+            <Button IsDefault="True" Width="86" Height="24" Name="_ok" Margin="0,0,3,3" Click="_ok_Click" IsEnabled="{Binding IsValid}" Content="O_K"></Button>
+            <Button IsCancel="True" Width="86" Height="24" Name="_cancel" Margin="3,0,3,3" Click="_cancel_Click" Content="C_ancel"></Button>
         </StackPanel>
-    </StackPanel>
+    </DockPanel>
 </ui:DialogWindow>

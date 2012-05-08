@@ -6,26 +6,21 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
     xmlns:ui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.10.0"
     mc:Ignorable="d" 
-    Height="296" Width="550"
+    Height="358" Width="550"
     x:ClassModifier="internal"
     WindowStartupLocation="CenterOwner"
     ShowInTaskbar="False"
-    WindowStyle="None"
+    WindowStyle="ToolWindow"
     Background="{x:Static SystemColors.ControlBrush}"
-    TextOptions.TextFormattingMode="Display">
-    <Grid Margin="0">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="83*" />
-            <ColumnDefinition Width="413*" />
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <TextBlock Text="Output:" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,12,20,102" />
-        <Button Grid.Row="2" IsDefault="True" Click="_okButton_Click" Width="86" Height="24" Margin="250,94,104,11" Name="_ok" IsEnabled="False" Grid.Column="1">Ok</Button>
-        <Button Grid.Row="2" IsCancel="True" Click="_cancelButton_Click" Width="86" Height="24" Margin="341,94,12,11" Name="_cancel" Grid.Column="1">Cancel</Button>
-        <TextBox Height="183" HorizontalAlignment="Left" Margin="12,33,0,0" Name="_textBox" VerticalAlignment="Top" Width="504" Grid.RowSpan="3" IsReadOnly="True" TextWrapping="NoWrap" Grid.ColumnSpan="2" />
-    </Grid>
+    TextOptions.TextFormattingMode="Display" ResizeMode="CanResizeWithGrip" MinWidth="320" MinHeight="200">
+    <DockPanel LastChildFill="True">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom" DockPanel.Dock="Bottom" Margin="4,4,8,4">
+            <Button IsDefault="True" Click="_okButton_Click" Width="86" Height="24" Margin="4" Name="_ok" IsEnabled="False" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="O_K"></Button>
+            <Button IsCancel="True" Click="_cancelButton_Click" Width="86" Height="24" Margin="4    " Name="_cancel" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="C_ancel"></Button>
+        </StackPanel>
+        <DockPanel DockPanel.Dock="Top">
+            <TextBlock Text="Output:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4" DockPanel.Dock="Top" />
+            <TextBox HorizontalAlignment="Stretch" Margin="4" Name="_textBox" VerticalAlignment="Stretch" IsReadOnly="True" TextWrapping="NoWrap" />
+        </DockPanel >
+    </DockPanel>
 </ui:DialogWindow>

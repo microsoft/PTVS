@@ -27,6 +27,24 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         private readonly DjangoCompletionSourceProvider _provider;
         private readonly ITextBuffer _buffer;
 
+        private static readonly Dictionary<string, string> _nestedTags = new Dictionary<string, string>() {
+            { "for", "endfor" },
+            { "if", "endif" },
+            { "ifequal", "endifequal" },
+            { "ifnotequal", "endifnotequal" },
+            { "ifchanged", "endifchanged" },
+            { "autoescape", "endautoescape" },
+            { "comment", "endcomment" },
+            { "filter", "endfilter" },
+            { "spaceless", "endspaceless" },
+            { "with", "endwith" },
+            { "empty", "endfor" },
+            { "else", "endif" },
+        };
+
+        internal static readonly HashSet<string> _nestedEndTags = MakeNestedEndTags();
+        private static readonly HashSet<string> _nestedStartTags = MakeNestedStartTags();
+
         public DjangoCompletionSource(DjangoCompletionSourceProvider djangoCompletionSourceProvider, ITextBuffer textBuffer) {
             _provider = djangoCompletionSourceProvider;
             _buffer = textBuffer;
@@ -130,29 +148,32 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         /// </summary>
         /// <param name="project"></param>
         /// <param name="kind">The type of template tag we are processing</param>
-        /// <param name="bufferText">The text of the template tag which we are offering a completion in</param>
+        /// <param name="templateText">The text of the template tag which we are offering a completion in</param>
         /// <param name="templateStart">the offset in the buffer where teh template starts</param>
         /// <param name="triggerPoint">The point in the buffer where the completion was triggered</param>
         /// <returns></returns>
-        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string bufferText, int templateStart, SnapshotPoint? triggerPoint) {
+        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint? triggerPoint) {
             List<Completion> completions = new List<Completion>();
             IEnumerable<CompletionInfo> tags;
 
             switch (kind) {
                 case TemplateTokenKind.Block:
-                    var block = DjangoBlock.Parse(bufferText);
+                    var block = DjangoBlock.Parse(templateText);
                     if (block != null && triggerPoint != null) {
                         int position = triggerPoint.Value.Position - templateStart;
                         if (position <= block.ParseInfo.Start) {
                             // we are completing before the command
                             // TODO: Return a new set of tags?  Do nothing?  Do this based upon ctrl-space?
-                            tags = CompletionInfo.ToCompletionInfo(project._tags.Keys, StandardGlyphGroup.GlyphKeyword);
+                            tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags.Keys, StandardGlyphGroup.GlyphKeyword), triggerPoint.Value);
                         } else if (position <= block.ParseInfo.Start + block.ParseInfo.Command.Length) {
                             // we are completing in the middle of the command, we should filter based upon
                             // the command text up to the current position
-                            tags = DjangoVariable.FilterTags(
-                                project._tags.Keys,
-                                block.ParseInfo.Command.Substring(0, position - block.ParseInfo.Start)
+                            tags = FilterBlocks(
+                                DjangoVariable.FilterTags(
+                                    project._tags.Keys,
+                                    block.ParseInfo.Command.Substring(0, position - block.ParseInfo.Start)
+                                ),
+                                triggerPoint.Value
                             );
                         } else {
                             // we are in the arguments, let the block handle the completions
@@ -163,7 +184,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                         }
                     } else {
                         // no tag entered yet, provide the known list of tags.
-                        tags = CompletionInfo.ToCompletionInfo(project._tags.Keys, StandardGlyphGroup.GlyphKeyword);
+                        tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags.Keys, StandardGlyphGroup.GlyphKeyword), triggerPoint.Value);
                     }
                     break;
                 case TemplateTokenKind.Variable:
@@ -172,7 +193,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
                     var dirName = Path.GetDirectoryName(filePath);
 
-                    var variable = DjangoVariable.Parse(bufferText);
+                    var variable = DjangoVariable.Parse(templateText);
                     if (variable != null && triggerPoint != null) {
                         int position = triggerPoint.Value.Position - templateStart;
                         tags = variable.GetCompletions(
@@ -211,6 +232,42 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             return completions;
         }
 
+        private IEnumerable<CompletionInfo> FilterBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint) {
+            var projBuffer = _buffer.Properties.GetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer));
+            var regions = projBuffer.GetTemplateRegions(
+                new SnapshotSpan(new SnapshotPoint(triggerPoint.Snapshot, 0), triggerPoint), 
+                reversed: true
+            );
+
+            int depth = 0;
+            HashSet<string> included = new HashSet<string>();
+            foreach (var region in regions) {
+                if (region.Kind == TemplateTokenKind.Block && region.Block != null) {
+                    var cmd = region.Block.ParseInfo.Command;
+
+                    if (_nestedEndTags.Contains(cmd)) {
+                        depth++;
+                    } else if (_nestedStartTags.Contains(cmd)) {
+                        if (depth == 0) {
+                            included.Add(_nestedTags[cmd]);
+                        }
+
+                        // we happily let depth go negative, it'll prevent us from
+                        // including an end tag for outer blocks when we're in an 
+                        // inner block.
+                        depth--;
+                    }
+                }
+            }
+
+            foreach (var value in results) {
+                if (!_nestedEndTags.Contains(value.DisplayText) ||
+                    included.Contains(value.DisplayText)) {
+                    yield return value;
+                }
+            }
+        }
+
         private static Dictionary<string, HashSet<AnalysisValue>> GetVariablesForTemplateFile(DjangoProject project, string filename) {
             string curLevel = filename;                     // is C:\Foo\Bar\Baz\foo.html
             string curPath = filename = Path.GetFileName(filename);    // is foo.html
@@ -234,6 +291,23 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         #endregion
+
+        private static HashSet<string> MakeNestedEndTags() {
+            HashSet<string> res = new HashSet<string>();
+            foreach (var value in _nestedTags.Values) {
+                res.Add(value);
+            }
+            return res;
+        }
+
+        private static HashSet<string> MakeNestedStartTags() {
+            HashSet<string> res = new HashSet<string>();
+            foreach (var key in _nestedTags.Keys) {
+                res.Add(key);
+            }
+            return res;
+        }
+
 
         #region IDisposable Members
 

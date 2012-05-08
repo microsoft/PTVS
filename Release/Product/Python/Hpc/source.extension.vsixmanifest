@@ -3,7 +3,7 @@
   <Identifier Id="413E24B0-F748-48D4-B638-01D121A88A04">
     <Name>Python Tools for Visual Studio, HPC Support</Name>
     <Author>Microsoft</Author>
-    <Version>1.1</Version>
+    <Version>1.5</Version>
     <Description xml:space="preserve">Provides templates for MPI projects as well as cluster deployment and debugging support.</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
@@ -29,7 +29,7 @@
     <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
       <Name>Visual Studio MPF</Name>
     </Reference>
-    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="1.1">
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="1.5">
       <Name>Python Tools for Visual Studio</Name>
     </Reference>
   </References>

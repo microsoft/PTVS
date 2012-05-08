@@ -1063,7 +1063,7 @@ namespace Microsoft.PythonTools.Debugger {
             using (var configKey = OpenVisualStudioKey()) {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\1.1");
+                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\1.5");
                     if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
                         return toolsPath;
                     }

@@ -27,9 +27,10 @@ namespace Microsoft.PythonTools.Django.Project {
     partial class WaitForValidationDialog : DialogWindow {
         private Process _proc;
 
-        public WaitForValidationDialog(Process process) {
+        public WaitForValidationDialog(Process process, string title) {
             _proc = process;
             InitializeComponent();
+            Title = title;
         }
 
         public void SetText(string text) {

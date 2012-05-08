@@ -3194,7 +3194,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         protected internal virtual void LoadNonBuildInformation()
         {
-            IPersistXMLFragment outerHierarchy = HierarchyNode.GetOuterHierarchy(this) as IPersistXMLFragment;
+            IPersistXMLFragment outerHierarchy = GetOuterInterface<IPersistXMLFragment>();
             if (outerHierarchy != null)
             {
                 this.LoadXmlFragment(outerHierarchy, null);
@@ -3714,7 +3714,7 @@ namespace Microsoft.PythonTools.Project
                 ErrorHandler.ThrowOnFailure(((IVsAggregatableProject)this).GetAggregateProjectTypeGuids(out flavorsGuid));
                 foreach (Guid flavor in Utilities.GuidsArrayFromSemicolonDelimitedStringOfGuids(flavorsGuid))
                 {
-                    IPersistXMLFragment outerHierarchy = HierarchyNode.GetOuterHierarchy(this) as IPersistXMLFragment;
+                    IPersistXMLFragment outerHierarchy = GetOuterInterface<IPersistXMLFragment>();
                     // First check the project
                     if (outerHierarchy != null)
                     {
@@ -3823,11 +3823,15 @@ namespace Microsoft.PythonTools.Project
             return VSConstants.S_OK;
         }
 
+        internal T GetOuterInterface<T>() where T : class {
+            return HierarchyNode.GetOuterHierarchy(this) as T;
+        }
+
         protected int IsFlavorDirty()
         {
             int isDirty = 0;
             // See if one of our flavor consider us dirty
-            IPersistXMLFragment outerHierarchy = HierarchyNode.GetOuterHierarchy(this) as IPersistXMLFragment;
+            IPersistXMLFragment outerHierarchy = GetOuterInterface<IPersistXMLFragment>();
             if (outerHierarchy != null)
             {
                 // First check the project

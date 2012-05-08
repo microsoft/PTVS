@@ -20,13 +20,15 @@ namespace Microsoft.PythonTools.Django {
     static class GuidList {
         public const string guidDjangoPkgString = "a8637c34-aa55-46e2-973c-9c3e09afc17b";
         public const string guidDjangoCmdSetString = "5b3281a5-d037-4e84-93aa-a6819304dbd9";
-        public const string guidDjangoEditorFactoryString = "96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f";
+        public const string guidDjangoKeyBindingString = "96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f";
+        public const string guidDjangoEditorFactoryString = "E1B7ABDE-CDDE-4874-A8A6-5B5C7597A848";
 
         public static readonly Guid guidDjangoCmdSet = new Guid(guidDjangoCmdSetString);
         public static readonly Guid guidDjangoEditorFactory = new Guid(guidDjangoEditorFactoryString);
         public static readonly Guid guidVenusCmdId = new Guid("c7547851-4e3a-4e5b-9173-fa6e9c8bd82c");
         public static readonly Guid guidWebPackgeCmdId = new Guid("822e3603-e573-47d2-acf0-520e4ce641c2");
         public static readonly Guid guidWebPackageGuid = new Guid("d9a342d1-a429-4059-808a-e55ee6351f7f");
+        public static readonly Guid guidWebAppCmdId = new Guid("CB26E292-901A-419c-B79D-49BD45C43929");
 
     }
 }

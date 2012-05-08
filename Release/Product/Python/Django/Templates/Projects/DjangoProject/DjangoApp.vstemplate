@@ -19,9 +19,6 @@
       <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="__init__.py">__init__.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="manage.py">manage.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="settings.py">settings.py</ProjectItem>
-      <Folder Name="Templates" >
-        
-      </Folder>
     </Project>
   </TemplateContent>
 </VSTemplate>

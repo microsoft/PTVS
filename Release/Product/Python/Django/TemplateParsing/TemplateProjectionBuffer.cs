@@ -652,7 +652,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// Given a span in the template buffer gets all of the associated template tags which
         /// overlap with that span.
         /// </summary>
-        internal IEnumerable<TemplateRegion> GetTemplateRegions(SnapshotSpan span) {
+        internal IEnumerable<TemplateRegion> GetTemplateRegions(SnapshotSpan span, bool reversed = false) {
             Debug.Assert(span.Snapshot.TextBuffer == _templateBuffer);
 
             var startPoint = _bufferGraph.MapDownToBuffer(span.Start, PointTrackingMode.Positive, _diskBuffer, PositionAffinity.Successor);
@@ -661,7 +661,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 // TODO: Binary search would be better
                 var templateRegionOnDisk = new SnapshotSpan(startPoint.Value, endPoint.Value);
 
-                for (int i = 0; i < _spans.Count; i++) {
+                for (int i = reversed ? _spans.Count - 1 : 0; 
+                    reversed ? (i >= 0): (i < _spans.Count); 
+                    IncOrDec(ref i, reversed)) {
+
                     if (_spans[i].Kind == TemplateTokenKind.Text) {
                         continue;
                     }
@@ -682,6 +685,19 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         );
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles the inc or dec depending on if we're reversed or not - because
+        /// we can't use the conditional ternary operator as the last portion of a
+        /// for loop.
+        /// </summary>
+        private void IncOrDec(ref int i, bool reversed) {
+            if (reversed) {
+                i--;
+            } else {
+                i++;
             }
         }
 

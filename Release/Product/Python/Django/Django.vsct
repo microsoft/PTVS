@@ -71,12 +71,15 @@
 
       </Button>
 
-      <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x700" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
+      <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x120" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <!-- <Icon guid="guidImages" id="bmpPic2"/> -->
 
         <Strings>
-          <ButtonText>Add new Django app...</ButtonText>
+          <ButtonText>Add New Django app...</ButtonText>
+          
         </Strings>
       </Button>
 

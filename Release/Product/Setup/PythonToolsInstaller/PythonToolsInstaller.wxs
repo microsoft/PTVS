@@ -84,7 +84,7 @@
               <RegistryValue Type='string' Value='Python source file' />
 
               <RegistryKey Key='DefaultIcon'>
-                <RegistryValue Type='string' Value="[VSINSTALLPATH]\Extensions\Microsoft\Python Tools for Visual Studio\1.1\PythonFile.ico" />
+                <RegistryValue Type='string' Value="[VSINSTALLPATH]\Extensions\Microsoft\Python Tools for Visual Studio\1.5\PythonFile.ico" />
               </RegistryKey>
               
               <RegistryKey Key='shell\Edit with Visual Studio'>
@@ -111,7 +111,7 @@
               <RegistryValue Type='string' Value='Django template file' />
 
               <RegistryKey Key='DefaultIcon'>
-                <RegistryValue Type='string' Value="[VSINSTALLPATH]\Extensions\Microsoft\Python Tools Django Support\1.1\DjangoTemplateFile.ico" />
+                <RegistryValue Type='string' Value="[VSINSTALLPATH]\Extensions\Microsoft\Python Tools Django Support\1.5\DjangoTemplateFile.ico" />
               </RegistryKey>
               
               <RegistryKey Key='shell\Edit with Visual Studio'>
@@ -145,7 +145,7 @@
 
         <Component Id="Comp_PyProgRegistration" DiskId="1" Guid="933CFC77-F315-4058-AB16-AE737B31B2F8">
           <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
-          <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[VSINSTALLPATH]\Extensions\Microsoft\Python Tools for Visual Studio\1.1\PythonProject.ico' />
+          <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[VSINSTALLPATH]\Extensions\Microsoft\Python Tools for Visual Studio\1.5\PythonProject.ico' />
 
           <ProgId Id="VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)" Description="Python Project">
             <Extension Id="pyproj" ContentType="text/plain">

@@ -75,10 +75,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             AppDomainSetup setup = new AppDomainSetup();
             setup.ShadowCopyFiles = "true";
-            // We are in ...\Extensions\Microsoft\IronPython Interpreter\1.1
+            // We are in ...\Extensions\Microsoft\IronPython Interpreter\1.5
             // We need to be able to load assemblies from:
-            //      Python Tools for Visual Studio\1.1
-            //      IronPython Interpreter\1.1
+            //      Python Tools for Visual Studio\1.5
+            //      IronPython Interpreter\1.5
             //
             // So setup the application base to be Extensions\Microsoft\, and then add the other 2 dirs to the private bin path.
             setup.ApplicationBase = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)));

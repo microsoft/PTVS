@@ -161,9 +161,10 @@ namespace Microsoft.PythonTools.Project.Automation
 
                     ErrorHandler.ThrowOnFailure(rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, this.Node.Url, out ivsHierarchy, out itemid, out docData, out docCookie));
 
-                    // Open the file using the IVsProject3 interface
-                    ErrorHandler.ThrowOnFailure(this.Node.ProjectMgr.OpenItem(this.Node.ID, ref logicalViewGuid, docData, out windowFrame));
-
+                    // Open the file using the IVsProject interface
+                    // We get the outer hierarchy so that projects can customize opening.
+                    var project = Node.ProjectMgr.GetOuterInterface<IVsProject>();
+                    ErrorHandler.ThrowOnFailure(project.OpenItem(Node.ID, ref logicalViewGuid, docData, out windowFrame));
                 }
                 finally
                 {

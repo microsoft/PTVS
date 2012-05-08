@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Profiling {
             using (var configKey = OpenVisualStudioKey()) {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\PythonProfiling\\1.1");
+                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\PythonProfiling\\1.5");
                     if (File.Exists(Path.Combine(toolsPath, "vspyprof.dll"))) {
                         return toolsPath;
                     }

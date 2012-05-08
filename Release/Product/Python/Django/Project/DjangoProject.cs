@@ -18,6 +18,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -27,6 +28,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -36,8 +38,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    class DjangoProject : FlavoredProject, IOleCommandTarget, IVsProjectFlavorCfgProvider {
+    class DjangoProject : FlavoredProject, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject {
         internal DjangoPackage _package;
+        internal IVsProject _innerProject;
+        internal IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
         private OleMenuCommandService _menuService;
@@ -45,12 +49,16 @@ namespace Microsoft.PythonTools.Django.Project {
         internal Dictionary<string, HashSet<AnalysisValue>> _filters = new Dictionary<string, HashSet<AnalysisValue>>();
         internal Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>> _templateFiles = new Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>> _contextTable = new ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>>();
+        private readonly Dictionary<string, GetTemplateAnalysisValue> _templateAnalysis = new Dictionary<string, GetTemplateAnalysisValue>();
 
+#if HAVE_ICONS
         private static ImageList _images;
+#endif
 
         public DjangoProject() {
-            _tags["endfor"] = new HashSet<AnalysisValue>();
-            _tags["endif"] = new HashSet<AnalysisValue>();
+            foreach (var tagName in DjangoCompletionSource._nestedEndTags) {
+                _tags[tagName] = new HashSet<AnalysisValue>();
+            }
         }
 
         #region IVsAggregatableProject
@@ -70,6 +78,18 @@ namespace Microsoft.PythonTools.Django.Project {
             if (menuService != null) {
                 CommandID menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.Open);
                 OleMenuCommand menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
+                menuService.AddCommand(menuItem);
+
+                menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.ViewCode);
+                menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
+                menuService.AddCommand(menuItem);
+
+                menuCommandID = new CommandID(VSConstants.VSStd2K, (int)VSConstants.VSStd2KCmdID.ECMD_VIEWMARKUP);
+                menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
+                menuService.AddCommand(menuItem);
+
+                menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.AddNewItem);
+                menuItem = new OleMenuCommand(AddNewItem, menuCommandID);
                 menuService.AddCommand(menuItem);
             }
 
@@ -244,8 +264,6 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        private readonly Dictionary<string, GetTemplateAnalysisValue> _templateAnalysis = new Dictionary<string, GetTemplateAnalysisValue>();
-
         private IEnumerable<AnalysisValue> GetTemplateProcessor(CallExpression call, CallInfo callInfo) {
             HashSet<AnalysisValue> res = new HashSet<AnalysisValue>();
             if (callInfo.NormalArgumentCount >= 1) {
@@ -355,7 +373,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 object name;
                 ErrorHandler.ThrowOnFailure(vsItemSelection.pHier.GetProperty(vsItemSelection.itemid, (int)__VSHPROPID.VSHPROPID_Name, out name));
 
-                if (IsHtmlFile(vsItemSelection.pHier, vsItemSelection.itemid)) {
+                if (IsHtmlFile(vsItemSelection.Name())) {
                     oleMenu.Supported = true;
                 }
             }
@@ -385,12 +403,50 @@ namespace Microsoft.PythonTools.Django.Project {
             oleMenu.Supported = false;
 
             foreach (var vsItemSelection in GetSelectedItems()) {
-                if (IsHtmlFile(vsItemSelection.pHier, vsItemSelection.itemid)) {
+                if (IsHtmlFile(vsItemSelection.Name())) {
                     ErrorHandler.ThrowOnFailure(OpenWithDjangoEditor(vsItemSelection.itemid));
                 } else {
                     ErrorHandler.ThrowOnFailure(OpenWithDefaultEditor(vsItemSelection.itemid));
                 }
             }
+        }
+
+        private void AddNewItem(object sender, EventArgs e) {
+            var items = GetSelectedItems().ToArray();
+            if (items.Length == 1) {
+                // Make sure we pass a folder item to the dialog. This is what the client project would
+                // have done.
+
+                var item = items[0];
+
+                if (!item.IsFolder()) {
+                    item = item.GetParentFolder();
+                }
+                uint itemid = item.itemid;
+
+                int iDontShowAgain = 0;
+                string strBrowseLocations = "";
+
+                Guid projectGuid;
+                ((IPersist)this).GetClassID(out projectGuid);
+
+                uint uiFlags = (uint)(__VSADDITEMFLAGS.VSADDITEM_AddNewItems | __VSADDITEMFLAGS.VSADDITEM_SuggestTemplateName | __VSADDITEMFLAGS.VSADDITEM_AllowHiddenTreeView);
+
+                IVsAddProjectItemDlg addItemDialog = (IVsAddProjectItemDlg)DjangoPackage.GetGlobalService(typeof(IVsAddProjectItemDlg));
+                string filter = "";
+                // Note we pass "Web" as the default category to select. The dialog only uses it if it hasn't already saved a default value.
+                string defCategory = "Web";
+                string folderName = item.Name();
+                addItemDialog.AddProjectItemDlg(itemid,
+                    ref projectGuid,
+                    this as IVsProject3,
+                    uiFlags, defCategory,
+                    null,
+                    ref strBrowseLocations,
+                    ref filter,
+                    out iDontShowAgain);
+            }
+
         }
 
         /// <summary>
@@ -481,19 +537,16 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
-                for (int i = 0; i < prgCmds.Length; i++) {
-                    switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
-                        case VSConstants.VSStd97CmdID.PreviewInBrowser:
-                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            return VSConstants.S_OK;
-                    }
-                }
-            } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
+            if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     switch (prgCmds[i].cmdID) {
                         case PkgCmdIDList.cmdidStartNewApp:
-                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            var items = GetSelectedItems();
+                            if (items.Count() == 1 && GetSelectedItemType() == PythonProjectGuid) {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            } else {
+                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
+                            }
                             return VSConstants.S_OK;
                     }
                 }
@@ -564,6 +617,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     foreach (string file in Directory.GetFiles(newAppFilesDir)) {
                         newFolder.Collection.AddFromTemplate(file, Path.GetFileName(file));
                     }
+                    newFolder.Collection.AddFolder("Templates");
                 }
             }
         }
@@ -571,7 +625,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private void ValidateDjangoApp() {
             var proc = RunManageCommand("validate");
             if (proc != null) {
-                var dialog = new WaitForValidationDialog(proc);
+                var dialog = new WaitForValidationDialog(proc, "Validate App Results");
 
                 ShowValidationDialog(dialog, proc);
             } else {
@@ -582,7 +636,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private void SyncDb() {
             var proc = RunManageCommand("syncdb");
             if (proc != null) {
-                var dialog = new WaitForValidationDialog(proc);
+                var dialog = new WaitForValidationDialog(proc, "Sync DB Results");
 
                 ShowValidationDialog(dialog, proc);
             } else {
@@ -668,10 +722,19 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private bool TryHandleRightClick(IntPtr pvaIn, out int res) {
+            Guid itemType = GetSelectedItemType();
+
+            if (TryShowContextMenu(pvaIn, itemType, out res)) {
+                return true;
+            }
+
+            return false;
+        }
+
+        private Guid GetSelectedItemType() {
             Guid itemType = Guid.Empty;
             foreach (var vsItemSelection in GetSelectedItems()) {
-                Guid typeGuid;
-                ErrorHandler.ThrowOnFailure(vsItemSelection.pHier.GetGuidProperty(vsItemSelection.itemid, (int)__VSHPROPID.VSHPROPID_TypeGuid, out typeGuid));
+                Guid typeGuid = vsItemSelection.GetItemType();
 
                 if (itemType == Guid.Empty) {
                     itemType = typeGuid;
@@ -681,12 +744,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     break;
                 }
             }
-
-            if (TryShowContextMenu(pvaIn, itemType, out res)) {
-                return true;
-            }
-
-            return false;
+            return itemType;
         }
 
         private bool TryShowContextMenu(IntPtr pvaIn, Guid itemType, out int res) {
@@ -747,6 +805,8 @@ namespace Microsoft.PythonTools.Django.Project {
             // The reason why we keep a reference to those is that doing a QI after being
             // aggregated would do the AddRef on the outer object.
             _innerVsProjectFlavorCfgProvider = inner as IVsProjectFlavorCfgProvider;
+            _innerProject = inner as IVsProject;
+            _innerProject3 = inner as IVsProject3;
 
             // Ensure we have a service provider as this is required for menu items to work
             if (this.serviceProvider == null)
@@ -811,7 +871,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     "{ed3b544c-26d8-4348-877b-a1f7bd505ed9}",   // typeof(DatabaseDeployPropertyPageComClass)
                     "{909d16b3-c8e8-43d1-a2b8-26ea0d4b6b57}",   // Microsoft.VisualStudio.Web.Application.WebPropertyPage
                     "{379354f2-bbb3-4ba9-aa71-fbe7b0e5ea94}"    // Microsoft.VisualStudio.Web.Application.SilverlightLinksPage
-                }; 
+                };
             }
         }
 
@@ -893,7 +953,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             return ((IOleCommandTarget)_menuService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
-        
+
         private void UpdateAzureDeploymentProject(IVsHierarchy project) {
             object projKind;
             if (!ErrorHandler.Succeeded(project.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_TypeName, out projKind)) ||
@@ -996,7 +1056,36 @@ namespace Microsoft.PythonTools.Django.Project {
                         case 0x039: /* add data folder */
                         case 0x040: /* add browser folders */
                         case 0x041: /* theme */
+                        case 0x054: /* package settings */
+                        case 0x055: /* context package settings */
+
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED);
+                            return VSConstants.S_OK;
+                    }
+                }
+            } else if (pguidCmdGroup == GuidList.guidWebAppCmdId) {
+                for (int i = 0; i < prgCmds.Length; i++) {
+                    switch (prgCmds[i].cmdID) {
+                        case 0x06A: /* check accessibility */
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
+                            return VSConstants.S_OK;
+                    }
+                }
+            } else if (pguidCmdGroup == VSConstants.VSStd2K) {
+                for (int i = 0; i < prgCmds.Length; i++) {
+                    switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
+                        case VSConstants.VSStd2KCmdID.SETASSTARTPAGE:
+                        case VSConstants.VSStd2KCmdID.CHECK_ACCESSIBILITY:
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
+                            return VSConstants.S_OK;
+                    }
+                }
+            } else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
+                for (int i = 0; i < prgCmds.Length; i++) {
+                    switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
+                        case VSConstants.VSStd97CmdID.PreviewInBrowser:
+                        case VSConstants.VSStd97CmdID.BrowseWith:
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
                             return VSConstants.S_OK;
                     }
                 }
@@ -1014,6 +1103,48 @@ namespace Microsoft.PythonTools.Django.Project {
             // base Python project handle it.  So we keep the base Python project config here.
             ppFlavorCfg = pBaseProjectCfg as IVsProjectFlavorCfg;
             return VSConstants.S_OK;
+        }
+
+        #endregion
+
+        #region IVsProject Members
+
+        int IVsProject.AddItem(uint itemidLoc, VSADDITEMOPERATION dwAddItemOperation, string pszItemName, uint cFilesToOpen, string[] rgpszFilesToOpen, IntPtr hwndDlgOwner, VSADDRESULT[] pResult) {
+            return _innerProject.AddItem(itemidLoc, dwAddItemOperation, pszItemName, cFilesToOpen, rgpszFilesToOpen, hwndDlgOwner, pResult);
+        }
+
+        int IVsProject.GenerateUniqueItemName(uint itemidLoc, string pszExt, string pszSuggestedRoot, out string pbstrItemName) {
+            return _innerProject.GenerateUniqueItemName(itemidLoc, pszExt, pszSuggestedRoot, out pbstrItemName);
+        }
+
+        int IVsProject.GetItemContext(uint itemid, out VisualStudio.OLE.Interop.IServiceProvider ppSP) {
+            return _innerProject.GetItemContext(itemid, out ppSP);
+        }
+
+        int IVsProject.GetMkDocument(uint itemid, out string pbstrMkDocument) {
+            return _innerProject.GetMkDocument(itemid, out pbstrMkDocument);
+        }
+
+        int IVsProject.IsDocumentInProject(string pszMkDocument, out int pfFound, VSDOCUMENTPRIORITY[] pdwPriority, out uint pitemid) {
+            return _innerProject.IsDocumentInProject(pszMkDocument, out pfFound, pdwPriority, out pitemid);
+        }
+
+        int IVsProject.OpenItem(uint itemid, ref Guid rguidLogicalView, IntPtr punkDocDataExisting, out IVsWindowFrame ppWindowFrame) {
+            if (_innerProject3 != null && IsHtmlFile(innerVsHierarchy.GetItemName(itemid))) {
+                // force HTML files opened w/o an editor type to be opened w/ our editor factory.
+                Guid guid = GuidList.guidDjangoEditorFactory;
+                return _innerProject3.OpenItemWithSpecific(
+                    itemid,
+                    0,
+                    ref guid,
+                    null,
+                    rguidLogicalView,
+                    punkDocDataExisting,
+                    out ppWindowFrame
+                );
+            }
+
+            return _innerProject.OpenItem(itemid, rguidLogicalView, punkDocDataExisting, out ppWindowFrame);
         }
 
         #endregion

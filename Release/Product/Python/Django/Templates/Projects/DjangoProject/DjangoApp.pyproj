@@ -24,7 +24,6 @@
     <Compile Include="manage.py" />
     <Compile Include="settings.py" />
     <Compile Include="urls.py" />
-    <Folder Include="Templates"/>
   </ItemGroup>
 
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\Python Tools\Microsoft.PythonTools.Django.targets" />

@@ -705,12 +705,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
             #region IEquatable<CallArgs> Members
 
             public bool Equals(CallArgs other) {
+                if (Object.ReferenceEquals(this, other)) {
+                    return true;
+                }
                 if (Args.Length != other.Args.Length ||
                     KeywordArgs.Length != other.KeywordArgs.Length) {
                     return false;
                 }
 
                 for (int i = 0; i < KeywordArgs.Length; i++) {
+                    if (KeywordArgs[i] == null) {
+                        // f(a=2, x) can hit this.
+
+                        if (other.KeywordArgs[i] == null) {
+                            // both null
+                            continue;
+                        }
+
+                        // differ in having a keyword argument
+                        return false;
+                    } else if (other.KeywordArgs[i] == null) {
+                        // differ in having a keyword argument
+                        return false;
+                    }
+
                     if (KeywordArgs[i].Name != other.KeywordArgs[i].Name) {
                         return false;
                     }

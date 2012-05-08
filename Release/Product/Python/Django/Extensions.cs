@@ -71,5 +71,56 @@ namespace Microsoft.PythonTools.Django {
 
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
         }
+
+        internal static Guid GetItemType(this VSITEMSELECTION vsItemSelection) {
+            Guid typeGuid;
+            ErrorHandler.ThrowOnFailure(
+                vsItemSelection.pHier.GetGuidProperty(
+                    vsItemSelection.itemid, 
+                    (int)__VSHPROPID.VSHPROPID_TypeGuid, 
+                    out typeGuid
+                )
+            );
+            return typeGuid;
+        }
+
+        internal static bool IsFolder(this VSITEMSELECTION item) {
+            return item.GetItemType() == VSConstants.GUID_ItemType_PhysicalFolder ||
+                item.itemid == VSConstants.VSITEMID_ROOT;
+        }
+
+        internal static string Name(this VSITEMSELECTION item) {
+            return item.pHier.GetItemName(item.itemid);
+        }
+
+        internal static string GetItemName(this IVsHierarchy hier, uint itemid) {
+            object name;
+            ErrorHandler.ThrowOnFailure(hier.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_Name, out name));
+            return (string)name;
+        }
+
+        internal static VSITEMSELECTION GetParent(this VSITEMSELECTION vsItemSelection) {
+            object parent;
+            ErrorHandler.ThrowOnFailure(
+                vsItemSelection.pHier.GetProperty(
+                    vsItemSelection.itemid,
+                    (int)__VSHPROPID.VSHPROPID_Parent, 
+                    out parent
+                )
+            );
+
+            var res = new VSITEMSELECTION();
+            res.itemid = (uint)((IntPtr)parent).ToInt32();
+            res.pHier = vsItemSelection.pHier;
+            return res;
+        }
+
+        internal static VSITEMSELECTION GetParentFolder(this VSITEMSELECTION vsItemSelection) {
+            var parent = vsItemSelection.GetParent();
+            while (!parent.IsFolder()) {
+                parent = parent.GetParent();
+            }
+            return parent;
+        }
     }
 }

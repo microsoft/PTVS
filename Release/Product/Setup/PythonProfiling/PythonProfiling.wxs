@@ -13,7 +13,7 @@
         <Directory Id="_EB81DD59F2004D80920C8419FDB26819" Name="Extensions">
           <Directory Id="_53E246BD78E24B9BB99B7BBE8C7F077C" Name="Microsoft">
             <Directory Id="_CECA38A01D8B4B79B2F2BE809AFAD70C" Name="PythonProfiling">
-              <Directory Id="INSTALLLOCATION" Name="1.1">
+              <Directory Id="INSTALLLOCATION" Name="1.5">
                 <Directory Id="X64INSTALL" Name="x64">
                 </Directory>
               </Directory>

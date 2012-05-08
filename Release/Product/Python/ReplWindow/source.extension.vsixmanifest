@@ -3,7 +3,7 @@
   <Identifier Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4">
     <Name>Microsoft.VisualStudio.InteractiveWindow</Name>
     <Author>Microsoft</Author>
-    <Version>1.1</Version>
+    <Version>1.5</Version>
     <Description xml:space="preserve">Visual Studio Interactive Window</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>

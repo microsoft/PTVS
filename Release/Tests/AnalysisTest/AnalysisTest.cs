@@ -2111,6 +2111,21 @@ f = x().g";
         }
 
         [TestMethod]
+        public void TestBadKeywordArguments() {
+            var code = @"def f(a, b):
+    return a
+
+x = 100
+z = f(a=42, x)";
+
+            var entry = ProcessText(code);
+            var values = entry.GetValuesByIndex("z", code.IndexOf("z =")).ToArray();
+            Assert.AreEqual(1, values.Length);
+
+            Assert.AreEqual(values.First().Description, "int");
+        }
+
+        [TestMethod]
         public void TestPositionalSplat() {
             var funcDef = @"def f(a, b, c): 
     pass";            

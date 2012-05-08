@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Django {
     /// <summary>
     /// Common factory for creating our editor
     /// </summary>    
-    [Guid("E1B7ABDE-CDDE-4874-A8A6-5B5C7597A848")]
+    [Guid(GuidList.guidDjangoEditorFactoryString)]
     public class DjangoEditorFactory : IVsEditorFactory {
         private DjangoPackage _package;
         private ServiceProvider _serviceProvider;

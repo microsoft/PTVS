@@ -13,7 +13,7 @@
         <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
            <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
              <Directory Id="_F68B9718F51542FA90160A491D0C2011" Name="Python Tools PyKinect Sample">
-               <Directory Id="INSTALLLOCATION" Name="1.1">
+               <Directory Id="INSTALLLOCATION" Name="1.5">
                </Directory>
              </Directory>
           </Directory>
