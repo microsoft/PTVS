@@ -48,6 +48,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
 
         private int? _crossModuleLimit;
         private static object _nullKey = new object();
@@ -118,33 +119,35 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("__builtin__", "max", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "getattr", SpecialGetAttr);
 
+            // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
+            // copied, and always returns the same type).  So we specialize these away so they return the type passed
+            // in and don't do any analyze.  Ditto for the rest of the functions here...  
+            SpecializeFunction("copy", "deepcopy", CopyFunction, analyze: false);
+            SpecializeFunction("copy", "copy", CopyFunction, analyze: false);
+            SpecializeFunction("pickle", "dumps", ReturnsString, analyze: false);
+            SpecializeFunction("UserDict.UserDict", "update", Nop, analyze: false);
+            SpecializeFunction("pprint", "pprint", Nop, analyze: false);
+            SpecializeFunction("pprint", "pformat", ReturnsString, analyze: false);
+            SpecializeFunction("pprint", "saferepr", ReturnsString, analyze: false);
+            SpecializeFunction("pprint", "_safe_repr", ReturnsString, analyze: false);
+            SpecializeFunction("pprint", "_format", ReturnsString, analyze: false);
+            SpecializeFunction("pprint.PrettyPrinter", "_format", ReturnsString, analyze: false);
+            SpecializeFunction("decimal.Decimal", "__new__", Nop, analyze: false);
+            SpecializeFunction("StringIO.StringIO", "write", Nop, analyze: false);
+            SpecializeFunction("threading.Thread", "__init__", Nop, analyze: false);
+            SpecializeFunction("subprocess.Popen", "__init__", Nop, analyze: false);
+            SpecializeFunction("Tkinter.Toplevel", "__init__", Nop, analyze: false);
+            SpecializeFunction("weakref.WeakValueDictionary", "update", Nop, analyze: false);
+            SpecializeFunction("os._Environ", "get", ReturnsString, analyze: false);
+            SpecializeFunction("os._Environ", "update", Nop, analyze: false);
+            SpecializeFunction("ntpath", "expandvars", ReturnsString, analyze: false);
+            SpecializeFunction("idlelib.EditorWindow.EditorWindow", "__init__", Nop, analyze: false);
+
             // cached for quick checks to see if we're a call to clr.AddReference
 
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
         }
 
-        private ISet<Namespace> SpecialGetAttr(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
-            if (args.Length >= 2) {
-                if (args.Length >= 3) {
-                    // getattr(foo, 'bar', baz), baz is a possible return value.
-                    res = args[2];
-                }
-
-                foreach (var value in args[0]) {
-                    foreach (var name in args[1]) {
-                        // getattr(foo, 'bar') - attempt to do the getattr and return the proper value
-                        var strValue = name.GetConstantValueAsString();
-                        if (strValue != null) {
-                            res = res.Union(value.GetMember(call, unit, strValue), ref madeSet);
-                        }
-                    }
-                }
-            }
-            return res;
-        }
-        
         /// <summary>
         /// Reloads the modules from the interpreter.
         /// 
@@ -186,13 +189,15 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (moduleName != null) {
                 Modules[moduleName] = new ModuleReference(entry.MyScope);
+
+                DoDelayedSpecialization(moduleName);
             }
             if (filePath != null) {
                 _modulesByFilename[filePath] = entry.MyScope;
             }
             return entry;
         }
-        
+
         /// <summary>
         /// Removes the specified project entry from the current analysis.
         /// 
@@ -528,24 +533,27 @@ namespace Microsoft.PythonTools.Analysis {
         /// Currently this just provides a hook when the function is called - it could be expanded
         /// to providing the interpretation of when the function is called as well.
         /// </summary>
-        private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg) {
+        private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze = true) {
             ModuleReference module;
 
             int lastDot;
+            string realModName = null;
             if (Modules.TryGetValue(moduleName, out module)) {
                 IModule mod = module.Module as IModule;
                 Debug.Assert(mod != null);
                 if (mod != null) {
-                    mod.SpecializeFunction(name, dlg);
+                    mod.SpecializeFunction(name, dlg, analyze);
                 }
-            } else if ((lastDot = moduleName.LastIndexOf('.')) != -1 && 
-                Modules.TryGetValue(moduleName.Substring(0, lastDot), out module)) {
+            } else if ((lastDot = moduleName.LastIndexOf('.')) != -1 &&
+                Modules.TryGetValue(realModName = moduleName.Substring(0, lastDot), out module)) {
 
                 IModule mod = module.Module as IModule;
                 Debug.Assert(mod != null);
                 if (mod != null) {
-                    mod.SpecializeFunction(moduleName.Substring(lastDot + 1, moduleName.Length - (lastDot + 1)) + "." + name, dlg);
+                    mod.SpecializeFunction(moduleName.Substring(lastDot + 1, moduleName.Length - (lastDot + 1)) + "." + name, dlg, analyze);
                 }
+            } else {
+                SaveDelayedSpecialization(moduleName, name, dlg, analyze, realModName);
             }
         }
 
@@ -673,6 +681,43 @@ namespace Microsoft.PythonTools.Analysis {
             return null;
         }
 
+        private ISet<Namespace> Nop(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+            return EmptySet<Namespace>.Instance;
+        }
+
+        private ISet<Namespace> CopyFunction(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+            if (args.Length > 0) {
+                return args[0];
+            }
+            return EmptySet<Namespace>.Instance;
+        }
+
+        private ISet<Namespace> ReturnsString(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+            return _stringType.Instance;
+        }
+
+        private ISet<Namespace> SpecialGetAttr(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+            ISet<Namespace> res = EmptySet<Namespace>.Instance;
+            bool madeSet = false;
+            if (args.Length >= 2) {
+                if (args.Length >= 3) {
+                    // getattr(foo, 'bar', baz), baz is a possible return value.
+                    res = args[2];
+                }
+
+                foreach (var value in args[0]) {
+                    foreach (var name in args[1]) {
+                        // getattr(foo, 'bar') - attempt to do the getattr and return the proper value
+                        var strValue = name.GetConstantValueAsString();
+                        if (strValue != null) {
+                            res = res.Union(value.GetMember(call, unit, strValue), ref madeSet);
+                        }
+                    }
+                }
+            }
+            return res;
+        }
+        
         private ISet<Namespace> ReturnUnionOfInputs(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
@@ -895,5 +940,43 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
+
+        /// <summary>
+        /// Processes any delayed specialization for when a module is added for the 1st time.
+        /// </summary>
+        /// <param name="moduleName"></param>
+        private void DoDelayedSpecialization(string moduleName) {
+            List<SpecializationInfo> specInfo;
+            if (_specializationInfo.TryGetValue(moduleName, out specInfo)) {
+                foreach (var curSpec in specInfo) {
+                    SpecializeFunction(curSpec.ModuleName, curSpec.Name, curSpec.Delegate, curSpec.Analyze);
+                }
+            }
+        }
+
+        private void SaveDelayedSpecialization(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze, string realModName) {
+            if (_specializationInfo == null) {
+                _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();
+            }
+            List<SpecializationInfo> specList;
+            if (!_specializationInfo.TryGetValue(moduleName, out specList)) {
+                _specializationInfo[realModName ?? moduleName] = specList = new List<SpecializationInfo>();
+            }
+
+            specList.Add(new SpecializationInfo(moduleName, name, dlg, analyze));
+        }
+
+        class SpecializationInfo {
+            public readonly string Name, ModuleName;
+            public readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> Delegate;
+            public readonly bool Analyze;
+
+            public SpecializationInfo(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze) {
+                ModuleName = moduleName;
+                Name = name;
+                Delegate = dlg;
+                Analyze = analyze;
+            }
+        }
     }
 }

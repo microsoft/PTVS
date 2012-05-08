@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void AddSend(Node node, AnalysisUnit unit, ISet<Namespace> sendValue) {
-            if (_sends.AddTypes(node, unit, sendValue)) {
+            if (_sends.AddTypes(unit, sendValue)) {
                 _unit.Enqueue();
             }
         }

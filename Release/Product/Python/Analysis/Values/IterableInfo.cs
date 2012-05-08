@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _unionType;
         }
 
-        internal bool AddTypes(Node node, AnalysisUnit unit, ISet<Namespace>[] types) {
+        internal bool AddTypes(AnalysisUnit unit, ISet<Namespace>[] types) {
             if (_indexTypes.Length < types.Length) {
                 VariableDef[] newTypes = new VariableDef[types.Length];
                 for (int i = 0; i < _indexTypes.Length; i++) {
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             bool added = false;
             for (int i = 0; i < types.Length; i++) {
-                added = _indexTypes[i].AddTypes(node, unit, types[i]) || added;
+                added = _indexTypes[i].AddTypes(unit, types[i]) || added;
             }
             
             if (added) {

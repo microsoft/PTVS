@@ -46,6 +46,10 @@ namespace Microsoft.PythonTools.Analysis {
                     return res;
                 }
             } else if ((valueOne = value as Namespace) != null) {
+                if (madeSet) {
+                    self.Add(valueOne);
+                    return self;
+                }
                 var res = new HashSet<Namespace>(self);
                 res.Add(valueOne);
                 return res;

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
@@ -137,7 +138,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             // check and see if it's defined in a base class instance as well...
             var res = def.Types;
-            bool madeSet = true;
+            bool madeSet = false;
             foreach (var b in _classInfo.Bases) {
                 foreach (var ns in b) {
                     if (ns.Push()) {
@@ -189,7 +190,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _instanceAttrs[name] = instMember = new VariableDef();
             }
             instMember.AddAssignment(node, unit);
-            instMember.AddTypes(node, unit, value);
+            instMember.AddTypes(unit, value);
         }
 
         public override void DeleteMember(Node node, AnalysisUnit unit, string name) {
@@ -297,6 +298,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public ClassInfo ClassInfo {
             get { return _classInfo; }
+        }
+
+        public override string ToString() {
+            return ClassInfo._analysisUnit.FullName + " instance";
+        }
+
+        public override bool UnionEquals(Namespace ns) {
+            if (Object.ReferenceEquals(this, ns)) {
+                return true;
+            }
+
+            InstanceInfo inst = ns as InstanceInfo;
+            if (inst == null) {
+                return false;
+            }
+
+            return inst.ClassInfo.UnionEquals(ClassInfo);
+        }
+
+        public override int UnionHashCode() {
+            return ClassInfo.UnionHashCode();
         }
 
         #region IVariableDefContainer Members

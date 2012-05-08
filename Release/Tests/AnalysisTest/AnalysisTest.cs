@@ -46,9 +46,8 @@ namespace AnalysisTest {
                 args = ArrayUtils.ShiftLeft(args, 1);
                 attr = typeof(PerfMethodAttribute);
             }
-            foreach (var type in Assembly.GetExecutingAssembly().GetExportedTypes()) {
+            foreach (var type in new[] { typeof(AnalysisTest) }) {
                 if (type.IsDefined(typeof(TestClassAttribute), false)) {
-                    Console.WriteLine("Running tests against: {0}", type.FullName);
 
                     res += RunTests(type, args, attr);
                 }
@@ -67,6 +66,7 @@ namespace AnalysisTest {
 
                     if (inst == null) {
                         inst = Activator.CreateInstance(instType);
+                        Console.WriteLine("Running tests against: {0}", instType.FullName);
                     }
                     try {
                         mi.Invoke(inst, new object[0]);
@@ -82,15 +82,17 @@ namespace AnalysisTest {
                 }
             }
 
-            Console.WriteLine();
-            if (failures == 0) {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("No failures");
-            } else {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("{0} failures", failures);
+            if (inst != null) {
+                Console.WriteLine();
+                if (failures == 0) {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("No failures");
+                } else {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("{0} failures", failures);
+                }
+                Console.ForegroundColor = fg;
             }
-            Console.ForegroundColor = fg;
             return failures;
         }
 
@@ -153,6 +155,68 @@ f(x=42, y = 'abc')
             AssertContainsExactly(entry.GetTypesFromNameByIndex("bar", code.IndexOf("pass")), Interpreter.GetBuiltinType(BuiltinTypeId.Dict));
             AssertContainsExactly(entry.GetValuesByIndex("bar['foo']", code.IndexOf("pass")).Select(x => x.PythonType), Interpreter.GetBuiltinType(BuiltinTypeId.Int), Interpreter.GetBuiltinType(BuiltinTypeId.Bytes));
         }
+
+        [TestMethod]
+        public void TestCartesianStarArgs() {
+            var code = @"def f(a, **args):
+    args['foo'] = a
+    return args['foo']
+
+
+x = f(42)
+y = f('abc')";
+
+            var entry = ProcessText(code);
+
+            AssertContains(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
+            AssertContains(entry.GetValuesByIndex("y", code.IndexOf("x =")).Select(x => x.PythonType.Name), "str");
+
+
+            code = @"def f(a, **args):
+    for i in xrange(2):
+        if i == 1:
+            return args['foo']
+        else:
+            args['foo'] = a
+
+x = f(42)
+y = f('abc')";
+
+            entry = ProcessText(code);
+
+            AssertContains(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
+            AssertContains(entry.GetValuesByIndex("y", code.IndexOf("x =")).Select(x => x.PythonType.Name), "str");
+        }
+
+        [TestMethod]
+        public void TestCartesianRecursive() {
+            var code = @"def f(a, *args):
+    f(a, args)
+    return a
+
+
+x = f(42)";
+
+            var entry = ProcessText(code);
+
+            AssertContains(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
+        }
+
+        [TestMethod]
+        public void TestCartesianSimple() {
+            var code = @"def f(a):
+    return a
+
+
+x = f(42)
+y = f('foo')";
+
+            var entry = ProcessText(code);
+
+            AssertContains(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
+            AssertContains(entry.GetValuesByIndex("y", code.IndexOf("y =")).Select(x => x.PythonType.Name), "str");
+        }
+
 
         [TestMethod]
         public void TestImportAs() {
@@ -499,6 +563,21 @@ def f():
     yield 3
 
 a = f()
+b = a.next()
+
+for c in f():
+    print c
+            ");
+
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+
+            entry = ProcessText(@"
+def f(x):
+    yield x
+
+a = f(42)
 b = a.next()
 
 for c in f():
@@ -1497,7 +1576,7 @@ def f(a):
                             vars.RemoveAt(i);
                             removed++;
                             removedOne = found = true;
-                            break;
+                            i--;
                         }
                     }
 
@@ -1793,6 +1872,16 @@ b.update(a)
 
             Assert.AreEqual(entry.GetValuesByIndex("b.items()[0][0]", 1).Select(x => x.PythonType).First(), IntType);
             Assert.AreEqual(entry.GetValuesByIndex("b.items()[0][1]", 1).Select(x => x.PythonType).First(), IntType);
+        }
+
+        [TestMethod]
+        public void TestDictEnum() {
+            var entry = ProcessText(@"
+for x in {42:'abc'}:
+    print(x)
+");
+
+            Assert.AreEqual(entry.GetValuesByIndex("x", 1).Select(x => x.PythonType).First(), IntType);
         }
 
         [TestMethod]

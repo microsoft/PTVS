@@ -179,9 +179,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override string ToString() {
             return String.Format(
-                "<_AnalysisUnit: Name={0}, NodeType={1}>",
+                "<{2}: Name={0}, NodeType={1}>",
                 FullName,
-                _ast.GetType().Name
+                _ast.GetType().Name,
+                GetType().Name
             );
         }
 
@@ -201,9 +202,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
     }
 
+    /// <summary>
+    /// Provides the analysis of a function before it is called with any arguments.
+    /// </summary>
     class FunctionAnalysisUnit : AnalysisUnit {
-        private readonly AnalysisUnit _outerUnit;
-
+        internal readonly AnalysisUnit _outerUnit;
+        
         public FunctionAnalysisUnit(FunctionDefinition node, InterpreterScope[] scopes, AnalysisUnit outerUnit)
             : base(node, scopes) {
             _outerUnit = outerUnit;
@@ -220,8 +224,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (!DeclaringModule.NodeScopes.TryGetValue(Ast, out interpreterScope)) {
                 return;
             }
-            var newScope = (interpreterScope as FunctionScope).Function;
-            Debug.Assert(newScope != null);
+            var funcScope = (FunctionScope)interpreterScope;
+            var function = funcScope.Function;
+            Debug.Assert(function != null);
             // TODO: __new__ in class should assign returnValue
             ddg.SetCurrentUnit(_outerUnit);
 
@@ -233,21 +238,30 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 foreach (var ns in bases) {
                     BuiltinMethodInfo methodInfo = ns as BuiltinMethodInfo;
                     if(methodInfo != null) {
-                        ddg.PropagateBaseParams(newScope, methodInfo);
+                        ddg.PropagateBaseParams(function, methodInfo);
                     }
                 }
             }
 
-            ddg.ProcessFunctionDecorators(Ast, newScope);
+            ddg.ProcessFunctionDecorators(Ast, function);
 
+            // analyze the function w/o any parameter types.
+            AnalyzeFunction(ddg, function, funcScope);
+        }
+
+        protected virtual void AnalyzeFunction(DDG ddg, FunctionInfo function, FunctionScope funcScope) {
+            AnalyzeFunctionWorker(ddg, function);
+        }
+
+        protected void AnalyzeFunctionWorker(DDG ddg, FunctionInfo function) {
             // process parameters
-            int len = Math.Min(Ast.Parameters.Count, newScope.ParameterTypes.Length);
+            int len = Math.Min(Ast.Parameters.Count, function.ParameterTypes.Length);
             for (int i = 0; i < len; i++) {
                 var p = Ast.Parameters[i];
                 if (p.DefaultValue != null) {
                     var val = ddg._eval.Evaluate(p.DefaultValue);
                     if (val != null) {
-                        newScope.AddParameterType(p.DefaultValue, this, val, i);
+                        function.AddParameterType(this, val, i);
                     }
                 }
                 ddg._eval.EvaluateMaybeNull(p.Annotation);
@@ -256,6 +270,109 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             ddg.SetCurrentUnit(this);
             Ast.Body.Walk(ddg);
+        }
+    }
+
+    /// <summary>
+    /// Provides analysis of a function called with a specific set of arguments.  We analyze each function
+    /// with each unique set of arguments (the cartesian product of the arguments).
+    /// 
+    /// It's possible that we still need to perform the analysis multiple times which can occur 
+    /// if we take a dependency on something which later gets updated.
+    /// </summary>
+    class CartesianProductFunctionAnalysisUnit : FunctionAnalysisUnit {
+        private readonly FunctionInfo.CallArgs _callArgs;
+        private readonly VariableDef _returnValue;
+        private readonly VariableDef[] _newParams;
+
+        public CartesianProductFunctionAnalysisUnit(FunctionInfo funcInfo, InterpreterScope[] scopes, AnalysisUnit outerUnit, FunctionInfo.CallArgs callArgs, VariableDef returnValue)
+            : base(funcInfo.FunctionDefinition, scopes, outerUnit) {
+            _callArgs = callArgs;
+            _returnValue = returnValue;
+            
+            // Set parameters to new empty variables, save the old variables which
+            // we'll merge back into.
+            var newParams = new VariableDef[Ast.Parameters.Count];
+            var oldParams = funcInfo.ParameterTypes;
+            int index = 0;
+            foreach (var param in Ast.Parameters) {
+                VariableDef variable;
+                if (param.Kind != ParameterKind.Dictionary) {
+                    variable = newParams[index++] = InterpreterScope.MakeParameterDef(param, this, param.Kind, false);
+                } else {
+                    variable = newParams[index] = oldParams[index++];
+                }
+            }
+            _newParams = newParams;
+        }
+
+        protected override void AnalyzeFunction(DDG ddg, FunctionInfo function, FunctionScope funcScope) {
+            var args = _callArgs;            
+
+            // Set parameters to new empty variables, save the old variables which
+            // we'll merge back into.
+            var oldParams = function.ParameterTypes;
+            int index = 0;
+            foreach (var param in Ast.Parameters) {
+                funcScope.Variables[param.Name] = _newParams[index++];
+            }
+
+            function.SetParameters(_newParams);
+            // TODO: Fix the null node
+            function.PropagateCall(null, args.KeywordArgs, this, args.Args, false);
+            var unifiedReturn = function.ReturnValue;
+            function.ReturnValue = _returnValue;
+
+            for (int i = 0; i < Ast.Parameters.Count; i++) {
+                var param = Ast.Parameters[i];
+
+                // We need to avoid an explosion of types for list/dictionary parameters.  If we create a new SequenceInfo
+                // everytime we process these then we break recursive *args calls such as:
+                // def f(*args):
+                //      f(args)
+                // As we need up creating a sequence of a sequence of a sequence ...  forever.
+                // So here we uniqify based upon the call arguments, removing any sequences which actually came from
+                // *args or **args.  
+                if (param.Kind == ParameterKind.List) {
+                    var listVar = (ListParameterVariableDef)_newParams[i];
+                    ISet<Namespace>[] argTypes = new ISet<Namespace>[listVar.List.IndexTypes.Length];
+                    for (int j = 0; j < argTypes.Length; j++) {
+                        argTypes[j] = new HashSet<Namespace>(listVar.List.IndexTypes[j].Types.Where(x => !(x is StarArgsSequenceInfo)));
+                    }
+                    var callArgs = new FunctionInfo.CallArgs(argTypes, ExpressionEvaluator.EmptyNames, false);
+                    SequenceInfo seqInfo;
+                    if (function._starArgs == null) {
+                        function._starArgs = new Dictionary<FunctionInfo.CallArgs, SequenceInfo>();
+                    }
+                    if (!function._starArgs.TryGetValue(callArgs, out seqInfo)) {
+                        function._starArgs[callArgs] = listVar.List;
+                    } else {
+                        listVar.List = seqInfo;
+                    }
+
+                    listVar.AddTypes(this, listVar.List);
+                } else if (param.Kind == ParameterKind.Dictionary) {
+
+                }
+            }
+
+            try {
+                AnalyzeFunctionWorker(ddg, function);
+            } finally {
+                function.SetParameters(oldParams);
+                function.ReturnValue = unifiedReturn;
+
+                // propagate the calculated types into the full variables
+                for (int i = 0; i < Ast.Parameters.Count; i++) {
+                    funcScope.Variables[Ast.Parameters[i].Name] = oldParams[i];
+                    foreach (var keyValue in _newParams[i]._dependencies) {
+                        var projEntry = keyValue.Key;
+                        var dependencies = keyValue.Value;
+
+                        oldParams[i].AddTypes(projEntry, dependencies.Types);
+                    }
+                }
+            }
         }
     }
 
@@ -281,11 +398,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             
             var newScope = (scope as ClassScope).Class;
 
-            newScope.Bases.Clear();
+            newScope.ClearBases();
             if (Ast.Bases.Count == 0) {
                 if (ddg.ProjectState.LanguageVersion.Is3x()) {
                     // 3.x all classes inherit from object by default
-                    newScope.Bases.Add(ddg.ProjectState._objectSet);
+                    newScope.AddBase(ddg.ProjectState._objectSet);
                 }
             } else {
                 ddg.SetCurrentUnit(_outerUnit);
@@ -298,7 +415,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                             metaClass.Walk(ddg);
                             var metaClassValue = ddg._eval.Evaluate(metaClass);
                             if (metaClassValue.Count > 0) {
-                                newScope.GetOrCreateMetaclassVariable().AddTypes(metaClass, _outerUnit, metaClassValue);
+                                newScope.GetOrCreateMetaclassVariable().AddTypes(_outerUnit, metaClassValue);
                             }
                         }
                         continue;
@@ -308,13 +425,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                     baseClass.Walk(ddg);
                     var bases = ddg._eval.Evaluate(baseClass);
-                    newScope.Bases.Add(bases);
+                    newScope.AddBase(bases);
 
 
                     foreach (var baseValue in bases) {
                         ClassInfo ci = baseValue as ClassInfo;
                         if (ci != null) {
-                            ci.SubClasses.AddTypes(Ast, newScope._analysisUnit, new[] { newScope });
+                            ci.SubClasses.AddTypes(newScope._analysisUnit, new[] { newScope });
                         }
                     }
 
@@ -376,7 +493,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             var node = (SetComprehension)Ast;
 
-            set.AddTypes(node, this, ddg._eval.Evaluate(node.Item));
+            set.AddTypes(this, ddg._eval.Evaluate(node.Item));
         }
     }
 
@@ -408,7 +525,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             var list = (ListInfo)((ComprehensionScope)Scopes[Scopes.Length - 1]).Namespace;
             var node = (ListComprehension)Ast;
 
-            list.AddTypes(node, this, new[] { ddg._eval.Evaluate(node.Item) });
+            list.AddTypes(this, new[] { ddg._eval.Evaluate(node.Item) });
         }
     }
 }

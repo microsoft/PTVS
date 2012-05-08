@@ -42,6 +42,18 @@ namespace Microsoft.PythonTools.Project.Automation
 
         #endregion
 
+        public override string Name
+        {
+            get
+            {
+                return this.Node.FileName;
+            }
+            set 
+            {
+                base.Name = value;
+            }
+        }
+
         #region overridden methods
         /// <summary>
         /// Returns the dirty state of the document.

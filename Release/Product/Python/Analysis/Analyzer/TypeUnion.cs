@@ -12,7 +12,9 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
@@ -27,11 +29,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public TypeUnion() {
         }
 
-        public TypeUnion(HashSet<T> set) {
-            _ns = set;
-        }
-
-        public bool Add(T ns, PythonAnalyzer state) {
+        public bool Add(T ns) {
             if (_ns == Empty) {
                 return false;
             }
@@ -43,9 +41,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (_ns.Count > MaxUniqueNamespaces) {
                     if (_ns.Comparer == ObjectComparer) {
                         _ns = new HashSet<T>(_ns, UnionComparer);
-                    } else {
-                        // TODO: We should warn here in debug builds so see if we can improve tracking
-                        _ns = Empty;
                     }
                 }
                 return true;
@@ -121,15 +116,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             #endregion
-        }
-    }
-
-    class TypeUnion : TypeUnion<Namespace> {
-        public TypeUnion() {
-        }
-
-        public TypeUnion(HashSet<Namespace> set)
-            : base(set) {
         }
     }
 }

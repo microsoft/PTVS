@@ -186,14 +186,31 @@ import System
         }
 
         [PerfMethod]
+        public void TestAnalyzeDjango() {
+            AnalyzeDir(@"C:\Python27\Lib\site-packages\django");
+        }
+
+        [PerfMethod]
+        public void TestAnalyzeStdLib26() {
+            string dir = Path.Combine("C:\\python26_x64\\Lib");
+            AnalyzeDir(dir);
+        }
+
+
+        [PerfMethod]
         public void TestAnalyzeStdLib() {
             //string dir = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), "IronPython 2.6 for .NET 4.0 RC\\Lib");
             AnalyzeStdLib();
             Console.ReadLine();
         }
 
+        [PerfMethod]
         public PythonAnalyzer AnalyzeStdLib() {
             string dir = Path.Combine("C:\\Python27_x64\\Lib");
+            return AnalyzeDir(dir);
+        }
+
+        private PythonAnalyzer AnalyzeDir(string dir) {
             List<string> files = new List<string>();
             CollectFiles(dir, files);
 
@@ -250,7 +267,7 @@ import System
                 Console.WriteLine("Analyzing queue");
                 modules[0].AnalysisGroup.AnalyzeQueuedEntries();
             }
-            
+
             long start4 = sw.ElapsedMilliseconds;
             Console.WriteLine("Analyze: {0} ms", start4 - start3);
             return projectState;

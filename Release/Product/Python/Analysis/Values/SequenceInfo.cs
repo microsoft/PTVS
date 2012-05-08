@@ -115,6 +115,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override string ToString() {
+            return Description;
+        }
+
         public override string Description {
             get {
                 EnsureUnionType();
@@ -122,6 +126,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var unionType = UnionType.GetUnionType();
                 if (unionType != null) {
                     result.Append(" of " + unionType.ShortDescription);
+                } else if (UnionType.Count > 0) {
+                    result.Append(" of multiple types");
                 } else {
                     result.Append("()");
                 }
@@ -152,6 +158,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     value.Types
                 );
             }
+        }
+    }
+
+    internal class StarArgsSequenceInfo : SequenceInfo {
+        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo)
+            : base(variableDef, builtinClassInfo) {
+        }
+
+        public override string ShortDescription {
+            get {
+                return base.ShortDescription;
+            }
+        }
+
+        public override string ToString() {
+            return "*" + base.ToString();
         }
     }
 }

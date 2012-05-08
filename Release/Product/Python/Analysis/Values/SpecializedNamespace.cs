@@ -33,6 +33,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _inst = inst;
         }
 
+        internal Namespace Original {
+            get {
+                return _original;
+            }
+        }
+
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
             return _original.Call(node, unit, args, keywordArgNames);
         }

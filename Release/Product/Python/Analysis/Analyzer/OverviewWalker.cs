@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 var declScope = outerUnit.Scopes[outerUnit.Scopes.Length - 1];
                 var classVar = declScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
-                classVar.AddTypes(node.NameExpression, unit, klass.SelfSet);
+                classVar.AddTypes(unit, klass.SelfSet);
 
                 declScope.Children.Add(classScope);
                 scopes[scopes.Length - 1] = classScope;
@@ -169,25 +169,25 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (!node.IsLambda && node.Name != "<genexpr>") {
                     // lambdas don't have their names published        
                     var funcVar = declScope.AddLocatedVariable(node.Name, node.NameExpression, unit);
-                    funcVar.AddTypes(node.NameExpression, unit, function.SelfSet);
+                    funcVar.AddTypes(unit, function.SelfSet);
                 }
 
-                var newParams = new VariableDef[node.Parameters.Count];
-                int index = 0;
-                foreach (var param in node.Parameters) {
-                    var variable = newParams[index++] = funcScope.AddLocatedVariable(param.Name, param, unit, param.Kind);
-                    
-                    if (param.IsList) {
-                        variable.AddTypes(param, unit, new SequenceInfo(VariableDef.EmptyArray, outerUnit.ProjectState._tupleType));
-                    } else if (param.IsDictionary) {
-                        variable.AddTypes(param, unit, new DictionaryInfo(outerUnit.ProjectEntry));
-                    }
-                }
-
-                function.SetParameters(newParams);
+                AddFunctionParameters(function, funcScope);
                 unit.Enqueue();
             }
             return scope.Namespace as FunctionInfo;
+        }
+
+        internal static void AddFunctionParameters(FunctionInfo function, FunctionScope funcScope) {
+            var unit = (FunctionAnalysisUnit)function._analysisUnit;
+            var node = unit.Ast;
+            var newParams = new VariableDef[node.Parameters.Count];
+            int index = 0;
+            foreach (var param in node.Parameters) {
+                var variable = newParams[index++] = funcScope.AddLocatedVariable(param.Name, param, unit, param.Kind);
+            }
+
+            function.SetParameters(newParams);
         }
 
         public override bool Walk(GeneratorExpression node) {

@@ -141,6 +141,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private object GetMemberValue(Namespace type, ModuleInfo declModule, bool isRef) {
+            SpecializedNamespace specialCallable = type as SpecializedNamespace;
+            if (specialCallable != null) {
+                return GetMemberValue(specialCallable.Original, declModule, isRef);
+            }
+
             switch (type.ResultType) {
                 case PythonMemberType.Function:
                     FunctionInfo fi = type as FunctionInfo;
@@ -152,6 +157,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (bfi != null) {
                         return GenerateFunction(bfi);
                     }
+
                     return "function";
                 case PythonMemberType.Method:
                     BoundMethodInfo mi = type as BoundMethodInfo;
@@ -247,6 +253,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static string GetMemberKind(Namespace type, ModuleInfo declModule, bool isRef) {
+            SpecializedNamespace specialCallable = type as SpecializedNamespace;
+            if (specialCallable != null) {
+                return GetMemberKind(specialCallable.Original, declModule, isRef);
+            }
+
             switch (type.ResultType) {
                 case PythonMemberType.Function:
                     if (type is BuiltinFunctionInfo) {
@@ -270,9 +281,21 @@ namespace Microsoft.PythonTools.Analysis {
         private object GenerateProperty(FunctionInfo prop) {
             return new Dictionary<string, object>() {
                 {"doc", MemoizeString(prop.Documentation) },
-                {"type", GenerateTypeName(prop.ReturnValue.Types) },
+                {"type", GenerateTypeName( GetFunctionReturnTypes(prop)) },
                 {"location", GenerateLocation(prop.Location) }
             };
+        }
+
+        private static ISet<Namespace> GetFunctionReturnTypes(FunctionInfo func) {
+            if (func._allCalls == null) {
+                return func.ReturnValue.Types;
+            }
+
+            HashSet<Namespace> res = new HashSet<Namespace>(func.ReturnValue.Types);
+            foreach (var callInfo in func._allCalls.Values) {
+                res.UnionWith(callInfo.ReturnValue.Types);
+            }
+            return res;
         }
 
         private Dictionary<string, object> GenerateConstant(ConstantInfo constantInfo) {
@@ -406,8 +429,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object[] GenerateOverloads(FunctionInfo fi) {
             List<object> overloads = new List<object>();
-            if (fi.ReturnValue.Types.Count > 0) {
-                foreach (var retType in fi.ReturnValue.Types) {
+            var types = GetFunctionReturnTypes(fi);
+            if (types.Count > 0) {
+                foreach (var retType in types) {
                     overloads.Add(
                         new Dictionary<string, object>() {
                             {"args", GenerateArgInfo(fi) },

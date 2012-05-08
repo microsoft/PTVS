@@ -253,14 +253,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override bool UnionEquals(Namespace ns) {
             ConstantInfo ci = ns as ConstantInfo;
             if (ci == null) {
+                BuiltinInstanceInfo bi = ns as BuiltinInstanceInfo;
+                if (bi != null) {
+                    return bi.ClassInfo == ClassInfo;
+                }
                 return false;
-            } else if (ci._value == _value) {
+            } else if (ci._value == null) {
+                return _value == null;
+            } else if (ci._value.Equals(_value)) {
                 return true;
-            } else if (_value == null) {
-                return false;
             }
 
-            return _value.GetType() == ci._value.GetType();
+            return ci.ClassInfo == ClassInfo;
         }
 
         public override int UnionHashCode() {
@@ -268,7 +272,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return 0;
             }
 
-            return _value.GetType().GetHashCode();
+            return ClassInfo.GetHashCode();
         }
 
         public object Value {

@@ -127,6 +127,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override bool UnionEquals(Namespace ns) {
+            BuiltinInstanceInfo bi = ns as BuiltinInstanceInfo;
+            if (bi != null) {
+                if (bi.ClassInfo == ClassInfo) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public override int UnionHashCode() {
+            return ClassInfo.GetHashCode();
+        }
+
         #region IReferenceableContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {

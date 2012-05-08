@@ -195,7 +195,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
             }
 
-            variable.AddTypes(node, _unit, newTypes);
+            variable.AddTypes(_unit, newTypes);
             if (node.Name != "*") {
                 variable.AddAssignment(node, _unit);
             }
@@ -340,7 +340,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     for (int i = 0; i < p.Length; i++) {
                         var baseParam = p[i];
                         var baseType = ProjectState.GetNamespaceFromObjects(baseParam.ParameterType);
-                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[i], _unit, baseType, i);
+                        newScope.AddParameterType(_unit, baseType, i);
                     }
                 }
             }
@@ -367,9 +367,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (newScope.ParameterTypes.Length > 0) {
                     var outerScope = Scopes[Scopes.Length - 1] as ClassScope;
                     if (outerScope != null) {
-                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[0], _unit, outerScope.Class.SelfSet, 0);
+                        newScope.AddParameterType(_unit, outerScope.Class.SelfSet, 0);
                     } else {
-                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[0], _unit, ProjectState._typeObj.SelfSet, 0);
+                        newScope.AddParameterType(_unit, ProjectState._typeObj.SelfSet, 0);
                     }
                 }
             } else if (!newScope.IsStatic) {
@@ -379,7 +379,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (newScope.ParameterTypes.Length > 0) {
                     var classScope = Scopes[Scopes.Length - 1] as ClassScope;
                     if (classScope != null) {
-                        newScope.AddParameterType(newScope.FunctionDefinition.Parameters[0], _unit, classScope.Class.Instance, 0);
+                        newScope.AddParameterType(_unit, classScope.Class.Instance, 0);
                     }
                 }
             }
@@ -461,7 +461,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     if (builtinModule != null) {
                         builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
 
-                        def.AddTypes(nameNode, _unit, builtinModule.SelfSet);
+                        def.AddTypes(_unit, builtinModule.SelfSet);
                         def.AddAssignment(nameNode, _unit);
                         continue;
                     }
@@ -479,7 +479,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                             builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
                         }
 
-                        def.AddTypes(nameNode, _unit, modRef.Module.SelfSet);
+                        def.AddTypes(_unit, modRef.Module.SelfSet);
                         def.AddAssignment(nameNode, _unit);
                         continue;
                     } else {
@@ -501,7 +501,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var retVal = curFunc.Function.ReturnValue;
                 int typeCount = retVal.Types.Count;
                 foreach (var type in lookupRes) {
-                    retVal.AddTypes(node, _unit, type);
+                    retVal.AddTypes(_unit, type);
                 }
                 if (typeCount != retVal.Types.Count) {
                     retVal.EnqueueDependents();
@@ -596,11 +596,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             foreach (var typeObj in typeSet) {
                 ClassInfo classInfo = typeObj as ClassInfo;
                 if (classInfo != null) {
-                    variable.AddTypes(node, _unit, classInfo.Instance);
+                    variable.AddTypes(_unit, classInfo.Instance);
                 } else {
                     BuiltinClassInfo builtinClassInfo = typeObj as BuiltinClassInfo;
                     if (builtinClassInfo != null) {
-                        variable.AddTypes(node, _unit, builtinClassInfo.Instance);
+                        variable.AddTypes(_unit, builtinClassInfo.Instance);
                     } else {
                         SequenceInfo seqInfo = typeObj as SequenceInfo;
                         if (seqInfo != null && seqInfo.Push()) {

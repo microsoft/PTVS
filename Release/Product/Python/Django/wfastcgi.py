@@ -320,7 +320,7 @@ if __name__ == '__main__':
                     send_response(record.req_id, FCGI_STDOUT, response)
 
                 # for testing of throughput of fastcgi handler vs static pages
-                #send_response(record.req_id, FCGI_STDOUT, 'Content-type: text/html\r\n\r\n\r\n<html>\n<body>foo</body></html>')
+                #send_response(record.req_id, FCGI_STDOUT, 'Content-type: text/html\r\n\r\n\r\n<html>\n<body>bar</body></html>')
 
                 send_response(record.req_id, FCGI_END_REQUEST, '\x00\x00\x00\x00\x00\x00\x00\x00', streaming=False)
                 del _REQUESTS[record.req_id]

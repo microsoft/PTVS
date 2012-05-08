@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <summary>
         /// Performs a delete index operation propagating the index types into the provided object.
         /// </summary>
-        public static void DeleteIndex(this ISet<Namespace> self, Node node, AnalysisUnit analysisState, ISet<Namespace> index) {
+        public static void DeleteIndex(this ISet<Namespace> self, Node node, AnalysisUnit unit, ISet<Namespace> index) {
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res ?? EmptySet<Namespace>.Instance;
         }
 
-        public static ISet<Namespace> BinaryOperation(this ISet<Namespace> self, Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {            
+        public static ISet<Namespace> BinaryOperation(this ISet<Namespace> self, Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
             ISet<Namespace> res = null;
             bool madeSet = false;
             foreach (var ns in self) {
@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             
             if (types.Count > 0) {
                 // simplify the types.
-                var set = new HashSet<Namespace>(types, TypeUnion.UnionComparer);
+                var set = new HashSet<Namespace>(types, TypeUnion<Namespace>.UnionComparer);
                 if (set.Count == 1) {
                     type = System.Linq.Enumerable.First(set);
                 }

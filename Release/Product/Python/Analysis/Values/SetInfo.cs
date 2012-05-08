@@ -26,8 +26,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _valueTypes = new VariableDef();
         }
 
-        public void AddTypes(Node node, AnalysisUnit unit, ISet<Namespace> types) {
-            _valueTypes.AddTypes(node, unit, types);
+        public void AddTypes(AnalysisUnit unit, ISet<Namespace> types) {
+            _valueTypes.AddTypes(unit, types);
         }
 
         public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override bool UnionEquals(Namespace ns) {
-            return ns is DictionaryInfo;
+            return ns is SetInfo;
         }
 
         public override int UnionHashCode() {

@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private VariableDef _metaclass;
         private ReferenceDict _references;
         private VariableDef<ClassInfo> _subclasses;
+        private Namespace _baseUserType;    // base most user defined type, used for unioning types during type explosion
 
         internal ClassInfo(AnalysisUnit unit, ClassDefinition klass)
             : base(unit) {
@@ -219,10 +220,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
             );
         }
 
-        public List<ISet<Namespace>> Bases {
+        public IEnumerable<ISet<Namespace>> Bases {
             get {
                 return _bases;
             }
+        }
+
+        public void AddBase(ISet<Namespace> baseClasses) {
+            _bases.Add(baseClasses);
+            _baseUserType = null;
+        }
+
+        public void ClearBases() {
+            _bases.Clear();
+            _baseUserType = null;
         }
 
         /// <summary>
@@ -230,7 +241,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// since Python 2.3. These rules are described at http://www.python.org/download/releases/2.3/mro/
         /// </summary>
         public IEnumerable<ISet<Namespace>> GetMro() {
-            if (!_bases.Any()) {
+            if (_bases.Count == 0) {
                 return new[] { SelfSet };
             }
 
@@ -442,7 +453,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
             var variable = Scope.CreateVariable(node, unit, name, false);
             variable.AddAssignment(node, unit);
-            variable.AddTypes(node, unit, value);
+            variable.AddTypes(unit, value);
         }
 
         public override void DeleteMember(Node node, AnalysisUnit unit, string name) {
@@ -487,6 +498,55 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 return _scope;
             }
+        }
+
+        private void EnsureBaseUserType() {
+            if (_baseUserType == null) {
+                foreach (var typeList in Bases) {
+                    foreach (var type in typeList) {
+                        ClassInfo ci = type as ClassInfo;
+                        
+                        if (ci != null && ci.Push()) {
+                            try {
+                                ci.EnsureBaseUserType();
+                                if (ci._baseUserType != null) {
+                                    _baseUserType = ci._baseUserType;
+                                } else {
+                                    _baseUserType = ci;
+                                }
+                            } finally {
+                                ci.Pop();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public override bool UnionEquals(Namespace ns) {
+            if (Object.ReferenceEquals(this, ns)) {
+                return true;
+            }
+
+            ClassInfo otherClass = ns as ClassInfo;
+            if (otherClass == null) {
+                return false;
+            }
+
+            EnsureBaseUserType();
+            if (_baseUserType != null) {
+                otherClass.EnsureBaseUserType();
+                return otherClass._baseUserType == _baseUserType;
+            }
+            return false;
+        }
+
+        public override int UnionHashCode() {
+            EnsureBaseUserType();
+            if (_baseUserType != null) {
+                return _baseUserType.GetHashCode();
+            }
+            return GetHashCode();
         }
 
         #region IVariableDefContainer Members

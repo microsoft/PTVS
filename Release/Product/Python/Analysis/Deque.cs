@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Analysis {
             _data = new T[8];
         }
 
-        public object Pop() {
+        public T Pop() {
             if (_itemCnt == 0) {
                 throw new InvalidOperationException("pop from an empty deque");
             }
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
             _itemCnt--;
 
-            object res = _data[_tail];
+            T res = _data[_tail];
             _data[_tail] = default(T);
             return res;
         }

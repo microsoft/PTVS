@@ -118,12 +118,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg) {
-            foreach (var v in this[name]) {
-                if (!(v is SpecializedNamespace)) {
-                    this[name] = new SpecializedCallable(v, dlg).SelfSet;
-                    break;
+        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze) {
+            try {
+                foreach (var v in this[name]) {
+                    if (!(v is SpecializedNamespace)) {
+                        this[name] = SpecializedCallable.MakeSpecializedCallable(dlg, analyze, v).SelfSet;
+                        break;
+                    }
                 }
+            } catch (KeyNotFoundException) {
             }
         }
 

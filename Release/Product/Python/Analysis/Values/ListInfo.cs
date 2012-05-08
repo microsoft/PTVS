@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 IndexTypes = new[] { new VariableDef() };
             } 
 
-            IndexTypes[0].AddTypes(node, unit, set);
+            IndexTypes[0].AddTypes(unit, set);
 
             UnionType = null;
         }

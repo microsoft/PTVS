@@ -105,6 +105,16 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
+        public bool TryGetSingleValue(out TValue value) {
+            SingleDependency single = _data as SingleDependency;
+            if (single != null) {
+                value = single.Value;
+                return true;
+            }
+            value = default(TValue);
+            return false;
+        }
+
         public IEnumerable<TValue> Values {
             get {
                 SingleDependency single = _data as SingleDependency;

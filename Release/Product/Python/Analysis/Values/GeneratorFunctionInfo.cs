@@ -35,12 +35,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
-            if (unit != null) {
-                _generator.Callers.AddDependency(unit);
+            _generator.Callers.AddDependency(unit);
 
-                AddCall(node, keywordArgNames, unit, args);
-            }
-
+            base.Call(node, unit, args, keywordArgNames);
+            
             return _generator.SelfSet;
         }
     }

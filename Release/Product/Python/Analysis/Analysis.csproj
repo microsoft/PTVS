@@ -277,6 +277,7 @@
     <Compile Include="CallInfo.cs" />
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
+    <Compile Include="Values\SpecializedCallableNoAnalyze.cs" />
     <Compile Include="Values\GeneratorFunctionInfo.cs" />
     <Compile Include="Values\IteratorInfo.cs" />
     <Compile Include="Values\IterableInfo.cs" />

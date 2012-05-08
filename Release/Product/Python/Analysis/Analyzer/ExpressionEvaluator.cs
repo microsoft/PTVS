@@ -155,6 +155,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private static ISet<Namespace> EvaluateSequence(ExpressionEvaluator ee, Node node) {
             // Covers both ListExpression and TupleExpression
+            // TODO: We need to update the sequence on each re-evaluation, not just
+            // evaluate it once.
             return ee.GlobalScope.GetOrMakeNodeVariable(node, (n) => ee.MakeSequence(ee, n));
         }
 
@@ -195,7 +197,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             
             var setInfo = (SetInfo)ee.GlobalScope.GetOrMakeNodeVariable(node, x => new SetInfo(ee.ProjectState));            
             foreach (var x in n.Items) {
-                setInfo.AddTypes(node, ee._unit, ee.Evaluate(x));
+                setInfo.AddTypes(ee._unit, ee.Evaluate(x));
             }
 
             return setInfo;
@@ -242,6 +244,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private static ISet<Namespace> EvaluateConstant(ExpressionEvaluator ee, Node node) {
             var n = (ConstantExpression)node;
+            if (n.Value is double ||
+                (n.Value is int && ((int)n.Value) > 100)) {
+                return ((BuiltinClassInfo)ee.ProjectState.GetNamespaceFromObjects(ee.ProjectState.GetTypeFromObject(n.Value))).Instance.SelfSet;
+            }
+
             return ee.ProjectState.GetConstant(n.Value);
         }
 
@@ -333,7 +340,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     node,
                     (x) => new ListInfo(VariableDef.EmptyArray, ee._unit.ProjectState._listType).SelfSet);
 
-                listInfo.AddTypes(node, ee._unit, new[] { ee.Evaluate(listComp.Item) });
+                listInfo.AddTypes(ee._unit, new[] { ee.Evaluate(listComp.Item) });
                 
                 return listInfo.SelfSet;
             } else {
@@ -378,11 +385,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
                     
                 vars.AddAssignment(left, _unit);
-                vars.AddTypes(l, _unit, values);
+                vars.AddTypes(_unit, values);
 
                 if (Scopes[Scopes.Length - 1] is ClassScope && l.Name == "__metaclass__") {
                     // assignment to __metaclass__, save it in our metaclass variable
-                    ((ClassScope)Scopes[Scopes.Length - 1]).Class.GetOrCreateMetaclassVariable().AddTypes(l, _unit, values);
+                    ((ClassScope)Scopes[Scopes.Length - 1]).Class.GetOrCreateMetaclassVariable().AddTypes(_unit, values);
                 }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
@@ -455,7 +462,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             for (int i = 0; i < seqItems.Count; i++) {
                 indexValues[i] = Evaluate(seqItems[i]);
             }
-            sequence.AddTypes(node, ee._unit, indexValues);
+            sequence.AddTypes(ee._unit, indexValues);
             return sequence.SelfSet;
         }
 

@@ -17,18 +17,9 @@ using Microsoft.PythonTools.Analysis.Interpreter;
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class UserDefinedInfo : Namespace {
         internal readonly AnalysisUnit _analysisUnit;
-        private VariableDef[] _parameters;
 
         protected UserDefinedInfo(AnalysisUnit analysisUnit) {
             _analysisUnit = analysisUnit;
-        }
-
-        public VariableDef[] ParameterTypes {
-            get { return _parameters; }
-        }
-
-        public void SetParameters(VariableDef[] parameters) {
-            _parameters = parameters;
         }
     }
 }

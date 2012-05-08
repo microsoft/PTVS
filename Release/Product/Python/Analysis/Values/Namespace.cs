@@ -352,5 +352,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 yield break;
             }
         }
+
+        public override string ToString() {
+            return ShortDescription;
+        }
     }
 }

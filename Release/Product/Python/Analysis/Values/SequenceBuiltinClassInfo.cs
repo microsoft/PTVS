@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
 
-                res.AddTypes(node, unit, seqTypes.ToArray());
+                res.AddTypes(unit, seqTypes.ToArray());
 
                 return res;
             }

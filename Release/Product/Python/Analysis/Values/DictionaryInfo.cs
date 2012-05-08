@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
@@ -43,6 +44,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _valueTypes.Types;
         }
 
+        public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            _keyTypes.AddDependency(unit);
+
+            return _keyTypes.Types;
+        }
+
         public override void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
             foreach (var indexVal in index) {
                 AddKeyType(node, unit, indexVal);
@@ -53,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal bool AddValueType(Node node, AnalysisUnit unit, Namespace valueVal) {
-            if (_valueTypes.AddTypes(node, unit, valueVal)) {
+            if (_valueTypes.AddTypes(unit, valueVal)) {
                 if (_iterValuesMethod != null) {
                     _iterValuesMethod.Update();
                 }
@@ -66,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal bool AddKeyType(Node node, AnalysisUnit unit, Namespace indexVal) {
-            if (_keyTypes.AddTypes(node, unit, indexVal)) {
+            if (_keyTypes.AddTypes(unit, indexVal)) {
                 if (_iterKeysMethod != null) {
                     _iterKeysMethod.Update();
                 }
@@ -414,8 +421,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     foreach (var type in args[0]) {
                         DictionaryInfo otherDict = type as DictionaryInfo;
                         if (otherDict != null) {
-                            _myDict._valueTypes.AddTypes(node, unit, otherDict._valueTypes.Types);
-                            _myDict._keyTypes.AddTypes(node, unit, otherDict._keyTypes.Types);
+                            _myDict._valueTypes.AddTypes(unit, otherDict._valueTypes.Types);
+                            _myDict._keyTypes.AddTypes(unit, otherDict._keyTypes.Types);
                         }
                     }
                 }

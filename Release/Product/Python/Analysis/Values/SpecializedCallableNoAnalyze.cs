@@ -25,27 +25,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// This is used for clr.AddReference* and calls to range() both of which we want to be customized in different
     /// ways.
     /// </summary>
-    class SpecializedCallable : SpecializedNamespace {
+    class SpecializedCallableNoAnalyze : SpecializedNamespace {
         private readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> _call;
 
-        public SpecializedCallable(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
+        public SpecializedCallableNoAnalyze(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
             : base(original) {
             _call = call;
         }
 
-        public SpecializedCallable(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
+        public SpecializedCallableNoAnalyze(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
             : base(original, inst) {
             _call = call;
-        }
-
-        internal static SpecializedNamespace MakeSpecializedCallable(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze, Namespace v) {
-            SpecializedNamespace special;
-            if (analyze) {
-                special = new SpecializedCallable(v, dlg);
-            } else {
-                special = new SpecializedCallableNoAnalyze(v, dlg);
-            }
-            return special;
         }
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
@@ -53,13 +43,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_inst != null) {
                 realArgs = Utils.Concat(_inst.SelfSet, args);
             }
-
-            var analyzed = _original.Call(node, unit, args, keywordArgNames);
-            return _call((CallExpression)node, unit, realArgs) ?? analyzed;
+            
+            return _call((CallExpression)node, unit, realArgs) ?? EmptySet<Namespace>.Instance;
         }
 
         protected override SpecializedNamespace Clone(Namespace original, Namespace instance) {
-            return new SpecializedCallable(original, instance, _call);
+            return new SpecializedCallableNoAnalyze(original, instance, _call);
         }
     }
 }

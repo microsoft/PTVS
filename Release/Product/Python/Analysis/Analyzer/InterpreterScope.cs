@@ -75,13 +75,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit, ParameterKind paramKind = ParameterKind.Normal) {
             VariableDef value;
             if (!Variables.TryGetValue(name, out value)) {
-                VariableDef def;
-                switch (paramKind) {
-                    case ParameterKind.List: def = new ListParameterVariableDef(unit, location); break;
-                    case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location); break;
-                    default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location); break;
-                }
-                return Variables[name] = def;
+                return Variables[name] = MakeParameterDef(location, unit, paramKind);
             } else if (!(value is LocatedVariableDef)) {
                 VariableDef def;
                 switch (paramKind) {
@@ -97,10 +91,20 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return value;
         }
 
+        internal static VariableDef MakeParameterDef(Node location, AnalysisUnit unit, ParameterKind paramKind, bool addType = true) {
+            VariableDef def;
+            switch (paramKind) {
+                case ParameterKind.List: def = new ListParameterVariableDef(unit, location, addType); break;
+                case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location); break;
+                default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location); break;
+            }
+            return def;
+        }
+
         public void SetVariable(Node node, AnalysisUnit unit, string name, IEnumerable<Namespace> value, bool addRef = true) {
             var variable = CreateVariable(node, unit, name, false);
 
-            variable.AddTypes(node, unit, value);
+            variable.AddTypes(unit, value);
             if (addRef) {
                 variable.AddAssignment(node, unit);
             }
@@ -135,14 +139,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 if (addRef) {
                     res.AddReference(node, unit);
                 }
-            }
-            return res;
-        }
-
-        protected VariableDef CreateVariableWorker(Node node, AnalysisUnit unit, string name) {
-            VariableDef res;
-            if (!_variables.TryGetValue(name, out res)) {
-                _variables[name] = res = new VariableDef();
             }
             return res;
         }

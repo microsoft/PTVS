@@ -33,9 +33,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool IsClassMethod;
         public bool IsProperty;
         private ReferenceDict _references;
+        private VariableDef[] _parameters;
         private readonly int _declVersion;
+        private OverflowState _overflowed;
+        internal Dictionary<CallArgs, CallInfo> _allCalls;
+        internal Dictionary<CallArgs, SequenceInfo> _starArgs;
         [ThreadStatic]
         private static List<Namespace> _descriptionStack;
+        const int MaximumCallCount = 50;
 
         internal FunctionInfo(AnalysisUnit unit)
             : base(unit) {
@@ -61,35 +66,72 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
-            if (unit != null) {
-                ReturnValue.AddDependency(unit);
-
-                AddCall(node, keywordArgNames, unit, args);
-            }
-
-            return ReturnValue.Types;
+        enum OverflowState {
+            None,
+            OverflowedOnce,
+            OverflowedBigTime
         }
 
-        protected void AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args) {
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+            if (_overflowed == OverflowState.OverflowedBigTime) {
+                return EmptySet<Namespace>.Instance;
+            }
+
+            var callArgs = new CallArgs(args, keywordArgNames, _overflowed == OverflowState.OverflowedOnce);
+
+            CallInfo callInfo;
+
+            if (_allCalls == null) {
+                _allCalls = new Dictionary<CallArgs, CallInfo>();
+            }
+
+            if (!_allCalls.TryGetValue(callArgs, out callInfo)) {
+                _allCalls[callArgs] = callInfo = new CallInfo(this, _analysisUnit.Scopes, ((FunctionAnalysisUnit)_analysisUnit)._outerUnit, callArgs);
+
+                if (_allCalls.Count > 10) {
+                    // try and compress args using UnionEquality...
+                    if (_overflowed == OverflowState.None) {
+                        _overflowed = OverflowState.OverflowedOnce;
+                        var newAllCalls = new Dictionary<CallArgs, CallInfo>();
+                        foreach (var keyValue in _allCalls) {
+                            newAllCalls[new CallArgs(keyValue.Key.Args, keyValue.Key.KeywordArgs, overflowed: true)] = keyValue.Value;
+                        }
+                        _allCalls = newAllCalls;
+                    }
+                }
+
+                if (_allCalls.Count > MaximumCallCount) {
+                    _overflowed = OverflowState.OverflowedBigTime;
+                    return EmptySet<Namespace>.Instance;
+                }
+
+                callInfo.ReturnValue.AddDependency(unit);
+
+                callInfo.AnalysisUnit.Enqueue();
+                return EmptySet<Namespace>.Instance;
+            } else {
+                callInfo.ReturnValue.AddDependency(unit);
+                return callInfo.ReturnValue.Types;
+            }
+        }
+
+        internal void AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args) {
             if (ParameterTypes != null) {
-                bool added = false;
-
-                // TODO: Warn when a keyword argument is provided and it maps to
-                // something which is also a positional argument:
-                // def f(a, b, c):
-                //    print a, b, c
-                //
-                // f(2, 3, a=42)
-
-                if (PropagateCall(node, keywordArgNames, unit, args, added)) {
+                if (PropagateCall(node, keywordArgNames, unit, args)) {
                     // new inputs to the function, it needs to be analyzed.
                     _analysisUnit.Enqueue();
                 }
             }
         }
 
-        private bool PropagateCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args, bool added) {
+        internal bool PropagateCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] args, bool enqueue = true) {
+            // TODO: Warn when a keyword argument is provided and it maps to
+            // something which is also a positional argument:
+            // def f(a, b, c):
+            //    print a, b, c
+            //
+            // f(2, 3, a=42)
+            bool added = false;
             for (int i = 0; i < args.Length; i++) {
                 int kwIndex = i - (args.Length - keywordArgNames.Length);
                 if (kwIndex >= 0) {
@@ -109,7 +151,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                         int paramIndex = lastPos + j;
                                         if (paramIndex >= ParameterTypes.Length) {
                                             break;
-                                        } else if (AddParameterType(node, unit, indexType, lastPos + j)) {
+                                        } else if (AddParameterType(unit, indexType, lastPos + j, enqueue)) {
                                             added = true;
                                         }
                                     }
@@ -125,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 string paramName = GetParameterName(j);
                                 if (paramName == curArg.Name) {
                                     ParameterTypes[j].AddReference(curArg, unit);
-                                    added = AddParameterType(node, unit, args[i], j) || added;
+                                    added = AddParameterType(unit, args[i], j, enqueue) || added;
                                     found = true;
                                     break;
                                 }
@@ -135,7 +177,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 for (int j = ParameterTypes.Length - 1; j >= 0; j--) {
                                     var curFuncArg = FunctionDefinition.Parameters[j];
                                     if (curFuncArg.IsDictionary) {
-                                        AddParameterType(node, unit, args[i], j);
+                                        AddParameterType(unit, args[i], j, enqueue);
                                         break;
                                     } else if (!curFuncArg.IsKeywordOnly) {
                                         break;
@@ -148,12 +190,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 } else if (i < ParameterTypes.Length) {
                     // positional argument
-                    added = AddParameterType(node, unit, args[i], i) || added;
+                    added = AddParameterType(unit, args[i], i, enqueue) || added;
                 } else {
                     for (int j = ParameterTypes.Length - 1; j >= 0; j--) {
                         var curArg = FunctionDefinition.Parameters[j];
                         if (curArg.IsList) {
-                            AddParameterType(node, unit, args[i], j);
+                            AddParameterType(unit, args[i], j, enqueue);
                             break;
                         } else if (!curArg.IsDictionary && !curArg.IsKeywordOnly) {
                             break;
@@ -164,7 +206,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return added;
         }
 
-        internal bool AddParameterType(Node node, AnalysisUnit unit, ISet<Namespace> arg, int parameterIndex) {
+        internal bool AddParameterType(AnalysisUnit unit, ISet<Namespace> arg, int parameterIndex, bool enqueue = true) {
             switch (FunctionDefinition.Parameters[parameterIndex].Kind) {
                 case ParameterKind.Dictionary:
                     Debug.Assert(ParameterTypes[parameterIndex] is DictParameterVariableDef);
@@ -177,14 +219,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case ParameterKind.List:
                     Debug.Assert(ParameterTypes[parameterIndex] is ListParameterVariableDef);
 
-                    return ((ListParameterVariableDef)ParameterTypes[parameterIndex]).List.AddTypes(node, unit, new[] { arg });
+                    return ((ListParameterVariableDef)ParameterTypes[parameterIndex]).List.AddTypes(unit, new[] { arg });
                 case ParameterKind.Normal:
-                    if (ParameterTypes[parameterIndex].AddTypes(FunctionDefinition.Parameters[parameterIndex], unit, arg)) {
+                    if (ParameterTypes[parameterIndex].AddTypes(unit, arg, enqueue)) {
                         return true;
                     }
                     break;
             }
             return false;
+        }
+
+        public VariableDef[] ParameterTypes {
+            get { return _parameters; }
+        }
+
+        public void SetParameters(VariableDef[] parameters) {
+            _parameters = parameters;
         }
 
         public override string Name {
@@ -245,14 +295,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 }
                                 AppendDescription(result, ns);
                             } finally {
-                            ns.Pop();
-                        }
+                                ns.Pop();
+                            }
                         } else {
                             result.Append("...");
                         }
                     }
                 }
-                
+
                 return result.ToString();
             }
         }
@@ -492,7 +542,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private static string FormatComplexValue(double x) {
-            return String.Format(nfi, "{0,0:f0}", x);            
+            return String.Format(nfi, "{0,0:f0}", x);
         }
 
         private static bool IsNegativeZero(double value) {
@@ -509,7 +559,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _functionAttrs[name] = varRef = new VariableDef();
             }
             varRef.AddAssignment(node, unit);
-            varRef.AddTypes(node, unit, value);
+            varRef.AddTypes(unit, value);
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
@@ -539,7 +589,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     // someone has overwritten a function attribute with their own value
                     res[variable.Key] = existing = new HashSet<Namespace>(existing);
                 }
-                
+
                 existing.UnionWith(variable.Value.Types);
             }
             return res;
@@ -551,6 +601,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public VariableDef ReturnValue {
             get { return _returnValue; }
+            set { _returnValue = value; }
         }
 
         public PythonAnalyzer ProjectState { get { return ProjectEntry.ProjectState; } }
@@ -588,5 +639,137 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         #endregion
+
+        /// <summary>
+        /// Hashable set of arguments for analyzing the cartesian product of the received arguments.
+        /// 
+        /// Each time we get called we check and see if we've seen the current argument set.  If we haven't
+        /// then we'll schedule the function to be analyzed for those args (and if that results in a new
+        /// return type then we'll use the return type to analyze afterwards).
+        /// </summary>
+        internal class CallArgs : IEquatable<CallArgs> {
+            public readonly ISet<Namespace>[] Args;
+            public readonly NameExpression[] KeywordArgs;
+            private int _hashCode;
+
+            public CallArgs(ISet<Namespace>[] args, NameExpression[] keywordArgs, bool overflowed) {
+                if (overflowed) {
+                    for (int i = 0; i < args.Length; i++) {
+                        args[i] = new HashSet<Namespace>(args[i], TypeUnion<Namespace>.UnionComparer);
+                    }
+                }
+                Args = args;
+                KeywordArgs = keywordArgs;
+            }
+
+            public override string ToString() {
+                StringBuilder res = new StringBuilder();
+
+                res.Append("{");
+                foreach (var arg in Args) {
+                    res.Append("{");
+                    bool appended = false;
+                    foreach (var argVal in arg) {
+                        if (appended) {
+                            res.Append(", ");
+                        }
+                        res.Append(argVal.ToString());
+                        res.Append(" ");
+                        res.Append(GetComparer().GetHashCode(argVal));
+                        appended = true;
+                    }
+                    res.Append("}");
+                }
+                res.Append("}");
+                if (KeywordArgs.Length > 0) {
+                    res.Append('(');
+                    for (int i = 0; i < KeywordArgs.Length; i++) {
+                        if (i != 0) {
+                            res.Append(", ");
+                        }
+                        res.Append(KeywordArgs[i].Name);
+                    }
+                    res.Append(')');
+                }
+                return res.ToString();
+            }
+
+            public override bool Equals(object obj) {
+                CallArgs other = obj as CallArgs;
+                if (other != null) {
+                    return Equals(other);
+                }
+                return false;
+            }
+
+            #region IEquatable<CallArgs> Members
+
+            public bool Equals(CallArgs other) {
+                if (Args.Length != other.Args.Length ||
+                    KeywordArgs.Length != other.KeywordArgs.Length) {
+                    return false;
+                }
+
+                for (int i = 0; i < KeywordArgs.Length; i++) {
+                    if (KeywordArgs[i].Name != other.KeywordArgs[i].Name) {
+                        return false;
+                    }
+                }
+
+                for (int i = 0; i < Args.Length; i++) {
+                    if (Args[i].Count != other.Args[i].Count) {
+                        return false;
+                    }
+                }
+
+                for (int i = 0; i < Args.Length; i++) {
+                    foreach (var arg in Args[i]) {
+                        if (!other.Args[i].Contains(arg)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            #endregion
+
+            public override int GetHashCode() {
+                if (_hashCode == 0) {
+                    int hc = 6551;
+                    if (Args.Length > 0) {
+                        IEqualityComparer<Namespace> comparer = GetComparer();
+                        for (int i = 0; i < Args.Length; i++) {
+                            foreach (var value in Args[i]) {
+                                hc ^= comparer.GetHashCode(value);
+                            }
+                        }
+                    }
+                    _hashCode = hc + KeywordArgs.Length;
+                }
+                return _hashCode;
+            }
+
+            private IEqualityComparer<Namespace> GetComparer() {
+                var arg0 = Args[0] as HashSet<Namespace>;
+                IEqualityComparer<Namespace> comparer;
+                if (arg0 != null) {
+                    comparer = arg0.Comparer;
+                } else {
+                    comparer = EqualityComparer<Namespace>.Default;
+                }
+                return comparer;
+            }
+        }
+
+        internal class CallInfo {
+            public readonly VariableDef ReturnValue;
+            public readonly CartesianProductFunctionAnalysisUnit AnalysisUnit;
+
+            public CallInfo(FunctionInfo funcInfo, InterpreterScope[] interpreterScope, Interpreter.AnalysisUnit analysisUnit, CallArgs args) {
+                ReturnValue = new VariableDef();
+                AnalysisUnit = new CartesianProductFunctionAnalysisUnit(funcInfo, interpreterScope, analysisUnit, args, ReturnValue);
+            }
+        }
     }
 }

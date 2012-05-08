@@ -12,14 +12,14 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    abstract class DependentData<TStorageType>  where TStorageType : DependencyInfo {
+    abstract class DependentData<TStorageType> where TStorageType : DependencyInfo {
         internal SingleDict<IProjectEntry, TStorageType> _dependencies;
 
         /// <summary>
@@ -131,24 +131,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return new TypedDependencyInfo<T>(version);
         }
 
-        public bool AddTypes(Node node, AnalysisUnit unit, IEnumerable<T> newTypes) {
-            var projectEntry = unit.ProjectEntry;
-            return AddTypes(projectEntry, newTypes);
+        public bool AddTypes(AnalysisUnit unit, IEnumerable<T> newTypes, bool enqueue = true) {
+            return AddTypes(unit.ProjectEntry, newTypes, enqueue);
         }
 
-        public bool AddTypes(ProjectEntry projectEntry, IEnumerable<T> newTypes) {
+        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<T> newTypes, bool enqueue = true) {
             var dependencies = GetDependentItems(projectEntry);
-            var projectState = projectEntry.ProjectState;
 
             bool added = false;
-
             foreach (var value in newTypes) {
-                if (dependencies.Types.Add(value, projectState)) {
+                if (dependencies.Types.Add(value)) {
                     added = true;
                 }
             }
 
-            if (added) {
+            if (added && enqueue) {
                 EnqueueDependents();
             }
 
@@ -158,12 +155,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public ISet<T> Types {
             get {
                 if (_dependencies.Count != 0) {
-                    HashSet<T> res = new HashSet<T>();
+                    TypedDependencyInfo<T> oneDependency;
+                    if (_dependencies.TryGetSingleValue(out oneDependency)) {
+                        return oneDependency.Types.ToSet();
+                    }
+
+                    ISet<T> res = EmptySet<T>.Instance;
+                    bool madeSet = false;
                     foreach (var mod in _dependencies.Values) {
-                        res.UnionWith(mod.Types);
+                        if (mod.HasTypes) {
+                            if (!madeSet) {
+                                res = new HashSet<T>(mod.Types);
+                                madeSet = true;
+                            } else {
+                                res.UnionWith(mod.Types);
+                            }
+                        }
                     }
                     return res;
                 }
+
                 return EmptySet<T>.Instance;
             }
         }
@@ -305,18 +316,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// includes all of the types passed in via splatting or extra position arguments.
     /// </summary>
     sealed class ListParameterVariableDef : LocatedVariableDef {
-        public readonly SequenceInfo List;
+        public SequenceInfo List;
 
-        public ListParameterVariableDef(AnalysisUnit unit, Node location)
-            : base(unit.DeclaringModule.ProjectEntry, location) {            
-            List = new SequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType);
-            AddTypes(location, unit, List.SelfSet);
+        public ListParameterVariableDef(AnalysisUnit unit, Node location, bool addType = true)
+            : base(unit.DeclaringModule.ProjectEntry, location) {
+            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType);
+            if (addType) {
+                AddTypes(unit, List.SelfSet);
+            }
         }
 
-        public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
+        public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy, bool addType = true)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
             List = new SequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType);
-            AddTypes(location, unit, List.SelfSet);
+            if (addType) {
+                AddTypes(unit, List.SelfSet);
+            }
         }
     }
 
@@ -330,13 +345,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public DictParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {
             Dict = new DictionaryInfo(unit.ProjectEntry);
-            AddTypes(location, unit, Dict.SelfSet);
+            AddTypes(unit, Dict.SelfSet);
         }
 
         public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
             Dict = new DictionaryInfo(unit.ProjectEntry);
-            AddTypes(location, unit, Dict.SelfSet);
+            AddTypes(unit, Dict.SelfSet);
         }
     }
 }

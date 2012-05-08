@@ -69,6 +69,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public bool HasTypes {
+            get {
+                return _union != null && _union.Count > 0;
+            }
+        }
+
         public bool HasReferences {
             get {
                 return _references != null;
