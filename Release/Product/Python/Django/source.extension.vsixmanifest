@@ -38,6 +38,7 @@
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <MefComponent>|%CurrentProject%|</MefComponent>
     <ProjectTemplate>Templates\Projects\DjangoProject</ProjectTemplate>
     <ItemTemplate>Templates\Files\DjangoHtmlTemplate</ItemTemplate>
   </Content>

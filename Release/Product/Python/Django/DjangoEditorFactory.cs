@@ -14,8 +14,8 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -23,7 +23,6 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
@@ -237,7 +236,10 @@ namespace Microsoft.PythonTools.Django {
             Type codeWindowType = typeof(IVsCodeWindow);
             Guid riid = codeWindowType.GUID;
             Guid clsid = typeof(VsCodeWindowClass).GUID;
-            IVsCodeWindow window = (IVsCodeWindow)_package.CreateInstance(ref clsid, ref riid, codeWindowType);
+            var compModel = (IComponentModel)_package.GetService(typeof(SComponentModel));
+            var adapterService = compModel.GetService<IVsEditorAdaptersFactoryService>();
+
+            var window = adapterService.CreateVsCodeWindowAdapter((IOleServiceProvider)_serviceProvider.GetService(typeof(IOleServiceProvider)));
             ErrorHandler.ThrowOnFailure(window.SetBuffer(textLines));
             ErrorHandler.ThrowOnFailure(window.SetBaseEditorCaption(null));
             ErrorHandler.ThrowOnFailure(window.GetEditorCaption(READONLYSTATUS.ROSTATUS_Unknown, out editorCaption));
@@ -250,9 +252,11 @@ namespace Microsoft.PythonTools.Django {
                 }
             }
             var textMgr = (IVsTextManager)_package.GetService(typeof(SVsTextManager));
-            new TextBufferEventListener((IComponentModel)_package.GetService(typeof(SComponentModel)), textLines, textMgr);
+
+            new TextBufferEventListener(compModel, textLines, textMgr, window);
 
             cmdUI = VSConstants.GUID_TextEditorFactory;
+
             return Marshal.GetIUnknownForObject(window);
         }
 
@@ -268,18 +272,20 @@ namespace Microsoft.PythonTools.Django {
             private readonly IConnectionPoint _cp;
             private readonly IComponentModel _compModel;
             private readonly IVsTextManager _textMgr;
+            private readonly IVsCodeWindow _window;
 
-            public TextBufferEventListener(IComponentModel compModel, IVsTextLines textLines, IVsTextManager textMgr) {
+            public TextBufferEventListener(IComponentModel compModel, IVsTextLines textLines, IVsTextManager textMgr, IVsCodeWindow window) {
                 _textLines = textLines;
                 _compModel = compModel;
                 _textMgr = textMgr;
+                _window = window;
 
                 var cpc = textLines as IConnectionPointContainer;
                 var bufferEventsGuid = typeof(IVsTextBufferDataEvents).GUID;
                 cpc.FindConnectionPoint(ref bufferEventsGuid, out _cp);
                 _cp.Advise(this, out _cookie);
             }
-            
+
             #region IVsTextBufferDataEvents
 
             public void OnFileChanged(uint grfChange, uint dwFileAttrs) {
@@ -288,25 +294,19 @@ namespace Microsoft.PythonTools.Django {
             public int OnLoadCompleted(int fReload) {
                 _cp.Unadvise(_cookie);
 
-                var adapterService = _compModel.GetService<IVsEditorAdaptersFactoryService>();                
+                var adapterService = _compModel.GetService<IVsEditorAdaptersFactoryService>();
                 ITextBuffer diskBuffer = adapterService.GetDocumentBuffer(_textLines);
 
                 var factService = _compModel.GetService<IProjectionBufferFactoryService>();
-                var fullSpan = diskBuffer.CurrentSnapshot.CreateTrackingSpan(
-                    new Span(0, diskBuffer.CurrentSnapshot.Length),
-                    SpanTrackingMode.EdgeInclusive
-                );
 
                 var contentRegistry = _compModel.GetService<IContentTypeRegistryService>();
-                                
-                var surfaceBuffer = factService.CreateProjectionBuffer(
-                    null,
-                    new object[] { fullSpan },
-                    ProjectionBufferOptions.None
-                );
+
+                var projBuffer = new HtmlProjectionBuffer(contentRegistry, factService, diskBuffer, _compModel.GetService<IBufferGraphFactoryService>());
+                diskBuffer.ChangedHighPriority += projBuffer.DiskBufferChanged;
+                diskBuffer.Properties.AddProperty(typeof(DjangoEditorFactory), typeof(DjangoEditorFactory));
 
                 Guid langSvcGuid;
-                IContentType contentType = SniffContentType(diskBuffer, out langSvcGuid) ?? 
+                IContentType contentType = SniffContentType(diskBuffer, out langSvcGuid) ??
                                            contentRegistry.GetContentType("HTML");
 
                 if (langSvcGuid != Guid.Empty) {
@@ -317,13 +317,24 @@ namespace Microsoft.PythonTools.Django {
                 } else {
                     diskBuffer.ChangeContentType(contentType, null);
                 }
-                adapterService.SetDataBuffer(_textLines, surfaceBuffer);
+                adapterService.SetDataBuffer(_textLines, projBuffer.ProjectionBuffer);
+
+                IVsTextView view;
+                ErrorHandler.ThrowOnFailure(_window.GetPrimaryView(out view));
+
+                if (contentType != null && contentType.IsOfType("HTML")) {
+                    var editAdapter = _compModel.GetService<IVsEditorAdaptersFactoryService>();
+                    var newView = editAdapter.GetWpfTextView(view);
+                    var intellisenseController = HtmlIntellisenseControllerProvider.GetOrCreateController(_compModel, newView);
+                    intellisenseController.AttachKeyboardFilter();
+                    newView.Properties.AddProperty(typeof(DjangoEditorFactory), typeof(DjangoEditorFactory));
+                }
 
                 return VSConstants.S_OK;
             }
 
             private IContentType SniffContentType(ITextBuffer diskBuffer, out Guid langSvcGuid) {
-                langSvcGuid = Guid.Empty; 
+                langSvcGuid = Guid.Empty;
                 // try and sniff the content type from a double extension, and if we can't
                 // do that then default to HTML.
                 IContentType contentType = null;

@@ -70,7 +70,8 @@
     <Compile Include="CompletionContextTests.cs" />
     <Compile Include="AddImportTests.cs" />
     <Compile Include="CompletionDBTest.cs" />
-    <Compile Include="DjangoTemplateParserTests.cs" />
+    <Compile Include="Django\DjangoEditingTests.cs" />
+    <Compile Include="Django\DjangoTemplateParserTests.cs" />
     <Compile Include="Mocks\MockGlyphService.cs" />
     <Compile Include="Mocks\MockReplWindow.cs" />
     <Compile Include="ProjectSystem\LinkedFileTests.cs" />
@@ -84,6 +85,61 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\AssemblyReference\PythonApplication\PythonApplication.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject.sln">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion2.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion3.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion4.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Deletion1.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion5.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Paste1.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion6.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\SelectAllText.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\SelectAllTag.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\SelectAllMixed1.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\SelectAllMixed2.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\SelectAllMixed3.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\SelectAllMixed4.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion7.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion8.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion9.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion10.html.djt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Python.VS.TestData\ErrorProjectUnicode\HelloWorld.pyproj">
@@ -225,6 +281,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\DebuggerProject\AttachMultithreadedSleeper.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\DjangoEditProject.pyproj">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Insertion1.html.djt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\FolderMultipleItems.sln">

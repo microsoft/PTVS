@@ -55,6 +55,18 @@ namespace AnalysisTest.UI {
             }));
         }
 
+        /// <summary>
+        /// Moves the caret to the 1 based line and column
+        /// </summary>
+        public void MoveCaret(int line, int column) {
+            var textLine = TextView.TextViewLines[line - 1];
+            if (column - 1 == textLine.Length) {
+                MoveCaret(textLine.End);
+            } else {
+                MoveCaret(new SnapshotPoint(TextView.TextBuffer.CurrentSnapshot, textLine.Start + column - 1));
+            }
+        }
+
         public void WaitForText(string text) {
             for (int i = 0; i < 10; i++) {
                 if (Text != text) {

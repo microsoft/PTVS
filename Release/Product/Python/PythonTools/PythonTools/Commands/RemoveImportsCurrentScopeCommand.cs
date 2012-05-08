@@ -13,8 +13,10 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.PythonTools.Refactoring;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -25,10 +27,21 @@ namespace Microsoft.PythonTools.Commands {
             new ImportRemover(CommonPackage.GetActiveTextView(), false).RemoveImports();
         }
 
+        public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
+            var activeView = CommonPackage.GetActiveTextView();
+            if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+            } else {
+                cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+            }
+
+            return VSConstants.S_OK;
+        }
+
         public override EventHandler BeforeQueryStatus {
             get {
                 return (sender, args) => {
-                    ((OleMenuCommand)sender).Visible = true;
+                    ((OleMenuCommand)sender).Visible = false;
                     ((OleMenuCommand)sender).Supported = true;
                 };
             }

@@ -632,7 +632,7 @@ x\
             return spans;
         }
 
-        private void VerifyClassification(IList<ClassificationSpan> spans, params Classifcation[] expected) {
+        internal static void VerifyClassification(IList<ClassificationSpan> spans, params Classifcation[] expected) {
             bool passed = false;
             try {
                 Assert.AreEqual(expected.Length, spans.Count);
@@ -669,7 +669,7 @@ x\
             }
         }
 
-        private string FormatString(string p) {
+        private static string FormatString(string p) {
             StringBuilder res = new StringBuilder();
             for (int i = 0; i < p.Length; i++) {
                 switch (p[i]) {
@@ -684,20 +684,21 @@ x\
             return res.ToString();
         }
 
-        private class Classifcation {
-            public readonly int Start, End;
-            public readonly string Text;
-            public readonly string ClassificationType;
-
-            public Classifcation(string classificationType, int start, int end, string text) {
-                ClassificationType = classificationType;
-                Start = start;
-                End = end;
-                Text = text;
-            }
-        }
-
         #endregion
 
     }
+
+    class Classifcation {
+        public readonly int Start, End;
+        public readonly string Text;
+        public readonly string ClassificationType;
+
+        public Classifcation(string classificationType, int start, int end, string text) {
+            ClassificationType = classificationType;
+            Start = start;
+            End = end;
+            Text = text;
+        }
+    }
+
 }
