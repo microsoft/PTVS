@@ -3,14 +3,14 @@
   <webpiFile version="4.0.0.0" />
   <title>Python 2.7 Installer 4.0 Feed</title>
   <!-- TODO -->
-  <link href="http://pytools/demos/scottgu/python27.xml" />
+  <link href="http://pytools/demos/proto/python27.xml" />
   <!-- TODO -->
   <updated>2012-4-5T00:00:00Z</updated>
   <author>
     <name>Microsoft</name>
     <uri>http://pytools.codeplex.com</uri>
   </author>
-  <id>http://pytools/demos/scottgu/python27.xml</id>
+  <id>http://pytools/demos/proto/python27.xml</id>
   
   <!-- ##PTVS############################################################## -->
   <entry>
@@ -55,9 +55,18 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       </discoveryHint>
      </or>
     </discoveryHint>
+
     <dependency>
-      <productId>VS2010SP1Prerequisite</productId>
+      <or>
+        <dependency>
+          <productId>VS2010SI</productId>
+        </dependency>
+        <dependency>
+          <productId>VS2010SP1Prerequisite</productId>
+        </dependency>
+      </or>
     </dependency>
+
     <installers>
       <installer>
         <id>1</id>
@@ -250,7 +259,7 @@ Python is a programming language that lets you work more quickly and integrate y
         <eulaURL>http://pytools.codeplex.com/license</eulaURL>
         <installerFile>
           <fileSize>2</fileSize>
-          <installerURL>http://pytools/demos/scottgu/FindPython.ps1</installerURL>
+          <installerURL>http://pytools/demos/proto/FindPython.ps1</installerURL>
           <sha1>eb7345e196844a5e9bce9e86236cf5ac07d76dc4</sha1>
         </installerFile>
         <installCommands>
@@ -296,10 +305,21 @@ Distribute is intended to replace Setuptools as the standard method for working 
     </author>
     <searchExclude />
     <discoveryHint>
-      <file>
-        <filePath>%SystemDrive%\Python27\Lib\site-packages\distribute-0.6.25-py2.7.egg\site.py</filePath>
-      </file>
+      <or>
+        <discoveryHint>
+          <file>
+            <filePath>%SystemDrive%\Python27\Lib\site-packages\distribute-0.6.25-py2.7.egg\site.py</filePath>
+          </file>
+        </discoveryHint>
+        <!-- On an Enthought distro -->
+        <discoveryHint>
+          <file>
+            <filePath>%SystemDrive%\Python27\Lib\site-packages\distribute.egg-info\PKG-INFO</filePath>
+          </file>
+        </discoveryHint>
+      </or>
     </discoveryHint>
+    
     <dependency>
       <and>
         <dependency>
@@ -698,9 +718,9 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
 
   <!-- ##Windows Azure SDK for Python Standard############################# -->
   <entry>
-    <productId>WindowsAzurePythonSDKStd</productId>
+    <productId>AzurePythonSDKCore</productId>
     <!-- TODO - update date-->
-    <title>Windows Azure SDK for Python - Standard</title>
+    <title>Windows Azure SDK for Python Core</title>
     <version>0.1</version>
     <!-- TODO -->
     <published>2012-4-11T00:00:00Z</published>
@@ -718,12 +738,10 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
       <name>Microsoft's Python Tools Team</name>
       <uri>http://pytools.codeplex.com/</uri>
     </author>
+    <searchExclude />
     <images>
       <!-- TODO permanently host this somewhere and get LCA approval on it-->
-      <icon>http://pytools/demos/scottgu/PythonAzureSDK01.png</icon>
-      <!-- TODO remove this
-      <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
-      -->
+      <icon>http://pytools/demos/scottgu/logos/PythonAzureSDK_small.png</icon>
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
@@ -739,141 +757,23 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
     <dependency>
       <and>
         <dependency>
-          <productId>Python27</productId>
+          <productId>WindowsAzureSDKOnly</productId>
         </dependency>
         <dependency>
-          <productId>FindPythonHelper</productId>
+          <productId>WindowsAzureEmulator</productId>
         </dependency>
-      </and>
-    </dependency>
-
-    <installers>
-      <installer>
-        <id>1</id>
-        <languageId>en</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
-        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
-        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
-        <!-- TODO - talk to Dino 
-        <installerFile>
-          <fileSize>2008</fileSize>
-          <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
-          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
-        </installerFile>
-        -->
-        <!-- TODO talk to Dino -->
-        <installCommands>
-          <cmdline>
-            <exe>%windir%\system32\cmd.exe</exe>
-            <commandLineArguments>/C mkdir %SystemDrive%\Python27\Lib\site-packages\pyzure</commandLineArguments>
-          </cmdline>
-          <cmdline>
-            <exe>%windir%\system32\cmd.exe</exe>
-            <commandLineArguments>/C type nul >> %SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</commandLineArguments>
-          </cmdline>
-        </installCommands>
-        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
-        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
-      </installer>
-    </installers>
-  </entry>
-
-  <!-- ##Windows Azure SDK for Python Premium############################## -->
-  <entry>
-    <productId>WindowsAzurePythonSDKPremium</productId>
-    <!-- TODO - update date-->
-    <title>Windows Azure SDK for Python - Premium</title>
-    <version>0.1</version>
-    <!-- TODO -->
-    <published>2012-4-11T00:00:00Z</published>
-    <!-- TODO -->
-    <updated>2012-6-11T00:00:00Z</updated>
-    <summary>Python development support for Windows Azure.</summary>
-    <longSummary>
-The Windows Azure SDK for Python provides developers with Python frameworks, packages, and Microsoft Visual Studio tools for building scalable services for deployment to Windows Azure.
-    </longSummary>
-    <productFamily>Python</productFamily>
-
-    <!-- TODO we'll likely want this on www.windowsazure.com -->
-    <link href="http://pytools.codeplex.com" />
-    <author>
-      <name>Microsoft's Python Tools Team</name>
-      <uri>http://pytools.codeplex.com/</uri>
-    </author>
-    <images>
-      <!-- TODO permanently host this somewhere and get LCA approval on it-->
-      <icon>http://df5/PythonAzureSDK01.png</icon>
-    <!-- TODO remove this
-      <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
-      -->
-    </images>
-    <keywords>
-      <keywordId>ProductTools</keywordId>
-      <keywordId>ProductSpotlight</keywordId>
-    </keywords>
-
-    <!-- TODO 'pyzure' package?-->
-    <discoveryHint>
-      <and>
-        <discoveryHint>
-          <file>
-            <filePath>%SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</filePath>
-          </file>
-        </discoveryHint>
-        <!-- Python Tools for VS -->
-        <discoveryHint>
-          <or>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
-                <valueName>DisplayVersion</valueName>
-                <valueValue>1.1.50409.0</valueValue>
-              </registry>
-            </discoveryHint>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
-                <valueName>DisplayVersion</valueName>
-                <valueValue>1.1.50409.0</valueValue>
-              </registry>
-            </discoveryHint>
-          </or>
-        </discoveryHint>
-      </and>
-    </discoveryHint>
-
-    <dependency>
-      <and>
+        <!-- TODO - revisit -->
+        <dependency>
+          <productId>UrlRewrite2</productId>
+        </dependency>
+        <dependency>
+          <productId>PowerShell2</productId>
+        </dependency>
         <dependency>
           <productId>Python27</productId>
         </dependency>
         <dependency>
           <productId>FindPythonHelper</productId>
-        </dependency>
-        <dependency>
-          <productId>PythonToolsForVS</productId>
-        </dependency>
-        <dependency>
-          <productId>PyPI</productId>
         </dependency>
         <dependency>
           <productId>Django</productId>
@@ -931,6 +831,259 @@ The Windows Azure SDK for Python provides developers with Python frameworks, pac
     </installers>
   </entry>
 
+  <!-- ##Windows Azure SDK for Python ##################################### -->
+  <entry>
+    <productId>WindowsAzurePythonSDK</productId>
+    <!-- TODO - update date-->
+    <title>Windows Azure SDK for Python</title>
+    <version>0.1</version>
+    <!-- TODO -->
+    <published>2012-4-11T00:00:00Z</published>
+    <!-- TODO -->
+    <updated>2012-6-11T00:00:00Z</updated>
+    <summary>Python development support for Windows Azure within Visual Studio.</summary>
+    <longSummary>
+The Windows Azure SDK for Python Tools provides developers with Python frameworks, packages, and Microsoft Visual Studio tools (if installed) for building scalable services for deployment to Windows Azure.
+    </longSummary>
+    <productFamily>Python</productFamily>
+
+    <!-- TODO we'll likely want this on www.windowsazure.com -->
+    <link href="http://pytools.codeplex.com" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://pytools.codeplex.com/</uri>
+    </author>
+    <images>
+      <!-- TODO permanently host this somewhere and get LCA approval on it-->
+      <icon>http://pytools/demos/scottgu/logos/PythonAzureSDK_small.png</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+
+    <!-- TODO 'pyzure' package?-->
+    <discoveryHint>
+      <and>
+        <discoveryHint>
+          <file>
+            <filePath>%SystemDrive%\Python27\Lib\site-packages\pyzure2\__init__.py</filePath>
+          </file>
+        </discoveryHint>
+        <!-- Python Tools for VS -->
+        <discoveryHint>
+          <or>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+                <valueName>DisplayVersion</valueName>
+                <valueValue>1.1.50409.0</valueValue>
+              </registry>
+            </discoveryHint>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+                <valueName>DisplayVersion</valueName>
+                <valueValue>1.1.50409.0</valueValue>
+              </registry>
+            </discoveryHint>
+          </or>
+        </discoveryHint>
+      </and>
+    </discoveryHint>
+
+    <dependency>
+      <productId>AzurePythonSDKCore</productId>
+    </dependency>
+    <related>
+      <relatedProduct>
+        <productId>PythonToolsForVS</productId>
+      </relatedProduct>
+    </related>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
+        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>5</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+            <osTypes>
+              <Server />
+              <HomePremium />
+              <Ultimate />
+              <Enterprise />
+              <Business />
+            </osTypes>
+          </os>
+        </osList>
+        <!-- TODO - talk to Dino 
+        <installerFile>
+          <fileSize>2008</fileSize>
+          <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
+          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
+        </installerFile>
+        -->
+        <!-- TODO talk to Dino -->
+        <installCommands>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C mkdir %SystemDrive%\Python27\Lib\site-packages\pyzure2</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C type nul >> %SystemDrive%\Python27\Lib\site-packages\pyzure2\__init__.py</commandLineArguments>
+          </cmdline>
+        </installCommands>
+        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
+        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Visual Studio 2010 Integrated Shell ############################## -->
+  <!-- TODO - other languages? -->
+  <!-- Visual Web Developer Express 2010 -->
+  <entry>
+    <productId>VS2010SI</productId>
+    <title>Visual Studio 2010 Shell (Integrated)</title>
+    <version>2010</version>
+    <summary>The Visual Studio 2010 Shell (Integrated) Redistributable Package contains the runtime binaries that are required to deploy an application that is based on the Visual Studio 2010 Shell (Integrated).</summary>
+    <id>http://www.microsoft.com/web/webpi/vs2010si</id>
+    <updated>2010-4-12T12:00:00Z</updated>
+    <longSummary>The Visual Studio Shell (integrated mode) provides the foundation on which you can seamlessly integrate tools and programming languages within Visual Studio. The Visual Studio Shell (integrated mode) does not contain any programming language, so it provides the perfect foundation to deploy a development environment for your own language. The Visual Studio Shell (integrated mode) seamlessly integrates with Visual Studio 2010 Professional and above. Any tools and programming languages that run inside the Visual Studio Shell (integrated mode) will run together with Visual Studio 2010 if they are also installed on the same machine. By using the Visual Studio Shell (integrated mode), you will not need to make Visual Studio a pre-requisite on your user machines.</longSummary>
+    <published>2010-4-12T12:00:00Z</published>
+    <link href="http://www.microsoft.com/visualstudio/en-us/products/2010-editions" />
+    <images>
+      <icon>http://www.microsoft.com/web/media/icons/vs-logo-sm.png</icon>
+    </images>
+    <author>
+      <name>Microsoft</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+    <discoveryHint>
+      <or>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\10.0\Setup\IntShell</keyPath>
+          </registry>
+        </discoveryHint>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0\Setup\IntShell</keyPath>
+          </registry>
+        </discoveryHint>
+      </or>
+    </discoveryHint>
+    <incompatibilities>
+      <incompatibleProduct>
+        <productId>VS2010Beta1</productId>
+        <errorMessage>You must uninstall Beta 1 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2</productId>
+        <errorMessage>You must uninstall Beta 2 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2Express</productId>
+        <errorMessage>You must uninstall Beta 2 of Visual Web Developer 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VB2010Beta2Express</productId>
+        <errorMessage>You must uninstall Beta 2 of Visual Basic 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VCS2010Beta2Express</productId>
+        <errorMessage>You must uninstall Beta 2 of Visual C# 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VC2010Beta2Express</productId>
+        <errorMessage>You must uninstall Beta 2 of Visual C++ 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010RC</productId>
+        <errorMessage>You must uninstall Visual Studio 2010 RC before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+    </incompatibilities>
+    <!-- TODO anything to do here? -->
+    <terms>
+      <termsText>-Visual Studio will receive and display online RSS content. For further information refer to the Readme link.</termsText>
+      <termsLink>http://go.microsoft.com/fwlink/?LinkID=151235</termsLink>
+      <termsLinkText>Readme</termsLinkText>
+    </terms>
+    <installers>
+      <!-- x86 English -->
+      <installer>
+        <id>1</id>
+        <!-- TODO -->
+        <languageId>en</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="NETFramework4OSList" />
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/D/7/0/D70CD265-3E18-41B0-AFC6-075AFA2DA631/VSIntShell.exe</installerURL>
+          <sha1>6d70a65c138fd3326c393e0b60aeb86c072bb80b</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+    </installers>
+  </entry>
 
   <!-- ##UI: new TAB Definition############################################ -->
   <tabs>
@@ -946,7 +1099,7 @@ The Windows Azure SDK for Python provides developers with Python frameworks, pac
           <groupingId>PythonGrouping</groupingId>
           <recommended>
             <productId>Python27</productId>
-            <productId>WindowsAzurePythonSDKPremium</productId>
+            <productId>WindowsAzurePythonSDK</productId>
             <productId>Django</productId>
             <productId>PythonToolsForVS</productId>
             <productId>NumPy</productId>
