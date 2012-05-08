@@ -53,8 +53,12 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("HTML Tag Delimiter", 58, 60, "</"),
                 new Classifcation("HTML Element Name", 60, 66, "script"),
                 new Classifcation("HTML Tag Delimiter", 66, 67, ">"),
-                new Classifcation("operator", 71, 81, "{{ faoo }}"),
-                new Classifcation("operator", 85, 94, "{{ foo }}"),
+                new Classifcation("Django template tag", 71, 73, "{{"),
+                new Classifcation("identifier", 74, 78, "faoo"),
+                new Classifcation("Django template tag", 79, 81, "}}"),
+                new Classifcation("Django template tag", 85, 87, "{{"),
+                new Classifcation("identifier", 88, 91, "foo"),
+                new Classifcation("Django template tag", 92, 94, "}}"),
                 new Classifcation("HTML Tag Delimiter", 96, 98, "</"),
                 new Classifcation("HTML Element Name", 98, 102, "body"),
                 new Classifcation("HTML Tag Delimiter", 102, 103, ">"),
@@ -85,8 +89,12 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("HTML Tag Delimiter", 58, 60, "</"),
                 new Classifcation("HTML Element Name", 60, 66, "script"),
                 new Classifcation("HTML Tag Delimiter", 66, 67, ">"),
-                new Classifcation("operator", 71, 81, "{{ faoo }}"),
-                new Classifcation("operator", 86, 95, "{{ foo }}"),
+                new Classifcation("Django template tag", 71, 73, "{{"),
+                new Classifcation("identifier", 74, 78, "faoo"),
+                new Classifcation("Django template tag", 79, 81, "}}"),
+                new Classifcation("Django template tag", 86, 88, "{{"),
+                new Classifcation("identifier", 89, 92, "foo"),
+                new Classifcation("Django template tag", 93, 95, "}}"),
                 new Classifcation("HTML Tag Delimiter", 97, 99, "</"),
                 new Classifcation("HTML Element Name", 99, 103, "body"),
                 new Classifcation("HTML Tag Delimiter", 103, 104, ">"),
@@ -104,7 +112,8 @@ namespace AnalysisTest.ProjectSystem {
                     new Classifcation("HTML Tag Delimiter", 0, 1, "<"),
                     new Classifcation("HTML Element Name", 1, 5, "html"),
                     new Classifcation("HTML Tag Delimiter", 5, 6, ">"),
-                    new Classifcation("operator", 8, 15, "{{   }}"),
+                    new Classifcation("Django template tag", 8, 10, "{{"),
+                    new Classifcation("Django template tag", 13, 15, "}}"),
                     new Classifcation("HTML Tag Delimiter", 17, 18, "<"),
                     new Classifcation("HTML Element Name", 18, 22, "head"),
                     new Classifcation("HTML Tag Delimiter", 22, 24, "><"),
@@ -123,8 +132,12 @@ namespace AnalysisTest.ProjectSystem {
                     new Classifcation("HTML Tag Delimiter", 67, 69, "</"),
                     new Classifcation("HTML Element Name", 69, 75, "script"),
                     new Classifcation("HTML Tag Delimiter", 75, 76, ">"),
-                    new Classifcation("operator", 96, 108, "{{ faoo aa}}"),
-                    new Classifcation("operator", 113, 122, "{{ foo }}"),
+                    new Classifcation("Django template tag", 96, 98, "{{"),
+                    new Classifcation("identifier", 99, 103, "faoo"),
+                    new Classifcation("Django template tag", 106, 108, "}}"),
+                    new Classifcation("Django template tag", 113, 115, "{{"),
+                    new Classifcation("identifier", 116, 119, "foo"),
+                    new Classifcation("Django template tag", 120, 122, "}}"),
                     new Classifcation("HTML Tag Delimiter", 124, 126, "</"),
                     new Classifcation("HTML Element Name", 126, 130, "body"),
                     new Classifcation("HTML Tag Delimiter", 130, 131, ">"),
@@ -136,7 +149,8 @@ namespace AnalysisTest.ProjectSystem {
                     new Classifcation("HTML Tag Delimiter", 0, 1, "<"),
                     new Classifcation("HTML Element Name", 1, 5, "html"),
                     new Classifcation("HTML Tag Delimiter", 5, 6, ">"),
-                    new Classifcation("operator", 8, 15, "{{   }}"),
+                    new Classifcation("Django template tag", 8, 10, "{{"),
+                    new Classifcation("Django template tag", 13, 15, "}}"),
                     new Classifcation("HTML Tag Delimiter", 17, 18, "<"),
                     new Classifcation("HTML Element Name", 18, 22, "head"),
                     new Classifcation("HTML Tag Delimiter", 22, 24, "><"),
@@ -155,8 +169,12 @@ namespace AnalysisTest.ProjectSystem {
                     new Classifcation("HTML Tag Delimiter", 67, 69, "</"),
                     new Classifcation("HTML Element Name", 69, 75, "script"),
                     new Classifcation("HTML Tag Delimiter", 75, 76, ">"),
-                    new Classifcation("operator", 96, 108, "{{ faoo aa}}"),
-                    new Classifcation("operator", 113, 122, "{{ foo }}"),
+                    new Classifcation("Django template tag", 96, 98, "{{"),
+                    new Classifcation("identifier", 99, 103, "faoo"),
+                    new Classifcation("Django template tag", 106, 108, "}}"),
+                    new Classifcation("Django template tag", 113, 115, "{{"),
+                    new Classifcation("identifier", 116, 119, "foo"),
+                    new Classifcation("Django template tag", 120, 122, "}}"),
                     new Classifcation("HTML Tag Delimiter", 124, 126, "</"),
                     new Classifcation("HTML Element Name", 126, 130, "body"),
                     new Classifcation("HTML Tag Delimiter", 130, 131, ">"),
@@ -174,20 +192,22 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("HTML Tag Delimiter", 0, 1, "<"),
                 new Classifcation("HTML Element Name", 1, 5, "html"),
                 new Classifcation("HTML Tag Delimiter", 5, 6, ">"),
-                new Classifcation("operator", 8, 13, "{{ }}")
+                new Classifcation("Django template tag", 8, 10, "{{"),
+                new Classifcation("Django template tag", 11, 13, "}}")
             );
-
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Insertion4() {
             InsertionTest("Insertion4.html.djt", 1, 1, "{",
-                new Classifcation("operator", 0, 12, "{{<html>\r\n}}")
+                new Classifcation("Django template tag", 0, 2, "{{"),
+                new Classifcation("Django template tag", 10, 12, "}}")
             );
 
             InsertionTest("Insertion4.html.djt", 1, 2, "{",
-                new Classifcation("operator", 0, 12, "{{<html>\r\n}}")
+                new Classifcation("Django template tag", 0, 2, "{{"),
+                new Classifcation("Django template tag", 10, 12, "}}")
             );
         }
 
@@ -195,7 +215,9 @@ namespace AnalysisTest.ProjectSystem {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Insertion5() {
             InsertionTest("Insertion5.html.djt", 1, 2, "#",
-                new Classifcation("operator", 0, 13, "{#{<html>\r\n#}")
+                new Classifcation("Django template tag", 0, 2, "{#"),
+                new Classifcation("comment", 2, 11, "{<html>\r\n"),
+                new Classifcation("Django template tag", 11, 13, "#}")
             );
         }
 
@@ -203,7 +225,8 @@ namespace AnalysisTest.ProjectSystem {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Insertion6() {
             InsertionTest("Insertion6.html.djt", 1, 4, "a",
-                new Classifcation("operator", 4, 18, "{{<html>\r\n\r\n}}")
+                new Classifcation("Django template tag", 4, 6, "{{"),
+                new Classifcation("Django template tag", 16, 18, "}}")
             );
         }
 
@@ -211,12 +234,15 @@ namespace AnalysisTest.ProjectSystem {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Insertion7() {
             InsertionTest("Insertion7.html.djt", 1, 16, "{",
-                new Classifcation("operator", 0, 12, "{{{  aaa{ }}"),
-                new Classifcation("operator", 15, 30, "{{{<html>\r\n\r\n}}"),
+                new Classifcation("Django template tag", 0, 2, "{{"),
+                new Classifcation("Django template tag", 10, 12, "}}"),
+                new Classifcation("Django template tag", 15, 17, "{{"),
+                new Classifcation("Django template tag", 28, 30, "}}"),
                 new Classifcation("HTML Tag Delimiter", 38, 39, "<"),
                 new Classifcation("HTML Element Name", 39, 42, "foo"),
                 new Classifcation("HTML Tag Delimiter", 42, 43, ">"),
-                new Classifcation("operator", 49, 63, "{{<html>\r\n\r\n}}")
+                new Classifcation("Django template tag", 49, 51, "{{"),
+                new Classifcation("Django template tag", 61, 63, "}}")
             );
         }
 
@@ -227,7 +253,9 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("HTML Tag Delimiter", 0, 1, "<"),
                 new Classifcation("HTML Element Name", 1, 5, "html"),
                 new Classifcation("HTML Tag Delimiter", 5, 6, ">"),
-                new Classifcation("operator", 8, 17, "{{ foo }}")
+                new Classifcation("Django template tag", 8, 10, "{{"),
+                new Classifcation("identifier", 11, 14, "foo"),
+                new Classifcation("Django template tag", 15, 17, "}}")
             );
         }
 
@@ -235,7 +263,9 @@ namespace AnalysisTest.ProjectSystem {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Insertion9() {
             InsertionTest("Insertion9.html.djt", 1, 7, "a",
-                new Classifcation("operator", 4, 19, "{{a<html>\r\n\r\n}}")
+                new Classifcation("Django template tag", 4, 6, "{{"),
+                new Classifcation("identifier", 6, 7, "a"),
+                new Classifcation("Django template tag", 17, 19, "}}")
             );
         }
 
@@ -264,8 +294,12 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("HTML Tag Delimiter", 58, 60, "</"),
                 new Classifcation("HTML Element Name", 60, 66, "script"),
                 new Classifcation("HTML Tag Delimiter", 66, 67, ">"),
-                new Classifcation("operator", 72, 81, "{{ foo }}"),
-                new Classifcation("operator", 84, 106, "{{ faoo }aaa {{ foo }}"),
+                new Classifcation("Django template tag", 72, 74, "{{"),
+                new Classifcation("identifier", 75, 78, "foo"),
+                new Classifcation("Django template tag", 79, 81, "}}"),
+                new Classifcation("Django template tag", 84, 86, "{{"),
+                new Classifcation("identifier", 87, 91, "faoo"),
+                new Classifcation("Django template tag", 104, 106, "}}"),
                 new Classifcation("HTML Tag Delimiter", 108, 110, "</"),
                 new Classifcation("HTML Element Name", 110, 114, "body"),
                 new Classifcation("HTML Tag Delimiter", 114, 115, ">"),
@@ -279,15 +313,18 @@ namespace AnalysisTest.ProjectSystem {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Deletion1() {
             DeletionTest("Deletion1.html.djt", 1, 2, 1,
-                new Classifcation("operator", 0, 14, "{{<html>\r\n\r\n}}")
+                new Classifcation("Django template tag", 0, 2, "{{"),
+                new Classifcation("Django template tag", 12, 14, "}}")
             );
 
             DeletionTest("Deletion1.html.djt", 1, 3, 1,
-                new Classifcation("operator", 0, 14, "{{<html>\r\n\r\n}}")
+                new Classifcation("Django template tag", 0, 2, "{{"),
+                new Classifcation("Django template tag", 12, 14, "}}")
             );
 
             DeletionTest("Deletion1.html.djt", 1, 4, 1,
-                new Classifcation("operator", 0, 14, "{{<html>\r\n\r\n}}")
+                new Classifcation("Django template tag", 0, 2, "{{"),
+                new Classifcation("Django template tag", 12, 14, "}}")
             );
         }
 

@@ -14,15 +14,65 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.PythonTools.Django.TemplateParsing;
 using System.IO;
+using System.Linq;
+using Microsoft.PythonTools.Django.Intellisense;
+using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnalysisTest {
     [TestClass]
     public class DjangoTemplateParserTests {
+        [TestMethod]
+        public void FilterRegexTests() {
+            var testCases = new[] { 
+                new { Got = ("100"), Expected = DjangoVariable.Number("100", 0) },
+                new { Got = ("100.0"), Expected = DjangoVariable.Number("100.0", 0) },
+                new { Got = ("+100"), Expected = DjangoVariable.Number("+100", 0) },
+                new { Got = ("-100"), Expected = DjangoVariable.Number("-100", 0) },
+                new { Got = ("'foo'"), Expected = DjangoVariable.Constant("'foo'", 0) },
+                new { Got = ("\"foo\""), Expected = DjangoVariable.Constant("\"foo\"", 0) },
+                new { Got = ("foo"), Expected = DjangoVariable.Variable("foo", 0) },
+                new { Got = ("foo.bar"), Expected = DjangoVariable.Variable("foo.bar", 0) },
+                new { Got = ("foo|bar"), Expected = DjangoVariable.Variable("foo", 0, new DjangoFilter("bar", 4)) },
+                new { Got = ("foo|bar|baz"), Expected = DjangoVariable.Variable("foo", 0, new DjangoFilter("bar", 4), new DjangoFilter("baz", 8)) },
+                new { Got = ("foo|bar:'foo'"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Constant("bar", 4, "'foo'", 8)) },
+                new { Got = ("foo|bar:42"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "42", 8)) },
+                new { Got = ("foo|bar:\"foo\""), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Constant("bar", 4, "\"foo\"", 8)) },
+                new { Got = ("foo|bar:100"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "100", 8)) },
+                new { Got = ("foo|bar:100.0"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "100.0", 8)) },
+                new { Got = ("foo|bar:+100.0"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "+100.0", 8)) },
+                new { Got = ("foo|bar:-100.0"), Expected =  DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "-100.0", 8)) },
+                new { Got = ("foo|bar:baz.quox"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Variable("bar", 4, "baz.quox", 8)) },
+                new { Got = ("foo|bar:baz"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Variable("bar", 4, "baz", 8)) },
+            };
+            
+            foreach (var testCase in testCases) {
+                Console.WriteLine(testCase.Got);
+
+                var got = DjangoVariable.Parse(testCase.Got);
+
+                ValidateFilter(testCase.Expected, got);    
+            }
+        }
+
+        internal void ValidateFilter(DjangoVariable got, DjangoVariable expected) {
+            Assert.AreEqual(expected.Expression.Value, got.Expression.Value);
+            Assert.AreEqual(expected.Expression.Kind, got.Expression.Kind);
+            Assert.AreEqual(expected.ExpressionStart, got.ExpressionStart);
+            Assert.AreEqual(expected.Filters.Length, got.Filters.Length);
+            for(int i = 0; i<expected.Filters.Length; i++) {
+                if (expected.Filters[i].Arg == null) {
+                    Assert.AreEqual(null, got.Filters[i].Arg);
+                } else {
+                    Assert.AreEqual(expected.Filters[i].Arg.Value, got.Filters[i].Arg.Value);
+                    Assert.AreEqual(expected.Filters[i].Arg.Kind, got.Filters[i].Arg.Kind);
+                }
+                Assert.AreEqual(expected.Filters[i].Filter, got.Filters[i].Filter);
+                Assert.AreEqual(expected.Filters[i].ArgStart, got.Filters[i].ArgStart);
+            }
+        }
+
         [TestMethod]
         public void TestSimpleVariable() {
             var code = @"<html>

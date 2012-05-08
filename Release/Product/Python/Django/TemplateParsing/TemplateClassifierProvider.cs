@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -22,12 +23,18 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     [Export(typeof(IClassifierProvider)), ContentType(TemplateContentType.ContentTypeName)]
     class TemplateClassifierProvider : IClassifierProvider {
         private readonly IContentType _type;
-        internal readonly IClassificationType _classType;
+        internal readonly IClassificationType _classType, _templateClassType, _commentClassType, _identifierType, _literalType, _numberType, _dot;
 
         [ImportingConstructor]
         public TemplateClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry) {
             _type = contentTypeRegistryService.GetContentType(TemplateContentType.ContentTypeName);
             _classType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Operator);
+            _templateClassType = classificationRegistry.GetClassificationType(DjangoPredefinedClassificationTypeNames.TemplateTag);
+            _commentClassType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
+            _identifierType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Identifier);
+            _literalType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
+            _numberType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Number);
+            _dot = classificationRegistry.GetClassificationType(PythonPredefinedClassificationTypeNames.Dot);
         }
 
         #region IClassifierProvider Members
@@ -43,5 +50,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         #endregion
+
+        [Export]
+        [Name(DjangoPredefinedClassificationTypeNames.TemplateTag)]
+        [BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]
+        internal static ClassificationTypeDefinition TemplateTag = null; // Set via MEF
     }
 }

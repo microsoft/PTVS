@@ -39,7 +39,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _declaringModule = declaringModule;
             _declVersion = declaringModule.AnalysisVersion;
         }
-        
+
+        public override IEnumerable<KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>> GetItems() {
+            yield return new KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>(
+                _keyTypes.Types,
+                _valueTypes.Types
+            );
+        }
+
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
             return _valueTypes.Types;
         }

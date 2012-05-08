@@ -307,17 +307,16 @@ namespace Microsoft.PythonTools.Django {
 
                 var contentRegistry = _compModel.GetService<IContentTypeRegistryService>();
 
-                var projBuffer = new HtmlProjectionBuffer(contentRegistry, factService, diskBuffer, _compModel.GetService<IBufferGraphFactoryService>());
+                
+                IContentType contentType = SniffContentType(diskBuffer) ??
+                                           contentRegistry.GetContentType("HTML");
+
+                var projBuffer = new HtmlProjectionBuffer(contentRegistry, factService, diskBuffer, _compModel.GetService<IBufferGraphFactoryService>(), contentType);
                 diskBuffer.ChangedHighPriority += projBuffer.DiskBufferChanged;
                 diskBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), projBuffer);
 
-                Guid langSvcGuid;
-                IContentType contentType = SniffContentType(diskBuffer, out langSvcGuid) ??
-                                           contentRegistry.GetContentType("HTML");
-
-                langSvcGuid = typeof(DjangoLanguageInfo).GUID;
+                Guid langSvcGuid = typeof(DjangoLanguageInfo).GUID;
                 _textLines.SetLanguageServiceID(ref langSvcGuid);
-                diskBuffer.ChangeContentType(contentType, null);
 
                 adapterService.SetDataBuffer(_textLines, projBuffer.ProjectionBuffer);
 
@@ -334,8 +333,7 @@ namespace Microsoft.PythonTools.Django {
                 return VSConstants.S_OK;
             }
 
-            private IContentType SniffContentType(ITextBuffer diskBuffer, out Guid langSvcGuid) {
-                langSvcGuid = Guid.Empty;
+            private IContentType SniffContentType(ITextBuffer diskBuffer) {
                 // try and sniff the content type from a double extension, and if we can't
                 // do that then default to HTML.
                 IContentType contentType = null;
@@ -349,7 +347,6 @@ namespace Microsoft.PythonTools.Django {
                             var fileExtRegistry = _compModel.GetService<IFileExtensionRegistryService>();
 
                             contentType = fileExtRegistry.GetContentTypeForExtension(subExt);
-                            _textMgr.MapFilenameToLanguageSID(path, out langSvcGuid);
                         }
                     }
                 }

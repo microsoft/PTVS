@@ -18,23 +18,41 @@ using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Projection;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
+    /// <summary>
+    /// Manages the relationship for our Django template projection buffers.  This is setup so that
+    /// we have one buffer which represents the file on disk - this is the ITextBuffer we get when
+    /// we originally open the file in our editor factory.  We then create an elision buffer which
+    /// has a 1-to-1 mapping with the disk buffer and has a content type of the real file (e.g. HTML
+    /// for an HTML template file).  This buffer, because it has the correct content type, picks
+    /// up the classifications from the underlying classifier for that content type.  We specifically
+    /// use an elision buffer here because it's all we need and it works around some direct checks
+    /// for IProjectionBuffer in the HTML designer code which break things.
+    /// 
+    /// For the Django template tags we create individual projection buffers for each tag.
+    /// 
+    /// Finally, we stitch this altogether in one projection buffer is which the real buffer
+    /// for the text view.
+    /// </summary>
     class HtmlProjectionBuffer : IProjectionEditResolver {
         private readonly ITextBuffer _diskBuffer;           // the buffer as it appears on disk.
         private readonly IProjectionBuffer _projBuffer; // the buffer we project into        
         private readonly IProjectionBufferFactoryService _bufferFactory;
         private readonly List<SpanInfo> _spans = new List<SpanInfo>();
         private readonly IContentTypeRegistryService _contentRegistry;
-        private readonly  IBufferGraph _bufferGraph;
+        private readonly IBufferGraph _bufferGraph;
+        private readonly IContentType _contentType;
+        private readonly IElisionBuffer _htmlBuffer;
         private static string[] _templateTags = new string[] { "{{", "{%", "{#", "#}", "%}", "}}" };
 
-        public HtmlProjectionBuffer(IContentTypeRegistryService contentRegistry, IProjectionBufferFactoryService bufferFactory, ITextBuffer diskBuffer, IBufferGraphFactoryService bufferGraphFactory) {
+        public HtmlProjectionBuffer(IContentTypeRegistryService contentRegistry, IProjectionBufferFactoryService bufferFactory, ITextBuffer diskBuffer, IBufferGraphFactoryService bufferGraphFactory, IContentType contentType) {
             _bufferFactory = bufferFactory;
             _diskBuffer = diskBuffer;
             _contentRegistry = contentRegistry;
-            
+            _contentType = contentType;
             
             _projBuffer = _bufferFactory.CreateProjectionBuffer(
                 this,
@@ -42,6 +60,26 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 ProjectionBufferOptions.None
             );
             _bufferGraph = bufferGraphFactory.CreateBufferGraph(_projBuffer);
+            
+            _htmlBuffer = _bufferFactory.CreateElisionBuffer(
+                this,
+                new NormalizedSnapshotSpanCollection(
+                    new SnapshotSpan(
+                        _diskBuffer.CurrentSnapshot,
+                        new Span(0, _diskBuffer.CurrentSnapshot.Length)
+                    )
+                ),
+                ElisionBufferOptions.None,
+                _contentType
+            );
+
+            _htmlBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), this);
+            
+            IVsTextBuffer buffer;
+            if (_diskBuffer.Properties.TryGetProperty<IVsTextBuffer>(typeof(IVsTextBuffer), out buffer)) {
+                // keep the Venus HTML classifier happy - it wants to find a site via IVsTextBuffer
+                _htmlBuffer.Properties.AddProperty(typeof(IVsTextBuffer), buffer);
+            }
 
             var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(diskBuffer.CurrentSnapshot, new Span(0, diskBuffer.CurrentSnapshot.Length)));
             UpdateTemplateSpans(reader);
@@ -54,7 +92,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public IBufferGraph BufferGraph {
-            get {
+            get {                
                 return _bufferGraph;
             }
         }
@@ -226,7 +264,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             List<object> newProjectionSpans = new List<object>();   // spans in the projection buffer
             List<SpanInfo> newSpanInfos = new List<SpanInfo>();     // our SpanInfo's, with spans in the on-disk buffer
             
-
             while ((token = tokenizer.GetNextToken()) != null) {
                 var curToken = token.Value;
                 
@@ -259,7 +296,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
                         var contentType = _contentRegistry.GetContentType(TemplateContentType.ContentTypeName);
                         
-                        // TODO: Should we only create one of these and share it amongst the buffers?
                         var tempProjectionBuffer = _bufferFactory.CreateProjectionBuffer(this, new object[] { span }, ProjectionBufferOptions.None, contentType);
                         tempProjectionBuffer.Properties.AddProperty(typeof(TemplateTokenKind), curToken.Kind);
                         tempProjectionBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), this);
@@ -273,15 +309,21 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         break;
                     case TemplateTokenKind.Text:
                         var sourceSpan = Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1);
-                        var textSpan = _diskBuffer.CurrentSnapshot.Version.CreateCustomTrackingSpan(
+                        var htmlSpan = _htmlBuffer.CurrentSnapshot.Version.CreateCustomTrackingSpan(
                             Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1),
                             TrackingFidelityMode.Forward,
                             new LanguageSpanCustomState(sourceSpan.Start, sourceSpan.End),
                             TrackToVersion
                         );
-
-                        newProjectionSpans.Add(textSpan);
-                        newSpanInfos.Add(new SpanInfo(textSpan, TemplateTokenKind.Text));
+                        var diskSpan = _diskBuffer.CurrentSnapshot.Version.CreateCustomTrackingSpan(
+                            Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1),
+                            TrackingFidelityMode.Forward,
+                            new LanguageSpanCustomState(sourceSpan.Start, sourceSpan.End),
+                            TrackToVersion
+                        );
+                        
+                        newProjectionSpans.Add(htmlSpan);
+                        newSpanInfos.Add(new SpanInfo(diskSpan, TemplateTokenKind.Text));
                         break;
                 }
             }
@@ -297,7 +339,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 newProjectionSpans.Add(emptySpan);
                 newSpanInfos.Add(new SpanInfo(emptySpan, TemplateTokenKind.Text));
             }
-
+            
             var oldSpanCount = _spans.Count;
             _spans.RemoveRange(startSpan, oldSpanCount - startSpan);
             _spans.AddRange(newSpanInfos);

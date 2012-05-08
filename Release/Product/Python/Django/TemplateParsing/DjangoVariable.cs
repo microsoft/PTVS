@@ -12,54 +12,24 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Django.Project;
-using Microsoft.PythonTools.Django.TemplateParsing;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Django.Intellisense {
-    class DjangoCompletionSource : ICompletionSource {
-        private readonly DjangoCompletionSourceProvider _provider;
-        private readonly ITextBuffer _buffer;
-
-        public DjangoCompletionSource(DjangoCompletionSourceProvider djangoCompletionSourceProvider, ITextBuffer textBuffer) {
-            _provider = djangoCompletionSourceProvider;
-            _buffer = textBuffer;
-        }
-
-        #region ICompletionSource Members
-
-        public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
-            DjangoProject project;
-            string filename = _buffer.GetFilePath();
-            if (filename != null) {
-                project = DjangoPackage.GetProject(filename);
-                TemplateTokenKind kind;
-                if (project != null &&
-                    _buffer.Properties.TryGetProperty<TemplateTokenKind>(typeof(TemplateTokenKind), out kind)) {
-
-                        if (kind == TemplateTokenKind.Block || kind == TemplateTokenKind.Variable) {
-                            var compSet = new CompletionSet();
-
-                            List<Completion> completions = GetCompletions(project, kind, _buffer.CurrentSnapshot.GetText());
-                            completionSets.Add(
-                                new CompletionSet(
-                                    "Django Tags",
-                                    "Django Tags",
-                                    session.CreateTrackingSpan(_buffer),
-                                    completions.ToArray(),
-                                    new Completion[0]
-                                )
-                            );
-                        }
-                }
-            }
-        }
-
+namespace Microsoft.PythonTools.Django.TemplateParsing {
+    /// <summary>
+    /// Captures information about a Django template variable including the filter(s) and any arguments.
+    /// 
+    /// For example for a variable such as {{ foo!bar }} we'll have a DjangoVariable() with an Expression
+    /// which is of kind Variable for "foo" and a DjangoFilter with a filter name of bar.  
+    /// 
+    /// For {{ foo!bar:42 }} we will have the same thing but the filter will have an Arg of kind Number and
+    /// the Value "42".  Likewise for {{ foo!bar:'abc' }} the filter will have an Arg of kind Constant and
+    /// a value 'abc'.
+    /// </summary>
+    class DjangoVariable {
+        public readonly DjangoVariableValue Expression;
+        public readonly int ExpressionStart;
+        public readonly DjangoFilter[] Filters;
         const string _doubleQuotedString = @"""[^""\\]*(?:\\.[^""\\]*)*""";
         const string _singleQuotedString = @"'[^'\\]*(?:\\.[^'\\]*)*'";
         const string _numFormat = @"[-+\.]?\d[\d\.e]*";
@@ -82,9 +52,27 @@ namespace Microsoft.PythonTools.Django.Intellisense {
               (?<var_arg>[\w\.]+)
              )
          )?
- )", RegexOptions.Compiled|RegexOptions.IgnorePatternWhitespace);
+ )", RegexOptions.Compiled | RegexOptions.IgnorePatternWhitespace);
 
-        internal static DjangoVariable ParseFilter(string filterText) {
+        public DjangoVariable(DjangoVariableValue expression, int expressionStart, params DjangoFilter[] filters) {
+            Expression = expression;
+            ExpressionStart = expressionStart;
+            Filters = filters;
+        }
+
+        public static DjangoVariable Variable(string expression, int expressionStart, params DjangoFilter[] filters) {
+            return new DjangoVariable(new DjangoVariableValue(expression, DjangoVariableKind.Variable), expressionStart, filters);
+        }
+
+        public static DjangoVariable Constant(string expression, int expressionStart, params DjangoFilter[] filters) {
+            return new DjangoVariable(new DjangoVariableValue(expression, DjangoVariableKind.Constant), expressionStart, filters);
+        }
+
+        public static DjangoVariable Number(string expression, int expressionStart, params DjangoFilter[] filters) {
+            return new DjangoVariable(new DjangoVariableValue(expression, DjangoVariableKind.Number), expressionStart, filters);
+        }
+
+        public static DjangoVariable Parse(string filterText) {
             DjangoVariableValue filter = null;
             List<DjangoFilter> filters = new List<DjangoFilter>();
             int varStart = 0;
@@ -126,10 +114,10 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
             var filterStart = filterName.Index;
 
-            
+
             DjangoVariableValue arg = null;
             int argStart = 0;
-            
+
             var constantGroup = match.Groups["constant_arg"];
             if (constantGroup.Success) {
                 arg = new DjangoVariableValue(constantGroup.Value, DjangoVariableKind.Constant);
@@ -149,51 +137,6 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
             return new DjangoFilter(filterName.Value, filterStart, arg, argStart);
         }
-
-        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string bufferText) {
-            List<Completion> completions = new List<Completion>();
-            IEnumerable<string> tags;
-
-            switch (kind) {
-                case TemplateTokenKind.Block:
-                    tags = project._tags.Keys;
-                    break;
-                case TemplateTokenKind.Variable:
-                    tags = project._filters.Keys;
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-
-            string filename = _buffer.GetFilePath();
-            if (filename != null) {
-            }
-
-            foreach (var tag in tags.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)) {
-                completions.Add(
-                    new Completion(
-                        tag,
-                        tag,
-                        "",
-                        _provider._glyphService.GetGlyph(
-                            StandardGlyphGroup.GlyphKeyword,
-                            StandardGlyphItem.GlyphItemPublic
-                        ),
-                        "tag"
-                    )
-                );
-            }
-            return completions;
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose() {
-        }
-
-        #endregion
     }
 
 }

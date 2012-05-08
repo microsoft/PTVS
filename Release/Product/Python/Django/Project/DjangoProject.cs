@@ -154,6 +154,8 @@ namespace Microsoft.PythonTools.Django.Project {
             tags[name] = name;
         }
 
+        private Dictionary<string, Dictionary<string, string>> _variables = new Dictionary<string, Dictionary<string, string>>();
+
         private void RenderToStringProcessor(CallExpression call, CallInfo callInfo) {
             if (callInfo.NormalArgumentCount == 2) {
                 foreach (var name in callInfo.GetArgument(0)) {
@@ -167,7 +169,20 @@ namespace Microsoft.PythonTools.Django.Project {
                         continue;
                     }
 
+                    Dictionary<string, string> tags;
+                    if (!_variables.TryGetValue(strName, out tags)) {
+                        _variables[strName] = tags = new Dictionary<string, string>();
+                    }
+
                     foreach (var dict in callInfo.GetArgument(1)) {
+                        foreach (var keyValue in dict.GetItems()) {
+                            foreach (var key in keyValue.Key) {
+                                var value = key.GetConstantValueAsString();
+                                if (value != null) {
+                                    RegisterTag(tags, value);
+                                }
+                            }
+                        }
                     }
                 }
             }

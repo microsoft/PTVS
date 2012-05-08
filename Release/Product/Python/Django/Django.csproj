@@ -171,6 +171,7 @@
     <Compile Include="Intellisense\DjangoCompletionSourceProvider.cs" />
     <Compile Include="Intellisense\DjangoIntellisenseController.cs" />
     <Compile Include="Intellisense\DjangoIntellisenseControllerProvider.cs" />
+    <Compile Include="Intellisense\DjangoPredefinedClassificationTypeNames.cs" />
     <Compile Include="Project\DjangoProjectFactory.cs" />
     <Compile Include="Project\DjangoProject.cs" />
     <Compile Include="Project\NewAppDialog.xaml.cs">
@@ -194,6 +195,7 @@
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="TemplateContentType.cs" />
     <Compile Include="TemplateParsing\CustomTrackingSpan.cs" />
+    <Compile Include="TemplateParsing\DjangoFormatDefinitions.cs" />
     <Compile Include="TemplateParsing\HtmlCompletionSource.cs" />
     <Compile Include="TemplateParsing\HtmlCompletionSourceProvider.cs" />
     <Compile Include="TemplateParsing\HtmlIntellisenseControllerProvider.cs" />
