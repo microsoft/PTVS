@@ -99,6 +99,14 @@ namespace Microsoft.PythonTools {
 
             return buffer.CurrentSnapshot.CreateTrackingSpan(position, 1, SpanTrackingMode.EdgeInclusive);
         }
+        
+        public static IPythonInterpreterFactory GetPythonInterpreterFactory(this IVsHierarchy self) {
+            var node = (self.GetProject().GetCommonProject() as PythonProjectNode);
+            if (node != null) {
+                return node.GetInterpreterFactory();
+            }
+            return null;
+        }
 
         internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {
             return project.GetCommonProject() as PythonProjectNode;

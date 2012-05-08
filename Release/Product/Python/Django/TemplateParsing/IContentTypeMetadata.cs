@@ -12,12 +12,10 @@
  *
  * ***************************************************************************/
 
-// PkgCmdID.cs
-// MUST match PkgCmdID.h
-using System;
+using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Django {
-    static class PkgCmdIDList {
-        public const uint cmdidValidateDjangoApp = 0x1001;
+namespace Microsoft.PythonTools.Django.TemplateParsing {
+    public interface IContentTypeMetadata {
+        IEnumerable<string> ContentTypes { get; }
     }
 }

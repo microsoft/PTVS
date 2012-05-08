@@ -35,6 +35,10 @@
     <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
         <Name>Visual Studio MPF</Name>
     </Reference>
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="1.1" MaxVersion="1.1">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+    </Reference>
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>

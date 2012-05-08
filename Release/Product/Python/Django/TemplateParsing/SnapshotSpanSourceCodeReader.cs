@@ -14,11 +14,10 @@
 
 using System;
 using System.IO;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
-    internal partial class SnapshotSpanSourceCodeReader : TextReader, ISnapshotTextReader {
+    internal partial class SnapshotSpanSourceCodeReader : TextReader  {
         private readonly SnapshotSpan _span;
         private ITextSnapshot _snapshot;
         private int _position;

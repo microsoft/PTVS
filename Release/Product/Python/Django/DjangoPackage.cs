@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Django.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 
@@ -48,6 +49,8 @@ namespace Microsoft.PythonTools.Django {
     [ProvideEditorLogicalView(typeof(DjangoEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
     [ProvideEditorLogicalView(typeof(DjangoEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.TextView_string)]
     [Guid(GuidList.guidDjangoPkgString)]
+    [ProvideObject(typeof(DjangoProject), RegisterUsing = RegistrationMethod.CodeBase)]
+    [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Django Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath")]
     public sealed class DjangoPackage : Package {
         /// <summary>
         /// Default constructor of the package.
@@ -59,8 +62,6 @@ namespace Microsoft.PythonTools.Django {
         public DjangoPackage() {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
         }
-
-
 
         /////////////////////////////////////////////////////////////////////////////
         // Overriden Package Implementation
@@ -75,8 +76,9 @@ namespace Microsoft.PythonTools.Django {
             base.Initialize();
 
             //Create Editor Factory. Note that the base Package class will call Dispose on it.
-            base.RegisterEditorFactory(new DjangoEditorFactory(this));
-            base.RegisterEditorFactory(new DjangoEditorFactoryPromptForEncoding(this));
+            RegisterEditorFactory(new DjangoEditorFactory(this));
+            RegisterEditorFactory(new DjangoEditorFactoryPromptForEncoding(this));
+            RegisterProjectFactory(new DjangoProjectFactory(this));
 
             /*
             // Add our command handlers for menu (commands must exist in the .vsct file)

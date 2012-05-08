@@ -4,6 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>$guid1$</ProjectGuid>
     <ProjectHome>.</ProjectHome>
+    <ProjectTypeGuids>{5F0BE9CA-D677-4A4D-8806-6076C0FAAD37};{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
     <StartupFile>$safeprojectname$.py</StartupFile>
     <SearchPath></SearchPath>
     <WorkingDirectory>.</WorkingDirectory>

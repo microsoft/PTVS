@@ -41,6 +41,9 @@
     <RunRegRiched>true</RunRegRiched>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Accessibility">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -51,6 +54,9 @@
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <Reference Include="Microsoft.VisualStudio.ProjectAggregator, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
@@ -70,6 +76,8 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="PresentationUI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -77,7 +85,10 @@
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +150,11 @@
   <ItemGroup>
     <Compile Include="DjangoEditorFactory.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="Project\DjangoProjectFactory.cs" />
+    <Compile Include="Project\DjangoProject.cs" />
+    <Compile Include="Project\WaitForValidationDialog.xaml.cs">
+      <DependentUpon>WaitForValidationDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -156,12 +172,15 @@
     <Compile Include="TemplateParsing\HtmlIntellisenseControllerProvider.cs" />
     <Compile Include="TemplateParsing\HtmlIntellisenseController.cs" />
     <Compile Include="TemplateParsing\HtmlProjectionBuffer.cs" />
+    <Compile Include="TemplateParsing\IContentTypeMetadata.cs" />
     <Compile Include="TemplateParsing\SnapshotSpanSourceCodeReader.cs" />
     <Compile Include="TemplateParsing\TemplateClassifier.cs" />
     <Compile Include="TemplateParsing\TemplateClassifierProvider.cs" />
     <Compile Include="TemplateParsing\TemplateToken.cs" />
     <Compile Include="TemplateParsing\TemplateTokenizer.cs" />
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
+    <Compile Include="Utilities.cs" />
+    <Compile Include="VsMenus.cs" />
     <None Include="Templates\Files\DjangoHtmlTemplate\DjangoTemplate.html.djt" />
     <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
@@ -214,11 +233,20 @@
     <Content Include="Resources\Package.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Analysis\Analysis.csproj">
+      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
+      <Name>Analysis</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
-      <Private>False</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Project\WaitForValidationDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
