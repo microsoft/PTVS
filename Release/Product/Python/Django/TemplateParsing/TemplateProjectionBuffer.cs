@@ -180,7 +180,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 // check if we inserted template tags at the end
                                 var newText = e.After.GetText(new Span(change.NewSpan.End - 2, 2));
                                 if (Array.IndexOf(_templateTags, newText) != -1) {
-                                    recalcPosition = _spans[closest].DiskBufferSpan.GetStartPoint(e.After);
+                                    if (closest != 0) {
+                                        recalcPosition = _spans[--closest].DiskBufferSpan.GetStartPoint(e.After);
+                                    } else {
+                                        recalcPosition = _spans[closest].DiskBufferSpan.GetStartPoint(e.After);
+                                    }
                                     recalc = true;
                                 }
                             }
@@ -189,7 +193,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 // check if the inserted char plus the char after us makes a template tag
                                 var newText = e.After.GetText(new Span(change.NewSpan.Start, 2));
                                 if (Array.IndexOf(_templateTags, newText) != -1) {
-                                    recalcPosition = _spans[closest].DiskBufferSpan.GetStartPoint(e.After);
+                                    if (closest != 0) {
+                                        recalcPosition = _spans[--closest].DiskBufferSpan.GetStartPoint(e.After);
+                                    } else {
+                                        recalcPosition = _spans[closest].DiskBufferSpan.GetStartPoint(e.After);
+                                    }
                                     recalc = true;
                                 }
                             }

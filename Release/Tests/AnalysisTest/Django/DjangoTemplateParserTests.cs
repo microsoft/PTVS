@@ -561,7 +561,11 @@ namespace AnalysisTest {
 </body>
 </html>";
 
-            TokenizerTest(code, new TemplateToken(TemplateTokenKind.Text, 0, code.Length - 1));
+            TokenizerTest(code,
+                /*unclosed*/true,
+                new TemplateToken(TemplateTokenKind.Text, 0, 49),
+                new TemplateToken(TemplateTokenKind.Variable, 50, 80)
+            );
         }
 
         [TestMethod]
@@ -603,7 +607,11 @@ namespace AnalysisTest {
 </body>
 </html>";
 
-            TokenizerTest(code, new TemplateToken(TemplateTokenKind.Text, 0, code.Length - 1));
+            TokenizerTest(code,
+                /*unclosed*/true,
+                new TemplateToken(TemplateTokenKind.Text, 0, 49),
+                new TemplateToken(TemplateTokenKind.Comment, 50, 80)
+            );
         }
 
         [TestMethod]
@@ -618,11 +626,19 @@ namespace AnalysisTest {
 </body>
 </html>";
 
-            TokenizerTest(code, new TemplateToken(TemplateTokenKind.Text, 0, code.Length - 1));
+            TokenizerTest(code, 
+                /*unclosed*/true, 
+                new TemplateToken(TemplateTokenKind.Text, 0, 49),
+                new TemplateToken(TemplateTokenKind.Block, 50, 80)
+            );
         }
 
 
         private void TokenizerTest(string text, params TemplateTokenResult[] expected) {
+            TokenizerTest(text, false, expected);
+        }
+
+        private void TokenizerTest(string text, bool unclosed, params TemplateTokenResult[] expected) {
             var tokenizer = new TemplateTokenizer(new StringReader(text));
             var tokens = tokenizer.GetTokens().ToArray();
 
@@ -643,7 +659,9 @@ namespace AnalysisTest {
                         case TemplateTokenKind.Comment:
                         case TemplateTokenKind.Variable:
                             Assert.AreEqual('{', text[expectedToken.Start]);
-                            Assert.AreEqual('}', text[expectedToken.End]);
+                            if (!unclosed) {
+                                Assert.AreEqual('}', text[expectedToken.End]);
+                            }
                             break;
                     }
                     if (expected[i].Start != null) {

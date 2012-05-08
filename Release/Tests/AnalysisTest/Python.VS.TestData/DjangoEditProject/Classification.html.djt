@@ -63,5 +63,6 @@
 
 	{% unknownblock %}
 
+    {{ foo!title!cut }}
 </body>
 </html>

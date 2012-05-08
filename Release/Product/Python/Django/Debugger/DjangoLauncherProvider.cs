@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
         public string Description {
             get {
-                return "Launches Django web sites using the Python debugger.  This enables launching and starting a web browser automatically.";
+                return "Launches Django web sites using the Python debugger.  This enables launching and starting a web browser automatically.  It launches using manage.py and passes the runserver flag as well as additional options to configure the port and other settings.";
             }
         }
 

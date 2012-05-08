@@ -261,7 +261,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
 
             foreach (var filter in Filters) {
-                foreach (var span in filter.GetSpans(ExpressionStart)) {
+                foreach (var span in filter.GetSpans()) {
                     yield return span;
                 }
             }

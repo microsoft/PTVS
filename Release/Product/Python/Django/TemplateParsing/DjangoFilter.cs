@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return new DjangoFilter(filterName, filterStart, new DjangoVariableValue(variable, DjangoVariableKind.Number), groupStart);
         }
 
-        internal IEnumerable<BlockClassification> GetSpans(int expressionStart) {
+        internal IEnumerable<BlockClassification> GetSpans(int expressionStart = 0) {
             yield return new BlockClassification(
                 new Span(FilterStart + expressionStart, Filter.Length),
                 Classification.Identifier

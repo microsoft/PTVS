@@ -53,7 +53,7 @@
     <Buttons>
       <Button guid="guidDjangoCmdSet" id="cmdidValidateDjangoApp" priority="0x0600" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
-        <Icon guid="guidImages" id="bmpPic1"/>
+        <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
         
         <Strings>
           <ButtonText>Validate Django App...</ButtonText>
@@ -63,7 +63,7 @@
 
       <Button guid="guidDjangoCmdSet" id="cmdidSyncDb" priority="0x0600" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
-        <Icon guid="guidImages" id="bmpPic1"/>
+        <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
 
         <Strings>
           <ButtonText>Django Sync DB...</ButtonText>
@@ -73,7 +73,7 @@
 
       <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x700" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
-        <Icon guid="guidImages" id="bmpPic2"/>
+        <!-- <Icon guid="guidImages" id="bmpPic2"/> -->
 
         <Strings>
           <ButtonText>Add new Django app...</ButtonText>
@@ -82,7 +82,7 @@
 
       <Button guid="guidDjangoCmdSet" id="cmdidGotoTemplateSource" priority="0x700" type="Button">
         <Parent guid="guidVSDebugGroup" id="IDG_CALLSTACK_NAVIGATE"/>
-        <Icon guid="guidImages" id="bmpPic1"/>
+        <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
 
         <Strings>
           <ButtonText>Go to template source</ButtonText>

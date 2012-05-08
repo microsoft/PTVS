@@ -30,6 +30,23 @@
       <PythonInterpreterSuffix>w</PythonInterpreterSuffix>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(PythonToolsOptionsRegPath)' == ''">
+      <PythonToolsOptionsRegPath>HKEY_CURRENT_USER\Software\Microsoft\VisualStudio\10.0\PythonTools\Options\Interpreters</PythonToolsOptionsRegPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(InterpreterId)==''">
+      <!-- X86 CPython Interpreter -->
+      <InterpreterId>$([MSBuild]::GetRegistryValueFromView('$(PythonToolsOptionsRegPath)', 'DefaultInterpreter', '', RegistryView.Registry32))</InterpreterId>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(InterpreterVersion)==''">
+      <!-- X86 CPython Interpreter -->
+      <InterpreterVersion>$([MSBuild]::GetRegistryValueFromView('$(PythonToolsOptionsRegPath)', 'DefaultInterpreterVersion', '', RegistryView.Registry32))</InterpreterVersion>
+    </PropertyGroup>
+
+    <Message Text="DefaultInterpreterId=$(InterpreterId)"/>
+    <Message Text="DefaultInterpreterVersion=$(InterpreterVersion)"/>
+
     <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e'">
       <!-- X86 CPython Interpreter -->
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry32))python$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
@@ -63,7 +80,7 @@
   </Target>
 
   <Target Name="Build" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
-          DependsOnTargets="ResolvePythonInterpreterPath">
+          >
     <Message Text="Content=@(Content->'%(RelativeDir)%(Filename)%(Extension)')"/>
     <Copy
         SourceFiles="@(Compile)"
@@ -147,9 +164,17 @@
 </configuration>
 ]]>
       </_DjangoWebConfigCode>
+      <_AzureSetupInfo>
+        <![CDATA[
+settings_module=$(MSBuildProjectName).settings
+python_path=%RootDir%
+interpreter_path=%RootDir%\Python\$([System.IO.Path]::GetFileName($(PythonInterpreterPath)))
+]]>
+      </_AzureSetupInfo>
 
     </PropertyGroup>
     <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == ''" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
+    <WriteLinesToFile File="AzureSetup.cfg" Lines="$(_AzureSetupInfo)" Overwrite="true"/>
   </Target>
   <Target
     Name="GetTargetPath"
@@ -174,21 +199,37 @@
 
   <Target
     Name="PipelineTransformPhase"
-    DependsOnTargets="Build"
+    DependsOnTargets="Build;ResolvePythonInterpreterPath"
     Returns="@(TransformedFilenames)"
     Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
-
+    <!-- Target used for generating a package which can be uploaded to web server -->
+    <PropertyGroup>
+      <PythonRuntimeDir>$([System.IO.Path]::GetDirectoryName($(PythonInterpreterPath)))</PythonRuntimeDir>
+    </PropertyGroup>
     <ItemGroup>
-      <ContentFiles Include="web.config"></ContentFiles>
       <ContentFiles Include="@(Content)"></ContentFiles>
       <ContentFiles Include="@(Compile)"></ContentFiles>
       <ContentFiles Include="@(Include)"></ContentFiles>
+
+      <GeneratedFiles  Include="AzureSetup.cfg"></GeneratedFiles>
       <GeneratedFiles Include="@(InstallPython->'%(FullPath)')"/>
       <GeneratedFiles Include="$(AzureDjangoSupportPath)wfastcgi.py"/>
       <GeneratedFiles Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"/>
 
+      <TopLevelFiles Include="web.config"></TopLevelFiles>
+
+      <PythonInterpreterFiles Include="$(PythonRuntimeDir)\**\*.*"/>
+
+      <TransformedFilenames Include="@(PythonInterpreterFiles)">
+        <DestinationRelativePath>Python\%(RecursiveDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <Exclude>false</Exclude>
+        <FromTarget>Unknown</FromTarget>
+        <Category>Run</Category>
+        <ProjectFileType>Default</ProjectFileType>
+      </TransformedFilenames>
+
       <TransformedFilenames Include="@(ContentFiles->'%(FullPath)')">
-        <DestinationRelativePath>%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <DestinationRelativePath>$(MSBuildProjectName)\%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
         <Exclude>false</Exclude>
         <FromTarget>Unknown</FromTarget>
         <Category>Run</Category>
@@ -202,8 +243,16 @@
         <Category>Run</Category>
         <ProjectFileType>Default</ProjectFileType>
       </TransformedFilenames>
+
+      <TransformedFilenames Include="@(TopLevelFiles)">
+        <DestinationRelativePath>%(Filename)%(Extension)</DestinationRelativePath>
+        <Exclude>false</Exclude>
+        <FromTarget>Unknown</FromTarget>
+        <Category>Run</Category>
+        <ProjectFileType>Default</ProjectFileType>
+      </TransformedFilenames>
     </ItemGroup>
-    <Message Text="@(TransformedFilenames)" />
+    <Message Text="Current Project: $(MSBuildProjectName)"/>
   </Target>
 
   <Target Name="GenerateManifests" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>

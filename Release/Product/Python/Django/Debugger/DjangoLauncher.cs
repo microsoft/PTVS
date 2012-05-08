@@ -15,14 +15,15 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Threading;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.Win32;
-using System.Threading;
 
 namespace Microsoft.PythonTools.Django.Debugger {
     /// <summary>
@@ -59,19 +60,28 @@ namespace Microsoft.PythonTools.Django.Debugger {
             public string GetProperty(string name) {
                 switch (name) {
                     case CommonConstants.CommandLineArguments:
-                        _launcher._testServerPort = GetFreePort();
+                        var userArgs = _realProject.GetProperty(CommonConstants.CommandLineArguments);
+                        if (String.Equals(Path.GetFileName(_realProject.GetStartupFile()), "manage.py", StringComparison.OrdinalIgnoreCase)) {
+                            _launcher._testServerPort = GetFreePort();
 
-                        string commandLine = "runserver";
-                        if (_debugLaunch) {
-                            commandLine += " --noreload";
-                        }
-                        string settingsModule = _realProject.GetProperty(DjangoLauncherOptions.SettingModulesSetting);
-                        if (!String.IsNullOrWhiteSpace(settingsModule)) {
-                            commandLine += " --settings " + settingsModule;
+                            string commandLine = "runserver";
+                            if (_debugLaunch) {
+                                commandLine += " --noreload";
+                            }
+                            string settingsModule = _realProject.GetProperty(DjangoLauncherOptions.SettingModulesSetting);
+                            if (!String.IsNullOrWhiteSpace(settingsModule)) {
+                                commandLine += " --settings " + settingsModule;
+                            }
+
+                            if (!String.IsNullOrWhiteSpace(userArgs)) {
+                                commandLine += " " + userArgs;
+                            }
+
+                            commandLine += " " + _launcher._testServerPort;
+                            return commandLine;
                         }
 
-                        commandLine += " " + _launcher._testServerPort;                        
-                        return commandLine;
+                        return userArgs;
                     case "DjangoDebugging":
                         return "True";
                 }
@@ -87,7 +97,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
             }
 
             public string GetStartupFile() {
-                return "manage.py";
+                return _realProject.GetStartupFile();
             }
 
             public string ProjectDirectory {

@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -772,6 +772,7 @@ namespace Microsoft.PythonTools.Django.Project {
         #endregion
 
         protected override int GetProperty(uint itemId, int propId, out object property) {
+#if HAVE_ICONS
             switch ((__VSHPROPID)propId) {
                 case __VSHPROPID.VSHPROPID_IconIndex:
                     // replace the default icon w/ our own icon for HTML files.
@@ -791,10 +792,49 @@ namespace Microsoft.PythonTools.Django.Project {
                     }
                     break;
             }
+#endif
+            switch ((__VSHPROPID2)propId) {
+                case __VSHPROPID2.VSHPROPID_PropertyPagesCLSIDList:
+                    var res = base.GetProperty(itemId, propId, out property);
+                    property = RemovePropertyPagesFromList((string)property);
+                    return res;
+            }
 
             return base.GetProperty(itemId, propId, out property);
         }
 
+
+        public string[] PropertyPagesToRemove {
+            get {
+                return new[] { 
+                    "{8c0201fe-8eca-403c-92a3-1bc55f031979}",   // typeof(DeployPropertyPageComClass)
+                    "{ed3b544c-26d8-4348-877b-a1f7bd505ed9}",   // typeof(DatabaseDeployPropertyPageComClass)
+                    "{909d16b3-c8e8-43d1-a2b8-26ea0d4b6b57}",   // Microsoft.VisualStudio.Web.Application.WebPropertyPage
+                    "{379354f2-bbb3-4ba9-aa71-fbe7b0e5ea94}"    // Microsoft.VisualStudio.Web.Application.SilverlightLinksPage
+                }; 
+            }
+        }
+
+        protected string RemovePropertyPagesFromList(string propertyPagesList) {
+            string[] pagesToRemove = PropertyPagesToRemove;
+            if (pagesToRemove != null) {
+                propertyPagesList = propertyPagesList.ToUpper(CultureInfo.InvariantCulture);
+                foreach (string s in pagesToRemove) {
+                    int index = propertyPagesList.IndexOf(s.ToUpper(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+                    if (index != -1) {
+                        // Guids are separated by ';' so if we remove the last one also remove the last ';'
+                        int index2 = index + s.Length + 1;
+                        if (index2 >= propertyPagesList.Length)
+                            propertyPagesList = propertyPagesList.Substring(0, index).TrimEnd(';');
+                        else
+                            propertyPagesList = propertyPagesList.Substring(0, index) + propertyPagesList.Substring(index2);
+                    }
+                }
+            }
+            return propertyPagesList;
+        }
+
+#if HAVE_ICONS
         /// <summary>
         /// Gets an ImageHandler for the project node.
         /// </summary>
@@ -815,6 +855,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 return _images;
             }
         }
+#endif
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == GuidList.guidWebPackgeCmdId) {

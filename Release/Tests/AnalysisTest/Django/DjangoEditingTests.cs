@@ -218,12 +218,15 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("Django template tag", 967, 969, "{%"),
                 new Classifcation("keyword", 970, 982, "unknownblock"),
                 new Classifcation("Django template tag", 983, 985, "%}"),
-                new Classifcation("HTML Tag Delimiter", 989, 991, "</"),
-                new Classifcation("HTML Element Name", 991, 995, "body"),
-                new Classifcation("HTML Tag Delimiter", 995, 996, ">"),
-                new Classifcation("HTML Tag Delimiter", 998, 1000, "</"),
-                new Classifcation("HTML Element Name", 1000, 1004, "html"),
-                new Classifcation("HTML Tag Delimiter", 1004, 1005, ">")
+                new Classifcation("Django template tag", 993, 995, "{{"),
+                new Classifcation("identifier", 996, 999, "foo"),
+                new Classifcation("Django template tag", 1010, 1012, "}}"),
+                new Classifcation("HTML Tag Delimiter", 1014, 1016, "</"),
+                new Classifcation("HTML Element Name", 1016, 1020, "body"),
+                new Classifcation("HTML Tag Delimiter", 1020, 1021, ">"),
+                new Classifcation("HTML Tag Delimiter", 1023, 1025, "</"),
+                new Classifcation("HTML Element Name", 1025, 1029, "html"),
+                new Classifcation("HTML Tag Delimiter", 1029, 1030, ">")
             );
         }
 
