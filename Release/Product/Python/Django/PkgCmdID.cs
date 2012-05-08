@@ -21,5 +21,6 @@ namespace Microsoft.PythonTools.Django {
         public const uint cmdidValidateDjangoApp = 0x1001;
         public const uint cmdidStartNewApp = 0x1002;
         public const uint cmdidGotoTemplateSource = 0x1003;
+        public const uint cmdidSyncDb = 0x1004;
     }
 }

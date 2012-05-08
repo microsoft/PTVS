@@ -23,7 +23,7 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Text="Validating:" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,12,20,102" />
+        <TextBlock Text="Output:" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,12,20,102" />
         <Button Grid.Row="2" IsDefault="True" Click="_okButton_Click" Width="86" Height="24" Margin="250,94,104,11" Name="_ok" IsEnabled="False" Grid.Column="1">Ok</Button>
         <Button Grid.Row="2" IsCancel="True" Click="_cancelButton_Click" Width="86" Height="24" Margin="341,94,12,11" Name="_cancel" Grid.Column="1">Cancel</Button>
         <TextBox Height="183" HorizontalAlignment="Left" Margin="12,33,0,0" Name="_textBox" VerticalAlignment="Top" Width="504" Grid.RowSpan="3" IsReadOnly="True" TextWrapping="NoWrap" Grid.ColumnSpan="2" />

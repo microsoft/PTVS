@@ -533,6 +533,9 @@ namespace Microsoft.PythonTools.Django.Project {
                     case PkgCmdIDList.cmdidStartNewApp:
                         StartNewApp();
                         return VSConstants.S_OK;
+                    case PkgCmdIDList.cmdidSyncDb:
+                        SyncDb();
+                        return VSConstants.S_OK;
                 }
             }
 
@@ -567,6 +570,17 @@ namespace Microsoft.PythonTools.Django.Project {
 
         private void ValidateDjangoApp() {
             var proc = RunManageCommand("validate");
+            if (proc != null) {
+                var dialog = new WaitForValidationDialog(proc);
+
+                ShowValidationDialog(dialog, proc);
+            } else {
+                MessageBox.Show("Could not find Python interpreter for project.");
+            }
+        }
+
+        private void SyncDb() {
+            var proc = RunManageCommand("syncdb");
             if (proc != null) {
                 var dialog = new WaitForValidationDialog(proc);
 
@@ -643,7 +657,7 @@ namespace Microsoft.PythonTools.Django.Project {
             }
 
             public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
-                Received.Append(e.Data);
+                Received.Append(e.Data + Environment.NewLine);
                 System.Threading.Tasks.Task.Factory.StartNew(
                     () => _dialog.SetText(Received.ToString()),
                     default(CancellationToken),

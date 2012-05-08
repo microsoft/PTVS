@@ -61,6 +61,16 @@
         
       </Button>
 
+      <Button guid="guidDjangoCmdSet" id="cmdidSyncDb" priority="0x0600" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
+        <Icon guid="guidImages" id="bmpPic1"/>
+
+        <Strings>
+          <ButtonText>Django Sync DB...</ButtonText>
+        </Strings>
+
+      </Button>
+
       <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x700" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
         <Icon guid="guidImages" id="bmpPic2"/>
@@ -127,6 +137,7 @@
       <IDSymbol name="cmdidValidateDjangoApp" value ="0x1001"/>
       <IDSymbol name="cmdidStartApp" value ="0x1002"/>
       <IDSymbol name="cmdidGotoTemplateSource" value="0x1003"/>
+      <IDSymbol name="cmdidSyncDb" value="0x1004"/>
     </GuidSymbol>
     
     <GuidSymbol name="guidDjangoEditorFactory" value="{96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f}" />
