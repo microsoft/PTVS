@@ -1,0 +1,21 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Azure Django Application</Name>
+    <Description>A project for creating a Django application</Description>
+    <Icon>__TemplateIcon.ico</Icon>
+    <ProjectType>Python</ProjectType>
+    <SortOrder>60</SortOrder>
+    <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>false</CreateNewFolder>
+    <DefaultName>DjangoApplication</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="DjangoApp.pyproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\manage.py">manage.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="false" TargetFileName="$safeprojectname$\settings.py">settings.py</ProjectItem>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

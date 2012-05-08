@@ -1,0 +1,81 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>$guid1$</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>$safeprojectname$.py</StartupFile>
+    <SearchPath></SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>    
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$safeprojectname$\__init__.py" />
+    <Compile Include="$safeprojectname$\manage.py" />
+    <Compile Include="$safeprojectname$\settings.py" />
+    <Compile Include="$safeprojectname$\urls.py" />
+  </ItemGroup>
+  
+  <!--TODO: IMPORT ME!-->
+  <PropertyGroup>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <Target
+   Name="GetTargetFrameworkVersion"
+   Returns="$(TargetFrameworkVersion)"/>
+  <Target Name="CreateManifestResourceNames" Returns=""/>
+  <Target Name="CoreCompile" Returns=""/>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+
+  <Target Name="GetTargetPath" Returns=""/>
+  <PropertyGroup>
+    <WebEntryPoint>Program.py</WebEntryPoint>
+  </PropertyGroup>
+  <Target Name="WatGetTargetFrameworkDirectories" Returns=""/>
+  <Target Name="BuiltProjectOutputGroupDependencies" Returns=""/>
+  <Target Name="WatGetTargetFrameworkMoniker" Returns=""/>
+  <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns=""/>
+  <Target Name="CompileTransform">
+    <ItemGroup>
+      <CompileTransforms Include="%(Compile.Filename)">
+        <DestinationRelativePath>%(Compile.Filename)</DestinationRelativePath>
+        <Exclude>False</Exclude>
+        <FromTarget></FromTarget>
+        <Category></Category>
+        <ProjectFileType></ProjectFileType>
+      </CompileTransforms>
+    </ItemGroup>
+  </Target>
+  
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>36701</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>
+          </IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" />
+  <Target Name="PipelineTransformPhase"
+          Returns="@(CompileTransform)"/>
+</Project>

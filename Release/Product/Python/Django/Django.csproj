@@ -185,6 +185,21 @@
     <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Templates\Projects\AzureDjangoProject\DjangoApp.pyproj">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Templates\Projects\AzureDjangoProject\DjangoApp.vstemplate">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Templates\Projects\AzureDjangoProject\manage.py" />
+    <Content Include="Templates\Projects\AzureDjangoProject\settings.py" />
+    <Content Include="Templates\Projects\AzureDjangoProject\urls.py" />
+    <Content Include="Templates\Projects\AzureDjangoProject\__init__.py" />
+    <Content Include="Templates\Projects\AzureDjangoProject\AzureDjangoApp.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Resource Include="Templates\Projects\AzureDjangoProject\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\DjangoProject\manage.py" />
     <Content Include="Templates\Projects\DjangoProject\DjangoApp.pyproj" />
     <Content Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
