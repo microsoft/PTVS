@@ -2,15 +2,13 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <webpiFile version="4.0.0.0" />
   <title>Python 2.7 Installer 4.0 Feed</title>
-  <!-- TODO -->
-  <link href="http://pytools/demos/proto/python27.xml" />
-  <!-- TODO -->
+  <link href="http://pytools/demos/production/python27.xml" />
   <updated>2012-4-5T00:00:00Z</updated>
   <author>
     <name>Microsoft</name>
     <uri>http://pytools.codeplex.com</uri>
   </author>
-  <id>http://pytools/demos/proto/python27.xml</id>
+  <id>http://pytools/demos/production/python27.xml</id>
   
   <!-- ##PTVS############################################################## -->
   <entry>
@@ -30,13 +28,13 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <uri>http://pytools.codeplex.com/</uri>
     </author>
     <images>
+      <!-- TODO forward link for PTVS logo -->
       <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
       <keywordId>ProductSpotlight</keywordId>
     </keywords>
-    
     <discoveryHint>
       <or>
       <discoveryHint>
@@ -58,6 +56,9 @@ Adds support for the Python programming language to Professional, Ultimate, and 
 
     <dependency>
       <or>
+        <!-- If either the VS2010 integrated shell or VS2010 SP1 prereqs are installed, we're good to
+        go -->
+        <!-- TODO what to do about VS.Next??? -->
         <dependency>
           <productId>VS2010SI</productId>
         </dependency>
@@ -71,38 +72,22 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-	        <x64 />
-        </architectures>
         <eulaURL>http://pytools.codeplex.com/license</eulaURL>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
         <installerFile>
           <fileSize>2008</fileSize>
+          <!-- TODO what magic do we need for this? -->
+          <!--
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;appid=PythonToolsForVS</trackingURL>
+          -->
           <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
           <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
         </installerFile>
         <installCommands> 
           <msiInstall>
-            <!-- TODO command-line options? -->
             <msi>%InstallerFile%</msi>
           </msiInstall>
         </installCommands>
+        <!-- TODO need a forward link here -->
         <helpLink>http://pytools.codeplex.com/documentation</helpLink>
       </installer>
     </installers>
@@ -115,30 +100,30 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     <version>2.7.3</version>
     <summary>Python programming language</summary>
     <id>http://www.python.org</id>
-    <!-- TODO -->
-    <updated>2012-4-10T00:00:00Z</updated>
-    <longSummary>
-Python is a programming language that lets you work more quickly and integrate your systems more effectively. You can learn to use Python and see almost immediate gains in productivity and lower maintenance costs.
-    </longSummary>
+    <longSummary>Python is a dynamic, object-oriented, open source programming language.</longSummary>
+    <link href="http://wiki.python.org/moin/BeginnersGuide" />
     <productFamily>Python</productFamily>
     <published>2012-4-10T00:00:00Z</published>
-    <link href="http://wiki.python.org/moin/BeginnersGuide" />
+    <updated>2012-4-10T00:00:00Z</updated>
+    <author>
+      <name>Python Community</name>
+      <uri>http://www.python.org/</uri>
+    </author>
+    <dependency>
+      <productId>PythonDetectInstalls</productId>
+    </dependency>
     <images>
       <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
     </images>
     <keywords>
       <keywordId>FrameworkRuntime</keywordId>
-      <keywordId>ProductTools</keywordId>
     </keywords>
-    <author>
-      <name>Python Community</name>
-      <uri>http://www.python.org/</uri>
-    </author>
-
+    
     <discoveryHint>
       <or>
       <discoveryHint>
         <registry>
+          <!-- TODO this can pickup an x64 install of CPython as well... -->
           <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\2.7\InstallPath</keyPath>
         </registry>
       </discoveryHint>
@@ -148,8 +133,9 @@ Python is a programming language that lets you work more quickly and integrate y
         </registry>
       </discoveryHint>
       <discoveryHint>
+        <!-- If we installed it previously -->
         <file>
-          <filePath>%SystemDrive%\python27\python.exe</filePath>
+          <filePath>%TMP%\python_27_x86.bat</filePath>
         </file>
       </discoveryHint>
      </or>
@@ -159,29 +145,7 @@ Python is a programming language that lets you work more quickly and integrate y
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-	        <x64 />
-        </architectures>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
-        
         <eulaURL>http://docs.python.org/license.html</eulaURL>
-        
         <installerFile>
           <fileSize>15868</fileSize>
           <installerURL>http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi</installerURL>
@@ -192,6 +156,16 @@ Python is a programming language that lets you work more quickly and integrate y
             <msi>%InstallerFile%</msi>
             <properties>ALLUSERS=1</properties>
           </msiInstall>
+          <cmdLine>
+            <exe>powershell</exe>
+            <commandLineArguments>-command "echo 'C:\Python27\python.exe %*' | out-file -encoding ascii $env:TMP\python_27_x86.bat"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+          <cmdLine>
+            <exe>powershell</exe>
+            <commandLineArguments>-command "echo 'C:\Python27\Scripts\pip.exe %*' | out-file -encoding ascii $env:TMP\pip_27_x86.bat"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
         </installCommands>
         <helpLink>http://www.python.org/doc</helpLink>
       </installer>
@@ -200,20 +174,18 @@ Python is a programming language that lets you work more quickly and integrate y
 
   <!-- ##Install Helpers################################################### -->
   <entry>
-    <productId>FindPythonHelper</productId>
-    <title>Python Installation Helpers</title>
-    <version>0.1</version>
+    <productId>PythonDetectInstalls</productId>
+    <title>Python Installation Detector</title>
+    <version>0.9</version>
     <summary>Helper tools for installing Python</summary>
-    <!-- TODO need an 'id' element? -->
     <!-- TODO -->
     <updated>2012-4-10T00:00:00Z</updated>
-    <longSummary>
-      Includes a set of tools useful for installing CPython and PyPI-based packages.
-    </longSummary>
+    <longSummary>Includes a set of tools useful for detecting previous installations of CPython.</longSummary>
     <productFamily>Python</productFamily>
     <published>2012-4-10T00:00:00Z</published>
-    <!-- TODO -->
+    <!-- TODO pytools or github? -->
     <link href="http://pytools.codeplex.com" />
+    <!-- TODO forward link for PTVS logo -->
     <images>
       <icon>https://si0.twimg.com/profile_images/1266784094/ptoolslogo4_reasonably_small.png</icon>
     </images>
@@ -223,54 +195,23 @@ Python is a programming language that lets you work more quickly and integrate y
     </author>
     <searchExclude />
     <dependency>
-      <and>
-        <dependency>
-          <productId>Python27</productId>
-        </dependency>
-        <dependency>
-          <productId>PowerShell</productId>
-        </dependency>
-      </and>
+      <productId>PowerShell</productId>
     </dependency>
     <installers>
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
         <eulaURL>http://pytools.codeplex.com/license</eulaURL>
         <installerFile>
           <fileSize>2</fileSize>
-          <installerURL>http://pytools/demos/proto/FindPython.ps1</installerURL>
-          <sha1>eb7345e196844a5e9bce9e86236cf5ac07d76dc4</sha1>
+          <!-- TODO forward link for this -->
+          <installerURL>http://pytools/demos/production/DetectPythonInstalls.ps1</installerURL>
+          <sha1>e78db89de09d3250aca4b925476e8ad7dd0bc12a</sha1>
         </installerFile>
         <installCommands>
           <cmdLine>
             <exe>powershell</exe>
-            <commandLineArguments>-command "if ((get-executionpolicy) -eq 'Restricted') {set-executionpolicy RemoteSigned}"</commandLineArguments>
-            <ignoreExitCode>false</ignoreExitCode>
-          </cmdLine>
-          <cmdLine>
-            <exe>powershell</exe>
-            <commandLineArguments>-File "%InstallerFile%" 2.7 x86</commandLineArguments>
+            <commandLineArguments>-ExecutionPolicy RemoteSigned -File "%InstallerFile%"</commandLineArguments>
             <ignoreExitCode>false</ignoreExitCode>
           </cmdLine>
         </installCommands>
@@ -278,21 +219,15 @@ Python is a programming language that lets you work more quickly and integrate y
       </installer>
     </installers>
   </entry>
-
+  
   <!-- ##Distribute Module############################################### -->
   <entry>
     <productId>PyDistributeModule</productId>
     <title>distribute module (Python)</title>
     <version>0.6.25</version>
     <summary>Python's distribute module (prereq for installing PyPI)</summary>
-    <id>http://packages.python.org/distribute/</id>
-    <!-- TODO -->
     <updated>2012-4-10T00:00:00Z</updated>
-    <longSummary>
-Distribute is a fork of the Setuptools project.
-
-Distribute is intended to replace Setuptools as the standard method for working with Python module distributions.
-    </longSummary>
+    <longSummary>Distribute is a fork of the Setuptools project.</longSummary>
     <productFamily>Python</productFamily>
     <published>2011-11-29T00:00:00Z</published>
     <link href="http://packages.python.org/distribute/" />
@@ -323,7 +258,7 @@ Distribute is intended to replace Setuptools as the standard method for working 
     <dependency>
       <and>
         <dependency>
-          <productId>FindPythonHelper</productId>
+          <productId>PythonDetectInstalls</productId>
         </dependency>
         <dependency>
           <productId>Python27</productId>
@@ -334,26 +269,6 @@ Distribute is intended to replace Setuptools as the standard method for working 
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-	        <x64 />
-        </architectures>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
         <eulaURL>http://docs.python.org/license.html</eulaURL>
         <installerFile>
           <fileSize>15</fileSize>
@@ -371,8 +286,6 @@ Distribute is intended to replace Setuptools as the standard method for working 
       </installer>
     </installers>
   </entry>
-
-  
   
   <!-- ##PyPI############################################################## -->
   <entry>
@@ -380,12 +293,8 @@ Distribute is intended to replace Setuptools as the standard method for working 
     <title>PyPI</title>
     <version>1.0.2</version>
     <summary>Python's package index repository</summary>
-    <id>http://pypi.python.org/pypi</id>
-    <!-- TODO -->
     <updated>2011-7-16T00:00:00Z</updated>
-    <longSummary>
-The Python Package Index is a repository of software for the Python programming language.
-    </longSummary>
+    <longSummary>Python Package Index is a repository of freely available Python software.</longSummary>
     <productFamily>Python</productFamily>
     <published>2011-7-16T00:00:00Z</published>
     <link href="http://pypi.python.org/pypi" />
@@ -410,7 +319,7 @@ The Python Package Index is a repository of software for the Python programming 
           <productId>Python27</productId>
         </dependency>
         <dependency>
-          <productId>FindPythonHelper</productId>
+          <productId>PythonDetectInstalls</productId>
         </dependency>
         <dependency>
           <productId>PyDistributeModule</productId>
@@ -422,26 +331,6 @@ The Python Package Index is a repository of software for the Python programming 
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-	        <x64 />
-        </architectures>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
         <eulaURL>http://docs.python.org/license.html</eulaURL>
         <installerFile>
           <fileSize>84</fileSize>
@@ -466,12 +355,8 @@ The Python Package Index is a repository of software for the Python programming 
     <title>Django 1.4</title>
     <version>1.4</version>
     <summary>Python Web framework</summary>
-    <id>https://www.djangoproject.com/</id>
-    <!-- TODO -->
     <updated>2012-3-23T00:00:00Z</updated>
-    <longSummary>
-Django is a high-level Python Web framework that encourages rapid development and clean, pragmatic design.
-    </longSummary>
+    <longSummary>Django is a high-level Python Web framework.</longSummary>
     <productFamily>Python</productFamily>
     <images>
       <icon>https://www.djangoproject.com/m/img/site/hdr_logo.gif</icon>
@@ -479,8 +364,6 @@ Django is a high-level Python Web framework that encourages rapid development an
     <keywords>
       <keywordId>Server</keywordId>
       <keywordId>FrameworkRuntime</keywordId>
-      <keywordId>ProductTools</keywordId>
-      <keywordId>ProductSpotlight</keywordId>
     </keywords>
     <published>2012-3-23T00:00:00Z</published>
     <link href="https://www.djangoproject.com/" />
@@ -500,7 +383,7 @@ Django is a high-level Python Web framework that encourages rapid development an
           <productId>Python27</productId>
         </dependency>
         <dependency>
-          <productId>FindPythonHelper</productId>
+          <productId>PythonDetectInstalls</productId>
         </dependency>
         <dependency>
           <productId>PyPI</productId>
@@ -511,41 +394,26 @@ Django is a high-level Python Web framework that encourages rapid development an
     <installers>
       <installer>
         <id>1</id>
-        <languageId>en</languageId>
-        <architectures>
-          <x86 />
-  	      <x64 />
-        </architectures>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>        
+        <languageId>en</languageId>     
         <eulaURL>https://code.djangoproject.com/browser/django/trunk/LICENSE</eulaURL>
-        <installCommands> 
+        <installCommands>
           <cmdLine>
             <exe>%TMP%\pip_27_x86.bat</exe>
-            <commandLineArguments>install django==1.4</commandLineArguments>
+            <commandLineArguments>--log %TMP%\django.log install django==1.4</commandLineArguments>
             <ignoreExitCode>false</ignoreExitCode>
           </cmdLine>
         </installCommands>
+        <logFiles>
+          <location>%TMP%\django.log</location>
+        </logFiles>
         <helpLink>http://pypi.python.org/pypi/Django/1.4</helpLink>
       </installer>
     </installers>
   </entry>
 
   <!-- ##NumPy############################################################# -->
+  <!-- TODO next version???
+  
   <entry>
     <productId>NumPy</productId>
     <title>NumPy</title>
@@ -553,9 +421,7 @@ Django is a high-level Python Web framework that encourages rapid development an
     <published>2011-7-21T00:00:00Z</published>
     <updated>2011-7-21T00:00:00Z</updated>
     <summary>Numerical libraries for the Python programming language.</summary>
-    <longSummary>
-NumPy is the fundamental package for scientific computing with Python.
-    </longSummary>
+    <longSummary>NumPy is the fundamental numerical computing package for the Python programming language.</longSummary>
     <productFamily>Python</productFamily>
     <link href="http://numpy.scipy.org/" />
     <author>
@@ -566,8 +432,7 @@ NumPy is the fundamental package for scientific computing with Python.
       <icon>http://numpy.scipy.org/_static/numpy_logo.png</icon>
     </images>
     <keywords>
-      <keywordId>ProductTools</keywordId>
-      <keywordId>ProductSpotlight</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
     </keywords>
 
     <discoveryHint>
@@ -591,27 +456,7 @@ NumPy is the fundamental package for scientific computing with Python.
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <eulaURL>http://numpy.scipy.org/license.html#license</eulaURL>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
         <installerFile>
           <fileSize>6105</fileSize>
           <installerURL>http://downloads.sourceforge.net/project/numpy/NumPy/1.6.1/numpy-1.6.1-win32-superpack-python2.7.exe?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fnumpy%2Ffiles%2FNumPy%2F1.6.1%2F&amp;ts=1335236920&amp;use_mirror=superb-sea2</installerURL>
@@ -628,8 +473,10 @@ NumPy is the fundamental package for scientific computing with Python.
       </installer>
     </installers>
   </entry>
-
+  -->
+  
   <!-- ##SciPy############################################################# -->
+<!-- TODO next version??? 
   <entry>
     <productId>SciPy</productId>
     <title>SciPy</title>
@@ -637,9 +484,7 @@ NumPy is the fundamental package for scientific computing with Python.
     <published>2012-2-28T00:00:00Z</published>
     <updated>2012-2-28T00:00:00Z</updated>
     <summary>Scientific libraries for the Python programming language.</summary>
-    <longSummary>
-SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, and engineering.
-    </longSummary>
+    <longSummary>SciPy is the fundamental scientific computing package for the Python programming language.</longSummary>
     <productFamily>Python</productFamily>
     <link href="http://www.scipy.org/SciPy" />
     <author>
@@ -650,8 +495,7 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
       <icon>http://www.scipy.org/images/scipy_logo.gif</icon>
     </images>
     <keywords>
-      <keywordId>ProductTools</keywordId>
-      <keywordId>ProductSpotlight</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
     </keywords>
 
     <discoveryHint>
@@ -678,27 +522,7 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <eulaURL>http://www.scipy.org/License_Compatibility</eulaURL>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
         <installerFile>
           <fileSize>45981</fileSize>
           <installerURL>http://downloads.sourceforge.net/project/scipy/scipy/0.10.1/scipy-0.10.1-win32-superpack-python2.7.exe?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fscipy%2Ffiles%2Fscipy%2F0.10.1%2F&amp;ts=1335237545&amp;use_mirror=voxel</installerURL>
@@ -715,42 +539,42 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
       </installer>
     </installers>
   </entry>
+-->
 
-  <!-- ##Windows Azure SDK for Python Standard############################# -->
+  <!-- ##Windows Azure SDK for Python Core################################# -->
   <entry>
     <productId>AzurePythonSDKCore</productId>
-    <!-- TODO - update date-->
     <title>Windows Azure SDK for Python Core</title>
-    <version>0.1</version>
+    <version>0.9</version>
     <!-- TODO -->
     <published>2012-4-11T00:00:00Z</published>
     <!-- TODO -->
     <updated>2012-6-11T00:00:00Z</updated>
     <summary>Python development support for Windows Azure.</summary>
-    <longSummary>
-      The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.
-    </longSummary>
+    <longSummary>The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.</longSummary>
     <productFamily>Python</productFamily>
 
-    <!-- TODO we'll likely want this on www.windowsazure.com -->
-    <link href="http://pytools.codeplex.com" />
+    <!-- TODO forward link? -->
+    <link href="http://www.windowsazure.com/en-us/develop/python" />
     <author>
       <name>Microsoft's Python Tools Team</name>
+      <!-- TODO forward link? -->
       <uri>http://pytools.codeplex.com/</uri>
     </author>
     <searchExclude />
     <images>
-      <!-- TODO permanently host this somewhere and get LCA approval on it-->
-      <icon>http://pytools/demos/scottgu/logos/PythonAzureSDK_small.png</icon>
+      <!-- TODO forward link -->
+      <icon>http://pytools/demos/production/logos/PythonAzureSDK_small.png</icon>
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
     </keywords>
 
-    <!-- TODO 'pyzure' package?-->
+    <!-- TODO need to update this once we get this installed from PyPI -->
     <discoveryHint>
       <file>
-        <filePath>%SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</filePath>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\windowsazure\__init__.py</filePath>
       </file>
     </discoveryHint>
 
@@ -773,7 +597,7 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
           <productId>Python27</productId>
         </dependency>
         <dependency>
-          <productId>FindPythonHelper</productId>
+          <productId>PythonDetectInstalls</productId>
         </dependency>
         <dependency>
           <productId>Django</productId>
@@ -785,48 +609,21 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
-        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
-        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
-        <!-- TODO - talk to Dino 
-        <installerFile>
-          <fileSize>2008</fileSize>
-          <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
-          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
-        </installerFile>
-        -->
-        <!-- TODO talk to Dino -->
+        <!-- TODO this needs to exist... -->
+        <eulaURL>https://github.com/WindowsAzure/azure-sdk-for-python/blob/master/LICENSE.txt</eulaURL>
+        <!-- TODO This is completely fake.  Need our PyPI story in place to proceed further -->
         <installCommands>
           <cmdline>
             <exe>%windir%\system32\cmd.exe</exe>
-            <commandLineArguments>/C mkdir %SystemDrive%\Python27\Lib\site-packages\pyzure</commandLineArguments>
+            <commandLineArguments>/C mkdir %SystemDrive%\Python27\Lib\site-packages\windowsazure</commandLineArguments>
           </cmdline>
           <cmdline>
             <exe>%windir%\system32\cmd.exe</exe>
-            <commandLineArguments>/C type nul >> %SystemDrive%\Python27\Lib\site-packages\pyzure\__init__.py</commandLineArguments>
+            <commandLineArguments>/C type nul >> %SystemDrive%\Python27\Lib\site-packages\windowsazure\__init__.py</commandLineArguments>
           </cmdline>
         </installCommands>
-        <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
-        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
+        <!-- TODO we should have a forward link for this -->
+        <helpLink>https://www.windowsazure.com/en-us/develop/python</helpLink>
       </installer>
     </installers>
   </entry>
@@ -834,62 +631,35 @@ SciPy (pronounced "Sigh Pie") is open-source software for mathematics, science, 
   <!-- ##Windows Azure SDK for Python ##################################### -->
   <entry>
     <productId>WindowsAzurePythonSDK</productId>
-    <!-- TODO - update date-->
     <title>Windows Azure SDK for Python</title>
-    <version>0.1</version>
+    <version>0.9</version>
     <!-- TODO -->
     <published>2012-4-11T00:00:00Z</published>
     <!-- TODO -->
     <updated>2012-6-11T00:00:00Z</updated>
     <summary>Python development support for Windows Azure within Visual Studio.</summary>
-    <longSummary>
-The Windows Azure SDK for Python Tools provides developers with Python frameworks, packages, and Microsoft Visual Studio tools (if installed) for building scalable services for deployment to Windows Azure.
-    </longSummary>
+    <longSummary>The Windows Azure SDK for Python provides developers with Python frameworks, packages, and Microsoft Visual Studio tools (if installed) for building scalable services for deployment to Windows Azure.</longSummary>
     <productFamily>Python</productFamily>
 
     <!-- TODO we'll likely want this on www.windowsazure.com -->
-    <link href="http://pytools.codeplex.com" />
+    <link href="http://www.windowsazure.com/en-us/develop/python" />
     <author>
       <name>Microsoft's Python Tools Team</name>
       <uri>http://pytools.codeplex.com/</uri>
     </author>
     <images>
       <!-- TODO permanently host this somewhere and get LCA approval on it-->
-      <icon>http://pytools/demos/scottgu/logos/PythonAzureSDK_small.png</icon>
+      <icon>http://pytools/demos/production/logos/PythonAzureSDK_small.png</icon>
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
       <keywordId>ProductSpotlight</keywordId>
     </keywords>
 
-    <!-- TODO 'pyzure' package?-->
     <discoveryHint>
-      <and>
-        <discoveryHint>
-          <file>
-            <filePath>%SystemDrive%\Python27\Lib\site-packages\pyzure2\__init__.py</filePath>
-          </file>
-        </discoveryHint>
-        <!-- Python Tools for VS -->
-        <discoveryHint>
-          <or>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
-                <valueName>DisplayVersion</valueName>
-                <valueValue>1.1.50409.0</valueValue>
-              </registry>
-            </discoveryHint>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
-                <valueName>DisplayVersion</valueName>
-                <valueValue>1.1.50409.0</valueValue>
-              </registry>
-            </discoveryHint>
-          </or>
-        </discoveryHint>
-      </and>
+      <registry>
+        <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure SDK for Python</keyPath>
+      </registry>
     </discoveryHint>
 
     <dependency>
@@ -899,67 +669,36 @@ The Windows Azure SDK for Python Tools provides developers with Python framework
       <relatedProduct>
         <productId>PythonToolsForVS</productId>
       </relatedProduct>
+      <relatedProduct>
+        <productId>WindowsAzureToolsOnlyVS2010OrShell</productId>
+      </relatedProduct>
     </related>
 
     <installers>
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
-        <eulaURL>http://pytools.codeplex.com/license</eulaURL>
-        <osList>
-          <os>
-            <minimumVersion>
-              <osMajorVersion>5</osMajorVersion>
-              <osMinorVersion>0</osMinorVersion>
-              <spMajorVersion>0</spMajorVersion>
-            </minimumVersion>
-            <osTypes>
-              <Server />
-              <HomePremium />
-              <Ultimate />
-              <Enterprise />
-              <Business />
-            </osTypes>
-          </os>
-        </osList>
-        <!-- TODO - talk to Dino 
-        <installerFile>
-          <fileSize>2008</fileSize>
-          <installerURL>http://pytools.codeplex.com/Download/AttachmentDownload.ashx?ProjectName=pytools&amp;WorkItemId=690&amp;FileAttachmentId=369449</installerURL>
-          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
-        </installerFile>
-        -->
-        <!-- TODO talk to Dino -->
+        <eulaURL>https://github.com/WindowsAzure/azure-sdk-for-python/blob/master/LICENSE.txt</eulaURL>
         <installCommands>
           <cmdline>
-            <exe>%windir%\system32\cmd.exe</exe>
-            <commandLineArguments>/C mkdir %SystemDrive%\Python27\Lib\site-packages\pyzure2</commandLineArguments>
-          </cmdline>
-          <cmdline>
-            <exe>%windir%\system32\cmd.exe</exe>
-            <commandLineArguments>/C type nul >> %SystemDrive%\Python27\Lib\site-packages\pyzure2\__init__.py</commandLineArguments>
+            <exe>%SystemRoot%\System32\cmd.exe</exe>
+            <commandLineArguments>/C add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure SDK for Python" /ve /f</commandLineArguments>
+            <ignoreExitCode>true</ignoreExitCode>
           </cmdline>
         </installCommands>
         <!-- TODO probably want this under http://www.windowsazure.com/en-us/develop/python/ somewhere -->
-        <helpLink>http://pytools.codeplex.com/documentation</helpLink>
+        <helpLink>https://www.windowsazure.com/en-us/develop/python/</helpLink>
       </installer>
     </installers>
   </entry>
 
   <!-- ##Visual Studio 2010 Integrated Shell ############################## -->
-  <!-- TODO - other languages? -->
-  <!-- Visual Web Developer Express 2010 -->
   <entry>
     <productId>VS2010SI</productId>
     <title>Visual Studio 2010 Shell (Integrated)</title>
     <version>2010</version>
     <summary>The Visual Studio 2010 Shell (Integrated) Redistributable Package contains the runtime binaries that are required to deploy an application that is based on the Visual Studio 2010 Shell (Integrated).</summary>
-    <id>http://www.microsoft.com/web/webpi/vs2010si</id>
     <updated>2010-4-12T12:00:00Z</updated>
     <longSummary>The Visual Studio Shell (integrated mode) provides the foundation on which you can seamlessly integrate tools and programming languages within Visual Studio. The Visual Studio Shell (integrated mode) does not contain any programming language, so it provides the perfect foundation to deploy a development environment for your own language. The Visual Studio Shell (integrated mode) seamlessly integrates with Visual Studio 2010 Professional and above. Any tools and programming languages that run inside the Visual Studio Shell (integrated mode) will run together with Visual Studio 2010 if they are also installed on the same machine. By using the Visual Studio Shell (integrated mode), you will not need to make Visual Studio a pre-requisite on your user machines.</longSummary>
     <published>2010-4-12T12:00:00Z</published>
@@ -973,7 +712,6 @@ The Windows Azure SDK for Python Tools provides developers with Python framework
     </author>
     <keywords>
       <keywordId>ProductTools</keywordId>
-      <keywordId>ProductSpotlight</keywordId>
     </keywords>
     <discoveryHint>
       <or>
@@ -1019,23 +757,23 @@ The Windows Azure SDK for Python Tools provides developers with Python framework
         <errorMessage>You must uninstall Visual Studio 2010 RC before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
     </incompatibilities>
-    <!-- TODO anything to do here? -->
     <terms>
       <termsText>-Visual Studio will receive and display online RSS content. For further information refer to the Readme link.</termsText>
-      <termsLink>http://go.microsoft.com/fwlink/?LinkID=151235</termsLink>
+      <termsLink>http://go.microsoft.com/fwlink/?LinkID=133421</termsLink>
       <termsLinkText>Readme</termsLinkText>
     </terms>
     <installers>
-      <!-- x86 English -->
+      <!-- English -->
       <installer>
         <id>1</id>
-        <!-- TODO -->
         <languageId>en</languageId>
         <architectures>
           <x86 />
           <x64 />
         </architectures>
-        <osList idref="NETFramework4OSList" />
+
+        <osList idref="OSList_VS2010_Shell"></osList>
+        
         <!-- TODO -->
         <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
         <showsUI>True</showsUI>
@@ -1080,11 +818,657 @@ The Windows Azure SDK for Python Tools provides developers with Python framework
             </returnCodeMappings>
           </cmdline>
         </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+
+      <!-- Chinese Traditional -->
+      <installer>
+        <id>10</id>
+        <languageId>zh-tw</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=zh-tw&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f5%2f1%2fA%2f51A0904D-1D73-4A60-89E6-9B1764627540%2fVSIntShell.exe</installerURL>
+          <sha1>24dba1c8baf0ff205ec6feabfd3bbb5eb53794d3</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+      
+      <!-- Chinese Simplified -->
+      <installer>
+        <id>9</id>
+        <languageId>zh-cn</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=zh-cn&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fD%2fD%2f3%2fDD3BC072-755D-4E99-8D76-E19F0073FBEC%2fVSIntShell.exe</installerURL>
+          <sha1>00139e88447a034afca6773261f63647d16be114</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+
+      <!-- Spanish -->
+      <installer>
+        <id>8</id>
+        <languageId>es</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=es&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fB%2f1%2f4%2fB1404B77-7FDF-41FF-89A9-511AF795570B%2fVSIntShell.exe</installerURL>
+          <sha1>fbbe33d4e1d14f0fabc7f764303407a0c27a61f6</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+
+      <!-- Russian -->
+      <installer>
+        <id>7</id>
+        <languageId>ru</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=ru&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f2%2f5%2f1%2f251A33EB-73F0-4ED1-B1A9-878106A296EF%2fVSIntShell.exe</installerURL>
+          <sha1>cc6a782937b46dd96d2e85dc2de515ba9c1be64e</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+
+      <!-- Korean -->
+      <installer>
+        <id>6</id>
+        <languageId>ko</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=ko&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f8%2f8%2f5%2f885443BF-EF97-4E1F-9299-A26C36C16EF7%2fVSIntShell.exe</installerURL>
+          <sha1>39f636107c2988c6d74d1c7413113d19734d6713</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+      
+      <!-- Japanese -->
+      <installer>
+        <id>5</id>
+        <languageId>ja</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=ja&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fE%2fC%2f5%2fEC5F3306-BA20-4791-8716-CE60BD3F10BA%2fVSIntShell.exe</installerURL>
+          <sha1>ece5620377cd4bc25805c38505f6ee22a6c6659e</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+
+      <!-- Italian -->
+      <installer>
+        <id>4</id>
+        <languageId>it</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=it&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fB%2f2%2fC%2fB2C5D31B-38D1-481F-B774-4AF38112E3BB%2fVSIntShell.exe</installerURL>
+          <sha1>23e710191c4e49357ec5ac53db0a66840b075e7e</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+      
+      <!-- German -->
+      <installer>
+        <id>3</id>
+        <languageId>de</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=de&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fF%2fC%2fA%2fFCA00864-2E2C-4D2E-8200-C292818A8F12%2fVSIntShell.exe</installerURL>
+          <sha1>e97f9373bb7f0ad01930beb1124cacf8046f5e25</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+      
+      <!-- French -->
+      <installer>
+        <id>2</id>
+        <languageId>fr</languageId>
+        <architectures>
+          <x86 />
+          <x64 />
+        </architectures>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <!-- TODO -->
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=188978</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=fr&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f1%2f4%2f3%2f14329506-B3BB-48AA-94AE-53A0098FAB16%2fVSIntShell.exe</installerURL>
+          <sha1>f7740e37a0aa50ef364953cdcb0711f823b2d029</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <!-- TODO forward link -->
         <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
       </installer>
     </installers>
   </entry>
 
+  <!-- TODO this change should be made in tools.xml -->
+  <entry>
+    <productId>WindowsAzureToolsOnlyVS2010OrShell</productId>
+    <title resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_Title">Windows Azure Tools for Microsoft Visual Studio 2010 - November 2011</title>
+    <version>1.6.41103.1601</version>
+    <summary resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_Summary">Add-on for Microsoft Visual Studio 2010 for developing Windows Azure applications.</summary>
+    <id>http://www.microsoft.com/web/webpi/toolsforsilverlight_3</id>
+    <updated>2011-06-15T16:30:00Z</updated>
+    <longSummary resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_LongSummary">Windows Azure Tools for Microsoft Visual Studio 2010 extends Visual Studio 2010 and Visual Web Developer 2010 Express Edition to enable you to create, build, debug, run, and package scalable services on Windows Azure.</longSummary>
+    <published>2011-06-10T12:30:00Z</published>
+    <link href="http://go.microsoft.com/fwlink/?LinkID=231172" />
+    <searchExclude />
+    <images>
+      <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/wa_vs_graphic.png</icon>
+    </images>
+    <author>
+      <name>Microsoft</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <discoveryHint>
+      <and>
+        <discoveryHint>
+          <or>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\1.6</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\1.6</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+          </or>
+        </discoveryHint>
+        <discoveryHint>
+          <or>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\Core</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\Core</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+          </or>
+        </discoveryHint>
+      </and>
+    </discoveryHint>
+    <dependency>
+
+      <and>
+        <dependency>
+          <or>
+            <dependency>
+              <productId>VS2010SI</productId>
+            </dependency>
+            <dependency>
+              <productId>VWD_RTW</productId>
+            </dependency>
+            <dependency>
+              <productId>VSVWD2010Feature</productId>
+            </dependency>
+          </or>
+        </dependency>
+        <dependency>
+          <productId>WindowsAzureEmulator</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <incompatibilities>
+      <incompatibleProduct>
+        <productId>VS2010Beta1</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010Beta1_ErrorMessage">You must uninstall Beta 1 of Visual Studio 2010 before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010Beta2_ErrorMessage">You must uninstall Beta 2 of Visual Studio 2010 before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2Express</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010Beta2Express_ErrorMessage">You must uninstall Beta 2 of Visual Web Developer 2010 Express before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010RC</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010RC_ErrorMessage">You must uninstall Visual Studio 2010 RC before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+    </incompatibilities>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <osList>
+          <os>
+
+            <minimumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>1</spMajorVersion>
+            </minimumVersion>
+          </os>
+        </osList>
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/WindowsAzureToolsforMSVS2010Supp.htm</eulaURL>
+        <installerFile>
+          <fileSize>11000</fileSize>
+          <installerURL>http://download.microsoft.com/download/D/F/4/DF442AB0-FAAE-44FF-A04E-F41E72FE6B6F/WindowsAzureTools.VS100.exe</installerURL>
+          <trackingURL>http://go.microsoft.com/fwlink/?LinkID=196933</trackingURL>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/quiet /norestart /log %temp%\WindowsAzureToolsInstall.txt</commandLineArguments>
+          </cmdline>
+        </installCommands>
+        <logFiles>
+          <location>%temp%\WindowsAzureToolsInstall.txt</location>
+        </logFiles>
+        <helpLink>http://forums.iis.net/1155.aspx</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
   <!-- ##UI: new TAB Definition############################################ -->
   <tabs>
     <tab>
@@ -1102,8 +1486,10 @@ The Windows Azure SDK for Python Tools provides developers with Python framework
             <productId>WindowsAzurePythonSDK</productId>
             <productId>Django</productId>
             <productId>PythonToolsForVS</productId>
+            <!-- TODO
             <productId>NumPy</productId>
             <productId>SciPy</productId>
+            -->
           </recommended>
         </pillar>
       </pillarTab>
@@ -1119,4 +1505,33 @@ The Windows Azure SDK for Python Tools provides developers with Python framework
       </include>
     </grouping>
   </groupings>
+
+  <!-- TODO this should be added the main feed.  I cannot get it working
+       with references to main.xml os elements -->
+<!-- 
+  <osLists>
+    <osList id="OSList_VS2010_Shell">
+      <os idref="OS_VWD2010_XP32Bit" />
+      <os idref="OS_VWD2010_2K3_2K3R2" />
+      <os idref="OS_VWD2010_Vista_2008" />
+      <os idref="NETFramework4OSList_Win7Plus" />
+      <os idref="OS_VWD2010_XP64Bit" />
+      <os idref="OS_VWD2010_2K3_2K3R2" />
+      <os idref="OS_VWD2010_Vista_2008" />
+      <os idref="NETFramework4OSList_Win7Plus" />
+    </osList>
+  </osLists>
+  -->
+  <osLists>
+    <osList id="OSList_VS2010_Shell">
+      <os>
+          <!-- WinXP only, SP3+ on 32 bit architecture -->
+          <minimumVersion>
+            <osMajorVersion>5</osMajorVersion>
+            <osMinorVersion>1</osMinorVersion>
+            <spMajorVersion>3</spMajorVersion>
+          </minimumVersion>
+      </os>
+    </osList>
+  </osLists>
 </feed>
