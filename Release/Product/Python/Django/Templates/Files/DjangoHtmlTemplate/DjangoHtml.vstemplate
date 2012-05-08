@@ -8,6 +8,6 @@
     <SortOrder>100</SortOrder>
   </TemplateData>
   <TemplateContent>
-    <ProjectItem TargetFileName="DjangoTemplate.html">DjangoTemplate.html</ProjectItem>
+    <ProjectItem TargetFileName="$fileinputname$.$fileinputextension$">DjangoTemplate.html</ProjectItem>
   </TemplateContent>
 </VSTemplate>
