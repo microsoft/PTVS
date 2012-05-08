@@ -148,10 +148,22 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Debugger\DjangoLauncher.cs" />
+    <Compile Include="Debugger\DjangoLauncherProvider.cs" />
+    <Compile Include="Debugger\DjangoLauncherOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Debugger\DjangoLauncherOptions.Designer.cs">
+      <DependentUpon>DjangoLauncherOptions.cs</DependentUpon>
+    </Compile>
     <Compile Include="DjangoEditorFactory.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="Project\DjangoProjectFactory.cs" />
     <Compile Include="Project\DjangoProject.cs" />
+    <Compile Include="Project\NewAppDialog.xaml.cs">
+      <DependentUpon>NewAppDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Project\NewAppDialogViewModel.cs" />
     <Compile Include="Project\WaitForValidationDialog.xaml.cs">
       <DependentUpon>WaitForValidationDialog.xaml</DependentUpon>
     </Compile>
@@ -185,6 +197,22 @@
     <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Templates\Files\DjangoNewAppFiles\models.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\Files\DjangoNewAppFiles\tests.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\Files\DjangoNewAppFiles\views.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Templates\Files\DjangoNewAppFiles\__init__.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Templates\Projects\AzureDjangoProject\DjangoApp.pyproj">
       <SubType>Designer</SubType>
     </Content>
@@ -211,6 +239,9 @@
     <Resource Include="Templates\Projects\DjangoProject\__TemplateIcon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Debugger\DjangoLauncherOptions.resx">
+      <DependentUpon>DjangoLauncherOptions.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -238,6 +269,7 @@
   <ItemGroup>
     <VSCTCompile Include="Django.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
@@ -258,6 +290,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="Project\NewAppDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Project\WaitForValidationDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

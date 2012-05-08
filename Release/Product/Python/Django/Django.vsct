@@ -50,12 +50,21 @@
          group as the part of a menu contained between two lines. The parent of a group 
          must be a menu. -->
     <Buttons>
-      <Button guid="guidDjangoCmdSet" id="cmdidValidateDjangoApp" priority="0x0000" type="Button">
+      <Button guid="guidDjangoCmdSet" id="cmdidValidateDjangoApp" priority="0x0600" type="Button">
         <Parent guid="guidVenusCmdId" id="IDG_CTX_BUILD"/>
         <Icon guid="guidImages" id="bmpPic1"/>
         
         <Strings>
-          <ButtonText>Validate Django App</ButtonText>
+          <ButtonText>Validate Django App...</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x700" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
+        <Icon guid="guidImages" id="bmpPic2"/>
+
+        <Strings>
+          <ButtonText>Add new Django app...</ButtonText>
         </Strings>
       </Button>
     </Buttons>
@@ -104,6 +113,7 @@
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidDjangoCmdSet" value="{5b3281a5-d037-4e84-93aa-a6819304dbd9}">
       <IDSymbol name="cmdidValidateDjangoApp" value ="0x1001"/>
+      <IDSymbol name="cmdidStartApp" value ="0x1002"/>
     </GuidSymbol>
     
     <GuidSymbol name="guidDjangoEditorFactory" value="{96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f}" />

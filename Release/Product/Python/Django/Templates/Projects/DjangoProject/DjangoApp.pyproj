@@ -8,6 +8,7 @@
     <StartupFile>$safeprojectname$.py</StartupFile>
     <SearchPath></SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
+    <LaunchProvider>Django launcher</LaunchProvider>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -19,10 +20,10 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$safeprojectname$\__init__.py" />
-    <Compile Include="$safeprojectname$\manage.py" />
-    <Compile Include="$safeprojectname$\settings.py" />
-    <Compile Include="$safeprojectname$\urls.py" />
+    <Compile Include="__init__.py" />
+    <Compile Include="manage.py" />
+    <Compile Include="settings.py" />
+    <Compile Include="urls.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

@@ -14,15 +14,17 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Django.Project {
     class DjangoProject : FlavoredProject {
@@ -55,6 +57,15 @@ namespace Microsoft.PythonTools.Django.Project {
                             return VSConstants.S_OK;
                     }
                 }
+            } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
+                for (int i = 0; i < prgCmds.Length; i++) {
+                    switch (prgCmds[i].cmdID) {
+                        case PkgCmdIDList.cmdidStartNewApp:
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            return VSConstants.S_OK;
+                    }
+                }
+
             }
 
             return base.QueryStatusCommand(itemid, ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
@@ -72,52 +83,80 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
-                    case PkgCmdIDList.cmdidValidateDjangoApp:
-                        var pyProj = innerVsHierarchy.GetPythonInterpreterFactory();
-                        if (pyProj != null) {
-                            
-                            
-                            
-                            
-
-                            var path = pyProj.Configuration.InterpreterPath;
-                            var psi = new ProcessStartInfo(path, "manage.py validate");
-                            
-                            object projectDir;
-                            ErrorHandler.ThrowOnFailure(innerVsHierarchy.GetProperty(
-                                (uint)VSConstants.VSITEMID.Root, 
-                                (int)__VSHPROPID.VSHPROPID_ProjectDir, 
-                                out projectDir)
-                            );
-
-                            object projectName;
-                            ErrorHandler.ThrowOnFailure(innerVsHierarchy.GetProperty(
-                                (uint)VSConstants.VSITEMID.Root,
-                                (int)__VSHPROPID.VSHPROPID_ProjectName,
-                                out projectName)
-                            );
-
-                            // TODO: Using the project name to find manage.py here isn't quite right.  Do we search
-                            // for manage.py, do we tag it in some special way?
-                            psi.WorkingDirectory = System.IO.Path.Combine(projectDir.ToString(), projectName.ToString());
-
-                            psi.CreateNoWindow = true;
-                            psi.UseShellExecute = false;
-                            psi.RedirectStandardOutput = true;
-                            psi.RedirectStandardError = true;
-                            
-                            var proc = Process.Start(psi);
-                            var dialog = new WaitForValidationDialog(proc);
-
-                            ShowValidationDialog(dialog, proc);
-                        } else {
-                            MessageBox.Show("Could not find Python interpreter for project.");
-                        }
-                        break;
+                    case PkgCmdIDList.cmdidValidateDjangoApp: 
+                        ValidateDjangoApp(); 
+                        return VSConstants.S_OK;
+                    case PkgCmdIDList.cmdidStartNewApp: 
+                        StartNewApp(); 
+                        return VSConstants.S_OK;
                 }
             }
 
             return base.ExecCommand(itemid, ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        private void StartNewApp() {
+            var dialog = new NewAppDialog();
+            bool? res = dialog.ShowDialog();
+            if (res != null && res.Value) {
+                object projectObj;
+                ErrorHandler.ThrowOnFailure(
+                    innerVsHierarchy.GetProperty(
+                        VSConstants.VSITEMID_ROOT,
+                        (int)__VSHPROPID.VSHPROPID_ExtObject,
+                        out projectObj
+                    )
+                );
+                
+                // TODO: Check if app already exists
+                
+                var project = projectObj as EnvDTE.Project;
+                if (project != null) {
+                    var newFolder = project.ProjectItems.AddFolder(dialog.ViewModel.Name);
+                    var newAppFilesDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Templates", "Files", "DjangoNewAppFiles");
+                    foreach (string file in Directory.GetFiles(newAppFilesDir)) {
+                        newFolder.Collection.AddFromTemplate(file, Path.GetFileName(file));
+                    }
+                }
+            }
+        }
+
+        private void ValidateDjangoApp() {
+            var proc = RunManageCommand("validate");
+            if (proc != null) {
+                var dialog = new WaitForValidationDialog(proc);
+
+                ShowValidationDialog(dialog, proc);
+            } else {
+                MessageBox.Show("Could not find Python interpreter for project.");
+            }
+        }
+
+        private Process RunManageCommand(string arguments) {
+            var pyProj = innerVsHierarchy.GetPythonInterpreterFactory();
+            if (pyProj != null) {
+                var path = pyProj.Configuration.InterpreterPath;
+                var psi = new ProcessStartInfo(path, "manage.py " + arguments);
+
+                object projectDir;
+                ErrorHandler.ThrowOnFailure(innerVsHierarchy.GetProperty(
+                    (uint)VSConstants.VSITEMID.Root,
+                    (int)__VSHPROPID.VSHPROPID_ProjectDir,
+                    out projectDir)
+                );
+
+                if (projectDir != null) {
+                    psi.WorkingDirectory = projectDir.ToString();
+
+                    psi.CreateNoWindow = true;
+                    psi.UseShellExecute = false;
+                    psi.RedirectStandardOutput = true;
+                    psi.RedirectStandardError = true;
+
+                    return Process.Start(psi);
+                }
+            }
+            return null;            
         }
 
         private static void ShowValidationDialog(WaitForValidationDialog dialog, Process proc) {
