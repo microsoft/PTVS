@@ -28,6 +28,7 @@ VsVars32
 
 # add tools to path
 $Env:Path = $TCWBToolsBin + ";" + $Env:Path;
+$env:PTVS_DEV="true"
 
 # set environment var for codereview.bat
 if ( $TfsWorkspace -ne '' )

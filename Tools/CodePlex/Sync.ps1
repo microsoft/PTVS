@@ -1,4 +1,4 @@
-param( [string] $direction, [string]$hg_repo, [string]$tfs_repo)
+param( [string] $direction, [string]$hg_repo, [string]$tfs_repo, [string]$commit_msg = "")
 
 pushd
 
@@ -50,7 +50,11 @@ function commit_tfs($tfs_repo) {
 
 function commit_hg($hg_repo) {
 	cd $hg_repo
-	hg commit
+    if ($commit_msg -ne "") {
+        hg commit -m $commit_msg
+    } else {
+        hg commit
+    }    
 	hg push 
 }
 
