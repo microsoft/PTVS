@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 }
                             }
 
-                            if (!recalc && change.NewSpan.End < e.After.Length) {
+                            if (!recalc && change.NewSpan.Start + 2 <= e.After.Length) {
                                 // check if the inserted char plus the char after us makes a template tag
                                 var newText = e.After.GetText(new Span(change.NewSpan.Start, 2));
                                 if (Array.IndexOf(_templateTags, newText) != -1) {

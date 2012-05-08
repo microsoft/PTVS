@@ -62,7 +62,17 @@ namespace AnalysisTest {
             );
         }
 
+        [TestMethod]
+        public void SingleTrailingChar() {
+            foreach(var code in new[] { "{{foo}}\n", "{{foo}}a" }) {
+                TokenizerTest(code,
+                    new TemplateToken(TemplateTokenKind.Variable, 0, 6),
+                    new TemplateToken(TemplateTokenKind.Text, 7, 7)
+                );
+            }
+        }
 
+        // 
         struct TemplateTokenResult {
             public readonly TemplateToken Token;
             public readonly char? Start, End;

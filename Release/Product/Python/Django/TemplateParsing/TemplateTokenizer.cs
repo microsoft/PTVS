@@ -43,16 +43,17 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public TemplateToken? GetNextToken() {
             int start = _position;
             TemplateToken? res;
+            int curChar;
             if (_readToken != null) {
                 res = _readToken;
                 _readToken = null;
                 return res;
-            } else if(ReadChar() == '{') {
+            } else if ((curChar = ReadChar()) == '{') {
                 res = TryReadTemplateTag(_position - 1);
                 if (res != null) {
                     return res;
                 }
-            } else if (PeekChar() == -1) {
+            } else if (curChar == -1) {
                 return null;
             }
 
