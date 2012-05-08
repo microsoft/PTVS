@@ -16,13 +16,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnalysisTest {
     [TestClass]
     public class DjangoTemplateParserTests {
+        #region Filter parser tests
+
         [TestMethod]
         public void FilterRegexTests() {
             var testCases = new[] { 
@@ -45,14 +46,34 @@ namespace AnalysisTest {
                 new { Got = ("foo|bar:-100.0"), Expected =  DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "-100.0", 8)) },
                 new { Got = ("foo|bar:baz.quox"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Variable("bar", 4, "baz.quox", 8)) },
                 new { Got = ("foo|bar:baz"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Variable("bar", 4, "baz", 8)) },
-            };
-            
+
+                new { Got = ("{{ 100 }}"), Expected = DjangoVariable.Number("100", 3) },
+                new { Got = ("{{ 100.0 }}"), Expected = DjangoVariable.Number("100.0", 3) },
+                new { Got = ("{{ +100 }}"), Expected = DjangoVariable.Number("+100", 3) },
+                new { Got = ("{{ -100 }}"), Expected = DjangoVariable.Number("-100", 3) },
+                new { Got = ("{{ 'foo' }}"), Expected = DjangoVariable.Constant("'foo'", 3) },
+                new { Got = ("{{ \"foo\" }}"), Expected = DjangoVariable.Constant("\"foo\"", 3) },
+                new { Got = ("{{ foo }}"), Expected = DjangoVariable.Variable("foo", 3) },
+                new { Got = ("{{ foo.bar }}"), Expected = DjangoVariable.Variable("foo.bar", 3) },
+                new { Got = ("{{ foo|bar }}"), Expected = DjangoVariable.Variable("foo", 3, new DjangoFilter("bar", 7)) },                
+                new { Got = ("{{ foo|bar|baz }}"), Expected = DjangoVariable.Variable("foo", 3, new DjangoFilter("bar", 7), new DjangoFilter("baz", 11)) },
+                new { Got = ("{{ foo|bar:'foo' }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Constant("bar", 7, "'foo'", 11)) },
+                new { Got = ("{{ foo|bar:42 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "42", 11)) },
+                new { Got = ("{{ foo|bar:\"foo\" }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Constant("bar", 7, "\"foo\"", 11)) },
+                new { Got = ("{{ foo|bar:100 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "100", 11)) },
+                new { Got = ("{{ foo|bar:100.0 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "100.0", 11)) },
+                new { Got = ("{{ foo|bar:+100.0 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "+100.0", 11)) },
+                new { Got = ("{{ foo|bar:-100.0 }}"), Expected =  DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "-100.0", 11)) },
+                new { Got = ("{{ foo|bar:baz.quox }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Variable("bar", 7, "baz.quox", 11)) },
+                new { Got = ("{{ foo|bar:baz }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Variable("bar", 7, "baz", 11)) },
+};
+
             foreach (var testCase in testCases) {
                 Console.WriteLine(testCase.Got);
 
                 var got = DjangoVariable.Parse(testCase.Got);
 
-                ValidateFilter(testCase.Expected, got);    
+                ValidateFilter(testCase.Expected, got);
             }
         }
 
@@ -61,17 +82,62 @@ namespace AnalysisTest {
             Assert.AreEqual(expected.Expression.Kind, got.Expression.Kind);
             Assert.AreEqual(expected.ExpressionStart, got.ExpressionStart);
             Assert.AreEqual(expected.Filters.Length, got.Filters.Length);
-            for(int i = 0; i<expected.Filters.Length; i++) {
+            for (int i = 0; i < expected.Filters.Length; i++) {
                 if (expected.Filters[i].Arg == null) {
                     Assert.AreEqual(null, got.Filters[i].Arg);
                 } else {
                     Assert.AreEqual(expected.Filters[i].Arg.Value, got.Filters[i].Arg.Value);
                     Assert.AreEqual(expected.Filters[i].Arg.Kind, got.Filters[i].Arg.Kind);
+                    Assert.AreEqual(expected.Filters[i].ArgStart, got.Filters[i].ArgStart);
                 }
                 Assert.AreEqual(expected.Filters[i].Filter, got.Filters[i].Filter);
-                Assert.AreEqual(expected.Filters[i].ArgStart, got.Filters[i].ArgStart);
             }
         }
+
+        #endregion
+
+        #region Block parser tests
+
+        [TestMethod]
+        public void BlockParserTests() {
+            var testCases = new[] { 
+                new { Got = ("for x in bar"), Expected = new DjangoForBlock(0, 6) },
+            };
+
+            foreach (var testCase in testCases) {
+                Console.WriteLine(testCase.Got);
+
+                var got = DjangoBlock.Parse(testCase.Got);
+
+                ValidateBlock(testCase.Expected, got);
+            }
+        }
+
+        private static Dictionary<Type, Action<DjangoBlock, DjangoBlock>> _blockValidators = MakeBlockValidators();
+
+        private static Dictionary<Type, Action<DjangoBlock, DjangoBlock>> MakeBlockValidators() {
+            return new Dictionary<Type, Action<DjangoBlock, DjangoBlock>>() {
+                { typeof(DjangoForBlock), ValidateForBlock }
+            };
+        }
+
+        private static void ValidateForBlock(DjangoBlock expected, DjangoBlock got) {
+            DjangoForBlock forExpected = (DjangoForBlock)expected;
+            DjangoForBlock forGot = (DjangoForBlock)got;
+
+            Assert.AreEqual(forExpected.Start, forGot.Start);
+            Assert.AreEqual(forExpected.InStart, forGot.InStart);
+        }
+
+        private void ValidateBlock(DjangoBlock expected, DjangoBlock got) {
+            Assert.AreEqual(expected.GetType(), got.GetType());
+
+            _blockValidators[expected.GetType()](expected, got);
+        }
+
+        #endregion
+
+        #region Template tokenizer tests
 
         [TestMethod]
         public void TestSimpleVariable() {
@@ -114,7 +180,7 @@ namespace AnalysisTest {
 
         [TestMethod]
         public void SingleTrailingChar() {
-            foreach(var code in new[] { "{{foo}}\n", "{{foo}}a" }) {
+            foreach (var code in new[] { "{{foo}}\n", "{{foo}}a" }) {
                 TokenizerTest(code,
                     new TemplateToken(TemplateTokenKind.Variable, 0, 6),
                     new TemplateToken(TemplateTokenKind.Text, 7, 7)
@@ -203,7 +269,7 @@ namespace AnalysisTest {
 </body>
 </html>";
 
-            TokenizerTest(code, 
+            TokenizerTest(code,
                 new TemplateTokenResult(
                     new TemplateToken(TemplateTokenKind.Text, 0, code.IndexOf("<p>") + 2),
                     '<',
@@ -297,5 +363,7 @@ namespace AnalysisTest {
                 }
             }
         }
+
+        #endregion
     }
 }

@@ -19,13 +19,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -34,13 +34,15 @@ using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
+    [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
     class DjangoProject : FlavoredProject {
         internal DjangoPackage _package;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
         private static ImageList _images;
-        internal Dictionary<string, string> _tags = new Dictionary<string, string>();
-        internal Dictionary<string, string> _filters = new Dictionary<string, string>();
+        internal Dictionary<string, HashSet<AnalysisValue>> _tags = new Dictionary<string, HashSet<AnalysisValue>>();
+        internal Dictionary<string, HashSet<AnalysisValue>> _filters = new Dictionary<string, HashSet<AnalysisValue>>();
+        internal Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>> _templateFiles = new Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>>(StringComparer.OrdinalIgnoreCase);
 
         #region IVsAggregatableProject
 
@@ -74,17 +76,22 @@ namespace Microsoft.PythonTools.Django.Project {
                         var dirName = Path.GetDirectoryName(loc.FilePath);
                         projAnalyzer.AnalyzeDirectory(dirName);
                         analyzer.SpecializeFunction("django.template.loader", "render_to_string", RenderToStringProcessor);
+
                         analyzer.SpecializeFunction("django.template.base.Library", "filter", FilterProcessor);
                         analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor);
                         analyzer.SpecializeFunction("django.template.base.Parser", "parse", ParseProcessor);
                         analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library");
+
+                        analyzer.SpecializeFunction("django.template.loader", "get_template", GetTemplateProcessor);
+                        analyzer.SpecializeFunction("django.template.context", "Context", ContextClassProcessor);
+                        analyzer.SpecializeFunction("django.template.base.Template", "render", TemplateRenderProcessor);
                         break;
                     }
                 }
             }
         }
 
-        private void ParseProcessor(CallExpression call, CallInfo callInfo) {
+        private IEnumerable<AnalysisValue> ParseProcessor(CallExpression call, CallInfo callInfo) {
             // def parse(self, parse_until=None):
             // We want to find closing tags here passed to parse_until...
             if (callInfo.NormalArgumentCount >= 2) {
@@ -100,31 +107,20 @@ namespace Microsoft.PythonTools.Django.Project {
                     }
                 }
             }
-        }
-
-        private static string GetConstantString(AnalysisValue value) {
-            var constName = value.GetConstantValue();
-            if (constName != null) {
-                string unicodeName = constName as string;
-                AsciiString asciiName;
-                if (unicodeName != null) {
-                    return unicodeName;
-                } else if ((asciiName = constName as AsciiString) != null) {
-                    return asciiName.String;
-                }
-            } 
             return null;
         }
 
-        private void FilterProcessor(CallExpression call, CallInfo callInfo) {
+        private IEnumerable<AnalysisValue> FilterProcessor(CallExpression call, CallInfo callInfo) {
             ProcessTags(callInfo, _filters);
+            return null;
         }
 
-        private void TagProcessor(CallExpression call, CallInfo callInfo) {
+        private IEnumerable<AnalysisValue> TagProcessor(CallExpression call, CallInfo callInfo) {
             ProcessTags(callInfo, _tags);
+            return null;
         }
 
-        private static void ProcessTags(CallInfo callInfo, Dictionary<string, string> tags) {
+        private static void ProcessTags(CallInfo callInfo, Dictionary<string, HashSet<AnalysisValue>> tags) {
             if (callInfo.NormalArgumentCount >= 3) {
                 // library.filter(name, value)
                 foreach (var name in callInfo.GetArgument(1)) {
@@ -150,42 +146,126 @@ namespace Microsoft.PythonTools.Django.Project {
             }            
         }
 
-        private static void RegisterTag(Dictionary<string, string> tags, string name) {
-            tags[name] = name;
+        private static void RegisterTag(Dictionary<string, HashSet<AnalysisValue>> tags, string name, IEnumerable<AnalysisValue> value = null) {
+            HashSet<AnalysisValue> set;
+            if (!tags.TryGetValue(name, out set)) {
+                tags[name] = set = new HashSet<AnalysisValue>();
+            }
+            if (value != null) {
+                foreach (var curVal in value) {
+                    set.Add(curVal);
+                }
+            }
         }
 
-        private Dictionary<string, Dictionary<string, string>> _variables = new Dictionary<string, Dictionary<string, string>>();
-
-        private void RenderToStringProcessor(CallExpression call, CallInfo callInfo) {
+        private IEnumerable<AnalysisValue> RenderToStringProcessor(CallExpression call, CallInfo callInfo) {
             if (callInfo.NormalArgumentCount == 2) {
                 foreach (var name in callInfo.GetArgument(0)) {
-                    var constName = name.GetConstantValue();
-                    var strName = constName as string;
-                    AsciiString asciiName;
+                    var strName = name.GetConstantValueAsString();
                     if (strName != null) {
-                    } else if ((asciiName = constName as AsciiString) != null) {
-                        strName = asciiName.String;
-                    } else {
-                        continue;
-                    }
+                        var dictArgs = callInfo.GetArgument(1);
 
-                    Dictionary<string, string> tags;
-                    if (!_variables.TryGetValue(strName, out tags)) {
-                        _variables[strName] = tags = new Dictionary<string, string>();
+                        AddTemplateMapping(strName, dictArgs);
                     }
+                }
+            }
+            return null;
+        }
 
-                    foreach (var dict in callInfo.GetArgument(1)) {
-                        foreach (var keyValue in dict.GetItems()) {
-                            foreach (var key in keyValue.Key) {
-                                var value = key.GetConstantValueAsString();
-                                if (value != null) {
-                                    RegisterTag(tags, value);
-                                }
+        private void AddTemplateMapping(string filename, IEnumerable<AnalysisValue> dictArgs) {
+            Dictionary<string, HashSet<AnalysisValue>> tags;
+            if (!_templateFiles.TryGetValue(filename, out tags)) {
+                _templateFiles[filename] = tags = new Dictionary<string, HashSet<AnalysisValue>>();
+            }
+
+            foreach (var dict in dictArgs) {
+                foreach (var keyValue in dict.GetItems()) {
+                    foreach (var key in keyValue.Key) {
+                        var keyName = key.GetConstantValueAsString();
+                        if (keyName != null) {
+                            RegisterTag(tags, keyName, keyValue.Value);
+                        }
+                    }
+                }
+            }
+        }
+
+        class GetTemplateAnalysisValue {
+            public readonly string Filename;
+
+            public GetTemplateAnalysisValue(string name) {
+                Filename = name;
+            }
+        }
+
+        private readonly Dictionary<string, ExternalAnalysisValue<GetTemplateAnalysisValue>> _templateAnalysis = new Dictionary<string,ExternalAnalysisValue<GetTemplateAnalysisValue>>();
+
+        private IEnumerable<AnalysisValue> GetTemplateProcessor(CallExpression call, CallInfo callInfo) {
+            HashSet<AnalysisValue> res = new HashSet<AnalysisValue>();
+            if (callInfo.NormalArgumentCount >= 1) {
+                foreach (var filename in callInfo.GetArgument(0)) {
+                    var file = filename.GetConstantValueAsString();
+                    if (file != null) {
+                        ExternalAnalysisValue<GetTemplateAnalysisValue> value;
+                        if (!_templateAnalysis.TryGetValue(file, out value)) {
+                            _templateAnalysis[file] = value = new ExternalAnalysisValue<GetTemplateAnalysisValue>(new GetTemplateAnalysisValue(file));
+                        }
+                        res.Add(value);
+                    }
+                }                
+            }
+            return res;
+        }
+
+
+        class ContextMarker {
+            public readonly HashSet<AnalysisValue> Arguments;
+
+            public ContextMarker() {
+                Arguments = new HashSet<AnalysisValue>();
+            }
+        }
+
+        private ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>> _contextTable = new ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>>();
+
+        private IEnumerable<AnalysisValue> ContextClassProcessor(CallExpression call, CallInfo callInfo) {
+            HashSet<AnalysisValue> res = new HashSet<AnalysisValue>();
+            if (callInfo.NormalArgumentCount == 1) {
+                ExternalAnalysisValue<ContextMarker> contextValue;
+
+                if (!_contextTable.TryGetValue(call, out contextValue)) {
+                    contextValue = new ExternalAnalysisValue<ContextMarker>(new ContextMarker());
+
+                    _contextTable.Add(call, contextValue);
+                }
+
+                contextValue.Data.Arguments.UnionWith(callInfo.GetArgument(0));
+                return contextValue.Data.Arguments;
+            }
+            return null;
+        }
+
+        private IEnumerable<AnalysisValue> TemplateRenderProcessor(CallExpression call, CallInfo callInfo) {
+            if (callInfo.NormalArgumentCount == 2) {
+                foreach (var selfArg in callInfo.GetArgument(0)) {
+                    var templateValue = selfArg as ExternalAnalysisValue<GetTemplateAnalysisValue>;
+                    
+                    if (templateValue != null) {
+                        foreach (var contextArg in callInfo.GetArgument(1)) {
+                            var context = contextArg as ExternalAnalysisValue<ContextMarker>;
+                            
+                            if (context != null) {
+                                // we now have the template and the context
+
+                                string filename = templateValue.Data.Filename;
+
+                                AddTemplateMapping(filename, context.Data.Arguments);
                             }
                         }
                     }
                 }
             }
+            return null;
         }
 
         /// <summary>

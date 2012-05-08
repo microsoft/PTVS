@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -82,6 +83,68 @@ namespace Microsoft.PythonTools.Analysis {
         /// <returns></returns>
         public virtual IEnumerable<KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>> GetItems() {
             yield break;
+        }
+
+        public virtual IDictionary<string, ISet<AnalysisValue>> GetAllMembers() {
+            return new Dictionary<string, ISet<AnalysisValue>>();
+        }
+    }
+
+    /// <summary>
+    /// Provides an external analysis value which can be returned from specialized calls
+    /// and then processed when received later from another specialized call.
+    /// 
+    /// This enables extending the analysis system with your own values.
+    /// 
+    /// New in 1.5.
+    /// </summary>
+    public class ExternalAnalysisValue<T> : AnalysisValue, IExternalAnalysisValue {
+        private readonly T _data;
+        private readonly ExternalNamespace _ns;
+
+        public ExternalAnalysisValue(T data) {
+            _data = data;
+            _ns = new ExternalNamespace(this);
+        }
+
+        public T Data {
+            get {
+                return _data;
+            }
+        }
+
+        ExternalNamespace IExternalAnalysisValue.Namespace {
+            get {
+                return _ns;
+            }
+        }
+
+        public virtual IEnumerable<AnalysisValue> GetMember(string name) {
+            return EmptySet<AnalysisValue>.Instance;
+        }
+    }
+
+    /// <summary>
+    /// Internal interface for getting back to the cached Namespace object which is
+    /// associated with an external analysis value.
+    /// </summary>
+    internal interface IExternalAnalysisValue {
+        ExternalNamespace Namespace {
+            get;
+        }
+    }
+
+    class ExternalNamespace : Namespace {
+        private readonly IExternalAnalysisValue _value;
+        
+        public ExternalNamespace(IExternalAnalysisValue value) {
+            _value = value;
+        }
+
+        public IExternalAnalysisValue Value {
+            get {
+                return _value;
+            }
         }
     }
 }

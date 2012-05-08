@@ -43,10 +43,10 @@ namespace Microsoft.PythonTools.Django {
 
         internal static string GetFilePath(this ITextBuffer textBuffer) {
             ITextDocument textDocument;
-            HtmlProjectionBuffer projBuffer;
+            TemplateProjectionBuffer projBuffer;
             if (textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDocument)) {
                 return textDocument.FilePath;
-            } else if(textBuffer.Properties.TryGetProperty<HtmlProjectionBuffer>(typeof(HtmlProjectionBuffer), out projBuffer)) {
+            } else if(textBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
                 return projBuffer.DiskBuffer.GetFilePath();
             } else {
                 return null;

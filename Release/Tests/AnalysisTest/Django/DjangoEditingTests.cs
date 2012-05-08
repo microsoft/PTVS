@@ -12,11 +12,15 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Collections.Generic;
+using System.Threading;
 using AnalysisTest.UI;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using TestUtilities;
 
 namespace AnalysisTest.ProjectSystem {
@@ -26,6 +30,171 @@ namespace AnalysisTest.ProjectSystem {
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void Classification() {
+            InsertionTest("Classification.html.djt", 8, 10, "",
+                new Classifcation("HTML Tag Delimiter", 0, 1, "<"),
+                new Classifcation("HTML Element Name", 1, 5, "html"),
+                new Classifcation("HTML Tag Delimiter", 5, 6, ">"),
+                new Classifcation("HTML Tag Delimiter", 8, 9, "<"),
+                new Classifcation("HTML Element Name", 9, 13, "head"),
+                new Classifcation("HTML Tag Delimiter", 13, 15, "><"),
+                new Classifcation("HTML Element Name", 15, 20, "title"),
+                new Classifcation("HTML Tag Delimiter", 20, 21, ">"),
+                new Classifcation("HTML Tag Delimiter", 24, 26, "</"),
+                new Classifcation("HTML Element Name", 26, 31, "title"),
+                new Classifcation("HTML Tag Delimiter", 31, 34, "></"),
+                new Classifcation("HTML Element Name", 34, 38, "head"),
+                new Classifcation("HTML Tag Delimiter", 38, 39, ">"),
+                new Classifcation("HTML Tag Delimiter", 41, 42, "<"),
+                new Classifcation("HTML Element Name", 42, 46, "body"),
+                new Classifcation("HTML Tag Delimiter", 46, 47, ">"),
+                new Classifcation("Django template tag", 50, 52, "{%"),
+                new Classifcation("keyword", 53, 63, "autoescape"),
+                new Classifcation("excluded code", 64, 66, "on"),
+                new Classifcation("Django template tag", 67, 69, "%}"),
+                new Classifcation("Django template tag", 72, 74, "{%"),
+                new Classifcation("keyword", 75, 85, "autoescape"),
+                new Classifcation("excluded code", 86, 89, "off"),
+                new Classifcation("Django template tag", 90, 92, "%}"),
+                new Classifcation("Django template tag", 95, 97, "{%"),
+                new Classifcation("keyword", 98, 108, "autoescape"),
+                new Classifcation("excluded code", 109, 113, "blah"),
+                new Classifcation("Django template tag", 114, 116, "%}"),
+                new Classifcation("Django template tag", 122, 124, "{%"),
+                new Classifcation("keyword", 125, 132, "comment"),
+                new Classifcation("Django template tag", 133, 135, "%}"),
+                new Classifcation("Django template tag", 144, 146, "{%"),
+                new Classifcation("keyword", 147, 157, "endcomment"),
+                new Classifcation("Django template tag", 158, 160, "%}"),
+                new Classifcation("Django template tag", 166, 168, "{%"),
+                new Classifcation("keyword", 169, 173, "csrf"),
+                new Classifcation("Django template tag", 174, 176, "%}"),
+                new Classifcation("Django template tag", 181, 183, "{%"),
+                new Classifcation("keyword", 184, 189, "cycle"),
+                new Classifcation("excluded code", 190, 203, "'row1' 'row2'"),
+                new Classifcation("Django template tag", 204, 206, "%}"),
+                new Classifcation("Django template tag", 209, 211, "{%"),
+                new Classifcation("keyword", 212, 217, "cycle"),
+                new Classifcation("excluded code", 218, 238, "'row1' 'row2' as baz"),
+                new Classifcation("Django template tag", 239, 241, "%}"),
+                new Classifcation("Django template tag", 244, 246, "{%"),
+                new Classifcation("keyword", 247, 252, "cycle"),
+                new Classifcation("excluded code", 253, 256, "baz"),
+                new Classifcation("Django template tag", 257, 259, "%}"),
+                new Classifcation("Django template tag", 265, 267, "{%"),
+                new Classifcation("keyword", 268, 273, "debug"),
+                new Classifcation("Django template tag", 274, 276, "%}"),
+                new Classifcation("Django template tag", 282, 284, "{%"),
+                new Classifcation("keyword", 285, 291, "filter"),
+                new Classifcation("excluded code", 292, 310, "force_escape|lower"),
+                new Classifcation("Django template tag", 311, 313, "%}"),
+                new Classifcation("Django template tag", 316, 318, "{%"),
+                new Classifcation("keyword", 319, 328, "endfilter"),
+                new Classifcation("Django template tag", 329, 331, "%}"),
+                new Classifcation("Django template tag", 337, 339, "{%"),
+                new Classifcation("keyword", 340, 347, "firstof"),
+                new Classifcation("excluded code", 348, 362, "var1 var2 var3"),
+                new Classifcation("Django template tag", 363, 365, "%}"),
+                new Classifcation("Django template tag", 370, 372, "{%"),
+                new Classifcation("keyword", 373, 380, "ifequal"),
+                new Classifcation("excluded code", 381, 404, "user.id comment.user_id"),
+                new Classifcation("Django template tag", 405, 407, "%}"),
+                new Classifcation("Django template tag", 410, 412, "{%"),
+                new Classifcation("keyword", 413, 423, "endifequal"),
+                new Classifcation("Django template tag", 424, 426, "%}"),
+                new Classifcation("Django template tag", 431, 433, "{%"),
+                new Classifcation("keyword", 434, 441, "ifequal"),
+                new Classifcation("excluded code", 442, 465, "user.id comment.user_id"),
+                new Classifcation("Django template tag", 466, 468, "%}"),
+                new Classifcation("Django template tag", 471, 473, "{%"),
+                new Classifcation("keyword", 474, 478, "else"),
+                new Classifcation("Django template tag", 479, 481, "%}"),
+                new Classifcation("Django template tag", 484, 486, "{%"),
+                new Classifcation("keyword", 487, 497, "endifequal"),
+                new Classifcation("Django template tag", 498, 500, "%}"),
+                new Classifcation("Django template tag", 505, 507, "{%"),
+                new Classifcation("keyword", 508, 518, "ifnotequal"),
+                new Classifcation("excluded code", 519, 542, "user.id comment.user_id"),
+                new Classifcation("Django template tag", 543, 545, "%}"),
+                new Classifcation("Django template tag", 548, 550, "{%"),
+                new Classifcation("keyword", 551, 555, "else"),
+                new Classifcation("Django template tag", 556, 558, "%}"),
+                new Classifcation("Django template tag", 561, 563, "{%"),
+                new Classifcation("keyword", 564, 577, "endifnotequal"),
+                new Classifcation("Django template tag", 578, 580, "%}"),
+                new Classifcation("Django template tag", 585, 587, "{%"),
+                new Classifcation("keyword", 588, 598, "ifnotequal"),
+                new Classifcation("excluded code", 599, 622, "user.id comment.user_id"),
+                new Classifcation("Django template tag", 623, 625, "%}"),
+                new Classifcation("Django template tag", 628, 630, "{%"),
+                new Classifcation("keyword", 631, 644, "endifnotequal"),
+                new Classifcation("Django template tag", 645, 647, "%}"),
+                new Classifcation("Django template tag", 652, 654, "{%"),
+                new Classifcation("keyword", 655, 657, "if"),
+                new Classifcation("Django template tag", 662, 664, "%}"),
+                new Classifcation("Django template tag", 667, 669, "{%"),
+                new Classifcation("keyword", 670, 675, "endif"),
+                new Classifcation("Django template tag", 676, 678, "%}"),
+                new Classifcation("Django template tag", 683, 685, "{%"),
+                new Classifcation("keyword", 686, 688, "if"),
+                new Classifcation("Django template tag", 693, 695, "%}"),
+                new Classifcation("Django template tag", 698, 700, "{%"),
+                new Classifcation("keyword", 701, 705, "else"),
+                new Classifcation("Django template tag", 706, 708, "%}"),
+                new Classifcation("Django template tag", 711, 713, "{%"),
+                new Classifcation("keyword", 714, 719, "endif"),
+                new Classifcation("Django template tag", 720, 722, "%}"),
+                new Classifcation("Django template tag", 727, 729, "{%"),
+                new Classifcation("keyword", 730, 733, "for"),
+                new Classifcation("keyword", 736, 738, "in"),
+                new Classifcation("Django template tag", 743, 745, "%}"),
+                new Classifcation("Django template tag", 748, 750, "{%"),
+                new Classifcation("keyword", 751, 757, "endfor"),
+                new Classifcation("Django template tag", 758, 760, "%}"),
+                new Classifcation("Django template tag", 765, 767, "{%"),
+                new Classifcation("keyword", 768, 772, "load"),
+                new Classifcation("Django template tag", 782, 784, "%}"),
+                new Classifcation("Django template tag", 787, 789, "{%"),
+                new Classifcation("keyword", 790, 794, "load"),
+                new Classifcation("Django template tag", 808, 810, "%}"),
+                new Classifcation("Django template tag", 815, 817, "{%"),
+                new Classifcation("keyword", 818, 821, "now"),
+                new Classifcation("excluded code", 822, 827, "'Y H'"),
+                new Classifcation("Django template tag", 828, 830, "%}"),
+                new Classifcation("Django template tag", 835, 837, "{%"),
+                new Classifcation("keyword", 838, 845, "regroup"),
+                new Classifcation("excluded code", 846, 873, "people by gender as grouped"),
+                new Classifcation("Django template tag", 874, 876, "%}"),
+                new Classifcation("Django template tag", 881, 883, "{%"),
+                new Classifcation("keyword", 884, 893, "spaceless"),
+                new Classifcation("Django template tag", 894, 896, "%}"),
+                new Classifcation("HTML Tag Delimiter", 900, 901, "<"),
+                new Classifcation("HTML Element Name", 901, 902, "p"),
+                new Classifcation("HTML Tag Delimiter", 902, 903, ">"),
+                new Classifcation("HTML Tag Delimiter", 907, 909, "</"),
+                new Classifcation("HTML Element Name", 909, 910, "p"),
+                new Classifcation("HTML Tag Delimiter", 910, 911, ">"),
+                new Classifcation("Django template tag", 914, 916, "{%"),
+                new Classifcation("keyword", 917, 929, "endspaceless"),
+                new Classifcation("Django template tag", 930, 932, "%}"),
+                new Classifcation("Django template tag", 937, 939, "{%"),
+                new Classifcation("keyword", 940, 943, "ssi"),
+                new Classifcation("excluded code", 944, 957, "/home/foo.txt"),
+                new Classifcation("Django template tag", 958, 960, "%}"),
+                new Classifcation("Django template tag", 967, 969, "{%"),
+                new Classifcation("keyword", 970, 982, "unknownblock"),
+                new Classifcation("Django template tag", 983, 985, "%}"),
+                new Classifcation("HTML Tag Delimiter", 989, 991, "</"),
+                new Classifcation("HTML Element Name", 991, 995, "body"),
+                new Classifcation("HTML Tag Delimiter", 995, 996, ">"),
+                new Classifcation("HTML Tag Delimiter", 998, 1000, "</"),
+                new Classifcation("HTML Element Name", 1000, 1004, "html"),
+                new Classifcation("HTML Tag Delimiter", 1004, 1005, ">")
+            );
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -92,15 +261,15 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("Django template tag", 71, 73, "{{"),
                 new Classifcation("identifier", 74, 78, "faoo"),
                 new Classifcation("Django template tag", 79, 81, "}}"),
-                new Classifcation("Django template tag", 86, 88, "{{"),
-                new Classifcation("identifier", 89, 92, "foo"),
-                new Classifcation("Django template tag", 93, 95, "}}"),
-                new Classifcation("HTML Tag Delimiter", 97, 99, "</"),
-                new Classifcation("HTML Element Name", 99, 103, "body"),
-                new Classifcation("HTML Tag Delimiter", 103, 104, ">"),
-                new Classifcation("HTML Tag Delimiter", 106, 108, "</"),
-                new Classifcation("HTML Element Name", 108, 112, "html"),
-                new Classifcation("HTML Tag Delimiter", 112, 113, ">")
+                new Classifcation("Django template tag", 88, 90, "{{"),
+                new Classifcation("identifier", 91, 94, "foo"),
+                new Classifcation("Django template tag", 95, 97, "}}"),
+                new Classifcation("HTML Tag Delimiter", 99, 101, "</"),
+                new Classifcation("HTML Element Name", 101, 105, "body"),
+                new Classifcation("HTML Tag Delimiter", 105, 106, ">"),
+                new Classifcation("HTML Tag Delimiter", 108, 110, "</"),
+                new Classifcation("HTML Element Name", 110, 114, "html"),
+                new Classifcation("HTML Tag Delimiter", 114, 115, ">")
             );
         }
 
@@ -172,15 +341,12 @@ namespace AnalysisTest.ProjectSystem {
                     new Classifcation("Django template tag", 96, 98, "{{"),
                     new Classifcation("identifier", 99, 103, "faoo"),
                     new Classifcation("Django template tag", 106, 108, "}}"),
-                    new Classifcation("Django template tag", 113, 115, "{{"),
-                    new Classifcation("identifier", 116, 119, "foo"),
-                    new Classifcation("Django template tag", 120, 122, "}}"),
-                    new Classifcation("HTML Tag Delimiter", 124, 126, "</"),
-                    new Classifcation("HTML Element Name", 126, 130, "body"),
-                    new Classifcation("HTML Tag Delimiter", 130, 131, ">"),
-                    new Classifcation("HTML Tag Delimiter", 133, 135, "</"),
-                    new Classifcation("HTML Element Name", 135, 139, "html"),
-                    new Classifcation("HTML Tag Delimiter", 139, 140, ">")
+                    new Classifcation("HTML Tag Delimiter", 123, 125, "</"),
+                    new Classifcation("HTML Element Name", 125, 129, "body"),
+                    new Classifcation("HTML Tag Delimiter", 129, 130, ">"),
+                    new Classifcation("HTML Tag Delimiter", 132, 134, "</"),
+                    new Classifcation("HTML Element Name", 134, 138, "html"),
+                    new Classifcation("HTML Tag Delimiter", 138, 139, ">")
                 }
             );
         }
@@ -332,9 +498,14 @@ namespace AnalysisTest.ProjectSystem {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Paste1() {
             PasteTest("Paste1.html.djt", 1, 2, "{{foo}}", "{{bazz}}",
+                new Classifcation("Django template tag", 0, 2, "{{"),
+                new Classifcation("Django template tag", 12, 14, "}}"),
                 new Classifcation("HTML Tag Delimiter", 18, 19, "<"),
                 new Classifcation("HTML Element Name", 19, 22, "foo"),
-                new Classifcation("HTML Tag Delimiter", 22, 23, ">")
+                new Classifcation("HTML Tag Delimiter", 22, 23, ">"),
+                new Classifcation("Django template tag", 25, 27, "{{"),
+                new Classifcation("identifier", 27, 31, "bazz"),
+                new Classifcation("Django template tag", 31, 33, "}}")
             );
         }
 
@@ -423,10 +594,22 @@ namespace AnalysisTest.ProjectSystem {
                 System.Windows.Clipboard.SetText(pasteText);
             });
 
+            AutoResetEvent are = new AutoResetEvent(false);
+            EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                are.Set();
+            };
+            item.TextView.TextBuffer.Changed += textChangedHandler;
             Keyboard.ControlV();
+            Assert.IsTrue(are.WaitOne(5000));
+            item.TextView.TextBuffer.Changed -= textChangedHandler;
 
-            var classifier = item.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            IList<ClassificationSpan> spans = null;
+            item.Invoke(() => {
+                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            });
+            Assert.IsNotNull(spans);
             EditorTests.VerifyClassification(
                 spans,
                 expected
@@ -438,15 +621,33 @@ namespace AnalysisTest.ProjectSystem {
             Window window;
             var item = OpenDjangoProjectItem(filename, out window);
             item.MoveCaret(line, column);
-            Keyboard.Type(insertionText);
+            
+            if (!String.IsNullOrEmpty(insertionText)) {
+                AutoResetEvent are = new AutoResetEvent(false);
+                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                    are.Set();
+                };
 
-            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-            var classifier = item.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                item.TextView.TextBuffer.Changed += textChangedHandler;
+                Keyboard.Type(insertionText);
+                Assert.IsTrue(are.WaitOne(5000));
+
+                item.TextView.TextBuffer.Changed -= textChangedHandler;
+            }
+
+            IList<ClassificationSpan> spans = null;
+            item.Invoke(() => {
+                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            });
+            
+            Assert.IsNotNull(spans);
             EditorTests.VerifyClassification(
                 spans,
                 expected
             );
+
             window.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
@@ -454,11 +655,23 @@ namespace AnalysisTest.ProjectSystem {
             Window window;
             var item = OpenDjangoProjectItem(filename, out window);
             item.MoveCaret(line, column);
+            AutoResetEvent are = new AutoResetEvent(false);
+            EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                are.Set();
+            };
+
+            item.TextView.TextBuffer.Changed += textChangedHandler;
             Keyboard.Type(insertionText);
+            Assert.IsTrue(are.WaitOne(5000));
+            are.Reset();
 
             var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
             var classifier = item.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            IList<ClassificationSpan> spans = null;
+            item.Invoke(() => {
+                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            });
+            Assert.IsNotNull(spans);
             EditorTests.VerifyClassification(
                 spans,
                 expectedFirst
@@ -467,8 +680,14 @@ namespace AnalysisTest.ProjectSystem {
             for (int i = 0; i < insertionText.Length; i++) {
                 Keyboard.Backspace();
             }
+            Assert.IsTrue(are.WaitOne(5000));
+            item.TextView.TextBuffer.Changed -= textChangedHandler;
 
-            spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            item.Invoke(() => {
+                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            });
+
             EditorTests.VerifyClassification(
                 spans,
                 expectedAfter

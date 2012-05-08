@@ -14,8 +14,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -36,123 +37,46 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
             DjangoProject project;
             string filename = _buffer.GetFilePath();
+            
             if (filename != null) {
                 project = DjangoPackage.GetProject(filename);
+                TemplateProjectionBuffer projBuffer;
                 TemplateTokenKind kind;
+                string templateText;
+                var triggerPoint = session.GetTriggerPoint(_buffer.CurrentSnapshot);
                 if (project != null &&
-                    _buffer.Properties.TryGetProperty<TemplateTokenKind>(typeof(TemplateTokenKind), out kind)) {
+                    triggerPoint != null &&
+                    _buffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer) &&
+                    (templateText = projBuffer.GetTemplateText(triggerPoint.Value, out kind)) != null) {
 
-                        if (kind == TemplateTokenKind.Block || kind == TemplateTokenKind.Variable) {
-                            var compSet = new CompletionSet();
+                    if (kind == TemplateTokenKind.Block || kind == TemplateTokenKind.Variable) {
+                        var compSet = new CompletionSet();
 
-                            List<Completion> completions = GetCompletions(project, kind, _buffer.CurrentSnapshot.GetText());
-                            completionSets.Add(
-                                new CompletionSet(
-                                    "Django Tags",
-                                    "Django Tags",
-                                    session.CreateTrackingSpan(_buffer),
-                                    completions.ToArray(),
-                                    new Completion[0]
-                                )
-                            );
-                        }
-                }
-            }
-        }
+                        List<Completion> completions = GetCompletions(
+                            project, 
+                            kind, 
+                            templateText, 
+                            session.GetTriggerPoint(_buffer.CurrentSnapshot));
 
-        const string _doubleQuotedString = @"""[^""\\]*(?:\\.[^""\\]*)*""";
-        const string _singleQuotedString = @"'[^'\\]*(?:\\.[^'\\]*)*'";
-        const string _numFormat = @"[-+\.]?\d[\d\.e]*";
-        const string _constStr = @"
-            (?:_\(" + _doubleQuotedString + @"\)|
-            _\(" + _singleQuotedString + @"\)|
-            " + _doubleQuotedString + @"|
-            " + _singleQuotedString + @")";
-
-        private static Regex _filterRegex = new Regex(@"
-^(?<constant>" + _constStr + @")|
-^(?<num>" + _numFormat + @")|
-^(?<var>[\w\.]+)|
- (?:\|
-     (?<filter_name>\w+)
-         (?:\:
-             (?:
-              (?<constant_arg>" + _constStr + @")|
-              (?<num_arg>" + _numFormat + @")|
-              (?<var_arg>[\w\.]+)
-             )
-         )?
- )", RegexOptions.Compiled|RegexOptions.IgnorePatternWhitespace);
-
-        internal static DjangoVariable ParseFilter(string filterText) {
-            DjangoVariableValue filter = null;
-            List<DjangoFilter> filters = new List<DjangoFilter>();
-            int varStart = 0;
-
-            foreach (Match match in _filterRegex.Matches(filterText)) {
-                if (filter == null) {
-                    var constantGroup = match.Groups["constant"];
-                    if (constantGroup.Success) {
-                        varStart = constantGroup.Index;
-                        filter = new DjangoVariableValue(constantGroup.Value, DjangoVariableKind.Constant);
-                    } else {
-                        var varGroup = match.Groups["var"];
-                        if (!varGroup.Success) {
-
-                            var numGroup = match.Groups["num"];
-                            if (!numGroup.Success) {
-                                return null;
-                            }
-                            varStart = numGroup.Index;
-                            filter = new DjangoVariableValue(numGroup.Value, DjangoVariableKind.Number);
-                        } else {
-                            varStart = constantGroup.Index;
-                            filter = new DjangoVariableValue(varGroup.Value, DjangoVariableKind.Variable);
-                        }
-                    }
-                } else {
-                    filters.Add(GetFilterFromMatch(match));
-                }
-            }
-
-            return new DjangoVariable(filter, varStart, filters.ToArray());
-        }
-
-        private static DjangoFilter GetFilterFromMatch(Match match) {
-            var filterName = match.Groups["filter_name"];
-
-            if (!filterName.Success) {
-                // TODO: Report error
-            }
-            var filterStart = filterName.Index;
-
-            
-            DjangoVariableValue arg = null;
-            int argStart = 0;
-            
-            var constantGroup = match.Groups["constant_arg"];
-            if (constantGroup.Success) {
-                arg = new DjangoVariableValue(constantGroup.Value, DjangoVariableKind.Constant);
-                argStart = constantGroup.Index;
-            } else {
-                var varGroup = match.Groups["var_arg"];
-                if (varGroup.Success) {
-                    arg = new DjangoVariableValue(varGroup.Value, DjangoVariableKind.Variable);
-                    argStart = varGroup.Index;
-                } else {
-                    var numGroup = match.Groups["num_arg"];
-                    if (numGroup.Success) {
-                        arg = new DjangoVariableValue(numGroup.Value, DjangoVariableKind.Number);
-                        argStart = numGroup.Index;
+                        completionSets.Add(
+                            new CompletionSet(
+                                "Django Tags",
+                                "Django Tags",
+                                session.CreateTrackingSpan(_buffer),
+                                completions.ToArray(),
+                                new Completion[0]
+                            )
+                        );
                     }
                 }
             }
-            return new DjangoFilter(filterName.Value, filterStart, arg, argStart);
         }
 
-        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string bufferText) {
+        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string bufferText, SnapshotPoint? triggerPoint) {
             List<Completion> completions = new List<Completion>();
             IEnumerable<string> tags;
+
+            var glyph = StandardGlyphGroup.GlyphKeyword;
 
             switch (kind) {
                 case TemplateTokenKind.Block:
@@ -160,13 +84,83 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                     break;
                 case TemplateTokenKind.Variable:
                     tags = project._filters.Keys;
+                    var filePath = this._buffer.GetFilePath();
+
+                    var dirName = Path.GetDirectoryName(filePath);
+
+                    var variable = DjangoVariable.Parse(bufferText);
+                    if (variable != null && triggerPoint != null && variable.Expression != null) {
+                        int position = triggerPoint.Value.Position;
+
+                        if (position == variable.Expression.Value.Length + variable.ExpressionStart) {
+                            var tempTags = GetVariablesForTemplateFile(project, filePath);
+                            // TODO: Handle multiple dots
+                            if (variable.Expression.Value.EndsWith(".")) {
+                                // get the members of this variable
+                                if (tempTags != null) {
+                                    HashSet<string> newTags = new HashSet<string>();
+                                    foreach (var value in tempTags.Values) {
+                                        foreach (var item in value) {
+                                            foreach (var members in item.GetAllMembers()) {
+                                                newTags.Add(members.Key);
+                                            }
+                                        }
+                                    }
+                                    tags = newTags;
+                                }
+                            } else {
+                                tags = FilterTags(tempTags.Keys, variable.Expression.Value);
+                            }
+                        } else if (position < variable.Expression.Value.Length + variable.ExpressionStart) {
+                            // we are triggering in the variable name area, we need to return variables
+                            // but we need to filter them.
+                            glyph = StandardGlyphGroup.GlyphGroupField;
+                            var tempTags = GetVariablesForTemplateFile(project, filePath);
+                            if (tempTags != null) {
+                                tags = tempTags.Keys;
+                            } else {
+                                tags = new string[0];
+                            }
+                        } else {
+                            // we are triggering in the filter or arg area
+                            for (int i = 0; i < variable.Filters.Length; i++) {
+                                var curFilter = variable.Filters[i];
+                                if (position >= curFilter.FilterStart &&
+                                    position < curFilter.FilterStart + curFilter.Filter.Length) {
+                                    // it's in this filter area
+                                    tags = FilterFilters(project, variable.Expression.Value);
+                                    break;
+                                } else if (curFilter.Arg != null) {
+                                    if (position >= curFilter.ArgStart &&
+                                        position < curFilter.ArgStart + curFilter.Arg.Value.Length) {
+                                        // it's in this argument
+                                        glyph = StandardGlyphGroup.GlyphGroupField;
+                                        var tempTags = GetVariablesForTemplateFile(project, filePath);
+                                        if (tempTags != null) {
+                                            tags = tempTags.Keys;
+                                        } else {
+                                            tags = new string[0];
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // show variable names
+                        var tempTags = GetVariablesForTemplateFile(project, filePath);
+                        if (tempTags != null) {
+                            tags = tempTags.Keys;
+                        } else {
+                            tags = new string[0];
+                        }
+
+                        glyph = StandardGlyphGroup.GlyphGroupField;
+                    }
+
                     break;
                 default:
                     throw new InvalidOperationException();
-            }
-
-            string filename = _buffer.GetFilePath();
-            if (filename != null) {
             }
 
             foreach (var tag in tags.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)) {
@@ -176,7 +170,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                         tag,
                         "",
                         _provider._glyphService.GetGlyph(
-                            StandardGlyphGroup.GlyphKeyword,
+                            glyph,
                             StandardGlyphItem.GlyphItemPublic
                         ),
                         "tag"
@@ -184,6 +178,36 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 );
             }
             return completions;
+        }
+
+        private Dictionary<string, HashSet<AnalysisValue>> GetVariablesForTemplateFile(DjangoProject project, string filename) {
+            string curLevel = filename;                     // is C:\Foo\Bar\Baz\foo.html
+            string curPath = Path.GetFileName(filename);    // is foo.html
+
+            for (; ; ) {
+                string curFilename = filename.Replace('\\', '/');
+                Dictionary<string, HashSet<AnalysisValue>> res;
+                if (project._templateFiles.TryGetValue(curFilename, out res)) {
+                    return res;
+                }
+                curLevel = Path.GetDirectoryName(curLevel);  // C:\Foo\Bar\Baz\foo.html gets us C:\Foo\Bar\Baz
+                var fn2 = Path.GetFileName(curLevel);            // Gets us Baz
+                if (String.IsNullOrEmpty(fn2)) {
+                    break;
+                }
+                curPath = Path.Combine(fn2, curPath);       // Get us Baz\foo.html       
+                filename = curPath;
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<string> FilterFilters(DjangoProject project, string filter) {
+            return from tag in project._filters.Keys where tag.StartsWith(filter) select tag;
+        }
+
+        private static IEnumerable<string> FilterTags(IEnumerable<string> keys, string filter) {
+            return from tag in keys where tag.StartsWith(filter) select tag;
         }
 
         #endregion

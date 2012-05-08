@@ -311,9 +311,9 @@ namespace Microsoft.PythonTools.Django {
                 IContentType contentType = SniffContentType(diskBuffer) ??
                                            contentRegistry.GetContentType("HTML");
 
-                var projBuffer = new HtmlProjectionBuffer(contentRegistry, factService, diskBuffer, _compModel.GetService<IBufferGraphFactoryService>(), contentType);
+                var projBuffer = new TemplateProjectionBuffer(contentRegistry, factService, diskBuffer, _compModel.GetService<IBufferGraphFactoryService>(), contentType);
                 diskBuffer.ChangedHighPriority += projBuffer.DiskBufferChanged;
-                diskBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), projBuffer);
+                diskBuffer.Properties.AddProperty(typeof(TemplateProjectionBuffer), projBuffer);
 
                 Guid langSvcGuid = typeof(DjangoLanguageInfo).GUID;
                 _textLines.SetLanguageServiceID(ref langSvcGuid);

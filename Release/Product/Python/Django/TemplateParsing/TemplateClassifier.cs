@@ -36,72 +36,106 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         IList<ClassificationSpan> IClassifier.GetClassificationSpans(SnapshotSpan span) {
-            TemplateTokenKind kind;
             List<ClassificationSpan> spans = new List<ClassificationSpan>();
-            spans.Add(
-                new ClassificationSpan(
-                    new SnapshotSpan(
-                        span.Snapshot,
-                        new Span(0, 2)
-                    ),
-                    _classifierProvider._templateClassType
-                )
-            );
 
-            if (_textBuffer.Properties.TryGetProperty<TemplateTokenKind>(typeof(TemplateTokenKind), out kind)) {
-                switch (kind) {
-                    case TemplateTokenKind.Comment:
-                        spans.Add(
-                            new ClassificationSpan(
-                                new SnapshotSpan(
-                                    span.Snapshot,
-                                    Span.FromBounds(2, span.Snapshot.Length - 2)
-                                ),
-                                _classifierProvider._commentClassType
-                            )
-                        );
-                        break;
-                    case TemplateTokenKind.Variable:
-                        ClassifyVariable(span, spans);
-                        break;
-                    case TemplateTokenKind.Block:
-                        spans.Add(
-                            new ClassificationSpan(
-                                new SnapshotSpan(
-                                    span.Snapshot,
-                                    Span.FromBounds(2, span.Snapshot.Length - 2)
-                                ),
-                                _classifierProvider._classType
-                            )
-                        );
-                        break;
+            TemplateProjectionBuffer projBuffer;
+            if (_textBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
+                foreach (var region in projBuffer.GetTemplateRegions(span)) {
+                    // classify {{, {#, or {%
+                    spans.Add(
+                        new ClassificationSpan(
+                            new SnapshotSpan(
+                                span.Snapshot,
+                                new Span(region.Start, 2)
+                            ),
+                            _classifierProvider._templateClassType
+                        )
+                    );
+                    
+                    // classify template tag body
+                    ClassifyTemplateBody(span.Snapshot, spans, region);
+                    
+                    // classify }}, #}, or %}
+                    spans.Add(
+                        new ClassificationSpan(
+                            new SnapshotSpan(
+                                span.Snapshot,
+                                new Span(region.Start + region.Text.Length - 2, 2)
+                            ),
+                            _classifierProvider._templateClassType
+                        )
+                    );
                 }
             }
-
-            spans.Add(
-                new ClassificationSpan(
-                    new SnapshotSpan(
-                        span.Snapshot,
-                        new Span(span.Snapshot.Length - 2, 2)
-                    ),
-                    _classifierProvider._templateClassType
-                )
-            );
 
             return spans;
         }
 
-        private void ClassifyVariable(SnapshotSpan span, List<ClassificationSpan> spans) {
-            string filterText;
-            int filterStart;
-            filterText = GetTrimmedFilterText(span, out filterStart);
-            if (filterText == null) {
+        private void ClassifyTemplateBody(ITextSnapshot snapshot, List<ClassificationSpan> spans, TemplateRegion region) {
+            switch (region.Kind) {
+                case TemplateTokenKind.Comment:
+                    spans.Add(
+                        new ClassificationSpan(
+                            new SnapshotSpan(
+                                snapshot,
+                                new Span(region.Start + 2, region.Text.Length - 4)
+                            ),
+                            _classifierProvider._commentClassType
+                        )
+                    );
+                    break;
+                case TemplateTokenKind.Variable:
+                    ClassifyVariable(snapshot, spans, region);
+                    break;
+                case TemplateTokenKind.Block:
+                    var blockInfo = DjangoBlock.Parse(region.Text);
+                    if (blockInfo != null) {
+                        foreach (var curSpan in blockInfo.GetSpans()) {
+                            spans.Add(
+                                new ClassificationSpan(
+                                    new SnapshotSpan(
+                                        snapshot,
+                                        new Span(
+                                            curSpan.Span.Start + region.Start,
+                                            curSpan.Span.Length
+                                        )
+                                    ),
+                                    GetClassification(curSpan.Classification)
+                                )
+                            );
+                        }
+                    } else {
+                        spans.Add(
+                            new ClassificationSpan(
+                                new SnapshotSpan(
+                                    snapshot,
+                                    Span.FromBounds(region.Start + 2, region.Text.Length - 4)
+                                ),
+                                _classifierProvider._classType
+                            )
+                        );
+                    }
+                    break;
+            }
+        }
+
+        private IClassificationType GetClassification(Classification classification) {
+            switch (classification) {
+                case Classification.None:           return _classifierProvider._classType;                    
+                case Classification.Keyword:        return _classifierProvider._keywordType;
+                case Classification.ExcludedCode:   return _classifierProvider._excludedCode;
+                default: throw new InvalidOperationException();
+            }
+        }
+
+        private void ClassifyVariable(ITextSnapshot snapshot, List<ClassificationSpan> spans, TemplateRegion region) {
+            var filterInfo = DjangoVariable.Parse(region.Text);
+            if (filterInfo == null) {
+                // TODO: Report error
                 return;
             }
 
-            var filterInfo = DjangoVariable.Parse(filterText);
-
-            AddVariableClassifications(span.Snapshot, spans, filterInfo.Expression, filterStart + filterInfo.ExpressionStart);
+            AddVariableClassifications(snapshot, spans, filterInfo.Expression, filterInfo.ExpressionStart + region.Start);
 
             for (int i = 0; i < filterInfo.Filters.Length; i++) {
                 var curFilter = filterInfo.Filters[i];
@@ -109,14 +143,14 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 spans.Add(
                     new ClassificationSpan(
                         new SnapshotSpan(
-                            span.Snapshot,
-                            new Span(filterStart + curFilter.FilterStart, curFilter.Filter.Length)
+                            snapshot,
+                            new Span(curFilter.FilterStart + region.Start, curFilter.Filter.Length)
                         ),
                         _classifierProvider._identifierType
                     )
                 );
-                
-                AddVariableClassifications(span.Snapshot, spans, curFilter.Arg, filterStart + curFilter.ArgStart);                
+
+                AddVariableClassifications(snapshot, spans, curFilter.Arg, curFilter.ArgStart + region.Start);
             }
         }
 
@@ -176,32 +210,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
         }
 
-        /// <summary>
-        /// Gets the trimmed filter text and passes back the position in the buffer where the first
-        /// character of the filter actually starts.
-        private static string GetTrimmedFilterText(SnapshotSpan span, out int start) {
-            start = 0;
-
-            string filterText = null;
-            int? tmpStart = null;
-            for (int i = 2; i < span.Snapshot.Length; i++) {
-                if (!Char.IsWhiteSpace(span.Snapshot[i])) {
-                    tmpStart = start = i;
-                    break;
-                }
-            }
-            if (tmpStart != null) {
-                for (int i = span.Snapshot.Length - 3; i > tmpStart.Value; i--) {
-                    if (!Char.IsWhiteSpace(span.Snapshot[i])) {
-                        filterText = span.Snapshot.GetText(Span.FromBounds(tmpStart.Value, i + 1));
-
-                        break;
-                    }
-                }
-            }
-
-            return filterText;
-        }
 
         #endregion
     }

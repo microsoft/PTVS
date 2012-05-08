@@ -12,13 +12,14 @@
  *
  * ***************************************************************************/
 
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.OLE.Interop;
+using System;
+using Microsoft.PythonTools.Django.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.PythonTools.Django.Project;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     class DjangoIntellisenseController : IIntellisenseController, IOleCommandTarget {
@@ -131,10 +132,86 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                             return VSConstants.S_OK;
                         }
                         return VSConstants.S_OK;
+                    case VSConstants.VSStd2KCmdID.TAB:
+                        if (_activeSession != null && !_activeSession.IsDismissed) {
+                            _activeSession.Commit();
+                            return VSConstants.S_OK;
+                        }
+                        break;
+                    case VSConstants.VSStd2KCmdID.RETURN:
+                        if (_activeSession != null) {
+                            if (PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense &&
+                                !_activeSession.IsDismissed &&
+                                _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected) {
+
+                                // If the user has typed all of the characters as the completion and presses
+                                // enter we should dismiss & let the text editor receive the enter.  For example 
+                                // when typing "import sys[ENTER]" completion starts after the space.  After typing
+                                // sys the user wants a new line and doesn't want to type enter twice.
+
+                                bool enterOnComplete = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord &&
+                                         EnterOnCompleteText();
+
+                                _activeSession.Commit();
+
+                                if (!enterOnComplete) {
+                                    return VSConstants.S_OK;
+                                }
+                            } else {
+                                _activeSession.Dismiss();
+                            }
+                        }
+                        break;
+                    case VSConstants.VSStd2KCmdID.TYPECHAR:
+                        var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
+                
+                        if (_activeSession != null && !_activeSession.IsDismissed) {
+                            if (_activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
+                                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(ch) != -1) {
+                                _activeSession.Commit();
+                            } else if (!IsIdentifierChar(ch)) {
+                                _activeSession.Dismiss();
+                            }
+                        }
+
+                        if (ch == '.') {
+                            // insert the ., then trigger...
+                            int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                            
+                            if (ErrorHandler.Succeeded(res)) {
+                                if (_activeSession != null && !_activeSession.IsDismissed) {
+                                    _activeSession.Dismiss();
+                                }
+
+                                TriggerCompletionSession(false);
+                                return VSConstants.S_OK;
+                            }
+                        }
+                        break;
 
                 }
             }
             return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        private bool EnterOnCompleteText() {
+            SnapshotPoint? point = _activeSession.GetTriggerPoint(_textView.TextBuffer.CurrentSnapshot);
+            if (point.HasValue) {
+                int chars = _textView.Caret.Position.BufferPosition.Position - point.Value.Position;
+                var selectionStatus = _activeSession.SelectedCompletionSet.SelectionStatus;
+                if (chars == selectionStatus.Completion.InsertionText.Length) {
+                    string text = _textView.TextSnapshot.GetText(point.Value.Position, chars);
+
+                    if (String.Compare(text, selectionStatus.Completion.InsertionText, true) == 0) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+        private static bool IsIdentifierChar(char ch) {
+            return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
         }
 
         public int QueryStatus(ref System.Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, System.IntPtr pCmdText) {

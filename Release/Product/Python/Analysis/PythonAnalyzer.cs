@@ -443,8 +443,29 @@ namespace Microsoft.PythonTools.Analysis {
             });
         }
 
-        public void SpecializeFunction(string moduleName, string name, Action<CallExpression, CallInfo> dlg) {
-            SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(call, new CallInfo(types)); return null; });
+        /// <summary>
+        /// Enables specializaing a call.
+        /// 
+        /// New in 1.5.
+        /// </summary>
+        public void SpecializeFunction(string moduleName, string name, Func<CallExpression, CallInfo, IEnumerable<AnalysisValue>> dlg) {
+            SpecializeFunction(moduleName, name, (call, unit, types) => {
+                var res = dlg(call, new CallInfo(types));
+                if (res != null) {
+                    ISet<Namespace> set = EmptySet<Namespace>.Instance;
+                    bool madeSet = false;
+                    foreach (var obj in res) {
+                        IExternalAnalysisValue marker = obj as IExternalAnalysisValue;
+                        if (marker != null) {
+                            set = set.Union(marker.Namespace, ref madeSet);
+                        } else {
+                            set = set.Union((Namespace)obj, ref madeSet);
+                        }
+                    }
+                    return set;
+                }
+                return null;
+            });
         }
 
         public void SpecializeFunction(string moduleName, string name, Action<CallExpression> dlg) {
@@ -533,7 +554,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Currently this just provides a hook when the function is called - it could be expanded
         /// to providing the interpretation of when the function is called as well.
         /// </summary>
-        private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze = true) {
+        private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze = true, bool save = true) {
             ModuleReference module;
 
             int lastDot;
@@ -552,7 +573,9 @@ namespace Microsoft.PythonTools.Analysis {
                 if (mod != null) {
                     mod.SpecializeFunction(moduleName.Substring(lastDot + 1, moduleName.Length - (lastDot + 1)) + "." + name, dlg, analyze);
                 }
-            } else {
+            }
+
+            if (save) {
                 SaveDelayedSpecialization(moduleName, name, dlg, analyze, realModName);
             }
         }
@@ -946,24 +969,25 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="moduleName"></param>
         private void DoDelayedSpecialization(string moduleName) {
-            List<SpecializationInfo> specInfo;
-            if (_specializationInfo.TryGetValue(moduleName, out specInfo)) {
-                foreach (var curSpec in specInfo) {
-                    SpecializeFunction(curSpec.ModuleName, curSpec.Name, curSpec.Delegate, curSpec.Analyze);
+            lock (_specializationInfo) {
+                List<SpecializationInfo> specInfo;
+                if (_specializationInfo.TryGetValue(moduleName, out specInfo)) {
+                    foreach (var curSpec in specInfo) {
+                        SpecializeFunction(curSpec.ModuleName, curSpec.Name, curSpec.Delegate, curSpec.Analyze, save: false);
+                    }
                 }
             }
         }
 
         private void SaveDelayedSpecialization(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze, string realModName) {
-            if (_specializationInfo == null) {
-                _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();
-            }
-            List<SpecializationInfo> specList;
-            if (!_specializationInfo.TryGetValue(moduleName, out specList)) {
-                _specializationInfo[realModName ?? moduleName] = specList = new List<SpecializationInfo>();
-            }
+            lock (_specializationInfo) {
+                List<SpecializationInfo> specList;
+                if (!_specializationInfo.TryGetValue(moduleName, out specList)) {
+                    _specializationInfo[realModName ?? moduleName] = specList = new List<SpecializationInfo>();
+                }
 
-            specList.Add(new SpecializationInfo(moduleName, name, dlg, analyze));
+                specList.Add(new SpecializationInfo(moduleName, name, dlg, analyze));
+            }
         }
 
         class SpecializationInfo {

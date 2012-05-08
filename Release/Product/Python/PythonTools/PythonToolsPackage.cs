@@ -281,7 +281,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        internal PythonAdvancedEditorOptionsPage AdvancedEditorOptionsPage {
+        public PythonAdvancedEditorOptionsPage AdvancedEditorOptionsPage {
             get {
                 return (PythonAdvancedEditorOptionsPage)GetDialogPage(typeof(PythonAdvancedEditorOptionsPage));
             }

@@ -14,8 +14,14 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
+using System;
 
 namespace Microsoft.PythonTools.Analysis {
+    /// <summary>
+    /// Provides information about a call for call specialization.
+    /// 
+    /// New in 1.5.
+    /// </summary>
     public struct CallInfo {
         private readonly ISet<Namespace>[] _args;
 
@@ -30,7 +36,17 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public IEnumerable<AnalysisValue> GetArgument(int arg) {
-            return _args[arg];
+            if (arg >= _args.Length) {
+                throw new ArgumentOutOfRangeException("arg");
+            }
+
+            foreach (var value in _args[arg]) {
+                if (value is ExternalNamespace) {
+                    yield return (AnalysisValue)((ExternalNamespace)value).Value;
+                } else {
+                    yield return value;
+                }
+            }
         }
     }
 }

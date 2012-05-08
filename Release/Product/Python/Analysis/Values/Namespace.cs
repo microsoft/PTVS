@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     internal class Namespace : AnalysisValue, ISet<Namespace>, IAnalysisValue {
         [ThreadStatic] private static HashSet<Namespace> _processing;
+        private static OverloadResult[] EmptyOverloadResult = new OverloadResult[0];
 
         public Namespace() { }
 
@@ -40,11 +41,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         #region Namespace Information
-        /*
-        public LocationInfo Location {
-            get {
-            }
-        }*/
 
         public LocationInfo Location {
             get {
@@ -52,7 +48,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private static OverloadResult[] EmptyOverloadResult = new OverloadResult[0];
         public virtual ICollection<OverloadResult> Overloads {
             get {
                 return EmptyOverloadResult;
@@ -81,6 +76,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public virtual IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
             return new Dictionary<string, ISet<Namespace>>();
+        }
+
+        public override IDictionary<string, ISet<AnalysisValue>> GetAllMembers() {
+            // TODO: Need to fix the null here
+            var members = GetAllMembers(null);
+            var res = new Dictionary<string, ISet<AnalysisValue>>();
+            foreach (var member in members) {
+                res[member.Key] = new HashSet<AnalysisValue>(member.Value);
+            }
+            return res;
         }
 
         public virtual IPythonType PythonType {

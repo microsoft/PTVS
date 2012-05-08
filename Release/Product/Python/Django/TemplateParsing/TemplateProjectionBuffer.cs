@@ -32,36 +32,72 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// use an elision buffer here because it's all we need and it works around some direct checks
     /// for IProjectionBuffer in the HTML designer code which break things.
     /// 
-    /// For the Django template tags we create individual projection buffers for each tag.
+    /// Finally for the Django template tags we create one more projection buffer - this buffer also
+    /// tracks the full range of the disk buffer, but this time the content type is our own content
+    /// type so we get the Django template classifications applied.
     /// 
     /// Finally, we stitch this altogether in one projection buffer is which the real buffer
-    /// for the text view.
+    /// for the text view.  Therefore we end up with a projection buffer which is receiving spans
+    /// from one of two other projection buffers (template or html) and those buffers are just projecting
+    /// the entirity of the on-disk buffer into themselves.
     /// </summary>
-    class HtmlProjectionBuffer : IProjectionEditResolver {
+    class TemplateProjectionBuffer : IProjectionEditResolver {
         private readonly ITextBuffer _diskBuffer;           // the buffer as it appears on disk.
         private readonly IProjectionBuffer _projBuffer; // the buffer we project into        
-        private readonly IProjectionBufferFactoryService _bufferFactory;
         private readonly List<SpanInfo> _spans = new List<SpanInfo>();
         private readonly IContentTypeRegistryService _contentRegistry;
         private readonly IBufferGraph _bufferGraph;
         private readonly IContentType _contentType;
         private readonly IElisionBuffer _htmlBuffer;
+        private readonly IProjectionBuffer _templateBuffer;
         private static string[] _templateTags = new string[] { "{{", "{%", "{#", "#}", "%}", "}}" };
 
-        public HtmlProjectionBuffer(IContentTypeRegistryService contentRegistry, IProjectionBufferFactoryService bufferFactory, ITextBuffer diskBuffer, IBufferGraphFactoryService bufferGraphFactory, IContentType contentType) {
-            _bufferFactory = bufferFactory;
+        public TemplateProjectionBuffer(IContentTypeRegistryService contentRegistry, IProjectionBufferFactoryService bufferFactory, ITextBuffer diskBuffer, IBufferGraphFactoryService bufferGraphFactory, IContentType contentType) {
             _diskBuffer = diskBuffer;
             _contentRegistry = contentRegistry;
             _contentType = contentType;
             
-            _projBuffer = _bufferFactory.CreateProjectionBuffer(
+            _projBuffer = bufferFactory.CreateProjectionBuffer(
                 this,
                 new object[0],
                 ProjectionBufferOptions.None
             );
+
             _bufferGraph = bufferGraphFactory.CreateBufferGraph(_projBuffer);
             
-            _htmlBuffer = _bufferFactory.CreateElisionBuffer(
+            _htmlBuffer = CreateHtmlBuffer(bufferFactory);
+            _templateBuffer = CreateTemplateBuffer(bufferFactory);
+
+            IVsTextBuffer buffer;
+            if (_diskBuffer.Properties.TryGetProperty<IVsTextBuffer>(typeof(IVsTextBuffer), out buffer)) {
+                // keep the Venus HTML classifier happy - it wants to find a site via IVsTextBuffer
+                _htmlBuffer.Properties.AddProperty(typeof(IVsTextBuffer), buffer);
+            }
+
+            var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(diskBuffer.CurrentSnapshot, new Span(0, diskBuffer.CurrentSnapshot.Length)));
+            UpdateTemplateSpans(reader);
+        }
+
+        private IProjectionBuffer CreateTemplateBuffer(IProjectionBufferFactoryService bufferFactory) {
+            var res = bufferFactory.CreateProjectionBuffer(
+                this,
+                new object[] { 
+                    _diskBuffer.CurrentSnapshot.CreateTrackingSpan(
+                        0,
+                        _diskBuffer.CurrentSnapshot.Length,
+                        SpanTrackingMode.EdgeInclusive,
+                        TrackingFidelityMode.Forward
+                    )
+                },
+                ProjectionBufferOptions.None,
+                _contentRegistry.GetContentType(TemplateContentType.ContentTypeName)
+            );
+            res.Properties.AddProperty(typeof(TemplateProjectionBuffer), this);
+            return res;
+        }
+
+        private IElisionBuffer CreateHtmlBuffer(IProjectionBufferFactoryService bufferFactory) {
+            var res = bufferFactory.CreateElisionBuffer(
                 this,
                 new NormalizedSnapshotSpanCollection(
                     new SnapshotSpan(
@@ -72,17 +108,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 ElisionBufferOptions.None,
                 _contentType
             );
-
-            _htmlBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), this);
-            
-            IVsTextBuffer buffer;
-            if (_diskBuffer.Properties.TryGetProperty<IVsTextBuffer>(typeof(IVsTextBuffer), out buffer)) {
-                // keep the Venus HTML classifier happy - it wants to find a site via IVsTextBuffer
-                _htmlBuffer.Properties.AddProperty(typeof(IVsTextBuffer), buffer);
-            }
-
-            var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(diskBuffer.CurrentSnapshot, new Span(0, diskBuffer.CurrentSnapshot.Length)));
-            UpdateTemplateSpans(reader);
+            res.Properties.AddProperty(typeof(TemplateProjectionBuffer), this);
+            return res;
         }
 
         public IProjectionBuffer ProjectionBuffer {
@@ -257,15 +284,15 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return true;
         }
 
-
         private void UpdateTemplateSpans(TextReader reader, int startSpan = 0, int offset = 0) {
             var tokenizer = new TemplateTokenizer(reader);
             TemplateToken? token;
             List<object> newProjectionSpans = new List<object>();   // spans in the projection buffer
             List<SpanInfo> newSpanInfos = new List<SpanInfo>();     // our SpanInfo's, with spans in the on-disk buffer
-            
+                       
             while ((token = tokenizer.GetNextToken()) != null) {
                 var curToken = token.Value;
+                var sourceSpan = Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1);
                 
                 switch (curToken.Kind) {
                     case TemplateTokenKind.Block:
@@ -285,38 +312,36 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                             newSpanInfos.Add(new SpanInfo(emptySpan, TemplateTokenKind.Text));
                         }
 
-                        var span = new CustomTrackingSpan(
-                            _diskBuffer.CurrentSnapshot,
-                            Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1),
-                            PointTrackingMode.Positive,
-                            PointTrackingMode.Negative
+                        newSpanInfos.Add(
+                            new SpanInfo(
+                                new CustomTrackingSpan(
+                                    _diskBuffer.CurrentSnapshot,
+                                    sourceSpan,
+                                    PointTrackingMode.Positive,
+                                    PointTrackingMode.Negative
+                                ), 
+                            curToken.Kind
+                            )
                         );
 
-                        newSpanInfos.Add(new SpanInfo(span, curToken.Kind));
-
-                        var contentType = _contentRegistry.GetContentType(TemplateContentType.ContentTypeName);
-                        
-                        var tempProjectionBuffer = _bufferFactory.CreateProjectionBuffer(this, new object[] { span }, ProjectionBufferOptions.None, contentType);
-                        tempProjectionBuffer.Properties.AddProperty(typeof(TemplateTokenKind), curToken.Kind);
-                        tempProjectionBuffer.Properties.AddProperty(typeof(HtmlProjectionBuffer), this);
-
-                        var projSpan = tempProjectionBuffer.CurrentSnapshot.CreateTrackingSpan(
-                            new Span(0, tempProjectionBuffer.CurrentSnapshot.Length),
-                            SpanTrackingMode.EdgeInclusive
+                        newProjectionSpans.Add(
+                            new CustomTrackingSpan(
+                                _templateBuffer.CurrentSnapshot,
+                                sourceSpan,
+                                PointTrackingMode.Positive,
+                                PointTrackingMode.Negative
+                            )
                         );
-
-                        newProjectionSpans.Add(projSpan);
                         break;
                     case TemplateTokenKind.Text:
-                        var sourceSpan = Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1);
                         var htmlSpan = _htmlBuffer.CurrentSnapshot.Version.CreateCustomTrackingSpan(
-                            Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1),
+                            sourceSpan,
                             TrackingFidelityMode.Forward,
                             new LanguageSpanCustomState(sourceSpan.Start, sourceSpan.End),
                             TrackToVersion
                         );
                         var diskSpan = _diskBuffer.CurrentSnapshot.Version.CreateCustomTrackingSpan(
-                            Span.FromBounds(curToken.Start + offset, curToken.End + offset + 1),
+                            sourceSpan,
                             TrackingFidelityMode.Forward,
                             new LanguageSpanCustomState(sourceSpan.Start, sourceSpan.End),
                             TrackToVersion
@@ -339,7 +364,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 newProjectionSpans.Add(emptySpan);
                 newSpanInfos.Add(new SpanInfo(emptySpan, TemplateTokenKind.Text));
             }
-            
+
             var oldSpanCount = _spans.Count;
             _spans.RemoveRange(startSpan, oldSpanCount - startSpan);
             _spans.AddRange(newSpanInfos);
@@ -508,6 +533,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         #region IProjectionEditResolver Members
 
         public void FillInInsertionSizes(SnapshotPoint projectionInsertionPoint, System.Collections.ObjectModel.ReadOnlyCollection<SnapshotPoint> sourceInsertionPoints, string insertionText, IList<int> insertionSizes) {
+            for (int i = 0; i < sourceInsertionPoints.Count; i++) {
+                if (sourceInsertionPoints[i].Snapshot.TextBuffer == _htmlBuffer) {
+                    insertionSizes[i] += insertionText.Length;
+                    break;
+                }
+            }
         }
 
         public void FillInReplacementSizes(SnapshotSpan projectionReplacementSpan, System.Collections.ObjectModel.ReadOnlyCollection<SnapshotSpan> sourceReplacementSpans, string insertionText, IList<int> insertionSizes) {            
@@ -525,5 +556,69 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         #endregion
+
+        /// <summary>
+        /// Given a point in the template buffer gets the text for that template tag.
+        /// </summary>
+        internal string GetTemplateText(SnapshotPoint point, out TemplateTokenKind kind) {
+            Debug.Assert(point.Snapshot.TextBuffer == _templateBuffer);
+
+            var realPoint = _bufferGraph.MapDownToBuffer(
+                point, 
+                PointTrackingMode.Positive, 
+                _diskBuffer, 
+                PositionAffinity.Successor);
+
+            if (realPoint != null) {
+                // TODO: Binary search would be better
+                var pointVal = realPoint.Value;
+                for (int i = 0; i < _spans.Count; i++) {
+                    var startPoint = _spans[i].DiskBufferSpan.GetSpan(_diskBuffer.CurrentSnapshot);
+                    if (startPoint.Start <= pointVal.Position && startPoint.End >= pointVal.Position) {
+                        kind = _spans[i].Kind;
+                        return _spans[i].DiskBufferSpan.GetText(_diskBuffer.CurrentSnapshot);
+                    }
+                }
+            }
+            kind = TemplateTokenKind.None;
+            return null;
+        }
+
+        /// <summary>
+        /// Given a span in the template buffer gets all of the associated template tags which
+        /// overlap with that span.
+        /// </summary>
+        internal IEnumerable<TemplateRegion> GetTemplateRegions(SnapshotSpan span) {
+            Debug.Assert(span.Snapshot.TextBuffer == _templateBuffer);
+
+            var startPoint = _bufferGraph.MapDownToBuffer(span.Start, PointTrackingMode.Positive, _diskBuffer, PositionAffinity.Successor);
+            var endPoint = _bufferGraph.MapDownToBuffer(span.End, PointTrackingMode.Positive, _diskBuffer, PositionAffinity.Predecessor);
+            if (startPoint != null && endPoint != null) {
+                // TODO: Binary search would be better
+                var templateRegionOnDisk = new SnapshotSpan(startPoint.Value, endPoint.Value);
+
+                for (int i = 0; i < _spans.Count; i++) {
+                    if (_spans[i].Kind == TemplateTokenKind.Text) {
+                        continue;
+                    }
+
+                    var diskSpan = _spans[i].DiskBufferSpan.GetSpan(_diskBuffer.CurrentSnapshot);
+
+                    if (diskSpan.OverlapsWith(templateRegionOnDisk)) {
+                        yield return new TemplateRegion(
+                            _spans[i].DiskBufferSpan.GetText(_diskBuffer.CurrentSnapshot),
+                            _spans[i].Kind,
+                            _bufferGraph.MapUpToBuffer(
+                                diskSpan.Start,
+                                PointTrackingMode.Positive,
+                                PositionAffinity.Successor,
+                                _templateBuffer
+                            ).Value
+                        );
+                    }
+                }
+            }
+        }
+
     }
 }

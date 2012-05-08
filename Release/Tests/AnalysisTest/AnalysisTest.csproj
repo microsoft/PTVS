@@ -148,6 +148,9 @@
     <Content Include="Python.VS.TestData\DjangoEditProject\Insertion10.html.djt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Classification.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Python.VS.TestData\DjangoProject\data.yaml" />
     <None Include="Python.VS.TestData\ErrorProjectUnicode\HelloWorld.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

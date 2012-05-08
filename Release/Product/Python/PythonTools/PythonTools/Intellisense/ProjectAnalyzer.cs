@@ -1015,7 +1015,25 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Analyzes a complete directory including all of the contained files and packages.
         /// </summary>
         public void AnalyzeDirectory(string dir) {
-            AnalyzeDirectoryWorker(dir, true);
+            _analysisQueue.Enqueue(new AddDirectoryAnalysis(dir, this), AnalysisPriority.High);
+        }
+
+        class AddDirectoryAnalysis : IAnalyzable {
+            private readonly string _dir;
+            private readonly VsProjectAnalyzer _analyzer;
+
+            public AddDirectoryAnalysis(string dir, VsProjectAnalyzer analyzer) {
+                _dir = dir;
+                _analyzer = analyzer;
+            }
+
+            #region IAnalyzable Members
+
+            public void Analyze() {
+                _analyzer.AnalyzeDirectoryWorker(_dir, true);
+            }
+
+            #endregion
         }
 
         private void AnalyzeDirectoryWorker(string dir, bool addDir) {

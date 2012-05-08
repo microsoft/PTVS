@@ -55,7 +55,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             var analyzed = _original.Call(node, unit, args, keywordArgNames);
-            return _call((CallExpression)node, unit, realArgs) ?? analyzed;
+            var res = _call((CallExpression)node, unit, realArgs);
+            if (res == null) {
+                return analyzed;
+            } else if (analyzed.Count == 0) {
+                return res;
+            } else {
+                return res.Union(analyzed);
+            }
         }
 
         protected override SpecializedNamespace Clone(Namespace original, Namespace instance) {

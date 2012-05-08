@@ -39,8 +39,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         #region ICompletionSource Members
 
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
-            HtmlProjectionBuffer projBuffer;
-            if (_textBuffer.Properties.TryGetProperty<HtmlProjectionBuffer>(typeof(HtmlProjectionBuffer), out projBuffer)) {
+            TemplateProjectionBuffer projBuffer;
+            if (_textBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
                 List<Completion> completions = new List<Completion>();
                 foreach (var tag in _htmlTags) {
                     completions.Add(new Completion(

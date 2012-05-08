@@ -23,7 +23,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     [Export(typeof(IClassifierProvider)), ContentType(TemplateContentType.ContentTypeName)]
     class TemplateClassifierProvider : IClassifierProvider {
         private readonly IContentType _type;
-        internal readonly IClassificationType _classType, _templateClassType, _commentClassType, _identifierType, _literalType, _numberType, _dot;
+        internal readonly IClassificationType _classType, _templateClassType, _commentClassType, 
+                                              _identifierType, _literalType, _numberType, _dot, 
+                                              _keywordType, _excludedCode;
 
         [ImportingConstructor]
         public TemplateClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry) {
@@ -35,6 +37,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             _literalType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Literal);
             _numberType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Number);
             _dot = classificationRegistry.GetClassificationType(PythonPredefinedClassificationTypeNames.Dot);
+            _keywordType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
+            _excludedCode = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.ExcludedCode);
         }
 
         #region IClassifierProvider Members

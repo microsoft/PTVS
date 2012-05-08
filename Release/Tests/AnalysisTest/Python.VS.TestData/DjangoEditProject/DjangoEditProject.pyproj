@@ -44,6 +44,8 @@
     <Compile Include="SelectAllMixed4.html.djt" />
     <Compile Include="SelectAllTag.html.djt" />
     <Compile Include="SelectAllText.html.djt" />
+
+    <Compile Include="Classification.html.djt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

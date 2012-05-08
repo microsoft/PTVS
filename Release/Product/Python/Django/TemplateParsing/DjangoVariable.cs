@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
@@ -73,9 +74,17 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public static DjangoVariable Parse(string filterText) {
+            int start = 0;
+            if (filterText.StartsWith("{{") && filterText.EndsWith("}}")) {
+                filterText = GetTrimmedFilterText(filterText, out start);
+                if (filterText == null) {
+                    return null;
+                }
+            }
+
+            int varStart = start;
             DjangoVariableValue filter = null;
             List<DjangoFilter> filters = new List<DjangoFilter>();
-            int varStart = 0;
 
             foreach (Match match in _filterRegex.Matches(filterText)) {
                 if (filter == null) {
@@ -86,7 +95,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     } else {
                         var varGroup = match.Groups["var"];
                         if (!varGroup.Success) {
-
                             var numGroup = match.Groups["num"];
                             if (!numGroup.Success) {
                                 return null;
@@ -94,27 +102,51 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                             varStart = numGroup.Index;
                             filter = new DjangoVariableValue(numGroup.Value, DjangoVariableKind.Number);
                         } else {
-                            varStart = constantGroup.Index;
+                            varStart = varGroup.Index;
                             filter = new DjangoVariableValue(varGroup.Value, DjangoVariableKind.Variable);
                         }
                     }
                 } else {
-                    filters.Add(GetFilterFromMatch(match));
+                    filters.Add(GetFilterFromMatch(match, start));
                 }
             }
 
-            return new DjangoVariable(filter, varStart, filters.ToArray());
+            return new DjangoVariable(filter, varStart + start, filters.ToArray());
         }
 
-        private static DjangoFilter GetFilterFromMatch(Match match) {
+        /// <summary>
+        /// Gets the trimmed filter text and passes back the position in the buffer where the first
+        /// character of the filter actually starts.
+        internal static string GetTrimmedFilterText(string text, out int start) {
+            start = 0;
+
+            string filterText = null;
+            int? tmpStart = null;
+            for (int i = 2; i < text.Length; i++) {
+                if (!Char.IsWhiteSpace(text[i])) {
+                    tmpStart = start = i;
+                    break;
+                }
+            }
+            if (tmpStart != null) {
+                for (int i = text.Length - 3; i > tmpStart.Value; i--) {
+                    if (!Char.IsWhiteSpace(text[i])) {
+                        filterText = text.Substring(tmpStart.Value, i + 1 - tmpStart.Value);
+                        break;
+                    }
+                }
+            }
+
+            return filterText;
+        }
+
+        private static DjangoFilter GetFilterFromMatch(Match match, int start) {
             var filterName = match.Groups["filter_name"];
 
             if (!filterName.Success) {
                 // TODO: Report error
             }
             var filterStart = filterName.Index;
-
-
             DjangoVariableValue arg = null;
             int argStart = 0;
 
@@ -135,7 +167,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     }
                 }
             }
-            return new DjangoFilter(filterName.Value, filterStart, arg, argStart);
+            return new DjangoFilter(filterName.Value, filterStart, arg, argStart + start);
         }
     }
 
