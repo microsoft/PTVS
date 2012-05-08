@@ -88,17 +88,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return null;
         }
 
-        public T LookupDefinition<T>(Node node, string name) where T : Namespace {
-            var defined = _eval.LookupNamespaceByName(node, name, false);
-            foreach (var definition in defined) {
-                T result = definition as T;
-                if (result != null) {
-                    return result;
-                }
-            }
-            return null;
-        }
-
         public override bool Walk(AssignmentStatement node) {
             var valueType = _eval.Evaluate(node.Right);
             foreach (var left in node.Left) {

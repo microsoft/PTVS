@@ -160,19 +160,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return oneDependency.Types.ToSet();
                     }
 
-                    ISet<T> res = EmptySet<T>.Instance;
-                    bool madeSet = false;
-                    foreach (var mod in _dependencies.Values) {
+                    ISet<T> res = null;
+                    foreach (var mod in _dependencies.DictValues) {
                         if (mod.HasTypes) {
-                            if (!madeSet) {
-                                res = new HashSet<T>(mod.Types);
-                                madeSet = true;
+                            if (res == null) {
+                                res = new HashSet<T>(mod.Types.ToSetNoCopy());
                             } else {
-                                res.UnionWith(mod.Types);
+                                res.UnionWith(mod.Types.ToSetNoCopy());
                             }
                         }
                     }
-                    return res;
+                    return res ?? EmptySet<T>.Instance;
                 }
 
                 return EmptySet<T>.Instance;

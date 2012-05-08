@@ -361,5 +361,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string ToString() {
             return ShortDescription;
         }
+
+        #region External value support
+
+        internal override Namespace AsNamespace() {
+            return this;
+        }
+
+        internal virtual AnalysisValue AsExternal() {
+            return this;
+        }
+
+        #endregion
     }
 }

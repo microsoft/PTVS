@@ -55,16 +55,16 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var v in listVars) {
                 string description = null;
                 if (listVars.Count == 1) {
-                    if (v.Description != null) {
+                    if (!String.IsNullOrWhiteSpace(v.Description)) {
                         description = v.Description;
                     }
                 } else {
-                    if (v.ShortDescription != null) {
+                    if (!String.IsNullOrWhiteSpace(v.ShortDescription)) {
                         description = v.ShortDescription;
                     }
                 }
 
-                if (descriptions.Add(description)) {
+                if (description != null && descriptions.Add(description)) {
                     if (first) {
                         first = false;
                     } else {

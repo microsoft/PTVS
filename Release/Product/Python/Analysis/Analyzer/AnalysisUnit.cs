@@ -284,6 +284,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private readonly FunctionInfo.CallArgs _callArgs;
         private readonly VariableDef _returnValue;
         private readonly VariableDef[] _newParams;
+        private readonly CartesianLocalVariable[] _specializedLocals;
 
         public CartesianProductFunctionAnalysisUnit(FunctionInfo funcInfo, InterpreterScope[] scopes, AnalysisUnit outerUnit, FunctionInfo.CallArgs callArgs, VariableDef returnValue)
             : base(funcInfo.FunctionDefinition, scopes, outerUnit) {
@@ -304,6 +305,35 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
             }
             _newParams = newParams;
+
+            var funcScope = scopes[scopes.Length - 1] as FunctionScope;
+            if (funcScope._assignedVars != null) {
+                var specLocals = new List<CartesianLocalVariable>();
+                foreach (var assignedVar in funcScope._assignedVars) {
+                    ProcessVariableForScope(funcScope, specLocals, assignedVar);
+                }
+                _specializedLocals = specLocals.ToArray();
+            }
+        }
+
+        private static void ProcessVariableForScope(InterpreterScope scope, List<CartesianLocalVariable> specLocals, string assignedVar) {
+            VariableDef oldDef;
+            if (scope.Variables.TryGetValue(assignedVar, out oldDef)) {
+                specLocals.Add(
+                    new CartesianLocalVariable(
+                        assignedVar,
+                        scope,
+                        new VariableDef(),
+                        oldDef
+                    )
+                );
+            }
+
+            foreach (var childScope in scope.Children) {
+                if (childScope is IsInstanceScope || childScope is StatementScope) {
+                    ProcessVariableForScope(childScope, specLocals, assignedVar);
+                }
+            }
         }
 
         protected override void AnalyzeFunction(DDG ddg, FunctionInfo function, FunctionScope funcScope) {
@@ -317,9 +347,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 funcScope.Variables[param.Name] = _newParams[index++];
             }
 
+            // Set the specialized versions of the locals
+            if (_specializedLocals != null) {
+                foreach (var local in _specializedLocals) {
+                    local.DefiningScope.Variables[local.Name] = local.Specialized;
+                }
+            }
+
             function.SetParameters(_newParams);
-            // TODO: Fix the null node
-            function.PropagateCall(null, args.KeywordArgs, this, args.Args, false);
+            function.PropagateCall(Ast, args.KeywordArgs, this, args.Args, false);
             var unifiedReturn = function.ReturnValue;
             function.ReturnValue = _returnValue;
 
@@ -365,13 +401,56 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 // propagate the calculated types into the full variables
                 for (int i = 0; i < Ast.Parameters.Count; i++) {
                     funcScope.Variables[Ast.Parameters[i].Name] = oldParams[i];
-                    foreach (var keyValue in _newParams[i]._dependencies) {
-                        var projEntry = keyValue.Key;
-                        var dependencies = keyValue.Value;
 
-                        oldParams[i].AddTypes(projEntry, dependencies.Types);
+                    if (_newParams[i] != oldParams[i]) {    // we don't yet copy dict params...
+                        CopyTypesTo(_newParams[i], oldParams[i]);
                     }
                 }
+
+                // restore the locals, merging types back into the shared...
+                if (_specializedLocals != null) {
+                    foreach (var variable in _specializedLocals) {
+                        var newVar = variable.Specialized;
+                        var oldVar = variable.Shared;
+
+                        CopyTypesTo(newVar, oldVar);
+
+                        variable.DefiningScope.Variables[variable.Name] = oldVar;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// A pair of variable defs - the old one, and the new one.
+        /// </summary>
+        struct CartesianLocalVariable {
+            /// <summary>
+            /// The specialized variable which is used for each individual analysis.
+            /// </summary>
+            public readonly VariableDef Specialized;
+            /// <summary>
+            /// The shared variable which has the merged locals from all of the analysis.
+            /// </summary>
+            public readonly VariableDef Shared;
+            public readonly string Name;
+            public readonly InterpreterScope DefiningScope;
+
+            public CartesianLocalVariable(string name, InterpreterScope definingScope, VariableDef specialized, VariableDef shared) {
+                Specialized = specialized;
+                Shared = shared;
+                DefiningScope = definingScope;
+                Name = name;
+            }
+        }
+
+        private static void CopyTypesTo(VariableDef from, VariableDef to) {
+            Debug.Assert(from != to);
+            foreach (var keyValue in from._dependencies) {
+                var projEntry = keyValue.Key;
+                var dependencies = keyValue.Value;
+
+                to.AddTypes(projEntry, dependencies.Types);
             }
         }
     }

@@ -115,16 +115,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze) {
-            if (_specialized == null) {
-                _specialized = new Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>, bool>>();
+            lock (this) {
+                if (_specialized == null) {
+                    _specialized = new Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>, bool>>();
+                }
+                _specialized[name] = new Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>, bool>(dlg, analyze);
             }
-            _specialized[name] = new Tuple<Func<CallExpression,AnalysisUnit,ISet<Namespace>[],ISet<Namespace>>,bool>(dlg, analyze);
         }
 
         internal void Specialize() {
-            if (_specialized != null) {
-                foreach (var keyValue in _specialized) {
-                    SpecializeOneFunction(keyValue.Key, keyValue.Value.Item1, keyValue.Value.Item2);
+            lock (this) {
+                if (_specialized != null) {
+                    foreach (var keyValue in _specialized) {
+                        SpecializeOneFunction(keyValue.Key, keyValue.Value.Item1, keyValue.Value.Item2);
+                    }
                 }
             }
         }

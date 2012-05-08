@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return def;
         }
 
-        public void SetVariable(Node node, AnalysisUnit unit, string name, IEnumerable<Namespace> value, bool addRef = true) {
+        public void SetVariable(Node node, AnalysisUnit unit, string name, ISet<Namespace> value, bool addRef = true) {
             var variable = CreateVariable(node, unit, name, false);
 
             variable.AddTypes(unit, value);
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return null;
         }
 
-        public VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+        public virtual VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             var res = GetVariable(node, unit, name, addRef);
             if (res == null) {
                 _variables[name] = res = new VariableDef();

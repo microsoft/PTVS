@@ -213,10 +213,46 @@ y = f('foo')";
 
             var entry = ProcessText(code);
 
-            AssertContains(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
-            AssertContains(entry.GetValuesByIndex("y", code.IndexOf("y =")).Select(x => x.PythonType.Name), "str");
+            AssertContainsExactly(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
+            AssertContainsExactly(entry.GetValuesByIndex("y", code.IndexOf("y =")).Select(x => x.PythonType.Name), "str");
         }
 
+
+        [TestMethod]
+        public void TestCartesianLocals() {
+            var code = @"def f(a):
+    b = a
+    return b
+
+
+x = f(42)
+y = f('foo')";
+
+            var entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
+            AssertContainsExactly(entry.GetValuesByIndex("y", code.IndexOf("y =")).Select(x => x.PythonType.Name), "str");
+        }
+
+        [TestMethod]
+        public void TestCartesianLocalsIsInstance() {
+            var code = @"def f(a, c):
+    if isinstance(c, int):
+        b = a
+        return b
+    else:
+        b = a
+        return b
+
+
+x = f(42, 'bar')
+y = f('foo', 'bar')";
+
+            var entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
+            AssertContainsExactly(entry.GetValuesByIndex("y", code.IndexOf("y =")).Select(x => x.PythonType.Name), "str");
+        }
 
         [TestMethod]
         public void TestImportAs() {

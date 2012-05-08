@@ -15,11 +15,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
-    class TypeUnion<T> : IEnumerable<T> where T : Namespace {
-        private HashSet<T> _ns;
+    class TypeUnion<T> : ICollection<T> where T : Namespace {
+        private ISet<T> _ns;
         private const int MaxUniqueNamespaces = 10;
 
         private static IEqualityComparer<T> ObjectComparer = EqualityComparer<T>.Default;
@@ -33,13 +34,26 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (_ns == Empty) {
                 return false;
             }
+            SetOfOne<T> one;
             if (_ns == null) {
-                _ns = new HashSet<T>(ObjectComparer);
+                _ns = new SetOfOne<T>(ns);
+                return true;
+            } else if ((one = _ns as SetOfOne<T>) != null) {
+                if (!one.Contains(ns)) {
+                    _ns = new SetOfTwo<T>(one.Value, ns);
+                    return true;
+                }
+                return false;
+            } else if (_ns is SetOfTwo<T>) {
+                if (_ns.Contains(ns)) {
+                    return false;
+                }
+                _ns = new HashSet<T>(_ns);
             }
 
             if (_ns.Add(ns)) {
                 if (_ns.Count > MaxUniqueNamespaces) {
-                    if (_ns.Comparer == ObjectComparer) {
+                    if (((HashSet<T>)_ns).Comparer == ObjectComparer) {
                         _ns = new HashSet<T>(_ns, UnionComparer);
                     }
                 }
@@ -66,11 +80,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         public ISet<T> ToSet() {
-            if (Count == 0) {
+            if (_ns == null) {
                 return EmptySet<T>.Instance;
+            } else if (_ns is SetOfOne<T> || _ns is SetOfTwo<T>) {
+                return _ns;
             }
 
-            return new HashSet<T>(this);
+            return new HashSet<T>(_ns);
         }
 
         public ISet<T> ToSetNoCopy() {
@@ -85,13 +101,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public IEnumerator<T> GetEnumerator() {
             if (_ns == null) {
-                return EmptySet();
+                return EmptySet<T>.EmptyEnum;
             }
             return _ns.GetEnumerator();
-        }
-
-        private IEnumerator<T> EmptySet() {
-            yield break;
         }
 
         #endregion
@@ -99,6 +111,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         #region IEnumerable Members
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+            if (_ns == null) {
+                return EmptySet<T>.EmptyEnum;
+            }
             return _ns.GetEnumerator();
         }
 
@@ -117,5 +132,29 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             #endregion
         }
+
+        #region ICollection<T> Members
+
+        void ICollection<T>.Add(T item) {
+            throw new InvalidOperationException();
+        }
+
+        public void Clear() {
+            throw new InvalidOperationException();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsReadOnly {
+            get { return true; }
+        }
+
+        public bool Remove(T item) {
+            throw new InvalidOperationException();
+        }
+
+        #endregion
     }
 }

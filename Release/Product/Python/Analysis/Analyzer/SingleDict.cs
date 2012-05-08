@@ -13,10 +13,9 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     /// <summary>
@@ -115,19 +114,27 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return false;
         }
 
+
+        public Dictionary<TKey, TValue>.ValueCollection DictValues {
+            get {
+                Debug.Assert(_data is Dictionary<TKey, TValue>);
+
+                return ((Dictionary<TKey, TValue>)_data).Values;
+            }
+        }
+
         public IEnumerable<TValue> Values {
             get {
-                SingleDependency single = _data as SingleDependency;
-                if (single != null) {
-                    yield return single.Value;
-                }
-
                 Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
                 if (dict != null) {
-                    foreach (var value in dict.Values) {
-                        yield return value;
+                    return dict.Values;
+                } else {
+                    SingleDependency single = _data as SingleDependency;
+                    if (single != null) {
+                        return new[] { single.Value };
                     }
                 }
+                return new TValue[0];
             }
         }
 

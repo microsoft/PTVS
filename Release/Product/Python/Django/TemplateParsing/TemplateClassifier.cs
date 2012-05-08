@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                             new ClassificationSpan(
                                 new SnapshotSpan(
                                     snapshot,
-                                    Span.FromBounds(region.Start + 2, region.Text.Length - 4)
+                                    new Span(region.Start + 2, region.Text.Length - 4)
                                 ),
                                 _classifierProvider._classType
                             )

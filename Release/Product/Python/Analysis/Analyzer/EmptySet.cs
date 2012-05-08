@@ -18,7 +18,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis {
     sealed class EmptySet<T> : ISet<T> {
-        private static readonly IEnumerator<T> EmptyEnum = new EmptyEnumerator();
+        internal static readonly IEnumerator<T> EmptyEnum = new EmptyEnumerator();
         public static readonly EmptySet<T> Instance = new EmptySet<T>();
 
         private EmptySet() {

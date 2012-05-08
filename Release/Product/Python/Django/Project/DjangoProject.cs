@@ -190,15 +190,52 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        class GetTemplateAnalysisValue {
+        class GetTemplateAnalysisValue : ExternalAnalysisValue {
             public readonly string Filename;
+            public readonly TemplateRenderMethod RenderMethod;
+            public readonly DjangoProject Project;
 
-            public GetTemplateAnalysisValue(string name) {
+            public GetTemplateAnalysisValue(DjangoProject project, string name) {
+                Project = project;
                 Filename = name;
+                RenderMethod = new TemplateRenderMethod(this);
+            }
+
+            public override IEnumerable<AnalysisValue> GetMember(string name) {
+                if (name == "render") {
+                    return new[] { RenderMethod };
+                }
+                return base.GetMember(name);
+            }
+
+        }
+
+        class TemplateRenderMethod : ExternalAnalysisValue {
+            public readonly GetTemplateAnalysisValue GetTemplateValue;
+
+            public TemplateRenderMethod(GetTemplateAnalysisValue getTemplateAnalysisValue) {
+                this.GetTemplateValue = getTemplateAnalysisValue;
+            }
+
+            public override IEnumerable<AnalysisValue> Call(ISet<AnalysisValue>[] args, NameExpression[] keywordArgNames) {
+                if (args.Length == 1) {
+                    foreach (var contextArg in args[0]) {
+                        var context = contextArg as ExternalAnalysisValue<ContextMarker>;
+
+                        if (context != null) {
+                            // we now have the template and the context
+
+                            string filename = GetTemplateValue.Filename;
+
+                            GetTemplateValue.Project.AddTemplateMapping(filename, context.Data.Arguments);
+                        }
+                    }
+                }
+                return base.Call(args, keywordArgNames);
             }
         }
 
-        private readonly Dictionary<string, ExternalAnalysisValue<GetTemplateAnalysisValue>> _templateAnalysis = new Dictionary<string,ExternalAnalysisValue<GetTemplateAnalysisValue>>();
+        private readonly Dictionary<string, GetTemplateAnalysisValue> _templateAnalysis = new Dictionary<string, GetTemplateAnalysisValue>();
 
         private IEnumerable<AnalysisValue> GetTemplateProcessor(CallExpression call, CallInfo callInfo) {
             HashSet<AnalysisValue> res = new HashSet<AnalysisValue>();
@@ -206,9 +243,9 @@ namespace Microsoft.PythonTools.Django.Project {
                 foreach (var filename in callInfo.GetArgument(0)) {
                     var file = filename.GetConstantValueAsString();
                     if (file != null) {
-                        ExternalAnalysisValue<GetTemplateAnalysisValue> value;
+                        GetTemplateAnalysisValue value;
                         if (!_templateAnalysis.TryGetValue(file, out value)) {
-                            _templateAnalysis[file] = value = new ExternalAnalysisValue<GetTemplateAnalysisValue>(new GetTemplateAnalysisValue(file));
+                            _templateAnalysis[file] = value = new GetTemplateAnalysisValue(this, file);
                         }
                         res.Add(value);
                     }
@@ -216,7 +253,6 @@ namespace Microsoft.PythonTools.Django.Project {
             }
             return res;
         }
-
 
         class ContextMarker {
             public readonly HashSet<AnalysisValue> Arguments;
@@ -240,7 +276,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
 
                 contextValue.Data.Arguments.UnionWith(callInfo.GetArgument(0));
-                return contextValue.Data.Arguments;
+                return new[] { contextValue };
             }
             return null;
         }
@@ -248,7 +284,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private IEnumerable<AnalysisValue> TemplateRenderProcessor(CallExpression call, CallInfo callInfo) {
             if (callInfo.NormalArgumentCount == 2) {
                 foreach (var selfArg in callInfo.GetArgument(0)) {
-                    var templateValue = selfArg as ExternalAnalysisValue<GetTemplateAnalysisValue>;
+                    var templateValue = selfArg as GetTemplateAnalysisValue;
                     
                     if (templateValue != null) {
                         foreach (var contextArg in callInfo.GetArgument(1)) {
@@ -257,7 +293,7 @@ namespace Microsoft.PythonTools.Django.Project {
                             if (context != null) {
                                 // we now have the template and the context
 
-                                string filename = templateValue.Data.Filename;
+                                string filename = templateValue.Filename;
 
                                 AddTemplateMapping(filename, context.Data.Arguments);
                             }

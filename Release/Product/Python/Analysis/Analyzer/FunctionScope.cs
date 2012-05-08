@@ -18,6 +18,8 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     sealed class FunctionScope : InterpreterScope {
+        internal HashSet<string> _assignedVars;
+
         public FunctionScope(FunctionInfo functionInfo, Node node)
             : base(functionInfo, node) {
         }
@@ -26,6 +28,16 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             get {
                 return Namespace as FunctionInfo;
             }
+        }
+
+        public override VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            var res = base.CreateVariable(node, unit, name, addRef);
+            if (_assignedVars == null) {
+                _assignedVars = new HashSet<string>();
+            }
+
+            _assignedVars.Add(name);
+            return res;
         }
 
         public override int GetBodyStart(PythonAst ast) {

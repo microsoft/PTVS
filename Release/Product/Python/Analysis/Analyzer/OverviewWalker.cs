@@ -390,7 +390,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             foreach (var left in node.Left) {
                 if (left is NameExpression) {
                     var nameExpr = ((NameExpression)left);
-                    var variable = CreateVariable(nameExpr);
+                    var variable = CreateVariable(nameExpr);                    
                     _scopes[_scopes.Count - 1].Variables[nameExpr.Name] = variable;                    
                 }
             }

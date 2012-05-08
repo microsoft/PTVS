@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly IPythonInterpreter _interpreter;
         private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
-        private readonly Dictionary<object, object> _itemCache;
+        private readonly Dictionary<object, Namespace> _itemCache;
         private BuiltinModule _builtinModule;
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
         internal Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
@@ -62,8 +62,7 @@ namespace Microsoft.PythonTools.Analysis {
             _interpreter = pythonInterpreter;
             _modules = new ModuleTable(this, _interpreter, _interpreter.GetModuleNames());
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
-            _itemCache = new Dictionary<object, object>();
-
+            _itemCache = new Dictionary<object, Namespace>();
 
             _queue = new Deque<AnalysisUnit>();
 
@@ -114,10 +113,10 @@ namespace Microsoft.PythonTools.Analysis {
             _dictKeysType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictKeys));
             _dictValuesType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictValues));
 
-            SpecializeFunction("__builtin__", "range", (n, unit, args) => unit.DeclaringModule.GetOrMakeNodeVariable(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet));
+            SpecializeFunction("__builtin__", "range", (n, unit, args) => unit.DeclaringModule.GetOrMakeNodeVariable(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet), analyze: false);
             SpecializeFunction("__builtin__", "min", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "max", ReturnUnionOfInputs);
-            SpecializeFunction("__builtin__", "getattr", SpecialGetAttr);
+            SpecializeFunction("__builtin__", "getattr", SpecialGetAttr, analyze: false);
 
             // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
             // copied, and always returns the same type).  So we specialize these away so they return the type passed
@@ -455,12 +454,7 @@ namespace Microsoft.PythonTools.Analysis {
                     ISet<Namespace> set = EmptySet<Namespace>.Instance;
                     bool madeSet = false;
                     foreach (var obj in res) {
-                        IExternalAnalysisValue marker = obj as IExternalAnalysisValue;
-                        if (marker != null) {
-                            set = set.Union(marker.Namespace, ref madeSet);
-                        } else {
-                            set = set.Union((Namespace)obj, ref madeSet);
-                        }
+                        set = set.Union(obj.AsNamespace(), ref madeSet);
                     }
                     return set;
                 }
@@ -759,14 +753,12 @@ namespace Microsoft.PythonTools.Analysis {
             return _builtinModule[name].First();
         }
 
-        internal T GetCached<T>(object key, Func<T> maker) where T : class {
-            object result;
+        internal Namespace GetCached(object key, Func<Namespace> maker) {
+            Namespace result;
             if (!_itemCache.TryGetValue(key, out result)) {
                 _itemCache[key] = result = maker();
-            } else {
-                Debug.Assert(result is T);
             }
-            return (result as T);
+            return result;
         }        
 
         internal BuiltinModule BuiltinModule {
@@ -778,7 +770,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal BuiltinClassInfo GetBuiltinType(IPythonType type) {
-            return GetCached(type,
+            return (BuiltinClassInfo)GetCached(type,
                 () => MakeBuiltinType(type)
             );
         }
@@ -851,12 +843,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal ISet<Namespace> GetConstant(IPythonConstant value) {
             object key = value ?? _nullKey;
-            return GetCached<ISet<Namespace>>(key, () => new ConstantInfo(value, this).SelfSet);
+            return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
         }
 
         internal ISet<Namespace> GetConstant(object value) {
             object key = value ?? _nullKey;
-            return GetCached<ISet<Namespace>>(key, () => new ConstantInfo(value, this).SelfSet);
+            return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
         }
 
         private static void Update<K, V>(IDictionary<K, V> dict, IDictionary<K, V> newValues) {

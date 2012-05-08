@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -88,6 +90,44 @@ namespace Microsoft.PythonTools.Analysis {
         public virtual IDictionary<string, ISet<AnalysisValue>> GetAllMembers() {
             return new Dictionary<string, ISet<AnalysisValue>>();
         }
+
+        internal virtual Namespace AsNamespace() {
+            throw new InvalidOperationException();
+        }
+    }
+
+    /// <summary>
+    /// Provides an external analysis value which can be returned from specialized
+    /// calls.  Consumers can subclass and override GetMember to participate in the 
+    /// analysis further. Or if you just need to hold onto some data you can use 
+    /// ExternalAnalysisValue&lt;T&gt; 
+    /// 
+    /// New in 1.5.
+    /// </summary>
+    public class ExternalAnalysisValue : AnalysisValue {
+        private readonly ExternalNamespace _ns;
+
+        public ExternalAnalysisValue() {
+            _ns = new ExternalNamespace(this);
+        }
+
+        internal ExternalNamespace Namespace {
+            get {
+                return _ns;
+            }
+        }
+
+        public virtual IEnumerable<AnalysisValue> GetMember(string name) {
+            return EmptySet<AnalysisValue>.Instance;
+        }
+
+        public virtual IEnumerable<AnalysisValue> Call(ISet<AnalysisValue>[] args, NameExpression[] keywordArgNames) {
+            return EmptySet<AnalysisValue>.Instance;
+        }
+
+        internal override Namespace AsNamespace() {
+            return _ns;
+        }
     }
 
     /// <summary>
@@ -98,13 +138,11 @@ namespace Microsoft.PythonTools.Analysis {
     /// 
     /// New in 1.5.
     /// </summary>
-    public class ExternalAnalysisValue<T> : AnalysisValue, IExternalAnalysisValue {
+    public class ExternalAnalysisValue<T> : ExternalAnalysisValue {
         private readonly T _data;
-        private readonly ExternalNamespace _ns;
 
         public ExternalAnalysisValue(T data) {
             _data = data;
-            _ns = new ExternalNamespace(this);
         }
 
         public T Data {
@@ -112,39 +150,48 @@ namespace Microsoft.PythonTools.Analysis {
                 return _data;
             }
         }
-
-        ExternalNamespace IExternalAnalysisValue.Namespace {
-            get {
-                return _ns;
-            }
-        }
-
-        public virtual IEnumerable<AnalysisValue> GetMember(string name) {
-            return EmptySet<AnalysisValue>.Instance;
-        }
-    }
-
-    /// <summary>
-    /// Internal interface for getting back to the cached Namespace object which is
-    /// associated with an external analysis value.
-    /// </summary>
-    internal interface IExternalAnalysisValue {
-        ExternalNamespace Namespace {
-            get;
-        }
     }
 
     class ExternalNamespace : Namespace {
-        private readonly IExternalAnalysisValue _value;
-        
-        public ExternalNamespace(IExternalAnalysisValue value) {
+        private readonly ExternalAnalysisValue _value;
+
+        public ExternalNamespace(ExternalAnalysisValue value) {
             _value = value;
         }
 
-        public IExternalAnalysisValue Value {
+        public ExternalAnalysisValue Value {
             get {
                 return _value;
             }
+        }
+
+        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+            return ToNamespaceSet(_value.GetMember(name));
+        }
+
+        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+            ISet<AnalysisValue>[] extArgs = new ISet<AnalysisValue>[args.Length];
+            for (int i = 0; i < args.Length; i++) {
+                HashSet<AnalysisValue> set;
+                extArgs[i] = set = new HashSet<AnalysisValue>();
+                foreach (var argValue in args[i]) {
+                    set.Add(argValue.AsExternal());
+                }
+            }
+
+            return ToNamespaceSet(_value.Call(extArgs, keywordArgNames));
+        }
+
+        private ISet<Namespace> ToNamespaceSet(IEnumerable<AnalysisValue> iEnumerable) {
+            HashSet<Namespace> res = new HashSet<Namespace>();
+            foreach (var value in iEnumerable) {
+                res.Add(value.AsNamespace());
+            }
+            return res;
+        }
+
+        internal override AnalysisValue AsExternal() {
+            return _value;
         }
     }
 }
