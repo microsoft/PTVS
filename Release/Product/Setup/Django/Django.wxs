@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?define InstallLocationName = "PTVS Samples" ?>
+
+  <Module Id="PTVSDjangoPackage" Language="1033" Version="1.0.0.0">
+    <Package Id="AF938468-55BF-4F28-8F64-EA8B2676B77E" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
+
+    <?include ..\InstallPath.wxi ?>
+    <?include ..\MergeModule.wxi ?>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="EXTENSION_INSTALLPATH">
+        <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
+           <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
+             <Directory Id="_F68B9718F51542FA90160A491D0C2011" Name="Python Tools Django Support">
+               <Directory Id="INSTALLLOCATION" Name="1.1">
+               </Directory>
+             </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <ComponentGroupRef Id="DjangoVsExt"/>
+  </Module>
+</Wix>

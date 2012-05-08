@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="a8637c34-aa55-46e2-973c-9c3e09afc17b">
+    <Name>Python Tools for Visual Studio, Django Support</Name>
+    <Author>Microsoft</Author>
+    <Version>1.0</Version>
+    <Description xml:space="preserve">Provides templates and integration for the Django web framework.</Description>
+    <MoreInfoUrl>http://pytools.codeplex.com</MoreInfoUrl>
+    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+    <Locale>1033</Locale>
+    <InstalledByMsi>false</InstalledByMsi>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+        <Name>Visual Studio MPF</Name>
+    </Reference>
+  </References>
+  <Content>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <ProjectTemplate>Templates\Projects\DjangoProject</ProjectTemplate>
+    <ItemTemplate>Templates\Files\DjangoHtmlTemplate</ItemTemplate>
+  </Content>
+</Vsix>

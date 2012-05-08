@@ -23,6 +23,10 @@
     <ProjectGuid>{AC19CAA0-5C69-4B20-8A18-D4B6B65F22B8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>PyDebugAttach</RootNamespace>
+    <SccProjectName>SAK</SccProjectName>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccProvider>SAK</SccProvider>
   </PropertyGroup>
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">

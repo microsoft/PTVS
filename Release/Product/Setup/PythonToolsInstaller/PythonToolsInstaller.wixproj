@@ -74,5 +74,12 @@
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
+    <ProjectReference Include="..\Django\Django.wixproj">
+      <Name>DjangoMsm</Name>
+      <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+    </ProjectReference>
   </ItemGroup>
 </Project>

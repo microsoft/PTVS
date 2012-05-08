@@ -102,6 +102,7 @@
       <Directory Id="EXTENSION_INSTALLPATH">
         <Merge Id="ReplWindow" Language="1033" SourceFile="$(var.TargetDir)ReplWindow.msm" DiskId="1" />
         <Merge Id="PythonProfiler" Language="1033" SourceFile="$(var.TargetDir)PythonProfiler.msm" DiskId="1" />
+        <Merge Id="PTVSDjangoPackage" Language="1033" SourceFile="$(var.TargetDir)DjangoMsm.msm" DiskId="1" />
         <Merge Id="PythonTools" Language="1033" SourceFile="$(var.TargetDir)PythonTools.msm" DiskId="1" />
         <Merge Id="PythonHpc" Language="1033" SourceFile="$(var.TargetDir)PythonHpcSupportMsm.msm" DiskId="1" />
         <Merge Id="IronPythonInterpreter" Language="1033" SourceFile="$(var.TargetDir)IronPythonInterpreterMsm.msm" DiskId="1" />
@@ -131,6 +132,10 @@
       <MergeRef Id="PythonTools"/>
       <MergeRef Id="ReplWindow"/>
       <MergeRef Id="PythonProfiler"/>
+      
+      <Feature Id="Feature_Django" AllowAdvertise="no" Level="1" Title="Django integration" Description="Django integration">
+        <MergeRef Id="PTVSDjangoPackage"/>
+      </Feature>
       
       <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
         <Condition Level="2">NOT HPC_CLIENT_INSTALLED</Condition>

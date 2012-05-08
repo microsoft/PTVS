@@ -23,6 +23,10 @@
     <ProjectGuid>{6EC75EDA-17AC-453E-BA34-CB6796C4319B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>VsPyProf</RootNamespace>
+    <SccProjectName>SAK</SccProjectName>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccProvider>SAK</SccProvider>
   </PropertyGroup>
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">

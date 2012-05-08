@@ -4,7 +4,7 @@
     <Description>A project for creating an mpi4py project</Description>
     <Icon>__TemplateIcon.ico</Icon>
     <ProjectType>Python</ProjectType>
-    <SortOrder>50</SortOrder>
+    <SortOrder>70</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>false</CreateNewFolder>
     <DefaultName>PythonMPI</DefaultName>
