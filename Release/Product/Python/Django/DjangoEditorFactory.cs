@@ -13,16 +13,20 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.OLE.Interop;
-using System.Globalization;
-using Microsoft.VisualStudio.Designer.Interfaces;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Projection;
+using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Utilities;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.Django {
@@ -34,7 +38,7 @@ namespace Microsoft.PythonTools.Django {
         private ServiceProvider _serviceProvider;
         private readonly bool _promptEncodingOnLoad;
 
-        public DjangoEditorFactory (DjangoPackage package) {
+        public DjangoEditorFactory(DjangoPackage package) {
             _package = package;
         }
 
@@ -152,7 +156,7 @@ namespace Microsoft.PythonTools.Django {
             }
 
             // Get a text buffer
-            IVsTextLines textLines = GetTextBuffer(docDataExisting);
+            IVsTextLines textLines = GetTextBuffer(docDataExisting, documentMoniker);
 
             // Assign docData IntPtr to either existing docData or the new text buffer
             if (docDataExisting != IntPtr.Zero) {
@@ -180,7 +184,8 @@ namespace Microsoft.PythonTools.Django {
         #endregion
 
         #region Helper methods
-        private IVsTextLines GetTextBuffer(System.IntPtr docDataExisting) {
+
+        private IVsTextLines GetTextBuffer(System.IntPtr docDataExisting, string filename) {
             IVsTextLines textLines;
             if (docDataExisting == IntPtr.Zero) {
                 // Create a new IVsTextLines buffer.
@@ -219,9 +224,6 @@ namespace Microsoft.PythonTools.Django {
             if (string.IsNullOrEmpty(physicalView)) {
                 // create code window as default physical view
                 return CreateCodeView(documentMoniker, textLines, ref editorCaption, ref cmdUI);
-            } else if (string.Compare(physicalView, "design", true, CultureInfo.InvariantCulture) == 0) {
-                // Create Form view
-                return CreateFormView(hierarchy, itemid, textLines, ref editorCaption, ref cmdUI);
             }
 
             // We couldn't create the view
@@ -229,45 +231,6 @@ namespace Microsoft.PythonTools.Django {
             ErrorHandler.ThrowOnFailure((int)VSConstants.VS_E_UNSUPPORTEDFORMAT);
 
             return IntPtr.Zero;
-        }
-
-        private IntPtr CreateFormView(IVsHierarchy hierarchy, uint itemid, IVsTextLines textLines, ref string editorCaption, ref Guid cmdUI) {
-            // Request the Designer Service
-            IVSMDDesignerService designerService = (IVSMDDesignerService)GetService(typeof(IVSMDDesignerService));
-
-            // Create loader for the designer
-            IVSMDDesignerLoader designerLoader = (IVSMDDesignerLoader)designerService.CreateDesignerLoader("Microsoft.VisualStudio.Designer.Serialization.VSDesignerLoader");
-
-            bool loaderInitalized = false;
-            try {
-                IOleServiceProvider provider = _serviceProvider.GetService(typeof(IOleServiceProvider)) as IOleServiceProvider;
-                // Initialize designer loader 
-                designerLoader.Initialize(provider, hierarchy, (int)itemid, textLines);
-                loaderInitalized = true;
-
-                // Create the designer
-                IVSMDDesigner designer = designerService.CreateDesigner(provider, designerLoader);
-
-                // Get editor caption
-                editorCaption = designerLoader.GetEditorCaption((int)READONLYSTATUS.ROSTATUS_Unknown);
-
-                // Get view from designer
-                object docView = designer.View;
-
-                // Get command guid from designer
-                cmdUI = designer.CommandGuid;
-
-                return Marshal.GetIUnknownForObject(docView);
-
-            } catch {
-                // The designer loader may have created a reference to the shell or the text buffer.
-                // In case we fail to create the designer we should manually dispose the loader
-                // in order to release the references to the shell and the textbuffer
-                if (loaderInitalized) {
-                    designerLoader.Dispose();
-                }
-                throw;
-            }
         }
 
         private IntPtr CreateCodeView(string documentMoniker, IVsTextLines textLines, ref string editorCaption, ref Guid cmdUI) {
@@ -286,17 +249,108 @@ namespace Microsoft.PythonTools.Django {
                     userData.SetData(ref guid, (uint)1);
                 }
             }
+            var textMgr = (IVsTextManager)_package.GetService(typeof(SVsTextManager));
+            new TextBufferEventListener((IComponentModel)_package.GetService(typeof(SComponentModel)), textLines, textMgr);
 
             cmdUI = VSConstants.GUID_TextEditorFactory;
             return Marshal.GetIUnknownForObject(window);
         }
 
         #endregion
+
+        /// <summary>
+        /// Listens for the text buffer to finish loading and then sets up our projection
+        /// buffer.
+        /// </summary>
+        internal sealed class TextBufferEventListener : IVsTextBufferDataEvents {
+            private readonly IVsTextLines _textLines;
+            private readonly uint _cookie;
+            private readonly IConnectionPoint _cp;
+            private readonly IComponentModel _compModel;
+            private readonly IVsTextManager _textMgr;
+
+            public TextBufferEventListener(IComponentModel compModel, IVsTextLines textLines, IVsTextManager textMgr) {
+                _textLines = textLines;
+                _compModel = compModel;
+                _textMgr = textMgr;
+
+                var cpc = textLines as IConnectionPointContainer;
+                var bufferEventsGuid = typeof(IVsTextBufferDataEvents).GUID;
+                cpc.FindConnectionPoint(ref bufferEventsGuid, out _cp);
+                _cp.Advise(this, out _cookie);
+            }
+            
+            #region IVsTextBufferDataEvents
+
+            public void OnFileChanged(uint grfChange, uint dwFileAttrs) {
+            }
+
+            public int OnLoadCompleted(int fReload) {
+                _cp.Unadvise(_cookie);
+
+                var adapterService = _compModel.GetService<IVsEditorAdaptersFactoryService>();                
+                ITextBuffer diskBuffer = adapterService.GetDocumentBuffer(_textLines);
+
+                var factService = _compModel.GetService<IProjectionBufferFactoryService>();
+                var fullSpan = diskBuffer.CurrentSnapshot.CreateTrackingSpan(
+                    new Span(0, diskBuffer.CurrentSnapshot.Length),
+                    SpanTrackingMode.EdgeInclusive
+                );
+
+                var contentRegistry = _compModel.GetService<IContentTypeRegistryService>();
+                                
+                var surfaceBuffer = factService.CreateProjectionBuffer(
+                    null,
+                    new object[] { fullSpan },
+                    ProjectionBufferOptions.None
+                );
+
+                Guid langSvcGuid;
+                IContentType contentType = SniffContentType(diskBuffer, out langSvcGuid) ?? 
+                                           contentRegistry.GetContentType("HTML");
+
+                if (langSvcGuid != Guid.Empty) {
+                    // if we have a language service ID we'll use it to set the content type.
+                    // That way anyone using the legacy language service adapter will work
+                    // with this buffer.  This will also set the content type.
+                    _textLines.SetLanguageServiceID(ref langSvcGuid);
+                } else {
+                    diskBuffer.ChangeContentType(contentType, null);
+                }
+                adapterService.SetDataBuffer(_textLines, surfaceBuffer);
+
+                return VSConstants.S_OK;
+            }
+
+            private IContentType SniffContentType(ITextBuffer diskBuffer, out Guid langSvcGuid) {
+                langSvcGuid = Guid.Empty; 
+                // try and sniff the content type from a double extension, and if we can't
+                // do that then default to HTML.
+                IContentType contentType = null;
+                ITextDocument textDocument;
+                if (diskBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDocument)) {
+                    if (Path.GetExtension(textDocument.FilePath).Equals(".djt", StringComparison.OrdinalIgnoreCase)) {
+                        var path = Path.GetFileNameWithoutExtension(textDocument.FilePath);
+                        if (path.IndexOf('.') != -1) {
+                            string subExt = Path.GetExtension(path).Substring(1);
+
+                            var fileExtRegistry = _compModel.GetService<IFileExtensionRegistryService>();
+
+                            contentType = fileExtRegistry.GetContentTypeForExtension(subExt);
+                            _textMgr.MapFilenameToLanguageSID(path, out langSvcGuid);
+                        }
+                    }
+                }
+                return contentType;
+            }
+
+            #endregion
+        }
     }
 
 
     [Guid("F4F53BA9-211A-4F1C-9CEA-5991450FE000")]
-    public class DjangoEditorFactoryPromptForEncoding : DjangoEditorFactory  {
+    public class DjangoEditorFactoryPromptForEncoding : DjangoEditorFactory {
         public DjangoEditorFactoryPromptForEncoding(DjangoPackage package) : base(package, true) { }
         public override int CreateEditorInstance(uint createEditorFlags, string documentMoniker, string physicalView, VisualStudio.Shell.Interop.IVsHierarchy hierarchy, uint itemid, IntPtr docDataExisting, out IntPtr docView, out IntPtr docData, out string editorCaption, out Guid commandUIGuid, out int createDocumentWindowFlags) {
             if (docDataExisting != IntPtr.Zero) {

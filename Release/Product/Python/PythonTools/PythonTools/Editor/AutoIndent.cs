@@ -41,18 +41,6 @@ namespace Microsoft.PythonTools.Editor {
             return res;
         }
 
-        private static string CurrentLine(IWpfTextView buffer) {
-            return buffer.TextSnapshot.GetLineFromPosition(buffer.Caret.Position.BufferPosition.Position).GetText();
-        }
-
-        private static string CurrentLine(IReplWindow buffer) {
-            return CurrentLine(buffer.TextView);
-        }
-
-        private static bool EndsGrouping(ClassificationSpan token) {
-            return token.ClassificationType.IsOfType("CloseGroupingClassification");
-        }
-
         private struct LineInfo {
             public static readonly LineInfo Empty = new LineInfo();
             public bool NeedsUpdate;
@@ -61,7 +49,7 @@ namespace Microsoft.PythonTools.Editor {
             public bool ShouldDedentAfter;
         }
 
-        private static int CalculateIndentation(string baseline, ITextSnapshotLine line, IEditorOptions options, IClassifier classifier) {
+        private static int CalculateIndentation(string baseline, ITextSnapshotLine line, IEditorOptions options, IClassifier classifier, ITextView textView) {
             int indentation = GetIndentation(baseline, options.GetTabSize());
             int tabSize = options.GetIndentSize();
             var tokens = classifier.GetClassificationSpans(line.Extent);
@@ -100,11 +88,20 @@ namespace Microsoft.PythonTools.Editor {
                 var lastChar = sline.Length == 0 ? '\0' : sline[sline.Length - 1];
 
                 // use the expression parser to figure out if we're in a grouping...
+                var spans = textView.BufferGraph.MapDownToFirstMatch(
+                    tokens[tokenIndex].Span,
+                    SpanTrackingMode.EdgePositive,
+                    PythonContentTypePrediciate
+                );
+                if (spans.Count == 0) {
+                    return indentation;
+                }
+                
                 var revParser = new ReverseExpressionParser(
-                        line.Snapshot,
-                        line.Snapshot.TextBuffer,
-                        line.Snapshot.CreateTrackingSpan(
-                            tokens[tokenIndex].Span.Span,
+                        spans[0].Snapshot,
+                        spans[0].Snapshot.TextBuffer,
+                        spans[0].Snapshot.CreateTrackingSpan(
+                            spans[0].Span,
                             SpanTrackingMode.EdgePositive
                         )
                     );
@@ -175,30 +172,6 @@ namespace Microsoft.PythonTools.Editor {
             return indentation;
         }
 
-        private static bool IsProceededByKeywordWhichCausesDedent(IClassifier classifier, SnapshotSpan prevExpression) {
-            bool dedentAfterKw = false;
-            
-            // find the token immediately before the expression and check if it's a return
-            int start = prevExpression.Start.Position - 1;
-            while (start > 0) {
-                var prevSpans = classifier.GetClassificationSpans(new SnapshotSpan(prevExpression.Snapshot, Span.FromBounds(start, start + 1)));
-                if (prevSpans.Count > 0) {
-                    if (ShouldDedentAfterKeyword(prevSpans[0])) {
-                        dedentAfterKw = true;
-                    }
-                    break;
-                }
-                start--;
-            }
-            
-            return dedentAfterKw;
-        }
-
-        private static bool IsOpenGrouping(SnapshotSpan exprRangeOpen) {
-            string text = exprRangeOpen.GetText();
-            return text.StartsWith("(") || text.StartsWith("[") || text.StartsWith("{");
-        }
-
         private static bool IsUnterminatedStringToken(ClassificationSpan lastToken) {
             if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
                 var text = lastToken.Span.GetText();
@@ -216,20 +189,6 @@ namespace Microsoft.PythonTools.Editor {
 
         private static bool ShouldDedentAfterKeyword(string keyword) {
             return keyword == "pass" || keyword == "return" || keyword == "break" || keyword == "continue" || keyword == "raise";
-        }
-
-        private static bool IsCaretInStringLiteral(IReplWindow buffer) {
-            var caret = buffer.TextView.Caret;
-            var spans = GetClassifier(buffer).GetClassificationSpans(buffer.TextView.GetTextElementSpan(caret.Position.BufferPosition));
-            if (spans.Count > 0) {
-                return spans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String);
-            }
-            return false;
-        }
-
-        internal static IClassifier GetClassifier(IReplWindow window) {
-            var aggregator = PythonToolsPackage.ComponentModel.GetService<IClassifierAggregatorService>();
-            return aggregator.GetClassifier(window.TextView.TextBuffer);
         }
 
         private static bool IsBlankLine(string lineText) {
@@ -283,8 +242,8 @@ namespace Microsoft.PythonTools.Editor {
                 // So now the user's auto-indent is broken in C# but returning null is better than crashing.
                 return null;
             }
-
-            var desiredIndentation = CalculateIndentation(baselineText, baseline, options, classifier);
+            
+            var desiredIndentation = CalculateIndentation(baselineText, baseline, options, classifier, textView);
 
             var caretLine = textView.Caret.Position.BufferPosition.GetContainingLine();
             // VS will get the white space when the user is moving the cursor or when the user is doing an edit which
