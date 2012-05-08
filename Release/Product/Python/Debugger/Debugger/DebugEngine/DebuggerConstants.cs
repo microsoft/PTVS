@@ -56,6 +56,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         static public Guid guidLanguagePython {
             get { return _guidLanguagePython; }
         }
+
+        // Language guid for Python. Used when the language for a document context or a stack frame is requested.
+        static private Guid _guidLanguageDjangoTemplate = new Guid("918E5764-7026-4D57-918D-19D86AD73AC4");
+        static public Guid guidLanguageDjangoTemplate {
+            get { return _guidLanguageDjangoTemplate; }
+        }
+
         public const int E_EVALUATE_BUSY_WITH_EVALUATION=unchecked((int)0x80040030);
         public const int E_EVALUATE_TIMEOUT=unchecked((int)0x80040031);
     }

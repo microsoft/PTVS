@@ -195,6 +195,11 @@ namespace Microsoft.PythonTools.Project {
             if (!String.IsNullOrWhiteSpace(interpArgs)) {
                 dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
             }
+            var djangoDebugging = _project.GetProperty("DjangoDebugging");
+            bool enableDjango;
+            if (!String.IsNullOrWhiteSpace(djangoDebugging) && Boolean.TryParse(djangoDebugging, out enableDjango)) {
+                dbgInfo.bstrOptions += ";" + AD7Engine.EnableDjangoDebugging + "=True";
+            }
 
             SetupEnvironment(env);
             if (env.Count > 0) {

@@ -86,8 +86,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_LANGUAGE) != 0) {
-                frameInfo.m_bstrLanguage = "Python";
-                frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_LANGUAGE;
+                switch (_stackFrame.Kind) {
+                    case FrameKind.Python:
+                        frameInfo.m_bstrLanguage = "Python";
+                        frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_LANGUAGE;
+                        break;
+                    case FrameKind.Django:
+                        frameInfo.m_bstrLanguage = "Django Templates";
+                        frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_LANGUAGE;
+                        break;
+                }
             }
 
             // The debugger is requesting the name of the module for this stack frame.
@@ -248,7 +256,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             endTp.dwColumn = 0;
             endTp.dwLine = (uint)_stackFrame.LineNo - 1;
 
-            docContext = new AD7DocumentContext(_stackFrame.FileName, begTp, endTp, null);
+            docContext = new AD7DocumentContext(_stackFrame.FileName, begTp, endTp, null, _stackFrame.Kind);
             return VSConstants.S_OK;
         }
 
@@ -271,8 +279,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Gets the language associated with this stack frame. 
         // In this sample, all the supported stack frames are C++
         int IDebugStackFrame2.GetLanguageInfo(ref string pbstrLanguage, ref Guid pguidLanguage) {
-            pbstrLanguage = "Python";
-            pguidLanguage = DebuggerConstants.guidLanguagePython;
+            _stackFrame.Kind.GetLanguageInfo(ref pbstrLanguage, ref pguidLanguage);
             return VSConstants.S_OK;
         }
 

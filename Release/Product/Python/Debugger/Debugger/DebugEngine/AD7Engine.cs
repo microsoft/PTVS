@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private bool _attached, _pseudoAttach;
         private BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
+        private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
 
         // These constants are duplicated in HpcLauncher and cannot be changed
         
@@ -103,6 +104,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string AttachRunning = "ATTACH_RUNNING";
 
         /// <summary>
+        /// True if Django debugging is enabled.
+        /// </summary>
+        public const string EnableDjangoDebugging = "DJANGO_DEBUG";
+
+        /// <summary>
         /// Specifies a directory mapping in the form of:
         /// 
         /// OldDir|NewDir
@@ -116,6 +122,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _breakpointManager = new BreakpointManager(this);
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
             Debug.WriteLine("Python Engine Created " + GetHashCode());
+            _engines.Add(new WeakReference(this));
         }
 
         ~AD7Engine() {
@@ -131,6 +138,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     // VS has released us
                     _process.Terminate();
                 } catch (InvalidOperationException) {
+                }
+            }
+
+            foreach (var engine in _engines) {
+                if (engine.Target == this) {
+                    _engines.Remove(engine);
+                    break;
                 }
             }
         }
@@ -411,7 +425,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             PythonDebugOptions debugOptions = PythonDebugOptions.None;
             bool attachRunning = false;
             List<string[]> dirMapping = null;
-            string interpreterOptions = null;
+            string interpreterOptions = null;           
             if (options != null) {
                 var splitOptions = SplitOptions(options);
                 
@@ -462,6 +476,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                                 break;
                             case AttachRunning:
                                 attachRunning = Convert.ToBoolean(setting[1]);
+                                break;
+                            case EnableDjangoDebugging:
+                                if (Boolean.TryParse(setting[1], out value) && value) {
+                                    debugOptions |= PythonDebugOptions.DjangoDebugging;
+                                }
                                 break;
                         }
                     }
@@ -1012,5 +1031,48 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns information about the given stack frame for the given process and thread ID.
+        /// 
+        /// If the process, thread, or frame are unknown the null is returned.
+        /// 
+        /// New in 1.5.
+        /// </summary>
+        public static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
+            if (frame >= 0) {
+                foreach (var engineRef in _engines) {
+                    var engine = engineRef.Target as AD7Engine;
+                    if (engine != null) {
+                        if (engine._process.Id == processId) {
+                            foreach (var thread in engine._threads.Keys) {
+                                if (thread.Id == threadId) {
+                                    var frames = thread.Frames;
+
+                                    if (frame < frames.Count) {
+                                        var curFrame = thread.Frames[frame];
+
+                                        switch (curFrame.Kind) {
+                                            case FrameKind.Django:
+                                                var djangoFrame = (DjangoStackFrame)curFrame;
+
+                                                return new AD7DocumentContext(djangoFrame.SourceFile,
+                                                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
+                                                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
+                                                    new AD7MemoryAddress(engine, djangoFrame.SourceFile, (uint)djangoFrame.SourceLine, curFrame),
+                                                    FrameKind.Python
+                                                );
+                                            default:
+                                                return null;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
     }
 }

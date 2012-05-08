@@ -13,14 +13,17 @@
  * ***************************************************************************/
 
 using System;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using EnvDTE90a;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using System.ComponentModel.Design;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Django {
     /// <summary>
@@ -60,6 +63,7 @@ namespace Microsoft.PythonTools.Django {
     public sealed class DjangoPackage : Package {
         internal const string DjangoTemplateLanguageId = "{918E5764-7026-4D57-918D-19D86AD73AC4}";
         internal const string DjangoExpressionEvaluatorGuid = "64F20547-C246-487F-83A6-587BC54BAB2F";
+        internal static Guid DjangoTemplateLanguageGuid = new Guid(DjangoTemplateLanguageId);
 
         /// <summary>
         /// Default constructor of the package.
@@ -91,17 +95,36 @@ namespace Microsoft.PythonTools.Django {
             RegisterEditorFactory(new DjangoEditorFactory(this));
             RegisterEditorFactory(new DjangoEditorFactoryPromptForEncoding(this));
             RegisterProjectFactory(new DjangoProjectFactory(this));
-
-            /*
+            
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs) {
                 // Create the command for the menu item.
-                CommandID menuCommandID = new CommandID(GuidList.guidDjangoCmdSet, (int)PkgCmdIDList.cmdidMyCommand);
-                MenuCommand menuItem = new MenuCommand(MenuItemCallback, menuCommandID);
+                CommandID menuCommandID = new CommandID(GuidList.guidDjangoCmdSet, (int)PkgCmdIDList.cmdidGotoTemplateSource);
+                MenuCommand menuItem = new MenuCommand(GotoTemplateSourceCode, menuCommandID);
                 mcs.AddCommand(menuItem);
-            }*/
+            }
         }
+
+        private void GotoTemplateSourceCode(object sender, EventArgs args) {
+            var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+
+            var curFrame = (StackFrame2)dte.Debugger.CurrentStackFrame;
+            
+            var frameId = curFrame.Depth;
+            var thread = curFrame.Parent;
+            var threadId = thread.ID;
+            var process = thread.Program;
+            var processId = process.Process.ProcessID;
+
+            var mappingDoc = AD7Engine.GetCodeMappingDocument(processId, threadId, (int)(frameId - 1));
+            if(mappingDoc != null) {
+                var debugger = (IVsDebugger2)GetService(typeof(IVsDebugger));
+                IVsTextView view;
+                ErrorHandler.ThrowOnFailure(debugger.ShowSource(mappingDoc, 1, 1, 1, 0, out view));
+            }
+        }
+
         #endregion
 
         internal new object GetService(Type serviceType) {

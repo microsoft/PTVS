@@ -26,8 +26,9 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly int _startLine, _endLine;
         private PythonEvaluationResult[] _variables;
         private readonly PythonThread _thread;
+        private readonly FrameKind _kind;
 
-        public PythonStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId) {
+        public PythonStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId, FrameKind kind) {
             _thread = thread;
             _frameName = frameName;
             _filename = filename;
@@ -36,6 +37,7 @@ namespace Microsoft.PythonTools.Debugger {
             _frameId = frameId;
             _startLine = startLine;
             _endLine = endLine;
+            _kind = kind;
         }
 
         /// <summary>
@@ -83,6 +85,12 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        public FrameKind Kind {
+            get {
+                return _kind;
+            }
+        }
+
         /// <summary>
         /// Gets the ID of the frame.  Frame 0 is the currently executing frame, 1 is the caller of the currently executing frame, etc...
         /// </summary>
@@ -120,7 +128,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// Attempts to parse the given text.  Returns true if the text is a valid expression.  Returns false if the text is not
         /// a valid expression and assigns the error messages produced to errorMsg.
         /// </summary>
-        public bool TryParseText(string text, out string errorMsg) {
+        public virtual bool TryParseText(string text, out string errorMsg) {
             CollectingErrorSink errorSink = new CollectingErrorSink();
             Parser parser = Parser.CreateParser(new StringReader(text), _thread.Process.LanguageVersion, new ParserOptions() { ErrorSink = errorSink });
             var ast = parser.ParseSingleStatement();
@@ -143,7 +151,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// Executes the given text against this stack frame.
         /// </summary>
         /// <param name="text"></param>
-        public void ExecuteText(string text, Action<PythonEvaluationResult> completion) {
+        public virtual void ExecuteText(string text, Action<PythonEvaluationResult> completion) {
             _thread.Process.ExecuteText(text, this, completion);
         }
 
@@ -155,7 +163,36 @@ namespace Microsoft.PythonTools.Debugger {
         public bool SetLineNumber(int lineNo) {
             return _thread.Process.SetLineNumber(this, lineNo);
         }
-
-
     }
+
+    class DjangoStackFrame : PythonStackFrame {
+        private readonly string _sourceFile;
+        private readonly int _sourceLine;
+
+        public DjangoStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId, string sourceFile, int sourceLine) 
+            : base(thread, frameName, filename, startLine, endLine, lineNo, argCount, frameId, FrameKind.Django) {
+            _sourceFile = sourceFile;
+            _sourceLine = sourceLine;
+        }
+
+        /// <summary>
+        /// The source .py file which implements the template logic.  The normal filename is the
+        /// name of the template it's self.
+        /// </summary>
+        public string SourceFile {
+            get {
+                return _sourceFile;
+            }
+        }
+
+        /// <summary>
+        /// The line in the source .py file which implements the template logic.
+        /// </summary>
+        public int SourceLine {
+            get {
+                return _sourceLine;
+            }
+        }
+    }
+
 }

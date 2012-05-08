@@ -42,5 +42,10 @@ namespace Microsoft.PythonTools.Debugger {
         /// of std lib code.
         /// </summary>
         DebugStdLib = 0x10,
+
+        /// <summary>
+        /// Set if Django debugging is enabled
+        /// </summary>
+        DjangoDebugging = 0x20
     }
 }

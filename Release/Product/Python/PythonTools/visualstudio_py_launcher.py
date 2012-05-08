@@ -23,6 +23,7 @@ redirect_output = False
 wait_on_exit = False
 break_on_systemexit_zero = False
 debug_stdlib = False
+django_debugging = False
 if len(sys.argv) >= 1 and sys.argv[0] == '--wait-on-exception':
     wait_on_exception = True
     del sys.argv[0]
@@ -44,6 +45,10 @@ if len(sys.argv) >= 1 and sys.argv[0] == '--debug-stdlib':
     debug_stdlib = True
     del sys.argv[0]
 
+if len(sys.argv) >= 1 and sys.argv[0] == '--django-debugging':
+    django_debugging = True
+    del sys.argv[0]
+
 __file__ = sys.argv[0]
 
 # remove all state we imported
@@ -59,4 +64,5 @@ visualstudio_py_debugger.debug(__file__,
                                 redirect_output, 
                                 wait_on_exit,
                                 break_on_systemexit_zero,
-                                debug_stdlib)
+                                debug_stdlib,
+                                django_debugging)

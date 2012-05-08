@@ -25,8 +25,11 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
+using System.ComponentModel.Design;
+using Microsoft.VisualStudio.Shell;
+using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Django.Project {
+namespace Microsoft.PythonTools.Django.Project {    
     class DjangoProject : FlavoredProject {
         internal DjangoPackage _package;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
@@ -41,11 +44,157 @@ namespace Microsoft.PythonTools.Django.Project {
         protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel) {
             base.InitializeForOuter(fileName, location, name, flags, ref guidProject, out cancel);
 
+            // register the open command with the menu service provided by the base class.  We can't just handle this
+            // internally because we kick off the context menu, pass ourselves as the IOleCommandTarget, and then our
+            // base implementation dispatches via the menu service.  So we could either have a different IOleCommandTarget
+            // which handles the Open command programmatically, or we can register it with the menu service.  
+            var menuService = (IMenuCommandService)((System.IServiceProvider)this).GetService(typeof(IMenuCommandService));
+            if (menuService != null) {
+                CommandID menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.Open);
+                OleMenuCommand menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
+                menuService.AddCommand(menuItem);
+            }
+            
+            
             // Load the icon we will be using for our nodes
             /*Assembly assembly = Assembly.GetExecutingAssembly();
             nodeIcon = new Icon(assembly.GetManifestResourceStream("Microsoft.VisualStudio.VSIP.Samples.Flavor.Node.ico"));
             this.FileAdded += new EventHandler<ProjectDocumentsChangeEventArgs>(this.UpdateIcons);
             this.FileRenamed += new EventHandler<ProjectDocumentsChangeEventArgs>(this.UpdateIcons);*/
+        }
+
+        private void OpenFileBeforeQueryStatus(object sender, EventArgs e) {
+            var oleMenu = sender as OleMenuCommand;
+            oleMenu.Supported = false;
+
+            foreach (var vsItemSelection in GetSelectedItems()) {
+                object name;
+                ErrorHandler.ThrowOnFailure(vsItemSelection.pHier.GetProperty(vsItemSelection.itemid, (int)__VSHPROPID.VSHPROPID_Name, out name));
+
+                if (IsHtmlFile(vsItemSelection.pHier, vsItemSelection.itemid)) {
+                    oleMenu.Supported = true;
+                }
+            }
+        }
+
+        private bool IsHtmlFile(IVsHierarchy iVsHierarchy, uint itemid) {
+            object name;
+            ErrorHandler.ThrowOnFailure(iVsHierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_Name, out name));
+
+            return IsHtmlFile(name);
+        }
+
+        private static bool IsHtmlFile(object name) {
+            string strName = name as string;
+            if (strName != null) {
+                var ext = Path.GetExtension(strName);
+                if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
+                    String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void OpenFile(object sender, EventArgs e) {
+            var oleMenu = sender as OleMenuCommand;
+            oleMenu.Supported = false;
+
+            foreach (var vsItemSelection in GetSelectedItems()) {
+                if (IsHtmlFile(vsItemSelection.pHier, vsItemSelection.itemid)) {
+                    ErrorHandler.ThrowOnFailure(OpenWithDjangoEditor(vsItemSelection.itemid));
+                } else {
+                    ErrorHandler.ThrowOnFailure(OpenWithDefaultEditor(vsItemSelection.itemid));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets all of the currently selected items.
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerable<VSITEMSELECTION> GetSelectedItems() {
+            IVsMonitorSelection monitorSelection = _package.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
+
+            IntPtr hierarchyPtr = IntPtr.Zero;
+            IntPtr selectionContainer = IntPtr.Zero;
+            try {
+                uint selectionItemId;
+                IVsMultiItemSelect multiItemSelect = null;
+                ErrorHandler.ThrowOnFailure(monitorSelection.GetCurrentSelection(out hierarchyPtr, out selectionItemId, out multiItemSelect, out selectionContainer));
+
+                if (selectionItemId != VSConstants.VSITEMID_NIL && hierarchyPtr != IntPtr.Zero) {
+                    IVsHierarchy hierarchy = Marshal.GetObjectForIUnknown(hierarchyPtr) as IVsHierarchy;
+
+                    if (selectionItemId != VSConstants.VSITEMID_SELECTION) {
+                        // This is a single selection. Compare hirarchy with our hierarchy and get node from itemid
+                        if (Utilities.IsSameComObject(this, hierarchy)) {
+                            yield return new VSITEMSELECTION() { itemid = selectionItemId, pHier = hierarchy };
+                        }
+                    } else if (multiItemSelect != null) {
+                        // This is a multiple item selection.
+                        // Get number of items selected and also determine if the items are located in more than one hierarchy
+
+                        uint numberOfSelectedItems;
+                        int isSingleHierarchyInt;
+                        ErrorHandler.ThrowOnFailure(multiItemSelect.GetSelectionInfo(out numberOfSelectedItems, out isSingleHierarchyInt));
+                        bool isSingleHierarchy = (isSingleHierarchyInt != 0);
+
+                        // Now loop all selected items and add to the list only those that are selected within this hierarchy
+                        if (!isSingleHierarchy || (isSingleHierarchy && Utilities.IsSameComObject(this, hierarchy))) {
+                            Debug.Assert(numberOfSelectedItems > 0, "Bad number of selected itemd");
+                            VSITEMSELECTION[] vsItemSelections = new VSITEMSELECTION[numberOfSelectedItems];
+                            uint flags = (isSingleHierarchy) ? (uint)__VSGSIFLAGS.GSI_fOmitHierPtrs : 0;
+                            ErrorHandler.ThrowOnFailure(multiItemSelect.GetSelectedItems(flags, numberOfSelectedItems, vsItemSelections));
+
+                            foreach (VSITEMSELECTION vsItemSelection in vsItemSelections) {
+                                yield return vsItemSelection;
+                            }
+                        }
+                    }
+                }
+            } finally {
+                if (hierarchyPtr != IntPtr.Zero) {
+                    Marshal.Release(hierarchyPtr);
+                }
+                if (selectionContainer != IntPtr.Zero) {
+                    Marshal.Release(selectionContainer);
+                }
+            }
+        }
+
+        private int OpenWithDefaultEditor(uint selectionItemId) {
+            Guid view = Guid.Empty;
+            IVsWindowFrame frame;
+            int hr = ((IVsProject)innerVsHierarchy).OpenItem(
+                selectionItemId,
+                ref view,
+                IntPtr.Zero,
+                out frame
+            );
+            if (ErrorHandler.Succeeded(hr)) {
+                hr = frame.Show();
+            }
+            return hr;
+        }
+
+
+        private int OpenWithDjangoEditor(uint selectionItemId) {
+            Guid ourEditor = typeof(DjangoEditorFactory).GUID;
+            Guid view = Guid.Empty;
+            IVsWindowFrame frame;
+            int hr = ((IVsProject3)innerVsHierarchy).ReopenItem(
+                selectionItemId,
+                ref ourEditor,
+                null,
+                ref view,
+                new IntPtr(-1),
+                out frame
+            );
+            if (ErrorHandler.Succeeded(hr)) {
+                hr = frame.Show();
+            }
+            return hr;
         }
 
         protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
@@ -80,6 +229,18 @@ namespace Microsoft.PythonTools.Django.Project {
                             return res;
                         }
                         break;
+                    case VSConstants.VsUIHierarchyWindowCmdIds.UIHWCMDID_DoubleClick:
+                    case VSConstants.VsUIHierarchyWindowCmdIds.UIHWCMDID_EnterKey:
+                        // open the document if it's an HTML file
+                        if (IsHtmlFile(innerVsHierarchy, itemid)) {
+                            int hr = OpenWithDjangoEditor(itemid);
+
+                            if (ErrorHandler.Succeeded(hr)) {
+                                return hr;
+                            }
+                        }
+                        break;
+
                 }
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
@@ -210,73 +371,24 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private bool TryHandleRightClick(IntPtr pvaIn, out int res) {
-            IVsMonitorSelection monitorSelection = _package.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
+            Guid itemType = Guid.Empty;
+            foreach (var vsItemSelection in GetSelectedItems()) {
+                Guid typeGuid;
+                ErrorHandler.ThrowOnFailure(vsItemSelection.pHier.GetGuidProperty(vsItemSelection.itemid, (int)__VSHPROPID.VSHPROPID_TypeGuid, out typeGuid));
 
-            IntPtr hierarchyPtr = IntPtr.Zero;
-            IntPtr selectionContainer = IntPtr.Zero;
-            try {
-                uint selectionItemId;
-                IVsMultiItemSelect multiItemSelect = null;
-                ErrorHandler.ThrowOnFailure(monitorSelection.GetCurrentSelection(out hierarchyPtr, out selectionItemId, out multiItemSelect, out selectionContainer));
-
-                if (selectionItemId != VSConstants.VSITEMID_NIL && hierarchyPtr != IntPtr.Zero) {
-                    IVsHierarchy hierarchy = Marshal.GetObjectForIUnknown(hierarchyPtr) as IVsHierarchy;
-
-                    if (selectionItemId != VSConstants.VSITEMID_SELECTION) {
-                        // This is a single selection. Compare hirarchy with our hierarchy and get node from itemid
-                        if (Utilities.IsSameComObject(this, hierarchy)) {
-                            Guid propGuid;
-                            ErrorHandler.ThrowOnFailure(hierarchy.GetGuidProperty(selectionItemId, (int)__VSHPROPID.VSHPROPID_TypeGuid, out propGuid));
-
-                            if (TryShowContextMenu(pvaIn, propGuid, out res)) {
-                                return true;
-                            }
-                        }
-                    } else if (multiItemSelect != null) {
-                        // This is a multiple item selection.
-                        // Get number of items selected and also determine if the items are located in more than one hierarchy
-
-                        uint numberOfSelectedItems;
-                        int isSingleHierarchyInt;
-                        ErrorHandler.ThrowOnFailure(multiItemSelect.GetSelectionInfo(out numberOfSelectedItems, out isSingleHierarchyInt));
-                        bool isSingleHierarchy = (isSingleHierarchyInt != 0);
-
-                        // Now loop all selected items and add to the list only those that are selected within this hierarchy
-                        if (!isSingleHierarchy || (isSingleHierarchy && Utilities.IsSameComObject(this, hierarchy))) {
-                            Debug.Assert(numberOfSelectedItems > 0, "Bad number of selected itemd");
-                            VSITEMSELECTION[] vsItemSelections = new VSITEMSELECTION[numberOfSelectedItems];
-                            uint flags = (isSingleHierarchy) ? (uint)__VSGSIFLAGS.GSI_fOmitHierPtrs : 0;
-                            ErrorHandler.ThrowOnFailure(multiItemSelect.GetSelectedItems(flags, numberOfSelectedItems, vsItemSelections));
-                            Guid itemType = Guid.Empty;
-                            foreach (VSITEMSELECTION vsItemSelection in vsItemSelections) {
-                                Guid typeGuid;
-                                ErrorHandler.ThrowOnFailure(vsItemSelection.pHier.GetGuidProperty(vsItemSelection.itemid, (int)__VSHPROPID.VSHPROPID_TypeGuid, out typeGuid));
-
-                                if (itemType == Guid.Empty) {
-                                    itemType = typeGuid;
-                                } else if (itemType != typeGuid) {
-                                    // we have multiple item types
-                                    itemType = Guid.Empty;
-                                    break;
-                                }
-                            }
-
-                            if (TryShowContextMenu(pvaIn, itemType, out res)) {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            } finally {
-                if (hierarchyPtr != IntPtr.Zero) {
-                    Marshal.Release(hierarchyPtr);
-                }
-                if (selectionContainer != IntPtr.Zero) {
-                    Marshal.Release(selectionContainer);
+                if (itemType == Guid.Empty) {
+                    itemType = typeGuid;
+                } else if (itemType != typeGuid) {
+                    // we have multiple item types
+                    itemType = Guid.Empty;
+                    break;
                 }
             }
 
-            res = VSConstants.E_FAIL;
+            if (TryShowContextMenu(pvaIn, itemType, out res)) {
+                return true;
+            }
+
             return false;
         }
 
@@ -329,8 +441,7 @@ namespace Microsoft.PythonTools.Django.Project {
             pnts[0].y = points.y;
             return shell.ShowContextMenu(0, ref menuGroup, menuId, pnts, (Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget)this);
         }
-
-
+        
         /// <summary>
         /// This should first QI for (and keep a reference to) each interface we plan to call on the inner project
         /// and then call the base implementation to do the rest. Because the base implementation

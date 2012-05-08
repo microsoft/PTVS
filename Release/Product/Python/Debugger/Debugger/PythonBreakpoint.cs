@@ -18,16 +18,18 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly PythonProcess _process;
         private readonly string _filename;
         private readonly int _lineNo, _breakpointId;
+        private readonly bool _isDjangoBreakpoint;
         private bool _breakWhenChanged;
         private string _condition;
 
-        public PythonBreakpoint(PythonProcess process, string filename, int lineNo, string condition, bool breakWhenChanged, int breakpointId) {
+        public PythonBreakpoint(PythonProcess process, string filename, int lineNo, string condition, bool breakWhenChanged, int breakpointId, bool isDjangoBreakpoint = false) {
             _process = process;
             _filename = filename;
             _lineNo = lineNo;
             _breakpointId = breakpointId;
             _condition = condition;
             _breakWhenChanged = breakWhenChanged;
+            _isDjangoBreakpoint = isDjangoBreakpoint;
         }
 
         /// <summary>
@@ -36,6 +38,12 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         public void Add() {
             _process.BindBreakpoint(this);
+        }
+
+        public bool IsDjangoBreakpoint {
+            get {
+                return _isDjangoBreakpoint;
+            }
         }
 
         /// <summary>

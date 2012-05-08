@@ -118,6 +118,7 @@ namespace Microsoft.PythonTools.Debugger {
                 (((options & PythonDebugOptions.RedirectOutput) != 0) ? " --redirect-output " : "") +
                 (((options & PythonDebugOptions.BreakOnSystemExitZero) != 0) ? " --break-on-systemexit-zero " : "") +
                 (((options & PythonDebugOptions.DebugStdLib) != 0) ? " --debug-stdlib " : "") +
+                (((options & PythonDebugOptions.DjangoDebugging) != 0) ? " --django-debugging " : "") +
                 args;
 
             if (env != null) {
@@ -268,6 +269,13 @@ namespace Microsoft.PythonTools.Debugger {
         public PythonBreakpoint AddBreakPoint(string filename, int lineNo, string condition = "", bool breakWhenChanged = false) {
             int id = _breakpointCounter++;
             var res = new PythonBreakpoint(this, filename, lineNo, condition, breakWhenChanged, id);
+            _breakpoints[id] = res;
+            return res;
+        }
+
+        public PythonBreakpoint AddDjangoBreakPoint(string filename, int lineNo) {
+            int id = _breakpointCounter++;
+            var res = new PythonBreakpoint(this, filename, lineNo, null, false, id, true);
             _breakpoints[id] = res;
             return res;
         }
@@ -583,12 +591,24 @@ namespace Microsoft.PythonTools.Debugger {
                 string frameName = socket.ReadString();
                 string filename = socket.ReadString();
                 int argCount = socket.ReadInt();
-                int varCount = socket.ReadInt();
-                PythonEvaluationResult[] variables = new PythonEvaluationResult[varCount];
+                var frameKind = (FrameKind)socket.ReadInt();
                 PythonStackFrame frame = null; 
                 if (thread != null) {
-                    frame = new PythonStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i);
+                    switch (frameKind) {
+                        case FrameKind.Django:
+                            string sourceFile = socket.ReadString();
+                            var sourceLine = socket.ReadInt();
+                            frame = new DjangoStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i, sourceFile, sourceLine);
+                            break;
+                        default:
+                            frame = new PythonStackFrame(thread, frameName, filename, startLine, endLine, lineNo, argCount, i, frameKind);
+                            break;
+                    }
+                    
                 }
+
+                int varCount = socket.ReadInt();
+                PythonEvaluationResult[] variables = new PythonEvaluationResult[varCount];
                 for (int j = 0; j < variables.Length; j++) {
                     string name = socket.ReadString();
                     if (frame != null) {
@@ -788,13 +808,20 @@ namespace Microsoft.PythonTools.Debugger {
         public static extern Int32 WaitForSingleObject(SafeWaitHandle handle, Int32 milliseconds);
 
         internal void BindBreakpoint(PythonBreakpoint breakpoint) {
-            DebugWriteCommand("Bind Breakpoint");
+            DebugWriteCommand(String.Format("Bind Breakpoint IsDjango: {0}", breakpoint.IsDjangoBreakpoint));
+
             lock (_socketLock) {
-                _socket.Send(SetBreakPointCommandBytes);
+                if (breakpoint.IsDjangoBreakpoint) {
+                    _socket.Send(AddDjangoBreakPointCommandBytes);
+                } else {
+                    _socket.Send(SetBreakPointCommandBytes);
+                }
                 _socket.Send(BitConverter.GetBytes(breakpoint.Id));
                 _socket.Send(BitConverter.GetBytes(breakpoint.LineNo));
                 SendString(_socket, MapFile(breakpoint.Filename));
-                SendCondition(breakpoint);
+                if (!breakpoint.IsDjangoBreakpoint) {
+                    SendCondition(breakpoint);
+                }
             }
         }
 
@@ -898,9 +925,16 @@ namespace Microsoft.PythonTools.Debugger {
             if (_socket != null && _socket.Connected) {
                 DebugWriteCommand("Disable Breakpoint");
                 lock (_socketLock) {
-                    _socket.Send(RemoveBreakPointCommandBytes);
+                    if (unboundBreakpoint.IsDjangoBreakpoint) {
+                        _socket.Send(RemoveDjangoBreakPointCommandBytes);
+                    } else {
+                        _socket.Send(RemoveBreakPointCommandBytes);
+                    }
                     _socket.Send(BitConverter.GetBytes(unboundBreakpoint.LineNo));
                     _socket.Send(BitConverter.GetBytes(unboundBreakpoint.Id));
+                    if (unboundBreakpoint.IsDjangoBreakpoint) {
+                        SendString(_socket, unboundBreakpoint.Filename);
+                    }
                 }
             }
         }
@@ -960,6 +994,8 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] DetachCommandBytes = MakeCommand("detc");
         private static byte[] SetExceptionInfoCommandBytes = MakeCommand("sexi");
         private static byte[] SetExceptionHandlerInfoCommandBytes = MakeCommand("sehi");
+        private static byte[] RemoveDjangoBreakPointCommandBytes = MakeCommand("bkdr");
+        private static byte[] AddDjangoBreakPointCommandBytes = MakeCommand("bkda");
 
         private static byte[] MakeCommand(string command) {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };

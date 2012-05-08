@@ -9,6 +9,7 @@ import struct
 import weakref
 import traceback
 import types
+import bisect
 from os import path
 
 try:
@@ -36,6 +37,7 @@ MODULES = []
 
 BREAK_ON_SYSTEMEXIT_ZERO = False
 DEBUG_STDLIB = False
+DJANGO_DEBUG = False
 
 # Py3k compat - alias unicode to str
 try:
@@ -84,6 +86,10 @@ STEPPING_INTO = 4
 STEPPING_OVER = 5     # last value, we increment past this.
 
 USER_STEPPING = (STEPPING_OUT, STEPPING_INTO, STEPPING_OVER)
+
+FRAME_KIND_NONE = 0
+FRAME_KIND_PYTHON = 1
+FRAME_KIND_DJANGO = 2
 
 def cmd(cmd_str):
     if sys.version >= '3.0':
@@ -321,6 +327,70 @@ def update_all_thread_stacks(blocking_thread):
     
         cur_thread._block_starting_lock.release()
 
+
+class DjangoBreakpointInfo(object):
+    def __init__(self, filename):
+        self._line_locations = None
+        self.filename = filename
+        self.breakpoints = {}
+    
+    def add_breakpoint(self, lineno, brkpt_id):
+        self.breakpoints[lineno] = brkpt_id
+
+    def remove_breakpoint(self, lineno):
+        del self.breakpoints[lineno]
+    
+    @property
+    def line_locations(self):
+        if self._line_locations is None:
+            # we need to calculate our line number offset information
+            try:
+                contents = file(self.filename, 'rb')
+                line_info = []
+                file_len = 0
+                for line in contents:
+                    file_len += len(line)
+                    line_info.append(file_len)
+                contents.close()
+                self._line_locations = line_info
+            except:
+                # file not available, locked, etc...
+                pass
+
+        return self._line_locations
+
+    def get_line_range(self, start, end):
+        line_locs = self.line_locations 
+        if line_locs is not None:
+            low_line = bisect.bisect_right(line_locs, start)
+            hi_line = bisect.bisect_right(line_locs, end)
+
+            return low_line, hi_line
+
+        return (None, None)
+
+    def should_break(self, start, end):
+        low_line, hi_line = self.get_line_range(start, end)
+        if low_line is not None and hi_line is not None:
+            # low_line/hi_line is 0 based, self.breakpoints is 1 based
+            for i in xrange(low_line+1, hi_line+2): 
+                bkpt_id = self.breakpoints.get(i)
+                if bkpt_id  is not None:
+                    return True, bkpt_id 
+
+        return False, 0
+
+
+def get_django_frame_source(frame):
+    if frame.f_code.co_name == 'render':
+        self_obj = frame.f_locals.get('self', None)
+        if self_obj is not None:
+            source_obj = getattr(self_obj, 'source', None)
+            if source_obj is not None:
+                return source_obj
+
+    return None
+
 class Thread(object):
     def __init__(self, id = None):
         if id is not None:
@@ -391,16 +461,18 @@ class Thread(object):
     def handle_call(self, frame, arg):
         self.push_frame(frame)
 
-        if frame.f_code.co_name == 'render':
-            self_obj = frame.f_locals.get('self', None)
-            if self_obj is not None:
-                source_obj = getattr(self_obj, 'source', None)
-                if source_obj is not None:
-                    origin, (start, end) = source_obj
+        if DJANGO_BREAKPOINTS:
+            source_obj = get_django_frame_source(frame)
+            if source_obj is not None:
+                origin, (start, end) = source_obj
                     
-                    active_bps = DJANGO_BREAKPOINTS.get(origin.name, None)
-                    if active_bps:
-                        print('Should maybe break in file', origin.name, start, end)
+                active_bps = DJANGO_BREAKPOINTS.get(origin.name)
+                if active_bps is not None:
+                    should_break, bkpt_id = active_bps.should_break(start, end)
+                    if should_break:
+                        probe_stack()
+                        update_all_thread_stacks(self)
+                        self.block(lambda: (report_breakpoint_hit(bkpt_id, self.id), mark_all_threads_for_break()))
 
         if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
             probe_stack()
@@ -798,13 +870,49 @@ class Thread(object):
                 vars.append((var_name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
                 
         
-            frames.append((cur_frame.f_code.co_firstlineno,
-                           lineno, 
-                           cur_frame.f_lineno, 
-                           cur_frame.f_code.co_name,
-                           get_code_filename(cur_frame.f_code),
-                           cur_frame.f_code.co_argcount,
-                           vars))
+            frame_info = None
+
+            if DJANGO_DEBUG:
+                source_obj = get_django_frame_source(cur_frame)
+                if source_obj is not None:
+                    origin, (start, end) = source_obj
+
+                    filename = str(origin)
+                    bp_info = DJANGO_BREAKPOINTS.get(filename)
+                    if bp_info is None:
+                        DJANGO_BREAKPOINTS[filename] = bp_info = DjangoBreakpointInfo(filename)
+
+                    low_line, hi_line = bp_info.get_line_range(start, end)
+                    if low_line is not None and hi_line is not None:
+                        frame_kind = FRAME_KIND_DJANGO
+                        frame_info = (
+                            low_line,
+                            hi_line, 
+                            low_line, 
+                            cur_frame.f_code.co_name,
+                            str(origin),
+                            cur_frame.f_code.co_argcount,
+                            vars,
+                            FRAME_KIND_DJANGO,
+                            get_code_filename(cur_frame.f_code),
+                            cur_frame.f_lineno
+                        )
+
+            if frame_info is None:
+                frame_info = (
+                    cur_frame.f_code.co_firstlineno,
+                    lineno, 
+                    cur_frame.f_lineno, 
+                    cur_frame.f_code.co_name,
+                    get_code_filename(cur_frame.f_code),
+                    cur_frame.f_code.co_argcount,
+                    vars,
+                    FRAME_KIND_PYTHON,
+                    None,
+                    None
+                )
+
+            frames.append(frame_info)
         
             cur_frame = cur_frame.f_back
                         
@@ -818,7 +926,7 @@ class Thread(object):
         
             # send the frame count
             conn.send(struct.pack('i', len(frames)))
-            for firstlineno, lineno, curlineno, name, filename, argcount, variables in frames:
+            for firstlineno, lineno, curlineno, name, filename, argcount, variables, frameKind, sourceFile, sourceLine in frames:
                 # send each frame    
                 conn.send(struct.pack('i', firstlineno))
                 conn.send(struct.pack('i', lineno))
@@ -827,6 +935,11 @@ class Thread(object):
                 write_string(name)
                 write_string(filename)
                 conn.send(struct.pack('i', argcount))
+                
+                conn.send(struct.pack('i', frameKind))
+                if frameKind == FRAME_KIND_DJANGO:
+                    write_string(sourceFile)
+                    conn.send(struct.pack('i', sourceLine))
                 
                 conn.send(struct.pack('i', len(variables)))
                 for name, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len in variables:
@@ -1009,13 +1122,21 @@ class DebuggerLoop(object):
     def command_remove_django_breakpoint(self):
         lineNo = read_int(self.conn)
         brkpt_id = read_int(self.conn)
-        #del DJANGO_BREAKPOINTS[filename]
+        filename = read_string(self.conn)
+
+        bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
+        if bp_info is not None:
+            bp_info.remove_breakpoint(lineNo)
 
     def command_add_django_breakpoint(self):
         brkpt_id = read_int(self.conn)
         lineNo = read_int(self.conn)
         filename = read_string(self.conn)
-        DJANGO_BREAKPOINTS[filename.lower()] = lineNo
+        bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
+        if bp_info is None:
+            DJANGO_BREAKPOINTS[filename.lower()] = bp_info = DjangoBreakpointInfo(filename)
+
+        bp_info.add_breakpoint(lineNo, brkpt_id)
         
     def command_break_all(self):
         global SEND_BREAK_COMPLETE
@@ -1573,8 +1694,7 @@ def print_exception():
     for out in traceback.format_exception_only(sys.exc_info()[0], sys.exc_info()[1]):
         sys.stdout.write(out)
     
-
-def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit, break_on_systemexit_zero = False, debug_stdlib = False):
+def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit, break_on_systemexit_zero = False, debug_stdlib = False, django_debugging = False):
     # remove us from modules so there's no trace of us
     sys.modules['$visualstudio_py_debugger'] = sys.modules['visualstudio_py_debugger']
     __name__ = '$visualstudio_py_debugger'
@@ -1585,14 +1705,16 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     del globals_obj['redirect_output']
     del globals_obj['wait_on_exit']
     del globals_obj['debug_id']
+    del globals_obj['django_debugging']
     if 'break_on_systemexit_zero' in globals_obj: 
         del globals_obj['break_on_systemexit_zero']
     if 'debug_stdlib' in globals_obj: 
         del globals_obj['debug_stdlib']
 
-    global BREAK_ON_SYSTEMEXIT_ZERO, DEBUG_STDLIB
+    global BREAK_ON_SYSTEMEXIT_ZERO, DEBUG_STDLIB, DJANGO_DEBUG
     BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
     DEBUG_STDLIB = debug_stdlib
+    DJANGO_DEBUG = django_debugging
 
     attach_process(port_num, debug_id)
 

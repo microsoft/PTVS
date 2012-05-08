@@ -19,17 +19,17 @@ using Microsoft.VisualStudio.Debugger.Interop;
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class represents a document context to the debugger. A document context represents a location within a source file. 
     class AD7DocumentContext : IDebugDocumentContext2 {
-        string m_fileName;
-        TEXT_POSITION m_begPos;
-        TEXT_POSITION m_endPos;
-        AD7MemoryAddress m_codeContext;
+        private readonly string _fileName;
+        private readonly TEXT_POSITION _begPos, _endPos;
+        private readonly AD7MemoryAddress _codeContext;
+        private readonly FrameKind _frameKind;
 
-
-        public AD7DocumentContext(string fileName, TEXT_POSITION begPos, TEXT_POSITION endPos, AD7MemoryAddress codeContext) {
-            m_fileName = fileName;
-            m_begPos = begPos;
-            m_endPos = endPos;
-            m_codeContext = codeContext;
+        public AD7DocumentContext(string fileName, TEXT_POSITION begPos, TEXT_POSITION endPos, AD7MemoryAddress codeContext, FrameKind frameKind) {
+            _fileName = fileName;
+            _begPos = begPos;
+            _endPos = endPos;
+            _codeContext = codeContext;
+            _frameKind = frameKind;
         }
 
 
@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             ppEnumCodeCxts = null;
 
             AD7MemoryAddress[] codeContexts = new AD7MemoryAddress[1];
-            codeContexts[0] = m_codeContext;
+            codeContexts[0] = _codeContext;
             ppEnumCodeCxts = new AD7CodeContextEnum(codeContexts);
             return VSConstants.S_OK;
         }
@@ -66,14 +66,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Gets the language associated with this document context.
         // The language for this sample is always C++
         int IDebugDocumentContext2.GetLanguageInfo(ref string pbstrLanguage, ref Guid pguidLanguage) {
-            pbstrLanguage = "Python";
-            pguidLanguage = DebuggerConstants.guidLanguagePython;
+            _frameKind.GetLanguageInfo(ref pbstrLanguage, ref pguidLanguage);
             return VSConstants.S_OK;
         }
 
         // Gets the displayable name of the document that contains this document context.
         int IDebugDocumentContext2.GetName(enum_GETNAME_TYPE gnType, out string pbstrFileName) {
-            pbstrFileName = m_fileName;
+            pbstrFileName = _fileName;
             return VSConstants.S_OK;
         }
 
@@ -89,11 +88,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Gets the file statement range of the document context.
         // A statement range is the range of the lines that contributed the code to which this document context refers.
         int IDebugDocumentContext2.GetStatementRange(TEXT_POSITION[] pBegPosition, TEXT_POSITION[] pEndPosition) {
-            pBegPosition[0].dwColumn = m_begPos.dwColumn;
-            pBegPosition[0].dwLine = m_begPos.dwLine;
+            pBegPosition[0].dwColumn = _begPos.dwColumn;
+            pBegPosition[0].dwLine = _begPos.dwLine;
 
-            pEndPosition[0].dwColumn = m_endPos.dwColumn;
-            pEndPosition[0].dwLine = m_endPos.dwLine;
+            pEndPosition[0].dwColumn = _endPos.dwColumn;
+            pEndPosition[0].dwLine = _endPos.dwLine;
 
             return VSConstants.S_OK;
         }

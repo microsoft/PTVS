@@ -32,9 +32,7 @@ namespace AnalysisTest {
     [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
     [DeploymentItem("Binaries\\Win32\\Debug\\PyDebugAttach.dll")]
     [DeploymentItem("Binaries\\Win32\\Debug\\x64\\PyDebugAttach.dll", "x64")]
-    public class DebuggerTests {
-        private const string _pythonPath = "C:\\Python26\\python.exe";
-
+    public class DebuggerTests : BaseDebuggerTests {
         [TestMethod]
         public void TestThreads() {
             // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.
@@ -280,7 +278,7 @@ namespace AnalysisTest {
 
         #region BreakAll Tests
 
-        internal const string DebuggerTestPath = @"Python.VS.TestData\DebuggerProject\";
+        
         [TestMethod]
         public void TestBreakAll() {
             var debugger = new PythonDebugger();
@@ -981,89 +979,6 @@ namespace AnalysisTest {
             process.WaitForExit();
 
             Assert.AreEqual(bindFailed, true);
-        }
-
-        /// <summary>
-        /// Runs the given file name setting break points at linenos.  Expects to hit the lines
-        /// in lineHits as break points in the order provided in lineHits.  If lineHits is negative
-        /// expects to hit the positive number and then removes the break point.
-        /// </summary>
-        private void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true) {
-            var debugger = new PythonDebugger();
-            PythonThread thread = null;
-            string rootedFilename = filename;
-            if (!Path.IsPathRooted(filename)) {
-                rootedFilename = DebuggerTestPath + filename;
-            }
-
-            var process = DebugProcess(debugger, rootedFilename, (newproc, newthread) => {
-                for (int i = 0; i < linenos.Length; i++) {
-                    var line = linenos[i];
-
-                    int finalLine = line;
-                    if (finalLine < 0) {
-                        finalLine = -finalLine;
-                    }
-
-                    PythonBreakpoint breakPoint;
-                    if (conditions != null) {
-                        if (breakWhenChanged != null) {
-                            breakPoint = newproc.AddBreakPoint(breakFilename ?? filename, line, conditions[i], breakWhenChanged[i]);
-                        } else {
-                            breakPoint = newproc.AddBreakPoint(breakFilename ?? filename, line, conditions[i]);
-                        }
-                    } else {
-                        breakPoint = newproc.AddBreakPoint(breakFilename ?? filename, line);
-                    }
-
-                    breakPoint.Add();
-                }
-                thread = newthread;
-            }, cwd: cwd);
-
-            process.BreakpointBindFailed += (sender, args) => {
-                if (checkBound) {
-                    Assert.Fail("unexpected bind failure");
-                }
-            };
-
-            var lineList = new List<int>(linenos);
-
-            int breakpointBound = 0;
-            int breakpointHit = 0;
-            process.BreakpointBindSucceeded += (sender, args) => {
-                Assert.AreEqual(args.Breakpoint.Filename, filename);
-                int index = lineList.IndexOf(args.Breakpoint.LineNo);
-                Assert.IsTrue(index != -1);
-                lineList[index] = -1;
-                breakpointBound++;
-            };
-
-            process.BreakpointHit += (sender, args) => {
-                if (lineHits[breakpointHit] < 0) {
-                    Assert.AreEqual(args.Breakpoint.LineNo, -lineHits[breakpointHit++]);
-                    try {
-                        args.Breakpoint.Remove();
-                    } catch {
-                        Debug.Assert(false);
-                    }
-                } else {
-                    Assert.AreEqual(args.Breakpoint.LineNo, lineHits[breakpointHit++]);
-                }
-                if (checkThread) {
-                    Assert.AreEqual(args.Thread, thread);
-                }
-                process.Continue();
-            };
-
-            process.Start();
-
-            process.WaitForExit(20000);
-
-            Assert.AreEqual(breakpointHit, lineHits.Length);
-            if (checkBound) {
-                Assert.AreEqual(breakpointBound, linenos.Length);
-            }
         }
 
         #endregion

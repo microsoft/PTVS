@@ -26,8 +26,9 @@
 
   <!--Defines VK_INSERT -->
   <Extern href="virtkeys.h"/>
-  
 
+  <Extern href="VsDebugGuids.h" />
+  <Extern href="VsDbgCmd.h" />
 
 
   <!--The Commands section is where we the commands, menus and menu groups are defined.
@@ -67,6 +68,16 @@
           <ButtonText>Add new Django app...</ButtonText>
         </Strings>
       </Button>
+
+      <Button guid="guidDjangoCmdSet" id="cmdidGotoTemplateSource" priority="0x700" type="Button">
+        <Parent guid="guidVSDebugGroup" id="IDG_CALLSTACK_NAVIGATE"/>
+        <Icon guid="guidImages" id="bmpPic1"/>
+
+        <Strings>
+          <ButtonText>Go to template source</ButtonText>
+        </Strings>
+      </Button>
+
     </Buttons>
 
 
@@ -114,6 +125,7 @@
     <GuidSymbol name="guidDjangoCmdSet" value="{5b3281a5-d037-4e84-93aa-a6819304dbd9}">
       <IDSymbol name="cmdidValidateDjangoApp" value ="0x1001"/>
       <IDSymbol name="cmdidStartApp" value ="0x1002"/>
+      <IDSymbol name="cmdidGotoTemplateSource" value="0x1003"/>
     </GuidSymbol>
     
     <GuidSymbol name="guidDjangoEditorFactory" value="{96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f}" />

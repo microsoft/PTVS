@@ -68,6 +68,8 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
                         commandLine += " " + _launcher._testServerPort;                        
                         return commandLine;
+                    case "DjangoDebugging":
+                        return "True";
                 }
                 return _realProject.GetProperty(name);
             }

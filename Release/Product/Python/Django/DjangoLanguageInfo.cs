@@ -73,8 +73,8 @@ namespace Microsoft.PythonTools.Django {
         #region IVsLanguageDebugInfo Members
 
         public int GetLanguageID(IVsTextBuffer pBuffer, int iLine, int iCol, out Guid pguidLanguageID) {
-            pguidLanguageID = Guid.Empty;
-            return VSConstants.E_FAIL;
+            pguidLanguageID = DjangoPackage.DjangoTemplateLanguageGuid;
+            return VSConstants.S_OK;
         }
 
         public int GetLocationOfName(string pszName, out string pbstrMkDoc, TextSpan[] pspanLocation) {
@@ -106,7 +106,6 @@ namespace Microsoft.PythonTools.Django {
             pCodeSpan[0].iStartLine = iLine;
             pCodeSpan[0].iEndLine = iLine;
             return VSConstants.S_OK;
-            //return VSConstants.E_FAIL;
         }
 
         #endregion

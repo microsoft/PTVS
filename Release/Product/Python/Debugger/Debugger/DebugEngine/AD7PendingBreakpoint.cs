@@ -37,9 +37,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public AD7PendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, AD7Engine engine, BreakpointManager bpManager) {
             _bpRequest = pBPRequest;
             BP_REQUEST_INFO[] requestInfo = new BP_REQUEST_INFO[1];
-            EngineUtils.CheckOk(_bpRequest.GetRequestInfo(enum_BPREQI_FIELDS.BPREQI_BPLOCATION | enum_BPREQI_FIELDS.BPREQI_CONDITION, requestInfo));
-            _bpRequestInfo = requestInfo[0];
-
+            EngineUtils.CheckOk(_bpRequest.GetRequestInfo(enum_BPREQI_FIELDS.BPREQI_BPLOCATION | enum_BPREQI_FIELDS.BPREQI_CONDITION | enum_BPREQI_FIELDS.BPREQI_ALLFIELDS, requestInfo));
+            _bpRequestInfo = requestInfo[0];            
+            
             _engine = engine;
             _bpManager = bpManager;
             _boundBreakpoints = new System.Collections.Generic.List<AD7BoundBreakpoint>();
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             AD7MemoryAddress codeContext = new AD7MemoryAddress(_engine, documentName, startPosition[0].dwLine);
 
-            return new AD7DocumentContext(documentName, startPosition[0], startPosition[0], codeContext);
+            return new AD7DocumentContext(documentName, startPosition[0], startPosition[0], codeContext, FrameKind.Python);
         }
 
         // Remove all of the bound breakpoints for this pending breakpoint
@@ -96,36 +96,63 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         int IDebugPendingBreakpoint2.Bind() {
             if (CanBind()) {
                 IDebugDocumentPosition2 docPosition = (IDebugDocumentPosition2)(Marshal.GetObjectForIUnknown(_bpRequestInfo.bpLocation.unionmember2));
-
+                
                 // Get the name of the document that the breakpoint was put in
                 string documentName;
                 EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
-
+                
+                
                 // Get the location in the document that the breakpoint is in.
                 TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
                 EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
-
+                
                 lock (_boundBreakpoints) {
-                    var bp = _engine.Process.AddBreakPoint(documentName, (int)(startPosition[0].dwLine + 1), _bpRequestInfo.bpCondition.bstrCondition, _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE ? false : true);
-                    AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp, GetDocumentContext(bp));
-                    AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution);
-                    _boundBreakpoints.Add(boundBreakpoint);
-                    _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
+                    if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguagePython) {
+                        var bp = _engine.Process.AddBreakPoint(
+                            documentName,
+                            (int)(startPosition[0].dwLine + 1),
+                            _bpRequestInfo.bpCondition.bstrCondition,
+                            _bpRequestInfo.bpCondition.styleCondition == enum_BP_COND_STYLE.BP_COND_WHEN_TRUE ? false : true
+                        );
 
-                    if (_enabled) {
-                        bp.Add();
+                        AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp, GetDocumentContext(bp));
+                        AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution);
+                        _boundBreakpoints.Add(boundBreakpoint);
+                        _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
+
+                        if (_enabled) {
+                            bp.Add();
+                        }
+
+                        return VSConstants.S_OK;
+                    } else if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguageDjangoTemplate) {
+                        
+                        // bind a Django template 
+                        var bp = _engine.Process.AddDjangoBreakPoint(
+                            documentName,
+                            (int)(startPosition[0].dwLine + 1)
+                        );
+
+                        AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp, GetDocumentContext(bp));
+                        AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution);
+                        _boundBreakpoints.Add(boundBreakpoint);
+                        _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
+
+                        if (_enabled) {
+                            bp.Add();
+                        }
+
+                        return VSConstants.S_OK;
                     }
                 }
-
-                return VSConstants.S_OK;
-            } else {
-                // The breakpoint could not be bound. This may occur for many reasons such as an invalid location, an invalid expression, etc...
-                // The sample engine does not support this, but a real world engine will want to send an instance of IDebugBreakpointErrorEvent2 to the
-                // UI and return a valid instance of IDebugErrorBreakpoint2 from IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then
-                // display information about why the breakpoint did not bind to the user.
-                return VSConstants.S_FALSE;
             }
+
+            // The breakpoint could not be bound. This may occur for many reasons such as an invalid location, an invalid expression, etc...
+            // The sample engine does not support this, but a real world engine will want to send an instance of IDebugBreakpointErrorEvent2 to the
+            // UI and return a valid instance of IDebugErrorBreakpoint2 from IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then
+            // display information about why the breakpoint did not bind to the user.
+            return VSConstants.S_FALSE;            
         }
 
         // Determines whether this pending breakpoint can bind to a code location.
@@ -199,7 +226,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 pState[0].state = (enum_PENDING_BP_STATE)enum_BP_STATE.BPS_DELETED;
             } else if (_enabled) {
                 pState[0].state = (enum_PENDING_BP_STATE)enum_BP_STATE.BPS_ENABLED;
-            } else if (!_enabled) {
+            } else {
                 pState[0].state = (enum_PENDING_BP_STATE)enum_BP_STATE.BPS_DISABLED;
             }
 

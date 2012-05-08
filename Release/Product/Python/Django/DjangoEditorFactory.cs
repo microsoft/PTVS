@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Django {
             }
 
             try {
-                docView = CreateDocumentView(documentMoniker, physicalView, hierarchy, itemid, textLines, out editorCaption, out commandUIGuid);
+                docView = CreateDocumentView(documentMoniker, physicalView, hierarchy, itemid, textLines, docDataExisting == IntPtr.Zero, out editorCaption, out commandUIGuid);
             } finally {
                 if (docView == IntPtr.Zero) {
                     if (docDataExisting != docData && docData != IntPtr.Zero) {
@@ -216,14 +216,14 @@ namespace Microsoft.PythonTools.Django {
             return textLines;
         }
 
-        private IntPtr CreateDocumentView(string documentMoniker, string physicalView, IVsHierarchy hierarchy, uint itemid, IVsTextLines textLines, out string editorCaption, out Guid cmdUI) {
+        private IntPtr CreateDocumentView(string documentMoniker, string physicalView, IVsHierarchy hierarchy, uint itemid, IVsTextLines textLines, bool createdDocData, out string editorCaption, out Guid cmdUI) {
             //Init out params
             editorCaption = string.Empty;
             cmdUI = Guid.Empty;
 
             if (string.IsNullOrEmpty(physicalView)) {
                 // create code window as default physical view
-                return CreateCodeView(documentMoniker, textLines, ref editorCaption, ref cmdUI);
+                return CreateCodeView(documentMoniker, textLines, createdDocData, ref editorCaption, ref cmdUI);
             }
 
             // We couldn't create the view
@@ -233,7 +233,7 @@ namespace Microsoft.PythonTools.Django {
             return IntPtr.Zero;
         }
 
-        private IntPtr CreateCodeView(string documentMoniker, IVsTextLines textLines, ref string editorCaption, ref Guid cmdUI) {
+        private IntPtr CreateCodeView(string documentMoniker, IVsTextLines textLines, bool createdDocData, ref string editorCaption, ref Guid cmdUI) {
             Type codeWindowType = typeof(IVsCodeWindow);
             Guid riid = codeWindowType.GUID;
             Guid clsid = typeof(VsCodeWindowClass).GUID;
@@ -254,7 +254,12 @@ namespace Microsoft.PythonTools.Django {
             }
             var textMgr = (IVsTextManager)_package.GetService(typeof(SVsTextManager));
 
-            new TextBufferEventListener(compModel, textLines, textMgr, window);
+            var bufferEventListener = new TextBufferEventListener(compModel, textLines, textMgr, window);
+            if (!createdDocData) {
+                // we have a pre-created buffer, go ahead and initialize now as the buffer already
+                // exists and is initialized.
+                bufferEventListener.OnLoadCompleted(0);
+            }
 
             cmdUI = VSConstants.GUID_TextEditorFactory;
 
@@ -310,16 +315,10 @@ namespace Microsoft.PythonTools.Django {
                 IContentType contentType = SniffContentType(diskBuffer, out langSvcGuid) ??
                                            contentRegistry.GetContentType("HTML");
 
-                if (langSvcGuid != Guid.Empty) {
-                    // if we have a language service ID we'll use it to set the content type.
-                    // That way anyone using the legacy language service adapter will work
-                    // with this buffer.  This will also set the content type.
-                    langSvcGuid = typeof(DjangoLanguageInfo).GUID;
-                    _textLines.SetLanguageServiceID(ref langSvcGuid);
-                    diskBuffer.ChangeContentType(contentType, null);
-                } else {
-                    diskBuffer.ChangeContentType(contentType, null);
-                }
+                langSvcGuid = typeof(DjangoLanguageInfo).GUID;
+                _textLines.SetLanguageServiceID(ref langSvcGuid);
+                diskBuffer.ChangeContentType(contentType, null);
+
                 adapterService.SetDataBuffer(_textLines, projBuffer.ProjectionBuffer);
 
                 IVsTextView view;
