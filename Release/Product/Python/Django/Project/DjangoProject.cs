@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
@@ -35,14 +36,16 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    class DjangoProject : FlavoredProject {
+    class DjangoProject : FlavoredProject, IOleCommandTarget {
         internal DjangoPackage _package;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
-        private static ImageList _images;
+        private OleMenuCommandService _menuService;
         internal Dictionary<string, HashSet<AnalysisValue>> _tags = new Dictionary<string, HashSet<AnalysisValue>>();
         internal Dictionary<string, HashSet<AnalysisValue>> _filters = new Dictionary<string, HashSet<AnalysisValue>>();
         internal Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>> _templateFiles = new Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>>(StringComparer.OrdinalIgnoreCase);
+
+        private static ImageList _images;
 
         #region IVsAggregatableProject
 
@@ -143,7 +146,7 @@ namespace Microsoft.PythonTools.Django.Project {
                         RegisterTag(tags, name.Name);
                     }
                 }
-            }            
+            }
         }
 
         private static void RegisterTag(Dictionary<string, HashSet<AnalysisValue>> tags, string name, IEnumerable<AnalysisValue> value = null) {
@@ -249,7 +252,7 @@ namespace Microsoft.PythonTools.Django.Project {
                         }
                         res.Add(value);
                     }
-                }                
+                }
             }
             return res;
         }
@@ -285,11 +288,11 @@ namespace Microsoft.PythonTools.Django.Project {
             if (callInfo.NormalArgumentCount == 2) {
                 foreach (var selfArg in callInfo.GetArgument(0)) {
                     var templateValue = selfArg as GetTemplateAnalysisValue;
-                    
+
                     if (templateValue != null) {
                         foreach (var contextArg in callInfo.GetArgument(1)) {
                             var context = contextArg as ExternalAnalysisValue<ContextMarker>;
-                            
+
                             if (context != null) {
                                 // we now have the template and the context
 
@@ -521,7 +524,7 @@ namespace Microsoft.PythonTools.Django.Project {
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.cmdidValidateDjangoApp:
-                        ValidateDjangoApp();
+                        ValidateDjangoApp(); ;
                         return VSConstants.S_OK;
                     case PkgCmdIDList.cmdidStartNewApp:
                         StartNewApp();
@@ -671,7 +674,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private bool TryShowContextMenu(IntPtr pvaIn, Guid itemType, out int res) {
             if (itemType == PythonProjectGuid) {
                 // multiple Python prjoect nodes selected
-                res = ShowContextMenu(pvaIn, VsMenus.IDM_VS_CTXT_WEBPROJECT);
+                res = ShowContextMenu(pvaIn, VsMenus.IDM_VS_CTXT_PROJNODE/*IDM_VS_CTXT_WEBPROJECT*/);
                 return true;
             } else if (itemType == VSConstants.GUID_ItemType_PhysicalFile) {
                 // multiple files selected
@@ -733,10 +736,10 @@ namespace Microsoft.PythonTools.Django.Project {
 
             // Now let the base implementation set the inner object
             base.SetInnerProject(inner);
-            /*
+
             // Add our commands (this must run after we called base.SetInnerProject)
-            MSVSIP.OleMenuCommandService mcs = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as MSVSIP.OleMenuCommandService;
-            if (mcs != null) {
+            _menuService = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            /*if (mcs != null) {
                 // Command to show the generated target file
                 CommandID cmd = new CommandID(GuidList.guidProjectSubtypeCmdSet, PkgCmdIDList.cmdidShowTargetFile);
                 MenuCommand menuCmd = new MenuCommand(new EventHandler(ShowTargetFile), cmd);
@@ -795,5 +798,152 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
+        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            if (pguidCmdGroup == GuidList.guidWebPackgeCmdId) {
+                if (nCmdID == 0x101 /*  EnablePublishToWindowsAzureMenuItem*/) {
+
+                    // We need to forward the command to the web publish package and let it handle it, while
+                    // we listen for the project which is going to get added.  After the command succeds
+                    // we can then go and update the newly added project so that it is setup appropriately for
+                    // Python...
+                    using (var listener = new DjangoAzureSolutionListener(this)) {
+                        listener.Init();
+
+                        var shell = (IVsShell)((System.IServiceProvider)this).GetService(typeof(SVsShell));
+                        Guid webPublishPackageGuid = GuidList.guidWebPackageGuid;
+                        IVsPackage package;
+
+                        if (ErrorHandler.Succeeded(shell.LoadPackage(ref webPublishPackageGuid, out package))) {
+                            var managedPack = package as IOleCommandTarget;
+                            if (managedPack != null) {
+                                int res = managedPack.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                                if (ErrorHandler.Succeeded(res)) {
+                                    // update the users service definition file to include import...
+                                    foreach (var project in listener.OpenedHierarchies) {
+                                        UpdateAzureDeploymentProject(project);
+                                    }
+                                }
+
+
+                                return res;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return ((IOleCommandTarget)_menuService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        private void UpdateAzureDeploymentProject(IVsHierarchy project) {
+            object projKind;
+            if (!ErrorHandler.Succeeded(project.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_TypeName, out projKind)) ||
+                !(projKind is string) ||
+                (string)projKind != "CloudComputingProjectType") {
+                return;
+            }
+
+            var dteProject = project.GetProject();
+            var serviceDef = dteProject.ProjectItems.Item("ServiceDefinition.csdef");
+            if (serviceDef != null && serviceDef.FileCount == 1) {
+                var filename = serviceDef.FileNames[0];
+                UpdateServiceDefinition(filename);
+            }
+        }
+
+        private static void UpdateServiceDefinition(string filename) {
+            List<string> elements = new List<string>();
+            XmlWriterSettings settings = new XmlWriterSettings() { Indent = true, IndentChars = " ", NewLineHandling = NewLineHandling.Entitize };
+            using (var reader = XmlReader.Create(filename)) {
+                using (var writer = XmlWriter.Create(filename + ".tmp", settings)) {
+                    while (reader.Read()) {
+                        switch (reader.NodeType) {
+                            case XmlNodeType.Element:
+                                // TODO: Switch to the code below when we can successfully install our module...
+                                if (reader.Name == "Imports" &&
+                                        elements.Count == 2 &&
+                                        elements[0] == "ServiceDefinition" &&
+                                        elements[1] == "WebRole") {
+                                    // insert our Imports node
+                                    writer.WriteStartElement("Startup");
+                                    writer.WriteStartElement("Task");
+                                    writer.WriteAttributeString("commandLine", "Microsoft.PythonTools.AzureSetup.exe");
+                                    writer.WriteAttributeString("executionContext", "elevated");
+                                    writer.WriteAttributeString("taskType", "simple");
+                                    writer.WriteEndElement();
+                                    writer.WriteEndElement();
+                                }
+                                writer.WriteStartElement(reader.Prefix, reader.Name, reader.NamespaceURI);
+                                writer.WriteAttributes(reader, true);
+
+                                if (!reader.IsEmptyElement) {
+                                    /*
+                                    if (reader.Name == "Imports" &&
+                                        elements.Count == 2 &&
+                                        elements[0] == "ServiceDefinition" &&
+                                        elements[1] == "WebRole") {
+
+                                        writer.WriteStartElement("Import");
+                                        writer.WriteAttributeString("moduleName", "PythonTools");
+                                        writer.WriteEndElement();
+                                    }*/
+
+                                    elements.Add(reader.Name);
+                                } else {
+                                    writer.WriteEndElement();
+                                }
+                                break;
+                            case XmlNodeType.Text:
+                                writer.WriteString(reader.Value);
+                                break;
+                            case XmlNodeType.EndElement:
+                                writer.WriteFullEndElement();
+                                elements.RemoveAt(elements.Count - 1);
+                                break;
+                            case XmlNodeType.XmlDeclaration:
+                            case XmlNodeType.ProcessingInstruction:
+                                writer.WriteProcessingInstruction(reader.Name, reader.Value);
+                                break;
+                            case XmlNodeType.SignificantWhitespace:
+                                writer.WriteWhitespace(reader.Value);
+                                break;
+                            case XmlNodeType.Attribute:
+                                writer.WriteAttributes(reader, true);
+                                break;
+                            case XmlNodeType.CDATA:
+                                writer.WriteCData(reader.Value);
+                                break;
+                            case XmlNodeType.Comment:
+                                writer.WriteComment(reader.Value);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            File.Delete(filename);
+            File.Move(filename + ".tmp", filename);
+        }
+
+        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            if (pguidCmdGroup == GuidList.guidVenusCmdId) {
+                for (int i = 0; i < prgCmds.Length; i++) {
+                    switch (prgCmds[i].cmdID) {
+                        case 0x034: /* add app assembly folder */
+                        case 0x035: /* add app code folder */
+                        case 0x036: /* add global resources */
+                        case 0x037: /* add local resources */
+                        case 0x038: /* add web refs folder */
+                        case 0x039: /* add data folder */
+                        case 0x040: /* add browser folders */
+                        case 0x041: /* theme */
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED);
+                            return VSConstants.S_OK;
+                    }
+                }
+            }
+
+            return ((IOleCommandTarget)_menuService).QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
     }
 }

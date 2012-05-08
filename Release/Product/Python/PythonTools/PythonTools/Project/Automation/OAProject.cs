@@ -440,4 +440,17 @@ namespace Microsoft.PythonTools.Project.Automation
         }
         #endregion
     }
+
+    /// <summary>
+    /// Specifies an alternate name for a property which cannot be fully captured using
+    /// .NET attribute names.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple=false)]
+    class PropertyNameAttribute : Attribute {
+        public readonly string Name; 
+
+        public PropertyNameAttribute(string name) {
+            Name = name;
+        }
+    }
 }

@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         public IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {            
             IEnumerable<CompletionInfo> tags = new CompletionInfo[0];
-
+            
             if (Expression == null) {
                 var tempTags = context.Variables;
                 if (tempTags != null) {

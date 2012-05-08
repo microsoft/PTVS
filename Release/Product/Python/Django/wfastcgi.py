@@ -117,7 +117,7 @@ def read_fastcgi_keyvalue_pairs(content, offset):
     name_len = ord(content[offset])
 
     if (name_len & 0x80) != 0:
-        name_full_len = content[offset:offset+4]
+        name_full_len = chr(name_len & ~0x80) + content[offset + 1:offset+4]
         name_len = int_struct.unpack(name_full_len)[0]
         offset += 4
     else:
@@ -126,7 +126,7 @@ def read_fastcgi_keyvalue_pairs(content, offset):
     value_len = ord(content[offset])
 
     if (value_len & 0x80) != 0:
-        value_full_len = content[offset:offset+4]
+        value_full_len = chr(value_len & ~0x80) + content[offset+1:offset+4]
         value_len = int_struct.unpack(value_full_len)[0]
         offset += 4
     else:

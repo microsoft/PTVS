@@ -184,7 +184,13 @@ namespace Microsoft.PythonTools.Project.Automation
 		/// <param name="propertyInfo">The property to be associated with an OAProperty object</param>
 		private void AddProperty(PropertyInfo propertyInfo)
 		{
-			this.properties.Add(propertyInfo.Name, new OAProperty(this, propertyInfo));
+			var attrs = propertyInfo.GetCustomAttributes(typeof(PropertyNameAttribute), false);
+			string name = propertyInfo.Name;
+			if (attrs.Length > 0) 
+			{
+				name = ((PropertyNameAttribute)attrs[0]).Name;
+			}
+			this.properties.Add(name, new OAProperty(this, propertyInfo));
 		}
 		#endregion
 

@@ -59,7 +59,8 @@ namespace Microsoft.PythonTools.Django {
     [ProvideEditorLogicalView(typeof(DjangoEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.TextView_string)]
     [Guid(GuidList.guidDjangoPkgString)]
     [ProvideObject(typeof(DjangoProject), RegisterUsing = RegistrationMethod.CodeBase)]
-    [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Django Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath")]
+    [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Django Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = "Python")]
+    [ProvideLanguageTemplates("{349C5851-65DF-11DA-9384-00065B846F21}", "Python", GuidList.guidDjangoPkgString, "Web", "Python Application Project Templates", "{888888a0-9f3d-457c-b088-3a5042f75d52}", ".py", "Python", "{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}")]
     public sealed class DjangoPackage : Package {
         internal const string DjangoTemplateLanguageId = "{918E5764-7026-4D57-918D-19D86AD73AC4}";
         internal const string DjangoExpressionEvaluatorGuid = "64F20547-C246-487F-83A6-587BC54BAB2F";

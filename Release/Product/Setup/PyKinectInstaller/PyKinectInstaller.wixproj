@@ -14,6 +14,11 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
   </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition="$(Configuration)==''">Debug</Configuration>
+    <WixVersion Condition="$(WixVersion)==''">0.7.4100.000</WixVersion>
+    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(VSTarget)' == ''">
     <DefineConstants>
         PyToolsDir=$(ProjectDir)..\..\Python\PythonTools\;

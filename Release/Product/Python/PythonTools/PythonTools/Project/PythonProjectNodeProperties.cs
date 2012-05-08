@@ -15,6 +15,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Project.Automation;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
@@ -41,5 +42,20 @@ namespace Microsoft.PythonTools.Project {
                 return ((PythonProjectNode)this.Node).GetInterpreterFactory().Configuration.Version.ToString();
             }
         }
+
+        [PropertyNameAttribute("WebApplication.AspNetDebugging")]
+        public bool AspNetDebugging {
+            get {
+                return false;
+            }
+        }
+
+        [PropertyNameAttribute("WebApplication.NativeDebugging")]
+        public bool NativeDebugging {
+            get {
+                return false;
+            }
+        }
+
     }
 }

@@ -52,12 +52,13 @@
          must be a menu. -->
     <Buttons>
       <Button guid="guidDjangoCmdSet" id="cmdidValidateDjangoApp" priority="0x0600" type="Button">
-        <Parent guid="guidVenusCmdId" id="IDG_CTX_BUILD"/>
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
         <Icon guid="guidImages" id="bmpPic1"/>
         
         <Strings>
           <ButtonText>Validate Django App...</ButtonText>
         </Strings>
+        
       </Button>
 
       <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x700" type="Button">

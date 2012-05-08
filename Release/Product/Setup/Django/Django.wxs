@@ -8,6 +8,11 @@
     <?include ..\InstallPath.wxi ?>
     <?include ..\MergeModule.wxi ?>
 
+    <Property Id="SERVICEHOSTING_SDK" > 
+      <RegistrySearch Id="SH_SDK_SEARCH" Root="HKLM" Type="raw" Key="SOFTWARE\Microsoft\Microsoft SDKs\ServiceHosting\v1.6" Name="InstallPath"/>
+    </Property> 
+
+
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="EXTENSION_INSTALLPATH">
         <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
@@ -19,7 +24,34 @@
           </Directory>
         </Directory>
       </Directory>
+      
+      <Directory Id="ProgramFilesFolder" Name="PFILES">
+          <Directory Id="Dir_MSBuild" Name="MSBuild"> 
+              <Directory Id="Dir_MSBuildMS" Name="Microsoft"> 
+                  <Directory Id="Dir_MSBuildVisualStudio" Name="VisualStudio"> 
+                      <Directory Id="Dir_VS10" Name="v10.0">
+                        <Directory Id="Dir_PythonToolsMsBuild" Name="Python Tools"> 
+                        </Directory>
+                      </Directory>
+                  </Directory> 
+              </Directory> 
+          </Directory> 
+      </Directory>
+
+    <Directory Id="ProgramFiles64Folder">
+        <Directory Id="AzureSDK" Name="Windows Azure SDK">
+        <Directory Id="AzureSDKVersion" Name="v1.6">
+          <Directory Id="bin" Name="bin">
+            <Directory Id="plugins" Name="plugins">
+              <Directory Id="Dir_PythonToolsAzureSdk" Name="PythonTools"> 
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory> 
+        </Directory>
     </Directory>
+  </Directory> 
+
 
     <ComponentGroupRef Id="DjangoVsExt"/>
   </Module>

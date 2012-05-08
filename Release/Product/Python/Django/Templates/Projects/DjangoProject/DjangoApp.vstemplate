@@ -8,7 +8,7 @@
     <ProjectType>Python</ProjectType>
     <SortOrder>60</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
-    <CreateNewFolder>false</CreateNewFolder>
+    <CreateNewFolder>true</CreateNewFolder>
     <DefaultName>DjangoApplication</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>

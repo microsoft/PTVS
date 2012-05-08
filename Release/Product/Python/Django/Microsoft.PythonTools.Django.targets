@@ -1,0 +1,251 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- *********************************************************************************** -->
+  <!-- Normal install environment, use the current version -->
+  <PropertyGroup Condition="$(PTVS_DEV) == '' and $(MSBuildThisFile)!='Microsoft.PythonTools.Django.Developer.targets'">
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <AzureDjangoSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\Python Tools\</AzureDjangoSupportPath>
+  </PropertyGroup>
+  <!-- *********************************************************************************** -->
+  <!-- Dev environment for PTVS, use the current version -->
+  <PropertyGroup Condition="$(PTVS_DEV) == 'true' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <DjangoSupportVersion>1.1</DjangoSupportVersion>
+    <AzureDjangoSupportPath
+      Condition="Exists('$(LOCALAPPDATA)\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\wfastcgi.py')">$(LOCALAPPDATA)\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\</AzureDjangoSupportPath>
+
+  </PropertyGroup>
+
+  <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+  <Target Name="CreateManifestResourceNames" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+
+  <Target Name="ResolvePythonInterpreterPath" >
+    <Message Text="InterpreterId=$(InterpreterId)"/>
+    <Message Text="InterpreterVersion=$(InterpreterVersion)"/>
+    <Message Text="IsWindowsInterpreter=$(IsWindowsInterpreter)"/>
+
+    <PropertyGroup Condition="$(IsWindowsApplication) == 'true'">
+      <PythonInterpreterSuffix>w</PythonInterpreterSuffix>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e'">
+      <!-- X86 CPython Interpreter -->
+      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry32))python$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(InterpreterId)=='9a7a9026-48c1-4688-9d5d-e5699d47d074'">
+      <!-- X64 CPython Interpreter -->
+      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))python$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(InterpreterId)=='80659AB7-4D53-4E0C-8588-A766116CBD46'">
+      <!-- X86 IronPython Interpreter -->
+      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\IronPython\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))ipy$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(InterpreterId)=='FCC291AA-427C-498C-A4D7-4502D6449B8C'">
+      <!-- X64 IronPython Interpreter -->
+      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\IronPython\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))ipy$(PythonInterpreterSuffix)64.exe</PythonInterpreterPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(InterpreterId)==''">
+      <!-- Registered to the default interpreter -->
+      <PythonInterpreterPath>C:\Python27\python.exe</PythonInterpreterPath>
+    </PropertyGroup>
+
+
+    <PropertyGroup Condition="$(PythonInterpreterPath)==''">
+      <!-- Custom interpreter, read from registry -->
+
+
+      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\10.0\PythonTools\Interpreters\{$(InterpreterId)}', 'InterpreterPath', null, RegistryView.Registry32))</PythonInterpreterPath>
+    </PropertyGroup>
+
+    <Message Text="InterpretPath=$(PythonInterpreterPath)"/>
+  </Target>
+
+  <Target Name="Build" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
+          DependsOnTargets="ResolvePythonInterpreterPath">
+    <Message Text="Content=@(Content->'%(RelativeDir)%(Filename)%(Extension)')"/>
+    <Copy
+        SourceFiles="@(Compile)"
+        DestinationFiles="@(Compile->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
+        SkipUnchangedFiles="true">
+      <!-- <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/> -->
+    </Copy>
+    <Copy SourceFiles="@(Include)"
+          DestinationFiles="@(Include->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true">
+      <!-- <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/> -->
+    </Copy>
+    <Copy SourceFiles="@(Content)"
+          DestinationFiles="@(Content->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true">
+      <!-- <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/> -->
+    </Copy>
+    <Copy SourceFiles="$(AzureDjangoSupportPath)wfastcgi.py"
+            DestinationFiles="bin\wfastcgi.py"
+            SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
+    </Copy>
+    <Copy SourceFiles="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"
+            DestinationFiles="bin\Microsoft.PythonTools.WebRole.dll"
+          SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
+    </Copy>
+    <MakeDir Directories="$(IntermediateOutputPath)\bin"/>
+    <Copy SourceFiles="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe" DestinationFolder="bin"/>
+    <Message Text="AzureSupport: $(AzureDjangoSupportPath)"/>
+
+    <!-- <WriteLinesToFile File="$(IntermediateOutputPath)\bin\InstallPython.cmd" Lines="$(_DjangoInstallPythonCode)" Overwrite="true"/> -->
+    <ItemGroup>
+      <InstallPython Include="bin\Microsoft.PythonTools.AzureSetup.exe"/>
+    </ItemGroup>
+    <Message Text="FilesCopiedToIntermediate=@(FilesCopiedToIntermediate)" Importance="low"/>
+  </Target>
+  <Target Name="CreateWebConfig"
+          Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
+          BeforeTargets="Build"
+          DependsOnTargets="ResolvePythonInterpreterPath"
+          >
+    <ItemGroup>
+      <_FoundWebConfig Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
+      <_FoundWebConfig Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
+    </ItemGroup>
+    <Message Text="Generating web.config automatically..." Condition="@(_FoundWebConfig) == ''"/>
+    <Message Text="Skipping generation of web.config automatically because it already exists in the project..." Condition="@(_FoundWebConfig) != ''"/>
+    <PropertyGroup>
+      <_DjangoWebConfigCode>
+        <![CDATA[<?xml version="1.0"?>
+<!-- Generated web.config for Django azure projects.  You can add a web.config file to your project to customize this. -->
+<configuration>
+  <system.diagnostics>
+    <trace>
+      <listeners>
+        <add type="Microsoft.WindowsAzure.Diagnostics.DiagnosticMonitorTraceListener, Microsoft.WindowsAzure.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"
+          name="AzureDiagnostics">
+          <filter type="" />  
+        </add>
+      </listeners>
+    </trace>
+  </system.diagnostics>
+
+  <system.web>
+    <compilation debug="true" targetFramework="4.0" />
+  </system.web>
+  
+  <system.webServer>
+    <modules runAllManagedModulesForAllRequests="true"/>
+    <handlers>
+      <add name="Django FastCGI" 
+           path="*" 
+           verb="*" 
+           modules="FastCgiModule" 
+           scriptProcessor="INTERPRETERPATH|WFASTCGIPATH" 
+           resourceType="Unspecified" 
+           requireAccess="Script" />
+    </handlers>
+  </system.webServer>
+</configuration>
+]]>
+      </_DjangoWebConfigCode>
+
+
+    </PropertyGroup>
+    <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == ''" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
+
+  </Target>
+  <Target
+    Name="GetTargetPath"
+    DependsOnTargets="Build"
+    Returns="@(ScriptAndWebDeployFiles)"
+    Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
+    >
+    <Warning Text="!!!!!!!!! USING DEVELOPMENT VERSION OF Microsoft.PythonTools.Django.targets" Condition="$(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+
+    <ItemGroup>
+      <ScriptAndWebDeployFiles Include="@(InstallPython->'%(FullPath)')"/>
+      <ScriptAndWebDeployFiles Include="@(FilesCopiedToIntermediate->'%(RootDir)%(Directory)%(Filename)%(Extension)')"/>
+    </ItemGroup>
+    <Message Text="ScriptAndWebDeployFiles=@(ScriptAndWebDeployFiles)"  />
+  </Target>
+  <Target Name="WatGetTargetFrameworkDirectories" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'" />
+  <Target Name="BuiltProjectOutputGroupDependencies" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'" />
+  <Target Name="WatGetTargetFrameworkMoniker" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+  <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'" />
+
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+
+  <Target
+    Name="PipelineTransformPhase"
+    DependsOnTargets="Build"
+    Returns="@(TransformedFilenames)"
+    Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
+
+    <ItemGroup>
+      <ContentFiles Include="@(Content)"></ContentFiles>
+      <ContentFiles Include="@(Compile)"></ContentFiles>
+      <ContentFiles Include="@(Include)"></ContentFiles>
+      <GeneratedFiles Include="@(InstallPython->'%(FullPath)')"/>
+      <GeneratedFiles Include="$(AzureDjangoSupportPath)wfastcgi.py"/>
+      <GeneratedFiles Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"/>
+
+      <TransformedFilenames Include="@(ContentFiles->'%(FullPath)')">
+        <DestinationRelativePath>%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <Exclude>false</Exclude>
+        <FromTarget>Unknown</FromTarget>
+        <Category>Run</Category>
+        <ProjectFileType>Default</ProjectFileType>
+      </TransformedFilenames>
+
+      <TransformedFilenames Include="@(GeneratedFiles)">
+        <DestinationRelativePath>bin\%(Filename)%(Extension)</DestinationRelativePath>
+        <Exclude>false</Exclude>
+        <FromTarget>Unknown</FromTarget>
+        <Category>Run</Category>
+        <ProjectFileType>Default</ProjectFileType>
+      </TransformedFilenames>
+    </ItemGroup>
+    <Message Text="@(TransformedFilenames)" />
+  </Target>
+
+  <Target Name="GenerateManifests" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+  <Target Name="PrepareForBuild" DependsOnTargets="$(PrepareForBuildDependsOn)" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
+    <!-- 
+        These CreateProperty calls are required because TargetDir and TargetPath are defined 
+        to contain an item list. We want that item list to be expanded so that it can be used
+        as a regular property value and not as an item-list-with-transform.
+        -->
+    <!-- 
+        Choose exactly one app.config to be the main app.config that is copied to the destination folder. 
+        
+        The search order is:
+        
+            (1) Choose the value $(AppConfig) set in the main project.
+            (2) Choose @(None) App.Config in the same folder as the project.
+            (3) Choose @(Content) App.Config in the same folder as the project.
+            (4) Choose @(None) App.Config in any subfolder in the project.
+            (5) Choose @(Content) App.Config in any subfolder in the project.
+        
+        If an app.config is not found in one of these locations then there is no app.config for this project.
+        -->
+    <CreateProperty Value="%(None.Identity)" Condition="'$(AppConfig)'=='' and '%(RelativeDir)%(Filename)%(Extension)'=='App.Config'">
+      <Output TaskParameter="Value" PropertyName="AppConfig" />
+    </CreateProperty>
+    <CreateProperty Value="%(Content.Identity)" Condition="'$(AppConfig)'=='' and '%(RelativeDir)%(Filename)%(Extension)'=='App.Config'">
+      <Output TaskParameter="Value" PropertyName="AppConfig" />
+    </CreateProperty>
+    <CreateProperty Value="%(None.Identity)" Condition="'$(AppConfig)'=='' and '%(Filename)%(Extension)'=='App.Config'">
+      <Output TaskParameter="Value" PropertyName="AppConfig" />
+    </CreateProperty>
+    <CreateProperty Value="%(Content.Identity)" Condition="'$(AppConfig)'=='' and '%(Filename)%(Extension)'=='App.Config'">
+      <Output TaskParameter="Value" PropertyName="AppConfig" />
+    </CreateProperty>
+    <!-- Dump the single app.config into an item list with TargetPath set. -->
+    <CreateItem Include="$(AppConfig)" AdditionalMetadata="TargetPath=$(TargetFileName).config">
+      <Output TaskParameter="Include" ItemName="AppConfigWithTargetPath" />
+    </CreateItem>
+    <!-- Create the directories for intermediate and final build products. -->
+    <MakeDir Directories="$(OutDir);$(IntermediateOutputPath);@(DocFileItem->'%(RelativeDir)')" />
+  </Target>
+
+  <Import Project="$(AzureDjangoSupportPath)Microsoft.PythonTools.Django.Developer.targets" Condition="$(PTVS_DEV) == 'true' and $(MSBuildThisFile)=='Microsoft.PythonTools.Django.targets'"/>
+</Project>

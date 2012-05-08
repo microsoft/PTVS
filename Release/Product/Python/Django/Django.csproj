@@ -156,6 +156,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="Debugger\DjangoLauncher.cs" />
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />
     <Compile Include="Debugger\DjangoLauncherOptions.cs">
@@ -172,6 +173,7 @@
     <Compile Include="Intellisense\DjangoIntellisenseController.cs" />
     <Compile Include="Intellisense\DjangoIntellisenseControllerProvider.cs" />
     <Compile Include="Intellisense\DjangoPredefinedClassificationTypeNames.cs" />
+    <Compile Include="Project\DjangoAzureSolutionListener.cs" />
     <Compile Include="Project\DjangoProjectFactory.cs" />
     <Compile Include="Project\DjangoProject.cs" />
     <Compile Include="Project\NewAppDialog.xaml.cs">
@@ -216,7 +218,13 @@
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VsMenus.cs" />
-    <None Include="Templates\Files\DjangoHtmlTemplate\DjangoTemplate.html.djt" />
+    <Content Include="Microsoft.PythonTools.Django.targets">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <TargetPath>Microsoft.PythonTools.Django.Developer.targets</TargetPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoTemplate.html" />
     <Content Include="DjangoTemplateFile.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -228,7 +236,10 @@
     <Resource Include="FastCgiTutorial\images\handler mappings.jpg" />
     <Resource Include="FastCgiTutorial\images\PyFastCgiMapping.png" />
     <Resource Include="FastCgiTutorial\images\AddModuleMapping.jpg" />
-    <Content Include="wfastcgi.py" />
+    <Content Include="wfastcgi.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
     </Content>
@@ -248,21 +259,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Templates\Projects\AzureDjangoProject\DjangoApp.pyproj">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Templates\Projects\AzureDjangoProject\DjangoApp.vstemplate">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Templates\Projects\AzureDjangoProject\manage.py" />
-    <Content Include="Templates\Projects\AzureDjangoProject\settings.py" />
-    <Content Include="Templates\Projects\AzureDjangoProject\urls.py" />
-    <Content Include="Templates\Projects\AzureDjangoProject\__init__.py" />
-    <Content Include="Templates\Projects\AzureDjangoProject\AzureDjangoApp.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Resource Include="Templates\Projects\AzureDjangoProject\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\DjangoProject\manage.py" />
     <Content Include="Templates\Projects\DjangoProject\DjangoApp.pyproj" />
     <Content Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
@@ -319,6 +315,12 @@
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
+    <ProjectReference Include="..\AzureSetup\AzureSetup.csproj">
+      <Project>{B6905758-81D9-4287-BE59-5D4E2F336414}</Project>
+      <Name>AzureSetup</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
+    </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
@@ -326,6 +328,12 @@
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WebRole\WebRole.csproj">
+      <Project>{304AB14D-4E63-4004-8D63-AB8DA2C601B4}</Project>
+      <Name>WebRole</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

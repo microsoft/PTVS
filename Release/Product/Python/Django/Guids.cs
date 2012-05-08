@@ -24,5 +24,9 @@ namespace Microsoft.PythonTools.Django {
 
         public static readonly Guid guidDjangoCmdSet = new Guid(guidDjangoCmdSetString);
         public static readonly Guid guidDjangoEditorFactory = new Guid(guidDjangoEditorFactoryString);
+        public static readonly Guid guidVenusCmdId = new Guid("c7547851-4e3a-4e5b-9173-fa6e9c8bd82c");
+        public static readonly Guid guidWebPackgeCmdId = new Guid("822e3603-e573-47d2-acf0-520e4ce641c2");
+        public static readonly Guid guidWebPackageGuid = new Guid("d9a342d1-a429-4059-808a-e55ee6351f7f");
+
     }
 }

@@ -12,23 +12,26 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis;
+using System.Linq;
+using System.Text;
+using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    /// <summary>
-    /// Provides context for returning the available variables/filters in a template file.
-    /// 
-    /// This is implemented as an interface so we can mock it out for the purposes of our tests
-    /// and not need to do a fully analysis of the Django library.
-    /// </summary>
-    interface IDjangoCompletionContext {
-        Dictionary<string, HashSet<AnalysisValue>> Variables {
-            get;
+namespace Microsoft.PythonTools.Django.Project {
+    class DjangoAzureSolutionListener : SolutionListener {
+        public readonly List<IVsHierarchy> OpenedHierarchies = new List<IVsHierarchy>();
+        public DjangoAzureSolutionListener(IServiceProvider serviceProvider)
+            : base(serviceProvider) {
         }
 
-        Dictionary<string, HashSet<AnalysisValue>> Filters {
-            get;
+        public override int OnAfterOpenProject(IVsHierarchy hierarchy, int added) {
+            if (added != 0) {
+                OpenedHierarchies.Add(hierarchy);
+            }
+            return VSConstants.E_NOTIMPL;
         }
     }
 }
