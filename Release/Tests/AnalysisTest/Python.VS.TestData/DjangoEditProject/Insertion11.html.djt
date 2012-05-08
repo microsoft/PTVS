@@ -1,0 +1,16 @@
+
+{% load poll_extras %}
+
+{% if latest_poll_list %}
+    <ul>            
+    {% for poll,value in latest_poll_list_foo %}
+        {% for inner_poll in latest_poll_list %}
+        {% endfor %}
+    {% endfor %}
+
+    </ul>
+{% else %}
+    <p>No polls are available.</p>
+    {% current_time "%Y-%m-%d %I:%M %p" %}
+{% endif %}
+

@@ -12,6 +12,10 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.Text;
+
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// Captures a Django value used in a variable expression.  The value can either be an expression (foo, foo.bar)
@@ -25,6 +29,44 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public DjangoVariableValue(string value, DjangoVariableKind kind) {
             Value = value;
             Kind = kind;
+        }
+
+        public IEnumerable<BlockClassification> GetSpans(int start) {
+            Classification? filterType = null;
+            switch (Kind) {
+                case DjangoVariableKind.Constant: filterType = Classification.Literal; break;
+                case DjangoVariableKind.Number: filterType = Classification.Number; break;
+                case DjangoVariableKind.Variable:
+                    // variable can have dots in it...
+
+                    if (Value.IndexOf('.') != -1) {
+                        var split = Value.Split('.');
+                        for (int i = 0; i < split.Length; i++) {
+                            yield return new BlockClassification(
+                                new Span(start, split[i].Length),
+                                Classification.Identifier
+                            );
+                            start += split[i].Length;
+                            yield return new BlockClassification(
+                                new Span(start, 1),
+                                Classification.Dot
+                            );
+                            start += 1;
+                        }
+                    } else {
+                        filterType = Classification.Identifier;
+                    }
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+
+            if (filterType != null) {
+                yield return new BlockClassification(
+                    new Span(start, Value.Length),
+                    filterType.Value
+                );
+            }
         }
     }
 

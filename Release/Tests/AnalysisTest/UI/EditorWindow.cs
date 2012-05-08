@@ -55,6 +55,23 @@ namespace AnalysisTest.UI {
             }));
         }
 
+        public void Select(int line, int column, int length) {
+            var textLine = TextView.TextViewLines[line - 1];
+            Span span;
+            if (column - 1 == textLine.Length) {
+                span = new Span(textLine.End, length);
+            } else {
+                span = new Span(textLine.Start + column - 1, length);
+            }
+
+            ((UIElement)TextView).Dispatcher.Invoke((Action)(() => {
+                TextView.Selection.Select(
+                    new SnapshotSpan(TextView.TextBuffer.CurrentSnapshot, span),
+                    false
+                );
+            }));
+        }
+
         /// <summary>
         /// Moves the caret to the 1 based line and column
         /// </summary>

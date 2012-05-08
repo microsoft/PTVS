@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Text.Differencing;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
@@ -51,6 +52,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         private readonly IElisionBuffer _htmlBuffer;
         private readonly IProjectionBuffer _templateBuffer;
         private static string[] _templateTags = new string[] { "{{", "{%", "{#", "#}", "%}", "}}" };
+        private static EditOptions _editOptions = new EditOptions(true, new StringDifferenceOptions(StringDifferenceTypes.Character, 0, false));
 
         public TemplateProjectionBuffer(IContentTypeRegistryService contentRegistry, IProjectionBufferFactoryService bufferFactory, ITextBuffer diskBuffer, IBufferGraphFactoryService bufferGraphFactory, IContentType contentType) {
             _diskBuffer = diskBuffer;
@@ -76,6 +78,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
             var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(diskBuffer.CurrentSnapshot, new Span(0, diskBuffer.CurrentSnapshot.Length)));
             UpdateTemplateSpans(reader);
+        }
+
+        public List<SpanInfo> Spans {
+            get {
+                return _spans;
+            }
         }
 
         private IProjectionBuffer CreateTemplateBuffer(IProjectionBufferFactoryService bufferFactory) {
@@ -232,6 +240,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(e.After, Span.FromBounds(start, e.After.Length)));
 
                         UpdateTemplateSpans(reader, closest, start);
+                    } else if (closestSpan.Kind == TemplateTokenKind.Block) {
+                        // re-parse the block
+                        _spans[closest] = new SpanInfo(
+                            closestSpan.DiskBufferSpan,
+                            closestSpan.Kind,
+                            DjangoBlock.Parse(closestSpan.DiskBufferSpan.GetText(closestSpan.DiskBufferSpan.TextBuffer.CurrentSnapshot))
+                        );
                     }
                 } else {
                     UpdateTemplateSpans(new StringReader(e.After.GetText()));
@@ -320,7 +335,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                     PointTrackingMode.Positive,
                                     PointTrackingMode.Negative
                                 ), 
-                            curToken.Kind
+                                curToken.Kind,
+                                curToken.Kind == TemplateTokenKind.Block ?
+                                    DjangoBlock.Parse(_diskBuffer.CurrentSnapshot.GetText(sourceSpan)) :
+                                    null
                             )
                         );
 
@@ -368,7 +386,29 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             var oldSpanCount = _spans.Count;
             _spans.RemoveRange(startSpan, oldSpanCount - startSpan);
             _spans.AddRange(newSpanInfos);
-            _projBuffer.ReplaceSpans(startSpan, oldSpanCount - startSpan, newProjectionSpans, EditOptions.DefaultMinimalChange, null);
+
+            _projBuffer.ReplaceSpans(startSpan, oldSpanCount - startSpan, newProjectionSpans, _editOptions, null);
+
+            TemplateClassifier classifier;
+            if (newSpanInfos.Count > 0 &&
+                _templateBuffer.Properties.TryGetProperty<TemplateClassifier>(typeof(TemplateClassifier), out classifier)) {
+                var start = _bufferGraph.MapUpToBuffer(
+                    newSpanInfos[0].DiskBufferSpan.GetStartPoint(_diskBuffer.CurrentSnapshot),
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Successor,
+                    _templateBuffer
+                );
+                var end = _bufferGraph.MapUpToBuffer(
+                    newSpanInfos[newSpanInfos.Count - 1].DiskBufferSpan.GetEndPoint(_diskBuffer.CurrentSnapshot),
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Successor,
+                    _templateBuffer
+                );
+
+                if (start != null && end != null) {
+                    classifier.RaiseClassificationChanged(start.Value, end.Value);
+                }
+            }
         }
 
         private class LanguageSpanCustomState {
@@ -457,13 +497,21 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return current;
         }
 
-        struct SpanInfo {
+        internal struct SpanInfo {
             public readonly ITrackingSpan DiskBufferSpan;
             public readonly TemplateTokenKind Kind;
+            public readonly DjangoBlock Block;
 
             public SpanInfo(ITrackingSpan diskBufferSpan, TemplateTokenKind kind) {
                 DiskBufferSpan = diskBufferSpan;
                 Kind = kind;
+                Block = null;
+            }
+
+            public SpanInfo(ITrackingSpan diskBufferSpan, TemplateTokenKind kind, DjangoBlock djangoBlock) {
+                DiskBufferSpan = diskBufferSpan;
+                Kind = kind;
+                Block = djangoBlock;
             }
         }
 
@@ -610,6 +658,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         yield return new TemplateRegion(
                             _spans[i].DiskBufferSpan.GetText(_diskBuffer.CurrentSnapshot),
                             _spans[i].Kind,
+                            _spans[i].Block,
                             _bufferGraph.MapUpToBuffer(
                                 diskSpan.Start,
                                 PointTrackingMode.Positive,

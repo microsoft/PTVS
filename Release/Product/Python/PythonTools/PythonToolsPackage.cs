@@ -565,6 +565,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return true;
         }
 
+        public bool AutoListMembers {
+            get {
+                return _langPrefs.AutoListMembers;
+            }
+        }
+
         internal LanguagePreferences LangPrefs {
             get {
                 return _langPrefs;

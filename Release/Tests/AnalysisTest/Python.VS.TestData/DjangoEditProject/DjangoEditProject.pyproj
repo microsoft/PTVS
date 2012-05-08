@@ -33,6 +33,7 @@
     <Compile Include="Insertion8.html.djt" />
     <Compile Include="Insertion9.html.djt" />
     <Compile Include="Insertion10.html.djt" />
+    <Compile Include="Insertion11.html.djt" />
 
     <Compile Include="Deletion1.html.djt" />
 

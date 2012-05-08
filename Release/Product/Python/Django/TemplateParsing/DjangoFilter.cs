@@ -12,6 +12,9 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
+using Microsoft.VisualStudio.Text;
+
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// Captures information about a Django variable expression's filter and its associate argument if one was present.
@@ -38,6 +41,19 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         public static DjangoFilter Number(string filterName, int filterStart, string variable, int groupStart) {
             return new DjangoFilter(filterName, filterStart, new DjangoVariableValue(variable, DjangoVariableKind.Number), groupStart);
+        }
+
+        internal IEnumerable<BlockClassification> GetSpans(int expressionStart) {
+            yield return new BlockClassification(
+                new Span(FilterStart + expressionStart, Filter.Length),
+                Classification.Identifier
+            );
+
+            if (Arg != null) {
+                foreach (var span in Arg.GetSpans(ArgStart + expressionStart)) {
+                    yield return span;
+                }
+            }
         }
     }
 

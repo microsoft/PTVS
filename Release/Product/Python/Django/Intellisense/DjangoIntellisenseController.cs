@@ -174,10 +174,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                             }
                         }
 
-                        if (ch == '.') {
+                        if (PythonToolsPackage.Instance.AutoListMembers &&
+                            (ch == '.' || ch == ' ' || ch == '|')) {
                             // insert the ., then trigger...
                             int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                            
+
                             if (ErrorHandler.Succeeded(res)) {
                                 if (_activeSession != null && !_activeSession.IsDismissed) {
                                     _activeSession.Dismiss();

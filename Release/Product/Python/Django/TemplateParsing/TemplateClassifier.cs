@@ -30,10 +30,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         #region IClassifier Members
 
-        event EventHandler<ClassificationChangedEventArgs> IClassifier.ClassificationChanged {
-            add { }
-            remove { }
-        }
+        public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
         IList<ClassificationSpan> IClassifier.GetClassificationSpans(SnapshotSpan span) {
             List<ClassificationSpan> spans = new List<ClassificationSpan>();
@@ -85,24 +82,19 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     );
                     break;
                 case TemplateTokenKind.Variable:
-                    ClassifyVariable(snapshot, spans, region);
+                    var filterInfo = DjangoVariable.Parse(region.Text);
+                    
+                    if (filterInfo != null) {
+                        foreach(var curSpan in filterInfo.GetSpans()) {
+                            spans.Add(ToClassification(curSpan, snapshot, region));
+                        }
+                    }
                     break;
                 case TemplateTokenKind.Block:
-                    var blockInfo = DjangoBlock.Parse(region.Text);
+                    var blockInfo = region.Block;
                     if (blockInfo != null) {
                         foreach (var curSpan in blockInfo.GetSpans()) {
-                            spans.Add(
-                                new ClassificationSpan(
-                                    new SnapshotSpan(
-                                        snapshot,
-                                        new Span(
-                                            curSpan.Span.Start + region.Start,
-                                            curSpan.Span.Length
-                                        )
-                                    ),
-                                    GetClassification(curSpan.Classification)
-                                )
-                            );
+                            spans.Add(ToClassification(curSpan, snapshot, region));
                         }
                     } else {
                         spans.Add(
@@ -119,98 +111,39 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
         }
 
+        private ClassificationSpan ToClassification(BlockClassification curSpan, ITextSnapshot snapshot, TemplateRegion region) {
+            return new ClassificationSpan(
+                new SnapshotSpan(
+                    snapshot,
+                    new Span(
+                        curSpan.Span.Start + region.Start,
+                        curSpan.Span.Length
+                    )
+                ),
+                GetClassification(curSpan.Classification)
+            );
+        }
+
         private IClassificationType GetClassification(Classification classification) {
             switch (classification) {
                 case Classification.None:           return _classifierProvider._classType;                    
                 case Classification.Keyword:        return _classifierProvider._keywordType;
                 case Classification.ExcludedCode:   return _classifierProvider._excludedCode;
+                case Classification.Identifier:     return _classifierProvider._identifierType;
+                case Classification.Dot:            return _classifierProvider._dot;
+                case Classification.Literal:        return _classifierProvider._literalType;
+                case Classification.Number:         return _classifierProvider._numberType;
                 default: throw new InvalidOperationException();
             }
         }
 
-        private void ClassifyVariable(ITextSnapshot snapshot, List<ClassificationSpan> spans, TemplateRegion region) {
-            var filterInfo = DjangoVariable.Parse(region.Text);
-            if (filterInfo == null) {
-                // TODO: Report error
-                return;
-            }
-
-            AddVariableClassifications(snapshot, spans, filterInfo.Expression, filterInfo.ExpressionStart + region.Start);
-
-            for (int i = 0; i < filterInfo.Filters.Length; i++) {
-                var curFilter = filterInfo.Filters[i];
-
-                spans.Add(
-                    new ClassificationSpan(
-                        new SnapshotSpan(
-                            snapshot,
-                            new Span(curFilter.FilterStart + region.Start, curFilter.Filter.Length)
-                        ),
-                        _classifierProvider._identifierType
-                    )
-                );
-
-                AddVariableClassifications(snapshot, spans, curFilter.Arg, curFilter.ArgStart + region.Start);
-            }
-        }
-
-        private void AddVariableClassifications(ITextSnapshot snapshot, List<ClassificationSpan> spans, DjangoVariableValue expr, int start) {
-            if (expr != null) {
-                IClassificationType filterType;
-                switch (expr.Kind) {
-                    case DjangoVariableKind.Constant: filterType = _classifierProvider._literalType; break;
-                    case DjangoVariableKind.Number: filterType = _classifierProvider._numberType; break;
-                    case DjangoVariableKind.Variable:
-                        // variable can have dots in it...
-                        if (expr.Value.IndexOf('.') != -1) {
-                            AddDottedIdentifierClassifications(snapshot, spans, start, expr);
-                            return;
-                        }
-                        filterType = _classifierProvider._identifierType;
-                        break;
-                    default:
-                        throw new InvalidOperationException();
-                }
-
-                spans.Add(
-                    new ClassificationSpan(
-                        new SnapshotSpan(
-                            snapshot,
-                            new Span(start, expr.Value.Length)
-                        ),
-                        filterType
-                    )
-                );
-            }
-        }
-
-        private void AddDottedIdentifierClassifications(ITextSnapshot snapshot, List<ClassificationSpan> spans, int start, DjangoVariableValue expr) {
-            var split = expr.Value.Split('.');
-            for (int i = 0; i < split.Length; i++) {
-                spans.Add(
-                    new ClassificationSpan(
-                        new SnapshotSpan(
-                            snapshot,
-                            new Span(start, split[i].Length)
-                        ),
-                        _classifierProvider._identifierType
-                    )
-                );
-                start += split[i].Length;
-                spans.Add(
-                    new ClassificationSpan(
-                        new SnapshotSpan(
-                            snapshot,
-                            new Span(start, 1)
-                        ),
-                        _classifierProvider._dot
-                    )
-                );
-                start += 1;
-            }
-        }
-
-
         #endregion
+
+        internal void RaiseClassificationChanged(SnapshotPoint start, SnapshotPoint end) {
+            var classChanged = ClassificationChanged;
+            if (classChanged != null) {
+                classChanged(this, new ClassificationChangedEventArgs(new SnapshotSpan(start, end)));
+            }
+        }
     }
 }

@@ -14,7 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
@@ -45,7 +48,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 ^(?<num>" + _numFormat + @")|
 ^(?<var>[\w\.]+)|
  (?:\|
-     (?<filter_name>\w+)
+     (?<filter_name>\w*)
          (?:\:
              (?:
               (?<constant_arg>" + _constStr + @")|
@@ -73,25 +76,24 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return new DjangoVariable(new DjangoVariableValue(expression, DjangoVariableKind.Number), expressionStart, filters);
         }
 
-        public static DjangoVariable Parse(string filterText) {
-            int start = 0;
+        public static DjangoVariable Parse(string filterText, int start = 0) {
             if (filterText.StartsWith("{{") && filterText.EndsWith("}}")) {
-                filterText = GetTrimmedFilterText(filterText, out start);
+                filterText = GetTrimmedFilterText(filterText, ref start);
                 if (filterText == null) {
                     return null;
                 }
             }
 
             int varStart = start;
-            DjangoVariableValue filter = null;
+            DjangoVariableValue variable = null;
             List<DjangoFilter> filters = new List<DjangoFilter>();
 
             foreach (Match match in _filterRegex.Matches(filterText)) {
-                if (filter == null) {
+                if (variable == null) {
                     var constantGroup = match.Groups["constant"];
                     if (constantGroup.Success) {
                         varStart = constantGroup.Index;
-                        filter = new DjangoVariableValue(constantGroup.Value, DjangoVariableKind.Constant);
+                        variable = new DjangoVariableValue(constantGroup.Value, DjangoVariableKind.Constant);
                     } else {
                         var varGroup = match.Groups["var"];
                         if (!varGroup.Success) {
@@ -100,10 +102,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 return null;
                             }
                             varStart = numGroup.Index;
-                            filter = new DjangoVariableValue(numGroup.Value, DjangoVariableKind.Number);
+                            variable = new DjangoVariableValue(numGroup.Value, DjangoVariableKind.Number);
                         } else {
                             varStart = varGroup.Index;
-                            filter = new DjangoVariableValue(varGroup.Value, DjangoVariableKind.Variable);
+                            variable = new DjangoVariableValue(varGroup.Value, DjangoVariableKind.Variable);
                         }
                     }
                 } else {
@@ -111,13 +113,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 }
             }
 
-            return new DjangoVariable(filter, varStart + start, filters.ToArray());
+            return new DjangoVariable(variable, varStart + start, filters.ToArray());
         }
 
         /// <summary>
         /// Gets the trimmed filter text and passes back the position in the buffer where the first
         /// character of the filter actually starts.
-        internal static string GetTrimmedFilterText(string text, out int start) {
+        internal static string GetTrimmedFilterText(string text, ref int start) {
             start = 0;
 
             string filterText = null;
@@ -129,7 +131,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 }
             }
             if (tmpStart != null) {
-                for (int i = text.Length - 3; i > tmpStart.Value; i--) {
+                for (int i = text.Length - 3; i >= tmpStart.Value; i--) {
                     if (!Char.IsWhiteSpace(text[i])) {
                         filterText = text.Substring(tmpStart.Value, i + 1 - tmpStart.Value);
                         break;
@@ -167,8 +169,115 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     }
                 }
             }
-            return new DjangoFilter(filterName.Value, filterStart, arg, argStart + start);
+            return new DjangoFilter(filterName.Value, filterStart + start, arg, argStart + start);
         }
+
+        public IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {            
+            IEnumerable<CompletionInfo> tags = new CompletionInfo[0];
+
+            if (Expression == null) {
+                var tempTags = context.Variables;
+                if (tempTags != null) {
+                    tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
+                }
+            } else if (position == Expression.Value.Length + ExpressionStart) {
+                var tempTags = context.Variables;
+                // TODO: Handle multiple dots
+                if (Expression.Value.EndsWith(".")) {
+                    string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
+                    // get the members of this variable
+                    if (tempTags != null) {
+                        HashSet<string> newTags = new HashSet<string>();
+                        HashSet<AnalysisValue> values;
+                        if (tempTags.TryGetValue(varName, out values)) {
+                            foreach (var item in values) {
+                                foreach (var members in item.GetAllMembers()) {
+                                    newTags.Add(members.Key);
+                                }
+                            }
+                        }
+                        tags = CompletionInfo.ToCompletionInfo(newTags, StandardGlyphGroup.GlyphGroupField);
+                    }
+                } else {
+                    tags = FilterTags(tempTags.Keys, Expression.Value, StandardGlyphGroup.GlyphGroupField);
+                }
+            } else if (position < Expression.Value.Length + ExpressionStart) {
+                // we are triggering in the variable name area, we need to return variables
+                // but we need to filter them.
+                var tempTags = context.Variables;
+                if (tempTags != null) {
+                    tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
+                }
+            } else {
+                // we are triggering in the filter or arg area
+                for (int i = 0; i < Filters.Length; i++) {
+                    var curFilter = Filters[i];
+                    if (position >= curFilter.FilterStart &&
+                        position <= curFilter.FilterStart + curFilter.Filter.Length) {
+                        // it's in this filter area
+                        tags = FilterFilters(context, curFilter.Filter);
+                        break;
+                    } else if (curFilter.Arg != null) {
+                        if (position >= curFilter.ArgStart &&
+                            position < curFilter.ArgStart + curFilter.Arg.Value.Length) {
+                            // it's in this argument
+                            var tempTags = context.Variables;
+                            if (tempTags != null) {
+                                tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
+                            }
+                            break;
+                        }
+                    } else if (i == Filters.Length - 1 && !String.IsNullOrWhiteSpace(curFilter.Filter)) {
+                        // last filter, nothing after us, so this has to be an argument...
+                        var tempTags = context.Variables;
+                        if (tempTags != null) {
+                            tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
+                        }
+                    }
+                }
+            }
+            return tags;
+        }
+
+        public IEnumerable<BlockClassification> GetSpans() {
+            if (Expression != null) {
+                foreach (var span in Expression.GetSpans(ExpressionStart)) {
+                    yield return span;
+                }
+            }
+
+            foreach (var filter in Filters) {
+                foreach (var span in filter.GetSpans(ExpressionStart)) {
+                    yield return span;
+                }
+            }
+        }
+
+        internal static IEnumerable<CompletionInfo> FilterTags(IEnumerable<string> keys, string filter, StandardGlyphGroup glyph = StandardGlyphGroup.GlyphKeyword) {
+            return from tag in keys where tag.StartsWith(filter) select new CompletionInfo(tag, glyph, tag.Substring(filter.Length));
+        }
+
+        private static IEnumerable<CompletionInfo> FilterFilters(IDjangoCompletionContext context, string filter) {
+            return from tag in context.Filters.Keys where tag.StartsWith(filter) select new CompletionInfo(tag, StandardGlyphGroup.GlyphKeyword, tag.Substring(filter.Length));
+        }
+
     }
 
+    class CompletionInfo {
+        public readonly string DisplayText;
+        public readonly StandardGlyphGroup Glyph;
+        public readonly string InsertionText;
+
+        public CompletionInfo(string displayText, StandardGlyphGroup glyph, string insertionText = null) {
+            DisplayText = displayText;
+            Glyph = glyph;
+            InsertionText = insertionText ?? displayText;
+        }
+
+        internal static IEnumerable<CompletionInfo> ToCompletionInfo(IEnumerable<string> keys, StandardGlyphGroup glyph) {
+            foreach (var key in keys) {
+                yield return new CompletionInfo(key, glyph, key);
+            }
+        }
+    }
 }

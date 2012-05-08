@@ -12,18 +12,17 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    internal class TemplateRegion {
-        public readonly string Text;
-        public readonly TemplateTokenKind Kind;
-        public readonly DjangoBlock Block;
-        public readonly int Start;
+using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis;
 
-        public TemplateRegion(string text, TemplateTokenKind kind, DjangoBlock block, int start) {
-            Text = text;
-            Kind = kind;
-            Start = start;
-            Block = block;
+namespace Microsoft.PythonTools.Django.TemplateParsing {
+    interface IDjangoCompletionContext {
+        Dictionary<string, HashSet<AnalysisValue>> Variables {
+            get;
+        }
+
+        Dictionary<string, HashSet<AnalysisValue>> Filters {
+            get;
         }
     }
 }

@@ -204,6 +204,7 @@
     <Compile Include="TemplateParsing\HtmlCompletionSourceProvider.cs" />
     <Compile Include="TemplateParsing\HtmlIntellisenseControllerProvider.cs" />
     <Compile Include="TemplateParsing\HtmlIntellisenseController.cs" />
+    <Compile Include="TemplateParsing\IDjangoCompletionContext.cs" />
     <Compile Include="TemplateParsing\TemplateProjectionBuffer.cs" />
     <Compile Include="TemplateParsing\IContentTypeMetadata.cs" />
     <Compile Include="TemplateParsing\SnapshotSpanSourceCodeReader.cs" />
