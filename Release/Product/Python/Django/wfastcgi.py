@@ -183,7 +183,9 @@ wsgi environment array"""
     else:
         res['wsgi.input'] += content
 
-    return _REQUESTS[req_id]
+    if not content:
+        # we've hit the end of the input stream, time to process input...
+        return _REQUESTS[req_id]
 
 
 def read_fastcgi_data(req_id, content):
@@ -320,8 +322,8 @@ if __name__ == '__main__':
                 except:
                     send_response(record.req_id, FCGI_STDERR, output.getvalue())
                 else:
-                    status = 'HTTP/1.1 ' + status_line + '\r\n'
-                    headers = ''.join('%s: %s\n' % (name, value) for name, value in response_headers)
+                    status = 'Status: ' + status_line + '\r\n'
+                    headers = ''.join('%s: %s\r\n' % (name, value) for name, value in response_headers)
                     full_response = status + headers + '\r\n' + response
                     send_response(record.req_id, FCGI_STDOUT, full_response)
 

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using System.Xml.XPath;
@@ -26,8 +27,20 @@ namespace AzureSetup {
         }
 
         public static void ConfigureFastCgi() {
+            // enable FastCGI in IIS
+            var proc = Process.Start(
+                Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32\\PkgMgr.exe"),
+                "/iu:IIS-WebServerRole;IIS-WebServer;IIS-CommonHttpFeatures;IIS-StaticContent;IIS-DefaultDocument;IIS-DirectoryBrowsing;IIS-HttpErrors;IIS-HealthAndDiagnostics;IIS-HttpLogging;IIS-LoggingLibraries;IIS-RequestMonitor;IIS-Security;IIS-RequestFiltering;IIS-HttpCompressionStatic;IIS-WebServerManagementTools;IIS-ManagementConsole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI;IIS-CGI"
+            );
+            proc.WaitForExit();
+
             // Crack RoleModel.xml to figure out where our site lives...
+            // Path.GetFullPath - in the cloud the RoleRoot is "E:" instead of "E:\"
             var roleRoot = Environment.GetEnvironmentVariable("RoleRoot");
+            if (!roleRoot.EndsWith("\\")) {
+                roleRoot = roleRoot + "\\";
+            }
+
             string interpreter;
             try {
                 interpreter = RoleEnvironment.GetConfigurationSettingValue("Microsoft.PythonTools.Azure.PythonInterpreter");
@@ -51,6 +64,10 @@ namespace AzureSetup {
                 // TODO: Multiple sites?
                 physicalDir = node.GetAttribute("physicalDirectory", "");
                 break;
+            }
+
+            if (!Path.IsPathRooted(physicalDir)) {
+                physicalDir = Path.Combine(roleRoot, physicalDir);
             }
 
             nodes = navigator.Select("/sd:RoleModel/sd:Properties/sd:Property", mngr);
@@ -104,9 +121,9 @@ namespace AzureSetup {
                     settingsName += ".settings";
 
                     foreach (var envVar in new[] { 
-                    new { Name = "DJANGO_SETTINGS_MODULE", Value = settingsName },
-                    new { Name = "PYTHONPATH", Value = Path.Combine(physicalDir, "..") } 
-                    }
+                new { Name = "DJANGO_SETTINGS_MODULE", Value = settingsName },
+                new { Name = "PYTHONPATH", Value = Path.Combine(physicalDir, "..") } 
+                }
                     ) {
                         ConfigurationElement environmentVariableElement = environmentVariablesCollection.CreateElement("environmentVariable");
                         environmentVariableElement["name"] = envVar.Name;

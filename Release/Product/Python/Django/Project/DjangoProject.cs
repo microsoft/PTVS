@@ -48,6 +48,11 @@ namespace Microsoft.PythonTools.Django.Project {
 
         private static ImageList _images;
 
+        public DjangoProject() {
+            _tags["endfor"] = new HashSet<AnalysisValue>();
+            _tags["endif"] = new HashSet<AnalysisValue>();
+        }
+
         #region IVsAggregatableProject
 
         /// <summary>
@@ -833,7 +838,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             return ((IOleCommandTarget)_menuService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
-
+        
         private void UpdateAzureDeploymentProject(IVsHierarchy project) {
             object projKind;
             if (!ErrorHandler.Succeeded(project.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_TypeName, out projKind)) ||

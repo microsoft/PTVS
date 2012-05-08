@@ -148,10 +148,8 @@
 ]]>
       </_DjangoWebConfigCode>
 
-
     </PropertyGroup>
     <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == ''" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
-
   </Target>
   <Target
     Name="GetTargetPath"
@@ -181,6 +179,7 @@
     Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
 
     <ItemGroup>
+      <ContentFiles Include="web.config"></ContentFiles>
       <ContentFiles Include="@(Content)"></ContentFiles>
       <ContentFiles Include="@(Compile)"></ContentFiles>
       <ContentFiles Include="@(Include)"></ContentFiles>
