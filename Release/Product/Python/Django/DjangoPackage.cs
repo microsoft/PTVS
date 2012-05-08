@@ -16,9 +16,11 @@ using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using System.ComponentModel.Design;
 
 namespace Microsoft.PythonTools.Django {
     /// <summary>
@@ -42,9 +44,13 @@ namespace Microsoft.PythonTools.Django {
     [ProvideEditorExtension(typeof(DjangoEditorFactory), ".djt", 50,
               ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}",
               TemplateDir = "Templates",
-              NameResourceID = 105,
+              NameResourceID = 102,
               DefaultName = "webpage")]
-    [ProvideEditorExtension2(typeof(DjangoEditorFactoryPromptForEncoding), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", NameResourceID = 105, DefaultName = "webpage")]
+    [ProvideLanguageService(typeof(DjangoLanguageInfo), "Django Templates", 107, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = false, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
+    [ProvideLanguageExtension(typeof(DjangoLanguageInfo), ".djt")]
+    [ProvideDebugLanguage("Django Templates", DjangoTemplateLanguageId, "{" + DjangoExpressionEvaluatorGuid + "}", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}")]
+    [ProvideEditorExtension2(typeof(DjangoEditorFactory), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", NameResourceID = 102, DefaultName = "webpage")]
+    [ProvideEditorExtension2(typeof(DjangoEditorFactoryPromptForEncoding), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", NameResourceID = 113, DefaultName = "webpage")]
     [ProvideKeyBindingTable(GuidList.guidDjangoEditorFactoryString, 102)]
     [ProvideEditorLogicalView(typeof(DjangoEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
     [ProvideEditorLogicalView(typeof(DjangoEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.TextView_string)]
@@ -52,6 +58,9 @@ namespace Microsoft.PythonTools.Django {
     [ProvideObject(typeof(DjangoProject), RegisterUsing = RegistrationMethod.CodeBase)]
     [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Django Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath")]
     public sealed class DjangoPackage : Package {
+        internal const string DjangoTemplateLanguageId = "{918E5764-7026-4D57-918D-19D86AD73AC4}";
+        internal const string DjangoExpressionEvaluatorGuid = "64F20547-C246-487F-83A6-587BC54BAB2F";
+
         /// <summary>
         /// Default constructor of the package.
         /// Inside this method you can place any initialization code that does not require 
@@ -74,6 +83,9 @@ namespace Microsoft.PythonTools.Django {
         protected override void Initialize() {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
+
+            var langService = new DjangoLanguageInfo(this);
+            ((IServiceContainer)this).AddService(langService.GetType(), langService, true);
 
             //Create Editor Factory. Note that the base Package class will call Dispose on it.
             RegisterEditorFactory(new DjangoEditorFactory(this));

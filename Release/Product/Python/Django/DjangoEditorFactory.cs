@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Django {
     /// <summary>
     /// Common factory for creating our editor
     /// </summary>    
+    [Guid("E1B7ABDE-CDDE-4874-A8A6-5B5C7597A848")]
     public class DjangoEditorFactory : IVsEditorFactory {
         private DjangoPackage _package;
         private ServiceProvider _serviceProvider;
@@ -313,7 +314,9 @@ namespace Microsoft.PythonTools.Django {
                     // if we have a language service ID we'll use it to set the content type.
                     // That way anyone using the legacy language service adapter will work
                     // with this buffer.  This will also set the content type.
+                    langSvcGuid = typeof(DjangoLanguageInfo).GUID;
                     _textLines.SetLanguageServiceID(ref langSvcGuid);
+                    diskBuffer.ChangeContentType(contentType, null);
                 } else {
                     diskBuffer.ChangeContentType(contentType, null);
                 }
