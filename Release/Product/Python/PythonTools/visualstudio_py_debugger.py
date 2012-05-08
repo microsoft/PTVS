@@ -45,6 +45,7 @@ except:
 
 # dictionary of line no to break point info
 BREAKPOINTS = {}
+DJANGO_BREAKPOINTS = {}
 
 BREAK_WHEN_CHANGED_DUMMY = object()
 # lock for calling .send on the socket
@@ -389,6 +390,17 @@ class Thread(object):
     
     def handle_call(self, frame, arg):
         self.push_frame(frame)
+
+        if frame.f_code.co_name == 'render':
+            self_obj = frame.f_locals.get('self', None)
+            if self_obj is not None:
+                source_obj = getattr(self_obj, 'source', None)
+                if source_obj is not None:
+                    origin, (start, end) = source_obj
+                    
+                    active_bps = DJANGO_BREAKPOINTS.get(origin.name, None)
+                    if active_bps:
+                        print('Should maybe break in file', origin.name, start, end)
 
         if frame.f_code.co_name == '<module>' and frame.f_code.co_filename != '<string>':
             probe_stack()
@@ -911,6 +923,8 @@ class DebuggerLoop(object):
             cmd('clst') : self.command_clear_stepping,
             cmd('sexi') : self.command_set_exception_info,
             cmd('sehi') : self.command_set_exception_handler_info,
+            cmd('bkdr') : self.command_remove_django_breakpoint,
+            cmd('bkda') : self.command_add_django_breakpoint,
         }
 
     def loop(self):
@@ -992,6 +1006,17 @@ class DebuggerLoop(object):
                         del BREAKPOINTS[lineNo]
                     break
 
+    def command_remove_django_breakpoint(self):
+        lineNo = read_int(self.conn)
+        brkpt_id = read_int(self.conn)
+        #del DJANGO_BREAKPOINTS[filename]
+
+    def command_add_django_breakpoint(self):
+        brkpt_id = read_int(self.conn)
+        lineNo = read_int(self.conn)
+        filename = read_string(self.conn)
+        DJANGO_BREAKPOINTS[filename.lower()] = lineNo
+        
     def command_break_all(self):
         global SEND_BREAK_COMPLETE
         SEND_BREAK_COMPLETE = True

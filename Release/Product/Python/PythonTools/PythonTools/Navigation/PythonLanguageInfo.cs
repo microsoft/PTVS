@@ -18,6 +18,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 
 namespace Microsoft.PythonTools.Navigation {
     /// <summary>
@@ -28,7 +29,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// should be switched over to using our TextViewCreationListener instead).
     /// </summary>
     [Guid("bf96a6ce-574f-3259-98be-503a3ad636dd")]
-    internal sealed class PythonLanguageInfo : IVsLanguageInfo {
+    internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo {
         private readonly IServiceProvider _serviceProvider;
         private readonly IComponentModel _componentModel;
 
@@ -79,5 +80,45 @@ namespace Microsoft.PythonTools.Navigation {
                 return _serviceProvider;
             }
         }
+
+        #region IVsLanguageDebugInfo Members
+
+        public int GetLanguageID(IVsTextBuffer pBuffer, int iLine, int iCol, out Guid pguidLanguageID) {
+            pguidLanguageID = DebuggerConstants.guidLanguagePython;
+            return VSConstants.S_OK;
+        }
+
+        public int GetLocationOfName(string pszName, out string pbstrMkDoc, TextSpan[] pspanLocation) {
+            pbstrMkDoc = null;
+            return VSConstants.E_FAIL;
+        }
+
+        public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset) {
+            pbstrName = "";
+            piLineOffset = iCol;
+            return VSConstants.S_OK;
+        }
+
+        public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
+            ppEnum = null;
+            return VSConstants.E_FAIL;
+        }
+
+        public int IsMappedLocation(IVsTextBuffer pBuffer, int iLine, int iCol) {
+            return VSConstants.E_FAIL;
+        }
+
+        public int ResolveName(string pszName, uint dwFlags, out IVsEnumDebugName ppNames) {
+            ppNames = null;
+            return VSConstants.E_FAIL;
+        }
+
+        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
+            pCodeSpan[0].iStartLine = iLine;
+            pCodeSpan[0].iEndLine = iLine;
+            return VSConstants.S_OK;
+        }
+
+        #endregion
     }
 }
