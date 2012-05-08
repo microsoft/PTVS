@@ -14,6 +14,7 @@
 
 using System;
 using Microsoft.PythonTools.Django.Project;
+using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -95,7 +96,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         internal void TriggerCompletionSession(bool completeWord) {
             Dismiss();
-
+            
             _activeSession = CompletionBroker.TriggerCompletion(_textView);
 
             if (_activeSession != null) {
@@ -180,11 +181,27 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                             int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
 
                             if (ErrorHandler.Succeeded(res)) {
-                                if (_activeSession != null && !_activeSession.IsDismissed) {
-                                    _activeSession.Dismiss();
+                                TemplateProjectionBuffer projBuffer;
+                                if (_textView.TextBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
+                                    var templateLoc = _textView.BufferGraph.MapDownToBuffer(
+                                        _textView.Caret.Position.BufferPosition,
+                                        PointTrackingMode.Positive,
+                                        projBuffer.TemplateBuffer,
+                                        PositionAffinity.Successor
+                                    );
+                                
+                                    TemplateTokenKind kind;
+                                    int start;
+                                    if (templateLoc != null &&
+                                        projBuffer.GetTemplateText(templateLoc.Value, out kind, out start) != null) {
+                                        if (_activeSession != null && !_activeSession.IsDismissed) {
+                                            _activeSession.Dismiss();
+                                        }
+
+                                        TriggerCompletionSession(false);
+                                    }
                                 }
 
-                                TriggerCompletionSession(false);
                                 return VSConstants.S_OK;
                             }
                         }

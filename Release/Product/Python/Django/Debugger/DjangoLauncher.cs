@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
         private readonly IPythonProject _project;
         private readonly IProjectLauncher _defaultLauncher;
         private readonly DjangoPythonProject _djangoProject;
+        [ThreadStatic] private static bool _debugLaunch;
 
         public DjangoLauncher(IPythonProject project, IPythonLauncherProvider defaultLauncher) {
             _project = project;
@@ -60,7 +61,10 @@ namespace Microsoft.PythonTools.Django.Debugger {
                     case CommonConstants.CommandLineArguments:
                         _launcher._testServerPort = GetFreePort();
 
-                        string commandLine = "runserver --noreload";
+                        string commandLine = "runserver";
+                        if (_debugLaunch) {
+                            commandLine += "--noreload";
+                        }
                         string settingsModule = _realProject.GetProperty(DjangoLauncherOptions.SettingModulesSetting);
                         if (!String.IsNullOrWhiteSpace(settingsModule)) {
                             commandLine += " --settings " + settingsModule;
@@ -108,6 +112,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
         #region IPythonLauncher Members
 
         public int LaunchProject(bool debug) {
+            _debugLaunch = debug;
             int res = _defaultLauncher.LaunchProject(debug);
             if (ErrorHandler.Succeeded(res)) {
                 ThreadPool.QueueUserWorkItem(StartBrowser, null);
@@ -130,6 +135,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
         }
 
         public int LaunchFile(string file, bool debug) {
+            _debugLaunch = debug;
             int res = _defaultLauncher.LaunchFile(file, debug);
             if (ErrorHandler.Succeeded(res)) {
                 StartInBrowser("http://localhost:" + _testServerPort);

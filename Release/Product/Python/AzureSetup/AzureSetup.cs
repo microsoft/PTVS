@@ -53,6 +53,15 @@ namespace AzureSetup {
                 break;
             }
 
+            nodes = navigator.Select("/sd:RoleModel/sd:Properties/sd:Property", mngr);
+            bool isDebug = false;
+            foreach (XPathNavigator node in nodes) {
+                if (node.GetAttribute("name", "") == "Configuration" &&
+                    node.GetAttribute("value", "") == "Debug") {
+                    isDebug = true;
+                }
+            }
+
             if (physicalDir != null) {
                 string fastCgiPath = Path.Combine(physicalDir, "bin\\wfastcgi.py");
 
@@ -81,7 +90,7 @@ namespace AzureSetup {
                     applicationElement["idleTimeout"] = 300;
                     applicationElement["activityTimeout"] = 30;
                     applicationElement["requestTimeout"] = 90;
-                    applicationElement["instanceMaxRequests"] = 10000;
+                    applicationElement["instanceMaxRequests"] = isDebug ? 1 : 10000;
                     applicationElement["protocol"] = "NamedPipe";
                     applicationElement["flushNamedPipe"] = false;
 

@@ -64,6 +64,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 new object[0],
                 ProjectionBufferOptions.None
             );
+            _projBuffer.Properties.AddProperty(typeof(TemplateProjectionBuffer), this);
 
             _bufferGraph = bufferGraphFactory.CreateBufferGraph(_projBuffer);
             
@@ -123,6 +124,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public IProjectionBuffer ProjectionBuffer {
             get {
                 return _projBuffer;
+            }
+        }
+
+        public IProjectionBuffer TemplateBuffer {
+            get {
+                return _templateBuffer;
             }
         }
 

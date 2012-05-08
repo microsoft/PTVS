@@ -47,7 +47,16 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         tag,
                         "<" + tag,
                         "",
-                        _completionSourceProvider._glyphService.GetGlyph(StandardGlyphGroup.GlyphXmlAttribute, StandardGlyphItem.GlyphItemPublic),
+                        _completionSourceProvider._glyphService.GetGlyph(StandardGlyphGroup.GlyphXmlItem, StandardGlyphItem.GlyphItemPublic),
+                        "")
+                    );
+                }
+                foreach (var tag in _htmlTags) {
+                    completions.Add(new Completion(
+                        "/" + tag,
+                        "</" + tag + ">",
+                        "",
+                        _completionSourceProvider._glyphService.GetGlyph(StandardGlyphGroup.GlyphXmlItem, StandardGlyphItem.GlyphItemPublic),
                         "")
                     );
                 }

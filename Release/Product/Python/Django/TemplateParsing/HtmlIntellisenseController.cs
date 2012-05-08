@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         private bool IsCompletionChar(char ch) {
-            return ch == '/' || ch == '>' || ch == '<' || ch == ';' || char.IsWhiteSpace(ch);
+            return ch == '>' || ch == '<' || ch == ';' || char.IsWhiteSpace(ch);
         }
 
         private static bool IsIdentifierChar(char ch) {
