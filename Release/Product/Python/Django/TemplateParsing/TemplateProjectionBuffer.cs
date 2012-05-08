@@ -560,7 +560,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// <summary>
         /// Given a point in the template buffer gets the text for that template tag.
         /// </summary>
-        internal string GetTemplateText(SnapshotPoint point, out TemplateTokenKind kind) {
+        internal string GetTemplateText(SnapshotPoint point, out TemplateTokenKind kind, out int start) {
             Debug.Assert(point.Snapshot.TextBuffer == _templateBuffer);
 
             var realPoint = _bufferGraph.MapDownToBuffer(
@@ -576,11 +576,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     var startPoint = _spans[i].DiskBufferSpan.GetSpan(_diskBuffer.CurrentSnapshot);
                     if (startPoint.Start <= pointVal.Position && startPoint.End >= pointVal.Position) {
                         kind = _spans[i].Kind;
+                        start = startPoint.Start;
                         return _spans[i].DiskBufferSpan.GetText(_diskBuffer.CurrentSnapshot);
                     }
                 }
             }
             kind = TemplateTokenKind.None;
+            start = 0;
             return null;
         }
 

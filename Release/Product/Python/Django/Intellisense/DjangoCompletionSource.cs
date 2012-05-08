@@ -44,10 +44,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 TemplateTokenKind kind;
                 string templateText;
                 var triggerPoint = session.GetTriggerPoint(_buffer.CurrentSnapshot);
+                int templateStart;
                 if (project != null &&
                     triggerPoint != null &&
                     _buffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer) &&
-                    (templateText = projBuffer.GetTemplateText(triggerPoint.Value, out kind)) != null) {
+                    (templateText = projBuffer.GetTemplateText(triggerPoint.Value, out kind, out templateStart)) != null) {
 
                     if (kind == TemplateTokenKind.Block || kind == TemplateTokenKind.Variable) {
                         var compSet = new CompletionSet();
@@ -56,6 +57,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                             project, 
                             kind, 
                             templateText, 
+                            templateStart,
                             session.GetTriggerPoint(_buffer.CurrentSnapshot));
 
                         completionSets.Add(
@@ -72,7 +74,16 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
         }
 
-        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string bufferText, SnapshotPoint? triggerPoint) {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="project"></param>
+        /// <param name="kind">The type of template tag we are processing</param>
+        /// <param name="bufferText">The text of the template tag which we are offering a completion in</param>
+        /// <param name="templateStart">the offset in the buffer where teh template starts</param>
+        /// <param name="triggerPoint">The point in the buffer where the completion was triggered</param>
+        /// <returns></returns>
+        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string bufferText, int templateStart, SnapshotPoint? triggerPoint) {
             List<Completion> completions = new List<Completion>();
             IEnumerable<string> tags;
 
@@ -90,17 +101,19 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
                     var variable = DjangoVariable.Parse(bufferText);
                     if (variable != null && triggerPoint != null && variable.Expression != null) {
-                        int position = triggerPoint.Value.Position;
+                        int position = triggerPoint.Value.Position - templateStart;
 
                         if (position == variable.Expression.Value.Length + variable.ExpressionStart) {
                             var tempTags = GetVariablesForTemplateFile(project, filePath);
                             // TODO: Handle multiple dots
                             if (variable.Expression.Value.EndsWith(".")) {
+                                string varName = variable.Expression.Value.Substring(0, variable.Expression.Value.IndexOf('.'));
                                 // get the members of this variable
                                 if (tempTags != null) {
                                     HashSet<string> newTags = new HashSet<string>();
-                                    foreach (var value in tempTags.Values) {
-                                        foreach (var item in value) {
+                                    HashSet<AnalysisValue> values;
+                                    if (tempTags.TryGetValue(varName, out values)) {
+                                        foreach (var item in values) {
                                             foreach (var members in item.GetAllMembers()) {
                                                 newTags.Add(members.Key);
                                             }

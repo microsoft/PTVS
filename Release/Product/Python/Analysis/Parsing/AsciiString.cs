@@ -28,5 +28,17 @@ namespace Microsoft.PythonTools.Parsing {
         public override string ToString() {
             return String;
         }
+
+        public override bool Equals(object obj) {
+            AsciiString other = obj as AsciiString;
+            if (other != null) {
+                return _str == other._str;
+            }
+            return false;
+        }
+
+        public override int GetHashCode() {
+            return _str.GetHashCode();
+        }
     }
 }

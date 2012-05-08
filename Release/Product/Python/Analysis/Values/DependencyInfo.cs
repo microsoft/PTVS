@@ -49,6 +49,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
     }
 
+    internal class KeyValueDependencyInfo : DependencyInfo {
+        internal Dictionary<Namespace, TypeUnion<Namespace>> KeyValues = new Dictionary<Namespace,TypeUnion<Namespace>>();
+
+        public KeyValueDependencyInfo(int version)
+            : base(version) {
+        }
+
+    }
+
     internal class TypedDependencyInfo<T> : DependencyInfo where T : Namespace {
         private TypeUnion<T> _union;
         public ISet<EncodedLocation> _references, _assignments;

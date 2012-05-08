@@ -211,11 +211,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case ParameterKind.Dictionary:
                     Debug.Assert(ParameterTypes[parameterIndex] is DictParameterVariableDef);
 
-                    bool res = false;
-                    foreach (var type in arg) {
-                        res = ((DictParameterVariableDef)ParameterTypes[parameterIndex]).Dict.AddValueType(null, unit, type) || res;
-                    }
-                    return res;
+                    return ((DictParameterVariableDef)ParameterTypes[parameterIndex]).Dict.AddTypes(
+                        FunctionDefinition, 
+                        unit, 
+                        ProjectState._stringType.Instance.SelfSet, 
+                        arg);
                 case ParameterKind.List:
                     Debug.Assert(ParameterTypes[parameterIndex] is ListParameterVariableDef);
 

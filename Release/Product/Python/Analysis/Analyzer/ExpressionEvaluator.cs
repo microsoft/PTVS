@@ -219,16 +219,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var keys = new HashSet<Namespace>();
                 var values = new HashSet<Namespace>();
                 foreach (var x in n.Items) {
-                    if (x.SliceStart != null) {
-                        foreach (var keyVal in ee.Evaluate(x.SliceStart)) {
-                            dictInfo.AddKeyType(x.SliceStart, ee._unit, keyVal);
-                        }
-                    }
-                    if (x.SliceStop != null) {
-                        foreach (var itemVal in ee.Evaluate(x.SliceStop)) {
-                            dictInfo.AddValueType(x.SliceStart, ee._unit, itemVal);
-                        }
-                    }
+                    dictInfo.SetIndex(
+                        node,
+                        ee._unit,
+                        ee.EvaluateMaybeNull(x.SliceStart) ?? EmptySet<Namespace>.Instance,
+                        ee.EvaluateMaybeNull(x.SliceStop) ?? EmptySet<Namespace>.Instance
+                    );
                 }
                 
                 ee.GlobalScope.NodeVariables[node] = result;

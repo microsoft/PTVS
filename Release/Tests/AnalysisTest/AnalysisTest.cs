@@ -266,6 +266,19 @@ y = f('foo', 'bar')";
         }
 
         [TestMethod]
+        public void DictionaryKeyValues() {
+            var code = @"x = {'abc': 42, 'bar': 'baz'}
+
+i = x['abc']
+s = x['bar']
+";
+            var entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetValuesByIndex("i", code.IndexOf("i =")).Select(x => x.PythonType.Name), "int");
+            AssertContainsExactly(entry.GetValuesByIndex("s", code.IndexOf("s =")).Select(x => x.PythonType.Name), "str");
+        }
+
+        [TestMethod]
         public void TestImportStar() {
             var entry = ProcessText(@"
 from nt import *
@@ -2198,8 +2211,8 @@ x['foo'](42, [])
             var entry = ProcessText(text);
             AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("print")), IntType);
             AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("print")), ListType);
-            AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("x, y")), IntType);
-            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("x, y")), ListType);
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("x, y")));
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("x, y")));
         }
 
         [TestMethod]
@@ -2227,8 +2240,8 @@ x.get('foo')(42, [])
             var entry = ProcessText(text);
             AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("print")), IntType);
             AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("print")), ListType);
-            AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("x, y")), IntType);
-            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("x, y")), ListType);
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("x, y")));
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("x, y")));
         }
 
         [TestMethod]
@@ -2248,8 +2261,8 @@ if y is not None:
             var entry = ProcessText(text);
             AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("print")), IntType);
             AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("print")), ListType);
-            AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("x, y")), IntType);
-            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("x, y")), ListType);
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("x, y")));
+            AssertContainsExactly(entry.GetTypesFromNameByIndex("b", text.IndexOf("x, y")));
         }
 
         [TestMethod]
