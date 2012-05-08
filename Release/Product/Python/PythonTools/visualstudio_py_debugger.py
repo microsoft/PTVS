@@ -384,7 +384,7 @@ class DjangoBreakpointInfo(object):
 def get_django_frame_source(frame):
     if frame.f_code.co_name == 'render':
         self_obj = frame.f_locals.get('self', None)
-        if self_obj is not None:
+        if self_obj is not None and type(self_obj).__name__ != 'TextNode':
             source_obj = getattr(self_obj, 'source', None)
             if source_obj is not None:
                 return source_obj
@@ -712,40 +712,51 @@ class Thread(object):
         self.unblock_work = work
         self.unblock()
 
-    def run_on_thread(self, text, cur_frame, execution_id):
+    def run_on_thread(self, text, cur_frame, execution_id, frame_kind):
         self._block_starting_lock.acquire()
         
         if not self._is_blocked:
             report_execution_error('<expression cannot be evaluated at this time>', execution_id)
         elif not self._is_working:
-            self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id))
+            self.schedule_work(lambda : self.run_locally(text, cur_frame, execution_id, frame_kind))
         else:
             report_execution_error('<error: previous evaluation has not completed>', execution_id)
         
         self._block_starting_lock.release()
 
-    def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate):
+    def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate, frame_kind):
         self._block_starting_lock.acquire()
         if not self._is_working and self._is_blocked:
-            self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate))
+            self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate, frame_kind))
             self._block_starting_lock.release()
         else:
             self._block_starting_lock.release()
             report_children(execution_id, [], False, False)
 
-    def run_locally(self, text, cur_frame, execution_id):
+    def get_locals(self, cur_frame, frame_kind):
+        if frame_kind == FRAME_KIND_DJANGO:
+            locs = {}
+            # iterate going forward, so later items replace earlier items
+            for d in cur_frame.f_locals['context'].dicts:
+                for key in d.keys():
+                    locs[key] = d[key]
+        else:
+            locs = cur_frame.f_locals
+        return locs
+
+    def run_locally(self, text, cur_frame, execution_id, frame_kind):
         try:
             try:
                 code = compile(text, cur_frame.f_code.co_name, 'eval')
             except:
                 code = compile(text, cur_frame.f_code.co_name, 'exec')
 
-            res = eval(code, cur_frame.f_globals, cur_frame.f_locals)
+            res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
             report_execution_result(execution_id, res)
         except:
             report_execution_exception(execution_id, sys.exc_info())
 
-    def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate):
+    def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate, frame_kind):
         try:
             if child_is_enumerate:
                 # remove index from eval, then get the index back.
@@ -760,7 +771,7 @@ class Thread(object):
                         break
             
             code = compile(text, cur_frame.f_code.co_name, 'eval')
-            res = eval(code, cur_frame.f_globals, cur_frame.f_locals)
+            res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
             
             if child_is_enumerate:
                 for index, value in enumerate(res):
@@ -847,8 +858,17 @@ class Thread(object):
                         lineno += line_incr
                     else:
                         lineno += ord(line_incr)
-                
-            if cur_frame.f_locals is cur_frame.f_globals:
+
+            source_obj = None
+            frame_locals = cur_frame.f_locals
+            if DJANGO_DEBUG:
+                source_obj = get_django_frame_source(cur_frame)
+                if source_obj is not None:
+                    frame_locals = self.get_locals(cur_frame, FRAME_KIND_DJANGO)
+
+            if source_obj is not None:
+                var_names = frame_locals
+            elif frame_locals is cur_frame.f_globals:
                 var_names = cur_frame.f_globals
             else:
                 var_names = cur_frame.f_code.co_varnames
@@ -856,7 +876,7 @@ class Thread(object):
             vars = []
             for var_name in var_names:
                 try:
-                    obj = cur_frame.f_locals[var_name]
+                    obj = frame_locals[var_name]
                 except:
                     obj = '<undefined>'
                 try:
@@ -872,31 +892,29 @@ class Thread(object):
         
             frame_info = None
 
-            if DJANGO_DEBUG:
-                source_obj = get_django_frame_source(cur_frame)
-                if source_obj is not None:
-                    origin, (start, end) = source_obj
+            if source_obj is not None:
+                origin, (start, end) = source_obj
 
-                    filename = str(origin)
-                    bp_info = DJANGO_BREAKPOINTS.get(filename)
-                    if bp_info is None:
-                        DJANGO_BREAKPOINTS[filename] = bp_info = DjangoBreakpointInfo(filename)
+                filename = str(origin)
+                bp_info = DJANGO_BREAKPOINTS.get(filename)
+                if bp_info is None:
+                    DJANGO_BREAKPOINTS[filename] = bp_info = DjangoBreakpointInfo(filename)
 
-                    low_line, hi_line = bp_info.get_line_range(start, end)
-                    if low_line is not None and hi_line is not None:
-                        frame_kind = FRAME_KIND_DJANGO
-                        frame_info = (
-                            low_line,
-                            hi_line, 
-                            low_line, 
-                            cur_frame.f_code.co_name,
-                            str(origin),
-                            cur_frame.f_code.co_argcount,
-                            vars,
-                            FRAME_KIND_DJANGO,
-                            get_code_filename(cur_frame.f_code),
-                            cur_frame.f_lineno
-                        )
+                low_line, hi_line = bp_info.get_line_range(start, end)
+                if low_line is not None and hi_line is not None:
+                    frame_kind = FRAME_KIND_DJANGO
+                    frame_info = (
+                        low_line + 1,
+                        hi_line + 1, 
+                        low_line + 1, 
+                        cur_frame.f_code.co_name,
+                        str(origin),
+                        0,
+                        vars,
+                        FRAME_KIND_DJANGO,
+                        get_code_filename(cur_frame.f_code),
+                        cur_frame.f_lineno
+                    )
 
             if frame_info is None:
                 frame_info = (
@@ -1236,6 +1254,7 @@ class DebuggerLoop(object):
         tid = read_int(self.conn) # thread id
         fid = read_int(self.conn) # frame id
         eid = read_int(self.conn) # execution id
+        frame_kind = read_int(self.conn)
                 
         thread = get_thread_from_id(tid)
         if thread is not None:
@@ -1243,7 +1262,7 @@ class DebuggerLoop(object):
             for i in xrange(fid):
                 cur_frame = cur_frame.f_back
 
-            thread.run_on_thread(text, cur_frame, eid)
+            thread.run_on_thread(text, cur_frame, eid, frame_kind)
     
     def command_enum_children(self):
         # execute given text in specified frame
@@ -1251,6 +1270,7 @@ class DebuggerLoop(object):
         tid = read_int(self.conn) # thread id
         fid = read_int(self.conn) # frame id
         eid = read_int(self.conn) # execution id
+        frame_kind = read_int(self.conn) # frame kind
         child_is_enumerate = read_int(self.conn)
                 
         thread = get_thread_from_id(tid)
@@ -1259,7 +1279,7 @@ class DebuggerLoop(object):
             for i in xrange(fid):
                 cur_frame = cur_frame.f_back
 
-            thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate)
+            thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate, frame_kind)
     
     def command_detach(self):
         detach_threads()

@@ -40,7 +40,7 @@ namespace AnalysisTest {
         /// </summary>
         internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, 
                                      string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "", 
-                                     Action processLoaded = null, PythonDebugOptions deubgOptions = PythonDebugOptions.None,
+                                     Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.None,
                                     bool waitForExit = true) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
@@ -68,16 +68,7 @@ namespace AnalysisTest {
                             breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i]);
                         }
                     } else {
-                        
-                        var ext = Path.GetExtension(finalBreakFilename);
-
-                        if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
-                            String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase) ||
-                            String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase)) {
-                            breakPoint = newproc.AddDjangoBreakPoint(finalBreakFilename, line);
-                        } else {
-                            breakPoint = newproc.AddBreakPoint(finalBreakFilename, line);
-                        }
+                        breakPoint = AddBreakPoint(newproc, line, finalBreakFilename);
                     }
 
                     breakPoint.Add();
@@ -143,6 +134,20 @@ namespace AnalysisTest {
             }
         }
 
+        private static PythonBreakpoint AddBreakPoint(PythonProcess newproc, int line, string finalBreakFilename) {
+            PythonBreakpoint breakPoint;
+            var ext = Path.GetExtension(finalBreakFilename);
+
+            if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
+                String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase) ||
+                String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase)) {
+                breakPoint = newproc.AddDjangoBreakPoint(finalBreakFilename, line);
+            } else {
+                breakPoint = newproc.AddBreakPoint(finalBreakFilename, line);
+            }
+            return breakPoint;
+        }
+
         internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string arguments = "") {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
@@ -160,6 +165,61 @@ namespace AnalysisTest {
             };
 
             return process;
+        }
+
+        internal void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, bool waitForExit = true) {
+            PythonThread thread = RunAndBreak(filename, lineNo, breakFilename: breakFilename, arguments: arguments, processLoaded: processLoaded, debugOptions: debugOptions);
+            PythonProcess process = thread.Process;
+
+            var frames = thread.Frames;
+            var localsExpected = new HashSet<string>(localsNames);
+            var paramsExpected = new HashSet<string>(paramNames);
+
+            BaseAnalysisTest.AssertContainsExactly(localsExpected, frames[0].Locals.Select(x => x.Expression));
+            BaseAnalysisTest.AssertContainsExactly(paramsExpected, frames[0].Parameters.Select(x => x.Expression));
+            Assert.AreEqual(frames[0].FileName, breakFilename ?? Path.GetFullPath(DebuggerTestPath + filename), true);
+
+            process.Continue();
+
+            if (waitForExit) {
+                process.WaitForExit();
+            } else {
+                process.Terminate();
+            }
+        }
+
+        internal PythonThread RunAndBreak(string filename, int lineNo, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+            PythonThread thread;
+
+            var debugger = new PythonDebugger();
+            thread = null;
+            PythonProcess process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
+                var breakPoint = AddBreakPoint(newproc, lineNo, breakFilename ?? filename);
+                breakPoint.Add();
+                thread = newthread;
+                if (processLoaded != null) {
+                    processLoaded();
+                }
+            },
+            arguments: arguments,
+            debugOptions: debugOptions);
+
+            AutoResetEvent brkHit = new AutoResetEvent(false);
+            process.BreakpointHit += (sender, args) => {
+                thread = args.Thread;
+                brkHit.Set();                
+            };
+
+            process.Start();
+
+            AssertWaited(brkHit);
+            return thread;
+        }
+
+        internal static void AssertWaited(EventWaitHandle eventObj) {
+            if (!eventObj.WaitOne(10000)) {
+                Assert.Fail("Failed to wait on event");
+            }
         }
 
         internal virtual PythonVersion Version {

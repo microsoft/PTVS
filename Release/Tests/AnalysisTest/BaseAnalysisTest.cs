@@ -119,11 +119,15 @@ namespace AnalysisTest {
 
         }
 
-        public void AssertContainsExactly<T>(IEnumerable<T> source, params T[] values) {
+        public static void AssertContainsExactly<T>(IEnumerable<T> source, IEnumerable<T> values) {
+            AssertContainsExactly(new HashSet<T>(source), values.ToArray());
+        }
+
+        public static void AssertContainsExactly<T>(IEnumerable<T> source, params T[] values) {
             AssertContainsExactly(new HashSet<T>(source), values);
         }
 
-        public void AssertContainsExactly<T>(HashSet<T> set, params T[] values) {
+        public static void AssertContainsExactly<T>(HashSet<T> set, params T[] values) {
             if (set.ContainsExactly(values)) {
                 return;
             }

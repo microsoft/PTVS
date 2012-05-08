@@ -33,12 +33,14 @@
     <Compile Include="manage.py" />
     <Compile Include="settings.py" />
     <Compile Include="urls.py" />
+    <Compile Include="Templates\polls\index.html" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Bar\" />
     <Folder Include="Foo\" />
     <Folder Include="Templates" />
     <Folder Include="Templates\admin" />
+    <Folder Include="Templates\polls" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Templates\admin\base_site.html" />

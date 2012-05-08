@@ -13,7 +13,10 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -23,17 +26,16 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.ComponentModel.Design;
-using Microsoft.VisualStudio.Shell;
-using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Django.Project {    
+namespace Microsoft.PythonTools.Django.Project {
     class DjangoProject : FlavoredProject {
         internal DjangoPackage _package;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
+        private static ImageList _images;
 
         #region IVsAggregatableProject
 
@@ -54,8 +56,8 @@ namespace Microsoft.PythonTools.Django.Project {
                 OleMenuCommand menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
                 menuService.AddCommand(menuItem);
             }
-            
-            
+
+
             // Load the icon we will be using for our nodes
             /*Assembly assembly = Assembly.GetExecutingAssembly();
             nodeIcon = new Icon(assembly.GetManifestResourceStream("Microsoft.VisualStudio.VSIP.Samples.Flavor.Node.ico"));
@@ -244,11 +246,11 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
-                    case PkgCmdIDList.cmdidValidateDjangoApp: 
-                        ValidateDjangoApp(); 
+                    case PkgCmdIDList.cmdidValidateDjangoApp:
+                        ValidateDjangoApp();
                         return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidStartNewApp: 
-                        StartNewApp(); 
+                    case PkgCmdIDList.cmdidStartNewApp:
+                        StartNewApp();
                         return VSConstants.S_OK;
                 }
             }
@@ -268,9 +270,9 @@ namespace Microsoft.PythonTools.Django.Project {
                         out projectObj
                     )
                 );
-                
+
                 // TODO: Check if app already exists
-                
+
                 var project = projectObj as EnvDTE.Project;
                 if (project != null) {
                     var newFolder = project.ProjectItems.AddFolder(dialog.ViewModel.Name);
@@ -317,7 +319,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     return Process.Start(psi);
                 }
             }
-            return null;            
+            return null;
         }
 
         private static void ShowValidationDialog(WaitForValidationDialog dialog, Process proc) {
@@ -325,7 +327,7 @@ namespace Microsoft.PythonTools.Django.Project {
             var receiver = new OutputDataReceiver(curScheduler, dialog);
             proc.OutputDataReceived += receiver.OutputDataReceived;
             proc.ErrorDataReceived += receiver.OutputDataReceived;
-            
+
             proc.BeginErrorReadLine();
             proc.BeginOutputReadLine();
 
@@ -333,7 +335,7 @@ namespace Microsoft.PythonTools.Django.Project {
             ThreadPool.QueueUserWorkItem(x => {
                 proc.WaitForExit();
                 var task = System.Threading.Tasks.Task.Factory.StartNew(
-                    () =>  dialog.EnableOk(),
+                    () => dialog.EnableOk(),
                     default(CancellationToken),
                     System.Threading.Tasks.TaskCreationOptions.None,
                     curScheduler
@@ -360,7 +362,7 @@ namespace Microsoft.PythonTools.Django.Project {
             }
 
             public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
-                Received.Append(e.Data);                
+                Received.Append(e.Data);
                 System.Threading.Tasks.Task.Factory.StartNew(
                     () => _dialog.SetText(Received.ToString()),
                     default(CancellationToken),
@@ -441,7 +443,7 @@ namespace Microsoft.PythonTools.Django.Project {
             pnts[0].y = points.y;
             return shell.ShowContextMenu(0, ref menuGroup, menuId, pnts, (Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget)this);
         }
-        
+
         /// <summary>
         /// This should first QI for (and keep a reference to) each interface we plan to call on the inner project
         /// and then call the base implementation to do the rest. Because the base implementation
@@ -474,5 +476,51 @@ namespace Microsoft.PythonTools.Django.Project {
 
 
         #endregion
+
+        protected override int GetProperty(uint itemId, int propId, out object property) {
+            switch ((__VSHPROPID)propId) {
+                case __VSHPROPID.VSHPROPID_IconIndex:
+                    // replace the default icon w/ our own icon for HTML files.
+                    // We can't return an index into an image list that we own because
+                    // the image list is owned by the root node.  So we just fail this
+                    // call for HTML files, which causes a request for VSHPROPID_IconHandle
+                    // where we give the actual icon.
+                    if (IsHtmlFile(innerVsHierarchy, itemId)) {
+                        property = 26;
+                        return VSConstants.DISP_E_MEMBERNOTFOUND;
+                    }
+                    break;
+                case __VSHPROPID.VSHPROPID_IconHandle:
+                    if (IsHtmlFile(innerVsHierarchy, itemId)) {
+                        property = (Images.Images[26] as Bitmap).GetHicon();
+                        return VSConstants.S_OK;
+                    }
+                    break;
+            }
+
+            return base.GetProperty(itemId, propId, out property);
+        }
+
+        /// <summary>
+        /// Gets an ImageHandler for the project node.
+        /// </summary>
+        public ImageList Images {
+            get {
+                if (_images == null) {
+                    var imageStream = typeof(DjangoProject).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Django.Resources.imagelis.bmp");
+
+                    ImageList imageList = new ImageList();
+                    imageList.ColorDepth = ColorDepth.Depth24Bit;
+                    imageList.ImageSize = new Size(16, 16);
+                    Bitmap bitmap = new Bitmap(imageStream);
+                    imageList.Images.AddStrip(bitmap);
+                    imageList.TransparentColor = Color.Magenta;
+                    _images = imageList;
+                }
+
+                return _images;
+            }
+        }
+
     }
 }

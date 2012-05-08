@@ -29,36 +29,82 @@ namespace AnalysisTest.Django {
     [DeploymentItem("Binaries\\Win32\\Debug\\PyDebugAttach.dll")]
     [DeploymentItem("Binaries\\Win32\\Debug\\x64\\PyDebugAttach.dll", "x64")]
     public class DjangoDebuggerTests : BaseDebuggerTests {
-        [TestInitialize]
-        public void ClassInit() {
-            var psi = new ProcessStartInfo();
-            psi.Arguments = "manage.py syncdb --noinput";
-            psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
-            psi.FileName = Version.Path;
-            var proc = Process.Start(psi);
-            proc.WaitForExit();
-            Assert.AreEqual(0, proc.ExitCode);
+        private static DbState _dbstate;
+
+        enum DbState {
+            Unknown,
+            BarApp
+        }
+
+        /// <summary>
+        /// Ensures the app is initialized with the appropriate set of data.  If we're
+        /// already initialized that way we don't re-initialize.
+        /// </summary>
+        private void Init(DbState requiredState) {
+            if (_dbstate != requiredState) {
+                switch (requiredState) {
+                    case DbState.BarApp:
+                        var psi = new ProcessStartInfo();
+                        psi.Arguments = "manage.py syncdb --noinput";
+                        psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
+                        psi.FileName = Version.Path;
+                        var proc = Process.Start(psi);
+                        proc.WaitForExit();
+                        Assert.AreEqual(0, proc.ExitCode);
+
+                        psi = new ProcessStartInfo();
+                        psi.Arguments = "manage.py loaddata data.yaml";
+                        psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
+                        psi.FileName = Version.Path;
+                        proc = Process.Start(psi);
+                        proc.WaitForExit();
+                        Assert.AreEqual(0, proc.ExitCode);
+                        break;
+                }
+                _dbstate = requiredState;
+            }
         }
 
         [TestMethod]
         public void BreakInTemplate() {
+            Init(DbState.BarApp);
+
             string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             
             BreakpointTest(
                 "manage.py",
-                new[] { 1, 8, 10 },
-                new[] { 1, 8, 10 },
+                new[] { 1, 3, 4 },
+                new[] { 1, 3, 4 },
                 breakFilename: Path.Combine(cwd, "Templates", "polls", "index.html"),
                 arguments: "runserver --noreload",
                 checkBound: false,
                 checkThread: false,
                 processLoaded: new WebPageRequester().DoRequest,
-                deubgOptions: PythonDebugOptions.DjangoDebugging,
+                debugOptions: PythonDebugOptions.DjangoDebugging,
                 waitForExit: false
             );
         }
 
-        private void RequestWebPage() {
+        [TestMethod]
+        public void TemplateLocals() {
+            Init(DbState.BarApp);
+
+            LocalsTest("polls\\index.html", 3, new[] { "latest_poll_list" });
+            LocalsTest("polls\\index.html", 4, new[] { "forloop", "latest_poll_list", "poll" });
+        }
+
+        private void LocalsTest(string filename, int breakLine, string[] expectedLocals) {
+            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
+            LocalsTest("manage.py",
+                breakLine,
+                new string[0],
+                expectedLocals,
+                breakFilename: Path.Combine(cwd, "Templates", filename),
+                arguments: "runserver --noreload",
+                processLoaded: new WebPageRequester().DoRequest,
+                debugOptions: PythonDebugOptions.DjangoDebugging,
+                waitForExit: false
+            );
         }
 
         class WebPageRequester {
@@ -80,12 +126,17 @@ namespace AnalysisTest.Django {
                         socket.Connect(IPAddress.Loopback, 8000);
                         break;
                     } catch {
+                        System.Threading.Thread.Sleep(1000);
                     }
                 }
                 socket.Close();
 
                 HttpWebRequest myReq = (HttpWebRequest)WebRequest.Create(_url);
-                myReq.GetResponse();
+                try {
+                    myReq.GetResponse();
+                } catch (WebException) {
+                    // the process can be killed and the connection with it
+                }
             }
         }
 

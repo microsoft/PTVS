@@ -73,6 +73,7 @@
     <Compile Include="BaseDebuggerTests.cs" />
     <Compile Include="Django\DjangoDebuggerTests.cs" />
     <Compile Include="Django\DjangoEditingTests.cs" />
+    <Compile Include="Django\DjangoProjectTests.cs" />
     <Compile Include="Django\DjangoTemplateParserTests.cs" />
     <Compile Include="Mocks\MockGlyphService.cs" />
     <Compile Include="Mocks\MockReplWindow.cs" />
@@ -147,6 +148,7 @@
     <Content Include="Python.VS.TestData\DjangoEditProject\Insertion10.html.djt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Python.VS.TestData\DjangoProject\data.yaml" />
     <None Include="Python.VS.TestData\ErrorProjectUnicode\HelloWorld.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -493,6 +495,7 @@
     <Compile Include="UI\NewProjectDialog.cs" />
     <Compile Include="UI\ObjectBrowser.cs" />
     <Compile Include="UI\Python\ComparePerfReports.cs" />
+    <Compile Include="UI\Python\Django\NewAppDialog.cs" />
     <Compile Include="UI\Python\PythonLaunchWithErrorsDialog.cs" />
     <Compile Include="UI\Python\PythonPerfTarget.cs" />
     <Compile Include="UI\Python\PythonPerfToolBar.cs" />

@@ -894,6 +894,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.Thread.Id));
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.FrameId));
                 _socket.Send(BitConverter.GetBytes(executeId));
+                _socket.Send(BitConverter.GetBytes((int)pythonStackFrame.Kind));
             }
         }
 
@@ -910,6 +911,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.Thread.Id));
                 _socket.Send(BitConverter.GetBytes(pythonStackFrame.FrameId));
                 _socket.Send(BitConverter.GetBytes(executeId));
+                _socket.Send(BitConverter.GetBytes((int)pythonStackFrame.Kind));
                 _socket.Send(BitConverter.GetBytes(childIsEnumerate ? 1 : 0));
             }
         }

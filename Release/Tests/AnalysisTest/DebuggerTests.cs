@@ -312,12 +312,6 @@ namespace AnalysisTest {
             process.Terminate();
         }
 
-        private static void AssertWaited(EventWaitHandle eventObj) {
-            if (!eventObj.WaitOne(10000)) {
-                Assert.Fail("Failed to wait on event");
-            }
-        }
-
         [TestMethod]
         public void TestBreakAllThreads() {
             var debugger = new PythonDebugger();
@@ -493,44 +487,6 @@ namespace AnalysisTest {
             } else {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" });
             }
-        }
-
-        private void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames) {
-            PythonThread thread = RunAndBreak(filename, lineNo);
-            PythonProcess process = thread.Process;
-
-            var frames = thread.Frames;
-            var localsExpected = new HashSet<string>(localsNames);
-            var paramsExpected = new HashSet<string>(paramNames);
-            Assert.IsTrue(localsExpected.ContainsExactly(frames[0].Locals.Select(x => x.Expression)));
-            Assert.IsTrue(paramsExpected.ContainsExactly(frames[0].Parameters.Select(x => x.Expression)));
-            Assert.AreEqual(frames[0].FileName, Path.GetFullPath(DebuggerTestPath + filename));
-
-            process.Continue();
-
-            process.WaitForExit();
-        }
-
-        private PythonThread RunAndBreak(string filename, int lineNo) {
-            PythonThread thread;
-            
-            var debugger = new PythonDebugger();
-            thread = null;
-            PythonProcess process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
-                var breakPoint = newproc.AddBreakPoint(filename, lineNo);
-                breakPoint.Add();
-                thread = newthread;
-            });
-
-            AutoResetEvent brkHit = new AutoResetEvent(false);
-            process.BreakpointHit += (sender, args) => {
-                brkHit.Set();
-            };
-
-            process.Start();
-
-            AssertWaited(brkHit);
-            return thread;
         }
 
         #endregion

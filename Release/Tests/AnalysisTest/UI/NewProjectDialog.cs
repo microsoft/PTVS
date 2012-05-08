@@ -100,6 +100,15 @@ namespace AnalysisTest.UI {
             }
         }
 
+        public void FocusLanguageNode(string name = "Python") {
+            var item = InstalledTemplates.FindItem("Other Languages", name);
+            if (item == null) {
+                // VS can be configured so that there is no Other Languages category
+                item = InstalledTemplates.FindItem(name);
+            }
+            item.SetFocus();
+        }
+
         private AutomationElement GetProjectNameBox() {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(

@@ -208,6 +208,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <EmbeddedResource Include="Resources\imagelis.bmp" />
     <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
     </Content>

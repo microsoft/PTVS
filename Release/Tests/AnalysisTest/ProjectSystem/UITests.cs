@@ -54,7 +54,7 @@ namespace AnalysisTest.ProjectSystem {
                 var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
                 var newProjDialog = app.FileNewProject();
 
-                FocusPythonLanguageNode(newProjDialog);
+                newProjDialog.FocusLanguageNode();
 
                 var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
                 consoleApp.SetFocus();
@@ -668,7 +668,7 @@ namespace AnalysisTest.ProjectSystem {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();
 
-            FocusPythonLanguageNode(newProjDialog);
+            newProjDialog.FocusLanguageNode();
 
             var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
             consoleApp.SetFocus();
@@ -683,16 +683,6 @@ namespace AnalysisTest.ProjectSystem {
             Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
             
             Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
-        }
-
-        private static void FocusPythonLanguageNode(NewProjectDialog newProjDialog) {
-            var item = newProjDialog.InstalledTemplates.FindItem("Other Languages", "Python");
-            if (item == null) {
-                // VS can be configured so that there is no Other Languages category
-                item = newProjDialog.InstalledTemplates.FindItem("Python");
-            }
-            Assert.IsNotNull(item);
-            item.SetFocus();
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
