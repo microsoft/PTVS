@@ -1679,7 +1679,7 @@ int main(int argc, char* argv[]) {
 
         #endregion
 
-        internal virtual PythonVersion Version {
+        internal override PythonVersion Version {
             get {
                 return PythonPaths.Python26;
             }
