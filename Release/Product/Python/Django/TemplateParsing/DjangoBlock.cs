@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// </summary>
         public static DjangoBlock Parse(string text) {
             int start = 0;
-            if (text.StartsWith("{%") && text.EndsWith("%}")) {
+            if (text.StartsWith("{%")) {
                 text = DjangoVariable.GetTrimmedFilterText(text, ref start);
                 if (text == null) {
                     return null;
@@ -347,13 +347,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             HashSet<string> definitions = new HashSet<string>();
             for (int i = 0; i < words.Length; i++) {
                 var word = words[i];
-                if (!String.IsNullOrEmpty(word)) {
-                    definitions.Add(word);
-                }
                 if (word == "in") {
                     inStart = inOffset + parseInfo.Start + parseInfo.Command.Length;
                     inIndex = i;
                     break;
+                }
+                if (!String.IsNullOrEmpty(word)) {
+                    definitions.Add(word);
                 }
                 inOffset += words[i].Length + 1;
             }

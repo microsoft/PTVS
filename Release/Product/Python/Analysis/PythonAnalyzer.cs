@@ -974,7 +974,7 @@ namespace Microsoft.PythonTools.Analysis {
         private void SaveDelayedSpecialization(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze, string realModName) {
             lock (_specializationInfo) {
                 List<SpecializationInfo> specList;
-                if (!_specializationInfo.TryGetValue(moduleName, out specList)) {
+                if (!_specializationInfo.TryGetValue(realModName ?? moduleName, out specList)) {
                     _specializationInfo[realModName ?? moduleName] = specList = new List<SpecializationInfo>();
                 }
 

@@ -36,7 +36,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    class DjangoProject : FlavoredProject, IOleCommandTarget {
+    class DjangoProject : FlavoredProject, IOleCommandTarget, IVsProjectFlavorCfgProvider {
         internal DjangoPackage _package;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
@@ -945,5 +945,18 @@ namespace Microsoft.PythonTools.Django.Project {
 
             return ((IOleCommandTarget)_menuService).QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
+
+        #region IVsProjectFlavorCfgProvider Members
+
+        public int CreateProjectFlavorCfg(IVsCfg pBaseProjectCfg, out IVsProjectFlavorCfg ppFlavorCfg) {
+            // We're flavored with a Web Application project and our normal project...  But we don't
+            // want the web application project to influence our config as that alters our debug
+            // launch story.  We control that w/ the Django project which is actually just letting the
+            // base Python project handle it.  So we keep the base Python project config here.
+            ppFlavorCfg = pBaseProjectCfg as IVsProjectFlavorCfg;
+            return VSConstants.S_OK;
+        }
+
+        #endregion
     }
 }

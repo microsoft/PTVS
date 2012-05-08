@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         private static Dictionary<string, HashSet<AnalysisValue>> GetVariablesForTemplateFile(DjangoProject project, string filename) {
             string curLevel = filename;                     // is C:\Foo\Bar\Baz\foo.html
-            string curPath = Path.GetFileName(filename);    // is foo.html
+            string curPath = filename = Path.GetFileName(filename);    // is foo.html
 
             for (; ; ) {
                 string curFilename = filename.Replace('\\', '/');

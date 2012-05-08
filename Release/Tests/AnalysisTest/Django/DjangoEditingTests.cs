@@ -673,6 +673,42 @@ namespace AnalysisTest.ProjectSystem {
             SelectAllAndDeleteTest("SelectAllText.html.djt");
         }
 
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CutUndo() {
+            CutUndoTest("CutUndo.html.djt",
+                6, 1, "{% for x in bar %}",
+                new Classifcation("HTML Tag Delimiter", 0, 1, "<"),
+                new Classifcation("HTML Element Name", 1, 5, "html"),
+                new Classifcation("HTML Tag Delimiter", 5, 6, ">"),
+                new Classifcation("HTML Tag Delimiter", 8, 9, "<"),
+                new Classifcation("HTML Element Name", 9, 13, "head"),
+                new Classifcation("HTML Tag Delimiter", 13, 15, "><"),
+                new Classifcation("HTML Element Name", 15, 20, "title"),
+                new Classifcation("HTML Tag Delimiter", 20, 23, "></"),
+                new Classifcation("HTML Element Name", 23, 28, "title"),
+                new Classifcation("HTML Tag Delimiter", 28, 31, "></"),
+                new Classifcation("HTML Element Name", 31, 35, "head"),
+                new Classifcation("HTML Tag Delimiter", 35, 36, ">"),
+                new Classifcation("HTML Tag Delimiter", 40, 41, "<"),
+                new Classifcation("HTML Element Name", 41, 45, "body"),
+                new Classifcation("HTML Tag Delimiter", 45, 46, ">"),
+                new Classifcation("Django template tag", 50, 52, "{%"),
+                new Classifcation("keyword", 53, 56, "for"),
+                new Classifcation("keyword", 59, 61, "in"),
+                new Classifcation("Django template tag", 66, 68, "%}"),
+                new Classifcation("Django template tag", 70, 72, "{{"),
+                new Classifcation("identifier", 73, 80, "content"),
+                new Classifcation("Django template tag", 81, 83, "}}"),
+                new Classifcation("HTML Tag Delimiter", 87, 89, "</"),
+                new Classifcation("HTML Element Name", 89, 93, "body"),
+                new Classifcation("HTML Tag Delimiter", 93, 94, ">"),
+                new Classifcation("HTML Tag Delimiter", 96, 98, "</"),
+                new Classifcation("HTML Element Name", 98, 102, "html"),
+                new Classifcation("HTML Tag Delimiter", 102, 103, ">")
+            );
+        }
+
         private static void SelectAllAndDeleteTest(string filename) {
             Window window;
             var item = OpenDjangoProjectItem(filename, out window);
@@ -728,6 +764,43 @@ namespace AnalysisTest.ProjectSystem {
             };
             item.TextView.TextBuffer.Changed += textChangedHandler;
             Keyboard.ControlV();
+            Assert.IsTrue(are.WaitOne(5000));
+            item.TextView.TextBuffer.Changed -= textChangedHandler;
+
+            IList<ClassificationSpan> spans = null;
+            item.Invoke(() => {
+                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            });
+            Assert.IsNotNull(spans);
+            EditorTests.VerifyClassification(
+                spans,
+                expected
+            );
+            window.Close(vsSaveChanges.vsSaveChangesNo);
+        }
+
+        private static void CutUndoTest(string filename, int line, int column, string selectionText, params Classifcation[] expected) {
+            Window window;
+            var item = OpenDjangoProjectItem(filename, out window);
+            item.MoveCaret(line, column);
+
+            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+
+            var selectionStart = snapshot.GetText().IndexOf(selectionText);
+            item.Invoke(() => {
+                item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
+                Keyboard.ControlX();
+            });
+
+            AutoResetEvent are = new AutoResetEvent(false);
+            EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                are.Set();
+            };
+            item.TextView.TextBuffer.Changed += textChangedHandler;
+            
+            Keyboard.ControlZ();
             Assert.IsTrue(are.WaitOne(5000));
             item.TextView.TextBuffer.Changed -= textChangedHandler;
 

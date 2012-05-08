@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             var prevChar = ReadChar();            
             for (; ; ) {               
                 if (prevChar == -1) {
-                    return null;
+                    return new TemplateToken(kind, start, _position - 1);
                 } else if (prevChar == closeType) {
                     if ((prevChar = ReadChar()) == '}') {
                         // we're done

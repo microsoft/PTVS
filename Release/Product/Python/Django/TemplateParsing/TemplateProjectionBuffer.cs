@@ -195,9 +195,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                             // the start of the buffer then we are definitely deleting a } which means we need to re-calc.  We know
                             // we're deleting the } because it's the last char in the buffer before us because it has
                             // to be the end of a template.
-                            if (closest != 0) {
-                                closestSpan = _spans[--closest];
-                            }
+                            closestSpan = _spans[0];
+                            closest = 0;
                             recalc = true;
                         }
                     } else {

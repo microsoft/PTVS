@@ -52,6 +52,10 @@ namespace AnalysisTest.UI {
             PressAndRelease(Key.V, Key.LeftCtrl);
         }
 
+        public static void ControlZ() {
+            PressAndRelease(Key.Z, Key.LeftCtrl);
+        }
+
         public static void PressAndRelease(Key key, params Key[] modifier) {
             for (int i = 0; i < modifier.Length; i++) {
                 Keyboard.Press(modifier[i]);

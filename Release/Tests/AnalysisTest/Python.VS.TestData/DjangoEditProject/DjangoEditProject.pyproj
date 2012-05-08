@@ -47,6 +47,7 @@
     <Compile Include="SelectAllText.html.djt" />
 
     <Compile Include="Classification.html.djt" />
+    <Compile Include="CutUndo.html.djt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
