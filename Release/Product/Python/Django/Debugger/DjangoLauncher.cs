@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
                         string commandLine = "runserver";
                         if (_debugLaunch) {
-                            commandLine += "--noreload";
+                            commandLine += " --noreload";
                         }
                         string settingsModule = _realProject.GetProperty(DjangoLauncherOptions.SettingModulesSetting);
                         if (!String.IsNullOrWhiteSpace(settingsModule)) {
