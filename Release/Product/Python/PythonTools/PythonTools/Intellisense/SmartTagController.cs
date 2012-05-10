@@ -15,17 +15,17 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.OLE.Interop;
 
 namespace Microsoft.PythonTools.Intellisense {
     class SmartTagController : IIntellisenseController {
         private readonly ISmartTagBroker _broker;
         private readonly ITextView _textView;
         private ISmartTagSession _curSession;
-        private bool _sessionIsInvalid;
-        private SmartTagSource.AbortedAugmentInfo _abortedAugment;
+        internal bool _sessionIsInvalid;
+        internal SmartTagSource.AbortedAugmentInfo _abortedAugment;
 
         public SmartTagController(ISmartTagBroker broker, ITextView textView) {
             _broker = broker;
@@ -80,6 +80,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
+            ITextSnapshot snapshot = _textView.TextViewModel.DataBuffer.CurrentSnapshot;
+            SnapshotPoint? caretPoint = _textView.Caret.Position.Point.GetPoint(snapshot, PositionAffinity.Successor);
+            if (caretPoint != null &&
+                _curSession != null &&
+                !_curSession.IsDismissed &&
+                _curSession.ApplicableToSpan != null &&
+                _curSession.ApplicableToSpan.GetSpan(_textView.TextBuffer.CurrentSnapshot).Contains(caretPoint.Value.Position)) {
+                    return;
+            }
+
             _sessionIsInvalid = false;
 
             // Figure out the point in the buffer where we are triggering.
@@ -88,31 +98,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 _curSession.Dismiss();
             }
 
-            ITextSnapshot snapshot = _textView.TextViewModel.DataBuffer.CurrentSnapshot;
-            SnapshotPoint? caretPoint = _textView.Caret.Position.Point.GetPoint(snapshot, PositionAffinity.Successor);
 
             if (!caretPoint.HasValue) {
                 return;
             }
 
             ITrackingPoint triggerPoint = snapshot.CreateTrackingPoint(caretPoint.Value, PointTrackingMode.Positive);
-
             ISmartTagSession newSession = _curSession = _broker.CreateSmartTagSession(_textView, SmartTagType.Factoid, triggerPoint, SmartTagState.Collapsed);
             newSession.Properties.AddProperty(typeof(SmartTagController), compMgr);
-            if (_abortedAugment != null) {
-                newSession.Properties.AddProperty(SmartTagSource.AbortedAugment, _abortedAugment);
-            }
-            newSession.Start();
+            newSession.Properties.AddProperty(typeof(SmartTagSource.AbortedAugmentInfo), this);
 
-            SmartTagSource.AbortedAugmentInfo abortInfo;
-            if (!newSession.IsDismissed &&
-                newSession.Properties.TryGetProperty<SmartTagSource.AbortedAugmentInfo>(SmartTagSource.AbortedAugment, out abortInfo) && abortInfo != _abortedAugment) {
-                // we didn't process all of the invalid imports
-                _sessionIsInvalid = true;
-                _abortedAugment = abortInfo;
-            } else {
-                _abortedAugment = null;
-            }
+            newSession.Start();
         }
     }
 }

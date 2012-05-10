@@ -11,8 +11,8 @@
 #------------------------------------------------------------------------------
 
 #Remove any trace of previous runs of this script
-rm -recurse -force "$env:TMP\python_*" 2> $null;
-rm -recurse -force "$env:TMP\pip_*"    2> $null;
+rm -recurse -force "$env:TMP\python_installhelper_*" 2> $null;
+rm -recurse -force "$env:TMP\pip_installhelper_*"    2> $null;
 
 $isMachine64Bit = (get-itemproperty -path "hklm:System\CurrentControlSet\Control\Session Manager\Environment" PROCESSOR_ARCHITECTURE).PROCESSOR_ARCHITECTURE -eq "AMD64";
 
@@ -23,8 +23,8 @@ foreach($pyBittedNess in $pyBittedNesses) {
 	foreach($pythonVersion in $pythonVersions) {
 		$dotLessPyVer = $pythonVersion.replace(".", "");
 	
-		$pythonDotBat = "$env:TMP\python_" + $dotLessPyVer + "_" + "$pyBittedNess.bat";
-		$pipDotBat    = "$env:TMP\pip_"    + $dotLessPyVer + "_" + "$pyBittedNess.bat";
+		$pythonDotBat = "$env:TMP\python_installhelper_" + $dotLessPyVer + "_" + "$pyBittedNess.bat";
+		$pipDotBat    = "$env:TMP\pip_installhelper_"    + $dotLessPyVer + "_" + "$pyBittedNess.bat";
 
 		#--Use the registry
 		$regKey = "hklm:SOFTWARE\Python\PythonCore\$pythonVersion\InstallPath";

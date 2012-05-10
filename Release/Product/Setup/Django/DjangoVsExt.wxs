@@ -60,14 +60,14 @@
             <Component Id="cmp4FD921172E724700A7C19D19663D3FDE" Directory="Dir_PythonToolsMsBuild" Guid="{6CA3EDD5-E639-41D8-A063-1082659BA9DE}">
                 <File Id="filC7455A97B04D4226B3D48288A5456A10" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Django.targets" />
             </Component>
+
             <Component Id="cmp1FEFFD263DCA4D68A92B728C4B4AA381" Directory="Dir_PythonToolsMsBuild" Guid="{FBED67AB-7541-40A5-B775-DDFB5582C391}">
                 <File Id="fil7D682D06949A44D283580BCE6C38ED68" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.WebRole.dll" />
             </Component>
-            
-            
             <Component Id="cmpB5F5D813C5064532B18AE23510C59445" Directory="Dir_PythonToolsMsBuild" Guid="{69BC20F5-7A60-41BC-AEAD-632388B532BC}" >
                 <File Id="fil9FC854A330164BC08899E2EE5352F14B" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe" />
             </Component>
+
             <!--
             <Component Id="cmpA8CF7125B38A48CB97967C6EC723F81F" Directory="Dir_PythonToolsAzureSdk" Guid="{AC38D433-5421-46C1-9162-04C61F18FCCE}" >
                 <File Id="fil4CC7D3A9A5BD4981A83CEA73ED7D7289" KeyPath="yes" Source="$(var.TargetDir)\PythonTools.csplugin" />

@@ -24,8 +24,7 @@ using Microsoft.VisualStudio.Text;
 namespace Microsoft.PythonTools.Intellisense {
     class SmartTagSource : ISmartTagSource {
         private readonly ITextBuffer _textBuffer;
-        public static readonly object AbortedAugment = new object();
-
+        
         public SmartTagSource(ITextBuffer textBuffer) {
             _textBuffer = textBuffer;
         }
@@ -39,7 +38,10 @@ namespace Microsoft.PythonTools.Intellisense {
             var span = session.CreateTrackingSpan(textBuffer);
             var imports = textBuffer.CurrentSnapshot.GetMissingImports(span);
             IOleComponentManager compMgr;
+            SmartTagController controller;
+
             session.Properties.TryGetProperty<IOleComponentManager>(typeof(SmartTagController), out compMgr);
+            session.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagSource.AbortedAugmentInfo), out controller);
 
             if (imports != MissingImportAnalysis.Empty) {
                 session.ApplicableToSpan = imports.ApplicableToSpan;
@@ -53,16 +55,17 @@ namespace Microsoft.PythonTools.Intellisense {
                 // here and continue working, and if we run out of idletime we'll add or update the aborted augment.
                 List<ISmartTagAction> actions;
                 IEnumerator<ExportedMemberInfo> importsEnum;
-                AbortedAugmentInfo prevAugInfo;
-                if (!session.Properties.TryGetProperty<AbortedAugmentInfo>(AbortedAugment, out prevAugInfo)) {
+
+                if (controller == null || controller._abortedAugment == null) {
                     actions = new List<ISmartTagAction>();
                     importsEnum = imports.AvailableImports.GetEnumerator();
                 } else {
                     // continue processing of the old imports
-                    importsEnum = prevAugInfo.Imports;
-                    actions = prevAugInfo.Actions;
+                    importsEnum = controller._abortedAugment.Imports;
+                    actions = controller._abortedAugment.Actions;
                 }
 
+                bool aborted = false;
                 while (importsEnum.MoveNext()) {
                     var import = importsEnum.Current;
 
@@ -80,9 +83,17 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     if (compMgr != null && compMgr.FContinueIdle() == 0) {
                         // we've run out of time, save our progress...
-                        session.Properties[AbortedAugment] = new AbortedAugmentInfo(importsEnum, actions);
+                        if (controller != null) {
+                            controller._sessionIsInvalid = true;
+                            controller._abortedAugment = new AbortedAugmentInfo(importsEnum, actions);
+                        }
+                        aborted = true;
                         break;
                     }
+                }
+
+                if (!aborted && controller != null) {
+                    controller._abortedAugment = null;
                 }
 
                 if (actions.Count > 0) {

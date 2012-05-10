@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools {
             }
 
             var triggerChar = triggerPoint.GetCharacter(buffer.CurrentSnapshot);
-            if (position != 0 && (triggerChar == '\r' || triggerChar == '\n' || triggerChar == '[' || triggerChar =='(' || triggerChar == '.')) {
+            if (position != 0 && !char.IsLetterOrDigit(triggerChar)) {
                 // end of line, back up one char as we may have an identifier
                 return buffer.CurrentSnapshot.CreateTrackingSpan(position - 1, 1, SpanTrackingMode.EdgeInclusive);
             }

@@ -1,8 +1,13 @@
-param( $outdir )
+param( $outdir, $build_name )
 
 if (-not $outdir)
 {
-    Write-Error "Must provide $outdir"
+    Write-Error "Must provide $outdir, the directory the release will be saved."
+	exit 1
+}
+if (-not $build_name)
+{
+    Write-Error "Must provide build_name parameter, such as '1.5 Alpha'"
 	exit 1
 }
 
@@ -39,7 +44,8 @@ $request | Out-File -Encoding ascii -FilePath request.txt
 #################################################################
 # Submit managed binaries
 
-$approvers = "smortaz", "mradmila", "pavaga", "arturl"
+$approvers = "smortaz", "arturl", "dfugate", "weidongh", "dinov"
+$approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
 
 $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
 $job.Description = "Python Tools for Visual Studio - managed code"
@@ -62,6 +68,8 @@ $files = ("Microsoft.PythonTools.Analysis.dll",
           "Microsoft.PythonTools.Profiling.dll", 
           "Microsoft.VisualStudio.ReplWindow.dll",
           "Microsoft.PythonTools.PyKinect.dll",
+          "Microsoft.PythonTools.WebRole.dll",
+          "Microsoft.PythonTools.AzureSetup.exe",
           "Microsoft.PythonTools.Pyvot.dll")
 
 foreach ($filename in $files) {
@@ -168,6 +176,9 @@ foreach($line in $file) {
             if ($targetdir -eq "PyKinectMsm") {
                 $targetdir = "PyKinect"
             }
+            if ($targetdir -eq "DjangoMsm") {
+                $targetdir = "Django"
+            }
             echo $targetdir
 
             cd $targetdir
@@ -222,6 +233,6 @@ do {
     sleep -seconds 5
 } while(-not $files);
 
-copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outdir\Release\PTVS 1.1 Beta 1.msi"
-copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outdir\Release\PTVS 1.1 Beta 1 - PyKinect Sample.msi"
-copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outdir\Release\PTVS 1.1 Beta 1 - Pyvot Sample.msi"
+copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outdir\Release\PTVS $build_name.msi"
+copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outdir\Release\PTVS $build_name - PyKinect Sample.msi"
+copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outdir\Release\PTVS $build_name - Pyvot Sample.msi"

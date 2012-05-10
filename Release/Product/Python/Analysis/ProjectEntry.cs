@@ -199,7 +199,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             // create new analysis object and add to the queue to be analyzed
             var newAnalysis = new ModuleAnalysis(_unit, _scopeTree);
-            _unit.Enqueue();
             
             // collect top-level definitions first
             var walker = new OverviewWalker(this, unit);
@@ -208,13 +207,14 @@ namespace Microsoft.PythonTools.Analysis {
 
             PublishPackageChildrenInPackage();
 
+            _unit.Enqueue();
+
             if (!enqueOnly) {
                 ((IGroupableAnalysisProject)_projectState).AnalyzeQueuedEntries();
             }
 
             // publish the analysis now that it's complete
             _currentAnalysis = newAnalysis;
-
         }
 
         public IGroupableAnalysisProject AnalysisGroup {

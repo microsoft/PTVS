@@ -157,16 +157,23 @@ namespace Microsoft.PythonTools {
 
                 state = lineTokenization.State;
 
-                foreach (var token in lineTokenization.Tokens) {
+                for (int i = 0; i < lineTokenization.Tokens.Length; i++) {
+                    var token = lineTokenization.Tokens[i];
                     if (token.Category == TokenCategory.IncompleteMultiLineStringLiteral) {
                         // we need to walk backwards to find the start of this multi-line string...
 
                         TokenInfo startToken = token;
                         int validPrevLine;  
                         int length = startToken.SourceSpan.Length;
-                        length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine, ref startToken);
+                        if (i == 0) {
+                            length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine, ref startToken);
+                        } else {
+                            validPrevLine = currentLine;
+                        }
 
-                        length += GetTrailingMultiLineStrings(tokenizer, snapshot, currentLine, state);
+                        if (i == lineTokenization.Tokens.Length - 1) {
+                            length += GetTrailingMultiLineStrings(tokenizer, snapshot, currentLine, state);
+                        }
 
                         var multiStrSpan = new Span(SnapshotSpanToSpan(snapshot, startToken, validPrevLine).Start, length);
                         classifications.Add(

@@ -46,15 +46,7 @@
       <RegistrySearch Id="PythonFileTypeNoDefaultSearch" Root="HKCR" Key=".py" Type="raw" />
     </Property>
 
-    <Property Id="DJANGOTEMPLATEFILETYPE" Value="Django.File">
-      <RegistrySearch Id="DjangoTemplateFileTypeSearch" Root="HKCR" Key=".djt" Type="raw" />
-    </Property>
-
-    <Property Id="DJANGOTEMPLATEFILETYPENODEFAULT" >
-      <!-- Same thing as DJANGOTEMPLATEFILETYPE but used to decide if we should install the default info for the file type -->
-      <RegistrySearch Id="DjangoTemplateFileTypeNoDefaultSearch" Root="HKCR" Key=".djt" Type="raw" />
-    </Property>
-
+    
     <!-- Conditions for install -->
     
     <Condition Message="The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
@@ -123,14 +115,6 @@
               </RegistryKey>
             </RegistryKey>
           </Component>
-
-          <!-- Double click to open with Visual Studio context menu -->
-          <Component Id="Comp_DjangoTemplateFileExistance" DiskId="1" Guid="8A1CF83B-6A29-4CEA-9039-E06E0FFEC977">
-            <!-- This is only installed if .py is not already registered.  -->
-            <RegistryValue Root='HKCR' Key='.djt' Type='string' Value='[DJANGOTEMPLATEFILETYPE]' />
-            <RegistryValue Root='HKCR' Key='.djt' Name='Content Type' Type='string' Value='text/plain' />
-          </Component>
-                            
         </Directory>
       </Directory>
 
@@ -171,13 +155,6 @@
       
       <Feature Id="Feature_Django" AllowAdvertise="no" Level="1" Title="Django integration" Description="Django integration">
         <MergeRef Id="PTVSDjangoPackage"/>
-        <Feature Id="Feature_VsDjtFile" AllowAdvertise="no" Level="1" Title="Register .djt context menu." Description="Adds a Edit with Visual Studio context menu for .djt files">
-            <ComponentRef Id="Comp_DjangoTemplateFileRegistration" />
-            <Feature Id="Feature_DjangoTemplateFileExist" AllowAdvertise="no" Level="0" Title="Register .djt with Visual Studio if not already registered">
-              <Condition Level="1">NOT DJANGOTEMPLATEFILETYPENODEFAULT</Condition>
-              <ComponentRef Id="Comp_DjangoTemplateFileExistance" Primary="yes" />
-            </Feature>
-        </Feature>
       </Feature>
       
       <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">

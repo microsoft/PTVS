@@ -123,7 +123,16 @@ namespace AnalysisTest.ProjectSystem {
                 new Classifcation("Python operator", 27, 28, ":"),
                 new Classifcation("keyword", 29, 33, "pass"),
                 new Classifcation("whitespace", 33, 35, "\r\n"),
-                new Classifcation("string", 35, 46, "'abc\\\r\ndef'")
+                new Classifcation("string", 35, 46, "'abc\\\r\ndef'"),
+                new Classifcation("whitespace", 46, 50, "\r\n\r\n"),
+                new Classifcation("identifier", 50, 53, "foo"),
+                new Classifcation("Python operator", 54, 55, "="),
+                new Classifcation("string", 56, 72, "'ONE \\\r\n    ONE'"),
+                new Classifcation("Python operator", 73, 74, "+"),
+                new Classifcation("identifier", 75, 87, "message_text"),
+                new Classifcation("Python operator", 88, 89, "+"),
+                new Classifcation("string", 90, 113, "'TWOXXXXXXXXXXXX\\\r\nTWO'"),
+                new Classifcation("whitespace", 113, 115, "\r\n")
             );
         }
 
