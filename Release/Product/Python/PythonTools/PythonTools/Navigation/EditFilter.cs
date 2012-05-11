@@ -719,12 +719,14 @@ namespace Microsoft.PythonTools.Language {
                 if (viewPoint != null) {
                     view.Caret.MoveTo(viewPoint.Value);
                 }
-            } else {
+            } else if (splitCode.Count != 0) {
                 var lastCode = splitCode[splitCode.Count - 1];
                 splitCode.RemoveAt(splitCode.Count - 1);
 
                 eval.Window.ReadyForInput += new PendLastSplitCode(eval.Window, lastCode).AppendCode;
                 eval.Window.Submit(splitCode);
+            } else {
+                eval.Window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
             }
         }
 
@@ -738,7 +740,9 @@ namespace Microsoft.PythonTools.Language {
             }
 
             public void AppendCode() {
-                Window.CurrentLanguageBuffer.Insert(0, Text);
+                if (((PythonReplEvaluator)Window.Evaluator)._lastExecutionResult.Result.IsSuccessful) {
+                    Window.CurrentLanguageBuffer.Insert(0, Text);
+                }
                 Window.ReadyForInput -= AppendCode;
             }
         }

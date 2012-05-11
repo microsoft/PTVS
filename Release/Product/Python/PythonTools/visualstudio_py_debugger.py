@@ -1572,7 +1572,7 @@ def attach_process(port_num, debug_id, report_and_block = False):
                 else:
                     MODULES.append((filename, Module(fullpath)))
         except:
-            traceback.print_exc()
+            traceback.print_exc()   
 
     # intercept all new thread requests
     if not _INTERCEPTING_FOR_ATTACH:
@@ -1633,6 +1633,8 @@ def do_wait():
 
 class _DebuggerOutput(object):
     """file like object which redirects output to the repl window."""
+    errors = None
+
     def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout
         self.old_out = old_out

@@ -142,7 +142,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void SwitchAnalyzers(VsProjectAnalyzer oldAnalyzer) {
             lock (_openFiles) {
-                foreach (var bufferParser in oldAnalyzer._openFiles.Keys) {
+                // copy the Keys here as ReAnalyzeTextBuffers can mutuate the dictionary
+                foreach (var bufferParser in oldAnalyzer._openFiles.Keys.ToArray()) {
                     ReAnalyzeTextBuffers(bufferParser);
                 }
             }

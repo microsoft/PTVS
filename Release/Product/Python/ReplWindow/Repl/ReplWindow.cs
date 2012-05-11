@@ -2283,6 +2283,10 @@ namespace Microsoft.VisualStudio.Repl {
                 if (_history.Last != null) {
                     _history.Last.Failed = true;
                 }
+
+                if (_pendingSubmissions.Count > 0) {
+                    _pendingSubmissions.Clear();
+                }
             }
 
             PrepareForInput();

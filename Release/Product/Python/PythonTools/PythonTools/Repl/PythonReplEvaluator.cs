@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Repl {
         private bool _multipleScopes = true, _enableAttach, _attached, _ownsAnalyzer;
         private VsProjectAnalyzer _replAnalyzer;
         private PythonInteractiveOptions _options;
+        internal Task<ExecutionResult> _lastExecutionResult;
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
 
@@ -1070,8 +1071,12 @@ namespace Microsoft.PythonTools.Repl {
         private static byte[] MakeCommand(string command) {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };
         }
-
+        
         public Task<ExecutionResult> ExecuteText(string text) {
+            return _lastExecutionResult = ExecuteTextWorker(text);
+        }
+
+        private Task<ExecutionResult> ExecuteTextWorker(string text) {
             var parser = Parser.CreateParser(new StringReader(text), Interpreter.GetLanguageVersion());
             ParseResult parseResult;
             parser.ParseInteractiveCode(out parseResult);

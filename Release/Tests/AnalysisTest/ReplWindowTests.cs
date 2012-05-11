@@ -2395,6 +2395,40 @@ g()",
             );
         }
 
+        /// <summary>
+        /// def f(): pass
+        /// 
+        /// X
+        /// 
+        /// def g(): pass
+        /// 
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void PasteWithError() {
+            var interactive = Prepare();
+
+            const string code = @"def f(): pass
+
+X
+
+def g(): pass
+
+";
+            PasteTextTest(
+                interactive,
+                code,
+                ReplPrompt + "def f(): pass",
+                SecondPrompt,
+                ReplPrompt + "X",
+                "Traceback (most recent call last):",
+                "  File \"<stdin>\", line 1, in <module>",
+                "NameError: name 'X' is not defined",
+                ReplPrompt
+            );
+
+        }
+
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void QuitAndReset() {

@@ -208,6 +208,9 @@ namespace Microsoft.PythonTools.Navigation {
         /// the user was originally outside of valid selection.
         /// </summary>
         public int OnItemChosen(int iCombo, int iIndex) {
+            if (_dropDownBar == null) {
+                return VSConstants.E_UNEXPECTED;
+            }
             switch (iCombo) {
                 case TopLevelComboBoxId:
                     _dropDownBar.RefreshCombo(NestedComboBoxId, 0);
@@ -272,6 +275,10 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         private void FindActiveTopLevelComboSelection(int newPosition, ReadOnlyCollection<DropDownEntryInfo> topLevel) {
+            if (_dropDownBar == null) {
+                return;
+            }
+
             int oldTopLevel = _curTopLevelIndex;
 
             // left side has changed
@@ -329,6 +336,10 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         private void FindActiveNestedSelection(int newPosition, ReadOnlyCollection<DropDownEntryInfo> nested) {
+            if (_dropDownBar == null) {
+                return;
+            }
+
             int oldNested = _curNestedIndex;
 
             bool found = false;

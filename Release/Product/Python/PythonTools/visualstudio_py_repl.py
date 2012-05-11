@@ -878,6 +878,8 @@ due to the exec, so we do it here"""
 
 class _ReplOutput(object):
     """file like object which redirects output to the repl window."""
+    errors = None
+
     def __init__(self, backend, is_stdout):
         self.backend = backend
         self.is_stdout = is_stdout
