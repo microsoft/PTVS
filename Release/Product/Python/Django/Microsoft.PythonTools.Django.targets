@@ -5,6 +5,7 @@
   <PropertyGroup Condition="$(PTVS_DEV) == '' and $(MSBuildThisFile)!='Microsoft.PythonTools.Django.Developer.targets'">
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AzureDjangoSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\Python Tools\</AzureDjangoSupportPath>
+    <PTVSSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\Python Tools\</PTVSSupportPath>
   </PropertyGroup>
   <!-- *********************************************************************************** -->
   <!-- Dev environment for PTVS, use the current version -->
@@ -14,6 +15,8 @@
     <AzureDjangoSupportPath
       Condition="Exists('$(LOCALAPPDATA)\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\wfastcgi.py')">$(LOCALAPPDATA)\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\</AzureDjangoSupportPath>
 
+    <PTVSSupportPath
+      Condition="Exists('$(LOCALAPPDATA)\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\$(DjangoSupportVersion)\WebPICmdLine.exe')">$(LOCALAPPDATA)\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\$(DjangoSupportVersion)\</PTVSSupportPath>
   </PropertyGroup>
 
   <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
@@ -46,6 +49,7 @@
 
     <Message Text="DefaultInterpreterId=$(InterpreterId)"/>
     <Message Text="DefaultInterpreterVersion=$(InterpreterVersion)"/>
+    
 
     <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e'">
       <!-- X86 CPython Interpreter -->
@@ -76,7 +80,11 @@
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\10.0\PythonTools\Interpreters\{$(InterpreterId)}', 'InterpreterPath', null, RegistryView.Registry32))</PythonInterpreterPath>
     </PropertyGroup>
 
+    <PropertyGroup>
+      <PythonVersionNoDot>$(InterpreterVersion.Replace(".", ""))</PythonVersionNoDot>
+    </PropertyGroup>
     <Message Text="InterpretPath=$(PythonInterpreterPath)"/>
+    <Message Text="InterpretVersionNoDot=$(PythonVersionNoDot)"/>
   </Target>
 
   <Target Name="Build" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
@@ -98,6 +106,30 @@
           SkipUnchangedFiles="true">
       <!-- <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/> -->
     </Copy>
+
+    <!-- WebPI Files -->
+    <Copy SourceFiles="$(PTVSSupportPath)WebPICmdLine.exe"
+            DestinationFiles="bin\WebPICmdLine.exe"
+            SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
+    </Copy>
+    <Copy SourceFiles="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"
+            DestinationFiles="bin\Microsoft.Web.PlatformInstaller.UI.dll"
+            SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
+    </Copy>
+    <Copy SourceFiles="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll"
+            DestinationFiles="bin\Microsoft.Web.PlatformInstaller.dll"
+            SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
+    </Copy>
+    <Copy SourceFiles="$(PTVSSupportPath)Microsoft.Web.Deployment.dll"
+            DestinationFiles="bin\Microsoft.Web.Deployment.dll"
+            SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
+    </Copy>
+
+    <!-- WebRole files -->
     <Copy SourceFiles="$(AzureDjangoSupportPath)wfastcgi.py"
             DestinationFiles="bin\wfastcgi.py"
             SkipUnchangedFiles="true">
@@ -168,13 +200,16 @@
         <![CDATA[
 settings_module=$(MSBuildProjectName).settings
 python_path=%RootDir%
-interpreter_path=%RootDir%\Python\$([System.IO.Path]::GetFileName($(PythonInterpreterPath)))
+interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
 ]]>
       </_AzureSetupInfo>
 
     </PropertyGroup>
     <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == ''" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
-    <WriteLinesToFile File="AzureSetup.cfg" Lines="$(_AzureSetupInfo)" Overwrite="true"/>
+    <WriteLinesToFile File="AzureSetup.cfg"
+                      Lines="$(_AzureSetupInfo)" Overwrite="true"/>
+    <WriteLinesToFile File="AzureSetup.cfg"
+                      Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')" Overwrite="false"/>
   </Target>
   <Target
     Name="GetTargetPath"
@@ -213,13 +248,20 @@ interpreter_path=%RootDir%\Python\$([System.IO.Path]::GetFileName($(PythonInterp
 
       <GeneratedFiles  Include="AzureSetup.cfg"></GeneratedFiles>
       <GeneratedFiles Include="@(InstallPython->'%(FullPath)')"/>
+
+      <GeneratedFiles Include="$(PTVSSupportPath)WebPICmdLine.exe"/>
+      <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"/>
+      <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll"/>
+      <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.Deployment.dll"/>
+
       <GeneratedFiles Include="$(AzureDjangoSupportPath)wfastcgi.py"/>
       <GeneratedFiles Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"/>
 
       <TopLevelFiles Include="web.config"></TopLevelFiles>
 
-      <PythonInterpreterFiles Include="$(PythonRuntimeDir)\**\*.*"/>
+      <!-- <PythonInterpreterFiles Include="$(PythonRuntimeDir)\**\*.*"/> -->
 
+      <!--
       <TransformedFilenames Include="@(PythonInterpreterFiles)">
         <DestinationRelativePath>Python\%(RecursiveDir)%(Filename)%(Extension)</DestinationRelativePath>
         <Exclude>false</Exclude>
@@ -227,7 +269,8 @@ interpreter_path=%RootDir%\Python\$([System.IO.Path]::GetFileName($(PythonInterp
         <Category>Run</Category>
         <ProjectFileType>Default</ProjectFileType>
       </TransformedFilenames>
-
+    -->
+      
       <TransformedFilenames Include="@(ContentFiles->'%(FullPath)')">
         <DestinationRelativePath>$(MSBuildProjectName)\%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
         <Exclude>false</Exclude>

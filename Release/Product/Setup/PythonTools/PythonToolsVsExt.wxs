@@ -292,6 +292,21 @@
             <Component Id="cmpA83C48D16DDE43B3AEF95E591E9A5CFA" Directory="X64INSTALL" Guid="{E18A951E-F61C-488F-BE2D-9B72BA942B7F}">
                 <File Id="fil4D6C7256F4DC457BAE3F3967ADBBB107" KeyPath="yes" Source="$(var.x64Dir)\PyDebugAttach.dll" />
             </Component>
+
+            <!-- WebPI Components -->
+            <Component Id="cmp784174C81EAD4818B81A267856573A28" Directory="INSTALLLOCATION" Guid="{0228219C-9AD9-482A-B461-E6827A2A6DA9}">
+                <File Id="filAB7B8ABBA4A44C5488E0B9348E96699F" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.Web.Deployment.dll" />
+            </Component>
+            <Component Id="cmp7EE160E60F1B4FAE948017F2D2C04038" Directory="INSTALLLOCATION" Guid="{8400A599-BBF9-4916-9479-6E5B23A5A953}">
+                <File Id="fil9398F9303B5647069556EC099743B577" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.Web.PlatformInstaller.dll" />
+            </Component>
+            <Component Id="cmpE263FDCA7B0245F28A8B107D3C1A6B76" Directory="INSTALLLOCATION" Guid="{F7BC0CD1-2EC2-472F-9731-5CF1AC57B4EB}">
+                <File Id="fil3922C5CFF6D24C688200DF91C921572E" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.Web.PlatformInstaller.UI.dll" />
+            </Component>
+            <Component Id="cmp3BF695351809415F9720EAFCFCDB5B92" Directory="INSTALLLOCATION" Guid="{E36E9F62-19E4-4BE6-A5E5-6AE24E6AE48C}">
+                <File Id="fil709C98DE8F9D4037A908D337A11E2FF9" KeyPath="yes" Source="$(var.TargetDir)\WebPICmdLine.exe" />
+            </Component>
+
         </ComponentGroup>
     </Fragment>
     <Fragment>

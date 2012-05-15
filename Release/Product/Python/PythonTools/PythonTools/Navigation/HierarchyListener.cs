@@ -215,7 +215,12 @@ namespace Microsoft.PythonTools.Navigation {
             // Find out if this item is a physical file.
             Guid typeGuid;
             canonicalName = null;
-            int hr = Hierarchy.GetGuidProperty(itemId, (int)__VSHPROPID.VSHPROPID_TypeGuid, out typeGuid);
+            int hr;
+            try {
+                hr = Hierarchy.GetGuidProperty(itemId, (int)__VSHPROPID.VSHPROPID_TypeGuid, out typeGuid);
+            } catch (System.Runtime.InteropServices.COMException) {
+                return false;
+            }
             if (Microsoft.VisualStudio.ErrorHandler.Failed(hr) ||
                 VSConstants.GUID_ItemType_PhysicalFile != typeGuid) {
                 // It is not a file, we can exit now.

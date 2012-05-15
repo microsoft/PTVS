@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Django {
         public ProvideDebugLanguageAttribute(string languageName, string languageGuid, string eeGuid, string debugEngineGuid) {
             _languageName = languageName;
             _languageGuid = languageGuid;
+            _eeGuid = eeGuid;
             _engineGuid = debugEngineGuid;
         }
 

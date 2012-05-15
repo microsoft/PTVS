@@ -55,6 +55,7 @@ namespace Microsoft.PythonTools.Project
         public const string Private = "Private";
         public const string ProjectReference = "ProjectReference";
         public const string Reference = "Reference";
+        public const string WebPiReference = "WebPiReference";
         public const string WebReference = "WebReference";
         public const string WebReferenceFolder = "WebReferenceFolder";
         public const string Folder = "Folder";

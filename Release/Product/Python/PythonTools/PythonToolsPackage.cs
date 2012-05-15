@@ -17,12 +17,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor;
@@ -129,13 +131,15 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.Warning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ZeroDivisionError")]
-    public sealed class PythonToolsPackage : CommonPackage {
+    [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue="#4000")]
+    public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider {
         private LanguagePreferences _langPrefs;
         public static PythonToolsPackage Instance;
         private VsProjectAnalyzer _analyzer;
         private static Dictionary<Command, MenuCommand> _commands = new Dictionary<Command,MenuCommand>();
         private PythonAutomation _autoObject = new PythonAutomation();
         private IContentType _contentType;
+        private PackageContainer _packageContainer;
         internal static Guid _noInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
         private static List<EventHandler> _earlyHandlers = new List<EventHandler>();
         private UpdateSolutionEventsListener _solutionEventListener;
@@ -618,5 +622,76 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             return null;
         }
+
+        #region IVsComponentSelectorProvider Members
+
+        public int GetComponentSelectorPage(ref Guid rguidPage, VSPROPSHEETPAGE[] ppage) {
+            if (rguidPage == typeof(WebPiComponentPickerControl).GUID) {
+                var page = new VSPROPSHEETPAGE();
+                page.dwSize = (uint)Marshal.SizeOf(typeof(VSPROPSHEETPAGE));
+                var pickerPage = new WebPiComponentPickerControl();
+                if (_packageContainer == null) {
+                    _packageContainer = new PackageContainer(this);
+                }
+                _packageContainer.Add(pickerPage);
+                //IWin32Window window = pickerPage;
+                page.hwndDlg = pickerPage.Handle;
+                ppage[0] = page;
+                return VSConstants.S_OK;
+            }
+            return VSConstants.E_FAIL;
+        }
+
+        /// <devdoc>
+        ///     This class derives from container to provide a service provider
+        ///     connection to the package.
+        /// </devdoc>
+        private sealed class PackageContainer : Container {
+            private IUIService _uis;
+            private AmbientProperties _ambientProperties;
+
+            private System.IServiceProvider _provider;
+
+            /// <devdoc>
+            ///     Creates a new container using the given service provider.
+            /// </devdoc>
+            internal PackageContainer(System.IServiceProvider provider) {
+                _provider = provider;
+            }
+
+            /// <devdoc>
+            ///     Override to GetService so we can route requests
+            ///     to the package's service provider.
+            /// </devdoc>
+            protected override object GetService(Type serviceType) {
+                if (serviceType == null) {
+                    throw new ArgumentNullException("serviceType");
+                }
+                if (_provider != null) {
+                    if (serviceType.IsEquivalentTo(typeof(AmbientProperties))) {
+                        if (_uis == null) {
+                            _uis = (IUIService)_provider.GetService(typeof(IUIService));
+                        }
+                        if (_ambientProperties == null) {
+                            _ambientProperties = new AmbientProperties();
+                        }
+                        if (_uis != null) {
+                            // update the _ambientProperties in case the styles have changed
+                            // since last time.
+                            _ambientProperties.Font = (Font)_uis.Styles["DialogFont"];
+                        }
+                        return _ambientProperties;
+                    }
+                    object service = _provider.GetService(serviceType);
+
+                    if (service != null) {
+                        return service;
+                    }
+                }
+                return base.GetService(serviceType);
+            }
+        }
+
+        #endregion
     }
 }

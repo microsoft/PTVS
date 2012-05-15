@@ -1426,7 +1426,7 @@ namespace Microsoft.PythonTools.Project
         {
             IVsComponentSelectorDlg2 componentDialog;
             Guid guidEmpty = Guid.Empty;
-            VSCOMPONENTSELECTORTABINIT[] tabInit = new VSCOMPONENTSELECTORTABINIT[3];
+            VSCOMPONENTSELECTORTABINIT[] tabInit = new VSCOMPONENTSELECTORTABINIT[4];
             string strBrowseLocations = Path.GetDirectoryName(ProjectHome);
 
             //Add the Project page
@@ -1445,6 +1445,11 @@ namespace Microsoft.PythonTools.Project
             tabInit[2].dwSize = (uint)Marshal.SizeOf(typeof(VSCOMPONENTSELECTORTABINIT));
             tabInit[2].guidTab = VSConstants.GUID_BrowseFilePage;
             tabInit[2].varTabInitInfo = 0;
+
+            // Add the WebPI page
+            tabInit[3].dwSize = (uint)Marshal.SizeOf(typeof(VSCOMPONENTSELECTORTABINIT));
+            tabInit[3].guidTab = typeof(WebPiComponentPickerControl).GUID;
+            tabInit[3].varTabInitInfo = 0;
 
             uint pX = 0, pY = 0;
 
@@ -2420,7 +2425,8 @@ namespace Microsoft.PythonTools.Project
                     || String.Compare(itemType, ProjectFileConstants.COMReference, StringComparison.OrdinalIgnoreCase) == 0
                     || String.Compare(itemType, ProjectFileConstants.Folder, StringComparison.OrdinalIgnoreCase) == 0
                     || String.Compare(itemType, ProjectFileConstants.WebReference, StringComparison.OrdinalIgnoreCase) == 0
-                    || String.Compare(itemType, ProjectFileConstants.WebReferenceFolder, StringComparison.OrdinalIgnoreCase) == 0);
+                    || String.Compare(itemType, ProjectFileConstants.WebReferenceFolder, StringComparison.OrdinalIgnoreCase) == 0
+                    || String.Compare(itemType, ProjectFileConstants.WebPiReference, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
 

@@ -179,6 +179,11 @@ namespace Microsoft.PythonTools.Project
         internal const string WinExe = "WinExe";
         internal const string Publish = "Publish";
         internal const string PublishDescription = "PublishDescription";
+        internal const string WebPiFeed = "WebPiFeed";
+        internal const string WebPiProduct = "WebPiProduct";
+        internal const string WebPiFeedDescription = "WebPiFeedDescription";
+        internal const string WebPiProductDescription = "WebPiProductDescription";
+        internal const string WebPiReferenceProperties = "WebPiReferenceProperties";
 
         static SR loader;
         ResourceManager resources;

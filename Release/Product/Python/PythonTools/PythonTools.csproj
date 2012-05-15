@@ -179,6 +179,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Messaging" />
+    <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Windows.Forms" />
@@ -202,6 +204,7 @@
     <Reference Include="System.Xaml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="ProvideImportTemplatesAttribute.cs" />
@@ -247,6 +250,7 @@
     <Compile Include="PythonTools\Project\AssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceFolderItem.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAWebPiReference.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAPythonExtensionReference.cs" />
     <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
     <Compile Include="PythonTools\Project\BuildDependency.cs" />
@@ -274,6 +278,14 @@
     </Compile>
     <Compile Include="PythonTools\Project\UIThreadSynchronizer.cs" />
     <Compile Include="PythonTools\Project\UpdateSolutionEventsListener.cs" />
+    <Compile Include="PythonTools\Project\ProjectResources.cs" />
+    <Compile Include="PythonTools\Project\WebPiComponentPickerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Project\WebPiComponentPickerControl.Designer.cs">
+      <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
@@ -455,7 +467,6 @@
     <Compile Include="PythonTools\Project\SuspendFileChanges.cs" />
     <Compile Include="PythonTools\Project\TrackDocumentsHelper.cs" />
     <Compile Include="PythonTools\Project\Utilities.cs" />
-    <Compile Include="PythonTools\Project\VisualStudio.Project.cs" />
     <Compile Include="PythonTools\Project\VsCommands.cs" />
     <Compile Include="PythonTools\Project\VSShellUtilities.cs" />
     <Compile Include="PythonTools\Refactoring\AssignmentWalker.cs" />
@@ -602,6 +613,26 @@
     <Content Include="BuiltinScraper.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="WebPiCmdLine\Microsoft.Web.Deployment.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="WebPiCmdLine\Microsoft.Web.PlatformInstaller.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="WebPiCmdLine\Microsoft.Web.PlatformInstaller.UI.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="WebPiCmdLine\WebPICmdLine.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <None Include="Resources\PythonProject.ico" />
     <Content Include="ExtensionScraper.py">
@@ -961,6 +992,9 @@
     <EmbeddedResource Include="PythonTools\Project\StartWithErrorsDialog.resx">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Project\WebPiComponentPickerControl.resx">
+      <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\completionset.bmp" />
     <Content Include="Resources\Images_24bit.bmp" />
     <Content Include="Resources\Images_32bit.bmp" />
@@ -980,13 +1014,9 @@
       <DependentUpon>PythonGeneralPropertyPageControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonImageList.bmp" />
-    <EmbeddedResource Include="PythonTools\Project\VisualStudio.Project.resx">
-      <DependentUpon>VisualStudio.Project.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\PythonPackageIcons.bmp" />
     <EmbeddedResource Include="VisualStudio.Project.resx">
-      <CustomToolNamespace>Microsoft.IronStudio</CustomToolNamespace>
+      <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="VSPackage.resx">

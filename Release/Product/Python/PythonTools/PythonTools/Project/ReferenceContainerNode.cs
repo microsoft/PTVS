@@ -49,7 +49,8 @@ namespace Microsoft.PythonTools.Project
         private static string[] supportedReferenceTypes = new string[] {
             ProjectFileConstants.ProjectReference,
             ProjectFileConstants.Reference,
-            ProjectFileConstants.COMReference
+            ProjectFileConstants.COMReference,
+            ProjectFileConstants.WebPiReference
         };
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         protected virtual string[] SupportedReferenceTypes
@@ -344,6 +345,16 @@ namespace Microsoft.PythonTools.Project
             else if (referenceType == ProjectFileConstants.ProjectReference)
             {
                 node = this.CreateProjectReferenceNode(element);
+            } 
+            else if (referenceType == ProjectFileConstants.WebPiReference) 
+            {
+                node = new WebPiReferenceNode(
+                    ProjectMgr,
+                    element,
+                    element.GetMetadata("Feed"),
+                    element.GetMetadata("ProductId"),
+                    element.GetMetadata("FriendlyName")
+                );
             }
 
             return node;
@@ -361,6 +372,17 @@ namespace Microsoft.PythonTools.Project
                 // This is the case for managed assembly
                 case VSCOMPONENTTYPE.VSCOMPONENTTYPE_ComPlus:
                     node = this.CreateFileComponent(selectorData);
+                    break;
+                case VSCOMPONENTTYPE.VSCOMPONENTTYPE_Custom:
+                    if (selectorData.lCustom == 0 ) {
+                        node = new WebPiReferenceNode(
+                            (PythonProjectNode)ProjectMgr,
+                            selectorData.bstrFile,
+                            selectorData.bstrTitle,
+                            selectorData.bstrProjRef
+                        );
+                        
+                    }
                     break;
 #if FALSE
                 case VSCOMPONENTTYPE.VSCOMPONENTTYPE_Com2:

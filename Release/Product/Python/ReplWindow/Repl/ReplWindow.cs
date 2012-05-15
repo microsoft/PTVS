@@ -2285,6 +2285,8 @@ namespace Microsoft.VisualStudio.Repl {
                 }
 
                 if (_pendingSubmissions.Count > 0) {
+                    // there was an error with the last execution, clear the
+                    // input queue due to the error.
                     _pendingSubmissions.Clear();
                 }
             }

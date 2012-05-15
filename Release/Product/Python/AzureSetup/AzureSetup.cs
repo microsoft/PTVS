@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -77,8 +78,10 @@ namespace AzureSetup {
 
             if (physicalDir != null) {
                 string fastCgiPath = Path.Combine(physicalDir, "bin\\wfastcgi.py");
+                string webpiCmdLinePath = Path.Combine(physicalDir, "bin\\WebPICmdLine.exe");
                 string settingsName = null, pythonPath = null;
                 string setupCfg = Path.Combine(physicalDir, "bin\\AzureSetup.cfg");
+                List<string> webpiInstalls = new List<string>();
                 if (File.Exists(setupCfg)) {
                     try {
                         var allLines = File.ReadAllLines(setupCfg);
@@ -89,26 +92,49 @@ namespace AzureSetup {
                                     case "settings_module":
                                         settingsName = curOptions[1];
                                         break;
-                                    case "python_path":
-                                        pythonPath = Regex.Replace(
-                                            curOptions[1], 
-                                            Regex.Escape("%RootDir%"), 
-                                            Regex.Escape(physicalDir), 
-                                            RegexOptions.IgnoreCase
+                                    case "python_path":                                        
+                                        pythonPath = Environment.ExpandEnvironmentVariables(
+                                            Regex.Replace(
+                                                curOptions[1], 
+                                                Regex.Escape("%RootDir%"), 
+                                                Regex.Escape(physicalDir), 
+                                                RegexOptions.IgnoreCase
+                                            )
                                         );
                                         break;
                                     case "interpreter_path":
-                                        interpreter = Regex.Replace(
-                                            curOptions[1],
-                                            Regex.Escape("%RootDir%"),
-                                            Regex.Escape(physicalDir),
-                                            RegexOptions.IgnoreCase
+                                        interpreter = Environment.ExpandEnvironmentVariables(
+                                            Regex.Replace(
+                                                curOptions[1],
+                                                Regex.Escape("%RootDir%"),
+                                                Regex.Escape(physicalDir),
+                                                RegexOptions.IgnoreCase
+                                            )
+                                        );
+                                        break;
+                                    case "webpi_install":
+                                        webpiInstalls.Add(
+                                            curOptions[1]
                                         );
                                         break;
                                 }
                             }
                         }
                     } catch (IOException) {
+                    }
+                }
+
+                // setup any installed products via WebPI...
+                foreach (var install in webpiInstalls) {
+                    var paths = install.Split(new[] { ';' }, 2);
+                    if (paths.Length == 2) {
+                        var psi = new ProcessStartInfo(
+                            webpiCmdLinePath,
+                            "\"/Feeds:" + paths[0] + "\" " +
+                            "\"/Products: " + paths[1] + "\""
+                        );
+                        var process = Process.Start(psi);
+                        process.WaitForExit();
                     }
                 }
 
@@ -120,7 +146,10 @@ namespace AzureSetup {
 
                     if (String.IsNullOrEmpty(interpreter)) {
                         // TODO: Better discovery....
-                        interpreter = "C:\\Python27\\python.exe";
+                        interpreter = Path.Combine(
+                            Environment.GetEnvironmentVariable("SystemDrive") + "\\",
+                            "Python27\\python.exe"
+                        );
                     }
 
                     // remove the previous entry if we're already registered at the same path...

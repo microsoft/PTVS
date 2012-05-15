@@ -526,4 +526,19 @@ Files and folders cannot be:
   <data name="PublishDescription" xml:space="preserve">
     <value>If the file should be included in the files which are published.</value>
   </data>
+  <data name="WebPiFeed" xml:space="preserve">
+    <value>Feed</value>
+  </data>
+  <data name="WebPiFeedDescription" xml:space="preserve">
+    <value>The WebPI Feed that contains this reference</value>
+  </data>
+  <data name="WebPiProduct" xml:space="preserve">
+    <value>Product ID</value>
+  </data>
+  <data name="WebPiProductDescription" xml:space="preserve">
+    <value>The product ID that for this web reference</value>
+  </data>
+  <data name="WebPiReferenceProperties" xml:space="preserve">
+    <value>WebPI Reference Properties</value>
+  </data>
 </root>

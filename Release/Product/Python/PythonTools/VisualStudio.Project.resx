@@ -112,10 +112,10 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AddToNullProjectError" xml:space="preserve">
     <value>Failed to add file '{0}' to project as project is null.</value>
@@ -508,10 +508,25 @@ Files and folders cannot be:
   <data name="BuildEventError" xml:space="preserve">
     <value>Exception was thrown during BuildBegin event\n{0}</value>
   </data>
-    <data name="Publish" xml:space="preserve">
+  <data name="Publish" xml:space="preserve">
     <value>Publish</value>
   </data>
-    <data name="PublishDescription" xml:space="preserve">
+  <data name="PublishDescription" xml:space="preserve">
     <value>If the file should be included in the files which are published.</value>
+  </data>
+  <data name="WebPiFeed" xml:space="preserve">
+    <value>Feed</value>
+  </data>
+  <data name="WebPiFeedDescription" xml:space="preserve">
+    <value>The WebPI Feed that contains this reference</value>
+  </data>
+  <data name="WebPiProduct" xml:space="preserve">
+    <value>Product ID</value>
+  </data>
+  <data name="WebPiProductDescription" xml:space="preserve">
+    <value>The product ID that for this web reference</value>
+  </data>
+  <data name="WebPiReferenceProperties" xml:space="preserve">
+    <value>WebPI Reference Properties</value>
   </data>
 </root>

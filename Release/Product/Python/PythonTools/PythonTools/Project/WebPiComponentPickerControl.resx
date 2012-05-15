@@ -117,92 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="110" xml:space="preserve">
-    <value>Microsoft Python Tools for Visual Studio</value>
-  </data>
-  <data name="112" xml:space="preserve">
-    <value>Python Tools for Visual Studio provides intellisense, project support, project and item templates, as well as a REPL window for Python development.</value>
-  </data>
-  <data name="113" xml:space="preserve">
-    <value>Advanced</value>
-  </data>
-  <data name="2000" xml:space="preserve">
-    <value>IronPython</value>
-  </data>
-  <data name="3000" xml:space="preserve">
-    <value>Console Application</value>
-  </data>
-  <data name="3001" xml:space="preserve">
-    <value>WinForms Application</value>
-  </data>
-  <data name="3002" xml:space="preserve">
-    <value>Wpf Application</value>
-  </data>
-  <data name="3003" xml:space="preserve">
-    <value>IronPython Silverlight Page</value>
-  </data>
-  <data name="114" xml:space="preserve">
-    <value>Intellisense</value>
-  </data>
-  <data name="115" xml:space="preserve">
-    <value>Python Tools</value>
-  </data>
-  <data name="116" xml:space="preserve">
-    <value>Interpreter Options</value>
-  </data>
-  <data name="117" xml:space="preserve">
-    <value>Interactive Windows</value>
-  </data>
-  <data name="118" xml:space="preserve">
-    <value>Advanced</value>
-  </data>
-  <data name="111" xml:space="preserve">
-    <value>Python Project</value>
-  </data>
-  <data name="3004" xml:space="preserve">
-    <value>Python Editor</value>
-  </data>
-  <data name="3005" xml:space="preserve">
-    <value>Python windows source file</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="400" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\PythonProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="3006" xml:space="preserve">
-    <value>Python</value>
-  </data>
-  <data name="3007" xml:space="preserve">
-    <value>Python Class</value>
-  </data>
-  <data name="3008" xml:space="preserve">
-    <value>Python Class (.pyw)</value>
-  </data>
-  <data name="3009" xml:space="preserve">
-    <value>Empty Module</value>
-  </data>
-  <data name="3010" xml:space="preserve">
-    <value>Empty Module (.pyw)</value>
-  </data>
-  <data name="3011" xml:space="preserve">
-    <value>A Python file with a class declared</value>
-  </data>
-  <data name="3012" xml:space="preserve">
-    <value>An empty Python module</value>
-  </data>
-  <data name="3013" xml:space="preserve">
-    <value>class</value>
-  </data>
-  <data name="3014" xml:space="preserve">
-    <value>module</value>
-  </data>
-  <data name="500" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>pythonfile.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="3015" xml:space="preserve">
-    <value>Python Editor with Encoding</value>
-  </data>
-  <data name="4000" xml:space="preserve">
-    <value>Web Platform Installer</value>
-  </data>
+  <metadata name="backgroundWorker5.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>673, 17</value>
+  </metadata>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>300</value>
+  </metadata>
 </root>

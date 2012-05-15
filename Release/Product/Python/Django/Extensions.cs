@@ -74,13 +74,17 @@ namespace Microsoft.PythonTools.Django {
 
         internal static Guid GetItemType(this VSITEMSELECTION vsItemSelection) {
             Guid typeGuid;
-            ErrorHandler.ThrowOnFailure(
-                vsItemSelection.pHier.GetGuidProperty(
-                    vsItemSelection.itemid, 
-                    (int)__VSHPROPID.VSHPROPID_TypeGuid, 
-                    out typeGuid
-                )
-            );
+            try {
+                ErrorHandler.ThrowOnFailure(
+                    vsItemSelection.pHier.GetGuidProperty(
+                        vsItemSelection.itemid,
+                        (int)__VSHPROPID.VSHPROPID_TypeGuid,
+                        out typeGuid
+                    )
+                );
+            } catch (System.Runtime.InteropServices.COMException) {
+                return Guid.Empty;
+            }
             return typeGuid;
         }
 

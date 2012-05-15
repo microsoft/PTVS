@@ -163,7 +163,6 @@ namespace Microsoft.PythonTools.Django {
                     Marshal.Release(docData);
                 }
             }
-            return null;
         }
 
     }

@@ -21,10 +21,8 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 
-namespace Microsoft.PythonTools.Project
-{
-    internal static class NativeMethods
-    {
+namespace Microsoft.PythonTools.Project {
+    internal static class NativeMethods {
         // IIDS
         public static readonly Guid IID_IUnknown = new Guid("{00000000-0000-0000-C000-000000000046}");
 
@@ -472,8 +470,7 @@ namespace Microsoft.PythonTools.Project
             FW_BOLD = 700;
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct NMHDR
-        {
+        public struct NMHDR {
             public IntPtr hwndFrom;
             public int idFrom;
             public int code;
@@ -482,10 +479,8 @@ namespace Microsoft.PythonTools.Project
         /// <devdoc>
         /// Helper class for setting the text parameters to OLECMDTEXT structures.
         /// </devdoc>
-        public static class OLECMDTEXT
-        {
-            public static void SetText(IntPtr pCmdTextInt, string text)
-            {
+        public static class OLECMDTEXT {
+            public static void SetText(IntPtr pCmdTextInt, string text) {
                 Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
                 char[] menuText = text.ToCharArray();
 
@@ -514,8 +509,7 @@ namespace Microsoft.PythonTools.Project
             /// </summary>
             /// <param name="pCmdTextInt">The structure to read.</param>
             /// <returns>The value of the flags.</returns>
-            public static OLECMDTEXTF GetFlags(IntPtr pCmdTextInt)
-            {
+            public static OLECMDTEXTF GetFlags(IntPtr pCmdTextInt) {
                 Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
 
                 if ((pCmdText.cmdtextf & (int)OLECMDTEXTF.OLECMDTEXTF_NAME) != 0)
@@ -531,8 +525,7 @@ namespace Microsoft.PythonTools.Project
             /// <summary>
             /// Flags for the OLE command text
             /// </summary>
-            public enum OLECMDTEXTF
-            {
+            public enum OLECMDTEXTF {
                 /// <summary>No flag</summary>
                 OLECMDTEXTF_NONE = 0,
                 /// <summary>The name of the command is required.</summary>
@@ -545,14 +538,31 @@ namespace Microsoft.PythonTools.Project
         /// <devdoc>
         /// OLECMDF enums for IOleCommandTarget
         /// </devdoc>
-        public enum tagOLECMDF
-        {
+        public enum tagOLECMDF {
             OLECMDF_SUPPORTED = 1,
             OLECMDF_ENABLED = 2,
             OLECMDF_LATCHED = 4,
             OLECMDF_NINCHED = 8,
             OLECMDF_INVISIBLE = 16
         }
+
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
+        public static extern IntPtr GetParent(IntPtr hWnd);
+
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
+        public static extern bool GetClientRect(IntPtr hWnd, out User32RECT lpRect);
+
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
+        public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
+        public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
+        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
+        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
         /// <devdoc>
         /// Please use this "approved" method to compare file names.
@@ -589,8 +599,7 @@ namespace Microsoft.PythonTools.Project
             return false;
         }*/
 
-        public static void SetErrorDescription(string description, params object[] args)
-        {
+        public static void SetErrorDescription(string description, params object[] args) {
             ICreateErrorInfo errInfo;
             ErrorHandler.ThrowOnFailure(CreateErrorInfo(out errInfo));
 
@@ -611,8 +620,7 @@ namespace Microsoft.PythonTools.Project
         static extern int SetErrorInfo(uint dwReserved, IErrorInfo perrinfo);
 
         [ComImport(), Guid("9BDA66AE-CA28-4e22-AA27-8A7218A0E3FA"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IEventHandler
-        {
+        public interface IEventHandler {
 
             // converts the underlying codefunction into an event handler for the given event
             // if the given event is NULL, then the function will handle no events
@@ -628,8 +636,7 @@ namespace Microsoft.PythonTools.Project
         }
 
         [ComImport(), Guid("A55CCBCC-7031-432d-B30A-A68DE7BDAD75"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IParameterKind
-        {
+        public interface IParameterKind {
 
             void SetParameterPassingMode(PARAMETER_PASSING_MODE ParamPassingMode);
             void SetParameterArrayDimensions(int uDimensions);
@@ -638,8 +645,7 @@ namespace Microsoft.PythonTools.Project
             int GetParameterPassingMode();
         }
 
-        public enum PARAMETER_PASSING_MODE
-        {
+        public enum PARAMETER_PASSING_MODE {
             cmParameterTypeIn = 1,
             cmParameterTypeOut = 2,
             cmParameterTypeInOut = 3
@@ -649,8 +655,7 @@ namespace Microsoft.PythonTools.Project
         ComImport, ComVisible(true), Guid("3E596484-D2E4-461a-A876-254C4F097EBB"),
         InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)
         ]
-        public interface IMethodXML
-        {
+        public interface IMethodXML {
             // Generate XML describing the contents of this function's body.
             void GetXML(ref string pbstrXML);
 
@@ -666,8 +671,7 @@ namespace Microsoft.PythonTools.Project
         }
 
         [ComImport(), Guid("EA1A87AD-7BC5-4349-B3BE-CADC301F17A3"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IVBFileCodeModelEvents
-        {
+        public interface IVBFileCodeModelEvents {
 
             [PreserveSig]
             int StartEdit();
@@ -682,8 +686,7 @@ namespace Microsoft.PythonTools.Project
         [GuidAttribute("23BBD58A-7C59-449b-A93C-43E59EFC080C")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [ComImport()]
-        public interface ICodeClassBase
-        {
+        public interface ICodeClassBase {
             [PreserveSig()]
             int GetBaseName(out string pBaseName);
         }
@@ -696,8 +699,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// Specifies options for a bitmap image associated with a task item.
         /// </summary>
-        public enum VSTASKBITMAP
-        {
+        public enum VSTASKBITMAP {
             BMP_COMPILE = -1,
             BMP_SQUIGGLE = -2,
             BMP_COMMENT = -3,
@@ -714,8 +716,7 @@ namespace Microsoft.PythonTools.Project
         /// Defines the values that are not supported by the System.Environment.SpecialFolder enumeration
         /// </summary>
         [ComVisible(true)]
-        public enum ExtendedSpecialFolder
-        {
+        public enum ExtendedSpecialFolder {
             /// <summary>
             /// Identical to CSIDL_COMMON_STARTUP
             /// </summary>
@@ -773,8 +774,7 @@ namespace Microsoft.PythonTools.Project
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool CloseHandle(IntPtr handle);
 
-        public enum LogonType
-        {
+        public enum LogonType {
             LOGON32_LOGON_INTERACTIVE = 2,
             LOGON32_LOGON_NETWORK,
             LOGON32_LOGON_BATCH,
@@ -784,8 +784,7 @@ namespace Microsoft.PythonTools.Project
             LOGON32_LOGON_NEW_CREDENTIALS
         }
 
-        public enum LogonProvider
-        {
+        public enum LogonProvider {
             LOGON32_PROVIDER_DEFAULT = 0,
             LOGON32_PROVIDER_WINNT35,
             LOGON32_PROVIDER_WINNT40,
@@ -805,8 +804,7 @@ namespace Microsoft.PythonTools.Project
         internal static extern uint MsiGetProductCode(string szComponent, [Out]StringBuilder lpProductBuf);
 
 
-        internal enum MsiInstallState
-        {
+        internal enum MsiInstallState {
             NotUsed = -7,  // component disabled
             BadConfig = -6,  // configuration data corrupt
             Incomplete = -5,  // installation suspended or in progress
@@ -825,8 +823,7 @@ namespace Microsoft.PythonTools.Project
     }
 
 
-    internal class CredUI
-    {
+    internal class CredUI {
         private const string advapi32Dll = "advapi32.dll";
         private const string credUIDll = "credui.dll";
 
@@ -837,8 +834,7 @@ namespace Microsoft.PythonTools.Project
         ERROR_LOGON_FAILURE = 1326;  // Logon failure: unknown user name or bad password.
 
         [Flags]
-        public enum CREDUI_FLAGS : uint
-        {
+        public enum CREDUI_FLAGS : uint {
             INCORRECT_PASSWORD = 0x1,
             DO_NOT_PERSIST = 0x2,
             REQUEST_ADMINISTRATOR = 0x4,
@@ -859,8 +855,7 @@ namespace Microsoft.PythonTools.Project
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public class CREDUI_INFO
-        {
+        public class CREDUI_INFO {
             public int cbSize;
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2006:UseSafeHandleToEncapsulateNativeResources")]
             public IntPtr hwndParentCERParent;
@@ -872,8 +867,7 @@ namespace Microsoft.PythonTools.Project
             public IntPtr hbmBannerCERHandle;
         }
 
-        public enum CredUIReturnCodes : uint
-        {
+        public enum CredUIReturnCodes : uint {
             NO_ERROR = 0,
             ERROR_CANCELLED = 1223,
             ERROR_NO_SUCH_LOGON_SESSION = 1312,
@@ -909,8 +903,7 @@ namespace Microsoft.PythonTools.Project
         CREDUI_MAX_USERNAME_LENGTH = CRED_MAX_USERNAME_LENGTH,
         CREDUI_MAX_PASSWORD_LENGTH = (CRED_MAX_CREDENTIAL_BLOB_SIZE / 2);
 
-        internal enum CRED_PERSIST : uint
-        {
+        internal enum CRED_PERSIST : uint {
             NONE = 0,
             SESSION = 1,
             LOCAL_MACHINE = 2,
@@ -918,8 +911,7 @@ namespace Microsoft.PythonTools.Project
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct NativeCredential
-        {
+        public struct NativeCredential {
             public uint flags;
             public uint type;
             public string targetName;
@@ -989,7 +981,7 @@ namespace Microsoft.PythonTools.Project
         [DllImport(credUIDll, CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "CredUIParseUserNameW")]
         public static extern CredUIReturnCodes CredUIParseUserName(
             [MarshalAs(UnmanagedType.LPWStr)]
-			string strUserName,
+            string strUserName,
             [MarshalAs(UnmanagedType.LPWStr)]
 			StringBuilder strUser,
             [MarshalAs(UnmanagedType.U4)]
@@ -999,12 +991,32 @@ namespace Microsoft.PythonTools.Project
             [MarshalAs(UnmanagedType.U4)]
 			uint iDomainMaxChars
             );
+
+
+    }
+
+    struct User32RECT {
+        public int left;
+        public int top;
+        public int right;
+        public int bottom;
+
+        public int Width {
+            get {
+                return right - left;
+            }
+        }
+
+        public int Height {
+            get {
+                return bottom - top;
+            }
+        }
     }
 
     [Guid("22F03340-547D-101B-8E65-08002B2BD119")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    interface ICreateErrorInfo
-    {
+    interface ICreateErrorInfo {
         int SetGUID(
              ref Guid rguid
          );

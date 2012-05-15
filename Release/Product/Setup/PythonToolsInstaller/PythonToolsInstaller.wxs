@@ -95,26 +95,6 @@
             <RegistryValue Root='HKCR' Key='.py' Type='string' Value='[PYTHONFILETYPE]' />
             <RegistryValue Root='HKCR' Key='.py' Name='Content Type' Type='string' Value='text/plain' />
           </Component>
-                  
-                  
-           <!-- Edit with Visual Studio context menu for Django template files -->
-          <Component Id="Comp_DjangoTemplateFileRegistration" DiskId="1" Guid="C1AFD433-B119-48A7-AC53-2CCDD3FCA990">
-            <RegistryKey Root='HKCR' Key='[DJANGOTEMPLATEFILETYPE]'>
-              <RegistryValue Type='string' Value='Django template file' />
-
-              <RegistryKey Key='DefaultIcon'>
-                <RegistryValue Type='string' Value="[VSINSTALLPATH]\Extensions\Microsoft\Python Tools Django Support\1.5\DjangoTemplateFile.ico" />
-              </RegistryKey>
-              
-              <RegistryKey Key='shell\Edit with Visual Studio'>
-                <RegistryValue Key='Command' Type='string' Value='[VSINSTALLPATH]devenv.exe /dde "%1"' />
-
-                <RegistryValue Key='ddeexec' Type='string' Value='Open("%1")' />
-                <RegistryValue Key='ddeexec\Application' Type='string' Value='VisualStudio.$(var.VSTargetVersion)' />
-                <RegistryValue Key='ddeexec\Topic' Type='string' Value='system' />
-              </RegistryKey>
-            </RegistryKey>
-          </Component>
         </Directory>
       </Directory>
 

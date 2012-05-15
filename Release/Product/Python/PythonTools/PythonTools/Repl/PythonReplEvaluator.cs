@@ -1073,7 +1073,8 @@ namespace Microsoft.PythonTools.Repl {
         }
         
         public Task<ExecutionResult> ExecuteText(string text) {
-            return _lastExecutionResult = ExecuteTextWorker(text);
+            var res = _lastExecutionResult = ExecuteTextWorker(text);
+            return res;
         }
 
         private Task<ExecutionResult> ExecuteTextWorker(string text) {
