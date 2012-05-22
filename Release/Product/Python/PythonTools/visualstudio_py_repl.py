@@ -479,6 +479,7 @@ class BasicReplBackend(ReplBackend):
         ReplBackend.__init__(self)
         if sys.platform == 'cli':
             self.exec_mod = Scope()
+            self.exec_mod.__name__ = '__main__'
         else:
             sys.modules[mod_name] = self.exec_mod = imp.new_module(mod_name)
         self.launch_file = launch_file

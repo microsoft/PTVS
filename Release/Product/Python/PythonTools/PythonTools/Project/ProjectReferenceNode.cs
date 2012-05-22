@@ -430,6 +430,7 @@ namespace Microsoft.PythonTools.Project
             }
             this.ProjectMgr.RemoveBuildDependency(this.buildDependency);
             base.Remove(removeFromStorage);
+
             return;
         }
 

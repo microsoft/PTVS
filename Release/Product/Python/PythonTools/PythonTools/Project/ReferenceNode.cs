@@ -132,6 +132,14 @@ namespace Microsoft.PythonTools.Project
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
+        public override void Remove(bool removeFromStorage) {
+            ReferenceContainerNode parent = Parent as ReferenceContainerNode;
+            base.Remove(removeFromStorage);
+            if (parent != null) {
+                parent.FireChildRemoved(this);
+            }
+        }
+
         /// <summary>
         /// References node cannot be dragged.
         /// </summary>

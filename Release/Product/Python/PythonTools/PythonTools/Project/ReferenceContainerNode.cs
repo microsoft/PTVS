@@ -32,9 +32,9 @@ namespace Microsoft.PythonTools.Project
     [CLSCompliant(false), ComVisible(true)]
     public class ReferenceContainerNode : HierarchyNode, IReferenceContainer
     {
-        #region fields
+        private EventHandler<HierarchyNodeEventArgs> onChildAdded;
+        private EventHandler<HierarchyNodeEventArgs> onChildRemoved;
         internal const string ReferencesNodeVirtualName = "References";
-        #endregion
 
         #region ctor
         public ReferenceContainerNode(ProjectNode root)
@@ -321,6 +321,10 @@ namespace Microsoft.PythonTools.Project
                     // is not inside the project.
                     return null;
                 }
+                var added = onChildAdded;
+                if (added != null) {
+                    onChildAdded(this, new HierarchyNodeEventArgs(node));
+                }
             }
 
             return node;
@@ -545,5 +549,20 @@ namespace Microsoft.PythonTools.Project
 
         #endregion
 
+        internal event EventHandler<HierarchyNodeEventArgs> OnChildAdded {
+            add { onChildAdded += value; }
+            remove { onChildAdded -= value; }
+        }
+        internal event EventHandler<HierarchyNodeEventArgs> OnChildRemoved {
+            add { onChildRemoved += value; }
+            remove { onChildRemoved -= value; }
+        }
+
+        internal void FireChildRemoved(ReferenceNode referenceNode) {
+            var removed = onChildRemoved;
+            if (removed != null) {
+                removed(this, new HierarchyNodeEventArgs(referenceNode));
+            }
+        }
     }
 }

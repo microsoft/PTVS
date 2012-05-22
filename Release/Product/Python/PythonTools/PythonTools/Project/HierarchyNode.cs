@@ -61,19 +61,6 @@ namespace Microsoft.PythonTools.Project
         };
         #endregion
 
-        #region Events
-        internal event EventHandler<HierarchyNodeEventArgs> OnChildAdded
-        {
-            add { onChildAdded += value; }
-            remove { onChildAdded -= value; }
-        }
-        internal event EventHandler<HierarchyNodeEventArgs> OnChildRemoved
-        {
-            add { onChildRemoved += value; }
-            remove { onChildRemoved -= value; }
-        }
-        #endregion
-
         #region static/const fields
         public static readonly Guid SolutionExplorer = new Guid(EnvDTE.Constants.vsWindowKindSolutionExplorer);
         public const int NoImage = -1;
@@ -100,8 +87,6 @@ namespace Microsoft.PythonTools.Project
         private NodeProperties nodeProperties;
         private OleServiceProvider oleServiceProvider = new OleServiceProvider();
         private bool excludeNodeFromScc;
-        private EventHandler<HierarchyNodeEventArgs> onChildAdded;
-        private EventHandler<HierarchyNodeEventArgs> onChildRemoved;
         private bool hasParentNodeNameRelation;
         private List<HierarchyNode> itemsDraggedOrCutOrCopied;
         private bool sourceDraggedOrCutOrCopied;

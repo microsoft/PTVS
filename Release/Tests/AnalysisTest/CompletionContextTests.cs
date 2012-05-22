@@ -195,6 +195,27 @@ except (None)"}) {
         }
 
         [TestMethod]
+        public void Scenario_MemberCompletion_Imports() {
+            var code = "import sys, ";
+            var completions = GetCompletions(code.Length - 1, code);
+            AnalysisTest.AssertContains(GetCompletionNames(completions), "exceptions");
+
+            var code2 = "import sys, ex";
+            var completionList = GetCompletionSetCtrlSpace(code2.Length - 1, code2);
+            AnalysisTest.AssertContains(GetCompletionNames(completionList), "ceptions");
+        }
+
+        private static IEnumerable<string> GetCompletionNames(CompletionSet completions) {            
+            foreach (var comp in completions.Completions) {
+                yield return comp.InsertionText;
+            }
+        }
+
+        private static IEnumerable<string> GetCompletionNames(CompletionAnalysis analysis) {
+            return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
+        }
+
+        [TestMethod]
         public void Scenario_CompletionInTripleQuotedString() {
             string code = @"
 '''

@@ -1048,14 +1048,18 @@ namespace Microsoft.PythonTools.Intellisense {
                 foreach (string filename in Directory.GetFiles(dir, "*.py")) {
                     AnalyzeFile(filename);
                 }
-            } catch (DirectoryNotFoundException) {
+            } catch (IOException) {
+                // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
+            } catch (UnauthorizedAccessException) {
             }
 
             try {
                 foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
                     AnalyzeFile(filename);
                 }
-            } catch (DirectoryNotFoundException) {
+            } catch (IOException) {
+                // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
+            } catch (UnauthorizedAccessException) {
             }
 
             try {
@@ -1064,7 +1068,9 @@ namespace Microsoft.PythonTools.Intellisense {
                         AnalyzeDirectoryWorker(innerDir, false);
                     }
                 }
-            } catch (DirectoryNotFoundException) {
+            } catch (IOException) {
+                // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
+            } catch (UnauthorizedAccessException) {
             }
         }
 

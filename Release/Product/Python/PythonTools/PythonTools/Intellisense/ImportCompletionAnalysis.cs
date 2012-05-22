@@ -31,14 +31,23 @@ namespace Microsoft.PythonTools.Intellisense {
                 ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer buffer, bool isSpace, CompletionOptions options) {
             if (start == end) {
                 return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer, options);
-            } else if (!isSpace) {
+            } else {
                 int nsLen = end.Span.End - start.Span.End - 1;
                 var nsSpan = new SnapshotSpan(snapshot, start.Span.End + 1, nsLen);
-                var text = nsSpan.GetText().Trim();
-                return new ImportCompletionAnalysis(text, loc.Start, span, buffer, options);
-            } else {
-                return EmptyCompletionContext;
+                var text = nsSpan.GetText().TrimEnd();
+                for (int i = text.Length - 1; i >= 0; i--) {
+                    if (Char.IsWhiteSpace(text[i]) || text[i] == ',') {
+                        text = text.Substring(i + 1);
+                        break;
+                    }
+                }
+                if (text.Length == 0) {
+                    return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer, options);
+                } else if (!isSpace) {
+                    return new ImportCompletionAnalysis(text, loc.Start, span, buffer, options);
+                }
             }
+            return EmptyCompletionContext;
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {

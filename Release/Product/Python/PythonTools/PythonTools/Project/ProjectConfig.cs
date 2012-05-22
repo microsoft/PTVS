@@ -333,7 +333,8 @@ namespace Microsoft.PythonTools.Project
 
         public virtual int get_CanonicalName(out string name)
         {
-            return ((IVsCfg)this).get_DisplayName(out name);
+            name = configName;
+            return VSConstants.S_OK;
         }
 
         public virtual int get_IsPackaged(out int pkgd)
