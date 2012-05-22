@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -20,6 +21,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Web.Administration;
+using Microsoft.Win32;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace AzureSetup {
@@ -88,16 +90,16 @@ namespace AzureSetup {
                         foreach (var line in allLines) {
                             var curOptions = line.Split(new[] { '=' }, 2);
                             if (curOptions.Length == 2) {
-                                switch(curOptions[0]) {
+                                switch (curOptions[0]) {
                                     case "settings_module":
                                         settingsName = curOptions[1];
                                         break;
-                                    case "python_path":                                        
+                                    case "python_path":
                                         pythonPath = Environment.ExpandEnvironmentVariables(
                                             Regex.Replace(
-                                                curOptions[1], 
-                                                Regex.Escape("%RootDir%"), 
-                                                Regex.Escape(physicalDir), 
+                                                curOptions[1],
+                                                Regex.Escape("%RootDir%"),
+                                                Regex.Escape(physicalDir),
                                                 RegexOptions.IgnoreCase
                                             )
                                         );
@@ -124,19 +126,7 @@ namespace AzureSetup {
                     }
                 }
 
-                // setup any installed products via WebPI...
-                foreach (var install in webpiInstalls) {
-                    var paths = install.Split(new[] { ';' }, 2);
-                    if (paths.Length == 2) {
-                        var psi = new ProcessStartInfo(
-                            webpiCmdLinePath,
-                            "\"/Feeds:" + paths[0] + "\" " +
-                            "\"/Products: " + paths[1] + "\""
-                        );
-                        var process = Process.Start(psi);
-                        process.WaitForExit();
-                    }
-                }
+                InstallWebPiProducts(webpiCmdLinePath, webpiInstalls);
 
                 using (ServerManager serverManager = new ServerManager()) {
                     Configuration config = serverManager.GetApplicationHostConfiguration();
@@ -191,9 +181,9 @@ namespace AzureSetup {
 
 
                     foreach (var envVar in new[] { 
-                        new { Name = "DJANGO_SETTINGS_MODULE", Value = settingsName },
-                        new { Name = "PYTHONPATH", Value = pythonPath } 
-                        }
+                    new { Name = "DJANGO_SETTINGS_MODULE", Value = settingsName },
+                    new { Name = "PYTHONPATH", Value = pythonPath } 
+                    }
                     ) {
                         ConfigurationElement environmentVariableElement = environmentVariablesCollection.CreateElement("environmentVariable");
                         environmentVariableElement["name"] = envVar.Name;
@@ -207,10 +197,93 @@ namespace AzureSetup {
                     serverManager.CommitChanges();
                 }
 
-                // patch web.config w/ the correct path to our fast cgi script
-                var webConfig = Path.Combine(physicalDir, "web.config");
-                var text = File.ReadAllText(webConfig);
-                File.WriteAllText(webConfig, text.Replace("WFASTCGIPATH", fastCgiPath).Replace("INTERPRETERPATH", interpreter));
+                UpdateWebConfig(interpreter, physicalDir, fastCgiPath);
+            }
+        }
+
+        private static void UpdateWebConfig(string interpreter, string physicalDir, string fastCgiPath) {
+
+            // patch web.config w/ the correct path to our fast cgi script
+            var webCloudConfig = Path.Combine(physicalDir, "web.cloud.config");
+            var webConfig = Path.Combine(physicalDir, "web.config");
+            string readFrom;
+            if (!RoleEnvironment.IsEmulated && File.Exists(webCloudConfig)) {
+                readFrom = webCloudConfig;
+            } else {
+                readFrom = webConfig;
+            }
+
+            var text = File.ReadAllText(readFrom);
+            File.WriteAllText(webConfig, text.Replace("WFASTCGIPATH", fastCgiPath).Replace("INTERPRETERPATH", interpreter));
+        }
+
+        private static void InstallWebPiProducts(string webpiCmdLinePath, List<string> webpiInstalls) {
+            if (RoleEnvironment.IsEmulated) {
+                // Don't run installs in the emulator
+                return;
+            }
+
+            // Deal w/ 32-bit vs 64-bit folder redirection of SYSTEM account...
+            // http://blog.smarx.com/posts/windows-azure-startup-tasks-tips-tricks-and-gotchas
+            // http://www.davidaiken.com/2011/01/19/running-azure-startup-tasks-as-a-real-user/
+
+            // We will create a new directory and set our local app data to be there.
+            var name = "AppData" + Guid.NewGuid();
+            string dir;
+            for (; ; ) {
+                dir = Path.Combine(
+                    Environment.GetEnvironmentVariable("SystemDrive") + "\\",
+                    "SystemAppData" + Path.GetRandomFileName()
+                );
+                if (Directory.Exists(dir)) {
+                    continue;
+                }
+                Directory.CreateDirectory(dir);
+                break;
+            }
+            
+            const string userShellFolders = ".DEFAULT\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
+            const string localAppData = "Local AppData";
+
+            using (var key = Registry.Users.OpenSubKey(userShellFolders, true)) {
+                var oldValue = key.GetValue(localAppData, null, RegistryValueOptions.DoNotExpandEnvironmentNames);
+                key.SetValue(localAppData, dir);
+                try {
+
+                    // setup any installed products via WebPI...                
+                    foreach (var install in webpiInstalls) {
+                        var paths = install.Split(new[] { ';' }, 2);
+                        if (paths.Length == 2) {
+                            var psi = new ProcessStartInfo(
+                                webpiCmdLinePath,
+                                "/AcceptEula " +
+                                "/Feeds:\"" + paths[0] + "\" " +
+                                "/Products:" + paths[1]
+                            );
+                            psi.UseShellExecute = false;
+                            psi.RedirectStandardOutput = true;
+                            psi.RedirectStandardError = true;
+                            var args = psi.Arguments;
+                            var process = Process.Start(psi);
+                            string output = "";
+                            process.OutputDataReceived += (sender, oargs) => {
+                                output += oargs.Data + Environment.NewLine;
+                            };
+                            process.ErrorDataReceived += (sender, oargs) => {
+                                output += oargs.Data + Environment.NewLine;
+                            };
+                            process.BeginErrorReadLine();
+                            process.BeginOutputReadLine();
+                            process.WaitForExit();
+
+                            args += "\r\n" + process.ExitCode + "\r\n" + output;
+
+                            File.WriteAllText("D:\\Foo.txt", args);
+                        }
+                    }
+                } finally {
+                    key.SetValue(localAppData, oldValue, RegistryValueKind.ExpandString);
+                }
             }
         }
     }

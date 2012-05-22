@@ -9,6 +9,7 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <ProjectFile Include="AzureMsm\Azure.wixproj"/>
     <ProjectFile Include="Django\Django.wixproj"/>
     <ProjectFile Include="ReplWindow\ReplWindow.wixproj"/>
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>

@@ -1,0 +1,301 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <PropertyGroup>
+    <StartupObject />
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <BuildRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Release.Product.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B6F73AB3-1207-4B52-B90A-065CD5E107EB}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.PythonTools.AzureDeploymentCmdlets</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.AzureDeploymentCmdlets</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <StyleCopEnabled>false</StyleCopEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>$(BuildRoot)\Binaries\Win32\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>$(BuildRoot)\Binaries\Win32\Release\</OutputPath>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseSigned|AnyCPU'">
+    <DefineConstants>TRACE;SIGN</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\AzureDeploymentCmdlets.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseSigned|x64'">
+    <DefineConstants>TRACE;SIGN</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\AzureDeploymentTool.dll.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseSigned|x64'">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseSigned|AnyCPU'">
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>MSSharedLibKey.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.WindowsAzure.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Data.Services.Client" />
+    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files\Reference Assemblies\Microsoft\WindowsPowerShell\v1.0\System.Management.Automation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AzureDeploymentCmdletsSnapIn.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="AzureTools\AzureTool.cs" />
+    <Compile Include="AzureTools\CsEncrypt.cs" />
+    <Compile Include="AzureTools\CsPack.cs" />
+    <Compile Include="Cmdlet\DisableAzureRemoteDesktop.cs" />
+    <Compile Include="Cmdlet\EnableAzureRemoteDesktop.cs" />
+    <Compile Include="Cmdlet\GetAzurePublishSettings.cs" />
+    <Compile Include="Cmdlet\GetAzureStorageAccounts.cs" />
+    <Compile Include="Python\Cmdlet\AddAzureDjangoWebRole.cs" />
+    <Compile Include="Model\AzureServiceManagementException.cs" />
+    <Compile Include="Model\GetDeploymentStatus.cs" />
+    <Compile Include="Model\RemoveAzureDeployment.cs" />
+    <Compile Include="Cmdlet\RemoveAzureService.cs" />
+    <Compile Include="Cmdlet\SetAzureDeploymentStorage.cs" />
+    <Compile Include="Cmdlet\SetAzureSubscription.cs" />
+    <Compile Include="Cmdlet\StartAzureService.cs" />
+    <Compile Include="Cmdlet\StopAzureService.cs" />
+    <Compile Include="Model\DeploymentStatusManager.cs" />
+    <Compile Include="Cmdlet\StopAzureEmulator.cs" />
+    <Compile Include="Model\CmdletBase.cs" />
+    <Compile Include="Model\Constants.cs" />
+    <Compile Include="Model\DeploymentSettings.cs" />
+    <Compile Include="Model\GlobalComponents.cs" />
+    <Compile Include="Model\GlobalPathInfo.cs" />
+    <Compile Include="Model\RoleInfo.cs" />
+    <Compile Include="Model\ServiceComponents.cs" />
+    <Compile Include="Model\AzureService.cs" />
+    <Compile Include="Model\ServicePathInfo.cs" />
+    <Compile Include="Model\SetSettings.cs" />
+    <Compile Include="Model\WebRoleInfo.cs" />
+    <Compile Include="Model\AddRole.cs" />
+    <Compile Include="Model\WorkerRoleInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Scaffolding\NodeRules.cs" />
+    <Compile Include="Scaffolding\Scaffold.cs" />
+    <Compile Include="Scaffolding\ScaffoldFile.cs" />
+    <Compile Include="Scaffolding\ScaffoldParams.cs" />
+    <Compile Include="Services\Certificates.cs" />
+    <Compile Include="Services\CloudCmdlet.cs" />
+    <Compile Include="Cmdlet\NewAzureService.cs" />
+    <Compile Include="Services\ServiceManagementCmdletBase.cs" />
+    <Compile Include="Cmdlet\SetAzureDeploymentLocation.cs" />
+    <Compile Include="Cmdlet\SetAzureDeploymentSlot.cs" />
+    <Compile Include="Cmdlet\SetAzureInstances.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Cmdlet\PublishAzureService.cs" />
+    <Compile Include="Services\AffinityGroup.cs" />
+    <Compile Include="Services\AzureBlob.cs" />
+    <Compile Include="Services\CertificateConfiguration.cs" />
+    <Compile Include="Services\CmdLetExtensions.cs" />
+    <Compile Include="Services\Constants.cs" />
+    <Compile Include="Services\Deployment.cs" />
+    <Compile Include="Services\DeploymentInfoContext.cs" />
+    <Compile Include="Services\HostedServices.cs" />
+    <Compile Include="Services\InnerDataServiceException.cs" />
+    <Compile Include="Services\IServiceManagementExternalApi.cs" />
+    <Compile Include="Services\ManagementOperationContext.cs" />
+    <Compile Include="Services\ManagementOperationContext2.cs" />
+    <Compile Include="Services\OperatingSystem.cs" />
+    <Compile Include="Services\OperationTracking.cs" />
+    <Compile Include="Services\RoleConfiguration.cs" />
+    <Compile Include="Services\RoleInstance.cs" />
+    <Compile Include="Services\ServiceConfigurationConstants.cs" />
+    <Compile Include="Services\ServiceManagementError.cs" />
+    <Compile Include="Services\ServiceManagementHelper.cs" />
+    <Compile Include="Services\StorageService1.cs" />
+    <Compile Include="Services\StorageService2.cs" />
+    <Compile Include="Services\Utility.cs" />
+    <Compile Include="AzureTools\CsRun.cs" />
+    <Compile Include="Utilities\IMessageWriter.cs" />
+    <Compile Include="Utilities\PathUtility.cs" />
+    <Compile Include="Utilities\ProcessHelper.cs" />
+    <Compile Include="Utilities\Validate.cs" />
+    <Compile Include="XmlSchema\PublishProfile.cs" />
+    <Compile Include="XmlSchema\ServiceConfigurationSchema.cs" />
+    <Compile Include="XmlSchema\ServiceDefinitionSchema.cs" />
+    <Compile Include="Model\ServiceSettings.cs" />
+    <Compile Include="Cmdlet\ImportAzurePublishSettings.cs" />
+    <Compile Include="Cmdlet\StartAzureEmulator.cs" />
+    <Compile Include="Utilities\General.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Scaffolding\General\ServiceConfiguration.Local.cscfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\General\ServiceDefinition.csdef">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Resources\Scaffolding\General\deploymentSettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\General\ServiceConfiguration.Cloud.cscfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\Python\WebRole\manage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\Python\WebRole\settings.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\Python\WebRole\urls.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\Python\WebRole\Web.cloud.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\Python\WebRole\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Scaffolding\Python\WebRole\WebRole.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\Scaffolding\Python\WebRole\Web.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="AzureDeploymentCmdlets.dll-Help.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Resources\Scaffolding\General\Scaffold.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Content>
+    <Content Include="Resources\Scaffolding\Python\WebRole\RoleSettings.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Scaffolding\Python\WebRole\Scaffold.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\Scaffolding\Python\WebRole\bin\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Scaffolding\Python\WebRole\AzureSetup.cfg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Import Project="..\..\Python.settings" />
+  <Import Project="$(TargetsPath)\TCWB.CSharp.targets" />
+  <!--  <PropertyGroup>
+    <PostBuildEvent>$(ProjectDir)\MoveScaffolding.bat $(TargetDir)</PostBuildEvent>
+  </PropertyGroup> -->
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

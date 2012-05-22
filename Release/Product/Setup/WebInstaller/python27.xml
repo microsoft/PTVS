@@ -3,7 +3,7 @@
   <webpiFile version="4.0.0.0" />
   <title>Python 2.7 Installer 4.0 Feed</title>
   <link href="http://pytools/demos/production/python27.xml" />
-  <updated>2012-4-5T12:00:00Z</updated>
+  <updated>2012-5-17T12:00:00Z</updated>
   <author>
     <name>Microsoft</name>
     <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
@@ -13,15 +13,15 @@
   <!-- ##PTVS############################################################## -->
   <entry>
     <productId>PythonToolsForVS</productId>
-    <title>Python Tools for Visual Studio 2010</title>
-    <version>1.1.1</version>
-    <published>2012-2-10T12:00:00Z</published>
-    <updated>2012-4-11T12:00:00Z</updated>
-    <summary>Adds support for Python to Visual Studio.</summary>
-    <longSummary>
+    <title resourceName="Entry_PythonToolsForVS_Title">Python Tools for Visual Studio 2010</title>
+    <version>1.5 Alpha 1</version>
+    <published>2012-5-10T12:00:00Z</published>
+    <updated>2012-5-10T12:00:00Z</updated>
+    <summary resourceName="Entry_PythonToolsForVS_Summary">Adds support for Python to Visual Studio.</summary>
+    <longSummary resourceName="Entry_PythonToolsForVS_LongSummary">
 Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio.
     </longSummary>
-    <productFamily>Python</productFamily>
+    <productFamily resourceName="Python">Python</productFamily>
     <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
     <author>
       <name>Microsoft's Python Tools Team</name>
@@ -40,14 +40,14 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <registry>
           <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
           <valueName>DisplayVersion</valueName>
-          <valueValue>1.1.50409.0</valueValue>
+          <valueValue>1.1.50508.0</valueValue>
         </registry>
       </discoveryHint>
       <discoveryHint>
         <registry>
           <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
           <valueName>DisplayVersion</valueName>
-          <valueValue>1.1.50409.0</valueValue> 
+          <valueValue>1.1.50508.0</valueValue> 
         </registry>
       </discoveryHint>
      </or>
@@ -72,10 +72,10 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <languageId>en</languageId>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
         <installerFile>
-          <fileSize>2008</fileSize>
+          <fileSize>2543</fileSize>
           <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;appid=PythonToolsForVS</trackingURL>
           <installerURL>http://go.microsoft.com/fwlink/?LinkId=252039</installerURL>
-          <sha1>76948af1ec47c48448a4003642f2358f81def38f</sha1>
+          <sha1>61954d687b0c487ab055c1aaded6f788f0c79c1b</sha1>
         </installerFile>
         <installCommands> 
           <msiInstall>
@@ -90,22 +90,19 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##CPython######################################################### -->
   <entry>
     <productId>Python27</productId>
-    <title>Python 2.7</title>
+    <title resourceName="Entry_Python27_Title">Python 2.7</title>
     <version>2.7.3</version>
-    <summary>Python programming language</summary>
+    <summary resourceName="Entry_Python27_Summary">Python programming language</summary>
     <id>http://www.python.org</id>
-    <longSummary>Python is a dynamic, object-oriented, open source programming language.</longSummary>
+    <longSummary resourceName="Entry_Python27_LongSummary">Python is a dynamic, object-oriented, open source programming language.</longSummary>
     <link href="http://wiki.python.org/moin/BeginnersGuide" />
-    <productFamily>Python</productFamily>
+    <productFamily resourceName="Python">Python</productFamily>
     <published>2010-7-3T12:00:00Z</published>
     <updated>2012-4-10T12:00:00Z</updated>
     <author>
       <name>Python Community</name>
       <uri>http://www.python.org/</uri>
     </author>
-    <dependency>
-      <productId>PythonDetectInstalls</productId>
-    </dependency>
     <images>
       <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
     </images>
@@ -117,7 +114,6 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <or>
       <discoveryHint>
         <registry>
-          <!-- TODO this can pickup an x64 install of CPython as well... -->
           <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\2.7\InstallPath</keyPath>
         </registry>
       </discoveryHint>
@@ -125,12 +121,6 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <registry>
           <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\WoW6432Node\Python\PythonCore\2.7\InstallPath</keyPath>
         </registry>
-      </discoveryHint>
-      <discoveryHint>
-        <!-- If we installed it previously -->
-        <file>
-          <filePath>%TMP%\python_installhelper_27_x86.bat</filePath>
-        </file>
       </discoveryHint>
      </or>
     </discoveryHint>
@@ -151,13 +141,13 @@ Adds support for the Python programming language to Professional, Ultimate, and 
             <properties>ALLUSERS=1</properties>
           </msiInstall>
           <cmdLine>
-            <exe>powershell</exe>
-            <commandLineArguments>-command "echo 'C:\Python27\python.exe %*' | out-file -encoding ascii $env:TMP\python_installhelper_27_x86.bat"</commandLineArguments>
+            <exe>%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe</exe>
+            <commandLineArguments>-command "echo '%SystemDrive%\Python27\python.exe %*' | out-file -encoding ascii $env:TMP\python_installhelper_27_x86.bat"</commandLineArguments>
             <ignoreExitCode>false</ignoreExitCode>
           </cmdLine>
           <cmdLine>
-            <exe>powershell</exe>
-            <commandLineArguments>-command "echo 'C:\Python27\Scripts\pip.exe %*' | out-file -encoding ascii $env:TMP\pip_installhelper_27_x86.bat"</commandLineArguments>
+            <exe>%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe</exe>
+            <commandLineArguments>-command "echo '%SystemDrive%\Python27\Scripts\pip.exe %*' | out-file -encoding ascii $env:TMP\pip_installhelper_27_x86.bat"</commandLineArguments>
             <ignoreExitCode>false</ignoreExitCode>
           </cmdLine>
         </installCommands>
@@ -169,12 +159,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Install Helpers################################################### -->
   <entry>
     <productId>PythonDetectInstalls</productId>
-    <title>Python Installation Detector</title>
+    <title resourceName="Entry_PythonDetectInstalls_Title">Python Installation Detector</title>
     <version>0.9</version>
-    <summary>Helper tools for installing Python</summary>
+    <summary resourceName="Entry_PythonDetectInstalls_Summary">Helper tools for installing Python</summary>
     <updated>2012-6-7T12:00:00Z</updated>
-    <longSummary>Includes a set of tools useful for detecting previous installations of CPython.</longSummary>
-    <productFamily>Python</productFamily>
+    <longSummary resourceName="Entry_PythonDetectInstalls_LongSummary">Includes a set of tools useful for detecting previous installations of CPython.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
     <published>2012-6-7T12:00:00Z</published>
     <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
     <images>
@@ -196,11 +186,11 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <installerFile>
           <fileSize>2</fileSize>
           <installerURL>http://go.microsoft.com/fwlink/?LinkId=252043</installerURL>
-          <sha1>c458387b8fee7966e5250d88c33a05288b5f1ae0</sha1>
+          <sha1>9d563337386fda90d9c98ab5357dca300062de68</sha1>
         </installerFile>
         <installCommands>
           <cmdLine>
-            <exe>powershell</exe>
+            <exe>%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe</exe>
             <commandLineArguments>-ExecutionPolicy RemoteSigned -File "%InstallerFile%"</commandLineArguments>
             <ignoreExitCode>false</ignoreExitCode>
           </cmdLine>
@@ -213,12 +203,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Distribute Module############################################### -->
   <entry>
     <productId>PyDistributeModule</productId>
-    <title>distribute module (Python)</title>
+    <title resourceName="Entry_PyDistributeModule_Title">distribute module (Python)</title>
     <version>0.6.25</version>
-    <summary>Python's distribute module (prereq for installing PyPI)</summary>
+    <summary resourceName="Entry_PyDistributeModule_Summary">Python's distribute module (prereq for installing PyPI)</summary>
     <updated>2011-11-29T12:00:00Z</updated>
-    <longSummary>Distribute is a fork of the Setuptools project.</longSummary>
-    <productFamily>Python</productFamily>
+    <longSummary resourceName="Entry_PyDistributeModule_LongSummary">Distribute is a fork of the Setuptools project.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
     <published>2009-8-8T12:00:00Z</published>
     <link href="http://packages.python.org/distribute/" />
     <images>
@@ -248,10 +238,10 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     <dependency>
       <and>
         <dependency>
-          <productId>PythonDetectInstalls</productId>
+          <productId>Python27</productId>
         </dependency>
         <dependency>
-          <productId>Python27</productId>
+          <productId>PythonDetectInstalls</productId>
         </dependency>
       </and>
     </dependency>
@@ -280,12 +270,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##PyPI############################################################## -->
   <entry>
     <productId>PyPI</productId>
-    <title>PyPI</title>
+    <title resourceName="Entry_PyPI_Title">PyPI</title>
     <version>1.0.2</version>
-    <summary>Python's package index repository</summary>
+    <summary resourceName="Entry_PyPI_Summary">Python's package index repository</summary>
     <updated>2011-7-16T12:00:00Z</updated>
-    <longSummary>Python Package Index is a repository of freely available Python software.</longSummary>
-    <productFamily>Python</productFamily>
+    <longSummary resourceName="Entry_PyPI_LongSummary">Python Package Index is a repository of freely available Python software.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
     <published>2011-7-16T12:00:00Z</published>
     <link href="http://pypi.python.org/pypi" />
     <images>
@@ -342,12 +332,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Django############################################################ -->
   <entry>
     <productId>Django</productId>
-    <title>Django 1.4</title>
+    <title resourceName="Entry_Django_Title">Django 1.4</title>
     <version>1.4</version>
-    <summary>Python Web framework</summary>
+    <summary resourceName="Entry_Django_Summary">Python Web framework</summary>
     <updated>2012-3-23T12:00:00Z</updated>
-    <longSummary>Django is a high-level Python Web framework.</longSummary>
-    <productFamily>Python</productFamily>
+    <longSummary resourceName="Entry_Django_LongSummary">Django is a high-level Python Web framework.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
     <images>
       <icon>https://www.djangoproject.com/m/img/site/hdr_logo.gif</icon>
     </images>
@@ -404,13 +394,13 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Windows Azure SDK for Python Core################################# -->
   <entry>
     <productId>AzurePythonSDKCore</productId>
-    <title>Windows Azure SDK for Python Core</title>
+    <title resourceName="Entry_AzurePythonSDKCore_Title">Windows Azure SDK for Python Core</title>
     <version>0.9</version>
     <published>2012-6-7T12:00:00Z</published>
     <updated>2012-6-7T12:00:00Z</updated>
-    <summary>Python development support for Windows Azure.</summary>
-    <longSummary>The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.</longSummary>
-    <productFamily>Python</productFamily>
+    <summary resourceName="Entry_AzurePythonSDKCore_Summary">Python development support for Windows Azure.</summary>
+    <longSummary resourceName="Entry_AzurePythonSDKCore_LongSummary">The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
     <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
     <author>
       <name>Microsoft's Python Tools Team</name>
@@ -479,13 +469,13 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Windows Azure SDK for Python ##################################### -->
   <entry>
     <productId>WindowsAzurePythonSDK</productId>
-    <title>Windows Azure SDK for Python</title>
+    <title resourceName="Entry_WindowsAzurePythonSDK_Title">Windows Azure SDK for Python</title>
     <version>0.9</version>
     <published>2012-6-7T12:00:00Z</published>
     <updated>2012-6-7T12:00:00Z</updated>
-    <summary>Python development support for Windows Azure within Visual Studio.</summary>
-    <longSummary>The Windows Azure SDK for Python provides developers with Python frameworks, packages, and Microsoft Visual Studio tools (if installed) for building scalable services for deployment to Windows Azure.</longSummary>
-    <productFamily>Python</productFamily>
+    <summary resourceName="Entry_WindowsAzurePythonSDK_Summary">Python development support for Windows Azure within Visual Studio."</summary>
+    <longSummary resourceName="Entry_WindowsAzurePythonSDK_LongSummary">The Windows Azure SDK for Python provides developers with Python frameworks, packages, and Microsoft Visual Studio tools (if installed) for building scalable services for deployment to Windows Azure."</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
 
     <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
     <author>
@@ -538,11 +528,11 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Visual Studio 2010 Integrated Shell ############################## -->
   <entry>
     <productId>VS2010SI</productId>
-    <title>Visual Studio 2010 Shell (Integrated)</title>
+    <title resourceName="Entry_VS2010SI_Title">Visual Studio 2010 Shell (Integrated)</title>
     <version>2010</version>
-    <summary>The Visual Studio 2010 Shell (Integrated) Redistributable Package contains the runtime binaries that are required to deploy an application that is based on the Visual Studio 2010 Shell (Integrated).</summary>
+    <summary resourceName="Entry_VS2010SI_Summary">The Visual Studio 2010 Shell (Integrated) Redistributable Package contains the runtime binaries that are required to deploy an application that is based on the Visual Studio 2010 Shell (Integrated).</summary>
     <updated>2010-4-12T12:00:00Z</updated>
-    <longSummary>The Visual Studio Shell (integrated mode) provides the foundation on which you can seamlessly integrate tools and programming languages within Visual Studio. The Visual Studio Shell (integrated mode) does not contain any programming language, so it provides the perfect foundation to deploy a development environment for your own language. The Visual Studio Shell (integrated mode) seamlessly integrates with Visual Studio 2010 Professional and above. Any tools and programming languages that run inside the Visual Studio Shell (integrated mode) will run together with Visual Studio 2010 if they are also installed on the same machine. By using the Visual Studio Shell (integrated mode), you will not need to make Visual Studio a pre-requisite on your user machines.</longSummary>
+    <longSummary resourceName="Entry_VS2010SI_LongSummary">The Visual Studio Shell (integrated mode) provides the foundation on which you can seamlessly integrate tools and programming languages within Visual Studio. The Visual Studio Shell (integrated mode) does not contain any programming language, so it provides the perfect foundation to deploy a development environment for your own language. The Visual Studio Shell (integrated mode) seamlessly integrates with Visual Studio 2010 Professional and above. Any tools and programming languages that run inside the Visual Studio Shell (integrated mode) will run together with Visual Studio 2010 if they are also installed on the same machine. By using the Visual Studio Shell (integrated mode), you will not need to make Visual Studio a pre-requisite on your user machines.</longSummary>
     <published>2010-4-12T12:00:00Z</published>
     <link href="http://www.microsoft.com/visualstudio/en-us/products/2010-editions" />
     <images>
@@ -572,47 +562,43 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     <incompatibilities>
       <incompatibleProduct>
         <productId>VS2010Beta1</productId>
-        <errorMessage>You must uninstall Beta 1 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010Beta1">You must uninstall Beta 1 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
       <incompatibleProduct>
         <productId>VS2010Beta2</productId>
-        <errorMessage>You must uninstall Beta 2 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010Beta2">You must uninstall Beta 2 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
       <incompatibleProduct>
         <productId>VS2010Beta2Express</productId>
-        <errorMessage>You must uninstall Beta 2 of Visual Web Developer 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010Beta2Express">You must uninstall Beta 2 of Visual Web Developer 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
       <incompatibleProduct>
         <productId>VB2010Beta2Express</productId>
-        <errorMessage>You must uninstall Beta 2 of Visual Basic 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VB2010Beta2Express">You must uninstall Beta 2 of Visual Basic 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
       <incompatibleProduct>
         <productId>VCS2010Beta2Express</productId>
-        <errorMessage>You must uninstall Beta 2 of Visual C# 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VCS2010Beta2Express">You must uninstall Beta 2 of Visual C# 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
       <incompatibleProduct>
         <productId>VC2010Beta2Express</productId>
-        <errorMessage>You must uninstall Beta 2 of Visual C++ 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VC2010Beta2Express">You must uninstall Beta 2 of Visual C++ 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
       <incompatibleProduct>
         <productId>VS2010RC</productId>
-        <errorMessage>You must uninstall Visual Studio 2010 RC before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010RC">You must uninstall Visual Studio 2010 RC before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
       </incompatibleProduct>
     </incompatibilities>
     <terms>
-      <termsText>-Visual Studio will receive and display online RSS content. For further information refer to the Readme link.</termsText>
+      <termsText resourceName="Entry_VS2010SI_TermsText">-Visual Studio will receive and display online RSS content. For further information refer to the Readme link.</termsText>
       <termsLink>http://go.microsoft.com/fwlink/?LinkID=133421</termsLink>
-      <termsLinkText>Readme</termsLinkText>
+      <termsLinkText resourceName="Entry_VS2010SI_TermsLinkText">Readme</termsLinkText>
     </terms>
     <installers>
       <!-- English -->
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
@@ -633,25 +619,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -664,16 +650,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>10</id>
         <languageId>zh-tw</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=zh-tw&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f5%2f1%2fA%2f51A0904D-1D73-4A60-89E6-9B1764627540%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/5/1/A/51A0904D-1D73-4A60-89E6-9B1764627540/VSIntShell.exe</installerURL>
           <sha1>24dba1c8baf0ff205ec6feabfd3bbb5eb53794d3</sha1>
         </installerFile>
         <installCommands>
@@ -688,25 +670,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -719,16 +701,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>9</id>
         <languageId>zh-cn</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=zh-cn&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fD%2fD%2f3%2fDD3BC072-755D-4E99-8D76-E19F0073FBEC%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/D/D/3/DD3BC072-755D-4E99-8D76-E19F0073FBEC/VSIntShell.exe</installerURL>
           <sha1>00139e88447a034afca6773261f63647d16be114</sha1>
         </installerFile>
         <installCommands>
@@ -743,25 +721,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -774,16 +752,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>8</id>
         <languageId>es</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=es&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fB%2f1%2f4%2fB1404B77-7FDF-41FF-89A9-511AF795570B%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/B/1/4/B1404B77-7FDF-41FF-89A9-511AF795570B/VSIntShell.exe</installerURL>
           <sha1>fbbe33d4e1d14f0fabc7f764303407a0c27a61f6</sha1>
         </installerFile>
         <installCommands>
@@ -798,25 +772,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -829,16 +803,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>7</id>
         <languageId>ru</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=ru&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f2%2f5%2f1%2f251A33EB-73F0-4ED1-B1A9-878106A296EF%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/2/5/1/251A33EB-73F0-4ED1-B1A9-878106A296EF/VSIntShell.exe</installerURL>
           <sha1>cc6a782937b46dd96d2e85dc2de515ba9c1be64e</sha1>
         </installerFile>
         <installCommands>
@@ -853,25 +823,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -884,16 +854,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>6</id>
         <languageId>ko</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=ko&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f8%2f8%2f5%2f885443BF-EF97-4E1F-9299-A26C36C16EF7%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/8/8/5/885443BF-EF97-4E1F-9299-A26C36C16EF7/VSIntShell.exe</installerURL>
           <sha1>39f636107c2988c6d74d1c7413113d19734d6713</sha1>
         </installerFile>
         <installCommands>
@@ -908,25 +874,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -939,16 +905,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>5</id>
         <languageId>ja</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=ja&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fE%2fC%2f5%2fEC5F3306-BA20-4791-8716-CE60BD3F10BA%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/E/C/5/EC5F3306-BA20-4791-8716-CE60BD3F10BA/VSIntShell.exe</installerURL>
           <sha1>ece5620377cd4bc25805c38505f6ee22a6c6659e</sha1>
         </installerFile>
         <installCommands>
@@ -963,25 +925,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -994,16 +956,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>4</id>
         <languageId>it</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=it&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fB%2f2%2fC%2fB2C5D31B-38D1-481F-B774-4AF38112E3BB%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/B/2/C/B2C5D31B-38D1-481F-B774-4AF38112E3BB/VSIntShell.exe</installerURL>
           <sha1>23e710191c4e49357ec5ac53db0a66840b075e7e</sha1>
         </installerFile>
         <installCommands>
@@ -1018,25 +976,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -1049,16 +1007,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>3</id>
         <languageId>de</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=de&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2fF%2fC%2fA%2fFCA00864-2E2C-4D2E-8200-C292818A8F12%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/F/C/A/FCA00864-2E2C-4D2E-8200-C292818A8F12/VSIntShell.exe</installerURL>
           <sha1>e97f9373bb7f0ad01930beb1124cacf8046f5e25</sha1>
         </installerFile>
         <installCommands>
@@ -1073,25 +1027,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -1104,16 +1058,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>2</id>
         <languageId>fr</languageId>
-        <architectures>
-          <x86 />
-          <x64 />
-        </architectures>
         <osList idref="OSList_VS2010_Shell"></osList>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
-          <installerURL>http://www.microsoft.com/downloads/info.aspx?na=41&amp;SrcFamilyId=8E5AA7B6-8436-43F0-B778-00C3BCA733D3&amp;SrcDisplayLang=fr&amp;u=http%3a%2f%2fdownload.microsoft.com%2fdownload%2f1%2f4%2f3%2f14329506-B3BB-48AA-94AE-53A0098FAB16%2fVSIntShell.exe</installerURL>
+          <installerURL>http://download.microsoft.com/download/1/4/3/14329506-B3BB-48AA-94AE-53A0098FAB16/VSIntShell.exe</installerURL>
           <sha1>f7740e37a0aa50ef364953cdcb0711f823b2d029</sha1>
         </installerFile>
         <installCommands>
@@ -1128,25 +1078,25 @@ Adds support for the Python programming language to Professional, Ultimate, and 
               <mapping>
                 <returnCode>5100</returnCode>
                 <failure>
-                  <detailedInformation>The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
                 </failure>
               </mapping>
               <mapping>
                 <returnCode>3010</returnCode>
                 <successRebootRequired>
-                  <detailedInformation>The installation was successful and the computer needs to be restarted.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
                 </successRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>3015</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
               <mapping>
                 <returnCode>1615</returnCode>
                 <failureRebootRequired>
-                  <detailedInformation>The computer needs to be restarted in order to continue installation.</detailedInformation>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
                 </failureRebootRequired>
               </mapping>
             </returnCodeMappings>
@@ -1157,7 +1107,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     </installers>
   </entry>
 
-  <!-- TODO? This is identical to WindowsAzureToolsOnlyVS2010 except that it requires VS2010 full,
+  <!-- This is identical to WindowsAzureToolsOnlyVS2010 except that it requires VS2010 full,
        VS2010 Web Express, or VS2010 Integrated Shell (as opposed to VS2010 full or VS2010 Web) -->
   <entry>
     <productId>WindowsAzureToolsOnlyVS2010OrShell</productId>
@@ -1339,9 +1289,9 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   </osLists>
   -->
   <osLists>
+    <!-- WinXP only, SP3+ on 32 bit architecture -->
     <osList id="OSList_VS2010_Shell">
       <os>
-          <!-- WinXP only, SP3+ on 32 bit architecture -->
           <minimumVersion>
             <osMajorVersion>5</osMajorVersion>
             <osMinorVersion>1</osMinorVersion>

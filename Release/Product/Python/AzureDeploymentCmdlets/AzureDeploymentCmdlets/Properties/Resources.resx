@@ -1,0 +1,620 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddRoleMessageCreate" xml:space="preserve">
+    <value>Role has been created at {0}\{1}. For easy access to Windows Azure services from your application code, install the Windows Azure client library for Python by running ‘easy_install windowsazure’.</value>
+  </data>
+  <data name="AddRoleMessageRoleExists" xml:space="preserve">
+    <value>A role name '{0}' already exists</value>
+  </data>
+  <data name="AzureEmulatorPathPortion" xml:space="preserve">
+    <value>Windows Azure Emulator\emulator</value>
+  </data>
+  <data name="AzureSdkDirectory" xml:space="preserve">
+    <value>Windows Azure SDK\{0}\</value>
+  </data>
+  <data name="AzureSdkDirectoryName" xml:space="preserve">
+    <value>Windows Azure SDK Deployment Cmdlets</value>
+  </data>
+  <data name="GlobalComponents_Load_PublishSettingsNotFound" xml:space="preserve">
+    <value>Could not find publish settings. Please run Import-AzurePublishSettings.</value>
+  </data>
+  <data name="AzureSdkInstallPathRegistryKeyValue" xml:space="preserve">
+    <value>InstallPath</value>
+  </data>
+  <data name="AzureSdkNotInstalledMessage" xml:space="preserve">
+    <value>Azure SDK is not installed and is required</value>
+  </data>
+  <data name="AzureSdkRegistryKeyName" xml:space="preserve">
+    <value>SOFTWARE\Microsoft\Microsoft SDKs\ServiceHosting</value>
+  </data>
+  <data name="AzureSdkVersionNotSupported" xml:space="preserve">
+    <value>The installed Azure SDK version is not supported. Make sure you version is between {0} and {1} inclusive</value>
+  </data>
+  <data name="CannotFindDeployment" xml:space="preserve">
+    <value>Deployment for service {0} with {1} slot doesn't exist</value>
+  </data>
+  <data name="CannotFindServiceConfigurationFile" xml:space="preserve">
+    <value>service {0} configuration file (ServiceConfiguration.Cloud.cscfg) is either null or doesn't exist</value>
+  </data>
+  <data name="CannotFindServiceRoot" xml:space="preserve">
+    <value>Cannot locate deploymentSettings.json in parent folders</value>
+  </data>
+  <data name="CertificateElementName" xml:space="preserve">
+    <value>ManagementCertificate</value>
+  </data>
+  <data name="CertificateFileName" xml:space="preserve">
+    <value>certificate.pfx</value>
+  </data>
+  <data name="CertificateImportedMessage" xml:space="preserve">
+    <value>Certificate imported into CurrentUser\My\{0}</value>
+  </data>
+  <data name="CertificateNotFoundInStore" xml:space="preserve">
+    <value>No certificate was found in the certificate store with thumbprint {0}</value>
+  </data>
+  <data name="ChangeDeploymentStateWaitMessage" xml:space="preserve">
+    <value>{0} {1} deployment for {2} service</value>
+  </data>
+  <data name="ChangeSettingsElementMessage" xml:space="preserve">
+    <value>Service {0} is set to value {1}</value>
+  </data>
+  <data name="CloudPackageFileName" xml:space="preserve">
+    <value>cloud_package.cspkg</value>
+  </data>
+  <data name="CloudServiceConfigurationFileName" xml:space="preserve">
+    <value>ServiceConfiguration.Cloud.cscfg</value>
+  </data>
+  <data name="CreatingPackageMessage" xml:space="preserve">
+    <value>Creating {0} package...</value>
+  </data>
+  <data name="CsPackCloudArg" xml:space="preserve">
+    <value>"{0}\ServiceDefinition.csdef" /out:"{0}\cloud_package.cspkg" {1} {2}</value>
+  </data>
+  <data name="CsPackExe" xml:space="preserve">
+    <value>cspack.exe</value>
+  </data>
+  <data name="CsPackLocalArg" xml:space="preserve">
+    <value>"{0}\ServiceDefinition.csdef" /out:"{0}\local_package.csx" {1} {2} /copyOnly</value>
+  </data>
+  <data name="CsRunExe" xml:space="preserve">
+    <value>csrun.exe</value>
+  </data>
+  <data name="CsRunLanuchBrowserArg" xml:space="preserve">
+    <value>/launchbrowser</value>
+  </data>
+  <data name="CsRunRemoveAllDeploymentsArg" xml:space="preserve">
+    <value>/removeall</value>
+  </data>
+  <data name="CsRunRemoveDeploymentArg" xml:space="preserve">
+    <value>/remove:{0}</value>
+  </data>
+  <data name="CsRunStartComputeEmulatorArg" xml:space="preserve">
+    <value>/devfabric</value>
+  </data>
+  <data name="CsRunStartStorageEmulatorArg" xml:space="preserve">
+    <value>/devstore</value>
+  </data>
+  <data name="CsRunStopEmulatorArg" xml:space="preserve">
+    <value>/devfabric:shutdown</value>
+  </data>
+  <data name="CsRunUpdateDeploymentArg" xml:space="preserve">
+    <value>/update:{0};{1}</value>
+  </data>
+  <data name="DefaultPort" xml:space="preserve">
+    <value>8080</value>
+  </data>
+  <data name="DefaultUpgradeMode" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="DefaultWebPort" xml:space="preserve">
+    <value>80</value>
+  </data>
+  <data name="DeploymentAlreadyInState" xml:space="preserve">
+    <value>The {0} slot for service {1} is already in {2} state</value>
+  </data>
+  <data name="DeploymentRemovedMessage" xml:space="preserve">
+    <value>The deployment in {0} slot for service {1} is removed</value>
+  </data>
+  <data name="DnsDoesNotExist" xml:space="preserve">
+    <value>The provided dns {0} doesn't exist</value>
+  </data>
+  <data name="EmulatorOutputSitesRegex" xml:space="preserve">
+    <value>((http|tcp)://[0-9.:/]*)</value>
+  </data>
+  <data name="EmulatorRoleRunningMessage" xml:space="preserve">
+    <value>Role is running at {0}</value>
+  </data>
+  <data name="GeneralScaffolding" xml:space="preserve">
+    <value>Scaffolding\General</value>
+  </data>
+  <data name="GetStorageKeysHeader" xml:space="preserve">
+    <value>Name{0}Primary Key{0}Seconday Key</value>
+  </data>
+  <data name="IllegalPath" xml:space="preserve">
+    <value>Illegal characters in path.</value>
+  </data>
+  <data name="InvalidCertificate" xml:space="preserve">
+    <value>Invalid certificate format. Publish settings may be corrupted. Use Get-AzurePublishSettings to download updated settings</value>
+  </data>
+  <data name="InvalidConfigPath" xml:space="preserve">
+    <value>The provided configuration path is invalid or doesn't exist</value>
+  </data>
+  <data name="InvalidDnsName" xml:space="preserve">
+    <value>"{0}" is an invalid DNS name for {1}</value>
+  </data>
+  <data name="InvalidFileExtension" xml:space="preserve">
+    <value>The provided file in {0} must be have {1} extension</value>
+  </data>
+  <data name="InvalidFileName" xml:space="preserve">
+    <value>File {0} has invalid characters</value>
+  </data>
+  <data name="InvalidInstancesCount" xml:space="preserve">
+    <value>Role {0} instances must be greater than or equal 0 and less than or equal 20</value>
+  </data>
+  <data name="InvalidOrEmptyArgumentMessage" xml:space="preserve">
+    <value>{0} is invalid or empty</value>
+  </data>
+  <data name="InvalidPackagePath" xml:space="preserve">
+    <value>The provided package path is invalid or doesn't exist</value>
+  </data>
+  <data name="InvalidPath" xml:space="preserve">
+    <value>{0} doesn't exist in {1} or you've not passed valid value for it</value>
+  </data>
+  <data name="InvalidPathName" xml:space="preserve">
+    <value>Path {0} has invalid characters</value>
+  </data>
+  <data name="InvalidPublishSettingsSchema" xml:space="preserve">
+    <value>The provided publish settings file {0} has invalid content. Please get valid by running cmdlet Get-AzurePublishSettings</value>
+  </data>
+  <data name="InvalidRoleNameMessage" xml:space="preserve">
+    <value>The provided role name "{0}" has invalid characters</value>
+  </data>
+  <data name="InvalidRootNameMessage" xml:space="preserve">
+    <value>A valid name for the service root folder is required</value>
+  </data>
+  <data name="InvalidScaffoldingLanguageArg" xml:space="preserve">
+    <value>A valid language is required</value>
+  </data>
+  <data name="InvalidServiceSettingElement" xml:space="preserve">
+    <value>You must provide valid value for {0}</value>
+  </data>
+  <data name="InvalidServiceSettingMessage" xml:space="preserve">
+    <value>settings.json is invalid or doesn't exist</value>
+  </data>
+  <data name="InvalidSubscriptionId" xml:space="preserve">
+    <value>The provided subscription if {0} is not valid</value>
+  </data>
+  <data name="InvalidSubscriptionNameMessage" xml:space="preserve">
+    <value>A valid subscription name is required. This can be provided using the  -Subscription parameter or by setting the subscription via the Set-AzureSubscription cmdlet</value>
+  </data>
+  <data name="LanguageScaffoldingIsNotSupported" xml:space="preserve">
+    <value>Scaffolding for this language is not yet supported</value>
+  </data>
+  <data name="LocalPackageFileName" xml:space="preserve">
+    <value>local_package.csx</value>
+  </data>
+  <data name="LocalServiceConfigurationFileName" xml:space="preserve">
+    <value>ServiceConfiguration.Local.cscfg</value>
+  </data>
+  <data name="MaxSupportAzureSdkVersion" xml:space="preserve">
+    <value>v1.6</value>
+  </data>
+  <data name="MinSupportAzureSdkVersion" xml:space="preserve">
+    <value>v1.6</value>
+  </data>
+  <data name="NewServiceCreatedMessage" xml:space="preserve">
+    <value>Service has been created at {0}</value>
+  </data>
+  <data name="NoInternetConnection" xml:space="preserve">
+    <value>Please connect to internet before executing this cmdlet</value>
+  </data>
+  <data name="NullObjectMessage" xml:space="preserve">
+    <value>{0} could not be null or empty</value>
+  </data>
+  <data name="NullRoleSettingsMessage" xml:space="preserve">
+    <value>Unable to add a null RoleSettings to {0}</value>
+  </data>
+  <data name="NullServiceDefinitionMessage" xml:space="preserve">
+    <value>Unable to add new role to null service definition</value>
+  </data>
+  <data name="Package" xml:space="preserve">
+    <value>package</value>
+  </data>
+  <data name="PathDoesNotExist" xml:space="preserve">
+    <value>Path {0} doesn't exist.</value>
+  </data>
+  <data name="PathDoesNotExistForElement" xml:space="preserve">
+    <value>Path for {0} doesn't exist in {1}.</value>
+  </data>
+  <data name="PublishUpgradingMessage" xml:space="preserve">
+    <value>Upgrading...</value>
+  </data>
+  <data name="PublishSettings" xml:space="preserve">
+    <value>publish settings</value>
+  </data>
+  <data name="PublishSettingsElementName" xml:space="preserve">
+    <value>Azure</value>
+  </data>
+  <data name="PublishSettingsFileExtention" xml:space="preserve">
+    <value>.PublishSettings</value>
+  </data>
+  <data name="PublishSettingsFileName" xml:space="preserve">
+    <value>Azure.PublishSettings</value>
+  </data>
+  <data name="PublishSettingsSetSuccessfully" xml:space="preserve">
+    <value>Publish settings imported</value>
+  </data>
+  <data name="PublishSettingsUrl" xml:space="preserve">
+    <value>https://windows.azure.com/download/publishprofile.aspx?client=nodejs&amp;lang=en</value>
+  </data>
+  <data name="RemoveAzureServiceWaitMessage" xml:space="preserve">
+    <value>Removing service {0}</value>
+  </data>
+  <data name="RemoveDeploymentWaitMessage" xml:space="preserve">
+    <value>Removing {0} deployment for {1} service</value>
+  </data>
+  <data name="RoleArgTemplate" xml:space="preserve">
+    <value>/role:{0};"{1}/{0}" </value>
+  </data>
+  <data name="RoleBinFolderName" xml:space="preserve">
+    <value>bin</value>
+  </data>
+  <data name="RoleInstanceWaitMsg" xml:space="preserve">
+    <value>Role {0} is {1}</value>
+  </data>
+  <data name="RoleMaxInstances" xml:space="preserve">
+    <value>20</value>
+  </data>
+  <data name="RoleName" xml:space="preserve">
+    <value>role name</value>
+  </data>
+  <data name="RoleNotFoundMessage" xml:space="preserve">
+    <value>The provided role name {0} doesn't exist</value>
+  </data>
+  <data name="RoleSettingsTemplateFileName" xml:space="preserve">
+    <value>RoleSettings.xml</value>
+  </data>
+  <data name="RoleTypeDoesNotExist" xml:space="preserve">
+    <value>Role type {0} doesn't exist</value>
+  </data>
+  <data name="RunInEmulatorArguments" xml:space="preserve">
+    <value>"{0}" "{1}" {2}</value>
+  </data>
+  <data name="ScaffoldXml" xml:space="preserve">
+    <value>scaffold.xml</value>
+  </data>
+  <data name="ServiceAlreadyExistsOnDisk" xml:space="preserve">
+    <value>Service {0} already exists on disk in location {1}</value>
+  </data>
+  <data name="ServiceConfiguration" xml:space="preserve">
+    <value>service configuration</value>
+  </data>
+  <data name="ServiceDefinition" xml:space="preserve">
+    <value>service definition</value>
+  </data>
+  <data name="ServiceDefinitionFileName" xml:space="preserve">
+    <value>ServiceDefinition.csdef</value>
+  </data>
+  <data name="ServiceDeploymentName" xml:space="preserve">
+    <value>{0}Deploy</value>
+  </data>
+  <data name="ServiceIsInTransitionState" xml:space="preserve">
+    <value>{0} slot for service {1} is in {2} state, please wait until it finish and update it's status</value>
+  </data>
+  <data name="ServiceName" xml:space="preserve">
+    <value>service name</value>
+  </data>
+  <data name="ServiceNameExists" xml:space="preserve">
+    <value>The provided service name {0} already exists, please pick another name</value>
+  </data>
+  <data name="ServiceNameMissingMessage" xml:space="preserve">
+    <value>Please provide name for the hosted service</value>
+  </data>
+  <data name="ServiceParentDirectory" xml:space="preserve">
+    <value>service parent directory</value>
+  </data>
+  <data name="ServiceRemovedMessage" xml:space="preserve">
+    <value>Service {0} removed successfully</value>
+  </data>
+  <data name="ServiceRoot" xml:space="preserve">
+    <value>service directory</value>
+  </data>
+  <data name="ServiceSettings" xml:space="preserve">
+    <value>service settings</value>
+  </data>
+  <data name="ServiceSlotDoesNotExist" xml:space="preserve">
+    <value>Service {0} doesn't exist or it doesn't have {1} slot</value>
+  </data>
+  <data name="ServiceStatusChanged" xml:space="preserve">
+    <value>{0} slot for service {1} is {2}</value>
+  </data>
+  <data name="ServiceUrl" xml:space="preserve">
+    <value>http://{0}.cloudapp.net</value>
+  </data>
+  <data name="SetRoleInstancesMessage" xml:space="preserve">
+    <value>Role {0} instances are set to {1}</value>
+  </data>
+  <data name="SettingsFileName" xml:space="preserve">
+    <value>deploymentSettings.json</value>
+  </data>
+  <data name="SitesArgTemplate" xml:space="preserve">
+    <value>/sites:{0};{1};"{2}/{0}" </value>
+  </data>
+  <data name="StandardRetryDelayInMs" xml:space="preserve">
+    <value>1000</value>
+  </data>
+  <data name="StartedEmulator" xml:space="preserve">
+    <value>Started</value>
+  </data>
+  <data name="StartingEmulator" xml:space="preserve">
+    <value>Starting Emulator...</value>
+  </data>
+  <data name="StopEmulatorMessage" xml:space="preserve">
+    <value>Stopping emulator...</value>
+  </data>
+  <data name="StoppedEmulatorMessage" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="StorageAccountName" xml:space="preserve">
+    <value>Account Name:</value>
+  </data>
+  <data name="StoragePrimaryKey" xml:space="preserve">
+    <value>Primary Key:</value>
+  </data>
+  <data name="StorageSecondaryKey" xml:space="preserve">
+    <value>Secondary Key:</value>
+  </data>
+  <data name="SubscriptionIdNotFoundMessage" xml:space="preserve">
+    <value>The provided subscription name doesn't exist in the imported publish profile. If subscriptions have changed for the hosted service, retrieve an updated profile by using Get-AzurePublishSettings then import the profile using Import-AzurePublishSettings</value>
+  </data>
+  <data name="WaitMessage" xml:space="preserve">
+    <value>Please wait...</value>
+  </data>
+  <data name="WebConfigTemplateFileName" xml:space="preserve">
+    <value>web.config</value>
+  </data>
+  <data name="WebRole" xml:space="preserve">
+    <value>WebRole</value>
+  </data>
+  <data name="WebRoleTemplateFileName" xml:space="preserve">
+    <value>WebRole.xml</value>
+  </data>
+  <data name="WorkerRole" xml:space="preserve">
+    <value>WorkerRole</value>
+  </data>
+  <data name="WorkerRoleTemplateFileName" xml:space="preserve">
+    <value>WorkerRole.xml</value>
+  </data>
+  <data name="x86InProgramFiles" xml:space="preserve">
+    <value> (x86)</value>
+  </data>
+  <data name="PublishCompleteMessage" xml:space="preserve">
+    <value>Complete.</value>
+  </data>
+  <data name="PublishConnectingMessage" xml:space="preserve">
+    <value>Connecting...</value>
+  </data>
+  <data name="PublishCreatedDeploymentMessage" xml:space="preserve">
+    <value>Created Deployment ID: {0}.</value>
+  </data>
+  <data name="PublishCreatedServiceMessage" xml:space="preserve">
+    <value>Created hosted service '{0}'.</value>
+  </data>
+  <data name="PublishCreatedWebsiteMessage" xml:space="preserve">
+    <value>Created Website URL: {0}.</value>
+  </data>
+  <data name="PublishCreatingServiceMessage" xml:space="preserve">
+    <value>Creating...</value>
+  </data>
+  <data name="PublishInstanceStatusBusy" xml:space="preserve">
+    <value>busy</value>
+  </data>
+  <data name="PublishInstanceStatusCreating" xml:space="preserve">
+    <value>creating the virtual machine</value>
+  </data>
+  <data name="PublishInstanceStatusMessage" xml:space="preserve">
+    <value>Instance {0} of role {1} is {2}.</value>
+  </data>
+  <data name="PublishInstanceStatusReady" xml:space="preserve">
+    <value>ready</value>
+  </data>
+  <data name="PublishPreparingDeploymentMessage" xml:space="preserve">
+    <value>Preparing deployment for {0} with Subscription ID: {1}...</value>
+  </data>
+  <data name="PublishServiceStartMessage" xml:space="preserve">
+    <value>Publishing {0} to Windows Azure. This may take several minutes...</value>
+  </data>
+  <data name="PublishStartingMessage" xml:space="preserve">
+    <value>Starting...</value>
+  </data>
+  <data name="PublishVerifyingStorageMessage" xml:space="preserve">
+    <value>Verifying storage account '{0}'...</value>
+  </data>
+  <data name="PublishUploadingPackageMessage" xml:space="preserve">
+    <value>Uploading Package...</value>
+  </data>
+  <data name="PublishInitializingMessage" xml:space="preserve">
+    <value>Initializing...</value>
+  </data>
+  <data name="AddRoleMessageInsufficientPermissions" xml:space="preserve">
+    <value>Unable to set role permissions. Please give the 'Network Service' user 'Read &amp; execute' and 'Modify' permissions to the role folder, or run PowerShell as an Administrator</value>
+  </data>
+  <data name="CompleteMessage" xml:space="preserve">
+    <value>Complete</value>
+  </data>
+  <data name="RemoveDeploymentMessage" xml:space="preserve">
+    <value>Removing deployment</value>
+  </data>
+  <data name="RemoveServiceMessage" xml:space="preserve">
+    <value>Removing service...</value>
+  </data>
+  <data name="RemoveServiceStartMessage" xml:space="preserve">
+    <value>Removing service {0}...</value>
+  </data>
+  <data name="StartServiceMessage" xml:space="preserve">
+    <value>Starting service {0}...</value>
+  </data>
+  <data name="StopServiceMessage" xml:space="preserve">
+    <value>Stopping service {0}...</value>
+  </data>
+  <data name="AzureServiceManagementException_WrapExistingError_DetailedErrorFormat" xml:space="preserve">
+    <value>Azure service management error
+{0}</value>
+  </data>
+  <data name="PublishCreatedWebsiteLaunchNotSupportedMessage" xml:space="preserve">
+    <value>Created Website. Please use the Azure Portal at http://windows.azure.com to find the deployment URL.</value>
+  </data>
+  <data name="CsRun_StartCsRunProcess_UnexpectedFailure" xml:space="preserve">
+    <value>An unexpected failure occurred.  Details:
+{0}</value>
+  </data>
+  <data name="CsEncryptCreateCertificateArg" xml:space="preserve">
+    <value>New-PasswordEncryptionCertificate -FriendlyName "Windows Azure Python Certificate"</value>
+  </data>
+  <data name="CsEncryptExe" xml:space="preserve">
+    <value>csencrypt.exe</value>
+  </data>
+  <data name="CsEncrypt_CreateCertificate_CreationFailed" xml:space="preserve">
+    <value>CsEncrypt.exe failed to generate a certificate ({0})</value>
+  </data>
+  <data name="EnableAzureRemoteDesktopCommand_Enable_NeedComplexPassword" xml:space="preserve">
+    <value>Password is not complex enough. The password should include at least three different kinds of characters (uppercase, lowercase, digits, and other symbols) and be at least six characters long.</value>
+  </data>
+  <data name="EnableAzureRemoteDesktop_Enable_NoRoles" xml:space="preserve">
+    <value>Cannot enable Remote Desktop because there are no roles</value>
+  </data>
+  <data name="EnableRemoteDesktop_FriendlyCertificateName" xml:space="preserve">
+    <value>Windows Azure Python Certificate</value>
+  </data>
+  <data name="CertificatePrivateKeyAccessError" xml:space="preserve">
+    <value>Your account does not have access to the private key for certificate {0}</value>
+  </data>
+  <data name="ServiceSettings_ValidateStorageAccountName_InvalidName" xml:space="preserve">
+    <value>The storage account name '{0}' is invalid.  Storage account names must be between 3 and 24 characters in length and use numbers and lower-case letters only.</value>
+  </data>
+  <data name="RemoveServiceWarning" xml:space="preserve">
+    <value>Are you sure you want to remove service \"{0}\"?</value>
+  </data>
+  <data name="ShouldProcessCaption" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="PythonScaffolding" xml:space="preserve">
+    <value>Scaffolding\Python</value>
+  </data>
+</root>

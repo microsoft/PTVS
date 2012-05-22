@@ -1,0 +1,1138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <webpiFile version="4.0.0.0" />
+  <title>Python 2.7 Installer 4.0 Feed</title>
+  <link href="http://pytools/demos/production/python27lite.xml" />
+  <updated>2012-5-17T12:00:00Z</updated>
+  <author>
+    <name>Microsoft</name>
+    <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+  </author>
+  <id>http://pytools/demos/production/python27lite.xml</id>
+  
+  <!-- ##PTVS############################################################## -->
+  <entry>
+    <productId>PythonToolsForVS</productId>
+    <title resourceName="Entry_PythonToolsForVS_Title">Python Tools for Visual Studio 2010</title>
+    <version>1.5 Alpha 1</version>
+    <published>2012-5-10T12:00:00Z</published>
+    <updated>2012-5-10T12:00:00Z</updated>
+    <summary resourceName="Entry_PythonToolsForVS_Summary">Adds support for Python to Visual Studio.</summary>
+    <longSummary resourceName="Entry_PythonToolsForVS_LongSummary">
+Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio.
+    </longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/fwlink/?LinkId=252041</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+    <discoveryHint>
+      <or>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.1.50508.0</valueValue>
+        </registry>
+      </discoveryHint>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.1.50508.0</valueValue> 
+        </registry>
+      </discoveryHint>
+     </or>
+    </discoveryHint>
+
+    <dependency>
+      <or>
+        <!-- If either the VS2010 integrated shell or VS2010 SP1 prereqs are installed, we're good to
+        go -->
+        <dependency>
+          <productId>VS2010SI</productId>
+        </dependency>
+        <dependency>
+          <productId>VS2010SP1Prerequisite</productId>
+        </dependency>
+      </or>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
+        <installerFile>
+          <fileSize>2543</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;appid=PythonToolsForVS</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=252039</installerURL>
+          <sha1>61954d687b0c487ab055c1aaded6f788f0c79c1b</sha1>
+        </installerFile>
+        <installCommands> 
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252038</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
+  <!-- ##CPython######################################################### -->
+  <entry>
+    <productId>Python27</productId>
+    <title resourceName="Entry_Python27_Title">Python 2.7</title>
+    <version>2.7.3</version>
+    <summary resourceName="Entry_Python27_Summary">Python programming language</summary>
+    <id>http://www.python.org</id>
+    <longSummary resourceName="Entry_Python27_LongSummary">Python is a dynamic, object-oriented, open source programming language.</longSummary>
+    <link href="http://wiki.python.org/moin/BeginnersGuide" />
+    <productFamily resourceName="Python">Python</productFamily>
+    <published>2010-7-3T12:00:00Z</published>
+    <updated>2012-4-10T12:00:00Z</updated>
+    <author>
+      <name>Python Community</name>
+      <uri>http://www.python.org/</uri>
+    </author>
+    <images>
+      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
+    </images>
+    <keywords>
+      <keywordId>FrameworkRuntime</keywordId>
+    </keywords>
+    
+    <discoveryHint>
+      <or>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\2.7\InstallPath</keyPath>
+        </registry>
+      </discoveryHint>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\WoW6432Node\Python\PythonCore\2.7\InstallPath</keyPath>
+        </registry>
+      </discoveryHint>
+     </or>
+    </discoveryHint>
+    
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://docs.python.org/license.html</eulaURL>
+        <installerFile>
+          <fileSize>15868</fileSize>
+          <installerURL>http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi</installerURL>
+          <sha1>239bf7790b2f50581a96bebfcea536bdc1f385c8</sha1>
+        </installerFile>
+        <installCommands> 
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+            <properties>ALLUSERS=1</properties>
+          </msiInstall>
+          <cmdLine>
+            <exe>%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe</exe>
+            <commandLineArguments>-command "echo '%SystemDrive%\Python27\python.exe %*' | out-file -encoding ascii $env:TMP\python_installhelper_27_x86.bat"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+          <cmdLine>
+            <exe>%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe</exe>
+            <commandLineArguments>-command "echo '%SystemDrive%\Python27\Scripts\pip.exe %*' | out-file -encoding ascii $env:TMP\pip_installhelper_27_x86.bat"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://www.python.org/doc</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Install Helpers################################################### -->
+  <entry>
+    <productId>PythonDetectInstalls</productId>
+    <title resourceName="Entry_PythonDetectInstalls_Title">Python Installation Detector</title>
+    <version>0.9</version>
+    <summary resourceName="Entry_PythonDetectInstalls_Summary">Helper tools for installing Python</summary>
+    <updated>2012-6-7T12:00:00Z</updated>
+    <longSummary resourceName="Entry_PythonDetectInstalls_LongSummary">Includes a set of tools useful for detecting previous installations of CPython.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <published>2012-6-7T12:00:00Z</published>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
+    <images>
+      <icon>http://go.microsoft.com/fwlink/?LinkId=252041</icon>
+    </images>
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <searchExclude />
+    <dependency>
+      <productId>PowerShell</productId>
+    </dependency>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
+        <installerFile>
+          <fileSize>2</fileSize>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=252043</installerURL>
+          <sha1>9d563337386fda90d9c98ab5357dca300062de68</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdLine>
+            <exe>%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe</exe>
+            <commandLineArguments>-ExecutionPolicy RemoteSigned -File "%InstallerFile%"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252038</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
+  <!-- ##Distribute Module############################################### -->
+  <entry>
+    <productId>PyDistributeModule</productId>
+    <title resourceName="Entry_PyDistributeModule_Title">distribute module (Python)</title>
+    <version>0.6.25</version>
+    <summary resourceName="Entry_PyDistributeModule_Summary">Python's distribute module (prereq for installing PyPI)</summary>
+    <updated>2011-11-29T12:00:00Z</updated>
+    <longSummary resourceName="Entry_PyDistributeModule_LongSummary">Distribute is a fork of the Setuptools project.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <published>2009-8-8T12:00:00Z</published>
+    <link href="http://packages.python.org/distribute/" />
+    <images>
+      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
+    </images>
+    <author>
+      <name>Python Community</name>
+      <uri>http://packages.python.org/distribute/</uri>
+    </author>
+    <searchExclude />
+    <discoveryHint>
+      <or>
+        <discoveryHint>
+          <file>
+            <filePath>%SystemDrive%\Python27\Lib\site-packages\distribute-0.6.25-py2.7.egg\site.py</filePath>
+          </file>
+        </discoveryHint>
+        <!-- On an Enthought distro -->
+        <discoveryHint>
+          <file>
+            <filePath>%SystemDrive%\Python27\Lib\site-packages\distribute.egg-info\PKG-INFO</filePath>
+          </file>
+        </discoveryHint>
+      </or>
+    </discoveryHint>
+    
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PythonDetectInstalls</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://docs.python.org/license.html</eulaURL>
+        <installerFile>
+          <fileSize>15</fileSize>
+          <installerURL>https://bitbucket.org/tarek/distribute/raw/6124053afb5c/distribute_setup.py</installerURL>
+          <sha1>624c16d9c59327f95ead3be82e305a5b330abd32</sha1>
+        </installerFile>
+        <installCommands> 
+          <cmdLine>
+            <exe>%TMP%\python_installhelper_27_x86.bat</exe>
+            <commandLineArguments>"%InstallerFile%"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://pypi.python.org/pypi/distribute</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
+  <!-- ##PyPI############################################################## -->
+  <entry>
+    <productId>PyPI</productId>
+    <title resourceName="Entry_PyPI_Title">PyPI</title>
+    <version>1.0.2</version>
+    <summary resourceName="Entry_PyPI_Summary">Python's package index repository</summary>
+    <updated>2011-7-16T12:00:00Z</updated>
+    <longSummary resourceName="Entry_PyPI_LongSummary">Python Package Index is a repository of freely available Python software.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <published>2011-7-16T12:00:00Z</published>
+    <link href="http://pypi.python.org/pypi" />
+    <images>
+      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
+    </images>
+    <keywords>
+      <keywordId>FrameworkRuntime</keywordId>
+    </keywords>
+    <author>
+      <name>Python Community</name>
+      <uri>http://pypi.python.org/pypi/</uri>
+    </author>
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\pip\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PythonDetectInstalls</productId>
+        </dependency>
+        <dependency>
+          <productId>PyDistributeModule</productId>
+        </dependency>
+      </and>
+    </dependency>
+    
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://docs.python.org/license.html</eulaURL>
+        <installerFile>
+          <fileSize>84</fileSize>
+          <installerURL>https://raw.github.com/pypa/pip/1.0.2/contrib/get-pip.py</installerURL>
+          <sha1>660a8e6bd324cf238bc38f74527dc5ca2b1c67ab</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdLine>
+            <exe>%TMP%\python_installhelper_27_x86.bat</exe>
+            <commandLineArguments>"%InstallerFile%"</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://www.pip-installer.org/en/latest/installing.html</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Django############################################################ -->
+  <entry>
+    <productId>Django</productId>
+    <title resourceName="Entry_Django_Title">Django 1.4</title>
+    <version>1.4</version>
+    <summary resourceName="Entry_Django_Summary">Python Web framework</summary>
+    <updated>2012-3-23T12:00:00Z</updated>
+    <longSummary resourceName="Entry_Django_LongSummary">Django is a high-level Python Web framework.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <images>
+      <icon>https://www.djangoproject.com/m/img/site/hdr_logo.gif</icon>
+    </images>
+    <keywords>
+      <keywordId>Server</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
+    </keywords>
+    <published>2012-3-23T12:00:00Z</published>
+    <link href="https://www.djangoproject.com/" />
+    <author>
+      <name>Django Community</name>
+      <uri>https://www.djangoproject.com/community/</uri>
+    </author>
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\django\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PythonDetectInstalls</productId>
+        </dependency>
+        <dependency>
+          <productId>PyPI</productId>
+        </dependency>
+      </and>
+    </dependency>
+    
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>     
+        <eulaURL>https://code.djangoproject.com/browser/django/trunk/LICENSE</eulaURL>
+        <installCommands>
+          <cmdLine>
+            <exe>%TMP%\pip_installhelper_27_x86.bat</exe>
+            <commandLineArguments>--log %TMP%\django.log install django==1.4</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <logFiles>
+          <location>%TMP%\django.log</location>
+        </logFiles>
+        <helpLink>http://pypi.python.org/pypi/Django/1.4</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Visual Studio 2010 Integrated Shell ############################## -->
+  <entry>
+    <productId>VS2010SI</productId>
+    <title resourceName="Entry_VS2010SI_Title">Visual Studio 2010 Shell (Integrated)</title>
+    <version>2010</version>
+    <summary resourceName="Entry_VS2010SI_Summary">The Visual Studio 2010 Shell (Integrated) Redistributable Package contains the runtime binaries that are required to deploy an application that is based on the Visual Studio 2010 Shell (Integrated).</summary>
+    <updated>2010-4-12T12:00:00Z</updated>
+    <longSummary resourceName="Entry_VS2010SI_LongSummary">The Visual Studio Shell (integrated mode) provides the foundation on which you can seamlessly integrate tools and programming languages within Visual Studio. The Visual Studio Shell (integrated mode) does not contain any programming language, so it provides the perfect foundation to deploy a development environment for your own language. The Visual Studio Shell (integrated mode) seamlessly integrates with Visual Studio 2010 Professional and above. Any tools and programming languages that run inside the Visual Studio Shell (integrated mode) will run together with Visual Studio 2010 if they are also installed on the same machine. By using the Visual Studio Shell (integrated mode), you will not need to make Visual Studio a pre-requisite on your user machines.</longSummary>
+    <published>2010-4-12T12:00:00Z</published>
+    <link href="http://www.microsoft.com/visualstudio/en-us/products/2010-editions" />
+    <images>
+      <icon>http://www.microsoft.com/web/media/icons/vs-logo-sm.png</icon>
+    </images>
+    <author>
+      <name>Microsoft</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+    </keywords>
+    <discoveryHint>
+      <or>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\10.0\Setup\IntShell</keyPath>
+          </registry>
+        </discoveryHint>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\10.0\Setup\IntShell</keyPath>
+          </registry>
+        </discoveryHint>
+      </or>
+    </discoveryHint>
+    <incompatibilities>
+      <incompatibleProduct>
+        <productId>VS2010Beta1</productId>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010Beta1">You must uninstall Beta 1 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2</productId>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010Beta2">You must uninstall Beta 2 of Visual Studio 2010 before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2Express</productId>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010Beta2Express">You must uninstall Beta 2 of Visual Web Developer 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VB2010Beta2Express</productId>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VB2010Beta2Express">You must uninstall Beta 2 of Visual Basic 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VCS2010Beta2Express</productId>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VCS2010Beta2Express">You must uninstall Beta 2 of Visual C# 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VC2010Beta2Express</productId>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VC2010Beta2Express">You must uninstall Beta 2 of Visual C++ 2010 Express before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010RC</productId>
+        <errorMessage resourceName="Entry_VS2010SI_IncompatibleProduct_VS2010RC">You must uninstall Visual Studio 2010 RC before you can install Visual Studio 2010 Shell (Integrated).</errorMessage>
+      </incompatibleProduct>
+    </incompatibilities>
+    <terms>
+      <termsText resourceName="Entry_VS2010SI_TermsText">-Visual Studio will receive and display online RSS content. For further information refer to the Readme link.</termsText>
+      <termsLink>http://go.microsoft.com/fwlink/?LinkID=133421</termsLink>
+      <termsLinkText resourceName="Entry_VS2010SI_TermsLinkText">Readme</termsLinkText>
+    </terms>
+    <installers>
+      <!-- English -->
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/D/7/0/D70CD265-3E18-41B0-AFC6-075AFA2DA631/VSIntShell.exe</installerURL>
+          <sha1>6d70a65c138fd3326c393e0b60aeb86c072bb80b</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_En_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/download/en/details.aspx?displaylang=en&amp;id=115</helpLink>
+      </installer>
+
+      <!-- Chinese Traditional -->
+      <installer>
+        <id>10</id>
+        <languageId>zh-tw</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/5/1/A/51A0904D-1D73-4A60-89E6-9B1764627540/VSIntShell.exe</installerURL>
+          <sha1>24dba1c8baf0ff205ec6feabfd3bbb5eb53794d3</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhTw_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/zh-tw/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+      
+      <!-- Chinese Simplified -->
+      <installer>
+        <id>9</id>
+        <languageId>zh-cn</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/D/D/3/DD3BC072-755D-4E99-8D76-E19F0073FBEC/VSIntShell.exe</installerURL>
+          <sha1>00139e88447a034afca6773261f63647d16be114</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_ZhCn_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/zh-cn/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+
+      <!-- Spanish -->
+      <installer>
+        <id>8</id>
+        <languageId>es</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/B/1/4/B1404B77-7FDF-41FF-89A9-511AF795570B/VSIntShell.exe</installerURL>
+          <sha1>fbbe33d4e1d14f0fabc7f764303407a0c27a61f6</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Es_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/es-es/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+
+      <!-- Russian -->
+      <installer>
+        <id>7</id>
+        <languageId>ru</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/2/5/1/251A33EB-73F0-4ED1-B1A9-878106A296EF/VSIntShell.exe</installerURL>
+          <sha1>cc6a782937b46dd96d2e85dc2de515ba9c1be64e</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ru_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/ru-ru/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+
+      <!-- Korean -->
+      <installer>
+        <id>6</id>
+        <languageId>ko</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/8/8/5/885443BF-EF97-4E1F-9299-A26C36C16EF7/VSIntShell.exe</installerURL>
+          <sha1>39f636107c2988c6d74d1c7413113d19734d6713</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ko_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/ko-kr/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+      
+      <!-- Japanese -->
+      <installer>
+        <id>5</id>
+        <languageId>ja</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/E/C/5/EC5F3306-BA20-4791-8716-CE60BD3F10BA/VSIntShell.exe</installerURL>
+          <sha1>ece5620377cd4bc25805c38505f6ee22a6c6659e</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Ja_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/ja-jp/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+
+      <!-- Italian -->
+      <installer>
+        <id>4</id>
+        <languageId>it</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/B/2/C/B2C5D31B-38D1-481F-B774-4AF38112E3BB/VSIntShell.exe</installerURL>
+          <sha1>23e710191c4e49357ec5ac53db0a66840b075e7e</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_It_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/it-it/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+      
+      <!-- German -->
+      <installer>
+        <id>3</id>
+        <languageId>de</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/F/C/A/FCA00864-2E2C-4D2E-8200-C292818A8F12/VSIntShell.exe</installerURL>
+          <sha1>e97f9373bb7f0ad01930beb1124cacf8046f5e25</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_De_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/de-de/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+      
+      <!-- French -->
+      <installer>
+        <id>2</id>
+        <languageId>fr</languageId>
+        <osList idref="OSList_VS2010_Shell"></osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <showsUI>True</showsUI>
+        <installerFile>
+          <fileSize>173811</fileSize>
+          <installerURL>http://download.microsoft.com/download/1/4/3/14329506-B3BB-48AA-94AE-53A0098FAB16/VSIntShell.exe</installerURL>
+          <sha1>f7740e37a0aa50ef364953cdcb0711f823b2d029</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/x:%temp%\vs2010si\ /q</commandLineArguments>
+          </cmdline>
+          <cmdline>
+            <exe>%temp%\vs2010si\setup.exe</exe>
+            <commandLineArguments>/q /norestart /full</commandLineArguments>
+            <returnCodeMappings>
+              <mapping>
+                <returnCode>5100</returnCode>
+                <failure>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_5100">The installation failed due to system requirement is not met or insufficient disk space.</detailedInformation>
+                </failure>
+              </mapping>
+              <mapping>
+                <returnCode>3010</returnCode>
+                <successRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_3010">The installation was successful and the computer needs to be restarted.</detailedInformation>
+                </successRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>3015</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_3015">The installation was unsuccessful. The computer needs to be restarted in order to install.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+              <mapping>
+                <returnCode>1615</returnCode>
+                <failureRebootRequired>
+                  <detailedInformation resourceName="Entry_VS2010SI_Installer_Fr_Mapping_1615">The computer needs to be restarted in order to continue installation.</detailedInformation>
+                </failureRebootRequired>
+              </mapping>
+            </returnCodeMappings>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://www.microsoft.com/downloads/fr-fr/details.aspx?familyid=8e5aa7b6-8436-43f0-b778-00c3bca733d3</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- This is identical to WindowsAzureToolsOnlyVS2010 except that it requires VS2010 full,
+       VS2010 Web Express, or VS2010 Integrated Shell (as opposed to VS2010 full or VS2010 Web) -->
+  <entry>
+    <productId>WindowsAzureToolsOnlyVS2010OrShell</productId>
+    <title resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_Title">Windows Azure Tools for Microsoft Visual Studio 2010 - November 2011</title>
+    <version>1.6.41103.1601</version>
+    <summary resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_Summary">Add-on for Microsoft Visual Studio 2010 for developing Windows Azure applications.</summary>
+    <id>http://www.microsoft.com/web/webpi/toolsforsilverlight_3</id>
+    <updated>2011-06-15T16:30:00Z</updated>
+    <longSummary resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_LongSummary">Windows Azure Tools for Microsoft Visual Studio 2010 extends Visual Studio 2010 and Visual Web Developer 2010 Express Edition to enable you to create, build, debug, run, and package scalable services on Windows Azure.</longSummary>
+    <published>2011-06-10T12:30:00Z</published>
+    <link href="http://go.microsoft.com/fwlink/?LinkID=231172" />
+    <searchExclude />
+    <images>
+      <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/wa_vs_graphic.png</icon>
+    </images>
+    <author>
+      <name>Microsoft</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <discoveryHint>
+      <and>
+        <discoveryHint>
+          <or>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\1.6</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\1.6</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+          </or>
+        </discoveryHint>
+        <discoveryHint>
+          <or>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\Core</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+            <discoveryHint>
+              <registry>
+                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\Core</keyPath>
+                <valueName>FullVersion</valueName>
+                <valueValue>1.6.41103.1601</valueValue>
+              </registry>
+            </discoveryHint>
+          </or>
+        </discoveryHint>
+      </and>
+    </discoveryHint>
+    <dependency>
+
+      <and>
+        <dependency>
+          <or>
+            <dependency>
+              <productId>VS2010SI</productId>
+            </dependency>
+            <dependency>
+              <productId>VWD_RTW</productId>
+            </dependency>
+            <dependency>
+              <productId>VSVWD2010Feature</productId>
+            </dependency>
+          </or>
+        </dependency>
+        <dependency>
+          <productId>WindowsAzureEmulator</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <incompatibilities>
+      <incompatibleProduct>
+        <productId>VS2010Beta1</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010Beta1_ErrorMessage">You must uninstall Beta 1 of Visual Studio 2010 before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010Beta2_ErrorMessage">You must uninstall Beta 2 of Visual Studio 2010 before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010Beta2Express</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010Beta2Express_ErrorMessage">You must uninstall Beta 2 of Visual Web Developer 2010 Express before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+      <incompatibleProduct>
+        <productId>VS2010RC</productId>
+        <errorMessage resourceName="IncompatibleProduct_AzureToolsCore2010_VS2010RC_ErrorMessage">You must uninstall Visual Studio 2010 RC before you can install Windows Azure Tools for Visual Studio 2010.</errorMessage>
+      </incompatibleProduct>
+    </incompatibilities>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <osList>
+          <os>
+            <minimumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>0</osMinorVersion>
+              <spMajorVersion>1</spMajorVersion>
+            </minimumVersion>
+          </os>
+        </osList>
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/WindowsAzureToolsforMSVS2010Supp.htm</eulaURL>
+        <installerFile>
+          <fileSize>11000</fileSize>
+          <installerURL>http://download.microsoft.com/download/D/F/4/DF442AB0-FAAE-44FF-A04E-F41E72FE6B6F/WindowsAzureTools.VS100.exe</installerURL>
+          <trackingURL>http://go.microsoft.com/fwlink/?LinkID=196933</trackingURL>
+        </installerFile>
+        <installCommands>
+          <cmdline>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments>/quiet /norestart /log %temp%\WindowsAzureToolsInstall.txt</commandLineArguments>
+          </cmdline>
+        </installCommands>
+        <logFiles>
+          <location>%temp%\WindowsAzureToolsInstall.txt</location>
+        </logFiles>
+        <helpLink>http://forums.iis.net/1155.aspx</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
+
+
+  <!-- TODO this should be added the main feed.  I cannot get it working
+       with references to main.xml os elements -->
+<!-- 
+  <osLists>
+    <osList id="OSList_VS2010_Shell">
+      <os idref="OS_VWD2010_XP32Bit" />
+      <os idref="OS_VWD2010_2K3_2K3R2" />
+      <os idref="OS_VWD2010_Vista_2008" />
+      <os idref="NETFramework4OSList_Win7Plus" />
+      <os idref="OS_VWD2010_XP64Bit" />
+      <os idref="OS_VWD2010_2K3_2K3R2" />
+      <os idref="OS_VWD2010_Vista_2008" />
+      <os idref="NETFramework4OSList_Win7Plus" />
+    </osList>
+  </osLists>
+  -->
+  <osLists>
+    <!-- WinXP only, SP3+ on 32 bit architecture -->
+    <osList id="OSList_VS2010_Shell">
+      <os>
+          <minimumVersion>
+            <osMajorVersion>5</osMajorVersion>
+            <osMinorVersion>1</osMinorVersion>
+            <spMajorVersion>3</spMajorVersion>
+          </minimumVersion>
+      </os>
+    </osList>
+  </osLists>
+</feed>

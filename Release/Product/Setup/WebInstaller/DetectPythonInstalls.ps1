@@ -16,7 +16,10 @@ rm -recurse -force "$env:TMP\pip_installhelper_*"    2> $null;
 
 $isMachine64Bit = (get-itemproperty -path "hklm:System\CurrentControlSet\Control\Session Manager\Environment" PROCESSOR_ARCHITECTURE).PROCESSOR_ARCHITECTURE -eq "AMD64";
 
-$pyBittedNesses = @("x86", "x64");
+$pyBittedNesses = @("x86");
+if ($isMachine64Bit) {
+	$pyBittedNesses += @("x64");
+}
 $pythonVersions = @("2.6", "2.7", "3.0", "3.1", "3.2", "3.3", "3.4");
 
 foreach($pyBittedNess in $pyBittedNesses) {
@@ -29,8 +32,14 @@ foreach($pyBittedNess in $pyBittedNesses) {
 		#--Use the registry
 		$regKey = "hklm:SOFTWARE\Python\PythonCore\$pythonVersion\InstallPath";
 		if (($isMachine64Bit -eq $true) -and ($pyBittedNess -eq "x86")) {
-			$regKey = "hklm:SOFTWARE\Wow6432Node\Python\PythonCore\$pythonVersion\InstallPath";
+			#Hack needed to workaround WebPI incorrectly detecting 64-bit 
+			#Python installs as 32-bit Python.
+			$correctRegKey = "hklm:SOFTWARE\Wow6432Node\Python\PythonCore\$pythonVersion\InstallPath";
+			if (test-path $correctRegKey) {
+				$regKey = $correctRegKey;
+			}
 		}
+
 		if (test-path $regKey) {
 			$partialPath = (get-itemproperty -path $regKey '(default)').'(default)';
 			if (test-path $partialPath) {

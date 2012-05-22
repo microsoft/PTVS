@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Release.Product.settings" />
+  <PropertyGroup>
+    <ProductVersion>3.5</ProductVersion>
+    <ProjectGuid>{2418555F-BEB0-4A6D-842B-C183B9E19DA6}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>Azure</OutputName>
+    <OutputType>Module</OutputType>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <WixTargetsPath>$(BuildRoot)\Tools\Wix\3.5\Targets\Wix2010.targets</WixTargetsPath>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' == ''">
+    <DefineConstants>
+        ObjDir=$(ProjectDir)..\..\Python\AzureDeploymentCmdlets\AzureDeploymentCmdlets\obj\Win32\$(Configuration);
+        x64Dir=$(BuildRoot)\Binaries\x64\$(Configuration);
+        VSTargetVersion=10.0
+    </DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VSTarget)' != ''">
+    <DefineConstants>
+        ObjDir=$(ProjectDir)..\..\Python\AzureDeploymentCmdlets\AzureDeploymentCmdlets\obj\Win32\$(Configuration);
+        x64Dir=$(BuildRoot)\Binaries\x64\$(Configuration);
+        VSTargetVersion=$(VSTarget)
+    </DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Azure.wxs" />
+    <Compile Include="AzureVsExt.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Python\AzureDeploymentCmdlets\AzureDeploymentCmdlets\AzureDeploymentCmdlets.csproj">
+      <Name>Microsoft.PythonTools.AzureDeploymentCmdlets</Name>
+      <Project>{B6F73AB3-1207-4B52-B90A-065CD5E107EB}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Python\AzureSetup\AzureSetup.csproj">
+      <Name>Microsoft.PythonTools.AzureSetup</Name>
+      <Project>{B6905758-81D9-4287-BE59-5D4E2F336414}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(WixTargetsPath)" />
+</Project>

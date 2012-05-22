@@ -47,14 +47,9 @@
     </Property>
 
     
-    <!-- Conditions for install -->
-    
-    <Condition Message="The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
-  <?if "$(var.VSTargetVersion)" = "10.0" ?>
-    <Condition Message="Visual Studio 2010 must be installed.  The free integrated shell can be downloaded at http://www.microsoft.com/downloads/en/details.aspx?FamilyID=8e5aa7b6-8436-43f0-b778-00c3bca733d3"> VSINSTALLPATH OR (NOT VSINSTALLPATH AND INSTALLED) </Condition>
-  <?else?>
-    <Condition Message="Visual Studio Dev11 must be installed."> VSINSTALLPATH OR (NOT VSINSTALLPATH AND INSTALLED) </Condition>
-  <?endif ?>
+    <Property Id="POWERSHELLVERSION">
+      <RegistrySearch Id="POWERSHELLVERSION" Root="HKLM" Key="SOFTWARE\Microsoft\PowerShell\1\PowerShellEngine" Name="PowerShellVersion" Type="raw" />
+    </Property>
     
     <!-- Files/Components/MSMs to install -->
     
@@ -106,7 +101,8 @@
         <Merge Id="PythonTools" Language="1033" SourceFile="$(var.TargetDir)PythonTools.msm" DiskId="1" />
         <Merge Id="PythonHpc" Language="1033" SourceFile="$(var.TargetDir)PythonHpcSupportMsm.msm" DiskId="1" />
         <Merge Id="IronPythonInterpreter" Language="1033" SourceFile="$(var.TargetDir)IronPythonInterpreterMsm.msm" DiskId="1" />
-
+        <Merge Id="PythonAzureDeploymentCmdlets" Language="1033" SourceFile="$(var.TargetDir)Azure.msm" DiskId="1" />
+        
         <Component Id="Comp_PyProgRegistration" DiskId="1" Guid="933CFC77-F315-4058-AB16-AE737B31B2F8">
           <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
           <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[VSINSTALLPATH]\Extensions\Microsoft\Python Tools for Visual Studio\1.5\PythonProject.ico' />
@@ -124,10 +120,12 @@
 
     <!-- Features to install -->
     
+    <!-- Main visual studio support feature, requires Visual Studio. -->
     <Feature Id="ProductFeature" Title="Python Tools for Visual Studio" Description="Python Tools for Visual Studio"
-             Display="expand" Level="1" AllowAdvertise="no" Absent="disallow"  >
+             Display="expand" Level="1" AllowAdvertise="no" Absent="allow"  >
       <ComponentRef Id="Comp_InstallDirItems" Primary="yes" />
       <ComponentRef Id="Comp_PyProgRegistration" Primary="yes" />
+      <Condition Level="0">NOT VSINSTALLPATH</Condition>
       
       <MergeRef Id="PythonTools"/>
       <MergeRef Id="ReplWindow"/>
@@ -137,13 +135,13 @@
         <MergeRef Id="PTVSDjangoPackage"/>
       </Feature>
       
+      <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
+        <MergeRef Id="IronPythonInterpreter"/>
+      </Feature>
+      
       <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
         <Condition Level="2">NOT HPC_CLIENT_INSTALLED</Condition>
         <MergeRef Id="PythonHpc"/>
-      </Feature>
-      
-      <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
-        <MergeRef Id="IronPythonInterpreter"/>
       </Feature>
       
       <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register .py context menu." Description="Adds a Edit with Visual Studio context menu for .py files">
@@ -154,7 +152,13 @@
         </Feature>
       </Feature>
     </Feature>
-
+    
+    
+    <Feature Id="AzurePowershell" Title="Windows Azure PowerShell for Python" Description="Windows Azure PowerShell for Python"
+        Display="expand" Level="1" AllowAdvertise="no" Absent="allow">
+        <MergeRef Id="PythonAzureDeploymentCmdlets"/>
+        <!-- <Condition Level="0">POWERSHELLVERSION <> "2.0"</Condition> -->
+    </Feature>
     <!-- User interface elements -->
 
     <WixVariable Id="WixUISupportPerUser" Value="1" Overridable="yes" />
@@ -178,9 +182,10 @@
         <Custom Action="CustomWixSetPerUserFolder" After="CustomWixSetDefaultPerMachineFolder">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS="" OR (ALLUSERS=2 AND (NOT Privileged)))</Custom>
         <Custom Action="CustomWixSetPerMachineFolder" After="CustomWixSetPerUserFolder">ACTION="INSTALL" AND APPLICATIONFOLDER="" AND (ALLUSERS=1 OR (ALLUSERS=2 AND Privileged))</Custom>
         <?if "$(var.VSTargetVersion)" != "10.0" ?>
-	  <Custom Action="DevEnvSetup_Cmd" After="CostFinalize"/>
-	  <Custom Action="DevEnv_Setup" Before="InstallFinalize"/>
+            <Custom Action="DevEnvSetup_Cmd" After="CostFinalize"/>
+            <Custom Action="DevEnv_Setup" Before="InstallFinalize"/>
         <?endif ?>
+        <CreateShortcuts Sequence="5100"/>
     </InstallExecuteSequence>
     <InstallUISequence>
         <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="CostInitialize">NOT Installed</Show>

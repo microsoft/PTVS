@@ -21,7 +21,7 @@ using System.Web;
 using System.Web.Security;
 using System.Web.SessionState;
 
-namespace PHPWebRole
+namespace Microsoft.PythonTools.WebRole
 {
     public class Global : System.Web.HttpApplication
     {

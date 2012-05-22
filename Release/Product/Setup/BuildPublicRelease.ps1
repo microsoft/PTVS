@@ -70,6 +70,7 @@ $files = ("Microsoft.PythonTools.Analysis.dll",
           "Microsoft.PythonTools.PyKinect.dll",
           "Microsoft.PythonTools.WebRole.dll",
           "Microsoft.PythonTools.AzureSetup.exe",
+          "Microsoft.PythonTools.AzureDeploymentCmdlets.dll",
           "Microsoft.PythonTools.Pyvot.dll")
 
 foreach ($filename in $files) {
