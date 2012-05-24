@@ -455,12 +455,53 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
     }
 
+    /// <summary>
+    /// Handles the re-evaluation of a base class when we have a deferred variable lookup.
+    /// 
+    /// For each base class which a class inherits from we create a new ClassBaseAnalysisUnit.  
+    /// 
+    /// We use this AnalysisUnit for the evaulation of the base class.  The ClassBaseAU is setup
+    /// to have the same set of scopes as the classes outer (defining) analysis unit.  We then
+    /// evaluate the base class inside of this unit.  If any of our dependencies change we will 
+    /// then re-evaluate our base class, and we will also re-evaluate our outer unit as well.
+    /// </summary>
+    class ClassBaseAnalysisUnit : AnalysisUnit {
+        private readonly Expression _baseClassNode;
+        private readonly AnalysisUnit _outerUnit;
+        public ClassBaseAnalysisUnit(ClassDefinition node, InterpreterScope[] scopes, Expression baseClassNode, AnalysisUnit outerUnit)
+            : base(node, scopes) {
+            _outerUnit = outerUnit;
+            _baseClassNode = baseClassNode;
+        }
+
+        protected override void AnalyzeWorker(DDG ddg) {
+            ddg.SetCurrentUnit(this);
+
+            InterpreterScope scope;
+            if (!DeclaringModule.NodeScopes.TryGetValue(Ast, out scope)) {
+                return;
+            }
+
+            ClassAnalysisUnit.EvaluateBaseClass(
+                ddg,
+                ((ClassScope)scope).Class,
+                _baseClassNode
+            );
+
+            _outerUnit.Enqueue();
+        }
+    }
+
     class ClassAnalysisUnit : AnalysisUnit {
         private readonly AnalysisUnit _outerUnit;
-
+        private readonly ClassBaseAnalysisUnit[] _baseEvals;
         public ClassAnalysisUnit(ClassDefinition node, InterpreterScope[] scopes, AnalysisUnit outerUnit)
             : base(node, scopes) {
             _outerUnit = outerUnit;
+            _baseEvals = new ClassBaseAnalysisUnit[node.Bases.Count];
+            for (int i = 0; i < node.Bases.Count; i++) {
+                _baseEvals[i] = new ClassBaseAnalysisUnit(node, outerUnit.Scopes, node.Bases[i].Expression, this);
+            }
         }
 
         public new ClassDefinition Ast {
@@ -484,10 +525,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     newScope.AddBase(ddg.ProjectState._objectSet);
                 }
             } else {
-                ddg.SetCurrentUnit(_outerUnit);
-
                 // Process base classes
-                foreach (var baseClassArg in Ast.Bases) {
+                for (int i = 0; i < Ast.Bases.Count; i++) {
+                    var baseClassArg = Ast.Bases[i];
+
+                    ddg.SetCurrentUnit(_baseEvals[i]);
+
                     if (baseClassArg.Name != null) {
                         if (baseClassArg.Name == "metaclass") {
                             var metaClass = baseClassArg.Expression;
@@ -502,23 +545,25 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                     var baseClass = baseClassArg.Expression;
 
-                    baseClass.Walk(ddg);
-                    var bases = ddg._eval.Evaluate(baseClass);
-                    newScope.AddBase(bases);
-
-
-                    foreach (var baseValue in bases) {
-                        ClassInfo ci = baseValue as ClassInfo;
-                        if (ci != null) {
-                            ci.SubClasses.AddTypes(newScope._analysisUnit, new[] { newScope });
-                        }
-                    }
-
+                    EvaluateBaseClass(ddg, newScope, baseClass);
                 }
             }
 
             ddg.SetCurrentUnit(this);
             ddg.WalkBody(Ast.Body, newScope._analysisUnit);
+        }
+
+        internal static void EvaluateBaseClass(DDG ddg, ClassInfo newScope, Expression baseClass) {
+            baseClass.Walk(ddg);
+            var bases = ddg._eval.Evaluate(baseClass);
+            newScope.AddBase(bases);
+
+            foreach (var baseValue in bases) {
+                ClassInfo ci = baseValue as ClassInfo;
+                if (ci != null) {
+                    ci.SubClasses.AddTypes(newScope._analysisUnit, new[] { newScope });
+                }
+            }
         }
     }
     
