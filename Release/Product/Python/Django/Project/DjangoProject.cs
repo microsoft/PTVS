@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Django.Project {
         /// </summary>      
         protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel) {
             base.InitializeForOuter(fileName, location, name, flags, ref guidProject, out cancel);
-
+            
             // register the open command with the menu service provided by the base class.  We can't just handle this
             // internally because we kick off the context menu, pass ourselves as the IOleCommandTarget, and then our
             // base implementation dispatches via the menu service.  So we could either have a different IOleCommandTarget
@@ -116,6 +116,27 @@ namespace Microsoft.PythonTools.Django.Project {
                         analyzer.SpecializeFunction("django.template.base.Template", "render", TemplateRenderProcessor);
                         break;
                     }
+                }
+            }
+
+            object extObject;
+            ErrorHandler.ThrowOnFailure(
+                innerVsHierarchy.GetProperty(
+                    VSConstants.VSITEMID_ROOT, 
+                    (int)__VSHPROPID.VSHPROPID_ExtObject, 
+                    out extObject
+                )
+            );
+
+            var proj = extObject as EnvDTE.Project;
+            if (proj != null) {
+                try {
+                    dynamic webAppExtender = proj.get_Extender("WebApplication");
+                    if (webAppExtender != null) {
+                        webAppExtender.StartWebServerOnDebug = false;
+                    }
+                } catch (COMException) {
+                    // extender doesn't exist...
                 }
             }
         }
@@ -989,8 +1010,18 @@ namespace Microsoft.PythonTools.Django.Project {
                                     writer.WriteAttributeString("commandLine", "Microsoft.PythonTools.AzureSetup.exe");
                                     writer.WriteAttributeString("executionContext", "elevated");
                                     writer.WriteAttributeString("taskType", "simple");
-                                    writer.WriteEndElement();
-                                    writer.WriteEndElement();
+                                    
+                                    writer.WriteStartElement("Environment");
+                                    writer.WriteStartElement("Variable");
+                                    writer.WriteAttributeString("name", "EMULATED");
+                                    writer.WriteStartElement("RoleInstanceValue");
+                                    writer.WriteAttributeString("xpath", "/RoleEnvironment/Deployment/@emulated");
+                                    
+                                    writer.WriteEndElement(); // RoleInstanceValue
+                                    writer.WriteEndElement(); // Variable
+                                    writer.WriteEndElement(); // Environment
+                                    writer.WriteEndElement(); // Task
+                                    writer.WriteEndElement(); // Startup
                                 }
                                 writer.WriteStartElement(reader.Prefix, reader.Name, reader.NamespaceURI);
                                 writer.WriteAttributes(reader, true);

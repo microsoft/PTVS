@@ -32,7 +32,6 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
-      <keywordId>ProductSpotlight</keywordId>
     </keywords>
     <discoveryHint>
       <or>
@@ -353,7 +352,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     </author>
     <discoveryHint>
       <file>
-        <filePath>%SystemDrive%\Python27\Lib\site-packages\django\__init__.py</filePath>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\Django-1.4-py2.7.egg-info\PKG-INFO</filePath>
       </file>
     </discoveryHint>
 

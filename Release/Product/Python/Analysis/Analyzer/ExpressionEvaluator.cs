@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             // Covers both ListExpression and TupleExpression
             // TODO: We need to update the sequence on each re-evaluation, not just
             // evaluate it once.
-            return ee.GlobalScope.GetOrMakeNodeVariable(node, (n) => ee.MakeSequence(ee, n));
+            return ee.MakeSequence(ee, node);
         }
 
         private static ISet<Namespace> EvaluateParenthesis(ExpressionEvaluator ee, Node node) {

@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -128,7 +127,7 @@ namespace AzureSetup {
 
                 InstallWebPiProducts(webpiCmdLinePath, webpiInstalls);
 
-                using (ServerManager serverManager = new ServerManager()) {
+                using (ServerManager serverManager = GetServerManager()) {
                     Configuration config = serverManager.GetApplicationHostConfiguration();
 
                     ConfigurationSection fastCgiSection = config.GetSection("system.webServer/fastCgi");
@@ -199,6 +198,20 @@ namespace AzureSetup {
 
                 UpdateWebConfig(interpreter, physicalDir, fastCgiPath);
             }
+        }
+
+        private static Regex configRegex = new Regex("/config:\"(?<filename>[^\"]*)\"");
+
+        private static ServerManager GetServerManager() {
+            var appCmd = Environment.GetEnvironmentVariable("APPCMD");
+            if (!String.IsNullOrEmpty(appCmd)) {
+                var match = configRegex.Match(appCmd);
+                var filename = match.Groups["filename"];
+                if (filename.Success && File.Exists(filename.Value)) {
+                    return new ServerManager(filename.Value);
+                }
+            }
+            return new ServerManager();
         }
 
         private static void UpdateWebConfig(string interpreter, string physicalDir, string fastCgiPath) {
@@ -275,10 +288,6 @@ namespace AzureSetup {
                             process.BeginErrorReadLine();
                             process.BeginOutputReadLine();
                             process.WaitForExit();
-
-                            args += "\r\n" + process.ExitCode + "\r\n" + output;
-
-                            File.WriteAllText("D:\\Foo.txt", args);
                         }
                     }
                 } finally {

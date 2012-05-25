@@ -233,6 +233,25 @@ y = f('foo')";
             AssertContainsExactly(entry.GetValuesByIndex("x", code.IndexOf("x =")).Select(x => x.PythonType.Name), "int");
             AssertContainsExactly(entry.GetValuesByIndex("y", code.IndexOf("y =")).Select(x => x.PythonType.Name), "str");
         }
+        /*
+        [TestMethod]
+        public void TestCartesianContainerFactory() {
+            var code = @"def list_fact(ctor):
+    x = []
+    for abc in xrange(10):
+        x.append(ctor(abc))
+    return x
+
+
+a = list_fact(int)[0]
+b = list_fact(str)[0]
+";
+
+            var entry = ProcessText(code);
+
+            AssertContainsExactly(entry.GetValuesByIndex("a", code.IndexOf("a =")).Select(x => x.PythonType.Name), "int");
+            AssertContainsExactly(entry.GetValuesByIndex("b", code.IndexOf("b =")).Select(x => x.PythonType.Name), "str");
+        }*/
 
         [TestMethod]
         public void TestCartesianLocalsIsInstance() {

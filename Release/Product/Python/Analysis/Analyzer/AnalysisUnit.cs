@@ -250,10 +250,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         protected virtual void AnalyzeFunction(DDG ddg, FunctionInfo function, FunctionScope funcScope) {
-            AnalyzeFunctionWorker(ddg, function);
-        }
-
-        protected void AnalyzeFunctionWorker(DDG ddg, FunctionInfo function) {
             // process parameters
             int len = Math.Min(Ast.Parameters.Count, function.ParameterTypes.Length);
             for (int i = 0; i < len; i++) {
@@ -393,7 +389,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
 
             try {
-                AnalyzeFunctionWorker(ddg, function);
+                base.AnalyzeFunction(ddg, function, funcScope);
             } finally {
                 function.SetParameters(oldParams);
                 function.ReturnValue = unifiedReturn;
