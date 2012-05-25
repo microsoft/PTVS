@@ -17,6 +17,8 @@ import struct
 import cStringIO
 import os
 import traceback
+from os import path
+from xml.dom import minidom
 
 # http://www.fastcgi.com/devkit/doc/fcgi-spec.html#S3
 
@@ -303,6 +305,29 @@ terminate the stream"""
         if len_remaining == 0 or not streaming:
             break
 
+def update_environment():
+    cur_dir = path.dirname(path.dirname(__file__))
+    web_config = path.join(cur_dir, 'Web.config')
+    if os.path.exists(web_config):
+        try:
+            with file(web_config) as wc:
+                doc = minidom.parse(wc)
+                config = doc.getElementsByTagName('configuration')
+                for configSection in config:
+                    appSettings = configSection.getElementsByTagName('appSettings')
+                    for appSettingsSection in configSection.getElementsByTagName('appSettings'):
+                        values = appSettingsSection.getElementsByTagName('add')
+                        for curAdd in values:
+                            key = curAdd.getAttribute('key')
+                            value = curAdd.getAttribute('value')
+                            if key and value:
+                                os.environ[key] = value
+        except:
+            # unable to read file
+            log(traceback.format_exc())
+            pass
+
+
 if __name__ == '__main__':
     # TODO: Pull this from an env var
     handler_name = os.getenv('WSGI_HANDLER', 'django.core.handlers.wsgi.WSGIHandler')
@@ -315,6 +340,8 @@ if __name__ == '__main__':
         msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
     except ImportError:
         pass
+
+    update_environment()
 
     _REQUESTS = {}
 
