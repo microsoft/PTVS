@@ -16,10 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.XPath;
-using Microsoft.Web.Administration;
 using Microsoft.Win32;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
@@ -78,7 +78,7 @@ namespace AzureSetup {
             }
 
             if (physicalDir != null) {
-                string fastCgiPath = Path.Combine(physicalDir, "bin\\wfastcgi.py");
+                string fastCgiPath = "\"" + Path.Combine(physicalDir, "bin\\wfastcgi.py") + "\"";
                 string webpiCmdLinePath = Path.Combine(physicalDir, "bin\\WebPICmdLine.exe");
                 string settingsName = null, pythonPath = null;
                 string setupCfg = Path.Combine(physicalDir, "bin\\AzureSetup.cfg");
@@ -127,95 +127,131 @@ namespace AzureSetup {
 
                 InstallWebPiProducts(webpiCmdLinePath, webpiInstalls);
 
-                using (ServerManager serverManager = GetServerManager()) {
-                    Configuration config = serverManager.GetApplicationHostConfiguration();
-
-                    ConfigurationSection fastCgiSection = config.GetSection("system.webServer/fastCgi");
-                    ConfigurationElementCollection fastCgiCollection = fastCgiSection.GetCollection();
-
-                    if (String.IsNullOrEmpty(interpreter)) {
-                        // TODO: Better discovery....
-                        interpreter = Path.Combine(
-                            Environment.GetEnvironmentVariable("SystemDrive") + "\\",
-                            "Python27\\python.exe"
-                        );
-                    }
-
-                    // remove the previous entry if we're already registered at the same path...
-                    foreach (var child in fastCgiCollection) {
-                        var path = child.Attributes["fullPath"];
-                        var arguments = child.Attributes["arguments"];
-
-                        if ((string)path.Value == interpreter && (string)arguments.Value == fastCgiPath) {
-                            fastCgiCollection.Remove(child);
-                            break;
-                        }
-                    }
-
-                    ConfigurationElement applicationElement = fastCgiCollection.CreateElement("application");
-
-                    applicationElement["fullPath"] = interpreter;
-                    applicationElement["arguments"] = fastCgiPath;
-                    applicationElement["maxInstances"] = 4;
-                    applicationElement["idleTimeout"] = 300;
-                    applicationElement["activityTimeout"] = 30;
-                    applicationElement["requestTimeout"] = 90;
-                    applicationElement["instanceMaxRequests"] = isDebug ? 1 : 10000;
-                    applicationElement["protocol"] = "NamedPipe";
-                    applicationElement["flushNamedPipe"] = false;
-
-                    ConfigurationElementCollection environmentVariablesCollection = applicationElement.GetCollection("environmentVariables");
-                    if (settingsName == null) {
-                        if (physicalDir.Length > 0 && physicalDir[physicalDir.Length - 1] == Path.DirectorySeparatorChar) {
-                            settingsName = Path.GetFileName(physicalDir.Substring(0, physicalDir.Length - 1));
-                        } else {
-                            settingsName = Path.GetFileName(physicalDir);
-                        }
-                        settingsName += ".settings";
-                    }
-
-                    if (pythonPath == null) {
-                        pythonPath = Path.Combine(physicalDir, "..");
-                    }
-
-
-                    foreach (var envVar in new[] { 
-                    new { Name = "DJANGO_SETTINGS_MODULE", Value = settingsName },
-                    new { Name = "PYTHONPATH", Value = pythonPath } 
-                    }
-                    ) {
-                        ConfigurationElement environmentVariableElement = environmentVariablesCollection.CreateElement("environmentVariable");
-                        environmentVariableElement["name"] = envVar.Name;
-                        environmentVariableElement["value"] = envVar.Value;
-                        environmentVariablesCollection.Add(environmentVariableElement);
-                    }
-
-                    fastCgiCollection.Add(applicationElement);
-
-
-                    serverManager.CommitChanges();
+                if (String.IsNullOrEmpty(interpreter)) {
+                    // TODO: Better discovery....
+                    interpreter = Path.Combine(
+                        Environment.GetEnvironmentVariable("SystemDrive") + "\\",
+                        "Python27\\python.exe"
+                    );
                 }
+
+                if (settingsName == null) {
+                    if (physicalDir.Length > 0 && physicalDir[physicalDir.Length - 1] == Path.DirectorySeparatorChar) {
+                        settingsName = Path.GetFileName(physicalDir.Substring(0, physicalDir.Length - 1));
+                    } else {
+                        settingsName = Path.GetFileName(physicalDir);
+                    }
+                    settingsName += ".settings";
+                }
+
+                if (pythonPath == null) {
+                    pythonPath = Path.Combine(physicalDir, "..");
+                }
+
+                UpdateIISAppCmd(interpreter, physicalDir, isDebug, fastCgiPath, settingsName, pythonPath);
 
                 UpdateWebConfig(interpreter, physicalDir, fastCgiPath);
             }
         }
 
-        private static Regex configRegex = new Regex("/config:\"(?<filename>[^\"]*)\"");
 
-        private static ServerManager GetServerManager() {
+        private static void UpdateIISAppCmd(string interpreter, string physicalDir, bool isDebug, string fastCgiPath, string settingsName, string pythonPath) {
             var appCmd = Environment.GetEnvironmentVariable("APPCMD");
-            if (!String.IsNullOrEmpty(appCmd)) {
-                var match = configRegex.Match(appCmd);
-                var filename = match.Groups["filename"];
-                if (filename.Success && File.Exists(filename.Value)) {
-                    return new ServerManager(filename.Value);
+            if (String.IsNullOrEmpty(appCmd)) {
+                appCmd = Path.Combine(Environment.GetEnvironmentVariable("WINDIR"), "System32\\inetsrv\\appcmd.exe");
+            }
+            interpreter = Escape(interpreter);
+            fastCgiPath = Escape(fastCgiPath);
+
+            RunAppCmd(appCmd,
+                "set config /section:system.webServer/fastCGI \"/+[fullPath='{0}', arguments='{1}', instanceMaxRequests='{2}']\"",
+                interpreter,
+                fastCgiPath,
+                isDebug ? "1" : "10000"
+            );
+            RunAppCmd(appCmd,
+                "set config /section:system.webServer/handlers \"/+[name='Python_via_FastCGI',path='*',verb='*',modules='FastCgiModule',scriptProcessor='{0}|{1}',resourceType='Unspecified']\"",
+                interpreter,
+                fastCgiPath
+            );
+
+            AppCmdSetEnv(interpreter, fastCgiPath, appCmd, "DJANGO_SETTINGS_MODULE", settingsName);
+            AppCmdSetEnv(interpreter, fastCgiPath, appCmd, "PYTHONPATH", pythonPath);
+        }
+
+        private static void AppCmdSetProperty(string interpreter, string fastCgiPath, string appCmd, string propertyName, string value) {
+            RunAppCmd(appCmd,
+                "set config -section:system.webServer/fastCgi \"^/[fullPath='{0}', arguments='{1}'].{2}:{3}\"",
+                interpreter,
+                fastCgiPath,
+                propertyName,
+                value
+            );
+        }
+
+        private static void AppCmdSetEnv(string interpreter, string fastCgiPath, string appCmd, string varName, string value) {
+            RunAppCmd(appCmd,
+                "set config -section:system.webServer/fastCgi /+\"[fullPath='{0}', arguments='{1}'].environmentVariables.[name='{2}',value='{3}']\"",
+                interpreter,
+                fastCgiPath,
+                varName,
+                Escape(value)
+            );
+        }
+
+
+        private static string Escape(string interpreter) {
+            // http://msdn.microsoft.com/en-us/library/bb776391(VS.85).aspx
+            // 2n backslashes followed by a quotation mark produce n backslashes followed by a quotation mark.
+            // (2n) + 1 backslashes followed by a quotation mark again produce n backslashes followed by a quotation mark.
+            // n backslashes not followed by a quotation mark simply produce n backslashes.
+
+            StringBuilder res = new StringBuilder();
+            int backslashCount = 0;
+            for (int i = 0; i < interpreter.Length; i++) {
+                if (interpreter[i] == '"') {
+                    for (int j = 0; j < backslashCount; j++) {
+                        res.Append('\\');
+                    }
+                    res.Append("\\\"");
+                    backslashCount = 0;
+                } else if (interpreter[i] == '\\') {
+                    backslashCount++;
+                } else {
+                    for (int j = 0; j < backslashCount; j++) {
+                        res.Append('\\');
+                    }
+                    res.Append(interpreter[i]);
+                    backslashCount = 0;
                 }
             }
-            return new ServerManager();
+            return res.ToString();
+        }
+
+        private static void RunAppCmd(string appCmd, string argStr, params string[] args) {
+            string fullArgs = String.Format(argStr, args);
+            var appCmdEnd = appCmd.IndexOf("appcmd.exe", StringComparison.OrdinalIgnoreCase);
+            if (appCmdEnd != -1) {
+                if (appCmd[0] == '\"') {
+                    // "D:\Program Files\IIS Express\appcmd.exe"
+                    var closeQuote = appCmdEnd + "appcmd.exe".Length;
+                    if (closeQuote < appCmd.Length &&
+                        appCmd[closeQuote] == '"') {
+                        appCmdEnd++;
+                    }
+                }
+                var appCmdCmd = appCmd.Substring(0, appCmdEnd + "appcmd.exe".Length);
+                fullArgs = fullArgs + appCmd.Substring(appCmdCmd.Length);
+
+                var psi = new ProcessStartInfo(appCmdCmd, fullArgs);
+                psi.UseShellExecute = false;
+                var proc = Process.Start(psi);
+
+                proc.WaitForExit();
+            }
         }
 
         private static void UpdateWebConfig(string interpreter, string physicalDir, string fastCgiPath) {
-
             // patch web.config w/ the correct path to our fast cgi script
             var webCloudConfig = Path.Combine(physicalDir, "web.cloud.config");
             var webConfig = Path.Combine(physicalDir, "web.config");
@@ -227,7 +263,7 @@ namespace AzureSetup {
             }
 
             var text = File.ReadAllText(readFrom);
-            File.WriteAllText(webConfig, text.Replace("WFASTCGIPATH", fastCgiPath).Replace("INTERPRETERPATH", interpreter));
+            File.WriteAllText(webConfig, text.Replace("WFASTCGIPATH", fastCgiPath.Replace("\"", "&quot;")).Replace("INTERPRETERPATH", interpreter));
         }
 
         private static void InstallWebPiProducts(string webpiCmdLinePath, List<string> webpiInstalls) {
@@ -254,7 +290,7 @@ namespace AzureSetup {
                 Directory.CreateDirectory(dir);
                 break;
             }
-            
+
             const string userShellFolders = ".DEFAULT\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
             const string localAppData = "Local AppData";
 

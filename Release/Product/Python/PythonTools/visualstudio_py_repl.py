@@ -109,6 +109,7 @@ actual inspection and introspection."""
         self.input_event = threading.Lock()
         self.input_event.acquire()  # lock starts acquired (we use it like a manual reset event)        
         self.input_string = None
+        self.exit_requested = False
     
     def connect(self, port):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -200,6 +201,7 @@ actual inspection and introspection."""
 
     def _cmd_exit(self):
         """exits the interactive process"""
+        self.exit_requested = True
         self.exit_process()
 
     def _cmd_mems(self):
@@ -583,6 +585,10 @@ due to the exec, so we do it here"""
         except SystemExit:
             self.send_error()
             self.send_exit()
+            # wait for ReplEvaluator to send back exit requested which will indicate
+            # that all the output has been processed.
+            while not self.exit_requested:
+                time.sleep(.25)
             return True, None, None, None
         except BaseException:
             _debug_write('Exception')
@@ -689,7 +695,7 @@ due to the exec, so we do it here"""
             thread.interrupt_main()
         self.send_lock.release()
 
-    def exit_process(self):
+    def exit_process(self):        
         self.execute_item = exit_work_item
         try:
             self.execute_item_lock.release()

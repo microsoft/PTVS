@@ -10,144 +10,6 @@
   </author>
   <id>http://pytools/demos/production/windowsazure.xml</id>
 
-
-  <!-- ##MySQLdbPython############################################################ -->
-  <entry>
-    <productId>MySQLdbPython</productId>
-    <title resourceName="Entry_MySQLdbPython_Title">MySQLdb (32-bit Python 2.7)</title>
-    <version>1.2.3</version>
-    <summary resourceName="Entry_MySQLdbPython_Summary">Python MySQL client interface</summary>
-    <updated>2010-7-22T12:00:00Z</updated>
-    <longSummary resourceName="Entry_MySQLdbPython_LongSummary">MySQLdb is a Python client interface to the MySQL database.</longSummary>
-    <productFamily resourceName="Python">Python</productFamily>
-    <images>
-      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
-    </images>
-    <keywords>
-      <keywordId>Server</keywordId>
-      <keywordId>FrameworkRuntime</keywordId>
-    </keywords>
-    <published>2010-7-22T12:00:00Z</published>
-    <link href="http://pypi.python.org/pypi/MySQL-python/1.2.3" />
-    <author>
-      <name>Andy Dustman</name>
-      <uri>http://sourceforge.net/projects/mysql-python</uri>
-    </author>
-    <discoveryHint>
-      <file>
-        <filePath>%SystemDrive%\Python27\Lib\site-packages\MySQL_python-1.2.3-py2.7.egg-info\PKG-INFO</filePath>
-      </file>
-    </discoveryHint>
-
-    <dependency>
-      <and>
-        <dependency>
-          <productId>Python27</productId>
-        </dependency>
-        <dependency>
-          <productId>PythonDetectInstalls</productId>
-        </dependency>
-      </and>
-    </dependency>
-
-    <installers>
-      <installer>
-        <id>1</id>
-        <languageId>en</languageId>
-        <eulaURL>http://pypi.python.org/pypi/MySQL-python/1.2.3</eulaURL>
-        <installerFile>
-          <fileSize>1000</fileSize>
-          <installerURL>http://www.codegood.com/download/10</installerURL>
-          <sha1>b9ab5a3117077d1e404294dc32d523cfd5c56a99</sha1>
-        </installerFile>
-        <installCommands>
-          <cmdLine>
-            <exe>%InstallerFile%</exe>
-            <commandLineArguments></commandLineArguments>
-            <ignoreExitCode>false</ignoreExitCode>
-          </cmdLine>
-        </installCommands>
-        <helpLink>http://pypi.python.org/pypi/MySQL-python/1.2.3</helpLink>
-      </installer>
-    </installers>
-  </entry>
-
-  <!-- ##Windows Azure SDK for Python (Core)################################# -->
-  <entry>
-    <productId>AzurePythonSDKCore</productId>
-    <title resourceName="Entry_AzurePythonSDKCore_Title">Windows Azure SDK for Python (Core) - June 2012</title>
-    <version>June 2012</version>
-    <published>2012-6-7T12:00:00Z</published>
-    <updated>2012-6-7T12:00:00Z</updated>
-    <summary resourceName="Entry_AzurePythonSDKCore_Summary">Python development support for Windows Azure.</summary>
-    <longSummary resourceName="Entry_AzurePythonSDKCore_LongSummary">The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.</longSummary>
-    <productFamily resourceName="Python">Python</productFamily>
-    <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
-    <author>
-      <name>Microsoft's Python Tools Team</name>
-      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
-    </author>
-    <searchExclude />
-    <images>
-      <icon>http://go.microsoft.com/fwlink/?LinkId=252047</icon>
-    </images>
-    <keywords>
-      <keywordId>ProductTools</keywordId>
-      <keywordId>FrameworkRuntime</keywordId>
-    </keywords>
-
-    <!-- TODO Update this around December 2012 -->
-    <!-- 
-    <discoveryHint>
-      <file>
-        <filePath>%SystemDrive%\Python27\Lib\site-packages\windowsazure\__init__.py</filePath>
-      </file>
-    </discoveryHint>
-    -->
-
-    <dependency>
-      <and>
-        <dependency>
-          <productId>WindowsAzureSDKOnly</productId>
-        </dependency>
-        <dependency>
-          <productId>WindowsAzureEmulator</productId>
-        </dependency>
-        <dependency>
-          <productId>PowerShell2</productId>
-        </dependency>
-        <dependency>
-          <productId>Python27</productId>
-        </dependency>
-        <dependency>
-          <productId>PythonDetectInstalls</productId>
-        </dependency>
-        <dependency>
-          <productId>Django</productId>
-        </dependency>
-      </and>
-    </dependency>
-
-    <installers>
-      <installer>
-        <id>1</id>
-        <languageId>en</languageId>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252059</eulaURL>
-        <installCommands>
-          <cmdLine>
-            <exe>%TMP%\pip_installhelper_27_x86.bat</exe>
-            <commandLineArguments>--log %TMP%\windowsazure.log install windowsazure --upgrade</commandLineArguments>
-            <ignoreExitCode>false</ignoreExitCode>
-          </cmdLine>
-        </installCommands>
-        <logFiles>
-          <location>%TMP%\windowsazure.log</location>
-        </logFiles>
-        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252044</helpLink>
-      </installer>
-    </installers>
-  </entry>
-
   <!-- ##Windows Azure SDK for Python ##################################### -->
   <entry>
     <productId>WindowsAzurePythonSDK</productId>
@@ -161,7 +23,7 @@
 
     <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
     <author>
-      <name>Microsoft's Python Tools Team</name>
+      <name>Microsoft</name>
       <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
     </author>
     <images>
@@ -202,6 +64,78 @@
             <ignoreExitCode>false</ignoreExitCode>
           </cmdline>
         </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252044</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
+  <!-- ##Windows Azure SDK for Python (Core)################################# -->
+  <entry>
+    <productId>AzurePythonSDKCore</productId>
+    <title resourceName="Entry_AzurePythonSDKCore_Title">Windows Azure SDK for Python (Core) - June 2012</title>
+    <version>June 2012</version>
+    <published>2012-6-7T12:00:00Z</published>
+    <updated>2012-6-7T12:00:00Z</updated>
+    <summary resourceName="Entry_AzurePythonSDKCore_Summary">Python development support for Windows Azure.</summary>
+    <longSummary resourceName="Entry_AzurePythonSDKCore_LongSummary">The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
+    <author>
+      <name>Microsoft</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/fwlink/?LinkId=252047</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
+    </keywords>
+
+    <!-- TODO Update this around December 2012 -->
+    <!-- 
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\azure\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+    -->
+
+    <dependency>
+      <and>
+        <dependency>
+          <productId>WindowsAzureSDKOnly_1_7</productId>
+        </dependency>
+        <dependency>
+          <productId>WindowsAzureEmulator_1_7</productId>
+        </dependency>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PythonDetectInstalls</productId>
+        </dependency>
+        <dependency>
+          <productId>Django</productId>
+        </dependency>
+      </and>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252059</eulaURL>
+        <installCommands>
+          <cmdLine>
+            <exe>%TMP%\pip_installhelper_27_x86.bat</exe>
+            <commandLineArguments>--log %TMP%\azure.log install azure --upgrade</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <logFiles>
+          <location>%TMP%\azure.log</location>
+        </logFiles>
         <helpLink>http://go.microsoft.com/fwlink/?LinkId=252044</helpLink>
       </installer>
     </installers>

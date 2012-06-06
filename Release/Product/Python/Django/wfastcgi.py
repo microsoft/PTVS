@@ -315,7 +315,7 @@ def update_environment():
                 config = doc.getElementsByTagName('configuration')
                 for configSection in config:
                     appSettings = configSection.getElementsByTagName('appSettings')
-                    for appSettingsSection in configSection.getElementsByTagName('appSettings'):
+                    for appSettingsSection in appSettings:
                         values = appSettingsSection.getElementsByTagName('add')
                         for curAdd in values:
                             key = curAdd.getAttribute('key')

@@ -370,22 +370,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         internal void AssignTo(Node assignStmt, Expression left, ISet<Namespace> values) {
-            if (left is NameExpression) {
+            if (left is NameExpression) {                
                 var l = (NameExpression)left;
-                var vars = Scopes[Scopes.Length - 1].CreateVariable(l, _unit, l.Name, false);
+                if (l.Name != null) {
+                    var vars = Scopes[Scopes.Length - 1].CreateVariable(l, _unit, l.Name, false);
 
-                IsInstanceScope isInstScope = Scopes[Scopes.Length - 1] as IsInstanceScope;
-                VariableDef outerVar;
-                if (isInstScope != null && isInstScope.OuterVariables.TryGetValue(l.Name, out outerVar)) {
-                    outerVar.AddAssignment(left, _unit);
-                }
-                    
-                vars.AddAssignment(left, _unit);
-                vars.AddTypes(_unit, values);
+                    IsInstanceScope isInstScope = Scopes[Scopes.Length - 1] as IsInstanceScope;
+                    VariableDef outerVar;
+                    if (isInstScope != null && isInstScope.OuterVariables.TryGetValue(l.Name, out outerVar)) {
+                        outerVar.AddAssignment(left, _unit);
+                    }
 
-                if (Scopes[Scopes.Length - 1] is ClassScope && l.Name == "__metaclass__") {
-                    // assignment to __metaclass__, save it in our metaclass variable
-                    ((ClassScope)Scopes[Scopes.Length - 1]).Class.GetOrCreateMetaclassVariable().AddTypes(_unit, values);
+                    vars.AddAssignment(left, _unit);
+                    vars.AddTypes(_unit, values);
+
+                    if (Scopes[Scopes.Length - 1] is ClassScope && l.Name == "__metaclass__") {
+                        // assignment to __metaclass__, save it in our metaclass variable
+                        ((ClassScope)Scopes[Scopes.Length - 1]).Class.GetOrCreateMetaclassVariable().AddTypes(_unit, values);
+                    }
                 }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;

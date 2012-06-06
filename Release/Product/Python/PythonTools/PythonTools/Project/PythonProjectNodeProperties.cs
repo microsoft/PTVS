@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Project {
         [PropertyNameAttribute("WebApplication.AspNetDebugging")]
         public bool AspNetDebugging {
             get {
-                return false;
+                return true;
             }
         }
 

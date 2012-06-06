@@ -2284,7 +2284,7 @@ namespace Microsoft.VisualStudio.Repl {
                     _history.Last.Failed = true;
                 }
 
-                if (_pendingSubmissions.Count > 0) {
+                if (_pendingSubmissions != null && _pendingSubmissions.Count > 0) {
                     // there was an error with the last execution, clear the
                     // input queue due to the error.
                     _pendingSubmissions.Clear();

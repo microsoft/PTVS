@@ -383,6 +383,7 @@ namespace Microsoft.PythonTools.Repl {
                                 case "DPNG": DisplayPng(); break;
                                 case "EXIT":
                                     // REPL has exited
+                                    socket.Send(ExitCommandBytes);
                                     return;
                             }
                         }

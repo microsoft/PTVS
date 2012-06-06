@@ -13,10 +13,10 @@
   <!-- ##PTVS############################################################## -->
   <entry>
     <productId>PythonToolsForVS</productId>
-    <title resourceName="Entry_PythonToolsForVS_Title">Python Tools for Visual Studio 2010</title>
-    <version>1.5 Alpha 1</version>
-    <published>2012-5-10T12:00:00Z</published>
-    <updated>2012-5-10T12:00:00Z</updated>
+    <title resourceName="Entry_PythonToolsForVS_Title">Python Tools for Visual Studio 2010 - 1.5 Beta 1</title>
+    <version>1.5 Beta 1</version>
+    <published>2012-6-7T12:00:00Z</published>
+    <updated>2012-6-7T12:00:00Z</updated>
     <summary resourceName="Entry_PythonToolsForVS_Summary">Adds support for Python to Visual Studio.</summary>
     <longSummary resourceName="Entry_PythonToolsForVS_LongSummary">
 Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio.
@@ -32,6 +32,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
     </keywords>
     <discoveryHint>
       <or>
@@ -39,14 +40,14 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <registry>
           <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
           <valueName>DisplayVersion</valueName>
-          <valueValue>1.1.50508.0</valueValue>
+          <valueValue>1.1.50530.0</valueValue>
         </registry>
       </discoveryHint>
       <discoveryHint>
         <registry>
           <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{6BC9E8A5-6AEE-4BD7-9C52-AFA087FF7B48}</keyPath>
           <valueName>DisplayVersion</valueName>
-          <valueValue>1.1.50508.0</valueValue> 
+          <valueValue>1.1.50530.0</valueValue> 
         </registry>
       </discoveryHint>
      </or>
@@ -71,10 +72,10 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <languageId>en</languageId>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
         <installerFile>
-          <fileSize>2543</fileSize>
+          <fileSize>3428</fileSize>
           <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;appid=PythonToolsForVS</trackingURL>
-          <installerURL>http://go.microsoft.com/fwlink/?LinkId=252039</installerURL>
-          <sha1>61954d687b0c487ab055c1aaded6f788f0c79c1b</sha1>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=254293</installerURL>
+          <sha1>8e3168b95b84973184f3123d33f8c11e37482fa2</sha1>
         </installerFile>
         <installCommands> 
           <msiInstall>
@@ -89,7 +90,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##CPython######################################################### -->
   <entry>
     <productId>Python27</productId>
-    <title resourceName="Entry_Python27_Title">Python 2.7</title>
+    <title resourceName="Entry_Python27_Title">Python 2.7 (32-bit)</title>
     <version>2.7.3</version>
     <summary resourceName="Entry_Python27_Summary">Python programming language</summary>
     <id>http://www.python.org</id>
@@ -202,7 +203,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Distribute Module############################################### -->
   <entry>
     <productId>PyDistributeModule</productId>
-    <title resourceName="Entry_PyDistributeModule_Title">distribute module (Python)</title>
+    <title resourceName="Entry_PyDistributeModule_Title">distribute (Python)</title>
     <version>0.6.25</version>
     <summary resourceName="Entry_PyDistributeModule_Summary">Python's distribute module (prereq for installing PyPI)</summary>
     <updated>2011-11-29T12:00:00Z</updated>
@@ -269,7 +270,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##PyPI############################################################## -->
   <entry>
     <productId>PyPI</productId>
-    <title resourceName="Entry_PyPI_Title">PyPI</title>
+    <title resourceName="Entry_PyPI_Title">PyPI (Python)</title>
     <version>1.0.2</version>
     <summary resourceName="Entry_PyPI_Summary">Python's package index repository</summary>
     <updated>2011-7-16T12:00:00Z</updated>
@@ -331,7 +332,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
   <!-- ##Django############################################################ -->
   <entry>
     <productId>Django</productId>
-    <title resourceName="Entry_Django_Title">Django 1.4</title>
+    <title resourceName="Entry_Django_Title">Django 1.4 (Python)</title>
     <version>1.4</version>
     <summary resourceName="Entry_Django_Summary">Python Web framework</summary>
     <updated>2012-3-23T12:00:00Z</updated>
@@ -972,19 +973,18 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     </installers>
   </entry>
 
-  <!-- This is identical to WindowsAzureToolsOnlyVS2010 except that it requires VS2010 full,
+  <!-- This is identical to WindowsAzureToolsVS2010_Only_1_7 except that it requires VS2010 full,
        VS2010 Web Express, or VS2010 Integrated Shell (as opposed to VS2010 full or VS2010 Web) -->
   <entry>
     <productId>WindowsAzureToolsOnlyVS2010OrShell</productId>
-    <title resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_Title">Windows Azure Tools for Microsoft Visual Studio 2010 - November 2011</title>
-    <version>1.6.41103.1601</version>
+    <title resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_Title">Windows Azure Tools 1.7 for Microsoft Visual Studio 2010 (June 2012)</title>
+    <version>1.7.50502.1601</version>
     <summary resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_Summary">Add-on for Microsoft Visual Studio 2010 for developing Windows Azure applications.</summary>
     <id>http://www.microsoft.com/web/webpi/toolsforsilverlight_3</id>
-    <updated>2011-06-15T16:30:00Z</updated>
+    <updated>2012-05-31T12:00:00Z</updated>
     <longSummary resourceName="Entry_WindowsAzureToolsOnlyVS2010OrShell_LongSummary">Windows Azure Tools for Microsoft Visual Studio 2010 extends Visual Studio 2010 and Visual Web Developer 2010 Express Edition to enable you to create, build, debug, run, and package scalable services on Windows Azure.</longSummary>
-    <published>2011-06-10T12:30:00Z</published>
+    <published>2012-05-31T12:00:00Z</published>
     <link href="http://go.microsoft.com/fwlink/?LinkID=231172" />
-    <searchExclude />
     <images>
       <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/wa_vs_graphic.png</icon>
     </images>
@@ -992,48 +992,12 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <name>Microsoft</name>
       <uri>http://www.microsoft.com/</uri>
     </author>
-    <discoveryHint>
-      <and>
-        <discoveryHint>
-          <or>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\1.6</keyPath>
-                <valueName>FullVersion</valueName>
-                <valueValue>1.6.41103.1601</valueValue>
-              </registry>
-            </discoveryHint>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\1.6</keyPath>
-                <valueName>FullVersion</valueName>
-                <valueValue>1.6.41103.1601</valueValue>
-              </registry>
-            </discoveryHint>
-          </or>
-        </discoveryHint>
-        <discoveryHint>
-          <or>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\Core</keyPath>
-                <valueName>FullVersion</valueName>
-                <valueValue>1.6.41103.1601</valueValue>
-              </registry>
-            </discoveryHint>
-            <discoveryHint>
-              <registry>
-                <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows Azure Tools for Microsoft Visual Studio\10.0\Core</keyPath>
-                <valueName>FullVersion</valueName>
-                <valueValue>1.6.41103.1601</valueValue>
-              </registry>
-            </discoveryHint>
-          </or>
-        </discoveryHint>
-      </and>
-    </discoveryHint>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+    </keywords>
+    <searchExclude />
+    <discoveryHint idref="DH_WindowsAzureToolsVS2010_Only_1_7" />
     <dependency>
-
       <and>
         <dependency>
           <or>
@@ -1049,7 +1013,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
           </or>
         </dependency>
         <dependency>
-          <productId>WindowsAzureEmulator</productId>
+          <productId>WindowsAzureEmulator_1_7</productId>
         </dependency>
       </and>
     </dependency>
@@ -1086,42 +1050,85 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         </osList>
         <eulaURL>http://www.microsoft.com/web/webpi/eula/WindowsAzureToolsforMSVS2010Supp.htm</eulaURL>
         <installerFile>
-          <fileSize>11000</fileSize>
-          <installerURL>http://download.microsoft.com/download/D/F/4/DF442AB0-FAAE-44FF-A04E-F41E72FE6B6F/WindowsAzureTools.VS100.exe</installerURL>
+          <fileSize>12123</fileSize>
+          <installerURL>\\iisdist\AzureSDK\LKG\VisualStudio\WindowsAzureTools.VS100.exe</installerURL>
           <trackingURL>http://go.microsoft.com/fwlink/?LinkID=196933</trackingURL>
         </installerFile>
         <installCommands>
           <cmdline>
             <exe>%InstallerFile%</exe>
-            <commandLineArguments>/quiet /norestart /log %temp%\WindowsAzureToolsInstall.txt</commandLineArguments>
+            <commandLineArguments>/quiet /norestart /log %temp%\WindowsAzureToolsVs2010_1_7_Install.txt</commandLineArguments>
           </cmdline>
         </installCommands>
         <logFiles>
-          <location>%temp%\WindowsAzureToolsInstall.txt</location>
+          <location>%temp%\WindowsAzureToolsVs2010_1_7_Install.txt</location>
         </logFiles>
         <helpLink>http://forums.iis.net/1155.aspx</helpLink>
       </installer>
     </installers>
   </entry>
-  
 
+  <!-- ##MySQLdbPython############################################################ -->
+  <entry>
+    <productId>MySQLdbPython</productId>
+    <title resourceName="Entry_MySQLdbPython_Title">MySQLdb (32-bit Python 2.7)</title>
+    <version>1.2.3</version>
+    <summary resourceName="Entry_MySQLdbPython_Summary">Python MySQL client interface</summary>
+    <updated>2010-7-22T12:00:00Z</updated>
+    <longSummary resourceName="Entry_MySQLdbPython_LongSummary">MySQLdb is a Python client interface to the MySQL database.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <images>
+      <icon>http://www.python.org/community/logos/python-powered-h-100x130.png</icon>
+    </images>
+    <keywords>
+      <keywordId>Server</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
+    </keywords>
+    <published>2010-7-22T12:00:00Z</published>
+    <link href="http://pypi.python.org/pypi/MySQL-python/1.2.3" />
+    <author>
+      <name>Andy Dustman</name>
+      <uri>http://sourceforge.net/projects/mysql-python</uri>
+    </author>
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\MySQL_python-1.2.3-py2.7.egg-info\PKG-INFO</filePath>
+      </file>
+    </discoveryHint>
 
-  <!-- TODO this should be added the main feed.  I cannot get it working
-       with references to main.xml os elements -->
-<!-- 
-  <osLists>
-    <osList id="OSList_VS2010_Shell">
-      <os idref="OS_VWD2010_XP32Bit" />
-      <os idref="OS_VWD2010_2K3_2K3R2" />
-      <os idref="OS_VWD2010_Vista_2008" />
-      <os idref="NETFramework4OSList_Win7Plus" />
-      <os idref="OS_VWD2010_XP64Bit" />
-      <os idref="OS_VWD2010_2K3_2K3R2" />
-      <os idref="OS_VWD2010_Vista_2008" />
-      <os idref="NETFramework4OSList_Win7Plus" />
-    </osList>
-  </osLists>
-  -->
+    <dependency>
+      <and>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PythonDetectInstalls</productId>
+        </dependency>
+      </and>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://pypi.python.org/pypi/MySQL-python/1.2.3</eulaURL>
+        <installerFile>
+          <fileSize>1000</fileSize>
+          <installerURL>http://www.codegood.com/download/10</installerURL>
+          <sha1>b9ab5a3117077d1e404294dc32d523cfd5c56a99</sha1>
+        </installerFile>
+        <installCommands>
+          <cmdLine>
+            <exe>%InstallerFile%</exe>
+            <commandLineArguments></commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <helpLink>http://pypi.python.org/pypi/MySQL-python/1.2.3</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
   <osLists>
     <!-- WinXP only, SP3+ on 32 bit architecture -->
     <osList id="OSList_VS2010_Shell">

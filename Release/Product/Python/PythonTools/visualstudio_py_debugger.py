@@ -483,7 +483,7 @@ class Thread(object):
             if source_obj is not None:
                 origin, (start, end) = source_obj
                     
-                active_bps = DJANGO_BREAKPOINTS.get(origin.name)
+                active_bps = DJANGO_BREAKPOINTS.get(origin.name.lower())
                 should_break = False
                 if active_bps is not None:
                     should_break, bkpt_id = active_bps.should_break(start, end)
@@ -918,9 +918,9 @@ class Thread(object):
                 origin, (start, end) = source_obj
 
                 filename = str(origin)
-                bp_info = DJANGO_BREAKPOINTS.get(filename)
+                bp_info = DJANGO_BREAKPOINTS.get(filename.lower())
                 if bp_info is None:
-                    DJANGO_BREAKPOINTS[filename] = bp_info = DjangoBreakpointInfo(filename)
+                    DJANGO_BREAKPOINTS[filename.lower()] = bp_info = DjangoBreakpointInfo(filename)
 
                 low_line, hi_line = bp_info.get_line_range(start, end)
                 if low_line is not None and hi_line is not None:

@@ -11,6 +11,7 @@ if (-not $build_name)
 	exit 1
 }
 
+
 ###################################################################
 # Build the actual binaries
 echo "Building release to $outdir ..."
@@ -69,9 +70,10 @@ $files = ("Microsoft.PythonTools.Analysis.dll",
           "Microsoft.VisualStudio.ReplWindow.dll",
           "Microsoft.PythonTools.PyKinect.dll",
           "Microsoft.PythonTools.WebRole.dll",
+          "Microsoft.PythonTools.Django.dll",
           "Microsoft.PythonTools.AzureSetup.exe",
-          "Microsoft.PythonTools.AzureDeploymentCmdlets.dll",
           "Microsoft.PythonTools.Pyvot.dll")
+
 
 foreach ($filename in $files) {
     $fullpath =  "$outdir\Release\Binaries\$filename"
