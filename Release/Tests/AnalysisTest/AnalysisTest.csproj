@@ -90,6 +90,12 @@
     <Content Include="Python.VS.TestData\AssemblyReference\PythonApplication\PythonApplication.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\DebuggerProject\BreakpointNonMainFileRemoved.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DebuggerProject\BreakpointNonMainFileRemovedImported.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\DjangoProject.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

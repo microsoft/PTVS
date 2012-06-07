@@ -91,7 +91,7 @@ namespace AnalysisTest {
             int breakpointBound = 0;
             int breakpointHit = 0;
             process.BreakpointBindSucceeded += (sender, args) => {
-                Assert.AreEqual(args.Breakpoint.Filename, filename);
+                Assert.AreEqual(args.Breakpoint.Filename, breakFilename ?? filename);
                 int index = lineList.IndexOf(args.Breakpoint.LineNo);
                 Assert.IsTrue(index != -1);
                 lineList[index] = -1;

@@ -136,12 +136,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public bool AddTypes(IProjectEntry projectEntry, IEnumerable<T> newTypes, bool enqueue = true) {
-            var dependencies = GetDependentItems(projectEntry);
-
             bool added = false;
             foreach (var value in newTypes) {
-                if (dependencies.Types.Add(value)) {
-                    added = true;
+                var declaringModule = value.DeclaringModule;
+                if (declaringModule == null || declaringModule.AnalysisVersion == value.DeclaringVersion) {
+                    var dependencies = GetDependentItems(value.DeclaringModule ?? projectEntry);
+
+                    if (dependencies.Types.Add(value)) {
+                        added = true;
+                    }
                 }
             }
 

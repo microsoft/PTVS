@@ -707,6 +707,22 @@ namespace AnalysisTest {
         #region Breakpoint Tests
 
         [TestMethod]
+        public void BreakpointNonMainFileRemoved() {
+            // http://pytools.codeplex.com/workitem/638
+
+            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
+            BreakpointTest(
+                Path.Combine(cwd, "BreakpointNonMainFileRemoved.py"),
+                new[] { 2 },
+                new[] { -2 },
+                cwd: cwd,
+                breakFilename: Path.Combine(cwd, "BreakpointNonMainFileRemovedImported.py"),
+                checkBound: false,
+                checkThread: false);
+        }
+
+
+        [TestMethod]
         public void BreakpointNonMainThreadMainThreadExited() {
             // http://pytools.codeplex.com/workitem/638
 

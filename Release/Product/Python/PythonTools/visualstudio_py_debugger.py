@@ -556,7 +556,7 @@ class Thread(object):
             if BREAKPOINTS:
                 bp = BREAKPOINTS.get(frame.f_lineno)
                 if bp is not None:
-                    for (filename, bp_id, bound), condition in bp.items():
+                    for (filename, bp_id), (condition, bound) in bp.items():
                         if filename == frame.f_code.co_filename or (not bound and filename_is_same(filename, frame.f_code.co_filename)):   
                             if condition:                            
                                 try:
@@ -1030,7 +1030,8 @@ def add_break_point(modFilename, break_when_changed, condition, lineNo, brkpt_id
     cond_info = None
     if condition:
         cond_info = ConditionInfo(condition, break_when_changed)
-    cur_bp[(modFilename, brkpt_id, bound)] = cond_info
+    
+    cur_bp[(modFilename, brkpt_id)] = cond_info, bound
 
 def check_break_point(modFilename, module, brkpt_id, lineNo, filename, condition, break_when_changed):
     if module.filename.lower() == path.abspath(filename).lower():
@@ -1149,9 +1150,9 @@ class DebuggerLoop(object):
         break_when_changed = read_int(self.conn)
         
         for line, bp_dict in BREAKPOINTS.items():
-            for filename, id, bound in bp_dict:
+            for filename, id in bp_dict:
                 if id == brkpt_id:
-                    bp_dict[filename, id, bound] = ConditionInfo(condition, break_when_changed)
+                    bp_dict[filename, id] = ConditionInfo(condition, break_when_changed), bp_dict[filename, id][1]
                     break
 
     def command_remove_breakpoint(self):
@@ -1159,9 +1160,9 @@ class DebuggerLoop(object):
         brkpt_id = read_int(self.conn)
         cur_bp = BREAKPOINTS.get(lineNo)
         if cur_bp is not None:
-            for file, id, bound in cur_bp:
+            for file, id in cur_bp:
                 if id == brkpt_id:
-                    del cur_bp[(file, id, bound)]
+                    del cur_bp[file, id]
                     if not cur_bp:
                         del BREAKPOINTS[lineNo]
                     break
