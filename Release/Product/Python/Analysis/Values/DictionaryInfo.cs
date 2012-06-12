@@ -480,7 +480,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (args.Length >= 1) {
                     foreach (var type in args[0]) {
                         DictionaryInfo otherDict = type as DictionaryInfo;
-                        if (otherDict != null) {
+                        if (otherDict != null && !Object.ReferenceEquals(otherDict, _myDict)) {
                             _myDict._keysAndValues.CopyFrom(otherDict._keysAndValues);
                         }
                     }
