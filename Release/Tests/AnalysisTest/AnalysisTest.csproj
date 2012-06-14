@@ -90,6 +90,15 @@
     <Content Include="Python.VS.TestData\AssemblyReference\PythonApplication\PythonApplication.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Python.VS.TestData\AddSearchPaths\AddSearchPaths.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="Python.VS.TestData\AddSearchPaths\Program.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\AddSearchPaths.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\DebuggerProject\BreakpointNonMainFileRemoved.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -493,6 +502,7 @@
     <Compile Include="UI\CheckBox.cs" />
     <Compile Include="UI\AddExistingItemDialog.cs" />
     <Compile Include="UI\AddReferenceDialog.cs" />
+    <Compile Include="UI\SelectFolderDialog.cs" />
     <Compile Include="UI\ExceptionHelperDialog.cs" />
     <Compile Include="UI\CredentialsDialog.cs" />
     <Compile Include="UI\DetailPane.cs" />

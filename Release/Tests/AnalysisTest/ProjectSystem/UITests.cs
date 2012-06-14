@@ -151,6 +151,31 @@ namespace AnalysisTest.ProjectSystem {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddSearchPathRelativePath() {
+            var project = DebugProject.OpenProject(@"Python.VS.TestData\AddSearchPaths.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            // find Program.py, send copy & paste, verify copy of file is there
+            var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", "Search Path");
+            projectNode.SetFocus();
+
+            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddSearchPath"));
+
+            var dialog = new SelectFolderDialog(app.WaitForDialog());
+            dialog.FolderName = Path.Combine(Directory.GetCurrentDirectory(), "Python.VS.TestData", "Outlining");
+            dialog.SelectFolder();
+
+            app.Dte.ExecuteCommand("File.SaveAll");
+
+            var text = File.ReadAllText(Path.Combine("Python.VS.TestData", "AddSearchPaths", "AddSearchPaths.pyproj"));
+            Assert.IsTrue(text.Contains("<SearchPath>..\\Outlining\\</SearchPath>"));
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolderNested() {
             var project = DebugProject.OpenProject(@"Python.VS.TestData\HelloWorld.sln");
 

@@ -830,10 +830,12 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNull("newpath", newpath);
 
             IList<string> searchPath = ParseSearchPath();
-            if (searchPath.Contains(newpath, StringComparer.OrdinalIgnoreCase)) {
+            var relativePath = CommonUtils.GetRelativeDirectoryPath(ProjectHome, newpath);
+            if (searchPath.Contains(newpath, StringComparer.OrdinalIgnoreCase) ||
+                searchPath.Contains(relativePath, StringComparer.OrdinalIgnoreCase)) {
                 return;
             }
-            searchPath.Add(newpath);
+            searchPath.Add(relativePath);
             SaveSearchPath(searchPath);
         }
 

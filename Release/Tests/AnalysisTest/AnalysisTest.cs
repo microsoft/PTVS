@@ -17,12 +17,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.Scripting.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -2851,6 +2852,138 @@ class x(object):
             }
         }
 
+
+        [TestMethod]
+        public void TestMemLeak() {
+            
+            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+
+            var bar = state.AddModule("bar", @"bar.py", EmptyAnalysisCookie.Instance);
+            var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
+
+            while (true) {
+                var barSrc = GetSourceUnit(@"
+import sys
+from baz import D
+
+class C(object):
+    def f(self, b):
+        x = sys.version
+        y = sys.exc_clear()
+        a = []
+        a.append(b)
+        return a
+
+a = C()
+z = a.f(D())
+min(a, D())
+
+", @"bar.py");
+
+                var bazSrc = GetSourceUnit(@"
+from bar import C
+
+class D(object):
+    def g(self, a):
+        pass
+
+a = D()
+a.f(C())
+z = C().f(42)
+
+min(a, D())
+", @"baz.py");
+
+
+                Prepare(bar, barSrc);
+                Prepare(baz, bazSrc);
+
+                bar.Analyze();
+                baz.Analyze();
+            }            
+        }
+
+        [TestMethod]
+        public void TestMemLeak2() {
+            AnalyzeDirLeak(@"C:\Source\TCP0\Open_Source\Incubation\azure");
+        }
+
+        private void AnalyzeDirLeak(string dir) {
+            List<string> files = new List<string>();
+            CollectFiles(dir, files);
+
+            List<FileStreamReader> sourceUnits = new List<FileStreamReader>();
+            foreach (string file in files) {
+                sourceUnits.Add(
+                    new FileStreamReader(file)
+                );
+            }
+
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+            long start0 = sw.ElapsedMilliseconds;
+            var projectState = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+            var modules = new List<IPythonProjectEntry>();
+            foreach (var sourceUnit in sourceUnits) {
+                modules.Add(projectState.AddModule(PythonAnalyzer.PathToModuleName(sourceUnit.Path), sourceUnit.Path, null));
+            }
+            long start1 = sw.ElapsedMilliseconds;
+            Console.WriteLine("AddSourceUnit: {0} ms", start1 - start0);
+
+            var nodes = new List<Microsoft.PythonTools.Parsing.Ast.PythonAst>();
+            for (int i = 0; i < modules.Count; i++) {
+                PythonAst ast = null;
+                try {
+                    var sourceUnit = sourceUnits[i];
+
+                    ast = Parser.CreateParser(sourceUnit, PythonLanguageVersion.V27).ParseFile();
+                } catch (Exception) {
+                }
+                nodes.Add(ast);
+            }
+            long start2 = sw.ElapsedMilliseconds;
+            Console.WriteLine("Parse: {0} ms", start2 - start1);
+
+            for (int i = 0; i < modules.Count; i++) {
+                var ast = nodes[i];
+
+                if (ast != null) {
+                    modules[i].UpdateTree(ast, null);
+                }
+            }
+
+            long start3 = sw.ElapsedMilliseconds;
+            for (int i = 0; i < modules.Count; i++) {
+                Console.WriteLine("Analyzing {1}: {0} ms", sw.ElapsedMilliseconds - start3, sourceUnits[i].Path);
+                var ast = nodes[i];
+                if (ast != null) {
+                    modules[i].Analyze(true);
+                }
+            }
+            if (modules.Count > 0) {
+                Console.WriteLine("Analyzing queue");
+                modules[0].AnalysisGroup.AnalyzeQueuedEntries();
+            }
+
+            int index = -1;
+            for(int i = 0; i<modules.Count; i++) {
+                if (((ProjectEntry)modules[i]).ModuleName == "azure.servicebus.servicebusservice") {
+                    index = i;
+                    break;
+                }
+            }
+            while (true) {
+                using(var reader = new FileStreamReader(modules[index].FilePath)) {
+                    var ast = Parser.CreateParser(reader, PythonLanguageVersion.V27).ParseFile();
+
+                    modules[index].UpdateTree(ast, null);
+                }
+
+                modules[index].Analyze(true);
+                modules[index].AnalysisGroup.AnalyzeQueuedEntries();
+            }
+        }
 
         [TestMethod]
         public void TestMoveClass() {
