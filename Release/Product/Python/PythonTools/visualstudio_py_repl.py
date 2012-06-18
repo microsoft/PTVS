@@ -509,7 +509,13 @@ class BasicReplBackend(ReplBackend):
             code.Execute(self.exec_mod)
         else:
             self.code_flags = 0
-            code = compile(contents, filename, 'exec')
+            real_file = filename
+            if isinstance(filename, unicode):
+                # http://pytools.codeplex.com/workitem/696
+                # We need to encode the unicode filename here, Python will throw trying
+                # to convert it to ASCII instead of the filesystem encoding.
+                real_file = filename.encode(sys.getfilesystemencoding())
+            code = compile(contents, real_file, 'exec')
             self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
             exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__) 
 
