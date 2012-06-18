@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
         private TaskScheduler _scheduler;
-        private volatile bool _unload;
+        internal bool _unload;
         private bool _isAnalyzing;
         private int _analysisPending;
 

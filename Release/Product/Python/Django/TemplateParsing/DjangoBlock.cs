@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return new Dictionary<string, Func<BlockParseInfo, DjangoBlock>>() {
                 {"autoescape", DjangoAutoEscapeBlock.Parse},
                 {"comment", DjangoArgumentlessBlock.Parse},
-                {"cycle", DjangoCycleBlock.Parse},
+                {"cycle", DjangoUnknownBlock.Parse},
                 {"csrf", DjangoArgumentlessBlock.Parse},
                 {"debug", DjangoArgumentlessBlock.Parse},
                 {"filter", DjangoFilterBlock.Parse},
@@ -154,10 +154,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 {"ifnotequal", DjangoIfOrIfNotEqualBlock.Parse},
                 {"if", DjangoIfBlock.Parse},
                 {"ifchanged", DjangoMultiVariableArgumentBlock.Parse},
-                {"ssi", DjangoSsiBlock.Parse},
+                {"ssi", DjangoUnknownBlock.Parse},
                 {"load", DjangoLoadBlock.Parse},
-                {"now", DjangoNowBlock.Parse},
-                {"regroup", DjangoRegroupBlock.Parse},
+                {"now", DjangoUnknownBlock.Parse},
+                {"regroup", DjangoUnknownBlock.Parse},
                 {"spaceless", DjangoSpacelessBlock.Parse},
                 {"widthratio", DjangoWidthRatioBlock.Parse},
                 {"templatetag", DjangoTemplateTagBlock.Parse}
@@ -247,21 +247,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     Classification.ExcludedCode
                 );
             }
-        }
-    }
-
-    /// <summary>
-    /// inside loop takes args for multiple strings ({% cycle 'row1' 'row2' %})
-    /// cycle 'foo' 'bar' as baz and then can refer:
-    /// cycle baz
-    /// </summary>
-    class DjangoCycleBlock : DjangoBlock {
-        public DjangoCycleBlock(BlockParseInfo parseInfo)
-            : base(parseInfo) {
-        }
-
-        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
-            return DjangoUnknownBlock.Parse(parseInfo);
         }
     }
 
@@ -560,21 +545,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 
-    /// <summary>
-    /// Outputs the contents of a given file into the page
-    /// 
-    /// ssi path [parsed]
-    /// </summary>
-    class DjangoSsiBlock : DjangoBlock {
-        public DjangoSsiBlock(BlockParseInfo parseInfo)
-            : base(parseInfo) {
-        }
-
-        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
-            return DjangoUnknownBlock.Parse(parseInfo);
-        }
-    }
-
     class DjangoLoadBlock : DjangoBlock {
         private readonly int _fromStart, _nameStart, _fromNameStart;
 
@@ -613,26 +583,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             if (_fromStart != -1) {
                 yield return new BlockClassification(new Span(_fromStart, 4), Classification.Keyword);
             }
-        }
-    }
-
-    class DjangoNowBlock : DjangoBlock {
-        public DjangoNowBlock(BlockParseInfo parseInfo)
-            : base(parseInfo) {
-        }
-
-        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
-            return DjangoUnknownBlock.Parse(parseInfo);
-        }
-    }
-
-    class DjangoRegroupBlock : DjangoBlock {
-        public DjangoRegroupBlock(BlockParseInfo parseInfo)
-            : base(parseInfo) {
-        }
-
-        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
-            return DjangoUnknownBlock.Parse(parseInfo);
         }
     }
 
@@ -714,16 +664,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 
-    class DjangoUrlBlock : DjangoBlock {
-        public DjangoUrlBlock(BlockParseInfo parseInfo)
-            : base(parseInfo) {
-        }
-
-        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
-            return DjangoUnknownBlock.Parse(parseInfo);
-        }
-    }
-
     class DjangoWidthRatioBlock : DjangoBlock {
         private readonly DjangoVariable[] _variables;
 
@@ -751,16 +691,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     yield return span;
                 }
             }
-        }
-    }
-
-    class DjangoWithBlock : DjangoBlock {
-        public DjangoWithBlock(BlockParseInfo parseInfo)
-            : base(parseInfo) {
-        }
-
-        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
-            return DjangoUnknownBlock.Parse(parseInfo);
         }
     }
 

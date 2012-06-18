@@ -207,7 +207,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     /// </summary>
     class FunctionAnalysisUnit : AnalysisUnit {
         internal readonly AnalysisUnit _outerUnit;
-        
+        internal Expression _decoratorCall;
+
         public FunctionAnalysisUnit(FunctionDefinition node, InterpreterScope[] scopes, AnalysisUnit outerUnit)
             : base(node, scopes) {
             _outerUnit = outerUnit;
@@ -243,10 +244,69 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
             }
 
-            ddg.ProcessFunctionDecorators(Ast, function);
+            ProcessFunctionDecorators(ddg, Ast, function);
 
             // analyze the function w/o any parameter types.
             AnalyzeFunction(ddg, function, funcScope);
+        }
+
+        internal void ProcessFunctionDecorators(DDG ddg, FunctionDefinition funcdef, FunctionInfo newScope) {
+            if (funcdef.Decorators != null) {
+                EnsureDecoratorCall(funcdef);
+                foreach (var d in funcdef.Decorators.Decorators) {
+                    if (d != null) {                        
+                        var decorator = ddg._eval.Evaluate(d);
+
+                        if (decorator.Contains(ProjectState._propertyObj)) {
+                            newScope.IsProperty = true;
+                        } else if (decorator.Contains(ProjectState._staticmethodObj)) {
+                            newScope.IsStatic = true;
+                        } else if (decorator.Contains(ProjectState._classmethodObj)) {
+                            newScope.IsClassMethod = true;
+                        }
+                    }
+                }
+                
+                ddg._eval.Evaluate(_decoratorCall);
+            }
+
+            if (newScope.IsClassMethod) {
+                if (newScope.ParameterTypes.Length > 0) {
+                    var outerScope = ddg.Scopes[ddg.Scopes.Length - 1] as ClassScope;
+                    if (outerScope != null) {
+                        newScope.AddParameterType(ddg._unit, outerScope.Class.SelfSet, 0);
+                    } else {
+                        newScope.AddParameterType(ddg._unit, ProjectState._typeObj.SelfSet, 0);
+                    }
+                }
+            } else if (!newScope.IsStatic) {
+                // self is always an instance of the class
+                // TODO: Check for __new__ (auto static) and
+                // @staticmethod and @classmethod and @property
+                if (newScope.ParameterTypes.Length > 0) {
+                    var classScope = ddg.Scopes[ddg.Scopes.Length - 1] as ClassScope;
+                    if (classScope != null) {
+                        newScope.AddParameterType(ddg._unit, classScope.Class.Instance, 0);
+                    }
+                }
+            }
+        }
+
+        private void EnsureDecoratorCall(FunctionDefinition funcdef) {
+            if (_decoratorCall == null) {
+                Expression decCall = new NameExpression(funcdef.Name);
+                foreach (var d in funcdef.Decorators.Decorators) {
+                    if (d != null) {
+                        decCall = new CallExpression(
+                            d,
+                            new[] {
+                                    new Arg(decCall)
+                                }
+                        );
+                    }
+                }
+                _decoratorCall = decCall;
+            }
         }
 
         protected virtual void AnalyzeFunction(DDG ddg, FunctionInfo function, FunctionScope funcScope) {

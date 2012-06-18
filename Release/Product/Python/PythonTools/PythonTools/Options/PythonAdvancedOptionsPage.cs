@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Options {
             _debugStdLib = LoadBool(DebugStdLibSetting) ?? false;
             var analysisLimit = LoadString(CrossModuleAnalysisLimitSetting);
             if (analysisLimit == null) {
-                _crossModuleAnalysisLimit = 1000;    // default analysis limit
+                _crossModuleAnalysisLimit = 1300;    // default analysis limit
             } else if (analysisLimit == "-") {
                 _crossModuleAnalysisLimit = null;
             } else {

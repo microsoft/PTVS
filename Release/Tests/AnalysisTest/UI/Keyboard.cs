@@ -107,6 +107,7 @@ namespace AnalysisTest.UI {
             Release(key);
         }
 
+        public const char CtrlSpace = '♫';
         /// <summary>
         /// Types the specified text.
         /// </summary>
@@ -123,6 +124,7 @@ namespace AnalysisTest.UI {
                     case '→': Type(Key.Right); break;
                     case '↑': Type(Key.Up); break;
                     case '↓': Type(Key.Down); break;
+                    case CtrlSpace: Keyboard.PressAndRelease(Key.Space, Key.LeftCtrl); break;
                     default:
                         int vKeyValue = NativeMethods.VkKeyScan(c);
                         bool keyIsShifted = (vKeyValue & NativeMethods.VKeyShiftMask) == NativeMethods.VKeyShiftMask;

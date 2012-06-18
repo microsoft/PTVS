@@ -45,6 +45,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
         private OleMenuCommandService _menuService;
+        private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
         internal Dictionary<string, HashSet<AnalysisValue>> _tags = new Dictionary<string, HashSet<AnalysisValue>>();
         internal Dictionary<string, HashSet<AnalysisValue>> _filters = new Dictionary<string, HashSet<AnalysisValue>>();
         internal Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>> _templateFiles = new Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>>(StringComparer.OrdinalIgnoreCase);
@@ -74,24 +75,21 @@ namespace Microsoft.PythonTools.Django.Project {
             // internally because we kick off the context menu, pass ourselves as the IOleCommandTarget, and then our
             // base implementation dispatches via the menu service.  So we could either have a different IOleCommandTarget
             // which handles the Open command programmatically, or we can register it with the menu service.  
-            var menuService = (IMenuCommandService)((System.IServiceProvider)this).GetService(typeof(IMenuCommandService));
-            if (menuService != null) {
-                CommandID menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.Open);
-                OleMenuCommand menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
-                menuService.AddCommand(menuItem);
+            CommandID menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.Open);
+            OleMenuCommand menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
+            AddCommand(menuItem);
 
-                menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.ViewCode);
-                menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
-                menuService.AddCommand(menuItem);
+            menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.ViewCode);
+            menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
+            AddCommand(menuItem);
 
-                menuCommandID = new CommandID(VSConstants.VSStd2K, (int)VSConstants.VSStd2KCmdID.ECMD_VIEWMARKUP);
-                menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
-                menuService.AddCommand(menuItem);
+            menuCommandID = new CommandID(VSConstants.VSStd2K, (int)VSConstants.VSStd2KCmdID.ECMD_VIEWMARKUP);
+            menuItem = new OleMenuCommand(OpenFile, null, OpenFileBeforeQueryStatus, menuCommandID);
+            AddCommand(menuItem);
 
-                menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.AddNewItem);
-                menuItem = new OleMenuCommand(AddNewItem, menuCommandID);
-                menuService.AddCommand(menuItem);
-            }
+            menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.AddNewItem);
+            menuItem = new OleMenuCommand(AddNewItem, menuCommandID);
+            AddCommand(menuItem);                
 
             var pyProj = this.innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
@@ -141,6 +139,11 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
+        private void AddCommand(OleMenuCommand menuItem) {
+            _menuService.AddCommand(menuItem);
+            _commands.Add(menuItem);
+        }
+
         private IEnumerable<AnalysisValue> ParseProcessor(CallExpression call, CallInfo callInfo) {
             // def parse(self, parse_until=None):
             // We want to find closing tags here passed to parse_until...
@@ -158,6 +161,21 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             }
             return null;
+        }
+
+        protected override void Close() {
+            if (_menuService != null) {
+                foreach (var command in _commands) {
+                    _menuService.RemoveCommand(command);
+                }
+            }
+            _commands.Clear();
+            _filters.Clear();
+            _tags.Clear();
+            _templateAnalysis.Clear();
+            _templateFiles.Clear();            
+            base.Close();
+            _menuService.Dispose();
         }
 
         private IEnumerable<AnalysisValue> FilterProcessor(CallExpression call, CallInfo callInfo) {
@@ -189,6 +207,13 @@ namespace Microsoft.PythonTools.Django.Project {
             } else if (callInfo.NormalArgumentCount >= 2) {
                 // library.filter(value)
                 foreach (var name in callInfo.GetArgument(1)) {
+                    if (name.Name != null) {
+                        RegisterTag(tags, name.Name);
+                    }
+                }
+            } else if (callInfo.NormalArgumentCount == 1) {
+                // library.filter(value)
+                foreach (var name in callInfo.GetArgument(0)) {
                     if (name.Name != null) {
                         RegisterTag(tags, name.Name);
                     }
@@ -348,42 +373,6 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             }
             return null;
-        }
-
-        /// <summary>
-        /// Analyzes a complete directory including all of the contained files and packages.
-        /// </summary>
-        public void AnalyzeDirectory(PythonAnalyzer analyzer, string dir) {
-            try {
-                foreach (string filename in Directory.GetFiles(dir, "*.py")) {
-                    analyzer.AddModule(
-                        PythonAnalyzer.PathToModuleName(filename),
-                        filename,
-                        null
-                    );
-                }
-            } catch (DirectoryNotFoundException) {
-            }
-
-            try {
-                foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
-                    analyzer.AddModule(
-                        PythonAnalyzer.PathToModuleName(filename),
-                        filename,
-                        null
-                    );
-                }
-            } catch (DirectoryNotFoundException) {
-            }
-
-            try {
-                foreach (string innerDir in Directory.GetDirectories(dir)) {
-                    if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
-                        AnalyzeDirectory(analyzer, innerDir);
-                    }
-                }
-            } catch (DirectoryNotFoundException) {
-            }
         }
 
         private void OpenFileBeforeQueryStatus(object sender, EventArgs e) {
@@ -836,17 +825,8 @@ namespace Microsoft.PythonTools.Django.Project {
             // Now let the base implementation set the inner object
             base.SetInnerProject(inner);
 
-            // Add our commands (this must run after we called base.SetInnerProject)
-            _menuService = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            /*if (mcs != null) {
-                // Command to show the generated target file
-                CommandID cmd = new CommandID(GuidList.guidProjectSubtypeCmdSet, PkgCmdIDList.cmdidShowTargetFile);
-                MenuCommand menuCmd = new MenuCommand(new EventHandler(ShowTargetFile), cmd);
-                menuCmd.Supported = true;
-                menuCmd.Visible = true;
-                menuCmd.Enabled = true;
-                mcs.AddCommand(menuCmd);
-            }*/
+            // Add our commands (this must run after we called base.SetInnerProject)            
+            _menuService = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as OleMenuCommandService;            
         }
 
 

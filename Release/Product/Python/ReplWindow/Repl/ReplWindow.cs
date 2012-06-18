@@ -1412,7 +1412,7 @@ namespace Microsoft.VisualStudio.Repl {
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.cmdidReplClearScreen:
-                        ClearScreen(insertInputPrompt: true);
+                        ClearScreen(insertInputPrompt: !_isRunning);
                         return VSConstants.S_OK;
 
                     case PkgCmdIDList.comboIdReplScopes:

@@ -5,6 +5,9 @@ from django.http import HttpResponse
 from Bar.models import Poll
 from django.http import HttpResponse
 
+def main(request):
+    return HttpResponse('<html><body>Hello world!</body></html>')
+
 def index(request):
     latest_poll_list = Poll.objects.all().order_by('-pub_date')[:5]
     t = loader.get_template('polls/index.html')

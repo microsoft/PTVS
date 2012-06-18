@@ -335,44 +335,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        internal void ProcessFunctionDecorators(FunctionDefinition funcdef, FunctionInfo newScope) {
-            if (funcdef.Decorators != null) {
-                foreach (var d in funcdef.Decorators.Decorators) {
-                    if (d != null) {
-                        var decorator = _eval.Evaluate(d);
-
-                        if (decorator.Contains(ProjectState._propertyObj)) {
-                            newScope.IsProperty = true;
-                        } else if (decorator.Contains(ProjectState._staticmethodObj)) {
-                            newScope.IsStatic = true;
-                        } else if (decorator.Contains(ProjectState._classmethodObj)) {
-                            newScope.IsClassMethod = true;
-                        }
-                    }
-                }
-            }
-
-            if (newScope.IsClassMethod) {
-                if (newScope.ParameterTypes.Length > 0) {
-                    var outerScope = Scopes[Scopes.Length - 1] as ClassScope;
-                    if (outerScope != null) {
-                        newScope.AddParameterType(_unit, outerScope.Class.SelfSet, 0);
-                    } else {
-                        newScope.AddParameterType(_unit, ProjectState._typeObj.SelfSet, 0);
-                    }
-                }
-            } else if (!newScope.IsStatic) {
-                // self is always an instance of the class
-                // TODO: Check for __new__ (auto static) and
-                // @staticmethod and @classmethod and @property
-                if (newScope.ParameterTypes.Length > 0) {
-                    var classScope = Scopes[Scopes.Length - 1] as ClassScope;
-                    if (classScope != null) {
-                        newScope.AddParameterType(_unit, classScope.Class.Instance, 0);
-                    }
-                }
-            }
-        }
+       
 
         public override bool Walk(FunctionDefinition node) {
             return false;

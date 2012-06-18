@@ -1031,13 +1031,13 @@ namespace Microsoft.PythonTools.Intellisense {
             #region IAnalyzable Members
 
             public void Analyze() {
-                _analyzer.AnalyzeDirectoryWorker(_dir, true);
+                _analyzer.AnalyzeDirectoryWorker(_dir, true, ref _analyzer._analysisQueue._unload);
             }
 
             #endregion
         }
 
-        private void AnalyzeDirectoryWorker(string dir, bool addDir) {
+        private void AnalyzeDirectoryWorker(string dir, bool addDir, ref bool unload) {
             if (addDir) {
                 lock (this) {
                     _pyAnalyzer.AddAnalysisDirectory(dir);
@@ -1055,6 +1055,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             try {
                 foreach (string filename in Directory.GetFiles(dir, "*.pyw")) {
+                    if (unload) {
+                        break;
+                    }
                     AnalyzeFile(filename);
                 }
             } catch (IOException) {
@@ -1064,8 +1067,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
             try {
                 foreach (string innerDir in Directory.GetDirectories(dir)) {
+                    if (unload) {
+                        break;
+                    }
                     if (File.Exists(Path.Combine(innerDir, "__init__.py"))) {
-                        AnalyzeDirectoryWorker(innerDir, false);
+                        AnalyzeDirectoryWorker(innerDir, false, ref unload);
                     }
                 }
             } catch (IOException) {

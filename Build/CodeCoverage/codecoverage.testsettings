@@ -4,19 +4,19 @@
   <Deployment>
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Attacher.exe" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Analyzer.exe" />
-    <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, HPC Support\1.0\Microsoft.PythonTools.dll" />
+    <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, IronPython Support\1.0\Microsoft.PythonTools.Analysis.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, IronPython Support\1.0\IronPython.Wpf.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, HPC Support\1.0\Microsoft.PythonTools.Hpc.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Profiling Support\1.0\Microsoft.PythonTools.Profiling.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Analysis.dll" />
-    <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, IronPython Support\1.0\Microsoft.PythonTools.Analysis.dll" />
+    <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, HPC Support\1.0\Microsoft.PythonTools.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, IronPython Support\1.0\Microsoft.PythonTools.IronPython.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, HPC Support\1.0\Microsoft.PythonTools.MpiShim.exe" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, HPC Support\1.0\Microsoft.PythonTools.Debugger.dll" />
-    <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Debugger.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\PyDebugAttach.dll" />
     <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Profiling Support\1.0\Microsoft.PythonTools.Analysis.dll" />
+    <DeploymentItem filename="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Debugger.dll" />
   </Deployment>
   <Execution>
     <Timeouts runTimeout="3600000" testTimeout="300000" />
@@ -49,8 +49,6 @@
                 <CodeCoverageItem binaryFile="Binaries\Win32\Debug\Microsoft.PythonTools.MpiShim.exe" pdbFile="Binaries\Win32\Debug\Microsoft.PythonTools.MpiShim.pdb" instrumentInPlace="true" />
                 <CodeCoverageItem binaryFile="Binaries\Win32\Debug\Microsoft.PythonTools.Profiling.dll" pdbFile="Binaries\Win32\Debug\Microsoft.PythonTools.Profiling.pdb" instrumentInPlace="true" />
                 <CodeCoverageItem binaryFile="Binaries\Win32\Debug\Microsoft.VisualStudio.ReplWindow.dll" pdbFile="Binaries\Win32\Debug\Microsoft.VisualStudio.ReplWindow.pdb" instrumentInPlace="true" />
-                <CodeCoverageItem binaryFile="Binaries\Win32\Debug\TestSccPackage.dll" pdbFile="Binaries\Win32\Debug\TestSccPackage.pdb" instrumentInPlace="true" />
-                <CodeCoverageItem binaryFile="Binaries\Win32\Debug\TestUtilities.dll" pdbFile="Binaries\Win32\Debug\TestUtilities.pdb" instrumentInPlace="true" />
                 <CodeCoverageItem binaryFile="Binaries\Win32\Debug\VsPyProf.dll" pdbFile="Binaries\Win32\Debug\VsPyProf.pdb" instrumentInPlace="true" />
                 <CodeCoverageItem binaryFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Analysis.dll" pdbFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Analysis.pdb" instrumentInPlace="true" />
                 <CodeCoverageItem binaryFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Analyzer.exe" pdbFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Analyzer.pdb" instrumentInPlace="true" />
@@ -59,6 +57,7 @@
                 <CodeCoverageItem binaryFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Debugger.dll" pdbFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.Debugger.pdb" instrumentInPlace="true" />
                 <CodeCoverageItem binaryFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.dll" pdbFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\Microsoft.PythonTools.pdb" instrumentInPlace="true" />
                 <CodeCoverageItem binaryFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio\1.0\PyDebugAttach.dll" pdbFile="Binaries\Win32\Debug\PyDebugAttach.pdb" instrumentInPlace="true" />
+                <CodeCoverageItem binaryFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\1.5\Microsoft.PythonTools.Django.dll" pdbFile="C:\Users\dinov\AppData\Local\Microsoft\VisualStudio\10.0Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\1.5\Microsoft.PythonTools.Django.pdb" instrumentInPlace="true" />
               </Regular>
             </CodeCoverage>
           </Configuration>

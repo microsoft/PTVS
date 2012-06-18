@@ -667,11 +667,11 @@ namespace AnalysisTest.ProjectSystem {
             return OpenProject(@"Python.VS.TestData\DebuggerProject.sln", startItem);
         }
 
-        private static Project OpenDebuggerProjectAndBreak(string startItem, int lineNo) {
+        private static Project OpenDebuggerProjectAndBreak(string startItem, int lineNo, bool setStartupItem = true) {
             return OpenProjectAndBreak(@"Python.VS.TestData\DebuggerProject.sln", startItem, lineNo);
         }
 
-        internal static Project OpenProject(string projName, string startItem = null, int expectedProjects = 1, string projectName = null) {
+        internal static Project OpenProject(string projName, string startItem = null, int expectedProjects = 1, string projectName = null, bool setStartupItem = true) {
             string fullPath = Path.GetFullPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Can't find project file");
             VsIdeTestHostContext.Dte.Solution.Open(fullPath);
@@ -703,8 +703,8 @@ namespace AnalysisTest.ProjectSystem {
                     project = (Project)iter.Current;
                 }
             }
-            
-            if (startItem != null) {
+
+            if (startItem != null && setStartupItem) {
                 project.SetStartupFile(startItem);
             }
 
@@ -717,8 +717,8 @@ namespace AnalysisTest.ProjectSystem {
             OpenProjectAndBreak(@"Python.VS.TestData\HelloWorld.sln", "Program.py", 1);
         }
 
-        private static Project OpenProjectAndBreak(string projName, string filename, int lineNo) {
-            var project = OpenProject(projName, filename);
+        internal static Project OpenProjectAndBreak(string projName, string filename, int lineNo, bool setStartupItem = true) {
+            var project = OpenProject(projName, filename, setStartupItem: setStartupItem);
 
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: filename, Line: lineNo);
             VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");

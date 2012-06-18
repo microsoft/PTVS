@@ -17,13 +17,12 @@ using System.Windows.Automation;
 
 namespace AnalysisTest.UI {
     /// <summary>
-    /// Wrapps VS's File->New Project dialog.
+    /// Wrapps VS's Project->Add Item dialog.
     /// </summary>
-    class NewProjectDialog  : AutomationWrapper {
-        private TreeView _installedTemplates;
+    class NewItemDialog  : AutomationWrapper {
         private Table _projectTypesTable;
 
-        public NewProjectDialog(AutomationElement element)
+        public NewItemDialog(AutomationElement element)
             : base(element) {
         }
 
@@ -32,35 +31,6 @@ namespace AnalysisTest.UI {
         /// </summary>
         public void ClickOK() {
             ClickButtonByAutomationId("btn_OK");
-        }
-
-        /// <summary>
-        /// Gets the installed templates tree view which enables access to all of the project types.
-        /// </summary>
-        public TreeView InstalledTemplates {
-            get {
-                if (_installedTemplates == null) {
-                    var templates = Element.FindAll(
-                        TreeScope.Descendants,
-                        new PropertyCondition(
-                            AutomationElement.AutomationIdProperty,
-                            "Installed Templates"
-                        )
-                    );
-
-                    // all the templates have the same name (Installed, Recent, etc...)
-                    // so we need to find the one that actually has our templates.
-                    foreach (AutomationElement template in templates) {
-                        var temp = new TreeView(template);
-                        var item = temp.FindItem("Visual C#");
-                        if (item != null) {
-                            _installedTemplates = temp;
-                            break;
-                        }
-                    }
-                }
-                return _installedTemplates;
-            }
         }
 
         /// <summary>
@@ -87,29 +57,20 @@ namespace AnalysisTest.UI {
             }
         }
 
-        public string ProjectName {
+        public string FileName {
             get {
-                var patterns = GetProjectNameBox().GetSupportedPatterns();
-                var filename = (ValuePattern)GetProjectNameBox().GetCurrentPattern(ValuePattern.Pattern);
+                var patterns = GetFileNameBox().GetSupportedPatterns();
+                var filename = (ValuePattern)GetFileNameBox().GetCurrentPattern(ValuePattern.Pattern);
                 return filename.Current.Value;
             }
             set {
-                var patterns = GetProjectNameBox().GetSupportedPatterns();
-                var filename = (ValuePattern)GetProjectNameBox().GetCurrentPattern(ValuePattern.Pattern);
+                var patterns = GetFileNameBox().GetSupportedPatterns();
+                var filename = (ValuePattern)GetFileNameBox().GetCurrentPattern(ValuePattern.Pattern);
                 filename.SetValue(value);
             }
         }
 
-        public void FocusLanguageNode(string name = "Python") {
-            var item = InstalledTemplates.FindItem("Other Languages", name);
-            if (item == null) {
-                // VS can be configured so that there is no Other Languages category
-                item = InstalledTemplates.FindItem(name);
-            }
-            item.SetFocus();
-        }
-
-        private AutomationElement GetProjectNameBox() {
+        private AutomationElement GetFileNameBox() {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.AutomationIdProperty, "txt_Name"),

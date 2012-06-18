@@ -71,6 +71,9 @@
     <Compile Include="AddImportTests.cs" />
     <Compile Include="CompletionDBTest.cs" />
     <Compile Include="BaseDebuggerTests.cs" />
+    <Compile Include="Django\AttributeTests.cs" />
+    <Compile Include="Django\DjangoDebugProjectTests.cs" />
+    <Compile Include="Django\DjangoAzureTests.cs" />
     <Compile Include="Django\DjangoDebuggerTests.cs" />
     <Compile Include="Django\DjangoEditingTests.cs" />
     <Compile Include="Django\DjangoProjectTests.cs" />
@@ -103,6 +106,45 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\DebuggerProject\BreakpointNonMainFileRemovedImported.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\DjangoDebugProject.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\manage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\settings.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\TestApp\models.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\TestApp\tests.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\TestApp\views.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\TestApp\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\urls.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoDebugProject\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Intellisense3.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Intellisense2.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoEditProject\Intellisense.html.djt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\DjangoProject.sln">
@@ -225,6 +267,42 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\DjangoProject\Templates\polls\loop.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\DjangoTemplateCodeIntelligence.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\manage.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\settings.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\TestApp\models.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\TestApp\Templates\page2.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\TestApp\Templates\page.html.djt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\TestApp\tests.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\TestApp\views.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\TestApp\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\urls.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\DjangoTemplateCodeIntelligence\__init__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python.VS.TestData\DragDropRelocatedTest.sln">
@@ -502,6 +580,9 @@
     <Compile Include="UI\CheckBox.cs" />
     <Compile Include="UI\AddExistingItemDialog.cs" />
     <Compile Include="UI\AddReferenceDialog.cs" />
+    <Compile Include="UI\NewItemDialog.cs" />
+    <Compile Include="UI\ProjectPropertiesWindow.cs" />
+    <Compile Include="UI\Python\Django\PythonProjectDebugProperties.cs" />
     <Compile Include="UI\SelectFolderDialog.cs" />
     <Compile Include="UI\ExceptionHelperDialog.cs" />
     <Compile Include="UI\CredentialsDialog.cs" />
@@ -586,6 +667,7 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>

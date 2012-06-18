@@ -53,17 +53,6 @@ namespace Microsoft.PythonTools.Django {
             }
         }
 
-        internal static EnvDTE.Project GetProject(this ITextBuffer buffer) {
-            var path = buffer.GetFilePath();
-            if (path != null && DjangoPackage.Instance != null) {
-                var item = DjangoPackage.Instance.DTE.Solution.FindProjectItem(path);
-                if (item != null) {
-                    return item.ContainingProject;
-                }
-            }
-            return null;
-        }
-
         internal static ITrackingSpan CreateTrackingSpan(this IIntellisenseSession session, ITextBuffer buffer) {
             var triggerPoint = session.GetTriggerPoint(buffer);
 

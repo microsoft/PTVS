@@ -62,7 +62,9 @@
 
 
 	{% unknownblock %}
-
+    {% templatetag openblock %}
+    {% templatetag closeblock %}
+    {% widthratio foo %}
     {{ foo!title!cut }}
 </body>
 </html>

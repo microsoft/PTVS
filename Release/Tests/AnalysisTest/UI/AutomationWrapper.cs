@@ -119,6 +119,48 @@ namespace AnalysisTest.UI {
         }
 
         /// <summary>
+        /// Finds the first child element of a given control type.
+        /// </summary>
+        /// <param name="ctlType">The ControlType you wish to find</param>
+        /// <returns></returns>
+        internal AutomationElement FindFirstByNameAndAutomationId(string name, string automationId) {
+            return Element.FindFirst(
+                TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(
+                        AutomationElement.AutomationIdProperty,
+                        automationId
+                    ),
+                    new PropertyCondition(
+                        AutomationElement.NameProperty,
+                        name
+                    )
+                )
+           );
+        }
+
+        /// <summary>
+        /// Finds the first child element of a given control type.
+        /// </summary>
+        /// <param name="ctlType">The ControlType you wish to find</param>
+        /// <returns></returns>
+        internal AutomationElement FindFirstByControlType(string name, ControlType ctlType) {
+            return Element.FindFirst(
+                TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(
+                        AutomationElement.ControlTypeProperty,
+                        ctlType
+                    ),
+                    new PropertyCondition(
+                        AutomationElement.NameProperty,
+                        name
+                    )
+                )
+           );
+        }
+
+        /// <summary>
         /// Finds all the children with a given control type.
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>

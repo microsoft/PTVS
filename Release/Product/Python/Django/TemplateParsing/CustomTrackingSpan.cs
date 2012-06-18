@@ -83,13 +83,5 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         #endregion
-
-        public override string ToString() {
-            return "CustomSpan: " +
-                (_start.TrackingMode == PointTrackingMode.Negative ? "<-" : "->") +
-                (_end.TrackingMode == PointTrackingMode.Negative ? "<-" : "->") + 
-                " " +
-                GetSpan(_buffer.CurrentSnapshot).ToString();
-        }
     }
 }

@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
 
             var line = _snapshot.GetLineFromPosition(_position);
-            _position = line.End.Position;
+            _position = line.EndIncludingLineBreak.Position;
 
             return line.GetText();
         }

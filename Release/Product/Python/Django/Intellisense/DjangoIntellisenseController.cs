@@ -67,13 +67,6 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
         }
 
-        private void DetachKeyboardFilter() {
-            if (_oldTarget != null) {
-                ErrorHandler.ThrowOnFailure(AdaptersFactory.GetViewAdapter(_textView).RemoveCommandFilter(this));
-                _oldTarget = null;
-            }
-        }
-
         #endregion
 
         internal IVsEditorAdaptersFactoryService AdaptersFactory {

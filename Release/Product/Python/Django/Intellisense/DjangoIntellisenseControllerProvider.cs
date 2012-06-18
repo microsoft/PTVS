@@ -65,38 +65,5 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
             return controller;
         }
-
     }
-
-    /// <summary>
-    /// Monitors creation of text view adapters for Python code so that we can attach
-    /// our keyboard filter.  This enables not using a keyboard pre-preprocessor
-    /// so we can process all keys for text views which we attach to.  We cannot attach
-    /// our command filter on the text view when our intellisense controller is created
-    /// because the adapter does not exist.
-    /// </summary>
-    [Export(typeof(IVsTextViewCreationListener))]
-    [ContentType(TemplateContentType.ContentTypeName)]
-    [TextViewRole(PredefinedTextViewRoles.Editable)]
-    class TextViewCreationListener : IVsTextViewCreationListener {
-        internal readonly IVsEditorAdaptersFactoryService _adaptersFactory;
-
-        [ImportingConstructor]
-        public TextViewCreationListener(IVsEditorAdaptersFactoryService adaptersFactory) {
-            _adaptersFactory = adaptersFactory;
-        }
-
-        #region IVsTextViewCreationListener Members
-
-        public void VsTextViewCreated(VisualStudio.TextManager.Interop.IVsTextView textViewAdapter) {
-            var textView = _adaptersFactory.GetWpfTextView(textViewAdapter);
-            DjangoIntellisenseController controller;
-            if (textView.Properties.TryGetProperty<DjangoIntellisenseController>(typeof(DjangoIntellisenseController), out controller)) {
-                controller.AttachKeyboardFilter();
-            }
-        }
-
-        #endregion
-    }
-
 }

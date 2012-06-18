@@ -35,7 +35,12 @@ namespace AnalysisTest.UI {
             ExpandCollapsePattern pat = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
             pat.Expand();
             try {
-                var items = Element.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.ClassNameProperty, "ListBoxItem"));
+                var items = Element.FindAll(TreeScope.Descendants, 
+                    new OrCondition(
+                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListBoxItem"),
+                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem)
+                    )
+                );
 
                 foreach (AutomationElement item in items) {
                     if (((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Current.IsSelected) {

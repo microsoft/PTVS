@@ -66,13 +66,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
         }
 
-        private void DetachKeyboardFilter() {
-            if (_oldTarget != null) {
-                ErrorHandler.ThrowOnFailure(AdaptersFactory.GetViewAdapter(_textView).RemoveCommandFilter(this));
-                _oldTarget = null;
-            }
-        }
-
         #region IOleCommandTarget Members
 
         public int Exec(ref System.Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, System.IntPtr pvaIn, System.IntPtr pvaOut) {
@@ -114,10 +107,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         private bool IsCompletionChar(char ch) {
             return ch == '>' || ch == '<' || ch == ';' || char.IsWhiteSpace(ch);
-        }
-
-        private static bool IsIdentifierChar(char ch) {
-            return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
         }
 
         void CurSessionDismissedOrCommitted(object sender, System.EventArgs e) {
