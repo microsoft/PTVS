@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _sequences.Clear();
             _scope.ClearLinkedVariables();
             _scope.Variables.Clear();
-            _scopes.Clear();
+            NodeScopes.Clear();
         }
 
         public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {

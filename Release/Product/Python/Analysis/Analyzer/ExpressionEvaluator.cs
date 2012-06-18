@@ -136,9 +136,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             { typeof(ConstantExpression),  ExpressionEvaluator.EvaluateConstant},
             { typeof(DictionaryExpression),  ExpressionEvaluator.EvaluateDictionary},
             { typeof(SetExpression),  ExpressionEvaluator.EvaluateSet},
-            { typeof(DictionaryComprehension),  ExpressionEvaluator.EvaluateDictionaryComp},
-            { typeof(SetComprehension),  ExpressionEvaluator.EvaluateSetComp},
-            { typeof(GeneratorExpression),  ExpressionEvaluator.EvaluateGenerator},
+            { typeof(DictionaryComprehension),  ExpressionEvaluator.EvaluateComprehension},
+            { typeof(SetComprehension),  ExpressionEvaluator.EvaluateComprehension},
+            { typeof(GeneratorExpression),  ExpressionEvaluator.EvaluateComprehension},
             { typeof(IndexExpression),  ExpressionEvaluator.EvaluateIndex},
             { typeof(LambdaExpression),  ExpressionEvaluator.EvaluateLambda},
             { typeof(ListComprehension),  ExpressionEvaluator.EvaluateListComprehension},
@@ -203,12 +203,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return setInfo;
         }
 
-        private static ISet<Namespace> EvaluateSetComp(ExpressionEvaluator ee, Node node) {
-            ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
-
-            return compScope.Namespace.SelfSet;
-        }
-
         private static ISet<Namespace> EvaluateDictionary(ExpressionEvaluator ee, Node node) {
             var n = (DictionaryExpression)node;
             ISet<Namespace> result;
@@ -230,12 +224,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 ee.GlobalScope.NodeVariables[node] = result;
             }
             return result;
-        }
-
-        private static ISet<Namespace> EvaluateDictionaryComp(ExpressionEvaluator ee, Node node) {
-            ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
-
-            return compScope.Namespace.SelfSet;
         }
 
         private static ISet<Namespace> EvaluateConstant(ExpressionEvaluator ee, Node node) {
@@ -341,9 +329,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 return listInfo.SelfSet;
             } else {
                 // list comprehension has its own scope in 3.x
-                ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
-
-                return compScope.Namespace.SelfSet;
+                return EvaluateComprehension(ee, node);
             }
         }
 
@@ -363,8 +349,19 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        private static ISet<Namespace> EvaluateGenerator(ExpressionEvaluator ee, Node node) {
-            ComprehensionScope compScope = (ComprehensionScope)ee._unit.DeclaringModule.NodeScopes[node];
+        private static ISet<Namespace> EvaluateComprehension(ExpressionEvaluator ee, Node node) {
+            InterpreterScope scope;
+            if (!ee._unit.DeclaringModule.NodeScopes.TryGetValue(node, out scope)) {
+                // we can fail to find the module if the underlying interpreter triggers a module
+                // reload.  In that case we're already parsing, we start to clear out all of 
+                // our module state in ModuleInfo.Clear, and then we queue the nodes to be
+                // re-analyzed immediately after.  We continue analyzing, and we don't find
+                // the node.  We can safely ignore it here as the re-analysis will kick in
+                // and get us the right info.
+                return EmptySet<Namespace>.Instance;
+            }
+
+            ComprehensionScope compScope = (ComprehensionScope)scope;
 
             return compScope.Namespace.SelfSet;
         }
