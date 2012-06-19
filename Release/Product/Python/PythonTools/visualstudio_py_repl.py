@@ -510,9 +510,9 @@ class BasicReplBackend(ReplBackend):
         else:
             self.code_flags = 0
             real_file = filename
-            if isinstance(filename, unicode):
+            if isinstance(filename, unicode) and unicode is not str:
                 # http://pytools.codeplex.com/workitem/696
-                # We need to encode the unicode filename here, Python will throw trying
+                # We need to encode the unicode filename here, Python 2.x will throw trying
                 # to convert it to ASCII instead of the filesystem encoding.
                 real_file = filename.encode(sys.getfilesystemencoding())
             code = compile(contents, real_file, 'exec')

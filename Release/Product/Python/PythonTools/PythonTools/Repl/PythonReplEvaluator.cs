@@ -111,6 +111,12 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        private void EnsureConnected() {
+            if (_curListener == null) {
+                Connect();
+            }
+        }
+
         #region IReplEvaluator Members
 
         public Task<ExecutionResult> Initialize(IReplWindow window) {
@@ -1086,6 +1092,7 @@ namespace Microsoft.PythonTools.Repl {
                 return ExecutionResult.Succeeded;
             }
 
+            EnsureConnected();
             if (_curListener != null) {
                 return _curListener.ExecuteText(text);
             } else {
@@ -1095,6 +1102,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public void ExecuteFile(string filename) {
+            EnsureConnected();
+
             if (_curListener != null) {
                 _curListener.ExecuteFile(filename);
             } else {
@@ -1103,11 +1112,18 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public void AbortCommand() {
-            _curListener.AbortCommand();
+            if (_curListener != null) {
+                _curListener.AbortCommand();
+            }
         }
 
         public Task<ExecutionResult> Reset() {
             // suppress reporting "failed to launch repl" process
+            if (_curListener == null) {
+                _window.WriteError("Interactive window is not yet started." + Environment.NewLine);
+                return ExecutionResult.Succeeded;
+            }
+
             _curListener._connected = true;
 
             Close();
@@ -1213,6 +1229,8 @@ namespace Microsoft.PythonTools.Repl {
         #endregion
 
         internal MemberResult[] GetMemberNames(VsProjectAnalyzer analyzer, string text) {
+            EnsureConnected();
+
             return _curListener.GetMemberNames(analyzer, text);
         }
 
@@ -1236,23 +1254,34 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal OverloadDoc[] GetSignatureDocumentation(VsProjectAnalyzer analyzer, string text) {
+            EnsureConnected();
+
             return _curListener.GetSignatureDocumentation(analyzer, text);
         }
 
         public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
-            return _curListener.GetAvailableScopesAndKind();
+            if (_curListener != null) {
+                return _curListener.GetAvailableScopesAndKind();
+            }
+
+            return new KeyValuePair<string, bool>[0];
         }
 
         #region IMultipleScopeEvaluator Members
 
         public IEnumerable<string> GetAvailableScopes() {
-            return _curListener.GetAvailableUserScopes();
+            if (_curListener != null) {
+                return _curListener.GetAvailableUserScopes();
+            }
+            return new string[0];
         }
 
         public event EventHandler<EventArgs> AvailableScopesChanged;
         public event EventHandler<EventArgs> MultipleScopeSupportChanged;
 
         public void SetScope(string scopeName) {
+            EnsureConnected();
+
             _curListener.SetScope(scopeName);
         }
 
@@ -1272,22 +1301,33 @@ namespace Microsoft.PythonTools.Repl {
         #endregion
 
         internal string GetScopeByFilename(string path) {
-            return _curListener.GetScopeByFilename(path);
+            if (_curListener != null) {
+                return _curListener.GetScopeByFilename(path);
+            }
+            return null;
         }
 
         public string PrimaryPrompt {
             get {
-                return _curListener._prompt1;
+                if (_curListener != null) {
+                    return _curListener._prompt1;
+                }
+                return ">>> ";
             }
         }
 
         public string SecondaryPrompt {
             get {
-                return _curListener._prompt2;
+                if (_curListener != null) {
+                    return _curListener._prompt2;
+                }
+                return "... ";
             }
         }
 
         internal string AttachDebugger() {
+            EnsureConnected();
+
             return _curListener.DoDebugAttach();
         }
 

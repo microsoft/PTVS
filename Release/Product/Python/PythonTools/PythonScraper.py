@@ -186,6 +186,13 @@ def generate_member(obj, is_hidden=False):
         
     return member_table
     
+
+if sys.version > '3.':
+    str_types = (str, bytes)
+else:
+    str_types = (str, unicode)
+
+
 def generate_type_new(type_obj, obj):
     if isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
         member_table = {}
@@ -197,6 +204,22 @@ def generate_type_new(type_obj, obj):
             # replace overloads with better version if available
             function_info['overloads'] = new_overloads
             return member_table
+    if obj.__doc__ == 'T.__new__(S, ...) -> a new object with type S, a subtype of T':
+        doc_str = type_obj.__doc__
+        if not isinstance(doc_str, str_types):
+            doc_str = ''
+        return {
+                'kind' : 'function',
+                'value' : {
+                         'doc': doc_str,
+                         'overloads' : [
+                                 {
+                                  'doc': doc_str, 
+                                  'args': [{'arg_format': '*', 'name': '...'}]
+                                 }
+                        ]                         
+                }
+        }
     return generate_member(obj)
 
 def oldstyle_mro(type_obj, res):
@@ -1873,7 +1896,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('14')
+    f.write('15')
     f.close()
 
     # inspect extension modules installed into site-packages

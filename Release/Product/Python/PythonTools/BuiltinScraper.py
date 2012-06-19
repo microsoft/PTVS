@@ -313,8 +313,14 @@ def parse_args(tokens, cur_token, module):
                 break
             ret_type_start += 2
 
-        ret_type = ''.join(tokens[cur_token + 2:ret_type_start]).strip()
-        cur_token = ret_type_start
+        if ret_type_start < len(tokens) and ',' in tokens[ret_type_start]:
+            # foo(bar, baz) -> some info about the return, and more info, and more info.
+            # "some info" is unlikely to be a return type
+            ret_type = ''
+            cur_token += 2
+        else:
+            ret_type = ''.join(tokens[cur_token + 2:ret_type_start]).strip()
+            cur_token = ret_type_start
     elif (cur_token + 4 < len(tokens) and 
         tokens[cur_token] == ':' and tokens[cur_token + 2] in RETURN_TOKENS):
         ret_type_start = cur_token + 4
@@ -324,20 +330,53 @@ def parse_args(tokens, cur_token, module):
                 break
             ret_type_start += 2
 
-        ret_type = ''.join(tokens[cur_token + 4:ret_type_start]).strip()
-        cur_token = ret_type_start
+        if ret_type_start < len(tokens) and ',' in tokens[ret_type_start]:
+            # foo(bar, baz) -> some info about the return, and more info, and more info.
+            # "some info" is unlikely to be a return type
+            ret_type = ''
+            cur_token += 4
+        else:
+            ret_type = ''.join(tokens[cur_token + 4:ret_type_start]).strip()
+            cur_token = ret_type_start
 
     return args, ret_type, cur_token
 
 
+if sys.version > '3.':
+    str_types = (str, bytes)
+else:
+    str_types = (str, unicode)
+
 def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, extra_args = []):
-    if isinstance(doc_str, (str, unicode)):
+    if isinstance(doc_str, str_types):
         decl_mod = None
         if mod is not None:
             decl_mod = sys.modules.get(mod, None)
 
         res = parse_doc_str(doc_str, mod, decl_mod, func_name, extra_args, obj_class)
         if res:
+            for i, v in enumerate(res):
+                if 'ret_type' not in v or (not v['ret_type'] or v['ret_type'] == ('', '')):
+                    alt_ret_type = v['doc'].find('returned as a ')
+                    if alt_ret_type != -1:
+                        last_space = v['doc'].find(' ', alt_ret_type + 14)
+                        last_new_line = v['doc'].find('\n', alt_ret_type + 14)
+                        if last_space == -1:
+                            if last_new_line == -1:
+                                last_space = None
+                            else:
+                                last_space = last_new_line
+                        elif last_new_line == -1:
+                            last_space = None
+                        else:
+                            last_space = last_new_line
+                        
+                        ret_type_str = v['doc'][alt_ret_type+14:last_space]
+                        if ret_type_str.endswith('.') or ret_type_str.endswith(','):
+                            ret_type_str = ret_type_str[:-1]
+                        new_ret_type = get_ret_type(ret_type_str, obj_class, mod)
+                        res[i]['ret_type'] = new_ret_type
+
             return tuple(res)
     return None
 
@@ -369,6 +408,7 @@ def get_new_overloads(type_obj, obj):
                                             getattr(type_obj, '__module__', None), 
                                             type(type_obj), 
                                             getattr(type_obj, '__name__', None))
+
     return res
 
 
@@ -507,3 +547,38 @@ and there is at least one character in B, False otherwise.''',
          {'args': [{'name': 'object'}],
           'doc': 'pygame object for storing rectangular coordinates',
           'ret_type': ('', 'Rect')}]
+
+    r = parse_doc_str('read([size]) -> read at most size bytes, returned as a string.\n\n'
+                      'If the size argument is negative or omitted, read until EOF is reached.\n'
+                      'Notice that when in non-blocking mode, less data than what was requested\n'
+                      'may be returned, even if no size parameter was given.',
+                      '__builtin__',
+                      __builtins__,
+                      'read'
+     )
+
+    assert r == [{'args': [{'default_value': 'None', 'name': 'size'}],
+                  'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
+                  'ret_type': ('', '')}]
+
+
+    r = get_overloads_from_doc_string('read([size]) -> read at most size bytes, returned as a string.\n\n'
+                      'If the size argument is negative or omitted, read until EOF is reached.\n'
+                      'Notice that when in non-blocking mode, less data than what was requested\n'
+                      'may be returned, even if no size parameter was given.',
+                      __builtins__,
+                      file,
+                      'read'
+     )
+
+    assert r == ({'args': [{'default_value': 'None', 'name': 'size'}],
+                 'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
+                 'ret_type': ('__builtin__', 'str')},)
+
+    r = parse_doc_str('T.__new__(S, ...) -> a new object with type S, a subtype of T',
+                      'struct',
+                      None,
+                      '__new__'
+     )
+
+    assert r == [{'ret_type': ('', ''), 'doc': 'a new object with type S, a subtype of T', 'args': [{'name': 'S'}, {'arg_format': '*', 'name': '...'}]}]
