@@ -12,20 +12,17 @@
  *
  * ***************************************************************************/
 
-using System.Windows.Input;
+using System;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Threading;
 using AnalysisTest.ProjectSystem;
-using AnalysisTest.UI;
+using EnvDTE;
+using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using System;
-using System.Diagnostics;
-using EnvDTE;
-using System.Reflection;
-using System.IO;
-using System.Threading;
-using Microsoft.PythonTools.Project;
-using Microsoft.Build.Tasks;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace AnalysisTest.UI {
@@ -318,7 +315,6 @@ namespace AnalysisTest.UI {
             var itemWindow = autoItem.Open();
 
             autoItem.SaveAs(Path.GetFullPath(@"Python.VS.TestData\LinkedFiles\SaveAsCreateFile.py"));
-
 
             autoItem = project.ProjectItems.Item("SaveAsCreateFile.py");
             node = (HierarchyNode)autoItem.Properties.Item("Node").Value;

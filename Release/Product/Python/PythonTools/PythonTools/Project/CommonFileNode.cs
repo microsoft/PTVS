@@ -124,6 +124,26 @@ namespace Microsoft.PythonTools.Project {
         /// Gets the text buffer for the file opening the document if necessary.
         /// </summary>
         public ITextBuffer GetTextBuffer() {
+            if (UIThread.Instance.IsUIThread) {
+                // http://pytools.codeplex.com/workitem/672
+                // When we FindAndLockDocument we marshal on the main UI thread, and the docdata we get
+                // back is marshalled back so that we'll marshal any calls on it back.  When we pass it
+                // into IVsEditorAdaptersFactoryService we don't go through a COM boundary (it's a managed
+                // call) and we therefore don't get the marshaled value, and it doesn't know what we're
+                // talking about.  So run the whole operation on the UI thread.
+                return GetTextBufferOnUIThread();
+            }
+
+            ITextBuffer res = null;
+            UIThread.Instance.RunSync(
+                () => {
+                    res = GetTextBufferOnUIThread();
+                }
+            );
+            return res;
+        }
+
+        private ITextBuffer GetTextBufferOnUIThread() {
             IVsTextManager textMgr = (IVsTextManager)GetService(typeof(SVsTextManager));
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
             var adapter = model.GetService<IVsEditorAdaptersFactoryService>();
@@ -147,7 +167,6 @@ namespace Microsoft.PythonTools.Project {
                         ILocalRegistry localReg = this.ProjectMgr.GetService(typeof(SLocalRegistry)) as ILocalRegistry;
                         ErrorHandler.ThrowOnFailure(localReg.CreateInstance(CLSID_VsTextBuffer, null, ref iid, (uint)CLSCTX.CLSCTX_INPROC_SERVER, out docData));
                     }
-
                     persistDocData = Marshal.GetObjectForIUnknown(docData) as IVsPersistDocData;
                 } finally {
                     if (docData != IntPtr.Zero) {
@@ -157,7 +176,6 @@ namespace Microsoft.PythonTools.Project {
 
                 //Try to get the Text lines
                 IVsTextLines srpTextLines = persistDocData as IVsTextLines;
-
                 if (srpTextLines == null) {
                     // Try getting a text buffer provider first
                     IVsTextBufferProvider srpTextBufferProvider = persistDocData as IVsTextBufferProvider;
@@ -179,7 +197,6 @@ namespace Microsoft.PythonTools.Project {
             IWpfTextView view = GetTextView();
 
             return view.TextBuffer;
-
         }
 
         public IWpfTextView GetTextView() {
