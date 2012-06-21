@@ -5,11 +5,13 @@
     <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags></FileUpgradeFlags>
-        <UpgradeBackupLocation></UpgradeBackupLocation>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
         <OldToolsVersion>4.0</OldToolsVersion>
-       </PropertyGroup>
-	</When>
+      </PropertyGroup>
+    </When>
   </Choose>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -25,7 +27,7 @@
     <ProjectGuid>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.PythonTools.IronPython</RootNamespace>
+    <RootNamespace>Microsoft.IronPythonTools</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.IronPython</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -161,6 +163,7 @@
     <Compile Include="Interpreter\ObjectIdentityHandle.cs" />
     <Compile Include="Interpreter\PythonObject.cs" />
     <Compile Include="Interpreter\RemoteInterpreter.cs" />
+    <Compile Include="Interpreter\RemoteInterpreterProxy.cs" />
     <Compile Include="IpyToolsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -168,6 +171,10 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IronPythonInterpreter\IronPythonResolver.csproj">
+      <Project>{D77BDD03-A3A6-4E37-B15B-AAC2383688A3}</Project>
+      <Name>IronPythonResolver</Name>
     </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>

@@ -35,7 +35,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
         private readonly HashSet<ProjectReference> _projectReferenceSet = new HashSet<ProjectReference>();
         private readonly IronPythonInterpreterFactory _factory;
-        private RemoteInterpreter _remote;
+        private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private IInterpreterState _state;
         private PythonTypeDatabase _typeDb;
@@ -56,7 +56,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             InitializeRemoteDomain();
 
-            LoadAssemblies();
+            try {
+                LoadAssemblies();
+            } catch {
+                // IronPython not installed in the GAC...
+            }
 
             LoadModules();
 
@@ -70,7 +74,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _unloader = new DomainUnloader(remoteDomain);
         }
 
-        private AppDomain CreateDomain(out RemoteInterpreter remoteInterpreter) {
+        private AppDomain CreateDomain(out RemoteInterpreterProxy remoteInterpreter) {
             // We create a sacrificial domain for loading all of our assemblies into.  
 
             AppDomainSetup setup = new AppDomainSetup();
@@ -88,10 +92,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             setup.PrivateBinPathProbe = "";
 
             var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
+            domain.AssemblyResolve += IronPythonResolver.domain_AssemblyResolve;
 
-            remoteInterpreter = (RemoteInterpreter)domain.CreateInstanceAndUnwrap(
-                typeof(RemoteInterpreter).Assembly.FullName,
-                typeof(RemoteInterpreter).FullName);
+            remoteInterpreter = (RemoteInterpreterProxy)domain.CreateInstanceAndUnwrap(
+                typeof(RemoteInterpreterProxy).Assembly.FullName,
+                typeof(RemoteInterpreterProxy).FullName);
 
             return domain;
         }
@@ -100,14 +105,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
             internal static AssemblyResolver Instance = new AssemblyResolver();
 
             public Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-                if (new AssemblyName(args.Name).FullName == typeof(RemoteInterpreter).Assembly.FullName) {
-                    return typeof(RemoteInterpreter).Assembly;
+                if (new AssemblyName(args.Name).FullName == typeof(RemoteInterpreterProxy).Assembly.FullName) {
+                    return typeof(RemoteInterpreterProxy).Assembly;
                 }
                 return null;
             }
         }
 
-        public RemoteInterpreter Remote {
+        public RemoteInterpreterProxy Remote {
             get {
                 return _remote;
             }
@@ -222,39 +227,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         /// </summary>
         private static void LoadAssemblies() {
             GC.KeepAlive(typeof(IronPython.Modules.ArrayModule)); // IronPython.Modules
-        }
-
-        internal static string GetPythonInstallDir() {
-            using (var ipy = Registry.LocalMachine.OpenSubKey("SOFTWARE\\IronPython")) {
-                if (ipy != null) {
-                    using (var twoSeven = ipy.OpenSubKey("2.7")) {
-                        if (twoSeven != null) {
-                            var installPath = twoSeven.OpenSubKey("InstallPath");
-                            if (installPath != null) {
-                                var res = installPath.GetValue("") as string;
-                                if (res != null) {
-                                    return res;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            var paths = Environment.GetEnvironmentVariable("PATH");
-            if (paths != null) {
-                foreach (string dir in paths.Split(Path.PathSeparator)) {
-                    try {
-                        if (IronPythonExistsIn(dir)) {
-                            return dir;
-                        }
-                    } catch {
-                        // ignore
-                    }
-                }
-            }
-
-            return null;
         }
 
         private static bool IronPythonExistsIn(string/*!*/ dir) {

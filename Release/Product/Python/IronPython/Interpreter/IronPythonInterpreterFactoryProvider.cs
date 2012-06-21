@@ -27,7 +27,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IPythonInterpreterProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            if (IronPythonInterpreter.GetPythonInstallDir() != null) {
+            if (IronPythonResolver.GetPythonInstallDir() != null) {
                 
                 yield return _interpreter;
 

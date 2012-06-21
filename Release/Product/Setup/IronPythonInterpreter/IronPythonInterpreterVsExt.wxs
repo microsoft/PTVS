@@ -22,6 +22,9 @@
             <Component Id="cmp00FA5BB73B254ABFBA0E280148B14AB7" Directory="INSTALLLOCATION" Guid="{BEBF666B-D16E-4AEB-8DD7-76C496D2CA8A}">
                 <File Id="filD41C4353EEAD40E18CD79B0F5BE688E2" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.IronPython.dll" />
             </Component>
+            <Component Id="cmp54DD4A3EE6D749A3AA19E1EA51A895F3" Directory="INSTALLLOCATION" Guid="{838EA3AE-7CA6-4579-958D-C999522EE406}">
+                <File Id="fil13EEEEBBF72A47C0808BA3A4B408BBE7" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.IpyResolver.dll" />
+            </Component>
             <Component Id="cmpB8DC2ECDD91E480B876F1C054FB0227E" Directory="INSTALLLOCATION" Guid="{A2F7E7FF-8CA1-481A-828F-9512389526FC}">
                 <File Id="fil8B6431B474834558A48DCB708060FC79" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.IronPython.pkgdef" />
             </Component>

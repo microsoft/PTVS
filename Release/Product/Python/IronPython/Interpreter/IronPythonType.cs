@@ -31,7 +31,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IronPythonType(IronPythonInterpreter interpreter, ObjectIdentityHandle type)
             : base(interpreter, type) {
-            Debug.Assert(Interpreter.Remote.TypeIs<PythonType>(type));
         }
 
         #region IPythonType Members

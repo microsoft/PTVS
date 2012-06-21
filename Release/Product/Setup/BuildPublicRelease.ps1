@@ -72,6 +72,7 @@ $files = ("Microsoft.PythonTools.Analysis.dll",
           "Microsoft.PythonTools.WebRole.dll",
           "Microsoft.PythonTools.Django.dll",
           "Microsoft.PythonTools.AzureSetup.exe",
+          "Microsoft.PythonTools.IpyResolver.dll",
           "Microsoft.PythonTools.Pyvot.dll")
 
 

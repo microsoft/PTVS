@@ -75,12 +75,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             public override string InterpreterPath {
                 get { 
-                    return Path.Combine(IronPythonInterpreter.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipy.exe" : "ipy64.exe"); 
+                    return Path.Combine(IronPythonResolver.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipy.exe" : "ipy64.exe"); 
                 }
             }
 
             public override string WindowsInterpreterPath {
-                get { return Path.Combine(IronPythonInterpreter.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipyw.exe" : "ipyw64.exe"); }
+                get { return Path.Combine(IronPythonResolver.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipyw.exe" : "ipyw64.exe"); }
             }
 
             public override string PathEnvironmentVariable {

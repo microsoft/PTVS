@@ -43,7 +43,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
     /// which allows the local domain to cache based upon object identity w/o transitioning to this domain
     /// to do comparisons.
     /// </summary>
-    class RemoteInterpreter : MarshalByRefObject {
+    class RemoteInterpreter {
         private readonly ScriptEngine _engine;
         private readonly CodeContext _codeContext;
         private readonly CodeContext _codeContextCls;
@@ -100,8 +100,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
-            if (new AssemblyName(args.Name).FullName == typeof(RemoteInterpreter).Assembly.FullName) {
-                return typeof(RemoteInterpreter).Assembly;
+            if (new AssemblyName(args.Name).FullName == typeof(RemoteInterpreterProxy).Assembly.FullName) {
+                return typeof(RemoteInterpreterProxy).Assembly;
             }
 
             if (_analysisDirs != null) {
@@ -144,10 +144,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
             return null;
         }
-
-        public override object InitializeLifetimeService() {
-            return null;
-        }        
 
         internal string[] GetBuiltinModuleNames() {
             var names = _engine.Operations.GetMember<PythonTuple>(_engine.GetSysModule(), "builtin_module_names");
