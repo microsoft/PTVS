@@ -551,13 +551,18 @@ namespace Microsoft.PythonTools.Debugger {
                 _pendingChildEnums.Remove(execId);
             }
 
-            int childCount = socket.ReadInt();
-            bool childIsIndex = socket.ReadInt() == 1;
-            bool childIsEnumerate = socket.ReadInt() == 1;
-            PythonEvaluationResult[] res = new PythonEvaluationResult[childCount];
-            for (int i = 0; i < res.Length; i++) {
+            int attributesCount = socket.ReadInt();
+            int indicesCount = socket.ReadInt();
+            bool indicesAreIndex = socket.ReadInt() == 1;
+            bool indicesAreEnumerate = socket.ReadInt() == 1;
+            PythonEvaluationResult[] res = new PythonEvaluationResult[attributesCount + indicesCount];
+            for (int i = 0; i < attributesCount; i++) {
                 string expr = socket.ReadString();
-                res[i] = ReadPythonObject(socket, completion.Text, expr, childIsIndex, childIsEnumerate, completion.Frame);
+                res[i] = ReadPythonObject(socket, completion.Text, expr, false, false, completion.Frame);
+            }
+            for (int i = attributesCount; i < res.Length; i++) {
+                string expr = socket.ReadString();
+                res[i] = ReadPythonObject(socket, completion.Text, expr, indicesAreIndex, indicesAreEnumerate, completion.Frame);
             }
             completion.Completion(res);
         }

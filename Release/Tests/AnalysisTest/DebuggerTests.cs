@@ -42,7 +42,7 @@ namespace AnalysisTest {
 
         [TestMethod]
         public void EnumChildrenTest() {
-            const int lastLine = 27;
+            const int lastLine = 40;
 
             if (Version.Version.Is3x()) {
                 ChildTest(EnumChildrenTestName, lastLine, "s", new ChildInfo("[0]", "frozenset({2, 3, 4})"));
@@ -55,6 +55,7 @@ namespace AnalysisTest {
                 ChildTest(EnumChildrenTestName, lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
             }
             ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
+            ChildTest(EnumChildrenTestName, lastLine, "c3inst", new ChildInfo("_contents", "[1, 2]"), new ChildInfo("abc", "42", "0x2a"), new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
             ChildTest(EnumChildrenTestName, lastLine, "l", new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
             ChildTest(EnumChildrenTestName, lastLine, "d1", new ChildInfo("[42]", "100", "0x64"));
             ChildTest(EnumChildrenTestName, lastLine, "d2", new ChildInfo("['abc']", "'foo'"));

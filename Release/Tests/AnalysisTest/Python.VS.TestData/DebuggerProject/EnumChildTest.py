@@ -22,6 +22,19 @@ class C2(object):
 
 c2inst = C2()
 
+class C3(object):
+    def __init__(self):
+        self.abc = 42
+        self._contents = [1,2]
+    def __iter__(self):
+        return iter(self._contents)
+    def __len__(self):
+        return len(self._contents)
+    def __getitem__(self, index):
+        return self._contents[index]
+
+c3inst = C3()
+
 l = [1, 2, ]
 
 i = 3

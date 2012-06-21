@@ -753,7 +753,7 @@ class Thread(object):
             self._block_starting_lock.release()
         else:
             self._block_starting_lock.release()
-            report_children(execution_id, [], False, False)
+            report_children(execution_id, [], [], False, False)
 
     def get_locals(self, cur_frame, frame_kind):
         if frame_kind == FRAME_KIND_DJANGO:
@@ -779,6 +779,19 @@ class Thread(object):
             report_execution_exception(execution_id, sys.exc_info())
 
     def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate, frame_kind):
+        def get_attributes(res):
+            items = []
+            for name in dir(res):
+                if not (name.startswith('__') and name.endswith('__')):
+                    try:
+                        item = getattr(res, name)
+                        if not hasattr(item, '__call__'):
+                            items.append( (name, item) )
+                    except:
+                        # skip this item if we can't display it...
+                        pass
+            return items
+
         try:
             if child_is_enumerate:
                 # remove index from eval, then get the index back.
@@ -802,11 +815,11 @@ class Thread(object):
                         break
                 else:
                     # value changed?
-                    report_children(execution_id, [], False, False)
+                    report_children(execution_id, [], [], False, False)
                     return
             
-            is_index = False
-            is_enumerate = False
+            indices_are_index = False
+            indices_are_enumerate = False
             maybe_enumerate = False
             try:
                 if isinstance(res, types.GeneratorType):
@@ -820,45 +833,37 @@ class Thread(object):
                     enum = enumerate(res)
                     maybe_enumerate = True
 
-                items = []
+                indices = []
                 for index, item in enum:
                     try:
-                        if len(items) > 10000:
+                        if len(indices) > 10000:
                             # report at most 10000 items.
-                            items.append( ('[...]', 'Evaluation halted because sequence included too many items...') )
+                            indices.append( ('[...]', 'Evaluation halted because sequence included too many items...') )
                             break
                         
-                        items.append( ('[' + repr(index) + ']', item) )
-                        if maybe_enumerate and not is_enumerate:
+                        indices.append( ('[' + repr(index) + ']', item) )
+                        if maybe_enumerate and not indices_are_enumerate:
                             # check if we can index back into this object, or if we have to use
                             # enumerate to get values out of it.
                             try:
                                 fetched = res[index]
                                 if fetched is not item:
-                                    is_enumerate = True
+                                    indices_are_enumerate = True
                             except:
-                                is_enumerate = True
+                                indices_are_enumerate = True
                                 
                     except:
                         # ignore bad objects for now...
                         pass
 
-                is_index = True
+                indices_are_index = True
             except:
-                # non-indexable object, return attribute names, filter callables
-                items = []
-                for name in dir(res):
-                    if not (name.startswith('__') and name.endswith('__')):
-                        try:
-                            item = getattr(res, name)
-                            if not hasattr(item, '__call__'):
-                                items.append( (name, item) )
-                        except:
-                            # skip this item if we can't display it...
-                            pass
-            report_children(execution_id, items, is_index, is_enumerate)
+                # non-indexable object
+                indices = []
+
+            report_children(execution_id, get_attributes(res), indices, indices_are_index, indices_are_enumerate)
         except:
-            report_children(execution_id, [], False, False)
+            report_children(execution_id, [], [], False, False)
 
     def get_frame_list(self):
         frames = []
@@ -1481,16 +1486,21 @@ def report_execution_result(execution_id, result):
         conn.send(struct.pack('i', execution_id))
         write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
 
-def report_children(execution_id, children, is_index, is_enumerate):
-    children = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in children]
+def report_children(execution_id, attributes, indices, indices_are_index, indices_are_enumerate):
+    attributes = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in attributes]
+    indices = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in indices]
 
     with _SendLockCtx:
         conn.send(CHLD)
         conn.send(struct.pack('i', execution_id))
-        conn.send(struct.pack('i', len(children)))
-        conn.send(struct.pack('i', is_index))
-        conn.send(struct.pack('i', is_enumerate))
-        for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in children:
+        conn.send(struct.pack('i', len(attributes)))
+        conn.send(struct.pack('i', len(indices)))
+        conn.send(struct.pack('i', indices_are_index))
+        conn.send(struct.pack('i', indices_are_enumerate))
+        for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in attributes:
+            write_string(child_name)
+            write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
+        for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in indices:
             write_string(child_name)
             write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
 
