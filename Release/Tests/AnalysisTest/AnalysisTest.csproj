@@ -102,6 +102,12 @@
     <Content Include="Python.VS.TestData\AddSearchPaths.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Python.VS.TestData\SysArgvScriptArgsRepl.sln">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Python.VS.TestData\SysArgvScriptArgsRepl\Program.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Python.VS.TestData\UnicodePathä.sln">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -217,6 +223,9 @@
     <Content Include="Python.VS.TestData\DjangoEditProject\CutUndo.html.djt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Python.VS.TestData\SysArgvScriptArgsRepl\SysArgvScriptArgsRepl.pyproj">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Python.VS.TestData\DjangoProject\data.yaml" />
     <None Include="Python.VS.TestData\ErrorProjectUnicode\HelloWorld.pyproj">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

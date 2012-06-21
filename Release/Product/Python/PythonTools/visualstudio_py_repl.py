@@ -283,7 +283,9 @@ actual inspection and introspection."""
     
     def _cmd_excf(self):
         """handles executing a single file"""
-        self.execute_file(self._read_string())                
+        filename = self._read_string()
+        args = self._read_string()
+        self.execute_file(filename, args)
 
     def _cmd_debug_attach(self):
         port, = struct.unpack('i', self.conn.recv(4))
@@ -404,7 +406,7 @@ actual inspection and introspection."""
         """runs the specified command which is a string containing code"""
         raise NotImplementedError
         
-    def execute_file(self, filename):
+    def execute_file(self, filename, args):
         """executes the given filename as the main module"""
         raise NotImplementedError
 
@@ -500,9 +502,40 @@ class BasicReplBackend(ReplBackend):
             System.Console.SetOut(DotNetOutput(self, True))
             System.Console.SetError(DotNetOutput(self, False))
 
-    def run_file_as_main(self, filename):
+    def _command_line_to_args_list(self, cmdline):
+        args_list = []
+
+        if cmdline is not None and len(cmdline.strip()) > 0:
+            from ctypes import c_int, c_voidp, c_wchar_p
+            from ctypes import byref, POINTER, WinDLL
+
+            clta = WinDLL('shell32').CommandLineToArgvW
+            clta.argtypes = [c_wchar_p, POINTER(c_int)]
+            clta.restype = POINTER(c_wchar_p)
+
+            lf = WinDLL('kernel32').LocalFree
+            lf.argtypes = [c_voidp]
+
+            pNumArgs = c_int()
+            r = clta(cmdline, byref(pNumArgs))
+            if r:
+                for index in range(0, pNumArgs.value):
+                    if sys.hexversion >= 0x030000F0:
+                        argval = r[index]
+                    else:
+                        argval = r[index].encode('ascii', 'ignore')
+                    args_list.append(argval)
+                lf(r)
+            else:
+                sys.stderr.write('Error parsing script arguments:\n')
+                sys.stderr.write(cmdline + '\n')
+
+        return args_list
+
+    def run_file_as_main(self, filename, args):
         contents = open(filename, 'rb').read().replace(_cmd('\r\n'), _cmd('\n'))
         sys.argv = [filename]
+        sys.argv.extend(self._command_line_to_args_list(args))
         self.exec_mod.__file__ = filename
         if sys.platform == 'cli':
             code = python_context.CreateSnippet(contents, None, SourceCodeKind.File)
@@ -651,7 +684,7 @@ due to the exec, so we do it here"""
         # launch the startup script if one has been specified
         if self.launch_file:
             try:
-                self.run_file_as_main(self.launch_file)
+                self.run_file_as_main(self.launch_file, '')
             except:
                 print('error in launching startup script:')
                 traceback.print_exc()
@@ -662,7 +695,7 @@ due to the exec, so we do it here"""
                 return
 
     def execute_file_work_item(self):
-        self.run_file_as_main(self.current_code)
+        self.run_file_as_main(self.current_code, self.current_args)
 
     @staticmethod
     def _get_cur_module_set():
@@ -686,8 +719,9 @@ due to the exec, so we do it here"""
         self.execute_item = self.execute_code_work_item
         self.execute_item_lock.release()
 
-    def execute_file(self, filename):
+    def execute_file(self, filename, args):
         self.current_code = filename
+        self.current_args = args
         self.execute_item = self.execute_file_work_item
         self.execute_item_lock.release()
 

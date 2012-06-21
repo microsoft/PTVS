@@ -245,10 +245,6 @@ namespace Microsoft.PythonTools.Repl {
                 _multipleScopes = multipleScopes;
             }
 
-            if (!String.IsNullOrWhiteSpace(extraArgs)) {
-                args.Add(extraArgs);
-            }
-
             processInfo.Arguments = String.Join(" ", args);
 
             var process = new Process();
@@ -276,7 +272,7 @@ namespace Microsoft.PythonTools.Repl {
             internal bool _connected;
             private Socket _socket;
             private TaskCompletionSource<ExecutionResult> _completion;
-            private string _executionText, _executionFile;
+            private string _executionText, _executionFile, _executionExtraArgs;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _fileToModuleName;
@@ -355,8 +351,9 @@ namespace Microsoft.PythonTools.Repl {
                     using (new SocketLock(this)) {
                         _connected = true;
                         if (_executionFile != null) {
-                            SendExecuteFile(_executionFile);
+                            SendExecuteFile(_executionFile, _executionExtraArgs);
                             _executionFile = null;
+                            _executionExtraArgs = null;
                         }
 
                         if (_executionText != null) {
@@ -716,26 +713,28 @@ namespace Microsoft.PythonTools.Repl {
                 SendString(text);
             }
 
-            public void ExecuteFile(string filename) {
+            public void ExecuteFile(string filename, string extraArgs) {
                 using (new SocketLock(this)) {
                     if (!_connected) {
                         // delay executing the text until we're connected
                         _executionFile = filename;
+                        _executionExtraArgs = extraArgs;
                         return;
                     } else if (!Socket.Connected) {
                         _eval._window.WriteError(_noReplProcess);
                         return;
                     }
 
-                    SendExecuteFile(filename);
+                    SendExecuteFile(filename, extraArgs);
                 }
             }
 
-            private void SendExecuteFile(string filename) {
+            private void SendExecuteFile(string filename, string extraArgs) {
                 AllowSetForegroundWindow(_process.Id);
 
                 Socket.Send(ExecuteFileCommandBytes);
                 SendString(filename);
+                SendString(extraArgs ?? String.Empty);
             }
 
             public void AbortCommand() {
@@ -1104,8 +1103,17 @@ namespace Microsoft.PythonTools.Repl {
         public void ExecuteFile(string filename) {
             EnsureConnected();
 
+            string startupFilename, startupDir, extraArgs = null;
+            VsProjectAnalyzer analyzer;
+            if (PythonToolsPackage.TryGetStartupFileAndDirectory(out startupFilename, out startupDir, out analyzer)) {
+                var startupProj = PythonToolsPackage.GetStartupProject();
+                if (startupProj != null) {
+                    extraArgs = startupProj.GetProjectProperty(CommonConstants.CommandLineArguments, true);
+                }
+            }
+            
             if (_curListener != null) {
-                _curListener.ExecuteFile(filename);
+                _curListener.ExecuteFile(filename, extraArgs);
             } else {
                 _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
             }

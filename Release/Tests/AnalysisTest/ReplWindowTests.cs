@@ -2232,6 +2232,21 @@ $cls
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ExecuteInReplSysArgvScriptArgs() {
+            // project is typed to 2.6 so execute in interactive always executes there
+            if (InterpreterDescription == "Python 2.6 Interactive") {
+                var interactive = Prepare();
+                var project = DebugProject.OpenProject(@"Python.VS.TestData\SysArgvScriptArgsRepl.sln");
+
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                Assert.AreNotEqual(null, interactive);
+
+                interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ReplPrompt);
+            }
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplUnicodeFilename() {
             // project is typed to 2.6 so execute in interactive always executes there
             if (InterpreterDescription == "Python 2.6 Interactive") {
