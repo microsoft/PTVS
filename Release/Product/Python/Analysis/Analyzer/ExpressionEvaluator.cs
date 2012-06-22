@@ -388,8 +388,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
-                foreach (var obj in Evaluate(l.Target)) {
-                    obj.SetMember(l, _unit, l.Name, values);
+                if (l.Name != null) {
+                    foreach (var obj in Evaluate(l.Target)) {
+                        obj.SetMember(l, _unit, l.Name, values);
+                    }
                 }
             } else if (left is IndexExpression) {
                 var l = (IndexExpression)left;

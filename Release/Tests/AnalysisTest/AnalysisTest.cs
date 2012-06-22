@@ -2845,6 +2845,21 @@ class x(object):
             AssertContainsExactly(entry.GetMembersByIndex("self.x", text.IndexOf("pass")).Select(m => m.Name), _strMembers);
         }
 
+        [TestMethod]
+        public void TestAssignToMissingMember() {
+            var text = @"
+class test():
+    x = 0;
+    y = 1;
+t = test()
+t.x, t. =
+";
+            // http://pytools.codeplex.com/workitem/733
+
+            // this just shouldn't crash, we should handle the malformed code, not much to inspect afterwards...
+            var entry = ProcessText(text);
+        }
+
         class EmptyAnalysisCookie : IAnalysisCookie {
             public static EmptyAnalysisCookie Instance = new EmptyAnalysisCookie();
             public string GetLine(int lineNo) {
