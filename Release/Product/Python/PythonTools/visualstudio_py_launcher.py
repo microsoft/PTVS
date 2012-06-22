@@ -26,8 +26,6 @@ import os
 # change to directory we expected to start from
 os.chdir(sys.argv[1])
 
-# fix sys.path to be our real starting dir, not this one
-sys.path[0] = sys.argv[1]
 port_num = int(sys.argv[2])
 debug_id = sys.argv[3]
 del sys.argv[0:4]
@@ -64,6 +62,9 @@ if len(sys.argv) >= 1 and sys.argv[0] == '--django-debugging':
     del sys.argv[0]
 
 __file__ = sys.argv[0]
+
+# fix sys.path to be the script file dir
+sys.path[0] = os.path.split(sys.argv[0])[0]
 
 # remove all state we imported
 del sys, os

@@ -61,6 +61,22 @@ namespace AnalysisTest.ProjectSystem {
         }
 
         /// <summary>
+        /// Loads a project with the startup file in a subdirectory, ensuring that syspath is correct when debugging.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DebugPythonProjectSubFolderStartupFileSysPath() {
+            OpenProject(@"Python.VS.TestData\SysPath.sln");
+            
+            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+            WaitForMode(dbgDebugMode.dbgDesignMode);
+            
+            // sys.path should point to the startup file directory, not the project directory.
+            // this matches the behavior of start without debugging.
+            WaitForDebugOutput(text => text.Contains(@"Python.VS.TestData\\SysPath\\Sub'"));
+        }
+
+        /// <summary>
         /// Tests using a custom interpreter path that is relative
         /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
@@ -713,6 +729,23 @@ namespace AnalysisTest.ProjectSystem {
             return project;
         }
 
+        private static string GetOutputWindowDebugPaneText() {
+            OutputWindow window = ((EnvDTE80.DTE2)VsIdeTestHostContext.Dte).ToolWindows.OutputWindow;
+            OutputWindowPane debugPane = window.OutputWindowPanes.Item("Debug");
+            debugPane.Activate();
+            var debugDoc = debugPane.TextDocument;
+            string debugText = debugDoc.StartPoint.CreateEditPoint().GetText(debugDoc.EndPoint);
+            return debugText;
+        }
+
+        private static void WaitForDebugOutput(Predicate<string> condition) {
+            for (int i = 0; i < 50 && !condition(GetOutputWindowDebugPaneText()); i++) {
+                Thread.Sleep(100);
+            }
+
+            Assert.IsTrue(condition(GetOutputWindowDebugPaneText()));
+        }
+
         private static void StartHelloWorldAndBreak() {
             OpenProjectAndBreak(@"Python.VS.TestData\HelloWorld.sln", "Program.py", 1);
         }
@@ -737,7 +770,7 @@ namespace AnalysisTest.ProjectSystem {
 
             Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, mode);
         }
-
+        
         #endregion
     }
 }
