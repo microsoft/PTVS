@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return 2;
         }
 
-        public override PythonMemberType ResultType {
+        public override PythonMemberType MemberType {
             get {
                 return PythonMemberType.Field;
             }

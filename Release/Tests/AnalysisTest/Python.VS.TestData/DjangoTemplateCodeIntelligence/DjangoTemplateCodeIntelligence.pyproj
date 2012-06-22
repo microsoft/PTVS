@@ -48,6 +48,7 @@
   <ItemGroup>
     <Content Include="TestApp\Templates\page.html.djt" />
     <Content Include="TestApp\Templates\page2.html.djt" />
+    <Content Include="TestApp\Templates\page3.html.djt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v10.0\Python Tools\Microsoft.PythonTools.Django.targets" />
   <ProjectExtensions>

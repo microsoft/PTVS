@@ -207,8 +207,9 @@ namespace Microsoft.PythonTools.Django.Project {
             } else if (callInfo.NormalArgumentCount >= 2) {
                 // library.filter(value)
                 foreach (var name in callInfo.GetArgument(1)) {
-                    if (name.Name != null) {
-                        RegisterTag(tags, name.Name);
+                    string tagName = name.Name ?? name.GetConstantValueAsString();
+                    if (tagName != null) {
+                        RegisterTag(tags, tagName);
                     }
                 }
             } else if (callInfo.NormalArgumentCount == 1) {

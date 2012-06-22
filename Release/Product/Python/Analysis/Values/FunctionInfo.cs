@@ -368,7 +368,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override PythonMemberType ResultType {
+        public override PythonMemberType MemberType {
             get {
                 return IsProperty ? PythonMemberType.Property : PythonMemberType.Function;
             }

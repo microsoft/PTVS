@@ -158,9 +158,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override PythonMemberType ResultType {
+        public override PythonMemberType MemberType {
             get {
-                return _original.ResultType;
+                return _original.MemberType;
             }
         }
 

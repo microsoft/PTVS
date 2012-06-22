@@ -26,9 +26,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _method = method;
         }
 
-        public override PythonMemberType ResultType {
+        public override PythonMemberType MemberType {
             get {
-                return _method.ResultType;
+                return _method.MemberType;
             }
         }
 

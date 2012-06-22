@@ -56,9 +56,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override PythonMemberType ResultType {
+        public override PythonMemberType MemberType {
             get {
-                switch (_klass.ResultType) {
+                switch (_klass.MemberType) {
                     case PythonMemberType.Enum: return PythonMemberType.EnumInstance;
                     case PythonMemberType.Delegate: return PythonMemberType.DelegateInstance;
                     default:

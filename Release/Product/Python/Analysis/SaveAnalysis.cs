@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return GetMemberValue(specialCallable.Original, declModule, isRef);
             }
 
-            switch (type.ResultType) {
+            switch (type.MemberType) {
                 case PythonMemberType.Function:
                     FunctionInfo fi = type as FunctionInfo;
                     if (fi != null) {
@@ -258,7 +258,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return GetMemberKind(specialCallable.Original, declModule, isRef);
             }
 
-            switch (type.ResultType) {
+            switch (type.MemberType) {
                 case PythonMemberType.Function:
                     if (type is BuiltinFunctionInfo) {
                         return "func_ref";

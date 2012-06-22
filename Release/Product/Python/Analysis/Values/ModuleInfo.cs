@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _projectEntry; }
         }
 
-        public override PythonMemberType ResultType {
+        public override PythonMemberType MemberType {
             get {
                 return PythonMemberType.Module;
             }

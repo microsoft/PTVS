@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Analysis {
         private PythonMemberType GetMemberType() {
             PythonMemberType result = PythonMemberType.Unknown;
             foreach (var ns in _vars()) {
-                var nsType = ns.ResultType;
+                var nsType = ns.MemberType;
                 if (result == PythonMemberType.Unknown) {
                     result = nsType;
                 } else if (result != nsType) {

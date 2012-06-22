@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -38,6 +39,15 @@ namespace Microsoft.PythonTools.Analysis {
         public virtual string Name {
             get {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the member type of the analysis value, or PythonMemberType.Unknown if it's unknown.
+        /// </summary>
+        public virtual PythonMemberType MemberType {
+            get {
+                return PythonMemberType.Unknown;
             }
         }
 
@@ -167,6 +177,15 @@ namespace Microsoft.PythonTools.Analysis {
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             return ToNamespaceSet(_value.GetMember(name));
+        }
+
+        /// <summary>
+        /// Returns the member type of the analysis value, if it's known.
+        /// </summary>
+        public override PythonMemberType MemberType {
+            get {
+                return _value.MemberType;
+            }
         }
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {

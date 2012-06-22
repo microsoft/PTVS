@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return ProjectState.GetAllMembers(_container, moduleContext);
         }
 
-        public override PythonMemberType ResultType {
+        public override PythonMemberType MemberType {
             get {
                 if (_container is IMember) {
                     return ((IMember)_container).MemberType;

@@ -12,4 +12,7 @@ def home2(request):
 def home3(request):
     return HttpResponse(render_to_string('page2.html.djt', {'content': 42}))
 
+def home4(request):
+    return HttpResponse(render_to_string('page3.html.djt', {'content': 'foo'}))
+
 

@@ -357,7 +357,7 @@ namespace Microsoft.PythonTools.Analysis {
             public override PythonMemberType MemberType {
                 get {
                     if (Module != null) {
-                        return Module.ResultType;
+                        return Module.MemberType;
                     }
                     return PythonMemberType.Module;
                 }

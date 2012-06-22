@@ -46,6 +46,12 @@
 	{% for x in abc %}
 	{% endfor %}
 
+	{% for x in abc reversed %}
+	{% endfor %}
+
+	{% for  x  in  abc  reversed %}
+	{% endfor %}
+
 	{% load baz.quox %}
 	{% load foo from bar %}
 

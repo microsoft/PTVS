@@ -105,7 +105,7 @@ namespace AnalysisTest {
             var testCases = new[] { 
                 new { 
                     Got = ("for x in bar"), 
-                    Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in bar", 0), 6, DjangoVariable.Variable("bar", 9), 12, false, new[] { "x" }),
+                    Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in bar", 0), 6, DjangoVariable.Variable("bar", 9), 12, -1, new[] { new Tuple<string, int>("x",  4) }),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new { 

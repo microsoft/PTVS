@@ -70,8 +70,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public virtual PythonMemberType ResultType {
-            get { return PythonMemberType.Unknown; }
+        PythonMemberType IAnalysisValue.ResultType {
+            get { return MemberType; }
         }
 
         public virtual IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {

@@ -312,15 +312,16 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public readonly int VariableEnd;
         public readonly DjangoVariable Variable;
         public readonly int ArgsEnd;
-        public readonly bool HasReversed;
-        private readonly string[] _definedVars;
+        public readonly int ReversedStart;
+        private readonly Tuple<string, int>[] _definedVars;
+        private static readonly char[] NewLines = new[] { '\r', '\n' };
 
-        public DjangoForBlock(BlockParseInfo parseInfo, int inStart, DjangoVariable variable, int argsEnd, bool hasReversed, string[] definedVars)
+        public DjangoForBlock(BlockParseInfo parseInfo, int inStart, DjangoVariable variable, int argsEnd, int reversedStart, Tuple<string, int>[] definedVars)
             : base(parseInfo) {
             InStart = inStart;
             Variable = variable;
             ArgsEnd = argsEnd;
-            HasReversed = hasReversed;
+            ReversedStart = reversedStart;
             _definedVars = definedVars;
         }
 
@@ -329,55 +330,86 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             int inStart = -1;
 
             int inOffset = 0, inIndex = -1;
-            HashSet<string> definitions = new HashSet<string>();
+            var definitions = new List<Tuple<string, int>>();
             for (int i = 0; i < words.Length; i++) {
                 var word = words[i];
                 if (word == "in") {
                     inStart = inOffset + parseInfo.Start + parseInfo.Command.Length;
                     inIndex = i;
                     break;
+                } else if (words[i].IndexOfAny(NewLines) != -1) {
+                    // unterminated tag
+                    break;
                 }
+
                 if (!String.IsNullOrEmpty(word)) {
-                    definitions.Add(word);
+                    definitions.Add(new Tuple<string, int>(word, inOffset + parseInfo.Start + parseInfo.Command.Length));
                 }
                 inOffset += words[i].Length + 1;
             }
 
-            int argEnd;
-            bool hasReversed = false;
-            if (words.Length > 0 && words[words.Length - 1] == "reversed") {
-                argEnd = words.Length - 1;
-                hasReversed = true;
-            } else {
-                argEnd = words.Length;
-            }
-
             // parse the arguments...
+            int reversedStart = -1;
             DjangoVariable variable = null;
             int argsEnd = -1;
             if (inIndex != -1) {
-                var filterText = String.Join(
-                    " ",
-                    words,
-                    inIndex + 1,
-                    argEnd - (inIndex + 1)
-                );
+                string filterText = "";
+                argsEnd = inStart + "in".Length + 1;
+                for (int i = inIndex + 1; i < words.Length; i++) {
+                    int nlStart = words[i].IndexOfAny(NewLines);
+                    string trimmed = words[i];
+                    if (nlStart != -1) {
+                        trimmed = words[i].Substring(0, nlStart);
+                    }
+                    
+                    if (i != inIndex + 1) {
+                        filterText += " ";
+                        argsEnd += 1;
+                    }
 
-                variable = DjangoVariable.Parse(filterText, inStart + "in".Length + 1);
-                argsEnd = filterText.Length + inStart + "in".Length + 1;
+                    if (trimmed == "reversed") {
+                        reversedStart = argsEnd;
+                        break;
+                    }
+
+                    filterText += trimmed;
+                    argsEnd += trimmed.Length;
+                    if (trimmed != words[i]) {
+                        // unterminated tag
+                        break;
+                    }
+                }
+
+                var trimmedFilter = filterText.TrimStart(' ');
+
+                variable = DjangoVariable.Parse(trimmedFilter, 
+                    inStart + "in".Length + 1 + filterText.Length - trimmedFilter.Length);
             }
 
-            return new DjangoForBlock(parseInfo, inStart, variable, argsEnd, hasReversed, definitions.ToArray());
+            return new DjangoForBlock(parseInfo, inStart, variable, argsEnd, reversedStart, definitions.ToArray());
         }
 
         public override IEnumerable<string> GetVariables() {
-            return _definedVars;
+            foreach (var word in _definedVars) {
+                yield return word.Item1;
+            }
         }
 
         public override IEnumerable<BlockClassification> GetSpans() {
             yield return new BlockClassification(new Span(ParseInfo.Start, 3), Classification.Keyword);
+            foreach (var word in _definedVars) {
+                yield return new BlockClassification(new Span(word.Item2, word.Item1.Length), Classification.Identifier);
+            }
             if (InStart != -1) {
                 yield return new BlockClassification(new Span(InStart, 2), Classification.Keyword);
+            }
+            if (Variable != null) {
+                foreach (var span in Variable.GetSpans()) {
+                    yield return span;
+                }
+            }
+            if (ReversedStart != -1) {
+                yield return new BlockClassification(new Span(ReversedStart, "reversed".Length), Classification.Keyword);
             }
         }
 
@@ -386,7 +418,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 return new CompletionInfo[0];
             } else if (Variable != null && position > InStart) {
                 var res = Variable.GetCompletions(context, position);
-                if (position > ArgsEnd && !HasReversed) {
+                if (position >= ArgsEnd && ReversedStart == -1) {
                     return System.Linq.Enumerable.Concat(
                         res,
                         new[] { new CompletionInfo("reversed", StandardGlyphGroup.GlyphKeyword) }

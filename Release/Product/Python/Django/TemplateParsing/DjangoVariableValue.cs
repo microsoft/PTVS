@@ -47,10 +47,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 Classification.Identifier
                             );
                             start += split[i].Length;
-                            yield return new BlockClassification(
-                                new Span(start, 1),
-                                Classification.Dot
-                            );
+                            if (i != split.Length - 1) {
+                                yield return new BlockClassification(
+                                    new Span(start, 1),
+                                    Classification.Dot
+                                );
+                            }
                             start += 1;
                         }
                     } else {

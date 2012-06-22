@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
@@ -201,16 +202,25 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
                     // get the members of this variable
                     if (tempTags != null) {
-                        HashSet<string> newTags = new HashSet<string>();
+                        Dictionary<string, PythonMemberType> newTags = new Dictionary<string, PythonMemberType>();
                         HashSet<AnalysisValue> values;
                         if (tempTags.TryGetValue(varName, out values)) {
                             foreach (var item in values) {
                                 foreach (var members in item.GetAllMembers()) {
-                                    newTags.Add(members.Key);
+                                    string name = members.Key;
+                                    PythonMemberType type, newType = GetMemberType(members.Value);
+                                    
+                                    if (!newTags.TryGetValue(name, out type)) {
+                                        newTags[name] = newType;
+                                    } else if (type != newType && 
+                                        type != PythonMemberType.Unknown && 
+                                        newType != PythonMemberType.Unknown) {
+                                        newTags[name] = PythonMemberType.Multiple;
+                                    }
                                 }
                             }
                         }
-                        tags = CompletionInfo.ToCompletionInfo(newTags, StandardGlyphGroup.GlyphGroupField);
+                        tags = CompletionInfo.ToCompletionInfo(newTags);
                     }
                 } else {
                     tags = FilterTags(tempTags.Keys, Expression.Value, StandardGlyphGroup.GlyphGroupField);
@@ -253,6 +263,21 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return tags;
         }
 
+        private static PythonMemberType GetMemberType(ISet<AnalysisValue> values) {
+            PythonMemberType newType = PythonMemberType.Unknown;
+            foreach (var value in values) {
+                if (value.MemberType == newType) {
+                    continue;
+                } else if (newType == PythonMemberType.Unknown) {
+                    newType = value.MemberType;
+                } else {
+                    newType = PythonMemberType.Multiple;
+                    break;
+                }
+            }
+            return newType;
+        }
+
         public IEnumerable<BlockClassification> GetSpans() {
             if (Expression != null) {
                 foreach (var span in Expression.GetSpans(ExpressionStart)) {
@@ -291,6 +316,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         internal static IEnumerable<CompletionInfo> ToCompletionInfo(IEnumerable<string> keys, StandardGlyphGroup glyph) {
             foreach (var key in keys) {
                 yield return new CompletionInfo(key, glyph, key);
+            }
+        }
+
+        internal static IEnumerable<CompletionInfo> ToCompletionInfo(Dictionary<string, PythonMemberType> keys) {
+            foreach (var key in keys) {
+                yield return new CompletionInfo(key.Key, key.Value.ToGlyphGroup(), key.Key);
             }
         }
     }
