@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 15;
+        public static readonly int CurrentVersion = 16;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
@@ -233,14 +233,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 return dbFile;
             }
 
-            class OutputDataReceiver {
-                public readonly StringBuilder Received = new StringBuilder();
-
-                public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
-                    Received.Append(e.Data);
-                }
-            }
-
             const int extensionModuleFilenameIndex = 0;
             const int interpreterGuidIndex = 1;
             const int interpreterVersionIndex = 2;
@@ -395,7 +387,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 proc.StartInfo = psi;
                 StringBuilder output = new StringBuilder();
                 try {
-                    LogEvent(request, "START_SCRAPE");
+                    LogEvent(request, "START_SCRAPE " + psi.Arguments);
 
                     proc.Start();
                     proc.BeginErrorReadLine();
@@ -412,7 +404,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if (proc.ExitCode != 0) {
-                    LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);
+                    LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);  
                 } else {
                     LogEvent(request, "DONE (SCRAPE)");
                 }
@@ -433,7 +425,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         proc.StartInfo = psi;
 
                         try {
-                            LogEvent(request, "START_STDLIB");
+                            LogEvent(request, "START_STDLIB " + psi.Arguments);
                             proc.Start();
                             proc.WaitForExit();
 
@@ -496,6 +488,37 @@ namespace Microsoft.PythonTools.Interpreter {
                     } catch (IOException) {
                     } catch (UnauthorizedAccessException) {
                     } catch (System.Security.SecurityException) {
+                    }
+                } else {
+                    // try and find the lib dir based upon where site.py lives
+                    var psi = new ProcessStartInfo(
+                        request.Factory.Configuration.InterpreterPath,
+                        "-c \"import site; print site.__file__\""
+                    );
+                    psi.RedirectStandardOutput = true;
+                    psi.RedirectStandardError = true;
+                    psi.UseShellExecute = false;
+                    psi.CreateNoWindow = true;
+
+                    var proc = Process.Start(psi);
+
+                    OutputDataReceiver receiver = new OutputDataReceiver();
+                    proc.OutputDataReceived += receiver.OutputDataReceived;
+                    proc.ErrorDataReceived += receiver.OutputDataReceived;
+
+                    proc.BeginErrorReadLine();
+                    proc.BeginOutputReadLine();
+
+                    proc.WaitForExit();
+
+                    string siteFilename = receiver.Received.ToString().Trim();
+                    
+                    if (!String.IsNullOrWhiteSpace(siteFilename) &&
+                        siteFilename.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+                        var dirName = Path.GetDirectoryName(siteFilename);
+                        if (Directory.Exists(dirName)) {
+                            libDir = dirName;
+                        }
                     }
                 }
             }
@@ -633,6 +656,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 return res;
             }
             return null;
+        }
+
+        class OutputDataReceiver {
+            public readonly StringBuilder Received = new StringBuilder();
+
+            public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
+                Received.Append(e.Data);
+            }
         }
     }
 

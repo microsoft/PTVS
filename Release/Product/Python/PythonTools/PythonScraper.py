@@ -165,12 +165,20 @@ class_method_descriptor_type = type(datetime.date.__dict__['today'])
 class OldStyleClass: pass
 OldStyleClassType = type(OldStyleClass)
 
-def generate_member(obj, is_hidden=False):
+def generate_member(obj, is_hidden=False, from_type = False):
     member_table = {}
     
     if isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
         member_table['kind'] = 'function'
         member_table['value'] = generate_builtin_function(obj)
+    elif isinstance(obj, types.FunctionType):
+        # PyPy - we see plain old Python functions in addition to built-ins
+        if from_type:
+            member_table['kind'] = 'method'
+        else:
+            member_table['kind'] = 'function'
+
+        member_table['value'] = generate_builtin_function(obj, from_type)
     elif isinstance(obj, (type, OldStyleClassType)):
         member_table['kind'] = 'type'        
         member_table['value'] = generate_type(obj, is_hidden=is_hidden)
@@ -257,7 +265,7 @@ def generate_type(type_obj, is_hidden=False):
             else:
                 members_table[member] = generate_type_new(type_obj, type_obj.__dict__[member])
         else:
-            members_table[member] = generate_member(type_obj.__dict__[member])
+            members_table[member] = generate_member(type_obj.__dict__[member], from_type = True)
 
     if not found_new and hasattr(type_obj, '__new__'):
         # you'd expect all types to have __new__, but twisted.internet.iocpreactor.iocpsupport.Event
@@ -1896,7 +1904,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('15')
+    f.write('16')
     f.close()
 
     # inspect extension modules installed into site-packages

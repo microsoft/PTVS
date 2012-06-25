@@ -347,10 +347,14 @@ if sys.version > '3.':
 else:
     str_types = (str, unicode)
 
+
 def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, extra_args = []):
     if isinstance(doc_str, str_types):
         decl_mod = None
-        if mod is not None:
+        if isinstance(mod, types.ModuleType):
+            decl_mod = mod
+            mod = decl_mod.__name__
+        elif mod is not None:
             decl_mod = sys.modules.get(mod, None)
 
         res = parse_doc_str(doc_str, mod, decl_mod, func_name, extra_args, obj_class)
@@ -374,7 +378,7 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, extra_args
                         ret_type_str = v['doc'][alt_ret_type+14:last_space]
                         if ret_type_str.endswith('.') or ret_type_str.endswith(','):
                             ret_type_str = ret_type_str[:-1]
-                        new_ret_type = get_ret_type(ret_type_str, obj_class, mod)
+                        new_ret_type = get_ret_type(ret_type_str, obj_class, decl_mod)
                         res[i]['ret_type'] = new_ret_type
 
             return tuple(res)
