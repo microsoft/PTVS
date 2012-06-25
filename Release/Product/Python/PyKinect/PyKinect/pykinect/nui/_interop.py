@@ -88,21 +88,26 @@ _KINECT_ERRORS = {
     _E_NUI_DATABASE_VERSION_MISMATCH : 'Database version mismatch',
 }
 
+try:
+    c_bool = ctypes.c_bool
+except:
+    c_bool = ctypes.c_uint
+
 _kernel32 = ctypes.WinDLL('kernel32')
 _CreateEvent = _kernel32.CreateEventW
-_CreateEvent.argtypes = [ctypes.c_voidp, ctypes.c_bool, ctypes.c_bool, ctypes.c_wchar_p]
+_CreateEvent.argtypes = [ctypes.c_voidp, ctypes.c_uint, ctypes.c_bool, ctypes.c_wchar_p]
 _CreateEvent.restype = ctypes.c_voidp
 
 _CloseHandle = _kernel32.CloseHandle
 _CloseHandle.argtypes = [ctypes.c_voidp]
-_CloseHandle.restype = ctypes.c_bool
+_CloseHandle.restype = c_bool
 
 _WaitForSingleObject = _kernel32.WaitForSingleObject 
 _WaitForSingleObject.argtypes = [ctypes.c_voidp, ctypes.c_uint32]
 _WaitForSingleObject.restype = ctypes.c_uint32
 
 _WaitForMultipleObjects = _kernel32.WaitForMultipleObjects 
-_WaitForMultipleObjects.argtypes = [ctypes.c_uint32, ctypes.POINTER(ctypes.c_voidp), ctypes.c_bool, ctypes.c_uint32]
+_WaitForMultipleObjects.argtypes = [ctypes.c_uint32, ctypes.POINTER(ctypes.c_voidp), ctypes.c_uint, ctypes.c_uint32]
 _WaitForMultipleObjects.restype = ctypes.c_uint32
 
 _WAIT_OBJECT_0 = 0

@@ -18,7 +18,7 @@ _AUDIODLL = ctypes.WinDLL(_audiodll_path)
 
 _audio_path = path.join(path.dirname(__file__), 'PyKinectAudio.dll')
 if not os.path.exists(_audio_path):
-    _audio_path = path.join(path.dirname(__file__), '..', '..', '..', 'Debug', 'PyKinectAudio.dll')
+    _audio_path = path.join(path.dirname(__file__), '..', '..', '..', '..', '..', '..', '..', 'Binaries', 'Win32', 'Debug', 'PyKinectAudio.dll')
     if not path.exists(_audio_path):
         raise Exception('Cannot find PyKinectAudio.dll')
 
@@ -32,7 +32,7 @@ _OpenAudioStream.argtypes = [ctypes.c_voidp, ctypes.POINTER(ctypes.c_voidp), cty
 _OpenAudioStream.restype = ctypes.HRESULT
 
 _SetDeviceProperty_Bool = _PYAUDIODLL.SetDeviceProperty_Bool
-_SetDeviceProperty_Bool.argtypes = [ctypes.c_voidp, ctypes.c_uint32, ctypes.c_bool]
+_SetDeviceProperty_Bool.argtypes = [ctypes.c_voidp, ctypes.c_uint32, ctypes.c_uint]
 _SetDeviceProperty_Bool.restype = ctypes.HRESULT
 
 _SetDeviceProperty_Int = _PYAUDIODLL.SetDeviceProperty_Int
@@ -40,7 +40,7 @@ _SetDeviceProperty_Int.argtypes = [ctypes.c_voidp, ctypes.c_uint32, ctypes.c_int
 _SetDeviceProperty_Int.restype = ctypes.HRESULT
 
 _GetDeviceProperty_Bool = _PYAUDIODLL.GetDeviceProperty_Bool
-_GetDeviceProperty_Bool.argtypes = [ctypes.c_voidp, ctypes.c_uint32, ctypes.POINTER(ctypes.c_bool)]
+_GetDeviceProperty_Bool.argtypes = [ctypes.c_voidp, ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint)]
 _GetDeviceProperty_Bool.restype = ctypes.HRESULT
 
 _GetDeviceProperty_Int = _PYAUDIODLL.GetDeviceProperty_Int
@@ -143,7 +143,7 @@ _AudioPropertySetters = {
 }
 
 _AudioPropertyGetters = {
-        bool : (_GetDeviceProperty_Bool, ctypes.c_bool),
+        bool : (_GetDeviceProperty_Bool, ctypes.c_uint),
         int : (_GetDeviceProperty_Int, ctypes.c_int),
         #AecQualityMetrics: (_GetDeviceProperty_QualityMetrics,  AecQualityMetrics),
  }

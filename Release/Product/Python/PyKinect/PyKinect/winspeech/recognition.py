@@ -14,7 +14,7 @@ from os import path
 
 _audio_path = path.join(path.dirname(__file__), '..', 'pykinect', 'audio', 'PyKinectAudio.dll')
 if not os.path.exists(_audio_path):
-    _audio_path = path.join(path.dirname(__file__), '..', '..', 'Debug', 'PyKinectAudio.dll')
+    _audio_path = path.join(path.dirname(__file__), '..', '..', '..', '..', '..', '..', 'Binaries', 'Win32', 'Debug', 'PyKinectAudio.dll')
     if not path.exists(_audio_path):
         raise Exception('Cannot find PyKinectAudio.dll')
 
@@ -51,7 +51,7 @@ _RecognizeOne.argtypes = [ctypes.c_voidp, ctypes.c_uint32, _Recognize_Callback, 
 _RecognizeOne.restype = ctypes.HRESULT
 
 _RecognizeAsync = _PYAUDIODLL.RecognizeAsync
-_RecognizeAsync.argtypes = [ctypes.c_voidp, ctypes.c_bool, _Recognize_Callback, _Recognize_Callback, ctypes.POINTER(ctypes.c_voidp)]
+_RecognizeAsync.argtypes = [ctypes.c_voidp, ctypes.c_uint, _Recognize_Callback, _Recognize_Callback, ctypes.POINTER(ctypes.c_voidp)]
 _RecognizeAsync.restype = ctypes.HRESULT
 
 _StopRecognizeAsync = _PYAUDIODLL.StopRecognizeAsync

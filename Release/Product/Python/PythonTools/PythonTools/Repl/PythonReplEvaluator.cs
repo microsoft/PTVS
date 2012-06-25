@@ -130,7 +130,6 @@ namespace Microsoft.PythonTools.Repl {
             window.SetOptionValue(ReplOptions.FormattedPrompts, true);
 
             window.WriteLine("Python interactive window.  Type $help for a list of commands.");            
-            Connect();
 
             _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
             return ExecutionResult.Succeeded;

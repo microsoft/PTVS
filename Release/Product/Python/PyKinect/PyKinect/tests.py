@@ -8,11 +8,18 @@
  # ###########################################################################/
 
 import unittest
+import ctypes
 from unittest.main import TestProgram
-from pykinect.nui import Device, Runtime, KinectError, ImageResolution, ImageStreamType, ImageType, ImageStream
+from pykinect.nui import (Device, Runtime, KinectError, ImageResolution, 
+                          ImageStreamType, ImageType, ImageStream)
 from pykinect.audio import KinectAudioSource, GetKinectDeviceInfo
 from winspeech.recognition import SpeechRecognitionEngine, Grammar
 import time
+from pykinect.nui.structs import (SkeletonData, SkeletonTrackingState, Vector, 
+                                  JointId, SkeletonQuality, JointTrackingState, 
+                                  ImageViewArea, SkeletonFrameQuality, NUI_SKELETON_COUNT, 
+                                  SkeletonFrame, TransformSmoothParameters)
+
 
 class KinectTestCases(unittest.TestCase):
     def test_device(self):
@@ -220,6 +227,74 @@ class KinectTestCases(unittest.TestCase):
         self.assertEqual(recognized_values[0], 'down')
         self.assertEqual(recognized_values[1], 'left')
         self.assertEqual(recognized_values[2], 'right')
+
+    def assertCtypesEquals(self, value1, value2):
+        if type(type(value1)) is type(ctypes.Array):
+            self.assertEqual(len(value1), len(value2))
+            for i in range(len(value1)):
+                self.assertCtypesEquals(value1[i], value2[i])
+        else:
+            self.assertEqual(value1, value2)
+
+    def interop_prop_test(self, interop_obj, tests):
+        for friendly_name, interop_name, value in tests:
+            print friendly_name
+            setattr(interop_obj, friendly_name, value)
+            
+            self.assertCtypesEquals(getattr(interop_obj, friendly_name), value)        
+            self.assertCtypesEquals(getattr(interop_obj, interop_name), value)
+
+    def test_skeleton_data(self):
+        pos_arr = ctypes.ARRAY(Vector, JointId.count.value)()
+        pos_arr[0] = Vector(2,4,6,8)
+        joint_arr = ctypes.ARRAY(JointTrackingState, JointId.count.value)()
+        joint_arr[0] = JointTrackingState.inferred
+
+        tests = [('tracking_state', 'eTrackingState', SkeletonTrackingState.tracked),
+                 ('tracking_id', 'dwTrackingID', 1),
+                 ('enrollment_index', 'dwEnrollmentIndex', 1),
+                 ('user_index', 'dwUserIndex', 1),
+                 ('position', 'Position', Vector(1, 2, 3, 4)),
+                 ('skeleton_positions', 'SkeletonPositions', pos_arr),
+                 ('skeleton_position_tracking_states', 'eSkeletonPositionTrackingState', joint_arr),
+                 ('skeleton_quality', 'Quality', SkeletonQuality.clipped_bottom),
+                ]
+
+        self.interop_prop_test(SkeletonData(), tests)
+
+    def test_image_view_area(self):
+        tests = [('zoom', 'Zoom', 1),
+                 ('center_x', 'CenterX', 1),
+                 ('center_y', 'CenterY', 1),
+                ]
+
+        self.interop_prop_test(ImageViewArea(), tests)
+
+    def test_skeleton_frame(self):
+        skel_data = ctypes.ARRAY(SkeletonData, NUI_SKELETON_COUNT)()
+        sd = SkeletonData()
+        sd.user_index = 5
+        skel_data[0] = sd
+        tests = [('timestamp', 'liTimeStamp', 1),
+                 ('frame_number', 'dwFrameNumber', 2),
+                 ('quality', 'Quality', SkeletonFrameQuality.camera_motion),
+                 ('floor_clip_plane', 'vFloorClipPlane', Vector(2,4,6,8)),
+                 ('normal_to_gravity', 'vNormalToGravity', Vector(1,2,3,4)),
+                 ('skeleton_data', 'SkeletonData', skel_data),
+                 ]
+
+        self.interop_prop_test(SkeletonFrame(), tests)
+
+    def test_TransformSmoothParameters(self):
+        tests = [('smoothing', 'fSmoothing', 1),
+                 ('correction', 'fCorrection', 2),
+                 ('prediction', 'fPrediction', 3),
+                 ('jitter_radius', 'fJitterRadius', 4),
+                 ('max_deviation_radius', 'fMaxDeviationRadius', 5),
+                 ]
+
+        self.interop_prop_test(TransformSmoothParameters(), tests)
+        pass
 
 if __name__ == '__main__':
     unittest.main()

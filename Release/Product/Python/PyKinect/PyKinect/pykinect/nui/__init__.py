@@ -275,18 +275,18 @@ class SkeletonEngine(object):
         self.runtime = runtime
         self._enabled = False
 
-    @property
-    def enabled(self):
+    def get_enabled(self):
         return self._enabled
 
-    @enabled.setter
-    def enabled(self, value):
+    def set_enabled(self, value):
         if value:
             self.runtime._nui.NuiSkeletonTrackingEnable(self.runtime._skeleton_event)
             self._enabled = True
         else:
             self.runtime._nui.NuiSkeletonTrackingDisable(self.runtime._skeleton_event)
             self._enabled = False
+
+    enabled = property(get_enabled, set_enabled)
 
     def get_next_frame(self, timeout = -1):
         res = self.runtime._nui.NuiSkeletonGetNextFrame(timeout)
@@ -353,16 +353,16 @@ class Camera(object):
     ElevationMaximum = 27
     ElevationMinimum = -27
 
-    @property
-    def elevation_angle(self):
+    def get_elevation_angle(self):
         """Gets or sets the camera elevation angle. """
         return self.runtime._nui.NuiCameraElevationGetAngle()
 
-    @elevation_angle.setter
-    def elevation_angle(self, degrees):
+    def set_elevation_angle(self, degrees):
         """Gets or sets the camera elevation angle. """
 
         self.runtime._nui.NuiCameraElevationSetAngle(degrees)
+
+    elevation_angle = property(get_elevation_angle, set_elevation_angle)
 
     @property
     def unique_device_name(self):
