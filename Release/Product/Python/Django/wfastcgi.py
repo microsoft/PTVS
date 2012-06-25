@@ -329,10 +329,13 @@ def update_environment():
 
 
 if __name__ == '__main__':
-    # TODO: Pull this from an env var
-    handler_name = os.getenv('WSGI_HANDLER', 'django.core.handlers.wsgi.WSGIHandler')
+    handler_name = os.getenv('WSGI_HANDLER', 'django.core.handlers.wsgi.WSGIHandler()')
     module, callable = handler_name.rsplit('.', 1)
-    handler = getattr(__import__(module, fromlist=[callable]), callable)()
+    if callable.endswith('()'):
+        callable = callable.rstrip('()')
+        handler = getattr(__import__(module, fromlist=[callable]), callable)()
+    else:
+        handler = getattr(__import__(module, fromlist=[callable]), callable)
 
     stdout = sys.stdin.fileno()
     try:
@@ -350,18 +353,24 @@ if __name__ == '__main__':
             record = read_fastcgi_record(sys.stdin)
             if record:
                 record.params['wsgi.input'] = cStringIO.StringIO(record.params['wsgi.input'])
-                
+                record.params['wsgi.version'] = (1,0)
+                record.params['wsgi.url_scheme'] = 'https' if record.params.has_key('HTTPS') and record.params['HTTPS'].lower() == 'on' else 'http'
+                record.params['wsgi.multiprocess'] = True
+                record.params['wsgi.multithread'] = False
+                record.params['wsgi.run_once'] = False
+
                 def start_response(status, headers, exc_info = None):
                     global response_headers, status_line
                     response_headers = headers
                     status_line = status
                 
-                sys.stdout = sys.stderr = sys.__stdout__ = sys.__stderr__ = output = cStringIO.StringIO()
+                errors = sys.stderr = sys.__stderr__ = record.params['wsgi.errors'] = cStringIO.StringIO()
+                sys.stdout = sys.__stdout__ = cStringIO.StringIO()
                 record.params['SCRIPT_NAME'] = ''
                 try:
                     response = ''.join(handler(record.params, start_response))
                 except:
-                    send_response(record.req_id, FCGI_STDERR, output.getvalue())
+                    send_response(record.req_id, FCGI_STDERR, errors.getvalue())
                 else:
                     status = 'Status: ' + status_line + '\r\n'
                     headers = ''.join('%s: %s\r\n' % (name, value) for name, value in response_headers)

@@ -267,6 +267,26 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                             if (nesting == 0 && otherNesting == 0) {
                                 if (start == null) {
+                                    // http://pytools.codeplex.com/workitem/560
+                                    // yield_value = 42
+                                    // def f():
+                                    //     yield<ctrl-space>
+                                    //     yield <ctrl-space>
+                                    // 
+                                    // If we're next to the keyword, just return the keyword.
+                                    // If we're after the keyword, return the span of the text proceeding
+                                    //  the keyword so we can complete after it.
+                                    // 
+                                    // Also repros with "return <ctrl-space>" or "print <ctrl-space>" both
+                                    // of which we weren't reporting completions for before
+                                    if (forCompletion) {
+                                        if (token.Span.IntersectsWith(_span.GetSpan(_snapshot))) {
+                                            return token.Span;
+                                        } else {
+                                            return _span.GetSpan(_snapshot);
+                                        }
+                                    }
+
                                     // hovering directly over a keyword, don't provide a tooltip
                                     return null;
                                 } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {

@@ -104,6 +104,69 @@ namespace AnalysisTest.Mocks {
         }
 
         [TestMethod]
+        public void Scenario_KeywordOrIdentifier() {
+            // http://pytools.codeplex.com/workitem/560
+            string code = @"
+def h():
+    yiel
+
+def f():
+    yield
+
+def g():
+    yield_
+
+yield_expression = 42
+";
+
+            var completionList = GetCompletionSetCtrlSpace(
+                code.IndexOf("yield_") + 6, 
+                code).Completions.Select(x => x.DisplayText).ToArray();
+
+            Assert.IsFalse(completionList.Contains("yield"));
+            Assert.IsTrue(completionList.Contains("yield_expression"));
+
+            completionList  = GetCompletionSetCtrlSpace(
+                code.IndexOf("yield") + 5,
+                code).Completions.Select(x => x.DisplayText).ToArray();
+
+            Assert.IsTrue(completionList.Contains("yield"));
+            Assert.IsTrue(completionList.Contains("yield_expression"));
+
+            completionList = GetCompletionSetCtrlSpace(
+                code.IndexOf("yiel") + 4,
+                code).Completions.Select(x => x.DisplayText).ToArray();
+
+            Assert.IsTrue(completionList.Contains("yield"));
+            Assert.IsTrue(completionList.Contains("yield_expression"));
+        }
+
+        [TestMethod]
+        public void Scenario_CtrlSpaceAfterKeyword() {
+            // http://pytools.codeplex.com/workitem/560
+            string code = @"
+def h():
+    return 
+
+print 
+
+";
+
+            var completionList = GetCompletionSetCtrlSpace(
+                code.IndexOf("return") + 7,
+                code).Completions.Select(x => x.DisplayText).ToArray();
+
+            Assert.IsTrue(completionList.Contains("any"));
+
+            completionList = GetCompletionSetCtrlSpace(
+                code.IndexOf("print") + 6,
+                code).Completions.Select(x => x.DisplayText).ToArray();
+
+            Assert.IsTrue(completionList.Contains("any"));
+        }
+
+
+        [TestMethod]
         public void Scenario_Exceptions() {
             foreach (string code in new[] { 
                 @"raise None", 
@@ -509,7 +572,13 @@ class Baz(Foo, Bar):
             }
             analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
 #pragma warning disable 618
-            var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), intersectMembers: intersectMembers);
+            var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), 
+                new CompletionOptions {
+                    IntersectMembers = intersectMembers,
+                    ConvertTabsToSpaces = true,
+                    IndentSize = 4
+                }
+            );
 #pragma warning restore 618
             return context;
         }

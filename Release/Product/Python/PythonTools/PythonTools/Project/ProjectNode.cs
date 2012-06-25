@@ -3096,10 +3096,6 @@ namespace Microsoft.PythonTools.Project
                         // ignore fully rooted link paths.
                         continue;
                     }
-                    if (Path.IsPathRooted(item.UnevaluatedInclude))
-                    {
-                        continue;
-                    }
 
                     if (!Path.IsPathRooted(item.EvaluatedInclude))
                     {

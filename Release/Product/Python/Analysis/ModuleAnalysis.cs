@@ -500,8 +500,12 @@ namespace Microsoft.PythonTools.Analysis {
             bool isStmtContext = options.StatementKeywords();
 
             // and now the keywords...
-            if (isStmtContext && scopes[scopes.Count - 1] is FunctionScope) {
-                yield return new MemberResult("return", PythonMemberType.Keyword);
+            if (scopes[scopes.Count - 1] is FunctionScope) {
+                if (isStmtContext) {
+                    yield return new MemberResult("return", PythonMemberType.Keyword);
+                }
+
+                // yield is always available as an expression in 2.5+
                 yield return new MemberResult("yield", PythonMemberType.Keyword);
             }
 
