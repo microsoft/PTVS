@@ -21,7 +21,7 @@
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" key1="K" mod1="Control" key2="7" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" key1="K" mod1="Control" key2="8" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" key1="K" mod1="Control" key2="9" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>    
+    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>
   </KeyBindings>
 
   <!--The Commands section is where we the commands, menus and menu groups are defined.
@@ -68,6 +68,10 @@
       <Group guid="guidPythonToolsCmdSet" id="SamplesGroup" priority="0x0600">
         <Parent guid="guidPythonToolsCmdSet" id="SamplesMenu"/>
       </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="RefactoringCommon" priority="0x0600">
+        <Parent guid="guidPythonToolsCmdSet" id="RefactoringCtxMenuIntShell" />
+      </Group>
     </Groups>
 
     <Menus>
@@ -84,7 +88,7 @@
         <Strings>
           <ButtonText>Python Tools</ButtonText>
           <CommandName>P&amp;ython Tools</CommandName>
-        </Strings>;
+        </Strings>
       </Menu>
 
       <Menu guid="guidPythonToolsCmdSet" id="RemoveImportsMenu" priority="0x0400" type="Context">
@@ -92,7 +96,15 @@
         <Strings>
           <ButtonText>Rem&amp;ove Imports</ButtonText>
           <CommandName>Rem&amp;ove Imports</CommandName>
-        </Strings>;
+        </Strings>
+      </Menu>
+
+      <Menu guid="guidPythonToolsCmdSet" id="RefactoringCtxMenuIntShell" priority="0x0300" type="Context">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CODEWIN_LANGUAGE" />
+        <Strings>
+          <ButtonText>Refactor</ButtonText>          
+          <CommandName>&amp;Refactor</CommandName>
+        </Strings>
       </Menu>
     </Menus>
 
@@ -402,6 +414,34 @@
         </Strings>
       </Button>
 
+
+      <!--================================================================================================================-->
+      <!--========================================== Integrated Shell Commands ===========================================-->
+      <!--================================================================================================================-->
+      <Button guid="guidPythonToolsCmdSet" id="cmdidExtractMethod" priority="0x200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="RefactoringCommon"/>
+        
+        <!-- <Icon guid="guidImages" id="ipyReplPic" /> -->
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>Refactor.ExtractMethodShell</CommandName>
+          <ButtonText>Extract &amp;Method...</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidRefactorRename" priority="0x100" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="RefactoringCommon"/>
+
+        <!-- <Icon guid="guidImages" id="ipyReplPic" /> -->
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>Refactor.RenameShell</CommandName>
+          <ButtonText>&amp;Rename...</ButtonText>
+        </Strings>
+      </Button>
+    
     </Buttons>
 
 
@@ -513,14 +553,13 @@
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x601">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
-
   </CommandPlacements>
 
   <Symbols>
     <!-- This is the package guid. -->
     <GuidSymbol name="guidPythonToolsPkg" value="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" />
     <GuidSymbol name="guidReplWindow" value="{7EE13E74-F6FD-4C7E-9896-1B89D62A513E}" />
-    
+
     <!-- This is our command set GUID and associated commands -->
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
       <IDSymbol name="cmdidExecuteFileInRepl" value="0x0102" />
@@ -530,6 +569,8 @@
       <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
       <IDSymbol name="cmdidRemoveImports" value ="0x0107" />
       <IDSymbol name="cmdidRemoveImportsCurrentScope" value ="0x0108" />
+      <IDSymbol name="cmdidRefactorRename" value ="0x0109" />
+      <IDSymbol name="cmdidExtractMethod" value ="0x010a" />
       
       <IDSymbol name="cmdidReplWindow" value="0x0201" />
       <IDSymbol name="cmdidReplWindow2" value="0x0202" />
@@ -558,10 +599,12 @@
       <IDSymbol name="ToolsMenuItemsGroup" value="0x1012" />
       <IDSymbol name="CodeFileGroup" value="0x1053" />
       <IDSymbol name="RemoveImportsGroup" value ="0x1054" />
+      <IDSymbol name="RefactoringCommon" value="0x1055" />
+      
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value ="0x2001" />
       <IDSymbol name="RemoveImportsMenu" value ="0x2002" />
-
+      <IDSymbol name="RefactoringCtxMenuIntShell" value="0x2003"/>
 
       <IDSymbol name="SamplesMenu" value="0x4000" />
       <IDSymbol name="SamplesGroup" value="0x1020" />

@@ -24,5 +24,6 @@ namespace Microsoft.PythonTools
         public const string guidPythonToolsCmdSetString = "bdfa79d2-2cd2-474a-a82a-ce8694116825";
 
         public static readonly Guid guidPythonToolsCmdSet = new Guid(guidPythonToolsCmdSetString);
+        public static readonly Guid guidCSharpProjectPacakge = new Guid("FAE04EC1-301F-11D3-BF4B-00C04F79EFBC");
     };
 }

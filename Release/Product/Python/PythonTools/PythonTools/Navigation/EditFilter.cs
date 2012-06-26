@@ -620,37 +620,55 @@ namespace Microsoft.PythonTools.Language {
                         }
                         break;
                     case VSConstants.VSStd2KCmdID.EXTRACTMETHOD:
-                        new MethodExtractor(_textView).ExtractMethod(ExtractMethodUserInput.Instance);
+                        ExtractMethod();
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.RENAME:
-                        var analyzer = _textView.GetAnalyzer();
-                        if (analyzer.IsAnalyzing) {
-                            var dialog = new WaitForCompleteAnalysisDialog(analyzer);
-
-                            var res = dialog.ShowModal();
-                            if (res != true) {
-                                // user cancelled dialog before analysis completed...
-                                break;
-                            }
-                        }
-
-                        new VariableRenamer(_textView).RenameVariable(
-                            RenameVariableUserInput.Instance, 
-                            (IVsPreviewChangesService)PythonToolsPackage.GetGlobalService(typeof(SVsPreviewChangesService))
-                        );
+                        RefactorRename();
                         return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
-                foreach (var command in PythonToolsPackage.Commands.Keys) {
-                    if (command.CommandId == nCmdID) {
-                        command.DoCommand(this, EventArgs.Empty);
+                switch (nCmdID) {
+                    case PkgCmdIDList.cmdidRefactorRenameIntegratedShell:
+                        RefactorRename();
                         return VSConstants.S_OK;
-                    }
+                    case PkgCmdIDList.cmdidExtractMethodIntegratedShell:
+                        ExtractMethod();
+                        return VSConstants.S_OK;
+                    default:
+                        foreach (var command in PythonToolsPackage.Commands.Keys) {
+                            if (command.CommandId == nCmdID) {
+                                command.DoCommand(this, EventArgs.Empty);
+                                return VSConstants.S_OK;
+                            }
+                        }
+                        break;
                 }
-                
+
             }
 
             return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        private bool ExtractMethod() {
+            return new MethodExtractor(_textView).ExtractMethod(ExtractMethodUserInput.Instance);
+        }
+
+        internal void RefactorRename() {
+            var analyzer = _textView.GetAnalyzer();
+            if (analyzer.IsAnalyzing) {
+                var dialog = new WaitForCompleteAnalysisDialog(analyzer);
+
+                var res = dialog.ShowModal();
+                if (res != true) {
+                    // user cancelled dialog before analysis completed...
+                    return;
+                }
+            }
+
+            new VariableRenamer(_textView).RenameVariable(
+                RenameVariableUserInput.Instance,
+                (IVsPreviewChangesService)PythonToolsPackage.GetGlobalService(typeof(SVsPreviewChangesService))
+            );
         }
 
         private static void PasteReplCode(PythonReplEvaluator eval, string pasting) {
@@ -747,6 +765,7 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
+        private const uint CommandDisabledAndHidden = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
         /// <summary>
         /// Called from VS to see what commands we support.  
         /// </summary>
@@ -764,16 +783,40 @@ namespace Microsoft.PythonTools.Language {
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 for (int i = 0; i < cCmds; i++) {
-                    foreach (var command in PythonToolsPackage.Commands.Keys) {
-                        if (command.CommandId == prgCmds[i].cmdID) {
-                            int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
-                            if (res != null) {
-                                return res.Value;
+                    switch (prgCmds[i].cmdID) {
+                        case PkgCmdIDList.cmdidRefactorRenameIntegratedShell:
+                            // C# provides the refactor context menu for the main VS command outside
+                            // of the integrated shell.  In the integrated shell we provide our own
+                            // command for it so these still show up.
+                            if (!IsCSharpInstalled()) {
+                                QueryStatusRename(prgCmds, i);
+                            } else {
+                                prgCmds[i].cmdf = CommandDisabledAndHidden;
                             }
-                        }
+                            return VSConstants.S_OK;
+                        case PkgCmdIDList.cmdidExtractMethodIntegratedShell:
+                            // C# provides the refactor context menu for the main VS command outside
+                            // of the integrated shell.  In the integrated shell we provide our own
+                            // command for it so these still show up.
+                            if (!IsCSharpInstalled()) {
+                                QueryStatusExtractMethod(prgCmds, i);
+                            } else {
+                                prgCmds[i].cmdf = CommandDisabledAndHidden;
+                            }
+                            return VSConstants.S_OK;
+                        default:
+                            foreach (var command in PythonToolsPackage.Commands.Keys) {
+                                if (command.CommandId == prgCmds[i].cmdID) {
+                                    int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
+                                    if (res != null) {
+                                        return res.Value;
+                                    }
+                                }
+                            }
+                            break;
                     }
                 }
-            } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {                
+            } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
@@ -804,31 +847,48 @@ namespace Microsoft.PythonTools.Language {
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
                         case VSConstants.VSStd2KCmdID.EXTRACTMETHOD:
-                            var activeView = CommonPackage.GetActiveTextView();
-
-                            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                                if (_textView.Selection.IsEmpty || _textView.Selection.Mode == TextSelectionMode.Box) {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
-                                } else {
-                                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                                }
-                            } else {
-                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
-                            }
-
+                            QueryStatusExtractMethod(prgCmds, i);
                             return VSConstants.S_OK;
                         case VSConstants.VSStd2KCmdID.RENAME:
-                            activeView = CommonPackage.GetActiveTextView();
-                            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            } else {
-                                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
-                            }
+                            QueryStatusRename(prgCmds, i);
                             return VSConstants.S_OK;
                     }
                 }
             }
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
+
+        internal static bool IsCSharpInstalled() {
+            IVsShell shell = (IVsShell)PythonToolsPackage.GetGlobalService(typeof(IVsShell));
+            Guid csharpPacakge = GuidList.guidCSharpProjectPacakge;
+            int installed;
+            ErrorHandler.ThrowOnFailure(
+                shell.IsPackageInstalled(ref csharpPacakge, out installed)
+            );
+            return installed != 0;
+        }
+
+        private void QueryStatusExtractMethod(OLECMD[] prgCmds, int i) {
+            var activeView = CommonPackage.GetActiveTextView();
+
+            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                if (_textView.Selection.IsEmpty || _textView.Selection.Mode == TextSelectionMode.Box) {
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
+                } else {
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                }
+            } else {
+                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+            }
+        }
+
+        private void QueryStatusRename(OLECMD[] prgCmds, int i) {
+            IWpfTextView activeView = CommonPackage.GetActiveTextView();
+            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+            } else {
+                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+            }
         }
 
         #endregion
