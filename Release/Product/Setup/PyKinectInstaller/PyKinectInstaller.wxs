@@ -28,9 +28,9 @@
     </Property>
 
   <?if "$(var.VSTargetVersion)" = "10.0" ?>
-    <Condition Message="Visual Studio 2010 must be installed.  The free integrated shell can be downloaded at http://www.microsoft.com/downloads/en/details.aspx?FamilyID=8e5aa7b6-8436-43f0-b778-00c3bca733d3"> VSINSTALLPATH OR (NOT VSINSTALLPATH AND INSTALLED) </Condition>
+    <Condition Message="Visual Studio 2010 must be installed.  The free integrated shell can be downloaded at http://www.microsoft.com/downloads/en/details.aspx?FamilyID=8e5aa7b6-8436-43f0-b778-00c3bca733d3"> VSINSTALLPATH OR Installed </Condition>
   <?else?>
-    <Condition Message="Visual Studio Dev11 must be installed."> VSINSTALLPATH OR (NOT VSINSTALLPATH AND INSTALLED) </Condition>
+    <Condition Message="Visual Studio 2012 must be installed."> VSINSTALLPATH OR Installed </Condition>
   <?endif ?>
     
     <!-- Files/Components/MSMs to install -->
