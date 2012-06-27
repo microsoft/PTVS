@@ -12,6 +12,12 @@ function clean_hg($hg_repo) {
 	hg purge	
 }
 
+function update_hg($hg_repo) {
+	cd $hg_repo
+	hg pull
+	hg update
+}
+
 function copy_repo($from, $to) {
 	# we only include specific top-level directories here on an opt-in basis
     $included_dirs = "Build", "Release", "Tools", "Servicing"
@@ -84,6 +90,7 @@ if($direction -eq "pull") {
 }elseif($direction -eq "push") {
 	# pushing to codeplex
 	clean_tfs $tfs_repo
+	update_hg $hg_repo
 	copy_repo $tfs_repo $hg_repo
 	update_hg $hg_repo
 	commit_hg $hg_repo
