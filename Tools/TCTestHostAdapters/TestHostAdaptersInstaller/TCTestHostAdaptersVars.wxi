@@ -20,7 +20,7 @@
   <?define TestAdaptersKey = "Software\Microsoft\TCTestHostAdapters" ?>
   <?define TestAdaptersRevisionProperty = "Revision" ?>
 
-  <?define VsRegistryVersion="10.0"?>
+  <?define VsRegistryVersion="11.0"?>
   
   <?define PublicKeyToken=null?>
 

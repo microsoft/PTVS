@@ -57,7 +57,25 @@ foreach($versionedFile in $versionFiles) {
 
 
 $prevOutDir = $outDir
-foreach ($targetVs in ("11.0", "10.0")) {
+
+$dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir
+$dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir
+$dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir
+$dev10InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\10.0" -name InstallDir
+
+$targetVersions = New-Object System.Collections.ArrayList($null)
+
+if ($dev11InstallDir64 -or $dev11InstallDir) {
+    echo "Will build for Dev11"
+    $targetVersions.Add("11.0")
+}
+
+if ($dev10InstallDir64 -or $dev10InstallDir) {
+    echo "Will build for Dev10"
+    $targetVersions.Add("10.0")
+}
+
+foreach ($targetVs in $targetVersions) {
     $asmverfile = dir ..\..\..\Build\AssemblyVersion.cs
 
 
@@ -78,7 +96,7 @@ foreach ($targetVs in ("11.0", "10.0")) {
     {
         if (-not $skiptests)
         {
-            msbuild ..\..\Tests\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs
+            msbuild ..\..\Tests\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
             if ($LASTEXITCODE -gt 0)
             {
                 Write-Error "Test build failed: $config"
@@ -86,7 +104,7 @@ foreach ($targetVs in ("11.0", "10.0")) {
             }
         }
 
-        msbuild .\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs
+        msbuild .\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
         if ($LASTEXITCODE -gt 0) {
             Write-Error "Build failed: $config"
             exit 3

@@ -50,7 +50,7 @@ namespace Microsoft.TC.TestHostAdapters
     ///   Overrides Run Config hive setting, also can be used for running with attribute.
     /// </summary>
     [RegisterHostAdapter(Constants.VsIdeHostAdapterName, typeof(VsIdeHostAdapter), typeof(RunConfigControl))]
-    [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\10.0")]
+    [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\11.0")]
     // We don't need to define Dispose, as IDisposable children are managed objects and we call Dispose on them when we clean up.
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     internal class VsIdeHostAdapter : ITestAdapter

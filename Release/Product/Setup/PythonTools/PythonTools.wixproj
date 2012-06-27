@@ -43,6 +43,7 @@
       <Private>True</Private>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
     <ProjectReference Include="..\..\Python\Analysis\Analysis.csproj">
       <Name>Microsoft.PythonTools.Analysis</Name>
@@ -50,6 +51,7 @@
       <Private>True</Private>
       <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
     <ProjectReference Include="..\..\Python\Analyzer\Analyzer.csproj">
       <Name>Microsoft.PythonTools.Analyzer</Name>
@@ -57,6 +59,7 @@
       <Private>True</Private>
       <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
     <ProjectReference Include="..\..\Python\Attacher\Attacher.csproj">
       <Name>Microsoft.Pythontools.Attacher</Name>
@@ -76,6 +79,7 @@
       <Private>True</Private>
       <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
     <ProjectReference Include="..\..\Python\MpiShim\MpiShim.csproj">
       <Name>Microsoft.PythonTools.MpiShim</Name>
@@ -83,6 +87,7 @@
       <Private>True</Private>
       <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />

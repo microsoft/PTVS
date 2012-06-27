@@ -37,6 +37,7 @@
       <Private>True</Private>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />

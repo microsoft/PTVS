@@ -166,7 +166,7 @@
       <!-- Context menu items for reports folder -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
         <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
-        <Icon guid="guidOfficeIcon" id="msotcidOpen"/>
+<!--        <Icon guid="guidVsShellIcons" id="cmdidVsShellOpen"/> -->
         <Strings>
           <ButtonText>&amp;Add Report...</ButtonText>
           <MenuText>&amp;Add Report...</MenuText>
@@ -191,7 +191,7 @@
       <!-- Context menu items for report item -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
         <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
-        <Icon guid="guidOfficeIcon" id="msotcidViewReports"/>
+<!--        <Icon guid="guidVsShellIcons" id="cmdidVsShellReports"/> -->
         <Strings>
           <ButtonText>&amp;Open</ButtonText>
           <MenuText>&amp;Open</MenuText>

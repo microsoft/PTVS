@@ -4,13 +4,11 @@
     <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
+        <FileUpgradeFlags></FileUpgradeFlags>
+        <UpgradeBackupLocation></UpgradeBackupLocation>
         <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
+       </PropertyGroup>
+	</When>
   </Choose>
   <PropertyGroup>
     <StartupObject />
@@ -71,9 +69,9 @@
     <Reference Include="System.Net" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.VisualStudio.Shell.10.0">
       <Aliases>global</Aliases>
     </Reference>
     <Reference Include="WindowsBase" />
@@ -101,7 +99,6 @@
     <Compile Include="Debugger\DebugEngine\BreakpointManager.cs" />
     <Compile Include="Debugger\DebugEngine\EngineUtils.cs" />
     <Compile Include="Debugger\Extensions.cs" />
-    <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="Debugger\IdDispenser.cs" />
     <Compile Include="Debugger\OutputEventArgs.cs" />
     <Compile Include="Debugger\PythonDebugOptions.cs" />
@@ -119,6 +116,7 @@
     <Compile Include="Debugger\ThreadEventArgs.cs" />
     <Compile Include="Debugger\PythonBreakpoint.cs" />
     <Compile Include="Debugger\TryHandlerWalker.cs" />
+    <Compile Include="Debugger\FrameKind.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

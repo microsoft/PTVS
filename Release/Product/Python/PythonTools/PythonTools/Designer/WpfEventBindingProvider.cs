@@ -137,7 +137,12 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         public override string CreateUniqueMethodName(string objectName, EventDescription eventDescription) {
-            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}", objectName, eventDescription.Name);
+            var name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}", objectName, eventDescription.Name);
+            int count = 0;
+            while (IsExistingMethodName(eventDescription, name)) {
+                name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}{2}", objectName, eventDescription.Name, ++count);
+            }
+            return name;
         }
 
         public override IEnumerable<string> GetCompatibleMethods(EventDescription eventDescription) {
@@ -259,7 +264,6 @@ namespace Microsoft.PythonTools.Designer {
         }
 
         public override void SetClassName(string className) {
-            throw new NotImplementedException();
         }
 
         public override bool ShowMethod(EventDescription eventDescription, string methodName) {
