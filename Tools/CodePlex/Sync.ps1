@@ -12,7 +12,7 @@ function clean_hg($hg_repo) {
 	hg purge	
 }
 
-function update_hg($hg_repo) {
+function sync_hg($hg_repo) {
 	cd $hg_repo
 	hg pull
 	hg update
@@ -90,7 +90,7 @@ if($direction -eq "pull") {
 }elseif($direction -eq "push") {
 	# pushing to codeplex
 	clean_tfs $tfs_repo
-	update_hg $hg_repo
+	sync_hg $hg_repo
 	copy_repo $tfs_repo $hg_repo
 	update_hg $hg_repo
 	commit_hg $hg_repo

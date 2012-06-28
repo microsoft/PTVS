@@ -612,7 +612,7 @@ namespace AnalysisTest.UI {
             var window = app.SolutionExplorerTreeView;
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "RootedIncludeIgnored.py");
-            Assert.IsNull(projectNode);
+            Assert.IsNotNull(projectNode);
         }
     }
 }

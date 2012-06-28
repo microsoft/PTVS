@@ -4223,7 +4223,7 @@ namespace Microsoft.PythonTools.Project
                     {
                         for (var folderChild = folder.FirstChild; folderChild != null; folderChild = folderChild.NextSibling)
                         {
-                            if (CommonUtils.IsSamePath(folderChild.Url, CommonUtils.GetAbsoluteFilePath(this.Url, filename)))
+                            if (Path.GetFileName(folderChild.Url) == filename)
                             {
                                 string message = "There is already a file of the same name in this folder.";
                                 string title = string.Empty;
