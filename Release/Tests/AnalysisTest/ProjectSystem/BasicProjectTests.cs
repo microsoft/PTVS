@@ -786,6 +786,18 @@ namespace AnalysisTest.ProjectSystem {
 
             var projectNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile");
 
+            var programNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Program.py");
+            Mouse.MoveTo(programNode.GetClickablePoint());
+            Mouse.Click();
+            Keyboard.ControlC();
+
+            Keyboard.ControlV();
+            System.Threading.Thread.Sleep(2000);
+
+            // Make sure that copy/paste directly under the project node works:
+            // http://pytools.codeplex.com/workitem/738
+            Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Program - Copy.py"));
+
             ProjectNewFolder(app, solutionNode, projectNode);
 
             System.Threading.Thread.Sleep(1000);
@@ -794,7 +806,6 @@ namespace AnalysisTest.ProjectSystem {
 
             WaitForItem(project, "Foo");
 
-            var programNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Program.py");
             Mouse.MoveTo(programNode.GetClickablePoint());
             Mouse.Click();
             Keyboard.ControlC();

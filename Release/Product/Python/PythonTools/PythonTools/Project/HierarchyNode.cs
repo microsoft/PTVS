@@ -3066,8 +3066,8 @@ namespace Microsoft.PythonTools.Project
             ErrorHandler.ThrowOnFailure(project.GetMkDocument(targetFolder.ID, out folderMoniker));
             folderMoniker = CommonUtils.TrimEndSeparator(folderMoniker);
             if (drop &&
-                (Directory.Exists(folderMoniker) && CommonUtils.IsSameDirectory(Path.GetDirectoryName(moniker), folderMoniker)) ||
-                File.Exists(folderMoniker) && CommonUtils.IsSameDirectory(Path.GetDirectoryName(moniker), Path.GetDirectoryName(folderMoniker)))
+                (Directory.Exists(folderMoniker) && CommonUtils.IsSameDirectory(Path.GetDirectoryName(moniker), folderMoniker) ||
+                File.Exists(folderMoniker) && CommonUtils.IsSameDirectory(Path.GetDirectoryName(moniker), Path.GetDirectoryName(folderMoniker))))
             {
                 return false;
             }
