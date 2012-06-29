@@ -1158,7 +1158,19 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal bool LoadAssemblyReference(string assembly) {
             try {
-                var asm = Assembly.Load(File.ReadAllBytes(assembly));
+                byte[] symbolStore = null;
+                try {
+                    // If PTVS is being debugged, then that debugger will lock
+                    // the pdb of the assembly we are loading here.  This is a
+                    // problem that PTVS developers will see, but PTVS users shouldn't.
+                    // Loading the symbol store and passing it in prevents this locking.
+                    string symbolStorePath = Path.ChangeExtension(assembly, ".pdb");
+                    if (File.Exists(symbolStorePath)) {
+                        symbolStore = File.ReadAllBytes(symbolStorePath);
+                    }
+                } catch {
+                }
+                var asm = Assembly.Load(File.ReadAllBytes(assembly), symbolStore);
                 if (asm != null) {
                     _referencedAssemblies[asm.FullName] = asm;
                     _referencedAssemblies[new AssemblyName(asm.FullName).Name] = asm;
