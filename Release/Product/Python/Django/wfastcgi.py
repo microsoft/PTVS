@@ -84,9 +84,16 @@ onto the params which we will receive and update later."""
 #   unsigned char paddingData[paddingLength];
 #} FCGI_Record;
 
+class _ExitException(Exception):
+    pass
+
 def read_fastcgi_record(input):
     """reads the main fast cgi record"""
     data = input.read(8)     # read record
+    if not data:
+        # no more data, our other process must have died...
+        raise _ExitException()
+
     content_size = ord(data[4]) << 8 | ord(data[5])
 
     content = input.read(content_size)  # read content    
@@ -325,7 +332,6 @@ def update_environment():
         except:
             # unable to read file
             log(traceback.format_exc())
-            pass
 
 
 if __name__ == '__main__':
@@ -382,5 +388,7 @@ if __name__ == '__main__':
 
                 send_response(record.req_id, FCGI_END_REQUEST, '\x00\x00\x00\x00\x00\x00\x00\x00', streaming=False)
                 del _REQUESTS[record.req_id]
+        except _ExitException:
+            break
         except:
             log(traceback.format_exc())        

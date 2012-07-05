@@ -97,7 +97,11 @@ def get_return_type(target):
 def get_function_overloads(targets):
     res = []
     for target in targets:
-        args = list(target.GetParameters())
+        try:
+            args = list(target.GetParameters())
+        except:
+            # likely a failure to load an assembly...
+            continue
         if args and args[0].ParameterType.FullName == 'IronPython.Runtime.CodeContext':
             del args[0]
         if args and args[0].ParameterType.IsSubclassOf(SiteLocalStorage):

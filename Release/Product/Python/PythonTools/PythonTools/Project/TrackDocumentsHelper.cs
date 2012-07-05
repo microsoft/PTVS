@@ -96,6 +96,16 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// Notify the environment about a folder just added
+        /// </summary>
+        internal void OnFolderAdded(string folder, VSADDDIRECTORYFLAGS flag) {
+            if ((this.projectMgr.EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerTrackerEvents) == 0) {
+                ErrorHandler.ThrowOnFailure(this.GetIVsTrackProjectDocuments2().OnAfterAddDirectoriesEx(
+                    this.projectMgr, 1, new string[1] { folder }, new VSADDDIRECTORYFLAGS[1] { flag }));
+            }
+        }
+
+        /// <summary>
         ///  Asks the environment for permission to remove files.
         /// </summary>
         /// <param name="files">an array of files to remove</param>

@@ -135,8 +135,12 @@ else:
 def generate_builtin_function(function, is_method = False):
     function_table = {}
     
-    if isinstance(function.__doc__, str):
-        function_table['doc'] = function.__doc__
+    try:
+        if isinstance(function.__doc__, str):
+            function_table['doc'] = function.__doc__
+    except:
+        # IronPython can throw here if an assembly load fails
+        pass
 
     function_table['overloads'] = BuiltinScraper.get_overloads(function, is_method)
     

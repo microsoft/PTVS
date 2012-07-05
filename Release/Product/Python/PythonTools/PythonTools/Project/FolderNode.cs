@@ -220,6 +220,11 @@ namespace Microsoft.PythonTools.Project
                     this.Parent.RemoveChild(this);
                     this.ID = ProjectMgr.ItemIdMap.Add(this);
                     this.Parent.AddChild(this);
+
+                    ProjectMgr.Tracker.OnFolderAdded(
+                        path,
+                        VSADDDIRECTORYFLAGS.VSADDDIRECTORYFLAGS_NoFlags
+                    );
                 }
             }
             else
