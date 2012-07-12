@@ -38,6 +38,7 @@ if sys.platform == 'cli':
 
 # save start_new_thread so we can call it later, we'll intercept others calls to it.
 
+debugger_dll_handle = None
 DETACHED = True
 def thread_creator(func, args, kwargs = {}):
     id = _start_new_thread(new_thread_wrapper, (func, ) + args, kwargs)
@@ -1319,6 +1320,15 @@ class DebuggerLoop(object):
     def command_detach(self):
         detach_threads()
 
+        # unload debugger DLL
+        global debugger_dll_handle
+        if debugger_dll_handle is not None:
+            import ctypes
+            k32 = ctypes.WinDLL('kernel32')
+            k32.FreeLibrary.argtypes = [ctypes.c_void_p]
+            k32.FreeLibrary(debugger_dll_handle)
+            debugger_dll_handle = None
+
         with _SendLockCtx:
             conn.send(DETC)
 
@@ -1326,7 +1336,7 @@ class DebuggerLoop(object):
 
         for callback in DETACH_CALLBACKS:
             callback()
-
+        
         raise DebuggerExitException()
 
 
@@ -1649,6 +1659,17 @@ def new_thread(tid = None, set_break = False, frame = None):
     if not DETACHED:
         report_new_thread(cur_thread)
     return cur_thread
+
+def new_external_thread():
+    thread = new_thread()
+    if not attach_sent_break:
+        # we are still doing the attach, make this thread break.
+        thread.stepping = STEPPING_ATTACH_BREAK
+    elif SEND_BREAK_COMPLETE:
+        # user requested break all, make this thread break
+        thread.stepping = STEPPING_BREAK
+
+    sys.settrace(thread.trace_func)
 
 def do_wait():
     import msvcrt    

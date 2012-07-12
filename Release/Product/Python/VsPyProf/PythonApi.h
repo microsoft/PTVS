@@ -27,7 +27,6 @@
 
 using namespace std;
 
-typedef const char* (GetVersionFunc) ();
 typedef void PyEval_SetProfileFunc(Py_tracefunc func, PyObject *obj);
 typedef PyObject* PyDict_GetItemString(PyObject *dp, const char *key);
 

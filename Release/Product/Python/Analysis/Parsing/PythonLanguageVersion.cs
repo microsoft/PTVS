@@ -16,7 +16,7 @@ namespace Microsoft.PythonTools.Parsing {
     /// <summary>
     /// Specifies the version of the Python language to be used for parsing.
     /// 
-    /// Referred to from C++ in PyDebugAttach.cpp and must be kept in sync
+    /// Referred to from C++ in PyDebugAttach.cpp and python.h and must be kept in sync
     /// </summary>
     public enum PythonLanguageVersion {
         None = 0,

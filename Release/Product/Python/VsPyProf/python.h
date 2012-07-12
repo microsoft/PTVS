@@ -464,5 +464,41 @@ public:
     PyObject *in_weakreflist; /* List of weak references */
 };
 
+// must be kept in sync with PythonLanguageVersion.cs
+enum PythonVersion {
+    PythonVersion_Unknown,
+    PythonVersion_25 = 0x0205,
+    PythonVersion_26 = 0x0206,
+    PythonVersion_27 = 0x0207,
+    PythonVersion_30 = 0x0300,
+    PythonVersion_31 = 0x0301,
+    PythonVersion_32 = 0x0302
+};
+
+typedef const char* (GetVersionFunc) ();
+
+static PythonVersion GetPythonVersion(HMODULE hMod) {
+    auto versionFunc = (GetVersionFunc*)GetProcAddress(hMod, "Py_GetVersion");
+    if(versionFunc != nullptr) {
+        auto version = versionFunc();
+        if(version != nullptr && strlen(version) >= 3 && version[1] == '.') {
+            if(version[0] == '2') {
+                switch(version[2]) {
+                case '5': return PythonVersion_25;
+                case '6': return PythonVersion_26;
+                case '7': return PythonVersion_27;
+                }
+            }else if(version[0] == '3') {
+                switch(version[2]) {
+                case '0': return PythonVersion_30;
+                case '1': return PythonVersion_31;
+                case '2': return PythonVersion_32;
+                }
+
+            }
+        }
+    }
+    return PythonVersion_Unknown;
+}
 
 #endif

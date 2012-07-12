@@ -1286,6 +1286,7 @@ namespace AnalysisTest {
                 System.Threading.Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent detached = new AutoResetEvent(false);
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
 
@@ -1298,10 +1299,14 @@ namespace AnalysisTest {
                     proc.ProcessLoaded += (sender, args) => {
                         attached.Set();
                     };
+                    proc.ProcessExited += (sender, args) => {
+                        detached.Set();
+                    };
                     proc.StartListening();
 
                     Assert.IsTrue(attached.WaitOne(10000));
                     proc.Detach();
+                    Assert.IsTrue(detached.WaitOne(10000));
                 }
 
                 p.Kill();
@@ -1375,6 +1380,7 @@ namespace AnalysisTest {
                 System.Threading.Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent detached = new AutoResetEvent(false);
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
 
@@ -1387,10 +1393,14 @@ namespace AnalysisTest {
                     proc.ProcessLoaded += (sender, args) => {
                         attached.Set();
                     };
+                    proc.ProcessExited += (sender, args) => {
+                        detached.Set();
+                    };
                     proc.StartListening();
 
                     Assert.IsTrue(attached.WaitOne(10000));
                     proc.Detach();
+                    Assert.IsTrue(detached.WaitOne(10000));
                 }
 
                 p.Kill();
@@ -1404,6 +1414,7 @@ namespace AnalysisTest {
                 System.Threading.Thread.Sleep(1000);
 
                 AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent detached = new AutoResetEvent(false);
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
 
@@ -1416,10 +1427,14 @@ namespace AnalysisTest {
                     proc.ProcessLoaded += (sender, args) => {
                         attached.Set();
                     };
+                    proc.ProcessExited += (sender, args) => {
+                        detached.Set();
+                    };
                     proc.StartListening();
 
                     Assert.IsTrue(attached.WaitOne(10000));
                     proc.Detach();
+                    Assert.IsTrue(detached.WaitOne(10000));
 
                 }
 
@@ -1460,6 +1475,260 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        /// <summary>
+        /// Attempts to attach w/ code only running on new threads which are initialized using PyGILState_Ensure
+        /// </summary>
+        [TestMethod]
+        public void AttachNewThread_PyGILState_Ensure() {
+            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+
+
+                File.WriteAllText("gilstate_attach.py", @"def test():
+    for i in xrange(10):
+        print i
+
+    return 0");
+
+                var hostCode = @"#include <Windows.h>
+#include <process.h>
+#undef _DEBUG
+#include <Python.h>
+
+PyObject *g_pFunc;
+
+void Thread(void*)
+{
+    printf(""Worker thread started %x\r\n"", GetCurrentThreadId());
+    while (true)
+    {
+        PyGILState_STATE state = PyGILState_Ensure();
+        PyObject *pValue;
+
+        pValue = PyObject_CallObject(g_pFunc, 0);
+        if (pValue != NULL) {
+            //printf(""Result of call: %ld\n"", PyInt_AsLong(pValue));
+            Py_DECREF(pValue);
+        }
+        else {
+            PyErr_Print();
+            return;
+        }
+        PyGILState_Release(state);
+
+        Sleep(1000);
+    }
+}
+
+void main()
+{
+    PyObject *pName, *pModule;
+
+    Py_Initialize();
+    PyEval_InitThreads();
+    PyEval_ReleaseLock();
+    pName = PyString_FromString(""gilstate_attach"");
+
+    pModule = PyImport_Import(pName);
+    Py_DECREF(pName);
+
+    if (pModule != NULL) {
+        g_pFunc = PyObject_GetAttrString(pModule, ""test"");
+
+        if (g_pFunc && PyCallable_Check(g_pFunc))
+        {
+            DWORD threadID;
+            threadID = _beginthread(&Thread, 1024*1024, 0);
+            threadID = _beginthread(&Thread, 1024*1024, 0);
+
+            while (true);
+        }
+        else
+        {
+            if (PyErr_Occurred())
+                PyErr_Print();
+        }
+        Py_XDECREF(g_pFunc);
+        Py_DECREF(pModule);
+    }
+    else
+    {
+        PyErr_Print();
+        return;
+    }
+    Py_Finalize();
+    return;
+}";
+                CompileCode(hostCode);
+
+                // start the test process w/ our handle
+                Process p = Process.Start("test.exe");
+
+                System.Threading.Thread.Sleep(1500);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent bpHit = new AutoResetEvent(false);
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                } else {
+                    Console.WriteLine("Attached");
+                }
+
+                proc.ProcessLoaded += (sender, args) => {
+                    Console.WriteLine("Process loaded");
+                    attached.Set();
+                };
+                proc.StartListening();
+
+                Assert.IsTrue(attached.WaitOne(20000));
+
+                proc.BreakpointHit += (sender, args) => {
+                    Console.WriteLine("Breakpoint hit");
+                    bpHit.Set();
+                };
+
+                var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
+                bp.Add();
+
+                Assert.IsTrue(bpHit.WaitOne(20000));
+                proc.Detach();
+
+                p.Kill();
+            }
+        }
+
+        /// <summary>
+        /// Attempts to attach w/ code only running on new threads which are initialized using PyThreadState_New
+        /// </summary>
+        [TestMethod]
+        public void AttachNewThread_PyThreadState_New() {
+            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+
+
+                File.WriteAllText("gilstate_attach.py", @"def test():
+    for i in xrange(10):
+        print i
+
+    return 0");
+
+                var hostCode = @"#include <Windows.h>
+#include <process.h>
+#undef _DEBUG
+#include <Python.h>
+
+PyObject *g_pFunc;
+
+void Thread(void*)
+{
+    printf(""Worker thread started %x\r\n"", GetCurrentThreadId());
+    while (true)
+    {
+        PyEval_AcquireLock();
+	    PyInterpreterState* pMainInterpreterState = PyInterpreterState_Head();
+	    auto pThisThreadState = PyThreadState_New(pMainInterpreterState);
+	    PyThreadState_Swap(pThisThreadState);
+
+        PyObject *pValue;
+
+        pValue = PyObject_CallObject(g_pFunc, 0);
+        if (pValue != NULL) {
+            //printf(""Result of call: %ld\n"", PyInt_AsLong(pValue));
+            Py_DECREF(pValue);
+        }
+        else {
+            PyErr_Print();
+            return;
+        }
+
+        PyThreadState_Swap(NULL);
+	    PyThreadState_Clear(pThisThreadState);
+	    PyThreadState_Delete(pThisThreadState);
+	    PyEval_ReleaseLock();
+
+        Sleep(1000);
+    }
+}
+
+void main()
+{
+    PyObject *pName, *pModule;
+
+    Py_Initialize();
+    PyEval_InitThreads();
+    PyEval_ReleaseLock();
+    pName = PyString_FromString(""gilstate_attach"");
+
+    pModule = PyImport_Import(pName);
+    Py_DECREF(pName);
+
+    if (pModule != NULL) {
+        g_pFunc = PyObject_GetAttrString(pModule, ""test"");
+
+        if (g_pFunc && PyCallable_Check(g_pFunc))
+        {
+            DWORD threadID;
+            threadID = _beginthread(&Thread, 1024*1024, 0);
+            threadID = _beginthread(&Thread, 1024*1024, 0);
+
+            while (true);
+        }
+        else
+        {
+            if (PyErr_Occurred())
+                PyErr_Print();
+        }
+        Py_XDECREF(g_pFunc);
+        Py_DECREF(pModule);
+    }
+    else
+    {
+        PyErr_Print();
+        return;
+    }
+    Py_Finalize();
+    return;
+}";
+                CompileCode(hostCode);
+
+                // start the test process w/ our handle
+                Process p = Process.Start("test.exe");
+
+                System.Threading.Thread.Sleep(1500);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent bpHit = new AutoResetEvent(false);
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                } else {
+                    Console.WriteLine("Attached");
+                }
+
+                proc.ProcessLoaded += (sender, args) => {
+                    Console.WriteLine("Process loaded");
+                    attached.Set();
+                };
+                proc.StartListening();
+
+                Assert.IsTrue(attached.WaitOne(20000));
+
+                proc.BreakpointHit += (sender, args) => {
+                    Console.WriteLine("Breakpoint hit");
+                    bpHit.Set();
+                };
+
+                var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
+                bp.Add();
+
+                Assert.IsTrue(bpHit.WaitOne(20000));
+                proc.Detach();
+
+                p.Kill();
+            }
+        }
+
         [TestMethod]
         public void AttachTimeoutThreadsInitialized() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
@@ -1493,35 +1762,12 @@ int main(int argc, char* argv[]) {
 	PyEval_EvalCode(src, glb, loc);
 }";
                 AttachTest(hostCode);
+
             }
         }
 
         private void AttachTest(string hostCode) {
-            File.WriteAllText("test.cpp", hostCode);
-
-            // compile our host code...
-            var startInfo = new ProcessStartInfo(
-                Path.Combine(GetVCInstallDir(), "bin", "cl.exe"),
-                String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.Path))
-            );
-            startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
-            startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(GetVCInstallDir(), "INCLUDE") + ";" + Path.Combine(GetWindowsSDKDir(), "Include");
-            startInfo.EnvironmentVariables["LIB"] = Path.Combine(GetVCInstallDir(), "LIB") + ";" + Path.Combine(GetWindowsSDKDir(), "Lib");
-            Debug.WriteLine(startInfo.EnvironmentVariables["LIB"]);
-
-            startInfo.UseShellExecute = false;
-            startInfo.RedirectStandardError = true;
-            startInfo.RedirectStandardOutput = true;
-            var compileProcess = Process.Start(startInfo);
-            System.Threading.Thread.Sleep(1000);
-
-            compileProcess.OutputDataReceived += compileProcess_OutputDataReceived; // for debugging if you change the code...
-            compileProcess.ErrorDataReceived += compileProcess_OutputDataReceived;
-            compileProcess.BeginErrorReadLine();
-            compileProcess.BeginOutputReadLine();
-            compileProcess.WaitForExit();
-
-            Assert.AreEqual(0, compileProcess.ExitCode);
+            CompileCode(hostCode);
 
             // start the test process w/ our handle
             var eventName = Guid.NewGuid().ToString();
@@ -1550,6 +1796,34 @@ int main(int argc, char* argv[]) {
             proc.Detach();
 
             p.Kill();
+        }
+
+        private void CompileCode(string hostCode) {
+            File.WriteAllText("test.cpp", hostCode);
+
+            // compile our host code...
+            var startInfo = new ProcessStartInfo(
+                Path.Combine(GetVCInstallDir(), "bin", "cl.exe"),
+                String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.Path))
+            );
+            startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
+            startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(GetVCInstallDir(), "INCLUDE") + ";" + Path.Combine(GetWindowsSDKDir(), "Include");
+            startInfo.EnvironmentVariables["LIB"] = Path.Combine(GetVCInstallDir(), "LIB") + ";" + Path.Combine(GetWindowsSDKDir(), "Lib");
+            Debug.WriteLine(startInfo.EnvironmentVariables["LIB"]);
+
+            startInfo.UseShellExecute = false;
+            startInfo.RedirectStandardError = true;
+            startInfo.RedirectStandardOutput = true;
+            var compileProcess = Process.Start(startInfo);
+            System.Threading.Thread.Sleep(1000);
+
+            compileProcess.OutputDataReceived += compileProcess_OutputDataReceived; // for debugging if you change the code...
+            compileProcess.ErrorDataReceived += compileProcess_OutputDataReceived;
+            compileProcess.BeginErrorReadLine();
+            compileProcess.BeginOutputReadLine();
+            compileProcess.WaitForExit();
+
+            Assert.AreEqual(0, compileProcess.ExitCode);
         }
 
         void compileProcess_OutputDataReceived(object sender, DataReceivedEventArgs e) {
