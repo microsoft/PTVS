@@ -215,7 +215,7 @@ void PatchIAT(PIMAGE_DOS_HEADER dosHeader, PVOID replacingFunc, LPSTR exportingD
             
     while(import->Name) {
         char* name = (char*)(import->Name + ((BYTE*)dosHeader));
-        if(stricmp(name, exportingDll) == 0) {
+        if(_stricmp(name, exportingDll) == 0) {
             auto thunkData = (PIMAGE_THUNK_DATA)((import->FirstThunk) + ((BYTE*)dosHeader));
 
             while(thunkData->u1.Function) {
@@ -347,7 +347,7 @@ BOOL PatchFunction(LPSTR exportingDll, PVOID replacingFunc, LPVOID newFunction) 
         modSize = modsNeeded;
     }
 
-    for(auto tmp = 0; tmp<modsNeeded/sizeof(HMODULE); tmp++) {
+    for(DWORD tmp = 0; tmp<modsNeeded/sizeof(HMODULE); tmp++) {
         PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMods[tmp];
             
         PatchIAT(dosHeader, replacingFunc, exportingDll, newFunction);
@@ -1447,9 +1447,9 @@ typedef NTSTATUS NTAPI LdrUnregisterDllNotification(
 void CALLBACK DllLoadNotify(ULONG NotificationReason, _LDR_DLL_NOTIFICATION_DATA* NotificationData, PVOID Context) {
     if(NotificationReason == LDR_DLL_NOTIFICATION_REASON_LOADED) {
         // patch any Python functions the newly loaded DLL is calling.
-        for(int i = 0;i<_interpreterCount; i++) {
+        for(DWORD i = 0;i<_interpreterCount; i++) {
             PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)NotificationData->Loaded.DllBase;
-            InterpreterInfo* curInterpreter = _interpreterInfo[_interpreterCount];
+            InterpreterInfo* curInterpreter = _interpreterInfo[i];
 
             char mod_name[MAX_PATH];
             if(GetModuleBaseNameA(GetCurrentProcess(), curInterpreter->Interpreter, mod_name, MAX_PATH)) {
@@ -1457,14 +1457,14 @@ void CALLBACK DllLoadNotify(ULONG NotificationReason, _LDR_DLL_NOTIFICATION_DATA
                     PatchIAT(dosHeader, 
                         curInterpreter->PyGILState_Ensure, 
                         mod_name, 
-                        gilEnsureFuncs[_interpreterCount]);
+                        gilEnsureFuncs[i]);
                 }
 
                 if(curInterpreter->PyThreadState_New != nullptr) {
                     PatchIAT(dosHeader, 
                         curInterpreter->PyThreadState_New, 
                         mod_name, 
-                        newThreadStateFuncs[_interpreterCount]);
+                        newThreadStateFuncs[i]);
                 }
             }
         }
@@ -1582,7 +1582,7 @@ void Detach() {
     for(size_t i = 0; i<modsNeeded/sizeof(HMODULE); i++) {
         bool isDebug;
         if(IsPythonModule(hMods[i], isDebug)) {
-            for(int j = 0; j<_interpreterCount; j++) {
+            for(DWORD j = 0; j<_interpreterCount; j++) {
                 InterpreterInfo* curInterpreter = _interpreterInfo[j];
 
                 if(curInterpreter->Interpreter == hMods[i]) {
