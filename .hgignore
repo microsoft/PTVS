@@ -1,0 +1,9 @@
+syntax: glob
+obj/*
+bin/*
+*.suo
+*.user
+*.sdf
+*.opensdf
+Binaries/*
+TestResults/* 

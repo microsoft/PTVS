@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Release.Product.settings" />
+  <Import Project="..\SetupProjectBefore.settings" />
   <PropertyGroup>
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{015C7412-2D19-4C5D-BA4E-6ADB16D1C464}</ProjectGuid>
@@ -8,29 +8,13 @@
     <OutputName>PyKinectInstaller</OutputName>
     <OutputType>Package</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
-    <WixTargetsPath>$(BuildRoot)\Tools\Wix\3.5\Targets\Wix2010.targets</WixTargetsPath>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-  </PropertyGroup>
-  <PropertyGroup>
-    <Configuration Condition="$(Configuration)==''">Debug</Configuration>
-    <WixVersion Condition="$(WixVersion)==''">0.7.4100.000</WixVersion>
-    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VSTarget)' == ''">
     <DefineConstants>
-        PyToolsDir=$(ProjectDir)..\..\Python\PythonTools\;
-        MsiVersion=$(WixVersion);
-        VSTargetVersion=10.0
-    </DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VSTarget)' != ''">
-    <DefineConstants>
-        PyToolsDir=$(ProjectDir)..\..\Python\PythonTools\;
-        MsiVersion=$(WixVersion);
-        VSTargetVersion=$(VSTarget)
+      MsiVersion=$(WixVersion);
+      VSTargetVersion=$(VSTarget)
     </DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
@@ -39,7 +23,6 @@
   <ItemGroup>
     <Compile Include="PyKinectInstaller.wxs" />
   </ItemGroup>
-  <Import Project="$(WixTargetsPath)" />
   <ItemGroup>
     <Content Include="License.rtf" />
   </ItemGroup>
@@ -52,4 +35,5 @@
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="..\SetupProjectAfter.settings" />
 </Project>

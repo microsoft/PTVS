@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="SetActualOutputPath;MessagesCB">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Ensures that if this file changes it forces a rebuild -->
   <PropertyGroup>                 
@@ -8,167 +8,54 @@
     </MSBuildAllProjects>        
   </PropertyGroup>
 
-  <PropertyGroup>
-    <BuildRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
-    <TargetsPath>$(BuildRoot)\Build</TargetsPath>
-    <OutDirIsInCommandLine Condition="'$(OutDirIsInCommandLine)'=='' AND '$(OutDir)'!=''">true</OutDirIsInCommandLine>
-    <OutDirIsInCommandLine Condition="'$(OutDirIsInCommandLine)'=='' AND '$(OutDir)'==''">false</OutDirIsInCommandLine>
-  </PropertyGroup>
-
-  <Target Name="SetActualOutputPath">
-    <CreateProperty Condition="'$(OutDirIsInCommandLine)' == 'true'" Value="$(OutDir)">
-      <Output TaskParameter="Value" PropertyName="ActualOutputPath" />
-    </CreateProperty>
-    <CreateProperty Condition="'$(OutDirIsInCommandLine)' != 'true'" Value="$(OutputPath)">
-      <Output TaskParameter="Value" PropertyName="ActualOutputPath" />
-    </CreateProperty>
-  </Target>
-
-  <Target Name="MessagesCB">
-    <Message Text="%24(OutputPath) = %22$(OutputPath)%22"></Message>
-    <Message Text="%24(OutDir) = %22$(OutDir)%22"></Message>
-    <Message Text="%24(ActualOutputPath) = %22$(ActualOutputPath)%22"></Message>
-  </Target>
-
-  <Import Project="$(TargetsPath)\CodeCoverage.proj" />
 
   <PropertyGroup>
-    <BinaryDependencies>$(TargetsPath)\BinaryDependencies</BinaryDependencies>
-    <Configuration Condition="'$(Configuration)'==''">Debug</Configuration>
-    <Platform Condition="'$(Platform)'==''">Win32</Platform>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-
-    <!--Team build uses this (in CodeCoverageSpecialPath).  This is a good test for Team build.-->
-    <UserHomePath Condition="'$(HOMEDRIVE)' == ''">C:\Users\tcwcslab</UserHomePath>
-    <!--Local build uses this (in CodeCoverageSpecialPath)-->
-    <UserHomePath Condition="'$(HOMEDRIVE)' != ''">$(HOMEDRIVE)$(HOMEPATH)</UserHomePath>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <WixVersion Condition="$(WixVersion)==''">0.7.4100.000</WixVersion>
+    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+    <!--Default Platform value is specified in the C#/C++ specific files imported below -->
     
-    <WixToolPath>$(BuildRoot)\Tools\Wix\3.5</WixToolPath>
-    <WixExtDir>$(BuildRoot)\Tools\Wix\3.5</WixExtDir>
-    <WixTargetsPath>$(WixToolPath)\Targets\Wix.targets</WixTargetsPath>
-    <WixTasksPath >$(WixToolPath)\Targets\WixTasks.dll</WixTasksPath>
-    <LuxTargetsPath>$(WixToolPath)\Targets\Lux.targets</LuxTargetsPath>
-    <LuxTasksPath >$(WixToolPath)\Targets\LuxTasks.dll</LuxTasksPath>
-    <!--Tool to replace configuration-->
-    <ConfigReplaceToolPath>$(BuildRoot)\Tools\ConfigReplace</ConfigReplaceToolPath>
-    <ConfigReplaceCommand>$(ConfigReplaceToolPath)\ConfigReplace.cmd</ConfigReplaceCommand>
-    <DevEnvDir>$(VS100COMNTOOLS)..\IDE</DevEnvDir>
+    <RunFXCop Condition="'$(RunFXCop)' == ''">false</RunFXCop>
+    <RunStyleCop Condition="'$(RunStyleCop)' == ''">false</RunStyleCop>
 
-    <!--For C#:-->
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-    <!-- This eliminates the warning CA0060, EnvDTE Version=7.0 not found, for VS 10 installations. -->
-    <CodeAnalysisAdditionalOptions> /assemblycomparemode:StrongNameIgnoringVersion</CodeAnalysisAdditionalOptions>
-    <CodeAnalysisRuleSet>$(TargetsPath)\SkipAnalysis.ruleset</CodeAnalysisRuleSet>
-    <StyleCopEnabled Condition="'$(StyleCopEnabled)'==''">true</StyleCopEnabled>
-    <CodeCoverageEnabled Condition="'$(CodeCoverageEnabled)'==''">false</CodeCoverageEnabled>
+    <CodeCoverageEnabled Condition="'$(CodeCoverageEnabled)'==''">true</CodeCoverageEnabled>
 
-  </PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
 
-  <!--For C++:-->
-  <ItemDefinitionGroup>
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <TreatWarningAsError>$(TreatWarningsAsErrors)</TreatWarningAsError>
-      <EnablePREfast>$(RunCodeAnalysis)</EnablePREfast>
-    </ClCompile>
-  </ItemDefinitionGroup>
-
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>            
-    </Link>              
-  </ItemDefinitionGroup> 
-  
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>        
-    </Link>        
-  </ItemDefinitionGroup>
-  
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <PreprocessorDefinitions>_WIN64;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>        
-    </Link>        
-  </ItemDefinitionGroup>
-  
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>        
-    </Link>        
-  </ItemDefinitionGroup>
-
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Win32' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(BuildRoot)\Binaries\Win32\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <InstallerPlatform>x86</InstallerPlatform>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(BuildRoot)\Binaries\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;X64</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Win32' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(BuildRoot)\Binaries\Win32\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <InstallerPlatform>x86</InstallerPlatform>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(BuildRoot)\Binaries\x64\Release\</OutputPath>
-    <DefineConstants>TRACE;X64</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'IncrementVersion' ">  <!-- Nothing is built here.  Version number is incremented.-->
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(BuildRoot)\Binaries\</OutputPath>  <!--Dummy path setting resolves warnings.  Nothing is copied here.-->
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <AssemblyOriginatorKeyFile>$(TargetsPath)\TCWB.snk</AssemblyOriginatorKeyFile>
-    <SignAssembly>true</SignAssembly>
-    <SignManifests>true</SignManifests>
-    <ManifestKeyFile>$(TargetsPath)\TCWB_Certificate.pfx</ManifestKeyFile>
-    <ManifestCertificateThumbprint>76D0073A70506C8332D05A50B69825B3F5687F5F</ManifestCertificateThumbprint>
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+    <TargetsPath>$(BuildRoot)\Build</TargetsPath>
+    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' != '' and $(OutDir.EndsWith(`\`))">$(OutDir)</OutputPath>
+    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' != '' and !$(OutDir.EndsWith(`\`))">$(OutDir)\</OutputPath>
+    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' == ''">$(BuildRoot)\Binaries\$(Configuration)\</OutputPath>
     <OutDir>$(OutputPath)</OutDir>
   </PropertyGroup>
+
+
+
   <PropertyGroup>
-    <OutDir Condition="'$(OutDir)' != '' and !HasTrailingSlash('$(OutDir)')">$(OutDir)\</OutDir>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors Condition="'$(TreatWarningsAsErrors)' == ''">true</TreatWarningsAsErrors>
+    <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
+    <StyleCopEnabled>$(RunStyleCop)</StyleCopEnabled>
+
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+
+    <DevEnvDir>$(VS100COMNTOOLS)..\IDE</DevEnvDir>                  <!-- CHECK RELEVANCE -->
   </PropertyGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />
+  <Import Project="$(TargetsPath)\Common.Build.Cpp.settings" Condition="'$(MSBuildProjectExtension)' == '.vcxproj'" />
+  <Import Project="$(TargetsPath)\Common.Build.Wix.settings" Condition="'$(MSBuildProjectExtension)' == '.wixproj'" />
+  <Import Project="$(TargetsPath)\CodeCoverage.proj" />
 
   <ItemGroup>
     <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <CodeAnalysisRuleSet>$(TargetsPath)\TCWCS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
 
 </Project>

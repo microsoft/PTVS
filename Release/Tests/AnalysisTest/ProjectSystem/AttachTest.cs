@@ -44,8 +44,8 @@ namespace AnalysisTest.ProjectSystem {
     [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
     [DeploymentItem(@"..\\PythonTools\\visualstudio_py_debugger.py")]
     [DeploymentItem(@"..\\PythonTools\\visualstudio_py_launcher.py")]
-    [DeploymentItem("Binaries\\Win32\\Debug\\PyDebugAttach.dll")]
-    [DeploymentItem("Binaries\\Win32\\Debug\\x64\\PyDebugAttach.dll", "x64")]
+    [DeploymentItem("Binaries\\Debug\\PyDebugAttach.dll")]
+    [DeploymentItem("Binaries\\Debug\\PyDebugAttachX86.dll")]
     public class AttachTest {
         public AttachTest() {
             //

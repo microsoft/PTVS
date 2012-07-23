@@ -33,7 +33,7 @@ using Path = System.IO.Path;
 namespace AnalysisTest.ProjectSystem {
     [TestClass]
     [DeploymentItem(@"Python.VS.TestData\", "Python.VS.TestData")]
-    [DeploymentItem("Binaries\\Win32\\Debug\\spam.dll")]
+    [DeploymentItem("Binaries\\Debug\\spam.dll")]
     public class UITests {
         [TestCleanup]
         public void MyTestCleanup() {

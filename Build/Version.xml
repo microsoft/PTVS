@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <appSettings>
-    <add key="major" value="1" />
-    <add key="minor" value="0" />
-    <add key="build" value="4057" />
-    <add key="revision" value="000" />
-  </appSettings>
-</configuration>

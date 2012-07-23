@@ -11,11 +11,17 @@ if (-not $build_name)
 	exit 1
 }
 
+$buildroot = (Get-Location).Path
+while ((Test-Path $buildroot) -and -not (Test-Path ([System.IO.Path]::Combine($buildroot, "build.root")))) {
+    $buildroot = [System.IO.Path]::Combine($buildroot, "..")
+}
+$buildroot = [System.IO.Path]::GetFullPath($buildroot)
+"Build Root: $buildroot"
 
 ###################################################################
 # Build the actual binaries
 echo "Building release to $outdir ..."
-.\BuildRelease.ps1 $outdir > release_output.txt
+$buildroot\Release\Product\Setup\BuildRelease.ps1 $outdir > release_output.txt
 
 ###################################################################
 # Index symbols
@@ -50,7 +56,7 @@ $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
 
 $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
 $job.Description = "Python Tools for Visual Studio - managed code"
-$job.Keywords = "PTVS; Visual Studion; Python"
+$job.Keywords = "PTVS; Visual Studio; Python"
 
 $job.SelectCertificate("10006")  # Authenticode
 $job.SelectCertificate("67")     # StrongName key
@@ -85,17 +91,17 @@ $job.Send()
 $firstjob = $job
 
 #################################################################
-### Submit x86 native binaries
+### Submit native binaries
 
 $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
-$job.Description = "Python Tools for Visual Studio - managed code"
-$job.Keywords = "PTVS; Visual Studion; Python"
+$job.Description = "Python Tools for Visual Studio - native code"
+$job.Keywords = "PTVS; Visual Studio; Python"
 
 $job.SelectCertificate("10006")  # Authenticode
 
 foreach ($approver in $approvers) { $job.AddApprover($approver) }
 
-$files = "PyDebugAttach.dll", "VsPyProf.dll", "PyKinectAudio.dll"
+$files = "PyDebugAttach.dll", "PyDebugAttachX86.dll", "VsPyProf.dll", "VsPyProfX86.dll", "PyKinectAudio.dll"
 
 foreach ($filename in $files) {
     $fullpath = "$outdir\Release\Binaries\$filename"
@@ -104,29 +110,8 @@ foreach ($filename in $files) {
 $job.Send()
 $secondjob = $job
 
-#################################################################
-### Submit x64 native binaries
-
-$job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
-$job.Description = "Python Tools for Visual Studio - managed code"
-$job.Keywords = "PTVS; Visual Studion; Python"
-
-$job.SelectCertificate("10006")  # Authenticode
-
-foreach ($approver in $approvers) { $job.AddApprover($approver) }
-
-$files = "PyDebugAttach.dll", "VsPyProf.dll"
-
-foreach ($filename in $files) {
-    $fullpath = "$outdir\Release\Binaries\x64\$filename"
-    $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-}
-
-$job.Send()
-$thirdjob = $job
-
-# wait for all 3 jobs to finish being signed...
-$jobs = $firstjob, $secondjob, $thirdjob
+# wait for both jobs to finish being signed...
+$jobs = $firstjob, $secondjob
 foreach($job in $jobs) {
     $activity = "Job ID " + $job.JobID + " still processing"
     $percent = 0
@@ -146,12 +131,10 @@ echo 'Completion path', $firstjob.JobCompletionPath
 
 robocopy $firstjob.JobCompletionPath $destpath\
 robocopy $secondjob.JobCompletionPath $destpath\
-robocopy $thirdjob.JobCompletionPath $destpath\x64\
 
 # copy files back to binaries for re-building the MSI
-robocopy $firstjob.JobCompletionPath ..\..\..\binaries\win32\Release\
-robocopy $secondjob.JobCompletionPath ..\..\..\binaries\win32\Release\
-robocopy $thirdjob.JobCompletionPath ..\..\..\binaries\x64\Release\
+robocopy $firstjob.JobCompletionPath $buildroot\Binaries\Release\
+robocopy $secondjob.JobCompletionPath $buildroot\Binaries\Release\
 
 # now generate MSI with signed binaries.
 $file = Get-Content release_output.txt
@@ -202,14 +185,14 @@ move $outdir\Release\PyvotInstaller.msi $outdir\Release\UnsignedMsi\PyvotInstall
 
 $destpath = "$outdir\Release\SignedBinariesUnsignedMsi"
 mkdir $destpath
-copy  ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PythonToolsInstaller.msi
-copy  ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $outdir\Release\PythonToolsInstaller.msi
+copy  $buildroot\Binaries\Release\PythonToolsInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PythonToolsInstaller.msi
+copy  $buildroot\Binaries\Release\PythonToolsInstaller.msi $outdir\Release\PythonToolsInstaller.msi
 
-copy  ..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PyKinectInstaller.msi
-copy  ..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi $outdir\Release\PyKinectInstaller.msi
+copy  $buildroot\Binaries\Release\PyKinectInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PyKinectInstaller.msi
+copy  $buildroot\Binaries\Release\PyKinectInstaller.msi $outdir\Release\PyKinectInstaller.msi
 
-copy  ..\..\..\Binaries\Win32\Release\PyvotInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PyvotInstaller.msi
-copy  ..\..\..\Binaries\Win32\Release\PyvotInstaller.msi $outdir\Release\PyvotInstaller.msi
+copy  $buildroot\Binaries\Release\PyvotInstaller.msi $outdir\Release\SignedBinariesUnsignedMsi\PyvotInstaller.msi
+copy  $buildroot\Binaries\Release\PyvotInstaller.msi $outdir\Release\PyvotInstaller.msi
 
 #################################################################
 ### Now submit the MSI for signing
@@ -222,9 +205,9 @@ $job.SelectCertificate("10006")  # Authenticode
 
 foreach ($approver in $approvers) { $job.AddApprover($approver) }
 
-$job.AddFile((get-location).Path + "\..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-$job.AddFile((get-location).Path + "\..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-$job.AddFile((get-location).Path + "\..\..\..\Binaries\Win32\Release\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+$job.AddFile($buildroot + "\Binaries\Release\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+$job.AddFile($buildroot + "\Binaries\Release\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+$job.AddFile($buildroot + "\Binaries\Release\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
 
 $job.Send()
 

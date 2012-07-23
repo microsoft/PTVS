@@ -505,7 +505,7 @@ namespace Microsoft.PythonTools.Hpc {
             "visualstudio_py_debugger.py",
             "visualstudio_py_launcher.py",
             "PyDebugAttach.dll",
-            "X64\\PyDebugAttach.dll",
+            "PyDebugAttachX86.dll",
             "Microsoft.PythonTools.Debugger.dll",
             "Microsoft.PythonTools.Analysis.dll",
             "Microsoft.PythonTools.Attacher.exe",

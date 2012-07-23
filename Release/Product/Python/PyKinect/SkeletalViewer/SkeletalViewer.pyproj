@@ -6,7 +6,7 @@
     <ProjectGuid>{ed0300eb-5381-4745-af28-f83a3e914717}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>Program.py</StartupFile>
-    <SearchPath>C:\Source\TCP0\Incubation\PyKinect\PyKinect</SearchPath>
+    <SearchPath>..\PyKinect</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <AssemblyName>SkeletalViewer</AssemblyName>
     <Name>SkeletalViewer</Name>

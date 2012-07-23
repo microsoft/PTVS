@@ -60,10 +60,6 @@
                 <File Id="fil55E46847674B4C5589EB470C2A5CF00A" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.WindowsAzure.StorageClient.xml" />
             </Component>
 
-            <Component Id="cmp90C22F81C8A4413E9AAAD5D991611130" Directory="PowerShellFolder" Guid="{ED88BACD-54F4-4D8A-97BB-C9A772691EF3}">
-                <File Id="fil584DC427F37A403E9FE3726CA037546B" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureDeploymentCmdlets.dll" />
-            </Component>
-
             <Component Id="cmpB3F31948DB764B5BADCB0CFEC273CA8B" Directory="GeneralScaffoldingFolder" Guid="{74D9CF31-303D-4917-B067-F446228430D8}">
                 <File Id="filE9B0824E74894041B42C9A462DA8E4CF" KeyPath="yes" Source="$(var.TargetDir)\Resources\Scaffolding\General\deploymentSettings.json" />
             </Component>

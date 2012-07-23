@@ -18,7 +18,7 @@ _AUDIODLL = ctypes.WinDLL(_audiodll_path)
 
 _audio_path = path.join(path.dirname(__file__), 'PyKinectAudio.dll')
 if not os.path.exists(_audio_path):
-    _audio_path = path.join(path.dirname(__file__), '..', '..', '..', '..', '..', '..', '..', 'Binaries', 'Win32', 'Debug', 'PyKinectAudio.dll')
+    _audio_path = path.join(path.dirname(__file__), '..', '..', '..', '..', '..', '..', '..', 'Binaries', 'Debug', 'PyKinectAudio.dll')
     if not path.exists(_audio_path):
         raise Exception('Cannot find PyKinectAudio.dll')
 

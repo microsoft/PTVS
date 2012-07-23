@@ -430,7 +430,7 @@ public:
     template <class U> struct rebind { typedef PrivateHeapAllocator<U>
     other; };
 
-	inline explicit PrivateHeapAllocator() {}
+    inline explicit PrivateHeapAllocator() {}
     inline ~PrivateHeapAllocator() {}
     inline PrivateHeapAllocator(PrivateHeapAllocator const&) {}
     template<typename U>
@@ -448,11 +448,11 @@ public:
         HeapFree(g_heap, 0, p);
     }
 
-	//    size
-	#undef max
-	inline size_type max_size() const { 
-		return std::numeric_limits<size_type>::max() / sizeof(T);
-	}
+    //    size
+    #undef max
+    inline size_type max_size() const { 
+        return std::numeric_limits<size_type>::max() / sizeof(T);
+    }
     inline void construct(pointer p, const T& t) { new(p) T(t); }
     inline void destroy(pointer p) { p->~T(); }
 };
@@ -719,7 +719,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
     if(isInit != nullptr && isInit()) {
         DWORD interpreterId = INFINITE;
-        for(size_t curInterp = 0; curInterp < MAX_INTERPRETERS; curInterp++) {
+        for(DWORD curInterp = 0; curInterp < MAX_INTERPRETERS; curInterp++) {
             if(_interpreterInfo[curInterp] != nullptr &&
                 _interpreterInfo[curInterp]->Interpreter == module) {
                 interpreterId = curInterp;

@@ -270,9 +270,9 @@ namespace Microsoft.PythonTools.Debugger {
                 string basePath = GetPythonToolsInstallPath();
                 string dll;
                 if (IntPtr.Size == 4) {
-                    dll = "PyDebugAttach.dll";
+                    dll = "PyDebugAttachX86.dll";
                 } else {
-                    dll = "x64\\PyDebugAttach.dll";
+                    dll = "PyDebugAttach.dll";
                 }
 
                 string dllPath;

@@ -1,5 +1,12 @@
 param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch)
 
+try {
+    msbuild
+} catch {
+    Write-Error "Visual Studio x86 build tools are required."
+    exit 1
+}
+
 if (-not $outdir)
 {
     Write-Error "Must provide valid output directory: '$outdir'"
@@ -31,12 +38,20 @@ $products = @{name="PythonTools"; wxi=".\PythonToolsInstaller\PythonToolsInstall
             @{name="PyKinect";    wxi=".\PyKinectInstaller\PyKinectInstallerVars.wxi";       msi="PyKinectInstaller.msi"}, `
             @{name="Pyvot";       wxi=".\PyvotInstaller\PyvotInstallerVars.wxi";             msi="PyvotInstaller.msi"}
 
+$buildroot = (Get-Location).Path
+while ((Test-Path $buildroot) -and -not (Test-Path ([System.IO.Path]::Combine($buildroot, "build.root")))) {
+    $buildroot = [System.IO.Path]::Combine($buildroot, "..")
+}
+$buildroot = [System.IO.Path]::GetFullPath($buildroot)
+"Build Root: $buildroot"
+Push-Location $buildroot
+
 if ($uninstall)
 {
     $guidregexp = "<\?define InstallerGuid=(.*)\?>"
     foreach ($product in $products)
     {
-        foreach ($line in ( Get-Content $product.wxi ))
+        foreach ($line in ( Get-Content ([System.IO.Path]::Combine($buildroot, "Release\Product\Setup", $product.wxi)) ))
         {
             if ($line -match $guidregexp) { $guid = $matches[1] ; break }
         }
@@ -45,7 +60,7 @@ if ($uninstall)
     }
 }
 
-$versionFiles = "..\..\..\Build\AssemblyVersion.cs"
+$versionFiles = "Build\AssemblyVersion.cs"
 foreach($versionedFile in $versionFiles) {
     tf edit $versionedFile
     if ($LASTEXITCODE -gt 0) {
@@ -76,7 +91,7 @@ if ($dev10InstallDir64 -or $dev10InstallDir) {
 }
 
 foreach ($targetVs in $targetVersions) {
-    $asmverfile = dir ..\..\..\Build\AssemblyVersion.cs
+    $asmverfile = dir Build\AssemblyVersion.cs
 
 
     if ($targetVs -eq "10.0") {
@@ -96,7 +111,7 @@ foreach ($targetVs in $targetVersions) {
     {
         if (-not $skiptests)
         {
-            msbuild ..\..\Tests\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
+            msbuild Release\Tests\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
             if ($LASTEXITCODE -gt 0)
             {
                 Write-Error "Test build failed: $config"
@@ -104,7 +119,7 @@ foreach ($targetVs in $targetVersions) {
             }
         }
 
-        msbuild .\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
+        msbuild Release\Product\Setup\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
         if ($LASTEXITCODE -gt 0) {
             Write-Error "Build failed: $config"
             exit 3
@@ -114,63 +129,41 @@ foreach ($targetVs in $targetVersions) {
     tf undo /noprompt $asmverfile
 
     mkdir $outdir\Debug
-    copy -force ..\..\..\Binaries\Win32\Debug\PythonToolsInstaller.msi $outdir\Debug\PythonToolsInstaller.msi
-    copy -force ..\..\..\Binaries\Win32\Debug\PyKinectInstaller.msi $outdir\Debug\PyKinectInstaller.msi
-    copy -force ..\..\..\Binaries\Win32\Debug\PyvotInstaller.msi $outdir\Debug\PyvotInstaller.msi
-    copy -force PythonToolsInstaller\SnInternal.reg $outdir\Debug\EnableSkipVerification.reg
-    copy -force PythonToolsInstaller\SnInternal64.reg $outdir\Debug\EnableSkipVerificationX64.reg
-    copy -force PythonToolsInstaller\SnInternalRemove.reg $outdir\Debug\DisableSkipVerification.reg
-    copy -force PythonToolsInstaller\SnInternal64Remove.reg $outdir\Debug\DisableSkipVerificationX64.reg
+    copy -force Binaries\Debug\*.msi $outdir\Debug\
+    copy -force Prerequisites\*.reg $outdir\Debug\
 
     mkdir $outdir\Debug\Symbols
-    copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.pdb $outdir\Debug\Symbols\
-
-    mkdir $outdir\Debug\Symbols\x64
-    copy -force -recurse ..\..\..\Binaries\x64\Debug\*.pdb $outdir\Debug\Symbols\x64
+    copy -force -recurse Binaries\Debug\*.pdb $outdir\Debug\Symbols\
 
     mkdir $outdir\Debug\Binaries
-    copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.dll $outdir\Debug\Binaries\
-    copy -force -recurse ..\..\..\Binaries\Win32\Debug\*.exe $outdir\Debug\Binaries\
+    copy -force -recurse Binaries\Debug\*.dll $outdir\Debug\Binaries\
+    copy -force -recurse Binaries\Debug\*.exe $outdir\Debug\Binaries\
+    copy -force -recurse Binaries\Debug\*.pkgdef $outdir\Debug\Binaries\
 
-    mkdir $outdir\Debug\Binaries\x64
     mkdir $outdir\Debug\Binaries\ReplWindow
-    copy -force -recurse ..\..\..\Binaries\x64\Debug\*.dll $outdir\Debug\Binaries\x64
-    copy -force -recurse ..\..\..\Binaries\x64\Debug\*.exe $outdir\Debug\Binaries\x64
-    copy -force -recurse ..\..\..\Binaries\x64\Debug\*.pkgdef $outdir\Debug\Binaries\x64
-    copy -force -recurse ..\Python\ReplWindow\obj\Win32\Debug\extension.vsixmanifest $outdir\Debug\Binaries\ReplWindow
+    copy -force -recurse Release\Product\Python\ReplWindow\obj\Debug\extension.vsixmanifest $outdir\Debug\Binaries\ReplWindow
 
     mkdir $outdir\Release
-    copy -force ..\..\..\Binaries\Win32\Release\PythonToolsInstaller.msi $outdir\Release\PythonToolsInstaller.msi
-    copy -force ..\..\..\Binaries\Win32\Release\PyKinectInstaller.msi $outdir\Release\PyKinectInstaller.msi
-    copy -force ..\..\..\Binaries\Win32\Release\PyvotInstaller.msi $outdir\Release\PyvotInstaller.msi
-    copy -force PythonToolsInstaller\SnInternal.reg $outdir\Release\EnableSkipVerification.reg
-    copy -force PythonToolsInstaller\SnInternal64.reg $outdir\Release\EnableSkipVerificationX64.reg
-    copy -force PythonToolsInstaller\SnInternalRemove.reg $outdir\Release\DisableSkipVerification.reg
-    copy -force PythonToolsInstaller\SnInternal64Remove.reg $outdir\Release\DisableSkipVerificationX64.reg
+    copy -force Binaries\Release\*.msi $outdir\Release\
+    copy -force Prerequisites\*.reg $outdir\Release\
 
     mkdir $outdir\Release\Symbols
-    copy -force -recurse ..\..\..\Binaries\Win32\Release\*.pdb $outdir\Release\Symbols\
-
-    mkdir $outdir\Release\Symbols\x64
-    copy -force -recurse ..\..\..\Binaries\x64\Release\*.pdb $outdir\Release\Symbols\x64
+    copy -force -recurse Binaries\Release\*.pdb $outdir\Release\Symbols\
 
     mkdir $outdir\Release\Binaries
-    mkdir $outdir\Release\Binaries\ReplWindow
-    copy -force -recurse ..\..\..\Binaries\Win32\Release\*.dll $outdir\Release\Binaries\
-    copy -force -recurse ..\..\..\Binaries\Win32\Release\*.exe $outdir\Release\Binaries\
-    copy -force -recurse ..\..\..\Binaries\Win32\Release\*.pkgdef $outdir\Release\Binaries\
-    copy -force -recurse ..\Python\ReplWindow\obj\Win32\Release\extension.vsixmanifest $outdir\Release\Binaries\ReplWindow
+    copy -force -recurse Binaries\Release\*.dll $outdir\Release\Binaries\
+    copy -force -recurse Binaries\Release\*.exe $outdir\Release\Binaries\
+    copy -force -recurse Binaries\Release\*.pkgdef $outdir\Release\Binaries\
 
-    mkdir $outdir\Release\Binaries\x64
-    copy -force -recurse ..\..\..\Binaries\x64\Release\*.dll $outdir\Release\Binaries\x64
-    copy -force -recurse ..\..\..\Binaries\x64\Release\*.exe $outdir\Release\Binaries\x64
+    mkdir $outdir\Release\Binaries\ReplWindow
+    copy -force -recurse Release\Product\Python\ReplWindow\obj\Release\extension.vsixmanifest $outdir\Release\Binaries\ReplWindow
 }
 
 if ($scorch) { tfpt scorch /noprompt }
 
 $outdir = $prevOutDir
 if (-not (Test-path $outdir\Sources\Incubation)) { mkdir $outdir\Sources\Incubation }
-robocopy /s ..\..\.. $outdir\Sources /xd TestResults
+robocopy /s . $outdir\Sources /xd TestResults
 
 foreach($versionedFile in $versionFiles) {
     tf undo /noprompt $versionedFile
@@ -180,6 +173,8 @@ foreach($versionedFile in $versionFiles) {
         del ($versionedFile + ".bak")
     }
 }
+
+Pop-Location
 
 if ($reinstall -eq "Debug" -or $reinstall -eq "Release")
 {

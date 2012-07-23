@@ -13,12 +13,7 @@
       </PropertyGroup>
     </When>
   </Choose>
-  <PropertyGroup>
-    <StartupObject />
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-  </PropertyGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Release.Product.settings" />
+  <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -37,25 +32,8 @@
     <SccProvider>SAK</SccProvider>
     <StyleCopEnabled>false</StyleCopEnabled>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(ProjectDir)..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(ProjectDir)..\bin\Release</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VSTarget)' == '11.0'">
-    <DefineConstants>DEV11</DefineConstants>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -198,14 +176,23 @@
     </Content>
     <Content Include="PyKinect\tests.py" />
     <Content Include="Templates\Projects\PyKinectPyGame\KinectGame.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <VSIXSourceItem Include="$(BuildRoot)\Binaries\Win32\$(Configuration)\PyKinectAudio.dll" Condition="Exists('$(BuildRoot)\Binaries\Win32\$(Configuration)\PyKinectAudio.dll')">
+    <ProjectReference Include="PyKinectAudio\PyKinectAudio.vcxproj">
+      <Project>{8B213E91-39F8-4461-BC8E-FE0401ECBEA5}</Project>
+      <Name>PyKinectAudio</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+      <IncludeOutputGroupsInVSIX>;</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
+    <Content Include="$(OutputPath)PyKinectAudio.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>PyKinect\pykinect\audio</VSIXSubPath>
-    </VSIXSourceItem>
+      <Link>PyKinectAudio.dll</Link>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="PyKinect.vsct">
@@ -228,7 +215,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="..\PythonTools\PythonProjectBig.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Resource Include="Templates\Projects\PyKinectPyGame\__TemplateIcon.ico" />
@@ -248,8 +235,7 @@
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
-  <Import Project="..\Python.settings" />
-  <Import Project="$(TargetsPath)\TCWB.CSharp.targets" />
+  <Import Project="..\ProjectAfter.settings" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

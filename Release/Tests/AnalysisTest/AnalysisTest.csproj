@@ -12,15 +12,10 @@
       </PropertyGroup>
     </When>
   </Choose>
-  <PropertyGroup>
-    <StartupObject />
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-  </PropertyGroup>
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Release.Product.settings" />
+  <Import Project="..\TestProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A9180A68-2BD8-4F9B-9D25-C6532C124B52}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -35,28 +30,10 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <StyleCopEnabled>false</StyleCopEnabled>
     <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
     <IsCodedUITest>True</IsCodedUITest>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(ProjectDir)..\bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;TRACE;$(SignedSym)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <PlatformTarget>x86</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(ProjectDir)..\bin\Release</OutputPath>
-    <DefineConstants>TRACE;$(SignedSym)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+  <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(InteractiveWindow)' != ''">
@@ -792,12 +769,6 @@
     <ProjectReference Include="..\TestSccPackage\TestSccPackage.csproj">
       <Project>{E75E5DB1-0EA0-4247-A830-FE467C016816}</Project>
       <Name>TestSccPackage</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\Python\PyDebugAttach\PyDebugAttach.vcxproj">
-      <Project>{AC19CAA0-5C69-4B20-8A18-D4B6B65F22B8}</Project>
-      <Name>PyDebugAttach</Name>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -1937,15 +1908,11 @@
     <Content Include="Python.VS.TestData\SourceControl\TestFolder\SubItem.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(BuildRoot)\Binaries\Win32\$(Configuration)\PyDebugAttach.dll" Condition="Exists('$(BuildRoot)\Binaries\Win32\$(Configuration)\PyDebugAttach.dll')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Python.VS.TestData\AddFolderExists\X\" />
     <Folder Include="Python.VS.TestData\AddFolderExists\Y\" />
   </ItemGroup>
-  <Import Project="..\..\Product\Python\Python.settings" />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
@@ -1964,8 +1931,7 @@
       </ItemGroup>
     </When>
   </Choose>
-  <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
-  <Import Project="$(TargetsPath)\TCWB.CSharp.targets" />
+  <Import Project="..\TestProjectAfter.settings" />
   <PropertyGroup>
     <PreBuildEvent>
     </PreBuildEvent>

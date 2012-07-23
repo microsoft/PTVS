@@ -286,11 +286,11 @@
             <Component Id="cmpAA6BF6D2FD0918918A7BFBE87041CFBE" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{5A47F81C-51CC-4F17-B26C-0D2397427B76}">
                 <File Id="fil3AE95E00ADA9A685C723B39AF457CD4A" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\__builtin__.idb" />
             </Component>
-            <Component Id="cmp8C70B534AEA74FC6B3184E2AE5D55663" Directory="INSTALLLOCATION" Guid="{EDE78A7D-C28D-4DDE-8B79-4D8B922CBF13}">
-                <File Id="filE5D05934AA554FAABB9004EF7D421861" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttach.dll" />
+            <Component Id="cmp0A3AD07C7B1940738D4EC76BA8FDB2DD" Directory="INSTALLLOCATION" Guid="{62900633-12C9-441A-AD7B-28AD9DE9FF93}">
+                <File Id="fil8E09A46F99354C3580E4F7500BAC7346" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttach.dll" />
             </Component>
-            <Component Id="cmpA83C48D16DDE43B3AEF95E591E9A5CFA" Directory="X64INSTALL" Guid="{E18A951E-F61C-488F-BE2D-9B72BA942B7F}">
-                <File Id="fil4D6C7256F4DC457BAE3F3967ADBBB107" KeyPath="yes" Source="$(var.x64Dir)\PyDebugAttach.dll" />
+            <Component Id="cmpD347FDE36E244F478BF31A6B7CA70458" Directory="INSTALLLOCATION" Guid="{F8B00369-E01C-430B-8F54-6B389FB13F68}">
+                <File Id="fil7AED81D9701E48FA942D4591A0D81849" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttachX86.dll" />
             </Component>
 
             <!-- WebPI Components -->

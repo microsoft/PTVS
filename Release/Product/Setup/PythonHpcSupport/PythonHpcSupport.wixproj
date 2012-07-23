@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Release.Product.settings" />
+  <Import Project="..\SetupProjectBefore.settings" />
   <PropertyGroup>
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{45DBE334-D497-4441-B136-5BA636173D26}</ProjectGuid>
@@ -8,25 +8,13 @@
     <OutputName>PythonHpcSupportMsm</OutputName>
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
-    <WixTargetsPath>$(BuildRoot)\Tools\Wix\3.5\Targets\Wix2010.targets</WixTargetsPath>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-        ObjDir=$(ProjectDir)..\..\Python\Hpc\obj\Win32\$(Configuration);
-    </DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VSTarget)' == ''">
-    <DefineConstants>
-        ObjDir=$(ProjectDir)..\..\Python\Hpc\obj\Win32\$(Configuration);
-        VSTargetVersion=10.0
-    </DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(VSTarget)' != ''">
-    <DefineConstants>
-        ObjDir=$(ProjectDir)..\..\Python\Hpc\obj\Win32\$(Configuration);
-        VSTargetVersion=$(VSTarget)
+      ObjDir=$(BuildRoot)\Release\Product\Python\Hpc\obj\$(Configuration);
+      VSTargetVersion=$(VSTarget)
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -43,5 +31,5 @@
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(WixTargetsPath)" />
+  <Import Project="..\SetupProjectAfter.settings" />
 </Project>
