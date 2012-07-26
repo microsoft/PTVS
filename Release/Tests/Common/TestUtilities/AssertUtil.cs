@@ -14,8 +14,11 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Text;
 
 namespace TestUtilities
 {
@@ -144,5 +147,68 @@ namespace TestUtilities
                 Assert.Fail(error);
             }
         }
+
+        public static void Contains(string source, params string[] values) {
+            foreach (var v in values) {
+                if (source.Contains(v)) {
+                    Assert.Fail(String.Format("{0} does not contain {1}", source, v));
+                }
+            }
+        }
+
+        public static void Contains<T>(IEnumerable<T> source, T value) {
+            foreach (var v in source) {
+                if (v.Equals(value)) {
+                    return;
+                }
+            }
+
+            Assert.Fail(String.Format("{0} does not contain {1}", MakeText(source), value));
+        }
+
+        public static void Equals<T>(IEnumerable<T> source, params T[] value) {
+            var items = source.ToArray();
+            Assert.AreEqual(value.Length, items.Length);
+            for (int i = 0; i < value.Length; i++) {
+                Assert.AreEqual(items[i], value[i]);
+            }
+        }
+
+        public static void DoesntContain<T>(IEnumerable<T> source, T value) {
+            foreach (var v in source) {
+                if (v.Equals(value)) {
+                    Assert.Fail(String.Format("{0} contains {1}", MakeText(source), value));
+                }
+            }
+
+        }
+
+        public static void ContainsExactly<T>(IEnumerable<T> source, IEnumerable<T> values) {
+            ContainsExactly(new HashSet<T>(source), values.ToArray());
+        }
+
+        public static void ContainsExactly<T>(IEnumerable<T> source, params T[] values) {
+            ContainsExactly(new HashSet<T>(source), values);
+        }
+
+        public static void ContainsExactly<T>(HashSet<T> set, params T[] values) {
+            if (set.ContainsExactly(values)) {
+                return;
+            }
+            Assert.Fail(String.Format("Expected {0}, got {1}", MakeText(values), MakeText(set)));
+        }
+
+        public static string MakeText<T>(IEnumerable<T> values) {
+            var sb = new StringBuilder("{");
+            foreach (var value in values) {
+                if (sb.Length > 1) {
+                    sb.Append(", ");
+                }
+                sb.Append(value.ToString());
+            }
+            sb.Append("}");
+            return sb.ToString();
+        }
+
     }
 }

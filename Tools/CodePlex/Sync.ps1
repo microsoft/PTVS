@@ -20,7 +20,7 @@ function sync_hg($hg_repo) {
 
 function copy_repo($from, $to) {
 	# we only include specific top-level directories here on an opt-in basis
-    $included_dirs = "Build", "Release", "Tools", "Servicing", "Prerequisites"
+    $included_dirs = "Build", "Release", "Tools", "Servicing"
     foreach($included_dir in $included_dirs) {
         $cur_from = join-path $from $included_dir
         $cur_to = join-path $to $included_dir

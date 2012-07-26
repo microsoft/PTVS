@@ -3,8 +3,17 @@
   <Import Project="TestProjectBefore.settings" />
 
   <ItemGroup>
-    <ProjectFile Include="AnalysisTest\AnalysisTest.csproj"/>
-    <ProjectFile Include="TestSccPackage\TestSccPackage.csproj"/>
+    <ProjectFile Include="AnalysisTests\AnalysisTests.csproj" />
+    <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
+    <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
+    <ProjectFile Include="DjangoTests\DjangoTests.csproj" />
+    <ProjectFile Include="DjangoUITests\DjangoUITests.csproj" />
+    <ProjectFile Include="FastCgiTest\FastCgiTest.csproj" />
+    <ProjectFile Include="ProfilingUITests\ProfilingUITests.csproj" />
+    <ProjectFile Include="PythonToolsTests\PythonToolsTests.csproj" />
+    <ProjectFile Include="PythonToolsUITests\PythonToolsUITests.csproj" />
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
+    <ProjectFile Include="TestSccPackage\TestSccPackage.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

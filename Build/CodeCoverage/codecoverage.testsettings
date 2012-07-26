@@ -1,6 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <TestSettings name="wcs codecoverage" id="d0bbcea6-c10e-4189-b125-8b5630a1f510" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
   <Description>These are code coverage test settings for a local test run</Description>
+  <Deployment>
+    <DeploymentItem filename="Release\Tests\Common\TestData\" outputDirectory="TestData\" />
+    <DeploymentItem filename="Release\Product\Python\PythonTools\CompletionDB\" outputDirectory="CompletionDB\" />
+    <DeploymentItem filename="Binaries\Debug\" />
+  </Deployment>
   <Execution>
     <Timeouts runTimeout="3600000" testTimeout="300000" />
     <TestTypeSpecific>

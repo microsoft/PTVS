@@ -28,9 +28,18 @@
     <Reference Include="Microsoft.TC.TestHostAdapters">
       <HintPath>..\..\..\..\Release\Public\TCTestHostAdapters\Microsoft.TC.TestHostAdapters.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.Common" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+    <Reference Include="Microsoft.VisualStudio.Text.Data, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.UI, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Office, Version=14.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
       <HintPath>C:\Program Files (x86)\Microsoft Visual Studio 10.0\Visual Studio Tools for Office\PIA\Office14\Office.dll</HintPath>
@@ -38,6 +47,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Windows.Forms" />
@@ -63,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertListener.cs" />
+    <Compile Include="Classification.cs" />
     <Compile Include="IWarningLogger.cs" />
     <Compile Include="AssertUtil.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
@@ -70,31 +81,58 @@
     <Compile Include="GlobalSuppressions.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="Mocks\MockBufferGraph.cs" />
+    <Compile Include="Mocks\MockClassificationType.cs" />
+    <Compile Include="Mocks\MockClassificationTypeRegistryService.cs" />
+    <Compile Include="Mocks\MockComponentModel.cs" />
+    <Compile Include="Mocks\MockContentType.cs" />
+    <Compile Include="Mocks\MockContentTypeRegistryService.cs" />
+    <Compile Include="Mocks\MockErrorProviderFactory.cs" />
+    <Compile Include="Mocks\MockGlyphService.cs" />
+    <Compile Include="Mocks\MockMappingPoint.cs" />
+    <Compile Include="Mocks\MockReplWindow.cs" />
+    <Compile Include="Mocks\MockTextBuffer.cs" />
+    <Compile Include="Mocks\MockTextCaret.cs" />
+    <Compile Include="Mocks\MockTextDocument.cs" />
+    <Compile Include="Mocks\MockTextEdit.cs" />
+    <Compile Include="Mocks\MockTextOptions.cs" />
+    <Compile Include="Mocks\MockTextSelection.cs" />
+    <Compile Include="Mocks\MockTextSnapshot.cs" />
+    <Compile Include="Mocks\MockTextSnapshotLine.cs" />
+    <Compile Include="Mocks\MockTextVersion.cs" />
+    <Compile Include="Mocks\MockTextView.cs" />
+    <Compile Include="Mocks\MockTrackingSpan.cs" />
     <Compile Include="NativeMethods.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="PythonPaths.cs" />
+    <Compile Include="TestData.cs" />
+    <Compile Include="TestExtensions.cs" />
+    <Compile Include="TestMethod.cs" />
     <Compile Include="VsIdeHostAdapter.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="VSUtility.cs" />
   </ItemGroup>
-  <!--<ItemGroup>
-    <Compile Include="$(TargetsPath)\AssemblyInfoCommon.cs">
-      <Link>AssemblyInfoCommon.cs</Link>
-    </Compile>
-    <Compile Include="$(TargetsPath)\AssemblyVersion.cs">
-      <Link>AssemblyVersion.cs</Link>
-    </Compile>
-  </ItemGroup>-->
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Product\Python\Analysis\Analysis.csproj">
+      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
+      <Name>Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Product\Python\PythonTools\PythonTools.csproj">
+      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
+      <Name>PythonTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Product\Python\ReplWindow\ReplWindow.csproj">
+      <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
+      <Name>ReplWindow</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="BeforeCompile">
+    <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true" />
+  </Target>
   <Import Project="..\..\TestProjectAfter.settings" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

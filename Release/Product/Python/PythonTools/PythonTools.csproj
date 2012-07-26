@@ -487,7 +487,6 @@
     <Compile Include="PythonTools\Intellisense\CompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\FileStreamReader.cs" />
     <Compile Include="PythonTools\Intellisense\FromImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\LazyCompletion.cs" />
