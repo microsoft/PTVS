@@ -2,6 +2,7 @@
 
 from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException
 try:
+    import IPython
     from IPython.zmq import kernelmanager
     from IPython.zmq.kernelmanager import ShellSocketChannel, KernelManager, SubSocketChannel, StdInSocketChannel, HBSocketChannel
     from IPython.utils.traitlets import Type
@@ -17,6 +18,7 @@ except:
     import _thread as thread    # Renamed as Py3k
 
 import sys
+import re
 from base64 import decodestring
 
 # TODO: SystemExit exceptions come back to us as strings, can we automatically exit when ones raised somehow?
@@ -149,13 +151,32 @@ class VsKernelManager(KernelManager):
     hb_channel_class = Type(VsHBSocketChannel)
 
 
+def is_ipython_version(major, minor):
+    """checks if we are at least a specific IPython version"""
+    match = re.match('(\d+).(\d+)', IPython.__version__)
+    if match:
+        groups = match.groups()
+        if int(groups[0]) > major:
+            return True
+        elif int(groups[0]) == major:
+            return int(groups[1]) >= minor
+
+    return False
+
 class IPythonBackend(ReplBackend):
     def __init__(self, mod_name = '__main__', launch_file = None):
         ReplBackend.__init__(self)
         self.launch_file = launch_file
         self.mod_name = mod_name
         self.km = VsKernelManager()
-        self.km.start_kernel(**{'ipython': True, 'extra_arguments': self.get_extra_arguments()})
+        
+        if is_ipython_version(0, 13):
+            # http://pytools.codeplex.com/workitem/759
+            # IPython stopped accepting the ipython flag and switched to launcher, the new
+            # default is what we want though.
+            self.km.start_kernel(**{'extra_arguments': self.get_extra_arguments()})
+        else:
+            self.km.start_kernel(**{'ipython': True, 'extra_arguments': self.get_extra_arguments()})
         self.km.start_channels()
         self.exit_lock = thread.allocate_lock()
         self.exit_lock.acquire()     # used as an event

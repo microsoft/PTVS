@@ -312,9 +312,10 @@ terminate the stream"""
         if len_remaining == 0 or not streaming:
             break
 
-def update_environment():
-    cur_dir = path.dirname(path.dirname(__file__))
+def get_environment():
+    cur_dir = path.dirname(__file__)
     web_config = path.join(cur_dir, 'Web.config')
+    d = {}
     if os.path.exists(web_config):
         try:
             with file(web_config) as wc:
@@ -328,10 +329,12 @@ def update_environment():
                             key = curAdd.getAttribute('key')
                             value = curAdd.getAttribute('value')
                             if key and value:
-                                os.environ[key] = value
+                                d[key] = value
         except:
             # unable to read file
             log(traceback.format_exc())
+            pass
+    return d
 
 
 if __name__ == '__main__':
@@ -350,7 +353,7 @@ if __name__ == '__main__':
     except ImportError:
         pass
 
-    update_environment()
+    env = get_environment()
 
     _REQUESTS = {}
 
@@ -374,6 +377,7 @@ if __name__ == '__main__':
                 sys.stdout = sys.__stdout__ = cStringIO.StringIO()
                 record.params['SCRIPT_NAME'] = ''
                 try:
+                    os.environ.update(env)
                     response = ''.join(handler(record.params, start_response))
                 except:
                     send_response(record.req_id, FCGI_STDERR, errors.getvalue())
