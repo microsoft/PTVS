@@ -13,24 +13,24 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices; // Ambiguous with EnvDTE.Thread.
+using System.Runtime.InteropServices;
+using System.Windows;
 using EnvDTE;
 using EnvDTE80;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using VSLangProj;
+using ST = System.Threading;
 
 namespace AnalysisTest.ProjectSystem {
     [TestClass]
@@ -817,6 +817,54 @@ namespace AnalysisTest.ProjectSystem {
             System.Threading.Thread.Sleep(2000);
 
             Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo", "Program.py"));
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CopyAndPasteFolder() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\CopyAndPasteFolder.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var solutionExplorer = app.SolutionExplorerTreeView;
+            var solutionNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)");
+
+            var projectNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder");
+
+            var folderNode = solutionExplorer.FindItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "X");
+
+            // paste to project node, make sure the files are there
+            StringCollection paths = new StringCollection() {
+                Path.Combine(Directory.GetCurrentDirectory(), "TestData", "CopiedFiles")
+            };
+
+            ToSTA(() => Clipboard.SetFileDropList(paths));
+
+            Mouse.MoveTo(projectNode.GetClickablePoint());
+            Mouse.Click();
+            Keyboard.ControlV();
+
+            Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "CopiedFiles"));
+            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "SomeFile.py")));
+            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "Foo", "SomeOtherFile.py")));
+
+            Mouse.MoveTo(folderNode.GetClickablePoint());
+            Mouse.Click();
+
+            // paste to folder node, make sure the files are there
+            ToSTA(() => Clipboard.SetFileDropList(paths));
+            Keyboard.ControlV();
+
+            System.Threading.Thread.Sleep(2000);
+
+            Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "X", "CopiedFiles"));
+            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "SomeFile.py")));
+            Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "Foo", "SomeOtherFile.py")));
+        }
+
+        private static void ToSTA(ST.ThreadStart code) {
+            ST.Thread t = new ST.Thread(code);
+            t.SetApartmentState(ST.ApartmentState.STA);
+            t.Start();
+            t.Join();
         }
 
         /// <summary>

@@ -228,9 +228,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal void CopyKeysTo(VariableDef to) {
             bool added = false;
             foreach (var dependency in _dependencies) {
-                var deps = GetDependentItems(dependency.Key);
-
-                to.AddTypes(dependency.Key, dependency.Value.KeyValues.Keys);
+                added |= to.AddTypes(dependency.Key, dependency.Value.KeyValues.Keys);
             }
 
             if (added) {
@@ -244,10 +242,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal void CopyValuesTo(VariableDef to) {
             bool added = false;
             foreach (var dependency in _dependencies) {
-                var deps = GetDependentItems(dependency.Key);
-
                 foreach (var value in dependency.Value.KeyValues) {
-                    to.AddTypes(dependency.Key, value.Value);
+                    added |= to.AddTypes(dependency.Key, value.Value);
                 }
             }
 

@@ -4402,7 +4402,8 @@ namespace Microsoft.PythonTools.Project
             HierarchyNode targetFolder = n.FindChild(Path.GetFileName(file), false);
             if (targetFolder == null)
             {
-                var newChild = CreateFolderNode(Path.GetFileName(file));
+                var fullPath = Path.Combine(GetBaseDirectoryForAddingFiles(n), Path.GetFileName(file));
+                var newChild = CreateFolderNode(fullPath);
                 n.AddChild(newChild);
                 targetFolder = newChild;
             }
