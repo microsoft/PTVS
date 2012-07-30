@@ -97,6 +97,10 @@ namespace Microsoft.PythonTools.Project.Automation
         {
             get
             {
+                var attrs = pi.GetCustomAttributes(typeof(PropertyNameAttribute), true);
+                if (attrs.Length > 0) {
+                    return ((PropertyNameAttribute)attrs[0]).Name;
+                }
                 return pi.Name;
             }
         }

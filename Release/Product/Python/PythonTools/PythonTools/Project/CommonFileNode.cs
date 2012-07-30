@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.Project {
                             CommonConstants.StartupFile,
                             CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
                         );
-                        break;
+                        return VSConstants.S_OK;
                     case CommonConstants.StartDebuggingCmdId:
                     case CommonConstants.StartWithoutDebuggingCmdId:
                         CommonProjectPackage package = (CommonProjectPackage)_project.Package;
@@ -242,9 +242,8 @@ namespace Microsoft.PythonTools.Project {
                         if (starter != null) {
                             starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
                         }
-                        break;
+                        return VSConstants.S_OK;
                 }
-                return VSConstants.S_OK;
             }
 
             return base.ExecCommandOnNode(guidCmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
@@ -270,14 +269,13 @@ namespace Microsoft.PythonTools.Project {
                             if (IsInProjectHome() && !CommonUtils.IsSamePath(startupFile, this.Url)) {
                                 result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             }
-                            break;
+                            return VSConstants.S_OK;
                         case CommonConstants.StartDebuggingCmdId:
                         case CommonConstants.StartWithoutDebuggingCmdId:
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            break;
+                            return VSConstants.S_OK;
                     }
                 }
-                return VSConstants.S_OK;
             }
             return base.QueryStatusOnNode(guidCmdGroup, cmd, pCmdText, ref result);
         }

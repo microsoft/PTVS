@@ -23,6 +23,7 @@ using System.Windows;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -894,6 +895,46 @@ namespace PythonToolsUITests {
 
             Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems", "A - Copy", "a.py"));
             Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems", "A - Copy", "b.py"));
+        }
+
+        /// <summary>
+        /// Verify we can start the interactive window when focus in within solution explorer in one of our projects.
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void OpenInteractiveFromSolutionExplorer() {
+            // http://pytools.codeplex.com/workitem/765
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);            
+            app.SelectDefaultInterpreter("Python 2.6");
+            
+            var options = GetInteractiveOptions("Python 2.6 Interactive");
+
+            options.InlinePrompts = true;
+            options.UseInterpreterPrompts = false;
+            options.PrimaryPrompt = ">>> ";
+            options.SecondaryPrompt = "... ";
+
+            var solutionExplorer = app.SolutionExplorerTreeView;
+
+            var programNode = solutionExplorer.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py");
+
+
+            Mouse.MoveTo(programNode.GetClickablePoint());
+            Mouse.Click();
+
+            // Press Alt-I to bring up the REPL
+            Keyboard.PressAndRelease(System.Windows.Input.Key.I, System.Windows.Input.Key.LeftAlt);
+
+            Keyboard.Type("print('hi')\r");
+            var interactive = app.GetInteractiveWindow("Python 2.6 Interactive");
+            interactive.WaitForTextEnd("hi", ">>> ");
+        }
+
+        protected static IPythonInteractiveOptions GetInteractiveOptions(string name) {
+            Debug.Assert(name.EndsWith(" Interactive"));
+            return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]
