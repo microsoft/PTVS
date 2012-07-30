@@ -2036,15 +2036,31 @@ namespace Microsoft.PythonTools.Project
                 path = CommonUtils.GetRelativeDirectoryPath(ProjectHome, path);
             }
 
-            string[] parts;
-            HierarchyNode curParent;
+            // If the folder already exists, return early
+            string strFullPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
+            uint uiItemId;
+            ErrorHandler.ThrowOnFailure(this.ParseCanonicalName(strFullPath, out uiItemId));
+            if (uiItemId != 0)
+            {
+                var folder = this.NodeFromItemId(uiItemId) as FolderNode;
+                if (folder != null)
+                {
+                    // found the folder, return immediately
+                    return folder;
+                }
+            }
 
-            parts = path.Split(Path.DirectorySeparatorChar);
-            path = ProjectHome;
-            curParent = this;
+            
+            string[] parts = path.Split(new [] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                throw new ArgumentException("The path is invalid", "path");
+            }
+            path = parts[0];
+            HierarchyNode curParent = VerifySubFolderExists(path, this);
 
             // now we have an array of subparts....
-            for (int i = 0; i < parts.Length; i++)
+            for (int i = 1; i < parts.Length; i++)
             {
                 if (parts[i].Length > 0)
                 {
@@ -2113,7 +2129,7 @@ namespace Microsoft.PythonTools.Project
                 folderNode = (FolderNode)this.NodeFromItemId(uiItemId);
             }
 
-            if (folderNode == null && path != null && parent != null)
+            if (folderNode == null && strFullPath != null && parent != null)
             {
                 // folder does not exist yet...
                 // We could be in the process of loading so see if msbuild knows about it
@@ -2121,7 +2137,7 @@ namespace Microsoft.PythonTools.Project
                 foreach (MSBuild.ProjectItem folder in buildProject.GetItems(ProjectFileConstants.Folder))
                 {
                     var absPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, folder.EvaluatedInclude);
-                    if (CommonUtils.IsSameDirectory(absPath, path))
+                    if (CommonUtils.IsSameDirectory(absPath, strFullPath))
                     {
                         item = new MsBuildProjectElement(this, folder);
                         break;
@@ -2129,8 +2145,8 @@ namespace Microsoft.PythonTools.Project
                 }
                 // If MSBuild did not know about it, create a new one
                 if (item == null)
-                    item = this.AddFolderToMsBuild(path);
-                folderNode = this.CreateFolderNode(path, item);
+                    item = this.AddFolderToMsBuild(strFullPath);
+                folderNode = this.CreateFolderNode(strFullPath, item);
                 parent.AddChild(folderNode);
             }
 
@@ -3141,12 +3157,6 @@ namespace Microsoft.PythonTools.Project
                             // we have duplicate entries, or this is a link file.
                             continue;
                         }
-                    }
-                    var duplicatedChild = FindChild(CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude));
-                    if (duplicatedChild != null)
-                    {
-                        // don't add duplicate files/links
-                        continue;
                     }
 
                     AddIndependentFileNode(item, parent);
@@ -4215,10 +4225,8 @@ namespace Microsoft.PythonTools.Project
 
                     // we need to figure out where this file would be added and make sure there's
                     // not an existing link node at the same location
-                    var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectHome, newFileName);
-                    var dirName = Path.GetDirectoryName(friendlyPath);
                     string filename = Path.GetFileName(newFileName);
-                    var folder = this.FindChild(dirName);
+                    var folder = this.FindChild(Path.GetDirectoryName(newFileName));
                     if (folder != null)
                     {
                         for (var folderChild = folder.FirstChild; folderChild != null; folderChild = folderChild.NextSibling)
@@ -4238,7 +4246,6 @@ namespace Microsoft.PythonTools.Project
                             }
                         }
                     }
-
                 }
 
                 // If the file to be added is not in the same path copy it.

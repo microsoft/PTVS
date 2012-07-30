@@ -20,7 +20,7 @@ using System.Net;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AnalysisTest {
+namespace FastCgiTest {
     [TestClass]
     [DeploymentItem(@"Release\Product\Python\Django\wfastcgi.py")]
     [DeploymentItem(@"Release\Product\Python\FastCgiTest\TestData\", "TestData")]

@@ -13,14 +13,13 @@
  * ***************************************************************************/
 
 using System.Threading;
-using AnalysisTest.ProjectSystem;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
 
-namespace AnalysisTest {
+namespace PythonToolsUITests {
     [TestClass]
     public class RemoveImportTests {
         [TestCleanup]

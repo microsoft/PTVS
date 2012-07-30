@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
@@ -32,9 +33,9 @@ using TestUtilities.UI.Python;
 using VSLangProj;
 using ST = System.Threading;
 
-namespace AnalysisTest.ProjectSystem {
+namespace PythonToolsUITests {
     [TestClass]
-    public class LoadUnloadProject {
+    public class BasicProjectTests {
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);
@@ -97,7 +98,7 @@ namespace AnalysisTest.ProjectSystem {
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
 
                 AssertError<ArgumentNullException>(() => project.SaveAs(null));
-                project.SaveAs("TempFile.pyproj");
+                project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
                 project.Save("");   // empty string means just save
 
                 // try too long of a file
@@ -119,10 +120,11 @@ namespace AnalysisTest.ProjectSystem {
                 //    Assert.IsTrue(e.ToString().Contains("The project file can only be saved into the project location"));
                 //}
 
+                project.SaveAs(TestData.GetPath(@"TestData\TempFile.pyproj"));
+                project.Save("");   // empty string means just save
                 project.Delete();
-                AssertError<InvalidOperationException>(() => project.Saved = true);
             } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
+                VsIdeTestHostContext.Dte.Solution.Close(false);
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
@@ -892,6 +894,49 @@ namespace AnalysisTest.ProjectSystem {
 
             Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems", "A - Copy", "a.py"));
             Assert.IsNotNull(solutionExplorer.FindItem("Solution 'FolderMultipleItems' (1 project)", "FolderMultipleItems", "A - Copy", "b.py"));
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LoadProjectWithDuplicateItems() {
+            var solution = DebuggerUITests.DebugProject.OpenProject(@"TestData\DuplicateItems.sln");
+
+            var itemCount = new Dictionary<string, int>();
+
+            CountNames(itemCount, solution.ProjectItems);
+
+            CountIs(itemCount, "A", 1);
+            CountIs(itemCount, "B", 1);
+            CountIs(itemCount, "a.py", 1);
+            CountIs(itemCount, "b.py", 1);
+            CountIs(itemCount, "Program.py", 1);
+            CountIs(itemCount, "HelloWorld.pyproj", 1);
+            CountIs(itemCount, "HelloWorld.py", 0);     // not included because the actual name is Program.py
+        }
+
+        private static void CountIs(Dictionary<string, int> count, string key, int expected){
+            int actual;
+            if (!count.TryGetValue(key, out actual)) {
+                actual = 0;
+            }
+            Assert.AreEqual(expected, actual, "count[" + key + "]");
+        }
+
+        private static void CountNames(Dictionary<string, int> count, ProjectItems items) {
+            if (items == null) {
+                return;
+            }
+
+            foreach (var item in items.OfType<ProjectItem>()) {
+                if (!string.IsNullOrEmpty(item.Name)) {
+                    int value;
+                    if (!count.TryGetValue(item.Name, out value)) {
+                        value = 0;
+                    }
+                    count[item.Name] = value + 1;
+                }
+                CountNames(count, item.ProjectItems);
+            }
         }
 
         private static void ProjectNewFolder(VisualStudioApp app, System.Windows.Automation.AutomationElement solutionNode, System.Windows.Automation.AutomationElement projectNode) {

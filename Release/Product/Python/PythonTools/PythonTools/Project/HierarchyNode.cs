@@ -2585,6 +2585,15 @@ namespace Microsoft.PythonTools.Project
         {
             return VSConstants.E_NOTIMPL;
         }
+
+        internal uint HierarchyId
+        {
+            get
+            {
+                return hierarchyId;
+            }
+        }
+
         #endregion
 
         #region IVsUIHierarchy methods
@@ -2969,7 +2978,55 @@ namespace Microsoft.PythonTools.Project
                 return null;
             }
 
-            HierarchyNode result;
+            HierarchyNode result = FindChildInternal(name, false);
+            if (result != null)
+            {
+                return result;
+            }
+
+            if (recurse)
+            {
+                string myName = GetMkDocument();
+                if (String.IsNullOrEmpty(myName))
+                {
+                    myName = Url;
+                }
+                if (this is ProjectNode)
+                {
+                    myName = ProjectMgr.ProjectHome;
+                }
+                myName = CommonUtils.TrimEndSeparator(myName);
+
+                if (!String.IsNullOrEmpty(myName) && name.StartsWith(myName + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                {
+                    int nextSeparator = name.IndexOf(Path.DirectorySeparatorChar, myName.Length + 2) + 1;
+                    if (nextSeparator > myName.Length)
+                    {
+                        var childPath = name.Substring(0, nextSeparator);
+
+                        result = FindChildInternal(childPath, false);
+                        if (result != null)
+                        {
+                            result = result.FindChild(name, true);
+                            if (result != null)
+                            {
+                                return result;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return FindChildInternal(name, recurse);
+        }
+
+        internal HierarchyNode FindChildInternal(string name, bool recurse)
+        {
+            if (String.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
             for (HierarchyNode child = this.firstChild; child != null; child = child.NextSibling)
             {
                 if (!String.IsNullOrEmpty(child.VirtualNodeName) && String.Equals(child.VirtualNodeName, name, StringComparison.OrdinalIgnoreCase))
@@ -2978,14 +3035,14 @@ namespace Microsoft.PythonTools.Project
                 }
                 // If it is a foldernode then it has a virtual name but we want to find folder nodes by the document moniker or url
                 else if ((String.IsNullOrEmpty(child.VirtualNodeName) || (child is FolderNode)) &&
-                        (CommonUtils.IsSamePath(child.GetMkDocument(), name) || CommonUtils.IsSamePath(child.Url, name)))
+                        (CommonUtils.IsSameDirectory(child.GetMkDocument(), name) || CommonUtils.IsSameDirectory(child.Url, name)))
                 {
                     return child;
                 }
 
                 if (recurse)
                 {
-                    result = child.FindChild(name);
+                    HierarchyNode result = child.FindChild(name, true);
                     if (result != null)
                     {
                         return result;
@@ -3006,9 +3063,9 @@ namespace Microsoft.PythonTools.Project
         {
             for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling)
             {
-                if (n is T)
+                T nodeAsT = n as T;
+                if (nodeAsT != null)
                 {
-                    T nodeAsT = (T)n;
                     nodes.Add(nodeAsT);
                 }
 
@@ -3027,10 +3084,14 @@ namespace Microsoft.PythonTools.Project
         {
             for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling)
             {
-                if (n is T)
+                T nodeAsT = n as T;
+                if (nodeAsT != null)
                 {
-                    T nodeAsT = (T)n;
                     yield return nodeAsT;
+                }
+
+                foreach(var node in n.EnumNodesOfType<T>()) {
+                    yield return node;
                 }
             }
         }

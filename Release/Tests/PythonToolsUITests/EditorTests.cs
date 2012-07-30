@@ -29,7 +29,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
 using TestUtilities.UI;
 
-namespace AnalysisTest.ProjectSystem {
+namespace PythonToolsUITests {
     [TestClass]
     public class EditorTests {
         [TestCleanup]

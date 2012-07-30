@@ -39,7 +39,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(InteractiveWindow)' != ''">
-    <DefineConstants>INTERACTIVE_WINDOW</DefineConstants>
+    <DefineConstants>$(DefineConstants);INTERACTIVE_WINDOW</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

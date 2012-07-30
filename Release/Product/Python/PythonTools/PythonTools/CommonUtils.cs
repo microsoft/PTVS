@@ -88,8 +88,12 @@ namespace Microsoft.PythonTools {
                 return true;
             }
 
-            return MakeUri(path1, true, UriKind.Absolute, "path1") ==
-                MakeUri(path2, true, UriKind.Absolute, "path2");
+            try {
+                return MakeUri(path1, true, UriKind.Absolute, "path1") == 
+                    MakeUri(path2, true, UriKind.Absolute, "path2");
+            } catch (ArgumentException) {
+                return false;
+            }
         }
 
         /// <summary>

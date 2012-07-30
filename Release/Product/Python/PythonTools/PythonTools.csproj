@@ -34,13 +34,13 @@
     <StartAction>Program</StartAction>
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootSuffix Exp /Log</StartArguments>
-    <DefineConstants>$(SignedSym)</DefineConstants>
+    <DefineConstants>$(DefineConstants);$(SignedSym)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(InteractiveWindow)' != ''">
-    <DefineConstants>INTERACTIVE_WINDOW</DefineConstants>
+    <DefineConstants>$(DefineConstants);INTERACTIVE_WINDOW</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

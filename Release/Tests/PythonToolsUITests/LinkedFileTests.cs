@@ -25,7 +25,7 @@ using TestUtilities;
 using TestUtilities.UI;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace AnalysisTest.ProjectSystem {
+namespace PythonToolsUITests {
     [TestClass]
     public class LinkedFileTests {
         [TestCleanup]
@@ -239,7 +239,7 @@ namespace AnalysisTest.ProjectSystem {
 
             // but it should be the linked file on disk outside of our project, not the file that exists on disk at the same location.
             var autoItem = project.ProjectItems.Item("FolderWithAFile").Collection.Item("FileNotInProject.py");
-            Assert.AreEqual(autoItem.Properties.Item("FullPath").Value, TestData.GetPath(@"TestData\\FileNotInProject.py"));
+            Assert.AreEqual(TestData.GetPath(@"TestData\FileNotInProject.py"), autoItem.Properties.Item("FullPath").Value);
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

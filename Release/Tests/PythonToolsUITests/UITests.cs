@@ -30,7 +30,7 @@ using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
 using Path = System.IO.Path;
 
-namespace AnalysisTest.ProjectSystem {
+namespace PythonToolsUITests {
     [TestClass]
     [DeploymentItem("Binaries\\Debug\\spam.dll")]
     public class UITests {

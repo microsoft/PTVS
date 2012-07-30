@@ -16,7 +16,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using AnalysisTest.ProjectSystem;
 using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
@@ -25,7 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
 
-namespace AnalysisTest {
+namespace PythonToolsUITests {
     [TestClass]
     public class PublishTest {
         private const string TestFtpUrl = "ftp://anonymous:blazzz@dinov1/testdir";

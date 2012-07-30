@@ -64,13 +64,18 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IErrorProviderFactory _errorProvider;
         private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
         private readonly PythonAnalyzer _pyAnalyzer;
-        private readonly IVsErrorList _errorList;
         private readonly PythonProjectNode _project;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private readonly IPythonInterpreterFactory[] _allFactories;
 
-        private static TaskProvider _taskProvider;
+        private static readonly Lazy<TaskProvider> _taskProvider = new Lazy<TaskProvider>(() => {
+            var _errorList = (IVsTaskList)PythonToolsPackage.GetGlobalService(typeof(SVsErrorList));
+            return new TaskProvider(_errorList);
+        }, LazyThreadSafetyMode.ExecutionAndPublication);
+
         private static char[] _invalidPathChars = Path.GetInvalidPathChars();
+
+        private bool _unloading;
 
         internal VsProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
@@ -91,7 +96,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
             if (PythonToolsPackage.Instance != null) {
-                _errorList = (IVsErrorList)PythonToolsPackage.GetGlobalService(typeof(SVsErrorList));
                 _pyAnalyzer.CrossModuleAnalysisLimit = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
             }
         }
@@ -223,10 +227,9 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (_openFiles) {
                 _openFiles.Remove(bufferParser);
             }
-            if (ImplicitProject && _taskProvider != null && _errorList != null && bufferParser._currentProjEntry.FilePath != null) {
+            if (ImplicitProject && _taskProvider.IsValueCreated && bufferParser._currentProjEntry.FilePath != null) {
                 // remove the file from the error list
-                _taskProvider.Clear(bufferParser._currentProjEntry.FilePath);
-                ((IVsTaskList)_errorList).RefreshTasks(_taskProvider.Cookie);
+                _taskProvider.Value.Clear(bufferParser._currentProjEntry.FilePath);
             }
         }
 
@@ -717,19 +720,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private TaskProvider GetTaskProviderAndClearProjectItems(IProjectEntry projEntry) {
             if (PythonToolsPackage.Instance != null) {
-                if (_taskProvider == null) {
-                    _taskProvider = new TaskProvider(_errorList);
-
-                    uint cookie;
-                    ErrorHandler.ThrowOnFailure(((IVsTaskList)_errorList).RegisterTaskProvider(_taskProvider, out cookie));
-                    _taskProvider.Cookie = cookie;
-                }
-
                 if (projEntry.FilePath != null) {
-                    _taskProvider.Clear(projEntry.FilePath);
+                    _taskProvider.Value.Clear(projEntry.FilePath);
                 }
             }
-            return _taskProvider;
+            return _taskProvider.Value;
         }
 
         private void UpdateErrorList(CollectingErrorSink errorSink, string filepath, TaskProvider provider) {
@@ -742,7 +737,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (provider != null && (errorSink.Errors.Count > 0 || errorSink.Warnings.Count > 0)) {
-                ((IVsTaskList)_errorList).RefreshTasks(provider.Cookie);
+                provider.UpdateTasks();
             }
         }
 
@@ -1086,11 +1081,23 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal void BeginUnload() {
+            _unloading = true;
+        }
+
+        internal void EndUnload() {
+            if (_unloading && _taskProvider.IsValueCreated) {
+                _unloading = false;
+                _taskProvider.Value.UpdateTasks();
+            }
+        }
+
         internal void UnloadFile(IProjectEntry entry) {
             if (entry != null && entry.FilePath != null) {
-                if (_taskProvider != null) {
-                    // _taskProvider can be null if we've never opened a Python file and none of the project files have error
-                    _taskProvider.Clear(entry.FilePath);
+                if (_taskProvider.IsValueCreated) {
+                    // _taskProvider may not be created if we've never opened a Python file and
+                    // none of the project files have errors
+                    _taskProvider.Value.Clear(entry.FilePath, !_unloading);
                 }
                 if (_project != null) {
                     _project.ErrorFiles.Remove(entry.FilePath);
@@ -1106,20 +1113,44 @@ namespace Microsoft.PythonTools.Intellisense {
         class TaskProvider : IVsTaskProvider {
             private readonly Dictionary<string, List<ErrorResult>> _warnings = new Dictionary<string, List<ErrorResult>>();
             private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string, List<ErrorResult>>();
-            private uint _cookie;
-            private readonly IVsErrorList _errorList;
+            private readonly uint _cookie;
+            private readonly IVsTaskList _errorList;
+            private readonly SemaphoreSlim _waitingToUpdate, _updating;
 
-            public TaskProvider(IVsErrorList errorList) {
+            public TaskProvider(IVsTaskList errorList) {
                 Debug.Assert(errorList != null);
                 _errorList = errorList;
+                ErrorHandler.ThrowOnFailure(_errorList.RegisterTaskProvider(this, out _cookie));
+                _waitingToUpdate = new SemaphoreSlim(1);
+                _updating = new SemaphoreSlim(1);
             }
+
+            private static void UpdateTasksInternal(object param) {
+                var self = (TaskProvider)param;
+                if (self._waitingToUpdate.Wait(0)) {
+                    try {
+                        Thread.Sleep(500);
+                        self._updating.Wait();
+                    } finally {
+                        self._waitingToUpdate.Release();
+                    }
+
+                    try {
+                        self._errorList.RefreshTasks(self._cookie);
+                    } finally {
+                        self._updating.Release();
+                    }
+                }
+            }
+
+            public void UpdateTasks() {
+                ThreadPool.QueueUserWorkItem(UpdateTasksInternal, this);
+            }
+
 
             public uint Cookie {
                 get {
                     return _cookie;
-                }
-                set {
-                    _cookie = value;
                 }
             }
 
@@ -1187,13 +1218,17 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             internal void Clear(string filename) {
+                Clear(filename, true);
+            }
+
+            internal void Clear(string filename, bool updateList) {
                 bool removed;
                 lock (this) {
                     removed = _warnings.Remove(filename);
                     removed = _errors.Remove(filename) || removed;
                 }
-                if (removed) {
-                    ((IVsTaskList)_errorList).RefreshTasks(_cookie);
+                if (updateList && removed) {
+                    UpdateTasks();
                 }
             }
 

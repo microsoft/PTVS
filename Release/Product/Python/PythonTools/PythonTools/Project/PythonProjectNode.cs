@@ -258,8 +258,13 @@ namespace Microsoft.PythonTools.Project {
         public override void BeforeClose() {
             if (this.ErrorFiles.Count > 0) {
                 var analyzer = GetAnalyzer();
-                foreach (var node in EnumNodesOfType<PythonFileNode>()) {
-                    analyzer.UnloadFile(node.GetAnalysis());
+                analyzer.BeginUnload();
+                try {
+                    foreach (var node in EnumNodesOfType<PythonFileNode>()) {
+                        analyzer.UnloadFile(node.GetAnalysis());
+                    }
+                } finally {
+                    analyzer.EndUnload();
                 }
             }
 
