@@ -36,6 +36,7 @@
     <Compile Include="Insertion9.html.djt" />
     <Compile Include="Insertion10.html.djt" />
     <Compile Include="Insertion11.html.djt" />
+    <Compile Include="Insertion12.html.djt" />
     <Compile Include="Deletion1.html.djt" />
     <Compile Include="Paste1.html.djt" />
     <Compile Include="SelectAllMixed1.html.djt" />

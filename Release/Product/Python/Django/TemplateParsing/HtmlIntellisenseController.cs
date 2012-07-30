@@ -84,12 +84,15 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 if (_curSession != null) {
                                     _curSession.Dismiss();
                                 }
-                                _curSession = CompletionBroker.TriggerCompletion(_textView);
-                                if (_curSession != null) {
-                                    _curSession.Dismissed += CurSessionDismissedOrCommitted;
-                                    _curSession.Committed += CurSessionDismissedOrCommitted;
+                                int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                                if(ErrorHandler.Succeeded(res)) {
+                                    _curSession = CompletionBroker.TriggerCompletion(_textView);
+                                    if (_curSession != null) {
+                                        _curSession.Dismissed += CurSessionDismissedOrCommitted;
+                                        _curSession.Committed += CurSessionDismissedOrCommitted;
+                                    }
                                 }
-                                break;
+                                return res;
                         }
                         break;
                     case VSConstants.VSStd2KCmdID.RETURN:

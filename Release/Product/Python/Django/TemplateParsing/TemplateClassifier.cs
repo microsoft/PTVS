@@ -30,7 +30,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         #region IClassifier Members
 
-        public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
+        public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged {
+            add {
+            }
+            remove {
+            }
+        }
 
         IList<ClassificationSpan> IClassifier.GetClassificationSpans(SnapshotSpan span) {
             List<ClassificationSpan> spans = new List<ClassificationSpan>();
@@ -138,12 +143,5 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         #endregion
-
-        internal void RaiseClassificationChanged(SnapshotPoint start, SnapshotPoint end) {
-            var classChanged = ClassificationChanged;
-            if (classChanged != null) {
-                classChanged(this, new ClassificationChangedEventArgs(new SnapshotSpan(start, end)));
-            }
-        }
     }
 }

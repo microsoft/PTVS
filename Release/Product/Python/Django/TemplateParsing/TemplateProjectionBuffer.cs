@@ -403,25 +403,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
             _projBuffer.ReplaceSpans(startSpan, oldSpanCount - startSpan, newProjectionSpans, _editOptions, null);
 
-            TemplateClassifier classifier;
+            ProjectionClassifier classifier;
             if (newSpanInfos.Count > 0 &&
-                _templateBuffer.Properties.TryGetProperty<TemplateClassifier>(typeof(TemplateClassifier), out classifier)) {
-                var start = _bufferGraph.MapUpToBuffer(
+                _projBuffer.Properties.TryGetProperty<ProjectionClassifier>(typeof(ProjectionClassifier), out classifier)) {
+                classifier.RaiseClassificationChanged(
                     newSpanInfos[0].DiskBufferSpan.GetStartPoint(_diskBuffer.CurrentSnapshot),
-                    PointTrackingMode.Positive,
-                    PositionAffinity.Successor,
-                    _templateBuffer
+                    newSpanInfos[newSpanInfos.Count - 1].DiskBufferSpan.GetEndPoint(_diskBuffer.CurrentSnapshot)
                 );
-                var end = _bufferGraph.MapUpToBuffer(
-                    newSpanInfos[newSpanInfos.Count - 1].DiskBufferSpan.GetEndPoint(_diskBuffer.CurrentSnapshot),
-                    PointTrackingMode.Positive,
-                    PositionAffinity.Successor,
-                    _templateBuffer
-                );
-
-                if (start != null && end != null) {
-                    classifier.RaiseClassificationChanged(start.Value, end.Value);
-                }
             }
         }
 

@@ -56,7 +56,7 @@ namespace TestUtilities {
                     Console.WriteLine(
                         String.Join(",\r\n",
                             spans.Select(curSpan =>
-                                String.Format("new Classifcation(\"{0}\", {1}, {2}, \"{3}\")",
+                                String.Format("new Classification(\"{0}\", {1}, {2}, \"{3}\")",
                                     curSpan.ClassificationType.Classification,
                                     curSpan.Span.Start.Position,
                                     curSpan.Span.End.Position,

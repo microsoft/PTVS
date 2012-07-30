@@ -1,0 +1,47 @@
+<html>
+<head><title></title></head>
+
+<body>
+<form method="get">
+    <table border="1" style="width: 100%">
+        <tr>
+            <td>Task name:</td>
+            <td><input name="task_name" type="{{ task.name }" /></td>
+        </tr>
+        <tr>
+            <td>Rolling: </td>
+            {% if task.rolling %}
+            <td><input checked="checked" name="rolling" type="radio" />Yes
+            <input name="rolling" type="radio" />No</td>
+            {% else %}
+            <td><input checked="checked" name="rolling" type="radio" />Yes
+            <input name="rolling" type="radio" />No</td>
+            {% endif %}
+        </tr>
+        <tr>
+            <td>Interval:</td>
+            <td><input checked="checked" name="interval" type="radio" />24 Hours
+            <input name="interval" type="radio" />12 Hours</td>
+        </tr>
+    </table>
+</form>
+
+<table style="width: 100%">
+    <tr>
+        <td>Test case</td>
+        <td>Test list</td>
+        <td>selection</td>
+    </tr>
+{% for testcase in testcases %}
+    <tr>
+        <td>{{ testcase.name }}</td>
+        <td>{{ testcase.path }}</td>
+        <td>{{ testcase.selected }}</td>
+    </tr>
+{% endfor %}
+
+</table>
+
+
+</body>
+</html>
