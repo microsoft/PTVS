@@ -2030,7 +2030,11 @@ namespace AnalysisTests {
             foreach (var curVersion in versions) {
                 string dir = Path.Combine(curVersion.Path);
                 List<string> files = new List<string>();
-                CollectFiles(dir, files);
+                try {
+                    CollectFiles(dir, files);
+                } catch (DirectoryNotFoundException) {
+                    continue;
+                }
 
                 var skippedFiles = new HashSet<string>(new[] { 
                     "py3_test_grammar.py",  // included in 2x distributions but includes 3x grammar

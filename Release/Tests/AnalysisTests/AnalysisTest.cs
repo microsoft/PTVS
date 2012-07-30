@@ -3639,13 +3639,13 @@ pass
             var entry = ProcessText(text);
 
             var vars = new List<IAnalysisValue>(entry.GetValuesByIndex("x[0]", text.IndexOf("pass")));            
-            Assert.AreEqual(vars.Count, 1);
+            Assert.AreEqual(1, vars.Count);
             Assert.AreEqual(IntType, vars[0].PythonType);
 
             foreach (string value in new[] { "ly", "lz", "ty", "tz", "lyt", "tyt" }) {
                 vars = new List<IAnalysisValue>(entry.GetValuesByIndex(value + "[0]", text.IndexOf("pass")));
-                Assert.AreEqual(vars.Count, 1);
-                Assert.AreEqual(vars[0].PythonType, IntType);
+                Assert.AreEqual(1, vars.Count, "value: {0}", value);
+                Assert.AreEqual(IntType, vars[0].PythonType, "value: {0}", value);
             }
         }
 

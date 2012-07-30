@@ -150,7 +150,7 @@ namespace TestUtilities
 
         public static void Contains(string source, params string[] values) {
             foreach (var v in values) {
-                if (source.Contains(v)) {
+                if (!source.Contains(v)) {
                     Assert.Fail(String.Format("{0} does not contain {1}", source, v));
                 }
             }

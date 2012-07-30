@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <Import Project="..\TestProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -8,7 +11,7 @@
     </ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{C2C1C6A1-3C1E-45E4-9EE2-1181DB641818}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AnalysisTests</RootNamespace>
     <AssemblyName>AnalysisTests</AssemblyName>
@@ -57,6 +60,7 @@
     <Compile Include="AnalysisTest.Perf.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="DeserializationTests.cs" />
+    <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
     <Compile Include="ParserRoundTripTest.cs" />
     <Compile Include="ParserTests.cs" />
@@ -76,6 +80,9 @@
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

@@ -317,7 +317,14 @@ import foo");
                 foreach (var version in versions) {
                     Console.WriteLine("Testing version {0} {1}", version.Version, version.Path);
                     int ran = 0, succeeded = 0;
-                    foreach (var file in Directory.GetFiles(version.Path)) {
+                    string[] files;
+                    try {
+                        files = Directory.GetFiles(version.Path);
+                    } catch (DirectoryNotFoundException) {
+                        continue;
+                    }
+
+                    foreach (var file in files) {
                         try {
                             if (file.EndsWith(".py")) {
                                 ran++;
@@ -1002,7 +1009,14 @@ def f(): pass");
             foreach (var version in versions) {
                 Console.WriteLine("Testing version {0} {1}", version.Version, version.Path);
                 int ran = 0, succeeded = 0;
-                foreach (var file in Directory.GetFiles(version.Path)) {
+                string[] files;
+                try {
+                    files = Directory.GetFiles(version.Path);
+                } catch (DirectoryNotFoundException) {
+                    continue;
+                }
+
+                foreach (var file in files) {
                     try {
                         if (file.EndsWith(".py")) {
                             ran++;

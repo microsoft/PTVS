@@ -56,8 +56,8 @@ namespace AnalysisTests {
         public void TestGenerics() {
             var text = @"
 import clr
-clr.AddReference('AnalysisTest')
-from AnalysisTest.DotNetAnalysis import *
+clr.AddReference('AnalysisTests')
+from AnalysisTests.DotNetAnalysis import *
 
 y = GenericType()
 zzz = y.ReturnsGenericParam()
@@ -150,15 +150,15 @@ y = int
 ");
 
             var result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[int, int]", 1).ToArray();
-            Assert.AreEqual(result.Length, 6);
+            Assert.AreEqual(6, result.Length);
 
             // 2 possible types
             result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[x, int]", 1).ToArray();
-            Assert.AreEqual(result.Length, 12);
+            Assert.AreEqual(12, result.Length);
 
             // 4 possible types
             result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[x, y]", 1).ToArray();
-            Assert.AreEqual(result.Length, 24);
+            Assert.AreEqual(24, result.Length);
         }
 
         [TestMethod]
