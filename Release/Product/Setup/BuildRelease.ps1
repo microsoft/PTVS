@@ -85,10 +85,10 @@ if ($dev11InstallDir64 -or $dev11InstallDir) {
     $targetVersions.Add("11.0")
 }
 
-if ($dev10InstallDir64 -or $dev10InstallDir) {
-    echo "Will build for Dev10"
-    $targetVersions.Add("10.0")
-}
+#if ($dev10InstallDir64 -or $dev10InstallDir) {
+#    echo "Will build for Dev10"
+#    $targetVersions.Add("10.0")
+#}
 
 foreach ($targetVs in $targetVersions) {
     $asmverfile = dir Build\AssemblyVersion.cs

@@ -623,7 +623,19 @@ namespace Microsoft.PythonTools.Django.Project {
 
                 var project = projectObj as EnvDTE.Project;
                 if (project != null) {
-                    var newFolder = project.ProjectItems.AddFolder(dialog.ViewModel.Name);
+                    if (dialog.ViewModel.Name == project.Name) {
+                        MessageBox.Show("You cannot add an app with the same name as the project.");
+                        return;
+                    }
+
+                    EnvDTE.ProjectItem newFolder;
+                    try {
+                        newFolder = project.ProjectItems.AddFolder(dialog.ViewModel.Name);
+                    } catch (ArgumentException ex) {
+                        MessageBox.Show(ex.Message);
+                        return;
+                    }
+
                     var newAppFilesDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Templates", "Files", "DjangoNewAppFiles");
                     foreach (string file in Directory.GetFiles(newAppFilesDir)) {
                         newFolder.Collection.AddFromTemplate(file, Path.GetFileName(file));

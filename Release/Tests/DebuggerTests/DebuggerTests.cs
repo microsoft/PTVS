@@ -41,9 +41,9 @@ namespace DebuggerTests {
             const int lastLine = 40;
 
             if (Version.Version.Is3x()) {
-                ChildTest(EnumChildrenTestName, lastLine, "s", new ChildInfo("[0]", "frozenset({2, 3, 4})"));
+                ChildTest(EnumChildrenTestName, lastLine, "s", AppendCount(new ChildInfo("[0]", "frozenset({2, 3, 4})")));
             } else {
-                ChildTest(EnumChildrenTestName, lastLine, "s", new ChildInfo("[0]", "frozenset([2, 3, 4])"));
+                ChildTest(EnumChildrenTestName, lastLine, "s", AppendCount(new ChildInfo("[0]", "frozenset([2, 3, 4])")));
             }
             if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
                 // IronPython unicode repr differs
@@ -52,11 +52,40 @@ namespace DebuggerTests {
             }
             ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
             ChildTest(EnumChildrenTestName, lastLine, "c3inst", new ChildInfo("_contents", "[1, 2]"), new ChildInfo("abc", "42", "0x2a"), new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
-            ChildTest(EnumChildrenTestName, lastLine, "l", new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
-            ChildTest(EnumChildrenTestName, lastLine, "d1", new ChildInfo("[42]", "100", "0x64"));
-            ChildTest(EnumChildrenTestName, lastLine, "d2", new ChildInfo("['abc']", "'foo'"));
+            ChildTest(EnumChildrenTestName, lastLine, "l", AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
+            ChildTest(EnumChildrenTestName, lastLine, "d1", AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
+            ChildTest(EnumChildrenTestName, lastLine, "d2", AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'foo'")));
             ChildTest(EnumChildrenTestName, lastLine, "i", null);
             ChildTest(EnumChildrenTestName, lastLine, "u1", null);
+        }
+
+        private ChildInfo[] AppendCount(ChildInfo existing) {
+            if (this is DebuggerTestsIpy) {
+                return new ChildInfo[] { new ChildInfo("Count"), existing };
+            }
+            return new[] { existing };
+        }
+
+        private ChildInfo[] AppendCountAndItem(params ChildInfo[] existing) {
+            if (this is DebuggerTestsIpy) {
+                List<ChildInfo> res = new List<ChildInfo>(existing);
+                res.Add(new ChildInfo("Count"));
+                res.Add(new ChildInfo("Item"));
+                return res.ToArray();
+            }
+            return existing;
+        }
+
+        private ChildInfo[] AppendCountItemKeysAndValues(params ChildInfo[] existing) {
+            if (this is DebuggerTestsIpy) {
+                List<ChildInfo> res = new List<ChildInfo>(existing);
+                res.Add(new ChildInfo("Count"));
+                res.Add(new ChildInfo("Item"));
+                res.Add(new ChildInfo("Keys"));
+                res.Add(new ChildInfo("Values"));
+                return res.ToArray();
+            }
+            return existing;
         }
 
         [TestMethod]
@@ -64,9 +93,9 @@ namespace DebuggerTests {
             const int breakLine = 2;
 
             if (Version.Version.Is3x()) {
-                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, new ChildInfo("[0]", "frozenset({2, 3, 4})"));
+                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, AppendCount(new ChildInfo("[0]", "frozenset({2, 3, 4})")));
             } else {
-                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, new ChildInfo("[0]", "frozenset([2, 3, 4])"));
+                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, AppendCount(new ChildInfo("[0]", "frozenset([2, 3, 4])")));
             }
             if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
                 // IronPython unicode repr differs
@@ -74,9 +103,9 @@ namespace DebuggerTests {
                 ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
             }
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, new ChildInfo("[42]", "100", "0x64"));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, new ChildInfo("['abc']", "'foo'"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'foo'")));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "i", 1, null);
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
@@ -456,10 +485,14 @@ namespace DebuggerTests {
 
             var obj = frames[0].Locals.First(x => x.Expression == "x");
             var children = obj.GetChildren(2000);
-            Assert.AreEqual(children.Length, 3);
-            Assert.AreEqual(children[0].StringRepr, "2");
-            Assert.AreEqual(children[1].StringRepr, "3");
-            Assert.AreEqual(children[2].StringRepr, "4");
+            int extraCount = 0;
+            if (this is DebuggerTestsIpy) {
+                extraCount += 2;
+            }
+            Assert.AreEqual(children.Length, extraCount + 3);
+            Assert.AreEqual(children[0 + extraCount].StringRepr, "2");
+            Assert.AreEqual(children[1 + extraCount].StringRepr, "3");
+            Assert.AreEqual(children[2 + extraCount].StringRepr, "4");
 
             thread.Process.Continue();
 
@@ -1428,9 +1461,9 @@ namespace DebuggerTests {
                     };
                     proc.StartListening();
 
-                    Assert.IsTrue(attached.WaitOne(10000));
+                    Assert.IsTrue(attached.WaitOne(20000));
                     proc.Detach();
-                    Assert.IsTrue(detached.WaitOne(10000));
+                    Assert.IsTrue(detached.WaitOne(20000));
 
                 }
 
@@ -1480,8 +1513,8 @@ int main(int argc, char* argv[]) {
 
 
                 File.WriteAllText("gilstate_attach.py", @"def test():
-    for i in xrange(10):
-        print i
+    for i in range(10):
+        print(i)
 
     return 0");
 
@@ -1521,8 +1554,7 @@ void main()
 
     Py_Initialize();
     PyEval_InitThreads();
-    PyEval_ReleaseLock();
-    pName = PyString_FromString(""gilstate_attach"");
+    pName = CREATE_STRING(""gilstate_attach"");
 
     pModule = PyImport_Import(pName);
     Py_DECREF(pName);
@@ -1536,6 +1568,7 @@ void main()
             threadID = _beginthread(&Thread, 1024*1024, 0);
             threadID = _beginthread(&Thread, 1024*1024, 0);
 
+            PyEval_ReleaseLock();
             while (true);
         }
         else
@@ -1553,7 +1586,7 @@ void main()
     }
     Py_Finalize();
     return;
-}";
+}".Replace("CREATE_STRING", CreateString);
                 CompileCode(hostCode);
 
                 // start the test process w/ our handle
@@ -1599,12 +1632,12 @@ void main()
         /// </summary>
         [TestMethod]
         public void AttachNewThread_PyThreadState_New() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
 
-
+            if (GetType() != typeof(DebuggerTestsIpy) &&    // IronPython doesn't support attach
+                Version.Version <= PythonLanguageVersion.V31) {    // PyEval_AcquireLock deprecated in 3.2
                 File.WriteAllText("gilstate_attach.py", @"def test():
-    for i in xrange(10):
-        print i
+    for i in range(10):
+        print(i)
 
     return 0");
 
@@ -1652,8 +1685,7 @@ void main()
 
     Py_Initialize();
     PyEval_InitThreads();
-    PyEval_ReleaseLock();
-    pName = PyString_FromString(""gilstate_attach"");
+    pName = CREATE_STRING(""gilstate_attach"");
 
     pModule = PyImport_Import(pName);
     Py_DECREF(pName);
@@ -1666,6 +1698,7 @@ void main()
             DWORD threadID;
             threadID = _beginthread(&Thread, 1024*1024, 0);
             threadID = _beginthread(&Thread, 1024*1024, 0);
+            PyEval_ReleaseLock();
 
             while (true);
         }
@@ -1684,7 +1717,7 @@ void main()
     }
     Py_Finalize();
     return;
-}";
+}".Replace("CREATE_STRING", CreateString);
                 CompileCode(hostCode);
 
                 // start the test process w/ our handle
@@ -1722,6 +1755,12 @@ void main()
                 proc.Detach();
 
                 p.Kill();
+            }
+        }
+
+        public virtual string CreateString {
+            get {
+                return "PyString_FromString";
             }
         }
 
@@ -1887,6 +1926,12 @@ int main(int argc, char* argv[]) {
         public override string ComplexExceptions {
             get {
                 return "ComplexExceptionsV3.py";
+            }
+        }
+        
+        public override string CreateString {
+            get {
+                return "PyUnicodeUCS2_FromString";
             }
         }
     }

@@ -145,6 +145,19 @@ namespace PythonToolsUITests {
             );
         }
 
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/749
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ClassificationMultiLineStringTest2() {
+            Classification.Verify(GetClassifications("MultiLineString2.py"),
+                new Classification("string", 0, 15, "'''\r\nfoo bar'''"),
+                new Classification("Python operator", 40, 41, "+"),
+                new Classification("string", 45, 125, "''')\r\n\r\n__visualstudio_debugger_init()\r\ndel __visualstudio_debugger_init\r\naaa'''")
+            );
+        }
+
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SignaturesTest() {

@@ -154,6 +154,117 @@ namespace DjangoUITests {
 
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void StartNewAppDuplicateName() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var newProjDialog = app.FileNewProject();
+
+            newProjDialog.FocusLanguageNode();
+
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
+            djangoApp.SetFocus();
+
+            newProjDialog.ClickOK();
+
+            // wait for new solution to load...
+            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            var projItem = app.SolutionExplorerTreeView.FindItem(
+                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
+                app.Dte.Solution.Projects.Item(1).Name
+            );
+            projItem.SetFocus();
+            System.Threading.Thread.Sleep(1000);
+
+            ThreadPool.QueueUserWorkItem(x => {
+                try {
+                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.AddNewDjangoapp");
+                } catch {
+                }
+            });
+
+            var newAppDialog = new NewAppDialog(app.WaitForDialog());
+
+            newAppDialog.AppName = "Foo";
+            newAppDialog.Ok();
+
+            app.SolutionExplorerTreeView.WaitForItem(
+                app.Dte.Solution.FullName,
+                app.Dte.Solution.Projects.Item(1).Name,
+                "Foo",
+                "models.py"
+            );
+
+            projItem.SetFocus();
+            System.Threading.Thread.Sleep(1000);
+            ThreadPool.QueueUserWorkItem(x => {
+                try {
+                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.AddNewDjangoapp");
+                } catch {
+                }
+            });
+
+            newAppDialog = new NewAppDialog(app.WaitForDialog());
+
+            newAppDialog.AppName = "Foo";
+            newAppDialog.Ok();            
+
+            System.Threading.Thread.Sleep(1000);
+
+            VisualStudioApp.CheckMessageBox(
+                TestUtilities.UI.MessageBoxButton.Ok,
+                "Folder already exists with the name 'Foo'"
+            );
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void StartNewAppSameAsProjectName() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var newProjDialog = app.FileNewProject();
+
+            newProjDialog.FocusLanguageNode();
+
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
+            djangoApp.SetFocus();
+
+            newProjDialog.ClickOK();
+
+            // wait for new solution to load...
+            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            var projItem = app.SolutionExplorerTreeView.FindItem(
+                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
+                app.Dte.Solution.Projects.Item(1).Name
+            );
+            projItem.SetFocus();
+            System.Threading.Thread.Sleep(1000);
+
+            ThreadPool.QueueUserWorkItem(x => {
+                try {
+                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.AddNewDjangoapp");
+                } catch {
+                }
+            });
+
+            var newAppDialog = new NewAppDialog(app.WaitForDialog());
+
+            newAppDialog.AppName = app.Dte.Solution.Projects.Item(1).Name;
+            newAppDialog.Ok();
+
+            System.Threading.Thread.Sleep(1000);
+
+            VisualStudioApp.CheckMessageBox(
+                TestUtilities.UI.MessageBoxButton.Ok,
+                "You cannot add an app with the same name as the project."
+            );
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugProjectProperties() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();

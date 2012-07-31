@@ -231,6 +231,13 @@ namespace Microsoft.PythonTools {
 
                 validPrevLine = prevLine;
                 prevLine--;
+
+                if (prevLineTokenization.Tokens.Length > 1) {
+                    // http://pytools.codeplex.com/workitem/749
+                    // if there are multiple tokens on this line then our multi-line string
+                    // is terminated.
+                    break;
+                }
             }
             return length;
         }

@@ -20,6 +20,8 @@ try:
     while True:
         try:
             thread.start_new_thread(f, ())
+            import time
+            time.sleep(.05)
         except: 
             # not enough memory for another thread
             print('Failed to create new thread')
