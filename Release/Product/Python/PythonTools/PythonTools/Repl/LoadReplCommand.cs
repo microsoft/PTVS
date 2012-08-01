@@ -45,8 +45,12 @@ namespace Microsoft.VisualStudio.Repl {
             string commandPrefix = (string)window.GetOptionValue(ReplOptions.CommandPrefix);
             string lineBreak = window.TextView.Options.GetNewLineCharacter();
             var eval = window.Evaluator as PythonReplEvaluator;
+            var debugEval = window.Evaluator as PythonDebugReplEvaluator;
             if (eval != null) {
                 window.Submit(eval.SplitCode(File.ReadAllText(arguments)).Where(CommentPrefixPredicate));
+                return ExecutionResult.Succeeded;
+            } else if (debugEval != null) {
+                window.Submit(debugEval.SplitCode(File.ReadAllText(arguments)).Where(CommentPrefixPredicate));
                 return ExecutionResult.Succeeded;
             } else {
                 // v1 beahvior, will probably never be hit, but if someone was developing their own IReplEvaluator

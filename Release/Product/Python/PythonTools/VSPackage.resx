@@ -156,6 +156,9 @@
   <data name="118" xml:space="preserve">
     <value>Advanced</value>
   </data>
+  <data name="119" xml:space="preserve">
+    <value>Debug Interactive Window</value>
+  </data>
   <data name="111" xml:space="preserve">
     <value>Python Project</value>
   </data>

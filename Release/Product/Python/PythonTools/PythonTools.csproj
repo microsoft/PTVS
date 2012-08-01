@@ -186,6 +186,7 @@
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="ProvideImportTemplatesAttribute.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
+    <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCurrentScopeCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
     <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
@@ -224,6 +225,16 @@
     <Compile Include="PythonTools\Intellisense\RefactoringIconKind.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagController.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagControllerProvider.cs" />
+    <Compile Include="PythonTools\Options\PythonInteractiveCommonOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.Designer.cs">
+      <DependentUpon>PythonDebugInteractiveOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PythonTools\Project\AssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceFolderItem.cs" />
     <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />
@@ -267,6 +278,22 @@
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
+    <Compile Include="PythonTools\Repl\BasePythonReplEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplFrameCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplFrameDownCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplFramesCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplFrameUpCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplGoCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplProcessCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplProcessesCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplStepIntoCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplStepOutCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplStepOverCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplThreadCommand.cs" />
+    <Compile Include="PythonTools\Repl\DebugReplThreadsCommand.cs" />
+    <Compile Include="PythonTools\Repl\IPythonReplIntellisense.cs" />
+    <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
+    <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\ImpersonationHelper.cs" />
@@ -896,6 +923,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\NewInterpreter.resx">
       <DependentUpon>NewInterpreter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.resx">
+      <DependentUpon>PythonDebugInteractiveOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonInteractiveOptionsControl.resx">
       <DependentUpon>PythonInteractiveOptionsControl.cs</DependentUpon>

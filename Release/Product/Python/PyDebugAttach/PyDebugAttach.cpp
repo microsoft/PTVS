@@ -40,8 +40,10 @@ typedef PyThreadState* (PyThreadState_Next)(PyThreadState *tstate);
 typedef PyThreadState* (PyThreadState_Swap)(PyThreadState *tstate);
 typedef int (PyRun_SimpleString)(const char *command);
 typedef PyObject* (PyDict_New)();
+typedef PyObject* (PyModule_New)(const char *name);
+typedef PyObject* (PyModule_GetDict)(PyObject *module);
 typedef PyObject* (Py_CompileString)(const char *str, const char *filename, int start);
-typedef int (PyEval_EvalCode)(PyObject *co, PyObject *globals, PyObject *locals);
+typedef PyObject* (PyEval_EvalCode)(PyObject *co, PyObject *globals, PyObject *locals);
 typedef PyObject* (PyDict_GetItemString)(PyObject *p, const char *key);
 typedef PyObject* (PyObject_CallFunctionObjArgs)(PyObject *callable, ...);    // call w/ varargs, last arg should be NULL
 typedef void (PyErr_Fetch)(PyObject **, PyObject **, PyObject **);
@@ -383,9 +385,9 @@ int AttachCallback(void *initThreads) {
     return 0;
 }
 
-char* ReadDebuggerCode(wchar_t* newName) {
+char* ReadCodeFromFile(wchar_t* filePath) {
     ifstream filestr;
-    filestr.open(newName, ios::binary);
+    filestr.open(filePath, ios::binary);
     if(filestr.fail()) {
         return nullptr;
     }
@@ -713,6 +715,35 @@ public:
     }
 };
 
+bool LoadAndEvaluateCode(wchar_t* filePath, const char* fileName, ConnectionInfo& connInfo, bool isDebug, PyObject* globalsDict,
+                         Py_CompileString* pyCompileString, PyDict_SetItemString* dictSetItem,
+                         PyEval_EvalCode* pyEvalCode, PyString_FromString* strFromString, PyEval_GetBuiltins* getBuiltins) {
+    auto debuggerCode = ReadCodeFromFile(filePath);
+    if(debuggerCode == nullptr) {
+        connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
+        return false;
+    }
+
+    auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, fileName, 257 /*Py_file_input*/));
+    delete [] debuggerCode;
+
+    if(*code == nullptr) {
+        connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
+        return false;
+    }
+
+    dictSetItem(globalsDict, "__builtins__", getBuiltins());
+    auto size = WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), NULL, 0, NULL, NULL);
+    char* filenameBuffer = new char[size];
+    if(WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), filenameBuffer, size, NULL, NULL) != 0) {
+        filenameBuffer[size] = 0;
+        dictSetItem (globalsDict, "__file__", strFromString(filenameBuffer));
+    }
+    auto evalResult = PyObjectHolder(isDebug, pyEvalCode(code.ToPython(), globalsDict, globalsDict));
+
+    return true;
+}
+
 bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
     // Python DLL?
     auto isInit = (Py_IsInitialized*)GetProcAddress(module, "Py_IsInitialized");
@@ -748,6 +779,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto threadNext = (PyThreadState_Next*)GetProcAddress(module, "PyThreadState_Next");
         auto threadSwap = (PyThreadState_Swap*)GetProcAddress(module, "PyThreadState_Swap");
         auto pyDictNew = (PyDict_New*)GetProcAddress(module, "PyDict_New");
+        auto pyModuleNew = (PyModule_New*)GetProcAddress(module, "PyModule_New");
+        auto pyModuleGetDict = (PyModule_GetDict*)GetProcAddress(module, "PyModule_GetDict");
         auto pyCompileString = (Py_CompileString*)GetProcAddress(module, "Py_CompileString");
         auto pyEvalCode = (PyEval_EvalCode*)GetProcAddress(module, "PyEval_EvalCode");
         auto getDictItem = (PyDict_GetItemString*)GetProcAddress(module, "PyDict_GetItemString");
@@ -928,38 +961,27 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         wchar_t drive[_MAX_DRIVE], dir[_MAX_DIR], file[_MAX_FNAME], ext[_MAX_EXT];
         _wsplitpath_s(filename.c_str(), drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, ext, _MAX_EXT);
 
-        wchar_t newName[MAX_PATH];
+        wchar_t debuggerModuleFilePath[MAX_PATH];
+        wchar_t replModuleFilePath[MAX_PATH];
 #if defined(_AMD64_)
-        _wmakepath_s(newName, drive, dir, L"..\\visualstudio_py_debugger", L".py");
+        _wmakepath_s(debuggerModuleFilePath, drive, dir, L"..\\visualstudio_py_debugger", L".py");
+        _wmakepath_s(replModuleFilePath, drive, dir, L"..\\visualstudio_py_repl", L".py");
 #else
-        _wmakepath_s(newName, drive, dir, L"visualstudio_py_debugger", L".py");
+        _wmakepath_s(debuggerModuleFilePath, drive, dir, L"visualstudio_py_debugger", L".py");
+        _wmakepath_s(replModuleFilePath, drive, dir, L"visualstudio_py_repl", L".py");
 #endif
 
-        // run the debugger code...
-        auto debuggerCode = ReadDebuggerCode(newName);
-        if(debuggerCode == nullptr) {
-            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
-            return false;
-        }
+        // visualstudio_py_debugger has a dependency on visualstudio_py_repl, so we need to load that one first
+        auto replModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_repl"));
+        auto replModuleDict = pyModuleGetDict(replModule.ToPython());
+        LoadAndEvaluateCode(replModuleFilePath, "visualstudio_py_repl.py", connInfo, isDebug, replModuleDict, 
+                            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
 
-        auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, "visualstudio_py_debugger.py", 257 /*Py_file_input*/));
-        delete [] debuggerCode;
-
-        if(*code == nullptr) {
-            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
-            return false;
-        }
-
-        // create a globals/locals dict for evaluating the code...
+        // set the visualstudio_py_repl module in the globals dictionary, so the import of it succeeds
         auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
-        dictSetItem(globalsDict.ToPython(), "__builtins__", getBuiltins());           
-        auto size = WideCharToMultiByte(CP_UTF8, 0, newName, (DWORD)wcslen(newName), NULL, 0, NULL, NULL);
-        char* filenameBuffer = new char[size];
-        if(WideCharToMultiByte(CP_UTF8, 0, newName, (DWORD)wcslen(newName), filenameBuffer, size, NULL, NULL) != 0) {
-            filenameBuffer[size] = 0;
-            dictSetItem (globalsDict.ToPython(), "__file__", strFromString(filenameBuffer));
-        }
-        pyEvalCode(code.ToPython(), globalsDict.ToPython(), globalsDict.ToPython());
+        dictSetItem(globalsDict.ToPython(), "visualstudio_py_repl", replModule.ToPython());
+        LoadAndEvaluateCode(debuggerModuleFilePath, "visualstudio_py_debugger.py", connInfo, isDebug, globalsDict.ToPython(), 
+                            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
 
         // now initialize debugger process wide state
         auto attach_process = PyObjectHolder(isDebug, getDictItem(globalsDict.ToPython(), "attach_process"), true);

@@ -122,6 +122,9 @@ actual inspection and introspection."""
         """loop on created thread which processes communicates with the REPL window"""    
         try:
             while True: 
+                if self.check_for_exit_repl_loop():
+                    break
+
                 # we receive a series of 4 byte commands.  Each command then
                 # has it's own format which we must parse before continuing to
                 # the next command.
@@ -158,6 +161,9 @@ actual inspection and introspection."""
                 System.Environment.Exit(1)
 
             self.interrupt_main()
+
+    def check_for_exit_repl_loop(self):
+        return False
 
     def _send(self, *data):
         self.send_lock.acquire()
@@ -259,6 +265,13 @@ actual inspection and introspection."""
         mod_name = self._read_string()
         self.set_current_module(mod_name)
 
+    def _cmd_sett(self):
+        """sets the current thread and frame which code will execute against"""
+        thread_id = struct.unpack('i', self.conn.recv(4))[0]
+        frame_id = struct.unpack('i', self.conn.recv(4))[0]
+        frame_kind = struct.unpack('i', self.conn.recv(4))[0]
+        self.set_current_thread_and_frame(thread_id, frame_id, frame_kind)
+
     def _cmd_mods(self):
         """gets the list of available modules"""
         try:
@@ -300,6 +313,7 @@ actual inspection and introspection."""
         _cmd('sigs'): _cmd_sigs,
         _cmd('mods'): _cmd_mods,
         _cmd('setm') : _cmd_setm,
+        _cmd('sett') : _cmd_sett,
         _cmd('inpl'): _cmd_inpl,
         _cmd('excf'): _cmd_excf,
         _cmd('dbga'): _cmd_debug_attach,
@@ -430,6 +444,10 @@ actual inspection and introspection."""
         """sets the module which code executes against"""
         raise NotImplementedError
         
+    def set_current_thread_and_frame(self, thread_id, frame_id, frame_kind):
+        """sets the current thread and frame which code will execute against"""
+        raise NotImplementedError
+
     def get_module_names(self):
         """returns a list of module names"""
         raise NotImplementedError
@@ -481,11 +499,15 @@ class BasicReplBackend(ReplBackend):
     """Basic back end which executes all Python code in-proc"""
     def __init__(self, mod_name = '__main__', launch_file = None):
         ReplBackend.__init__(self)
-        if sys.platform == 'cli':
-            self.exec_mod = Scope()
-            self.exec_mod.__name__ = '__main__'
+        if mod_name is not None:
+            if sys.platform == 'cli':
+                self.exec_mod = Scope()
+                self.exec_mod.__name__ = '__main__'
+            else:
+                sys.modules[mod_name] = self.exec_mod = imp.new_module(mod_name)
         else:
-            sys.modules[mod_name] = self.exec_mod = imp.new_module(mod_name)
+            self.exec_mod = sys.modules['__main__']
+
         self.launch_file = launch_file
         self.code_flags = 0
         self.execute_item = None
@@ -598,6 +620,9 @@ due to the exec, so we do it here"""
             cur_modules = new_modules
         
             self.execute_item_lock.acquire()
+
+            if self.check_for_exit_execution_loop():
+                return True, None, None, None
         
             if self.execute_item is not None:
                 try:
@@ -641,16 +666,10 @@ due to the exec, so we do it here"""
                     sys.stderr.write('KeyboardInterrupt')
                 else:
                     # let IronPython format the exception so users can do -X:ExceptionDetail or -X:ShowClrExceptions
-                    if exc_tb.tb_next is not None:
-                        exc_next = exc_tb.tb_next.tb_next
-                    else:
-                        exc_next = None
+                    exc_next = self.skip_internal_frames(exc_tb)
                     sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
             else:
-                if exc_tb.tb_next is not None:
-                    exc_next = exc_tb.tb_next.tb_next
-                else:
-                    exc_next = None
+                exc_next = self.skip_internal_frames(exc_tb)
                 sys.stderr.write(''.join(traceback.format_exception(exc_type, exc_value, exc_next)))
 
             try:
@@ -660,6 +679,19 @@ due to the exec, so we do it here"""
                 return True, None, None, None
         
         return False, cur_modules, cur_ps1, cur_ps2
+
+    def skip_internal_frames(self, tb):
+        """return the first frame outside of the repl/debugger code"""
+        while tb is not None and self.is_internal_frame(tb):
+            tb = tb.tb_next
+        return tb
+
+    def is_internal_frame(self, tb):
+        """return true if the frame is from internal code (repl or debugger)"""
+        f = tb.tb_frame
+        co = f.f_code
+        filename = co.co_filename
+        return filename.endswith('visualstudio_py_repl.py') or filename.endswith('visualstudio_py_debugger.py')
 
     def execution_loop(self):
         """loop on the main thread which is responsible for executing code"""
@@ -693,6 +725,9 @@ due to the exec, so we do it here"""
             exit, cur_modules, cur_ps1, cur_ps2 = self.run_one_command(cur_modules, cur_ps1, cur_ps2)
             if exit:
                 return
+
+    def check_for_exit_execution_loop(self):
+        return False
 
     def execute_file_work_item(self):
         self.run_file_as_main(self.current_code, self.current_args)
@@ -752,9 +787,9 @@ due to the exec, so we do it here"""
                 code = python_context.CreateSnippet('vars()', None, SourceCodeKind.AutoDetect)
                 items = code.Execute(self.exec_mod)
             else:
-                items = self.exec_mod.__dict__.iteritems()
+                items = self.exec_mod.__dict__
 
-            for key, value in items:
+            for key, value in items.items():
                 all_members[key] = self.get_type_name(value)
             return '', all_members, {}
         else:
@@ -770,6 +805,10 @@ due to the exec, so we do it here"""
             else:
                 val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
                 members = dir(val)
+    
+        return self.collect_members(val, members, getattr_func)
+
+    def collect_members(self, val, members, getattr_func):
         t = type(val)
 
         inst_members = {}
@@ -819,6 +858,10 @@ due to the exec, so we do it here"""
             val = code.Execute(self.exec_mod)
         else:
             val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
+
+        return self.collect_signatures(val)
+
+    def collect_signatures(self, val):
         doc = val.__doc__
         type_obj = None
         if isinstance(val, type) or isinstance(val, _OldClassType):
@@ -868,7 +911,7 @@ due to the exec, so we do it here"""
         res = []
         for name, module in sys.modules.items():
             try:
-                if name != 'visualstudio_py_repl':
+                if name != 'visualstudio_py_repl' and name != '$visualstudio_py_debugger':
                     if sys.platform == 'cli' and type(module) is NamespaceType:
                         self.get_namespaces(name, module, res)
                     else:
@@ -936,18 +979,139 @@ due to the exec, so we do it here"""
                     pass
             return
 
+class DebugReplBackend(BasicReplBackend):
+    def __init__(self, debugger):
+        BasicReplBackend.__init__(self, None, None)
+        self.debugger = debugger
+        self.thread_id = None
+        self.frame_id = None
+        self.frame_kind = None
+        self.disconnect_requested = False
+
+    def connect_from_debugger(self, port):
+        ReplBackend.connect(self, port)
+        sys.stdout = _ReplOutput(self, is_stdout = True, old_out = sys.stdout)
+        sys.stderr = _ReplOutput(self, is_stdout = False, old_out = sys.stderr)
+        if sys.platform == 'cli':
+            import System
+            System.Console.SetOut(DotNetOutput(self, True, System.Console.Out))
+            System.Console.SetError(DotNetOutput(self, False, System.Console.Error))
+
+    def disconnect_from_debugger(self):
+        sys.stdout = sys.stdout.old_out
+        sys.stderr = sys.stderr.old_out
+        if sys.platform == 'cli':
+            System.Console.SetOut(System.Console.Out.old_out)
+            System.Console.SetError(System.Console.Error.old_out)
+
+        # this tells both _repl_loop and execution_loop, each 
+        # running on its own worker thread, to exit
+        self.disconnect_requested = True
+        self.execute_item_lock.release()
+
+    def set_current_thread_and_frame(self, thread_id, frame_id, frame_kind):
+        self.thread_id = thread_id
+        self.frame_id = frame_id
+        self.frame_kind = frame_kind
+        self.exec_mod = None
+
+    def execute_code_work_item(self):
+        if self.exec_mod is not None:
+            BasicReplBackend.execute_code_work_item(self)
+        else:
+            try:
+                self.debugger.execute_code_no_report(self.current_code, self.thread_id, self.frame_id, self.frame_kind)
+            finally:
+                self.current_code = None
+
+    def get_members(self, expression):
+        """returns a tuple of the type name, instance members, and type members"""
+        if self.exec_mod is not None:
+            return BasicReplBackend.get_members(self, expression)
+        else:
+            thread, cur_frame = self.debugger.get_thread_and_frame(self.thread_id, self.frame_id, self.frame_kind)
+            return self.get_members_for_frame(expression, thread, cur_frame, self.frame_kind)
+
+    def get_signatures(self, expression):
+        """returns doc, args, vargs, varkw, defaults."""
+        if self.exec_mod is not None:
+            return BasicReplBackend.get_signatures(self, expression)
+        else:
+            thread, cur_frame = self.debugger.get_thread_and_frame(self.thread_id, self.frame_id, self.frame_kind)
+            return self.get_signatures_for_frame(expression, thread, cur_frame, self.frame_kind)
+
+    def get_members_for_frame(self, expression, thread, cur_frame, frame_kind):
+        """returns a tuple of the type name, instance members, and type members"""
+        getattr_func = getattr
+        if not expression:
+            all_members = {}
+            if sys.platform == 'cli':
+                code = python_context.CreateSnippet('vars()', None, SourceCodeKind.AutoDetect)
+                globals = code.Execute(Scope(cur_frame.f_globals))
+                locals = code.Execute(Scope(thread.get_locals(cur_frame, frame_kind)))
+            else:
+                globals = cur_frame.f_globals
+                locals = thread.get_locals(cur_frame, frame_kind)
+
+            for key, value in globals.items():
+                all_members[key] = self.get_type_name(value)
+
+            for key, value in locals.items():
+                all_members[key] = self.get_type_name(value)
+
+            return '', all_members, {}
+        else:
+            if sys.platform == 'cli':
+                scope = Scope(cur_frame.f_globals)
+
+                code = python_context.CreateSnippet(expression, None, SourceCodeKind.AutoDetect)
+                val = code.Execute(scope)
+
+                code = python_context.CreateSnippet('dir(' + expression + ')', None, SourceCodeKind.AutoDetect)
+                members = code.Execute(scope)
+
+                code = python_context.CreateSnippet('lambda value, name: getattr(value, name)', None, SourceCodeKind.AutoDetect)
+                getattr_func = code.Execute(scope)
+            else:
+                val = eval(expression, cur_frame.f_globals, thread.get_locals(cur_frame, frame_kind))
+                members = dir(val)
+
+        return self.collect_members(val, members, getattr_func)
+
+    def get_signatures_for_frame(self, expression, thread, cur_frame, frame_kind):
+        if sys.platform == 'cli':
+            code = python_context.CreateSnippet(expression, None, SourceCodeKind.AutoDetect)
+            val = code.Execute(Scope(cur_frame.f_globals))
+        else:
+            val = eval(expression, cur_frame.f_globals, thread.get_locals(cur_frame, frame_kind))
+
+        return self.collect_signatures(val)
+
+    def set_current_module(self, module):
+        if module == '<CurrentFrame>':
+            self.exec_mod = None
+        else:
+            BasicReplBackend.set_current_module(self, module)
+
+    def check_for_exit_repl_loop(self):
+        return self.disconnect_requested
+
+    def check_for_exit_execution_loop(self):
+        return self.disconnect_requested
 
 class _ReplOutput(object):
     """file like object which redirects output to the repl window."""
     errors = None
 
-    def __init__(self, backend, is_stdout):
+    def __init__(self, backend, is_stdout, old_out = None):
         self.backend = backend
+        self.old_out = old_out
         self.is_stdout = is_stdout
         self.pipe = None
 
     def flush(self):
-        pass
+        if self.old_out:
+            self.old_out.flush()
     
     def fileno(self):
         if self.pipe is None:        
@@ -979,6 +1143,8 @@ class _ReplOutput(object):
             self.backend.write_stdout(value)
         else:
             self.backend.write_stderr(value)
+        if self.old_out:
+            self.old_out.write(value)
     
     def isatty(self):
         return True
@@ -1034,14 +1200,18 @@ class _ReplInput(object):
 if sys.platform == 'cli':
     import System
     class DotNetOutput(System.IO.TextWriter):        
-        def __new__(cls, backend, is_stdout):
+        def __new__(cls, backend, is_stdout, old_out=None):
             return System.IO.TextWriter.__new__(cls)
         
-        def __init__(self, backend, is_stdout):
+        def __init__(self, backend, is_stdout, old_out=None):
             self.backend = backend
             self.is_stdout = is_stdout
+            self.old_out = old_out
 
         def Write(self, value, *args):
+            if self.old_out:
+                self.old_out.Write(value, *args)
+
             if not args:
                 if type(value) is str or type(value) is System.Char:
                     if self.is_stdout:
@@ -1054,6 +1224,9 @@ if sys.platform == 'cli':
                 self.Write(System.String.Format(value, *args))
 
         def WriteLine(self, value, *args):
+            if self.old_out:
+                self.old_out.WriteLine(value, *args)
+
             if not args:
                 if type(value) is str or type(value) is System.Char:
                     if self.is_stdout:

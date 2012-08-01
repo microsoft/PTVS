@@ -82,6 +82,7 @@ namespace Microsoft.VisualStudio.Repl {
         private readonly Guid _langSvcGuid;
         private readonly string _replId;
         private readonly IContentType/*!*/ _languageContentType;
+        private readonly string[] _roles;
         private readonly IClassifierAggregatorService _classifierAgg;
         private ReplAggregateClassifier _primaryClassifier;
         private readonly IReplEvaluator/*!*/ _evaluator;
@@ -161,7 +162,7 @@ namespace Microsoft.VisualStudio.Repl {
         private static readonly char[] _whitespaceChars = new[] { '\r', '\n', ' ', '\t' };
         private const string _boxSelectionCutCopyTag = "MSDEVColumnSelect";
 
-        public ReplWindow(IComponentModel/*!*/ model, IReplEvaluator/*!*/ evaluator, IContentType/*!*/ contentType, string/*!*/ title, Guid languageServiceGuid, string replId) {
+        public ReplWindow(IComponentModel/*!*/ model, IReplEvaluator/*!*/ evaluator, IContentType/*!*/ contentType, string[] roles, string/*!*/ title, Guid languageServiceGuid, string replId) {
             Contract.Assert(evaluator != null);
             Contract.Assert(contentType != null);
             Contract.Assert(title != null);
@@ -177,6 +178,7 @@ namespace Microsoft.VisualStudio.Repl {
             _componentModel = model;
             _evaluator = evaluator;
             _languageContentType = contentType;
+            _roles = roles;
             
             Contract.Requires(_commandPrefix != null && _prompt != null);
             
@@ -342,10 +344,33 @@ namespace Microsoft.VisualStudio.Repl {
             return (provider != null) ? provider.CreateSmartIndent(view) : null;
         }
 
+        private bool IsCommandApplicable(IReplCommand command) {
+            bool applicable = true;
+            string[] commandRoles = command.GetType().GetCustomAttributes(typeof(ReplRoleAttribute), true).Select(r => ((ReplRoleAttribute)r).Name).ToArray();
+            if (_roles.Length > 0) {
+                // The window has one or more roles, so the following commands will be applicable:
+                // - commands that don't specify a role
+                // - commands that specify a role that matches one of the window roles
+                if (commandRoles.Length > 0) {
+                    applicable = _roles.Intersect(commandRoles).Count() > 0;
+                }
+            } else {
+                // The window doesn't have any role, so the following commands will be applicable:
+                // - commands that don't specify any role
+                applicable = commandRoles.Length == 0;
+            }
+
+            return applicable;
+        }
+
         private List<IReplCommand>/*!*/ CreateCommands() {
             var commands = new List<IReplCommand>();
             var commandTypes = new HashSet<Type>();
             foreach (var command in _componentModel.GetExtensions<IReplCommand>()) {
+                if (!IsCommandApplicable(command)) {
+                    continue;
+                }
+
                 // avoid duplicate commands
                 if (commandTypes.Contains(command.GetType())) {
                     continue;
@@ -1367,6 +1392,10 @@ namespace Microsoft.VisualStudio.Repl {
                     case PkgCmdIDList.cmdidBreakRepl:
                         prgCmds[0].cmdf = _isRunning || _stdInputStart != null ? CommandEnabled : CommandDisabled;
                         return VSConstants.S_OK;
+
+                    case PkgCmdIDList.cmdidResetRepl:
+                        prgCmds[0].cmdf = _commands.OfType<ResetReplCommand>().Count() != 0 ? CommandEnabled : CommandDisabledAndHidden;
+                        return VSConstants.S_OK;
                 }
             }
 
@@ -2335,7 +2364,10 @@ namespace Microsoft.VisualStudio.Repl {
 
             IReplCommand commandHandler = _commands.Find(x => x.Command == command);
             if (commandHandler == null) {
-                return null;
+                commandHandler = _commands.OfType<IReplCommand2>().FirstOrDefault(x => x.Aliases.Contains(command));
+                if (commandHandler == null) {
+                    return null;
+                }
             }
 
             _history.Last.Command = true;
@@ -2356,8 +2388,20 @@ namespace Microsoft.VisualStudio.Repl {
             WriteLine(string.Format(helpFmt, "help", "Show a list of REPL commands"));
 
             foreach (var cmd in cmdnames) {
-                WriteLine(string.Format(helpFmt, cmd.Command, cmd.Description));
+                WriteLine(string.Format(helpFmt, GetCommandNameWithAliases(cmd), cmd.Description));
             }
+        }
+
+        private static string GetCommandNameWithAliases(IReplCommand cmd) {
+            var cmd2 = cmd as IReplCommand2;
+            if (cmd2 != null && cmd2.Aliases != null) {
+                string aliases = string.Join(",", cmd2.Aliases);
+                if (aliases.Length > 0) {
+                    return string.Join(",", cmd.Command, aliases);
+                }
+            }
+
+            return cmd.Command;
         }
 
         #endregion

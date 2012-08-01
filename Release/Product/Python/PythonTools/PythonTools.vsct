@@ -340,6 +340,17 @@
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" priority="0x0950" type="Button">
+        <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_WINDOWS_INSPECT"/>
+        <Icon guid="guidImages" id="ipyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdidReplWindow</CommandName>
+          <ButtonText>Python Debug Interactive</ButtonText>
+        </Strings>
+      </Button>
+
       <Button guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x7f0f" type="Button">
         <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -529,7 +540,11 @@
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x111">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" priority="0x111">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x115">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
 
@@ -587,6 +602,7 @@
       <IDSymbol name="cmdidReplWindowD" value="0x020D" />
       <IDSymbol name="cmdidReplWindowE" value="0x020E" />
       <IDSymbol name="cmdidReplWindowF" value="0x020F" />
+      <IDSymbol name="cmdidDebugReplWindow" value="0x0210" />
       <IDSymbol name="cmdidSetAsStartupFile" value="0x3001" />
 
       <IDSymbol name="cmdIdAddSearchPath" value="0x4002" />

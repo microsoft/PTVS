@@ -14,6 +14,7 @@
 
 from __future__ import with_statement
 import sys
+import ctypes
 try:
     import thread
 except ImportError:
@@ -24,6 +25,11 @@ import weakref
 import traceback
 import types
 import bisect
+try:
+    import visualstudio_py_repl
+except ImportError:
+    # in the attach scenario, visualstudio_py_repl should already be defined
+    visualstudio_py_repl
 from os import path
 
 try:
@@ -747,6 +753,18 @@ class Thread(object):
         
         self._block_starting_lock.release()
 
+    def run_on_thread_no_report(self, text, cur_frame, frame_kind):
+        self._block_starting_lock.acquire()
+        
+        if not self._is_blocked:
+            pass
+        elif not self._is_working:
+            self.schedule_work(lambda : self.run_locally_no_report(text, cur_frame, frame_kind))
+        else:
+            pass
+        
+        self._block_starting_lock.release()
+
     def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate, frame_kind):
         self._block_starting_lock.acquire()
         if not self._is_working and self._is_blocked:
@@ -767,17 +785,35 @@ class Thread(object):
             locs = cur_frame.f_locals
         return locs
 
+    def locals_to_fast(self, frame):
+        try:
+            ltf = ctypes.pythonapi.PyFrame_LocalsToFast
+            ltf.argtypes = [ctypes.py_object, ctypes.c_int]
+            ltf(frame, 1)
+        except:
+            pass
+
+    def compile(self, text, cur_frame):
+        try:
+            code = compile(text, cur_frame.f_code.co_name, 'eval')
+        except:
+            code = compile(text, cur_frame.f_code.co_name, 'exec')
+        return code
+
     def run_locally(self, text, cur_frame, execution_id, frame_kind):
         try:
-            try:
-                code = compile(text, cur_frame.f_code.co_name, 'eval')
-            except:
-                code = compile(text, cur_frame.f_code.co_name, 'exec')
-
+            code = self.compile(text, cur_frame)
             res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
+            self.locals_to_fast(cur_frame)
             report_execution_result(execution_id, res)
         except:
             report_execution_exception(execution_id, sys.exc_info())
+
+    def run_locally_no_report(self, text, cur_frame, frame_kind):
+        code = self.compile(text, cur_frame)
+        res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
+        self.locals_to_fast(cur_frame)
+        sys.displayhook(res)
 
     def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate, frame_kind):
         def get_attributes(res):
@@ -1066,6 +1102,7 @@ def mark_all_threads_for_break():
 class DebuggerLoop(object):    
     def __init__(self, conn):
         self.conn = conn
+        self.repl_backend = None
         self.command_table = {
             cmd('stpi') : self.command_step_into,
             cmd('stpo') : self.command_step_out,
@@ -1085,6 +1122,8 @@ class DebuggerLoop(object):
             cmd('sehi') : self.command_set_exception_handler_info,
             cmd('bkdr') : self.command_remove_django_breakpoint,
             cmd('bkda') : self.command_add_django_breakpoint,
+            cmd('crep') : self.command_connect_repl,
+            cmd('drep') : self.command_disconnect_repl,
         }
 
     def loop(self):
@@ -1191,7 +1230,20 @@ class DebuggerLoop(object):
             DJANGO_BREAKPOINTS[filename.lower()] = bp_info = DjangoBreakpointInfo(filename)
 
         bp_info.add_breakpoint(lineNo, brkpt_id)
-        
+
+    def command_connect_repl(self):
+        port_num = read_int(self.conn)
+        _start_new_thread(self.connect_to_repl_backend, (port_num,))
+
+    def connect_to_repl_backend(self, port_num):
+        self.repl_backend = visualstudio_py_repl.DebugReplBackend(self)
+        self.repl_backend.connect_from_debugger(port_num)
+        self.repl_backend.execution_loop()
+
+    def command_disconnect_repl(self):
+        self.repl_backend.disconnect_from_debugger()
+        self.repl_backend = None
+
     def command_break_all(self):
         global SEND_BREAK_COMPLETE
         SEND_BREAK_COMPLETE = True
@@ -1291,15 +1343,17 @@ class DebuggerLoop(object):
         fid = read_int(self.conn) # frame id
         eid = read_int(self.conn) # execution id
         frame_kind = read_int(self.conn)
-                
-        thread = get_thread_from_id(tid)
-        if thread is not None:
-            cur_frame = thread.cur_frame
-            for i in xrange(fid):
-                cur_frame = cur_frame.f_back
 
+        thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
+        if thread is not None and cur_frame is not None:
             thread.run_on_thread(text, cur_frame, eid, frame_kind)
-    
+
+    def execute_code_no_report(self, text, tid, fid, frame_kind):
+        # execute given text in specified frame, without sending back the results
+        thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
+        if thread is not None and cur_frame is not None:
+            thread.run_locally_no_report(text, cur_frame, frame_kind)
+
     def command_enum_children(self):
         # execute given text in specified frame
         text = read_string(self.conn)
@@ -1309,21 +1363,27 @@ class DebuggerLoop(object):
         frame_kind = read_int(self.conn) # frame kind
         child_is_enumerate = read_int(self.conn)
                 
+        thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
+        if thread is not None and cur_frame is not None:
+            thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate, frame_kind)
+    
+    def get_thread_and_frame(self, tid, fid, frame_kind):
         thread = get_thread_from_id(tid)
+        cur_frame = None
+
         if thread is not None:
             cur_frame = thread.cur_frame
             for i in xrange(fid):
                 cur_frame = cur_frame.f_back
 
-            thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate, frame_kind)
-    
+        return thread, cur_frame
+
     def command_detach(self):
         detach_threads()
 
         # unload debugger DLL
         global debugger_dll_handle
         if debugger_dll_handle is not None:
-            import ctypes
             k32 = ctypes.WinDLL('kernel32')
             k32.FreeLibrary.argtypes = [ctypes.c_void_p]
             k32.FreeLibrary(debugger_dll_handle)

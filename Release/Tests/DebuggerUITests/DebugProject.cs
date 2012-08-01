@@ -68,7 +68,9 @@ namespace DebuggerUITests {
             
             // sys.path should point to the startup file directory, not the project directory.
             // this matches the behavior of start without debugging.
-            WaitForDebugOutput(text => text.Contains(TestData.GetPath(@"TestData\\SysPath\\Sub'")));
+            // Note: backslashes are escaped in the output
+            string testDataPath = TestData.GetPath("TestData\\SysPath\\Sub'").Replace("\\", "\\\\");
+            WaitForDebugOutput(text => text.Contains(testDataPath));
         }
 
         /// <summary>

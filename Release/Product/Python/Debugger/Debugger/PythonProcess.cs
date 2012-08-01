@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Debugger {
             _dirMapping = dirMapping;
             var processInfo = new ProcessStartInfo(exe);
 
-            processInfo.CreateNoWindow = false;
+            processInfo.CreateNoWindow = (options & PythonDebugOptions.CreateNoWindow) != 0;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
 
@@ -398,6 +398,14 @@ namespace Microsoft.PythonTools.Debugger {
                 return ToDottedNameString(paren.Expression, ast);
             }
             return null;
+        }
+
+        internal IList<PythonThread> GetThreads() {
+            List<PythonThread> threads = new List<PythonThread>();
+            foreach (var thread in _threads.Values) {
+                threads.Add(thread);
+            }
+            return threads;
         }
 
         internal IList<Tuple<int, int, IList<string>>> GetHandledExceptionRanges(string filename) {
@@ -946,6 +954,25 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        internal void ConnectRepl(int portNum) {
+            DebugWriteCommand("Connect Repl");
+            lock (_socketLock) {
+                _socket.Send(ConnectReplCommandBytes);
+                _socket.Send(BitConverter.GetBytes(portNum));
+            }
+        }
+
+        internal void DisconnectRepl() {
+            DebugWriteCommand("Disconnect Repl");
+            lock (_socketLock) {
+                try {
+                    _socket.Send(DisconnectReplCommandBytes);
+                } catch (SocketException) {
+                    // If the process has terminated, we expect a SocketException
+                }
+            }
+        }
+
         internal bool SetLineNumber(PythonStackFrame pythonStackFrame, int lineNo) {
             if (_stoppedForException) {
                 return false;
@@ -1003,6 +1030,8 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] SetExceptionHandlerInfoCommandBytes = MakeCommand("sehi");
         private static byte[] RemoveDjangoBreakPointCommandBytes = MakeCommand("bkdr");
         private static byte[] AddDjangoBreakPointCommandBytes = MakeCommand("bkda");
+        private static byte[] ConnectReplCommandBytes = MakeCommand("crep");
+        private static byte[] DisconnectReplCommandBytes = MakeCommand("drep");
 
         private static byte[] MakeCommand(string command) {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };

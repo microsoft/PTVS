@@ -47,7 +47,9 @@ namespace Microsoft.PythonTools.Editor {
             var model = PythonToolsPackage.ComponentModel;
             var textView = window.TextView;
             var vsTextView = _adapterFact.GetViewAdapter(textView);
-            textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
+            if (window.Evaluator is PythonReplEvaluator) {
+                textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
+            }
 
             var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView));
             var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);

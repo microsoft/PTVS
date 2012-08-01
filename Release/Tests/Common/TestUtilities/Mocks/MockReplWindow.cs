@@ -38,6 +38,12 @@ namespace TestUtilities.Mocks {
             }
         }
 
+        public string Error {
+            get {
+                return _error.ToString();
+            }
+        }
+
         #region IReplWindow Members
 
         public IWpfTextView TextView {
@@ -58,6 +64,7 @@ namespace TestUtilities.Mocks {
 
         public void ClearScreen() {
             _output.Clear();
+            _error.Clear();
         }
 
         public void ClearHistory() {

@@ -794,13 +794,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             IReplEvaluator eval;
-            PythonReplEvaluator dlrEval;
+            IPythonReplIntellisense dlrEval;
             if (snapshot.TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval) &&
-                (dlrEval = eval as PythonReplEvaluator) != null) {
+                (dlrEval = eval as IPythonReplIntellisense) != null) {
                 if (text.EndsWith("(")) {
                     text = text.Substring(0, text.Length - 1);
                 }
-                var liveSigs = dlrEval.GetSignatureDocumentation(snapshot.TextBuffer.GetAnalyzer(), text);
+                var liveSigs = dlrEval.GetSignatureDocumentation(text);
 
                 if (liveSigs != null && liveSigs.Length > 0) {
                     return new SignatureAnalysis(text, paramIndex, GetLiveSignatures(text, liveSigs, paramIndex, applicableSpan, lastKeywordArg), lastKeywordArg);

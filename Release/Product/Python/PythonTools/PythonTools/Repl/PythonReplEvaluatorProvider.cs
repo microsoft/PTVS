@@ -25,6 +25,8 @@ namespace Microsoft.PythonTools.Repl {
 #endif
     
     [Export(typeof(IReplEvaluatorProvider))]
+    [ReplRole("Execution")]
+    [ReplRole("Reset")]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         private readonly IPythonInterpreterFactoryProvider[] _interpreters;
         private readonly IErrorProviderFactory _errorProviderFactory;

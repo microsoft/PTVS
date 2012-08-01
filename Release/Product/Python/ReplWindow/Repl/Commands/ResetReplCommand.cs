@@ -25,6 +25,7 @@ namespace Microsoft.VisualStudio.Repl {
 #endif
 
     [Export(typeof(IReplCommand))]
+    [ReplRole("Reset")]
     class ResetReplCommand : IReplCommand {
         #region IReplCommand Members
 

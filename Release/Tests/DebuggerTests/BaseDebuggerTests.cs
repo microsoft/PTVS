@@ -135,7 +135,7 @@ namespace DebuggerTests {
             }
         }
 
-        private static PythonBreakpoint AddBreakPoint(PythonProcess newproc, int line, string finalBreakFilename) {
+        internal static PythonBreakpoint AddBreakPoint(PythonProcess newproc, int line, string finalBreakFilename) {
             PythonBreakpoint breakPoint;
             var ext = Path.GetExtension(finalBreakFilename);
 
@@ -150,6 +150,10 @@ namespace DebuggerTests {
         }
 
         internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string arguments = "") {
+            return DebugProcess(debugger, Version, filename, onLoaded, interpreterOptions, debugOptions, cwd, arguments);
+        }
+
+        internal static PythonProcess DebugProcess(PythonDebugger debugger, PythonVersion version, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string arguments = "") {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
             if (!String.IsNullOrEmpty(arguments)) {
@@ -157,7 +161,7 @@ namespace DebuggerTests {
             } else {
                 arguments = "\"" + fullPath + "\"";
             }
-            var process = debugger.CreateProcess(Version.Version, Version.Path, arguments, dir, "", interpreterOptions, debugOptions);
+            var process = debugger.CreateProcess(version.Version, version.Path, arguments, dir, "", interpreterOptions, debugOptions);
             process.ProcessLoaded += (sender, args) => {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);

@@ -59,6 +59,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
 
+        internal static event EventHandler<AD7EngineEventArgs> EngineBreakpointHit;
+        internal static event EventHandler<AD7EngineEventArgs> EngineAttached;
+        internal static event EventHandler<AD7EngineEventArgs> EngineDetaching;
+
         // These constants are duplicated in HpcLauncher and cannot be changed
         
         public const string DebugEngineId = "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}";
@@ -149,6 +153,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
         }
 
+        internal static IList<AD7Engine> GetEngines() {
+            List<AD7Engine> engines = new List<AD7Engine>();
+            foreach (var engine in AD7Engine._engines) {
+                AD7Engine target = (AD7Engine)engine.Target;
+                if (target != null) {
+                    engines.Add(target);
+                }
+            }
+            return engines;
+        }
+
         internal PythonProcess Process {
             get {
                 return _process;
@@ -236,6 +251,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
             _processLoadedThread = null;
             _loadComplete.Set();
+
+            var attached = EngineAttached;
+            if (attached != null) {
+                attached(this, new AD7EngineEventArgs(this));
+            }
         }
 
         private void SendThreadStart(AD7Thread ad7Thread) {
@@ -608,6 +628,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 return VSConstants.S_FALSE;
             }
 
+            var detaching = EngineDetaching;
+            if (detaching != null) {
+                detaching(this, new AD7EngineEventArgs(this));
+            }
+
             if (!_pseudoAttach) {
                 _process.Terminate();
             } else {
@@ -663,6 +688,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AssertMainThread();
 
             _breakpointManager.ClearBoundBreakpoints();
+
+            var detaching = EngineDetaching;
+            if (detaching != null) {
+                detaching(this, new AD7EngineEventArgs(this));
+            }
 
             _process.Detach();
             _ad7ProgramId = Guid.Empty;
@@ -1008,6 +1038,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 AD7BreakpointBoundEvent.IID,
                 null
             );
+
+            var breakpointHit = EngineBreakpointHit;
+            if (breakpointHit != null) {
+                breakpointHit(this, new AD7EngineEventArgs(this));
+            }
         }
 
         private void OnBreakpointBindFailed(object sender, BreakpointEventArgs e) {

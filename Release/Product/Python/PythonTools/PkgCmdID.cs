@@ -45,5 +45,6 @@ namespace Microsoft.PythonTools
         public const uint cmdidReplWindowD = 0x20D;
         public const uint cmdidReplWindowE = 0x20E;
         public const uint cmdidReplWindowF = 0x20F;
+        public const uint cmdidDebugReplWindow = 0x210;
     };
 }

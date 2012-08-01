@@ -117,6 +117,7 @@
             <Button guid="guidReplWindowCmdSet" id="cmdidResetRepl" priority="0x0300" type="Button">
                 <Parent guid="guidReplWindowCmdSet" id="ConsoleMenuGroup"/>
                 <Icon guid="guidReplToolbarImages" id="bmpResetSession" />
+                <CommandFlag>DynamicVisibility</CommandFlag>
                 <Strings>
                     <CommandName>cmdIdResetRepl</CommandName>
                     <ButtonText>Reset</ButtonText>
@@ -223,7 +224,7 @@
         </Buttons>
 
         <Combos>
-            <Combo guid="guidReplWindowCmdSet" id="comboIdReplScopes" priority="0x0400" type="DropDownCombo" defaultWidth="100" idCommandList="comboIdReplScopesGetList">
+            <Combo guid="guidReplWindowCmdSet" id="comboIdReplScopes" priority="0x0400" type="DropDownCombo" defaultWidth="130" idCommandList="comboIdReplScopesGetList">
                 <Parent guid="guidReplWindowCmdSet" id="replToolbarGroup"/>
                 <CommandFlag>DynamicVisibility</CommandFlag>
                 <CommandFlag>DefaultInvisible</CommandFlag>

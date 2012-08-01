@@ -122,10 +122,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 path = newPath;
             }
 
-            PythonReplEvaluator pyReplEval = null;
+            IPythonReplIntellisense pyReplEval = null;
             IReplEvaluator eval;
             if (TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
-                pyReplEval = eval as PythonReplEvaluator;
+                pyReplEval = eval as IPythonReplIntellisense;
             }
             IEnumerable<KeyValuePair<string, bool>> replScopes = null;
             if (pyReplEval != null) {

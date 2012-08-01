@@ -27,6 +27,7 @@ namespace Microsoft.VisualStudio.Repl {
 #endif
     
     [Export(typeof(IReplCommand))]
+    [ReplRole("Execution")]
     class AttachDebuggerReplCommand : IReplCommand {
         #region IReplCommand Members
 

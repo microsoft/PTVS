@@ -46,6 +46,11 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Set if Django debugging is enabled
         /// </summary>
-        DjangoDebugging = 0x20
+        DjangoDebugging = 0x20,
+
+        /// <summary>
+        /// Set if you do not want to create a window
+        /// </summary>
+        CreateNoWindow = 0x40
     }
 }

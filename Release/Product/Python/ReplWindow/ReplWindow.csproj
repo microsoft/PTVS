@@ -139,6 +139,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CommonConstants.cs" />
     <Compile Include="Guids.cs" />
+    <Compile Include="Repl\IReplCommand2.cs" />
     <Compile Include="Repl\Margin\GlyphPrompts.cs" />
     <Compile Include="Repl\Margin\PromptMarginVisualManager.cs" />
     <Compile Include="Repl\Margin\PromptMargin.cs" />
@@ -171,6 +172,7 @@
     <Compile Include="Repl\IReplWindowProvider.cs" />
     <Compile Include="Repl\ReplContentType.cs" />
     <Compile Include="Repl\ReplOptions.cs" />
+    <Compile Include="Repl\ReplRoleAttribute.cs" />
     <Compile Include="Repl\ReplWindow.cs" />
     <Compile Include="Repl\ReplWindowExtensions.cs" />
     <Compile Include="Repl\ReplWindowProvider.cs" />

@@ -2717,7 +2717,7 @@ def g(): pass
             execute.Wait();
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
 
-            var sigs = replEval.GetSignatureDocumentation(replEval.ReplAnalyzer, "Array[int]");
+            var sigs = replEval.GetSignatureDocumentation("Array[int]");
             Assert.AreEqual(sigs.Length, 1);
             Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
         }
@@ -2785,7 +2785,7 @@ def g(): pass
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
-                var names = replEval.GetMemberNames(analyzer, "t");
+                var names = replEval.GetMemberNames("t");
                 foreach (var name in names) {
                     Debug.WriteLine(name.Name);
                 }
@@ -2826,8 +2826,7 @@ def g(): pass
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
-            replEval.CurrentOptions = new PythonInteractiveOptions();
-            replEval.CurrentOptions.EnableAttach = true;
+            replEval.CurrentOptions = new PythonInteractiveOptions() { EnableAttach = true };
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var code = new[] {

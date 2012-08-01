@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Repl {
         #region IReplCommand Members
 
         public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
-            var remoteEval = window.Evaluator as PythonReplEvaluator;
+            var remoteEval = window.Evaluator as IMultipleScopeEvaluator;
             if (remoteEval != null) {
                 remoteEval.SetScope(arguments);
             }
