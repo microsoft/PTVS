@@ -17,10 +17,6 @@
     <CodeAnalysisAdditionalOptions> /assemblycomparemode:StrongNameIgnoringVersion</CodeAnalysisAdditionalOptions>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(VSTarget)' == '11.0' ">
-    <DefineConstants>DEV11</DefineConstants>
-  </PropertyGroup>
-
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
@@ -34,6 +30,10 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(VSTarget)' == '11.0' ">
+    <DefineConstants>$(DefineConstants);DEV11</DefineConstants>
+  </PropertyGroup>
+  
   <PropertyGroup>
     <SignManifests>false</SignManifests>
     <SignAssembly>true</SignAssembly>

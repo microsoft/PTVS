@@ -1,7 +1,7 @@
 param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch)
 
 try {
-    msbuild
+    get-command msbuild
 } catch {
     Write-Error "Visual Studio x86 build tools are required."
     exit 1
@@ -73,10 +73,10 @@ foreach($versionedFile in $versionFiles) {
 
 $prevOutDir = $outDir
 
-$dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir
-$dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir
-$dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir
-$dev10InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\10.0" -name InstallDir
+$dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir 2> out-null
+$dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir 2> out-null
+$dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir 2> out-null
+$dev10InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\10.0" -name InstallDir 2> out-null
 
 $targetVersions = New-Object System.Collections.ArrayList($null)
 
@@ -85,10 +85,10 @@ if ($dev11InstallDir64 -or $dev11InstallDir) {
     $targetVersions.Add("11.0")
 }
 
-#if ($dev10InstallDir64 -or $dev10InstallDir) {
-#    echo "Will build for Dev10"
-#    $targetVersions.Add("10.0")
-#}
+if ($dev10InstallDir64 -or $dev10InstallDir) {
+    echo "Will build for Dev10"
+    $targetVersions.Add("10.0")
+}
 
 foreach ($targetVs in $targetVersions) {
     $asmverfile = dir Build\AssemblyVersion.cs
