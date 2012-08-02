@@ -1,7 +1,7 @@
-param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch)
+param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch, [string] $vsTarget)
 
 try {
-    get-command msbuild
+    get-command msbuild >out-null
 } catch {
     Write-Error "Visual Studio x86 build tools are required."
     exit 1
@@ -81,13 +81,17 @@ $dev10InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio
 $targetVersions = New-Object System.Collections.ArrayList($null)
 
 if ($dev11InstallDir64 -or $dev11InstallDir) {
-    echo "Will build for Dev11"
-    $targetVersions.Add("11.0")
+    if (-not $vsTarget -or $vsTarget -eq "11.0") {
+        echo "Will build for Dev11"
+        $targetVersions.Add("11.0")
+    }
 }
 
 if ($dev10InstallDir64 -or $dev10InstallDir) {
-    echo "Will build for Dev10"
-    $targetVersions.Add("10.0")
+    if (-not $vsTarget -or $vsTarget -eq "10.0") {
+        echo "Will build for Dev10"
+        $targetVersions.Add("10.0")
+    }
 }
 
 foreach ($targetVs in $targetVersions) {
