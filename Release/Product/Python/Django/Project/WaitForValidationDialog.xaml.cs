@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Django.Project {
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>
-    partial class WaitForValidationDialog : DialogWindow {
+    partial class WaitForValidationDialog : DialogWindowVersioningWorkaround {
         private Process _proc;
 
         public WaitForValidationDialog(Process process, string title) {

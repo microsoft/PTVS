@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Django.Project {
     /// <summary>
     /// Interaction logic for NewAppDialog.xaml
     /// </summary>
-    partial class NewAppDialog : DialogWindow {
+    partial class NewAppDialog : DialogWindowVersioningWorkaround {
         private readonly NewAppDialogViewModel _viewModel;
 
         public NewAppDialog() {

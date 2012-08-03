@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid(DjangoProjectGuid)]
-    public class DjangoProjectFactory : FlavoredProjectFactory {
+    public class DjangoProjectFactory : FlavoredProjectFactoryBase {
         internal const string DjangoProjectGuid = "5F0BE9CA-D677-4A4D-8806-6076C0FAAD37";
         private DjangoPackage _package;
 
@@ -28,35 +28,10 @@ namespace Microsoft.PythonTools.Django.Project {
             _package = package;
         }
 
-        #region IVsAggregatableProjectFactory
-
-        /// <summary>
-        /// Create an instance of our project. The initialization will be done later
-        /// when VS call InitalizeForOuter on it.
-        /// </summary>
-        /// <param name="outerProject">This is only useful if someone else is subtyping us</param>
-        /// <returns>An uninitialized instance of our project</returns>
-        protected override object PreCreateForOuter(object outerProject) {
-            // Note: to support being aggregated (flavored) ourself, we must use
-            // CreateInstance (passing in the outer object) rather than new
-            // Using the ILocalRegistry implementation means we can register our
-            // CLSID under the VS registry hive rather then globaly (although this
-            // approachpr still support creating globaly registered CLSID).
-
-            ILocalRegistry localRegistry = (ILocalRegistry)_package.GetService(typeof(SLocalRegistry));
-
-            // Create an instance of our project
-            IntPtr newProjectIUnknown;
-            Guid riid = VSConstants.IID_IUnknown;
-            ErrorHandler.ThrowOnFailure(localRegistry.CreateInstance(typeof(DjangoProject).GUID, outerProject, ref riid, 0, out newProjectIUnknown));
-
-            var newProject = (DjangoProject)Marshal.GetObjectForIUnknown(newProjectIUnknown);
-            newProject._package = _package;
-
-            return newProject;
+        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) {
+            var res = new DjangoProject();
+            res._package = _package;
+            return res;
         }
-
-        #endregion
-
     }
 }

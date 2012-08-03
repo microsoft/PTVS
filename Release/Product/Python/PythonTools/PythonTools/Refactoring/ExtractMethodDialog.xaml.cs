@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Interaction logic for ExtractMethodDialog.xaml
     /// </summary>
-    internal partial class ExtractMethodDialog : DialogWindow {
+    internal partial class ExtractMethodDialog : DialogWindowVersioningWorkaround {
         private bool _firstActivation;
 
         public ExtractMethodDialog(ExtractMethodRequestView viewModel) {

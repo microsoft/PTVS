@@ -66,7 +66,7 @@
     <Reference Include="Microsoft.VisualStudio.Text.UI" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
-    <Reference Include="Microsoft.VisualStudio.Shell.10.0">
+    <Reference Include="Microsoft.VisualStudio.Shell.$(VsTarget)">
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" />
@@ -148,6 +148,7 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="Debugger\DjangoLauncher.cs" />
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />
@@ -254,7 +255,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\Projects\DjangoProject\manage.py" />
-    <Content Include="Templates\Projects\DjangoProject\DjangoApp.pyproj" />
+    <Content Include="Templates\Projects\DjangoProject\DjangoApp.pyproj">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
       <SubType>Designer</SubType>
     </Content>

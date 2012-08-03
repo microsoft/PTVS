@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>
-    partial class WaitForCompleteAnalysisDialog : DialogWindow {
+    partial class WaitForCompleteAnalysisDialog : DialogWindowVersioningWorkaround {
         private VsProjectAnalyzer _analyzer;
 
         public WaitForCompleteAnalysisDialog(VsProjectAnalyzer analyzer) {

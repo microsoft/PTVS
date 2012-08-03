@@ -16,7 +16,7 @@
     
     <!-- we detect other installed software (IronPython, HPC pack) and set the install level of the feature to 2 if they're not installed to uncheck them by default.  -->
     <Property Id="INSTALLLEVEL" Value="1"/>
-    <Property Id="ApplicationFolderName" Value="Python Tools for Visual Studio" />
+    <Property Id="ApplicationFolderName" Value="$(var.ProductName)" />
 
     <Property Id="IPYTOOLS_INSTALLED">
       <ComponentSearch Id="Comp_VSTools" Guid="2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951" Type="file" />
@@ -126,7 +126,7 @@
     <!-- Features to install -->
     
     <!-- Main visual studio support feature, requires Visual Studio. -->
-    <Feature Id="ProductFeature" Title="Python Tools for Visual Studio" Description="Python Tools for Visual Studio"
+    <Feature Id="ProductFeature" Title="$(var.ProductName)" Description="$(var.ProductName)"
              Display="expand" Level="1" AllowAdvertise="no" Absent="disallow"  >
       <ComponentRef Id="Comp_InstallDirItems" Primary="yes" />
       <ComponentRef Id="Comp_PyProgRegistration" Primary="yes" />

@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>
-    partial class TaskProgressBar : DialogWindow {
+    partial class TaskProgressBar : DialogWindowVersioningWorkaround {
         private readonly Task _task;
         private readonly DispatcherTimer _timer;
         private readonly CancellationTokenSource _cancelSource;

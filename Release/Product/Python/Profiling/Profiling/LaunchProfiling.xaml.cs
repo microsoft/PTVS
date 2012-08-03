@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Interaction logic for LaunchProfiling.xaml
     /// </summary>
-    public partial class LaunchProfiling : DialogWindow {
+    public partial class LaunchProfiling : DialogWindowVersioningWorkaround {
         readonly ProfilingTargetView _viewModel;
 
         public LaunchProfiling(ProfilingTargetView viewModel) {

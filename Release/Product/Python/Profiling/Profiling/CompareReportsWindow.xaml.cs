@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Interaction logic for CompareReportsWindow.xaml
     /// </summary>
-    public partial class CompareReportsWindow : DialogWindow {
+    public partial class CompareReportsWindow : DialogWindowVersioningWorkaround {
         private readonly CompareReportsView _viewModel;
         
         public CompareReportsWindow(CompareReportsView viewModel) {

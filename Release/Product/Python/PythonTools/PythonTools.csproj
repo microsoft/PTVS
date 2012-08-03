@@ -128,7 +128,7 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
-    <Reference Include="Microsoft.VisualStudio.Shell.10.0">
+    <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget)">
       <Aliases>global</Aliases>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Design" />
@@ -136,6 +136,9 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -184,6 +187,7 @@
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="ProvideImportTemplatesAttribute.cs" />
+    <Compile Include="PythonTools\DialogWindowVersioningWorkaround.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCurrentScopeCommand.cs" />

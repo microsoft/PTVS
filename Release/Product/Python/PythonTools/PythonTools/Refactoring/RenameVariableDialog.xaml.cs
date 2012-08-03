@@ -20,7 +20,7 @@ namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Interaction logic for RenameVariableDialog.xaml
     /// </summary>
-    partial class RenameVariableDialog : DialogWindow {
+    partial class RenameVariableDialog : DialogWindowVersioningWorkaround {
         private bool _firstActivation;
 
         public RenameVariableDialog(RenameVariableRequestView viewModel) {

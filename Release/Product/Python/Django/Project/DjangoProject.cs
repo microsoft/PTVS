@@ -38,7 +38,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    class DjangoProject : FlavoredProject, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject {
+    class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject {
         internal DjangoPackage _package;
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Django.Project {
             menuItem = new OleMenuCommand(AddNewItem, menuCommandID);
             AddCommand(menuItem);                
 
-            var pyProj = this.innerVsHierarchy.GetProject().GetPythonProject();
+            var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
                 var analyzer = pyProj.GetProjectAnalyzer();
                 var projAnalyzer = pyProj.GetAnalyzer();
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             object extObject;
             ErrorHandler.ThrowOnFailure(
-                innerVsHierarchy.GetProperty(
+                _innerVsHierarchy.GetProperty(
                     VSConstants.VSITEMID_ROOT, 
                     (int)__VSHPROPID.VSHPROPID_ExtObject, 
                     out extObject
@@ -438,8 +438,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 int iDontShowAgain = 0;
                 string strBrowseLocations = "";
 
-                Guid projectGuid;
-                ((IPersist)this).GetClassID(out projectGuid);
+                Guid projectGuid = typeof(DjangoProject).GUID;
 
                 uint uiFlags = (uint)(__VSADDITEMFLAGS.VSADDITEM_AddNewItems | __VSADDITEMFLAGS.VSADDITEM_SuggestTemplateName | __VSADDITEMFLAGS.VSADDITEM_AllowHiddenTreeView);
 
@@ -450,7 +449,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 string folderName = item.Name();
                 addItemDialog.AddProjectItemDlg(itemid,
                     ref projectGuid,
-                    this as IVsProject3,
+                    this,
                     uiFlags, defCategory,
                     null,
                     ref strBrowseLocations,
@@ -517,7 +516,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private int OpenWithDefaultEditor(uint selectionItemId) {
             Guid view = Guid.Empty;
             IVsWindowFrame frame;
-            int hr = ((IVsProject)innerVsHierarchy).OpenItem(
+            int hr = ((IVsProject)_innerVsHierarchy).OpenItem(
                 selectionItemId,
                 ref view,
                 IntPtr.Zero,
@@ -533,7 +532,7 @@ namespace Microsoft.PythonTools.Django.Project {
             Guid ourEditor = typeof(DjangoEditorFactory).GUID;
             Guid view = Guid.Empty;
             IVsWindowFrame frame;
-            int hr = ((IVsProject3)innerVsHierarchy).ReopenItem(
+            int hr = ((IVsProject3)_innerVsHierarchy).ReopenItem(
                 selectionItemId,
                 ref ourEditor,
                 null,
@@ -579,7 +578,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     case VSConstants.VsUIHierarchyWindowCmdIds.UIHWCMDID_DoubleClick:
                     case VSConstants.VsUIHierarchyWindowCmdIds.UIHWCMDID_EnterKey:
                         // open the document if it's an HTML file
-                        if (IsHtmlFile(innerVsHierarchy, itemid)) {
+                        if (IsHtmlFile(_innerVsHierarchy, itemid)) {
                             int hr = OpenWithDjangoEditor(itemid);
 
                             if (ErrorHandler.Succeeded(hr)) {
@@ -612,7 +611,7 @@ namespace Microsoft.PythonTools.Django.Project {
             if (res != null && res.Value) {
                 object projectObj;
                 ErrorHandler.ThrowOnFailure(
-                    innerVsHierarchy.GetProperty(
+                    _innerVsHierarchy.GetProperty(
                         VSConstants.VSITEMID_ROOT,
                         (int)__VSHPROPID.VSHPROPID_ExtObject,
                         out projectObj
@@ -668,13 +667,13 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private Process RunManageCommand(string arguments) {
-            var pyProj = innerVsHierarchy.GetPythonInterpreterFactory();
+            var pyProj = _innerVsHierarchy.GetPythonInterpreterFactory();
             if (pyProj != null) {
                 var path = pyProj.Configuration.InterpreterPath;
                 var psi = new ProcessStartInfo(path, "manage.py " + arguments);
 
                 object projectDir;
-                ErrorHandler.ThrowOnFailure(innerVsHierarchy.GetProperty(
+                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
                     (uint)VSConstants.VSITEMID.Root,
                     (int)__VSHPROPID.VSHPROPID_ProjectDir,
                     out projectDir)
@@ -819,29 +818,26 @@ namespace Microsoft.PythonTools.Django.Project {
             return shell.ShowContextMenu(0, ref menuGroup, menuId, pnts, (Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget)this);
         }
 
-        /// <summary>
-        /// This should first QI for (and keep a reference to) each interface we plan to call on the inner project
-        /// and then call the base implementation to do the rest. Because the base implementation
-        /// already keep a reference to the interfaces it override, we don't need to QI for those.
-        /// </summary>
-        protected override void SetInnerProject(object inner) {
+        protected override void SetInnerProject(IntPtr innerIUnknown) {
+            var inner = Marshal.GetObjectForIUnknown(innerIUnknown);
+
             // The reason why we keep a reference to those is that doing a QI after being
             // aggregated would do the AddRef on the outer object.
             _innerVsProjectFlavorCfgProvider = inner as IVsProjectFlavorCfgProvider;
             _innerProject = inner as IVsProject;
             _innerProject3 = inner as IVsProject3;
+            _innerVsHierarchy = inner as IVsHierarchy;
 
             // Ensure we have a service provider as this is required for menu items to work
             if (this.serviceProvider == null)
                 this.serviceProvider = (System.IServiceProvider)this._package;
 
             // Now let the base implementation set the inner object
-            base.SetInnerProject(inner);
+            base.SetInnerProject(innerIUnknown);
 
             // Add our commands (this must run after we called base.SetInnerProject)            
-            _menuService = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as OleMenuCommandService;            
+            _menuService = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
         }
-
 
         #endregion
 
@@ -1154,7 +1150,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         int IVsProject.OpenItem(uint itemid, ref Guid rguidLogicalView, IntPtr punkDocDataExisting, out IVsWindowFrame ppWindowFrame) {
-            if (_innerProject3 != null && IsHtmlFile(innerVsHierarchy.GetItemName(itemid))) {
+            if (_innerProject3 != null && IsHtmlFile(_innerVsHierarchy.GetItemName(itemid))) {
                 // force HTML files opened w/o an editor type to be opened w/ our editor factory.
                 Guid guid = GuidList.guidDjangoEditorFactory;
                 return _innerProject3.OpenItemWithSpecific(
