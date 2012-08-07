@@ -38,7 +38,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject {
+    class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject, IDjangoProject {
         internal DjangoPackage _package;
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
@@ -805,7 +805,7 @@ namespace Microsoft.PythonTools.Django.Project {
         /// <param name="menuId">The context menu ID.</param>
         /// <param name="groupGuid">The GUID of the menu group.</param>
         /// <param name="points">The location at which to show the menu.</param>
-        protected virtual int ShowContextMenu(int menuId, Guid menuGroup, POINTS points) {
+        internal int ShowContextMenu(int menuId, Guid menuGroup, POINTS points) {
             IVsUIShell shell = _package.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
             Debug.Assert(shell != null, "Could not get the ui shell from the project");
@@ -874,7 +874,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
 
-        public string[] PropertyPagesToRemove {
+        internal string[] PropertyPagesToRemove {
             get {
                 return new[] { 
                     "{8c0201fe-8eca-403c-92a3-1bc55f031979}",   // typeof(DeployPropertyPageComClass)
@@ -885,7 +885,7 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        protected string RemovePropertyPagesFromList(string propertyPagesList) {
+        internal string RemovePropertyPagesFromList(string propertyPagesList) {
             string[] pagesToRemove = PropertyPagesToRemove;
             if (pagesToRemove != null) {
                 propertyPagesList = propertyPagesList.ToUpper(CultureInfo.InvariantCulture);
@@ -927,7 +927,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 #endif
 
-        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+        int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == GuidList.guidWebPackgeCmdId) {
                 if (nCmdID == 0x101 /*  EnablePublishToWindowsAzureMenuItem*/) {
 
@@ -1064,7 +1064,7 @@ namespace Microsoft.PythonTools.Django.Project {
             File.Move(filename + ".tmp", filename);
         }
 
-        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+        int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
             if (pguidCmdGroup == GuidList.guidVenusCmdId) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     switch (prgCmds[i].cmdID) {
@@ -1168,5 +1168,14 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
+
+        #region IDjangoProject Members
+
+        public ProjectSmuggler GetDjangoProject() {
+            return new ProjectSmuggler(this);
+        }
+
+        #endregion
     }
+
 }

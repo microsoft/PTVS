@@ -19,6 +19,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using MSBuild = Microsoft.Build.Evaluation;
 using MSBuildExecution = Microsoft.Build.Execution;
@@ -30,6 +31,9 @@ namespace Microsoft.PythonTools.Project
     /// </summary>
 
     public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase
+#if DEV11
+        , IVsAsynchronousProjectCreate
+#endif
     {
         #region fields
         private Microsoft.VisualStudio.Shell.Package package;
@@ -44,6 +48,9 @@ namespace Microsoft.PythonTools.Project
         /// The msbuild project for the project file.
         /// </summary>
         private MSBuild.Project buildProject;
+#if DEV11
+        private static readonly Lazy<IVsTaskSchedulerService> taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Package.GetGlobalService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
+#endif
         #endregion
 
         #region properties
@@ -195,5 +202,36 @@ namespace Microsoft.PythonTools.Project
         }
 
         #endregion
+
+#if DEV11
+
+        public virtual bool CanCreateProjectAsynchronously(ref Guid rguidProjectID, string filename, uint flags)
+        {
+            return true;
+        }
+
+        public void OnBeforeCreateProjectAsync(ref Guid rguidProjectID, string filename, string location, string pszName, uint flags)
+        {
+        }
+
+        public IVsTask CreateProjectAsync(ref Guid rguidProjectID, string filename, string location, string pszName, uint flags)
+        {
+            Guid iid = typeof(IVsHierarchy).GUID;
+            return VsTaskLibraryHelper.CreateAndStartTask(taskSchedulerService.Value, VsTaskRunContext.UIThreadBackgroundPriority, VsTaskLibraryHelper.CreateTaskBody(() =>
+            {
+                IntPtr project;
+                int cancelled;
+                CreateProject(filename, location, pszName, flags, ref iid, out project, out cancelled);
+                if (cancelled != 0)
+                {
+                    throw new OperationCanceledException();
+                }
+
+                return Marshal.GetObjectForIUnknown(project);
+            }));
+        }
+
+#endif
+
     }
 }

@@ -149,6 +149,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
+    <Compile Include="Project\IDjangoProject.cs" />
+    <Compile Include="Project\ProjectSmuggler.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="Debugger\DjangoLauncher.cs" />
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />

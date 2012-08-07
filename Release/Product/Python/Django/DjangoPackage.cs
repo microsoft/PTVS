@@ -157,7 +157,11 @@ namespace Microsoft.PythonTools.Django {
                 if (ErrorHandler.Succeeded(hr)) {
                     rdt.UnlockDocument((uint)_VSRDTFLAGS.RDT_ReadLock, cookie);
                 }
-                return hierarchy as DjangoProject;
+                var res = hierarchy as IDjangoProject;
+                if (res != null) {
+                    return res.GetDjangoProject().Project;
+                }
+                return null;
             } finally {
                 if (docData != IntPtr.Zero) {
                     Marshal.Release(docData);

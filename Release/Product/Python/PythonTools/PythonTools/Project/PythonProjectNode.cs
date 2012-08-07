@@ -309,7 +309,7 @@ namespace Microsoft.PythonTools.Project {
             var vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
             var guid = new Guid(PythonConstants.ProjectFactoryGuid);
             IEnumHierarchies hierarchies;
-            ErrorHandler.ThrowOnFailure((vsSolution.GetProjectEnum((uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_ALLPROJECTS), ref guid, out hierarchies)));
+            ErrorHandler.ThrowOnFailure((vsSolution.GetProjectEnum((uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION), ref guid, out hierarchies)));
             IVsHierarchy[] hierarchy = new IVsHierarchy[1];
             uint fetched;
             var curFactory = GetInterpreterFactory();

@@ -779,8 +779,11 @@ class Thread(object):
             locs = {}
             # iterate going forward, so later items replace earlier items
             for d in cur_frame.f_locals['context'].dicts:
-                for key in d.keys():
-                    locs[key] = d[key]
+                # hasattr check to defend against someone passing a bad dictionary value
+                # and us breaking the app.
+                if hasattr(d, 'keys'):
+                    for key in d.keys():
+                        locs[key] = d[key]
         else:
             locs = cur_frame.f_locals
         return locs
