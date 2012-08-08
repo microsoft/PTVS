@@ -1239,6 +1239,7 @@ class DebuggerLoop(object):
         _start_new_thread(self.connect_to_repl_backend, (port_num,))
 
     def connect_to_repl_backend(self, port_num):
+        DONT_DEBUG.append(visualstudio_py_repl.__file__)
         self.repl_backend = visualstudio_py_repl.DebugReplBackend(self)
         self.repl_backend.connect_from_debugger(port_num)
         self.repl_backend.execution_loop()

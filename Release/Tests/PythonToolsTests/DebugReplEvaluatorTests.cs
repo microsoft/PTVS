@@ -207,7 +207,26 @@ namespace PythonToolsTests {
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
         }
 
-        private string ExecuteCommand(IReplCommand cmd, string args) {
+        [TestMethod]
+        public void StepInto()
+        {
+            // Make sure that we don't step into the internal repl code
+            // http://pytools.codeplex.com/workitem/777
+            Attach("DebugReplTest6.py", 1);
+
+            var thread = _processes[0].GetThreads()[0];
+            thread.StepInto();
+            
+            // Result of step into is not immediate
+            Thread.Sleep(1000);
+
+            // We should still be in the <module>, not in the internals of print in repl code
+            Assert.AreEqual(1, thread.Frames.Count);
+            Assert.AreEqual("<module>", thread.Frames[0].FunctionName);
+        }
+
+        private string ExecuteCommand(IReplCommand cmd, string args)
+        {
             _window.ClearScreen();
             var execute = cmd.Execute(_window, args);
             execute.Wait();
