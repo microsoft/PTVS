@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Project;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
@@ -27,7 +28,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             get;
         }
 
-        Dictionary<string, HashSet<AnalysisValue>> Filters {
+        Dictionary<string, TagInfo> Filters {
             get;
         }
     }

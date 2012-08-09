@@ -2866,7 +2866,7 @@ t.x, t. =
             }
         }
 
-
+        /*
         [TestMethod]
         public void TestMemLeak() {
             
@@ -2916,11 +2916,11 @@ min(a, D())
                 baz.Analyze();
             }            
         }
-
+        
         [TestMethod]
         public void TestMemLeak2() {
             AnalyzeDirLeak(@"C:\Source\TCP0\Open_Source\Incubation\azure");
-        }
+        }*/
 
         private void AnalyzeDirLeak(string dir) {
             List<string> files = new List<string>();
@@ -3177,6 +3177,74 @@ a = f()
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", text.IndexOf("a =")), IntType);
         }
+
+        [TestMethod]
+        public void TestDecorator() {
+            var text1 = @"
+import mod2
+
+inst = mod2.MyClass()
+
+@inst.mydec
+def f():
+    return 42
+    
+
+";
+
+            var text2 = @"
+import mod1
+
+class MyClass(object):
+	def mydec(self, x):
+		return x()
+";
+
+            PermutedTest("mod", new[] { text1, text2 }, (pe) => {
+                AssertUtil.ContainsExactly(
+                    pe[1].Analysis.GetValuesByIndex("MyClass().mydec(mod1.f)", 1).Select(value => value.PythonType), 
+                    IntType
+                );
+            });
+        }
+
+
+        [TestMethod]
+        public void TestDecoratorFlow() {
+            var text1 = @"
+import mod2
+
+inst = mod2.MyClass()
+
+@inst.filter(foo=42)
+def f():
+    return 42
+    
+";
+
+            var text2 = @"
+import mod1
+
+class MyClass(object):
+    def filter(self, name=None, filter_func=None, **flags):
+        # @register.filter()
+        def dec(func):
+            return self.filter_function(func, **flags)
+        return dec
+    def filter_function(self, func, **flags):
+        name = getattr(func, ""_decorated_function"", func).__name__
+        return self.filter(name, func, **flags)
+";
+
+            PermutedTest("mod", new[] { text1, text2 }, (pe) => {
+                AssertUtil.ContainsExactly(
+                    pe[1].Analysis.GetValuesByIndex("filter_func", text2.IndexOf("# @register.filter()")).Select(value => value.PythonType),
+                    FunctionType,
+                    NoneType
+                );
+            });
+        }
+
 
         [TestMethod]
         public void TestClassInit() {

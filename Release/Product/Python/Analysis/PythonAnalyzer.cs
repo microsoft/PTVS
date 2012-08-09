@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Analysis {
             _dictKeysType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictKeys));
             _dictValuesType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictValues));
 
-            SpecializeFunction("__builtin__", "range", (n, unit, args) => unit.DeclaringModule.GetOrMakeNodeVariable(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet), analyze: false);
+            SpecializeFunction("__builtin__", "range", (n, unit, args, argNames) => unit.DeclaringModule.GetOrMakeNodeVariable(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet), analyze: false);
             SpecializeFunction("__builtin__", "min", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "max", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "getattr", SpecialGetAttr, analyze: false);
@@ -422,7 +422,7 @@ namespace Microsoft.PythonTools.Analysis {
             string retModule = returnType.Substring(0, lastDot);
             string typeName = returnType.Substring(lastDot + 1);
 
-            SpecializeFunction(moduleName, name, (call, unit, types) => {
+            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => {
                 ModuleReference modRef;
                 if (Modules.TryGetValue(retModule, out modRef)) {
                     if (modRef.Module != null) {
@@ -448,8 +448,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// New in 1.5.
         /// </summary>
         public void SpecializeFunction(string moduleName, string name, Func<CallExpression, CallInfo, IEnumerable<AnalysisValue>> dlg) {
-            SpecializeFunction(moduleName, name, (call, unit, types) => {
-                var res = dlg(call, new CallInfo(types));
+            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => {
+                var res = dlg(call, new CallInfo(types, argNames));
                 if (res != null) {
                     ISet<Namespace> set = EmptySet<Namespace>.Instance;
                     bool madeSet = false;
@@ -463,11 +463,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void SpecializeFunction(string moduleName, string name, Action<CallExpression> dlg) {
-            SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(call); return null; });
+            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => { dlg(call); return null; });
         }
 
         public void SpecializeFunction(string moduleName, string name, Action<PythonAnalyzer, CallExpression> dlg) {
-            SpecializeFunction(moduleName, name, (call, unit, types) => { dlg(this, call); return null; });
+            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => { dlg(this, call); return null; });
         }
 
         /// <summary>
@@ -548,7 +548,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Currently this just provides a hook when the function is called - it could be expanded
         /// to providing the interpretation of when the function is called as well.
         /// </summary>
-        private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze = true, bool save = true) {
+        private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze = true, bool save = true) {
             ModuleReference module;
 
             int lastDot;
@@ -574,7 +574,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private ISet<Namespace> LoadComponent(CallExpression node, AnalysisUnit unit, ISet<Namespace>[] args) {
+        private ISet<Namespace> LoadComponent(CallExpression node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
             if (args.Length == 2 && Interpreter is IDotNetPythonInterpreter) {
                 var xaml = args[1];
                 var self = args[0];
@@ -621,7 +621,7 @@ namespace Microsoft.PythonTools.Analysis {
                                 // track references w/o this extra effort.
                                 foreach (var inst in self) {
                                     InstanceInfo instInfo = inst as InstanceInfo;
-                                    if (instInfo != null) {
+                                    if (instInfo != null && instInfo.InstanceAttributes != null) {
                                         VariableDef def;
                                         if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
                                             def.AddAssignment(
@@ -698,22 +698,22 @@ namespace Microsoft.PythonTools.Analysis {
             return null;
         }
 
-        private ISet<Namespace> Nop(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+        private ISet<Namespace> Nop(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
             return EmptySet<Namespace>.Instance;
         }
 
-        private ISet<Namespace> CopyFunction(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+        private ISet<Namespace> CopyFunction(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
             if (args.Length > 0) {
                 return args[0];
             }
             return EmptySet<Namespace>.Instance;
         }
 
-        private ISet<Namespace> ReturnsString(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+        private ISet<Namespace> ReturnsString(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
             return _stringType.Instance;
         }
 
-        private ISet<Namespace> SpecialGetAttr(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+        private ISet<Namespace> SpecialGetAttr(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             if (args.Length >= 2) {
@@ -735,7 +735,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
         
-        private ISet<Namespace> ReturnUnionOfInputs(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args) {
+        private ISet<Namespace> ReturnUnionOfInputs(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
             ISet<Namespace> res = EmptySet<Namespace>.Instance;
             bool madeSet = false;
             foreach (var set in args) {
@@ -971,7 +971,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private void SaveDelayedSpecialization(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze, string realModName) {
+        private void SaveDelayedSpecialization(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze, string realModName) {
             lock (_specializationInfo) {
                 List<SpecializationInfo> specList;
                 if (!_specializationInfo.TryGetValue(realModName ?? moduleName, out specList)) {
@@ -984,10 +984,10 @@ namespace Microsoft.PythonTools.Analysis {
 
         class SpecializationInfo {
             public readonly string Name, ModuleName;
-            public readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> Delegate;
+            public readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> Delegate;
             public readonly bool Analyze;
 
-            public SpecializationInfo(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze) {
+            public SpecializationInfo(string moduleName, string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze) {
                 ModuleName = moduleName;
                 Name = name;
                 Delegate = dlg;

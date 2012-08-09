@@ -26,19 +26,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// ways.
     /// </summary>
     class SpecializedCallable : SpecializedNamespace {
-        private readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> _call;
+        private readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> _call;
 
-        public SpecializedCallable(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
+        public SpecializedCallable(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
             : base(original) {
             _call = call;
         }
 
-        public SpecializedCallable(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
+        public SpecializedCallable(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
             : base(original, inst) {
             _call = call;
         }
 
-        internal static SpecializedNamespace MakeSpecializedCallable(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze, Namespace v) {
+        internal static SpecializedNamespace MakeSpecializedCallable(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze, Namespace v) {
             SpecializedNamespace special;
             if (analyze) {
                 special = new SpecializedCallable(v, dlg);
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             var analyzed = _original.Call(node, unit, args, keywordArgNames);
-            var res = _call((CallExpression)node, unit, realArgs);
+            var res = _call((CallExpression)node, unit, realArgs, keywordArgNames);
             if (res == null) {
                 return analyzed;
             } else if (analyzed.Count == 0) {

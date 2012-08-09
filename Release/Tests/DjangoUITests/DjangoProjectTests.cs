@@ -13,7 +13,8 @@
  * ***************************************************************************/
 
 using System;
-using System.Threading;         // Ambiguous with EnvDTE.Thread.
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -52,6 +53,42 @@ namespace DjangoUITests {
             Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("settings.py"));
             Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("urls.py"));
             Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("__init__.py"));
+        }
+
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/778
+        /// </summary>
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DjangoCommandsNonDjangoApp() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var newProjDialog = app.FileNewProject();
+
+            newProjDialog.FocusLanguageNode();
+
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+            djangoApp.SetFocus();
+
+            newProjDialog.ClickOK();
+
+            // wait for new solution to load...
+            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            try {
+                app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewProject.ValidateDjangoApp");
+            } catch(COMException e) {
+                // requires a Django project
+                Assert.IsTrue(e.ToString().Contains("is not available"));
+            }
+
+            try {
+                app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewProject.ValidateDjangoApp");
+            } catch (COMException e) {
+                // requires a Django project
+                Assert.IsTrue(e.ToString().Contains("is not available"));
+            }
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

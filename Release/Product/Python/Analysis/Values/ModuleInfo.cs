@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly WeakReference _weakModule;
         private readonly IModuleContext _context;
         private Dictionary<string, WeakReference> _packageModules;
-        private Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>, bool>> _specialized;
+        private Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>>, bool>> _specialized;
         private ModuleInfo _parentPackage;
         private DependentData _definition = new DependentData();
 
@@ -114,12 +114,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze) {
+        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze) {
             lock (this) {
                 if (_specialized == null) {
-                    _specialized = new Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>, bool>>();
+                    _specialized = new Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>>, bool>>();
                 }
-                _specialized[name] = new Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>>, bool>(dlg, analyze);
+                _specialized[name] = new Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>>, bool>(dlg, analyze);
             }
         }
 
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private void SpecializeOneFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze) {
+        private void SpecializeOneFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze) {
             int lastIndex;
             VariableDef def;
             if (Scope.Variables.TryGetValue(name, out def)) {
@@ -153,7 +153,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private static void SpecializeVariableDef(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, VariableDef def, bool analyze) {
+        private static void SpecializeVariableDef(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, VariableDef def, bool analyze) {
             List<Namespace> items = new List<Namespace>();
             foreach (var v in def.Types) {
                 if (!(v is SpecializedNamespace) && v.DeclaringModule != null) {

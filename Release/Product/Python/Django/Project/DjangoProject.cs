@@ -46,8 +46,8 @@ namespace Microsoft.PythonTools.Django.Project {
         private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
         private OleMenuCommandService _menuService;
         private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
-        internal Dictionary<string, HashSet<AnalysisValue>> _tags = new Dictionary<string, HashSet<AnalysisValue>>();
-        internal Dictionary<string, HashSet<AnalysisValue>> _filters = new Dictionary<string, HashSet<AnalysisValue>>();
+        internal Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
+        internal Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
         internal Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>> _templateFiles = new Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>> _contextTable = new ConditionalWeakTable<CallExpression, ExternalAnalysisValue<ContextMarker>>();
         private readonly Dictionary<string, GetTemplateAnalysisValue> _templateAnalysis = new Dictionary<string, GetTemplateAnalysisValue>();
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
         public DjangoProject() {
             foreach (var tagName in DjangoCompletionSource._nestedEndTags) {
-                _tags[tagName] = new HashSet<AnalysisValue>();
+                _tags[tagName] = new TagInfo("");
             }
         }
 
@@ -188,14 +188,14 @@ namespace Microsoft.PythonTools.Django.Project {
             return null;
         }
 
-        private static void ProcessTags(CallInfo callInfo, Dictionary<string, HashSet<AnalysisValue>> tags) {
+        private static void ProcessTags(CallInfo callInfo, Dictionary<string, TagInfo> tags) {
             if (callInfo.NormalArgumentCount >= 3) {
                 // library.filter(name, value)
                 foreach (var name in callInfo.GetArgument(1)) {
                     var constName = name.GetConstantValue();
                     if (constName == Type.Missing) {
                         if (name.Name != null) {
-                            RegisterTag(tags, name.Name);
+                            RegisterTag(tags, name.Name, name.Documentation);
                         }
                     } else {
                         var strName = name.GetConstantValueAsString();
@@ -204,19 +204,24 @@ namespace Microsoft.PythonTools.Django.Project {
                         }
                     }
                 }
+                foreach (var func in callInfo.GetArgument(2)) {
+                    if (func.Name != null) {
+                        RegisterTag(tags, func.Name, func.Documentation);
+                    }
+                }
             } else if (callInfo.NormalArgumentCount >= 2) {
                 // library.filter(value)
                 foreach (var name in callInfo.GetArgument(1)) {
                     string tagName = name.Name ?? name.GetConstantValueAsString();
                     if (tagName != null) {
-                        RegisterTag(tags, tagName);
+                        RegisterTag(tags, tagName, name.Documentation);
                     }
                 }
             } else if (callInfo.NormalArgumentCount == 1) {
                 // library.filter(value)
                 foreach (var name in callInfo.GetArgument(0)) {
                     if (name.Name != null) {
-                        RegisterTag(tags, name.Name);
+                        RegisterTag(tags, name.Name, name.Documentation);
                     }
                 }
             }
@@ -231,6 +236,13 @@ namespace Microsoft.PythonTools.Django.Project {
                 foreach (var curVal in value) {
                     set.Add(curVal);
                 }
+            }
+        }
+
+        private static void RegisterTag(Dictionary<string, TagInfo> tags, string name, string documentation = null) {
+            TagInfo tag;
+            if (!tags.TryGetValue(name, out tag)) {
+                tags[name] = tag = new TagInfo(documentation);
             }
         }
 
@@ -558,6 +570,10 @@ namespace Microsoft.PythonTools.Django.Project {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
                             }
                             return VSConstants.S_OK;
+                        case PkgCmdIDList.cmdidValidateDjangoApp:
+                        case PkgCmdIDList.cmdidSyncDb:
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                            break;
                     }
                 }
 
@@ -1176,6 +1192,13 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
+    }
+
+    class TagInfo {
+        public readonly string Documentation;
+        public TagInfo(string doc) {
+            Documentation = doc;
+        }
     }
 
 }

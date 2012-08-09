@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze) {
+        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze) {
             try {
                 foreach (var v in this[name]) {
                     if (!(v is SpecializedNamespace)) {

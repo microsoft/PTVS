@@ -338,6 +338,33 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
        
 
         public override bool Walk(FunctionDefinition node) {
+            InterpreterScope funcScope;
+            if (_unit.DeclaringModule.NodeScopes.TryGetValue(node, out funcScope)) {
+                var function = ((FunctionScope)funcScope).Function;
+                var analysisUnit = (FunctionAnalysisUnit)((FunctionScope)funcScope).Function._analysisUnit;
+
+                var curClass = analysisUnit.Scopes[Scopes.Length - 1] as ClassScope;
+                if (curClass != null) {
+                    // wire up information about the class
+                    // TODO: Should follow MRO
+                    var bases = LookupBaseMethods(
+                        analysisUnit.Ast.Name, 
+                        curClass.Class.Bases, 
+                        analysisUnit.Ast, 
+                        analysisUnit
+                    );
+                    foreach (var ns in bases) {
+                        BuiltinMethodInfo methodInfo = ns as BuiltinMethodInfo;
+                        if (methodInfo != null) {
+                            PropagateBaseParams(function, methodInfo);
+                        }
+                    }
+                }
+
+                analysisUnit.ProcessFunctionDecorators(this, analysisUnit.Ast, function);
+                analysisUnit.AnalyzeDefaultParameters(this, function);
+            }           
+
             return false;
         }
 

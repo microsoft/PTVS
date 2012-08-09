@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal Dictionary<CallArgs, SequenceInfo> _starArgs;
         [ThreadStatic]
         private static List<Namespace> _descriptionStack;
-        const int MaximumCallCount = 50;
+        const int MaximumCallCount = 150;
 
         internal FunctionInfo(AnalysisUnit unit)
             : base(unit) {
@@ -571,6 +571,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return tmp.Types;
             }
             // TODO: Create one and add a dependency
+            if (name == "__name__") {
+                return unit.ProjectState.GetConstant(FunctionDefinition.Name);
+            }
 
             return ProjectState._functionType.GetMember(node, unit, name);
         }

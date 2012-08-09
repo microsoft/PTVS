@@ -16,9 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
 
 namespace DjangoTests {
@@ -693,17 +694,18 @@ namespace DjangoTests {
     }
 
     class TestCompletionContext : IDjangoCompletionContext {
-        private readonly Dictionary<string, HashSet<AnalysisValue>> _variables, _filters;
+        private readonly Dictionary<string, HashSet<AnalysisValue>> _variables;
+        private readonly Dictionary<string, TagInfo> _filters;
         internal static TestCompletionContext Simple = new TestCompletionContext(new[] { "foo", "bar" }, new[] { "cut", "lower" });
 
         public TestCompletionContext(string[] variables, string[] filters) {
             _variables = new Dictionary<string, HashSet<AnalysisValue>>();
-            _filters = new Dictionary<string, HashSet<AnalysisValue>>();
+            _filters = new Dictionary<string, TagInfo>();
             foreach (var variable in variables) {
                 _variables[variable] = new HashSet<AnalysisValue>();
             }
             foreach (var filter in filters) {
-                _filters[filter] = new HashSet<AnalysisValue>();
+                _filters[filter] = new TagInfo("");
             }
         }
 
@@ -713,7 +715,7 @@ namespace DjangoTests {
             get { return _variables; }
         }
 
-        public Dictionary<string, HashSet<Microsoft.PythonTools.Analysis.AnalysisValue>> Filters {
+        public Dictionary<string, TagInfo> Filters {
             get { return _filters; }
         }
 

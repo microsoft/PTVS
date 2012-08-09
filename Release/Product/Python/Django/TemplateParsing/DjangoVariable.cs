@@ -297,7 +297,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         private static IEnumerable<CompletionInfo> FilterFilters(IDjangoCompletionContext context, string filter) {
-            return from tag in context.Filters.Keys where tag.StartsWith(filter) select new CompletionInfo(tag, StandardGlyphGroup.GlyphKeyword, tag.Substring(filter.Length));
+            return from tag in context.Filters where tag.Key.StartsWith(filter) select new 
+                CompletionInfo(tag.Key, StandardGlyphGroup.GlyphKeyword, tag.Key.Substring(filter.Length), tag.Value.Documentation);
         }
 
     }
@@ -306,11 +307,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public readonly string DisplayText;
         public readonly StandardGlyphGroup Glyph;
         public readonly string InsertionText;
+        public readonly string Documentation;
 
-        public CompletionInfo(string displayText, StandardGlyphGroup glyph, string insertionText = null) {
+        public CompletionInfo(string displayText, StandardGlyphGroup glyph, string insertionText = null, string documentation = null) {
             DisplayText = displayText;
             Glyph = glyph;
             InsertionText = insertionText ?? displayText;
+            Documentation = documentation ?? "";
         }
 
         internal static IEnumerable<CompletionInfo> ToCompletionInfo(IEnumerable<string> keys, StandardGlyphGroup glyph) {

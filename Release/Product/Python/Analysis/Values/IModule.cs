@@ -14,12 +14,13 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     interface IModule {
         IModule GetChildPackage(IModuleContext context, string name);
         IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext context);
 
-        void SpecializeFunction(string name, System.Func<Parsing.Ast.CallExpression, Interpreter.AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> dlg, bool analyze);
+        void SpecializeFunction(string name, System.Func<Parsing.Ast.CallExpression, Interpreter.AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze);
     }
 }

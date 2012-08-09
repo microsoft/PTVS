@@ -220,34 +220,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        protected override void AnalyzeWorker(DDG ddg) {
+        protected sealed override void AnalyzeWorker(DDG ddg) {
             InterpreterScope interpreterScope;
             if (!DeclaringModule.NodeScopes.TryGetValue(Ast, out interpreterScope)) {
                 return;
             }
             var funcScope = (FunctionScope)interpreterScope;
-            var function = funcScope.Function;
-            Debug.Assert(function != null);
-            // TODO: __new__ in class should assign returnValue
-            ddg.SetCurrentUnit(_outerUnit);
-
-            ClassScope curClass = Scopes[Scopes.Length - 1] as ClassScope;
-            if (curClass != null) {
-                // wire up information about the class
-                // TODO: Should follow MRO
-                var bases = ddg.LookupBaseMethods(Ast.Name, curClass.Class.Bases, Ast, this);
-                foreach (var ns in bases) {
-                    BuiltinMethodInfo methodInfo = ns as BuiltinMethodInfo;
-                    if(methodInfo != null) {
-                        ddg.PropagateBaseParams(function, methodInfo);
-                    }
-                }
-            }
-
-            ProcessFunctionDecorators(ddg, Ast, function);
 
             // analyze the function w/o any parameter types.
-            AnalyzeFunction(ddg, function, funcScope);
+            AnalyzeFunction(ddg, funcScope.Function, funcScope);
         }
 
         internal void ProcessFunctionDecorators(DDG ddg, FunctionDefinition funcdef, FunctionInfo newScope) {
@@ -310,7 +291,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         protected virtual void AnalyzeFunction(DDG ddg, FunctionInfo function, FunctionScope funcScope) {
-            // process parameters
+            // analyze defaults in outer unit
+            ddg.SetCurrentUnit(_outerUnit);
+            AnalyzeDefaultParameters(ddg, function);
+            
+            ddg.SetCurrentUnit(this);
+            Ast.Body.Walk(ddg);
+        }
+
+        internal void AnalyzeDefaultParameters(DDG ddg, FunctionInfo function) {
             int len = Math.Min(Ast.Parameters.Count, function.ParameterTypes.Length);
             for (int i = 0; i < len; i++) {
                 var p = Ast.Parameters[i];
@@ -323,9 +312,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 ddg._eval.EvaluateMaybeNull(p.Annotation);
             }
             ddg._eval.EvaluateMaybeNull(Ast.ReturnAnnotation);
-
-            ddg.SetCurrentUnit(this);
-            Ast.Body.Walk(ddg);
         }
     }
 

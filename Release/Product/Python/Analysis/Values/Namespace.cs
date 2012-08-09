@@ -54,12 +54,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public virtual string Documentation {
-            get {
-                return String.Empty;
-            }
-        }
-
         public virtual string Description {
             get { return null; }
         }

@@ -12,9 +12,10 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
-using System;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -24,17 +25,25 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public struct CallInfo {
         private readonly ISet<Namespace>[] _args;
+        private readonly NameExpression[] _names;
 
-        internal CallInfo(ISet<Namespace>[] args) {
+        internal CallInfo(ISet<Namespace>[] args, NameExpression[] names) {
             _args = args;
+            _names = names;
         }
 
         public int NormalArgumentCount {
             get {
-                return _args.Length;
+                return _args.Length - _names.Length;
             }
         }
-
+        /*
+        public int NamedArgumentCount {
+            get {
+                return _names.Length;
+            }
+        }
+        */
         public IEnumerable<AnalysisValue> GetArgument(int arg) {
             if (arg >= _args.Length) {
                 throw new ArgumentOutOfRangeException("arg");
@@ -48,5 +57,19 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
+        /*
+        public IEnumerable<AnalysisValue> GetNamedArgument(int arg) {
+            if (arg >= _names.Length) {
+                throw new ArgumentOutOfRangeException("arg");
+            }
+
+            foreach (var value in _args[_args.Length - _names.Length + arg]) {
+                if (value is ExternalNamespace) {
+                    yield return (AnalysisValue)((ExternalNamespace)value).Value;
+                } else {
+                    yield return value;
+                }
+            }
+        }*/
     }
 }

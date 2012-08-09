@@ -52,6 +52,15 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// Returns the documentation for the object, or String.Empty if no documentation is available.
+        /// </summary>
+        public virtual string Documentation {
+            get {
+                return String.Empty;
+            }
+        }
+
+        /// <summary>
         /// Gets a list of locations where this value is defined.
         /// </summary>
         public virtual IEnumerable<LocationInfo> Locations {

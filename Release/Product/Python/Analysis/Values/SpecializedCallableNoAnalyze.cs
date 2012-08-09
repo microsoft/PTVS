@@ -26,14 +26,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// ways.
     /// </summary>
     class SpecializedCallableNoAnalyze : SpecializedNamespace {
-        private readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> _call;
+        private readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> _call;
 
-        public SpecializedCallableNoAnalyze(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
+        public SpecializedCallableNoAnalyze(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
             : base(original) {
             _call = call;
         }
 
-        public SpecializedCallableNoAnalyze(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], ISet<Namespace>> call)
+        public SpecializedCallableNoAnalyze(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
             : base(original, inst) {
             _call = call;
         }
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 realArgs = Utils.Concat(_inst.SelfSet, args);
             }
             
-            return _call((CallExpression)node, unit, realArgs) ?? EmptySet<Namespace>.Instance;
+            return _call((CallExpression)node, unit, realArgs, keywordArgNames) ?? EmptySet<Namespace>.Instance;
         }
 
         protected override SpecializedNamespace Clone(Namespace original, Namespace instance) {

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
@@ -135,7 +136,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 }
             }
 
-            public Dictionary<string, HashSet<AnalysisValue>> Filters {
+            public Dictionary<string, TagInfo> Filters {
                 get {
                     return _project._filters;
                 }
@@ -220,7 +221,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                     new Completion(
                         tag.DisplayText,
                         tag.InsertionText,
-                        "",
+                        StripDocumentation(tag.Documentation),
                         _provider._glyphService.GetGlyph(
                             tag.Glyph,
                             StandardGlyphItem.GlyphItemPublic
@@ -230,6 +231,20 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 );
             }
             return completions;
+        }
+
+        internal static string StripDocumentation(string doc) {
+            if (doc == null) {
+                return String.Empty;
+            }
+            StringBuilder result = new StringBuilder(doc.Length);
+            foreach (string line in doc.Split('\n')) {
+                if (result.Length > 0) {
+                    result.Append("\r\n");
+                }
+                result.Append(line.Trim());
+            }
+            return result.ToString();
         }
 
         private IEnumerable<CompletionInfo> FilterBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint) {
