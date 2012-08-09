@@ -84,8 +84,8 @@
             this.tableLayoutPanel5.ColumnCount = 1;
             this.tableLayoutPanel5.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel5.Controls.Add(this._evalNever, 0, 0);
-            this.tableLayoutPanel5.Controls.Add(this._evalAlways, 0, 2);
             this.tableLayoutPanel5.Controls.Add(this._evalNoCalls, 0, 1);
+            this.tableLayoutPanel5.Controls.Add(this._evalAlways, 0, 2);
             this.tableLayoutPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel5.Location = new System.Drawing.Point(6, 21);
             this.tableLayoutPanel5.Name = "tableLayoutPanel5";
@@ -146,7 +146,7 @@
             this._inlinePrompts.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._inlinePrompts.Name = "_inlinePrompts";
             this._inlinePrompts.Size = new System.Drawing.Size(112, 17);
-            this._inlinePrompts.TabIndex = 2;
+            this._inlinePrompts.TabIndex = 1;
             this._inlinePrompts.Text = "Use &inline prompts";
             this._inlinePrompts.UseVisualStyleBackColor = true;
             this._inlinePrompts.CheckedChanged += new System.EventHandler(this._inlinePrompts_CheckedChanged);
@@ -159,7 +159,7 @@
             this._useUserDefinedPrompts.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._useUserDefinedPrompts.Name = "_useUserDefinedPrompts";
             this._useUserDefinedPrompts.Size = new System.Drawing.Size(146, 17);
-            this._useUserDefinedPrompts.TabIndex = 4;
+            this._useUserDefinedPrompts.TabIndex = 3;
             this._useUserDefinedPrompts.Text = "Use use&r defined prompts";
             this._useUserDefinedPrompts.UseVisualStyleBackColor = true;
             this._useUserDefinedPrompts.CheckedChanged += new System.EventHandler(this._useInterpreterPrompts_CheckedChanged);
@@ -220,7 +220,7 @@
             this._liveCompletionsOnly.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._liveCompletionsOnly.Name = "_liveCompletionsOnly";
             this._liveCompletionsOnly.Size = new System.Drawing.Size(145, 17);
-            this._liveCompletionsOnly.TabIndex = 3;
+            this._liveCompletionsOnly.TabIndex = 2;
             this._liveCompletionsOnly.Text = "Only use li&ve completions";
             this._liveCompletionsOnly.UseVisualStyleBackColor = true;
             this._liveCompletionsOnly.CheckedChanged += new System.EventHandler(this._liveCompletionsOnly_CheckedChanged);
@@ -231,8 +231,8 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel3, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this._completionModeGroup, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.tableLayoutPanel4, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this._completionModeGroup, 0, 3);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -275,8 +275,8 @@
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 45F));
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 55F));
             this.tableLayoutPanel3.Controls.Add(this._smartReplHistory, 0, 0);
-            this.tableLayoutPanel3.Controls.Add(this._liveCompletionsOnly, 1, 1);
             this.tableLayoutPanel3.Controls.Add(this._inlinePrompts, 0, 1);
+            this.tableLayoutPanel3.Controls.Add(this._liveCompletionsOnly, 1, 1);
             this.tableLayoutPanel3.Controls.Add(this._useUserDefinedPrompts, 0, 2);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 8);
@@ -301,9 +301,9 @@
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 45F));
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 5F));
             this.tableLayoutPanel4.Controls.Add(this._priPromptLabel, 1, 0);
-            this.tableLayoutPanel4.Controls.Add(this._secPrompt, 4, 0);
-            this.tableLayoutPanel4.Controls.Add(this._secPromptLabel, 3, 0);
             this.tableLayoutPanel4.Controls.Add(this._priPrompt, 2, 0);
+            this.tableLayoutPanel4.Controls.Add(this._secPromptLabel, 3, 0);
+            this.tableLayoutPanel4.Controls.Add(this._secPrompt, 4, 0);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 77);
             this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(3, 0, 3, 0);
@@ -313,13 +313,13 @@
             this.tableLayoutPanel4.Size = new System.Drawing.Size(485, 26);
             this.tableLayoutPanel4.TabIndex = 2;
             // 
-            // PythonInteractiveDebugOptionsControl
+            // PythonDebugInteractiveOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this.Name = "PythonInteractiveDebugOptionsControl";
+            this.Name = "PythonDebugInteractiveOptionsControl";
             this.Size = new System.Drawing.Size(491, 315);
             this._completionModeGroup.ResumeLayout(false);
             this._completionModeGroup.PerformLayout();

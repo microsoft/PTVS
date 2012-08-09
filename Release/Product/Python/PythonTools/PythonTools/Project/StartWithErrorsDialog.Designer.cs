@@ -94,10 +94,10 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this._icon, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this._buildErrorsText, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this._yesButton, 2, 1);
             this.tableLayoutPanel1.Controls.Add(this._noButton, 3, 1);
             this.tableLayoutPanel1.Controls.Add(this._dontShowAgainCheckbox, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this._yesButton, 2, 1);
-            this.tableLayoutPanel1.Controls.Add(this._buildErrorsText, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);

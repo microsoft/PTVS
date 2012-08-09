@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="textBox2.Text" xml:space="preserve">
+  <data name="_fullDbLabel.Text" xml:space="preserve">
     <value>Generates the database for all of the built-in modules and all of the standard library and site packages supported by the Python interpreter. This process typically takes a couple of minutes. You can continue to work while the process runs in the background.</value>
   </data>
 </root>

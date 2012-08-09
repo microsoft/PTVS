@@ -24,9 +24,9 @@ namespace Microsoft.PythonTools.Refactoring {
         private bool _firstActivation;
 
         public RenameVariableDialog(RenameVariableRequestView viewModel) {
-            InitializeComponent();
-
             DataContext = viewModel;
+
+            InitializeComponent();
 
             _firstActivation = true;
         }

@@ -56,9 +56,9 @@
             this.tableLayoutPanel2.ColumnCount = 2;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel2.Controls.Add(this._pubNowButton, 1, 3);
             this.tableLayoutPanel2.Controls.Add(this._publishLocationLabel, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._pubUrl, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this._pubNowButton, 1, 3);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(6, 23);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";

@@ -60,7 +60,7 @@
                          ScrollViewer.HorizontalScrollBarVisibility="Auto"
                          IsReadOnly="True" IsReadOnlyCaretVisible="True"
                          FontFamily="{Binding PreviewFontFamily}"
-                         Text="{Binding PreviewText}"
+                         Text="{Binding PreviewText,Mode=OneWay}"
                          AutomationProperties.AutomationId="PreviewText" />
             </DockPanel>
             

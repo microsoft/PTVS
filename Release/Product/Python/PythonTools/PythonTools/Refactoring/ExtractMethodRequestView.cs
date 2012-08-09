@@ -66,6 +66,9 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             _targetScopes = new ReadOnlyCollection<ScopeStatement>(targetScopes);
+            if (_defaultScope == null && _targetScopes.Any()) {
+                _defaultScope = _targetScopes[0];
+            }
 
             //_name = null;
             //_targetScope = null;
@@ -233,6 +236,8 @@ namespace Microsoft.PythonTools.Refactoring {
             if (e.PropertyName != "IsValid") {
                 IsValid = (Name != null && _validNameRegex.IsMatch(Name)) &&
                     TargetScope != null;
+            }
+            if (e.PropertyName != "PreviewText") {
                 UpdatePreview();
             }
         }

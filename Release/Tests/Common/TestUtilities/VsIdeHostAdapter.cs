@@ -239,6 +239,9 @@ namespace TestUtilities
                 return configKey;
             }
 
+            if (System.Environment.GetEnvironmentVariable("RUN_NO_EXP") != null)
+                return "10.0";
+
             // Default to the experimental hive for the development evnironment.
             return "10.0Exp";
         }

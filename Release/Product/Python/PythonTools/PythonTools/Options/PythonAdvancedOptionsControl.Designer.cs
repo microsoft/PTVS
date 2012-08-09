@@ -174,11 +174,11 @@
             this.tableLayoutPanel2.ColumnCount = 1;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.Controls.Add(this._promptOnBuildError, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this._debugStdLib, 0, 5);
-            this.tableLayoutPanel2.Controls.Add(this._breakOnSystemExitZero, 0, 4);
-            this.tableLayoutPanel2.Controls.Add(this._teeStdOut, 0, 3);
-            this.tableLayoutPanel2.Controls.Add(this._waitOnNormalExit, 0, 2);
             this.tableLayoutPanel2.Controls.Add(this._waitOnAbnormalExit, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this._waitOnNormalExit, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this._teeStdOut, 0, 3);
+            this.tableLayoutPanel2.Controls.Add(this._breakOnSystemExitZero, 0, 4);
+            this.tableLayoutPanel2.Controls.Add(this._debugStdLib, 0, 5);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
@@ -227,9 +227,9 @@
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
             this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 0);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 2);
             this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 2);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 2);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";

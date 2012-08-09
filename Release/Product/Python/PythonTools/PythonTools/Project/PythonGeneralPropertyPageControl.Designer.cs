@@ -60,13 +60,13 @@
             this.tableLayoutPanel2.ColumnCount = 2;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Controls.Add(this._startupFile, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this._startupFileLabel, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this._windowsApplication, 0, 2);
+            this.tableLayoutPanel2.Controls.Add(this._startupFile, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this._workingDirLabel, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this._workingDirectory, 1, 1);
+            this.tableLayoutPanel2.Controls.Add(this._windowsApplication, 0, 2);
             this.tableLayoutPanel2.Controls.Add(this._defaultInterpreterLabel, 0, 3);
             this.tableLayoutPanel2.Controls.Add(this._defaultInterpreter, 1, 3);
-            this.tableLayoutPanel2.Controls.Add(this._workingDirectory, 1, 1);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(6, 21);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";

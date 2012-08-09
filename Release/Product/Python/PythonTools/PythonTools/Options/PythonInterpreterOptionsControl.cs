@@ -68,9 +68,9 @@ namespace Microsoft.PythonTools.Options {
                 _showSettingsFor.Enabled = true;
 
                 if (curOptions.IsConfigurable) {
-                    _removeInterpreter.Enabled = _path.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _pathEnvVar.Enabled = true;
+                    _removeInterpreter.Enabled = _path.Enabled = _browsePath.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _browseWindowsPath.Enabled = _pathEnvVar.Enabled = true;
                 } else {
-                    _removeInterpreter.Enabled = _path.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _pathEnvVar.Enabled = false;
+                    _removeInterpreter.Enabled = _path.Enabled = _browsePath.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _browseWindowsPath.Enabled = _pathEnvVar.Enabled = false;
                 }
 
                 _loadingOptions = true;
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Options {
 
         private void InitializeWithNoInterpreters() {
             _loadingOptions = true;
-            _removeInterpreter.Enabled = _path.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _pathEnvVar.Enabled = false;
+            _removeInterpreter.Enabled = _path.Enabled = _browsePath.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _browseWindowsPath.Enabled = _pathEnvVar.Enabled = false;
             _generateCompletionDb.Enabled = false;
             _showSettingsFor.Items.Add("No Python Interpreters Installed");
             _defaultInterpreter.Items.Add("No Python Interpreters Installed");
@@ -332,6 +332,7 @@ namespace Microsoft.PythonTools.Options {
         private void BrowsePathClick(object sender, EventArgs e) {
             var dialog = new OpenFileDialog();
             dialog.CheckFileExists = true;
+            dialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
             if (dialog.ShowDialog() == DialogResult.OK) {
                 _path.Text = dialog.FileName;
             }
@@ -340,7 +341,9 @@ namespace Microsoft.PythonTools.Options {
         private void BrowseWindowsPathClick(object sender, EventArgs e) {
             var dialog = new OpenFileDialog();
             dialog.CheckFileExists = true;
-            if (dialog.ShowDialog() == DialogResult.OK) {
+            dialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
                 _windowsPath.Text = dialog.FileName;
             }
         }

@@ -98,9 +98,9 @@
             // 
             // WebPiComponentPickerControl
             // 
+            this.Controls.Add(this._productsList);
             this.Controls.Add(this._addNewFeedLabel);
             this.Controls.Add(this._newFeedUrl);
-            this.Controls.Add(this._productsList);
             this.Controls.Add(this._addNewFeed);
             this.Name = "WebPiComponentPickerControl";
             this.Size = new System.Drawing.Size(501, 433);

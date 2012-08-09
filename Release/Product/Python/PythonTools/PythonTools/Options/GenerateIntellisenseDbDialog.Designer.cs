@@ -29,9 +29,9 @@
             this._okButton = new System.Windows.Forms.Button();
             this._cancelButton = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this._fullDbLabel = new System.Windows.Forms.Label();
+            this._builtInDbLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -100,36 +100,9 @@
             this.label1.Location = new System.Drawing.Point(6, 8);
             this.label1.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(233, 13);
+            this.label1.Size = new System.Drawing.Size(238, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "What database would you like to generate?";
-            // 
-            // textBox1
-            // 
-            this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tableLayoutPanel1.SetColumnSpan(this.textBox1, 3);
-            this.textBox1.Location = new System.Drawing.Point(60, 70);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(475, 43);
-            this.textBox1.TabIndex = 2;
-            this.textBox1.Text = "Generates the database for all of the built-in modules supported by the Python in" +
-    "terpreter. This process typically takes just a few seconds.";
-            // 
-            // textBox2
-            // 
-            this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tableLayoutPanel1.SetColumnSpan(this.textBox2, 3);
-            this.textBox2.Location = new System.Drawing.Point(60, 162);
-            this.textBox2.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this.textBox2.Multiline = true;
-            this.textBox2.Name = "textBox2";
-            this.textBox2.ReadOnly = true;
-            this.textBox2.Size = new System.Drawing.Size(475, 43);
-            this.textBox2.TabIndex = 4;
-            this.textBox2.Text = resources.GetString("textBox2.Text");
+            this.label1.Text = "Which database would you like to generate?";
             // 
             // tableLayoutPanel1
             // 
@@ -139,12 +112,12 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 15F));
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this._cancelButton, 3, 5);
-            this.tableLayoutPanel1.Controls.Add(this.textBox2, 1, 4);
-            this.tableLayoutPanel1.Controls.Add(this._okButton, 2, 5);
             this.tableLayoutPanel1.Controls.Add(this._builtinDb, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.textBox1, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this._fullDb, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this._okButton, 2, 5);
+            this.tableLayoutPanel1.Controls.Add(this._cancelButton, 3, 5);
+            this.tableLayoutPanel1.Controls.Add(this._fullDbLabel, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this._builtInDbLabel, 1, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 15);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -158,6 +131,29 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.Size = new System.Drawing.Size(541, 258);
             this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // _fullDbLabel
+            // 
+            this._fullDbLabel.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this._fullDbLabel, 3);
+            this._fullDbLabel.Location = new System.Drawing.Point(60, 162);
+            this._fullDbLabel.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this._fullDbLabel.Name = "_fullDbLabel";
+            this._fullDbLabel.Size = new System.Drawing.Size(458, 39);
+            this._fullDbLabel.TabIndex = 7;
+            this._fullDbLabel.Text = resources.GetString("_fullDbLabel.Text");
+            // 
+            // _builtInDbLabel
+            // 
+            this._builtInDbLabel.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this._builtInDbLabel, 3);
+            this._builtInDbLabel.Location = new System.Drawing.Point(60, 70);
+            this._builtInDbLabel.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this._builtInDbLabel.Name = "_builtInDbLabel";
+            this._builtInDbLabel.Size = new System.Drawing.Size(451, 26);
+            this._builtInDbLabel.TabIndex = 8;
+            this._builtInDbLabel.Text = "Generates the database for all of the built-in modules supported by the Python in" +
+    "terpreter. This process typically takes just a few seconds.";
             // 
             // GenerateIntellisenseDbDialog
             // 
@@ -176,7 +172,7 @@
             this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Generate Intellisense Database";
+            this.Text = "Generate IntelliSense Database";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
@@ -190,8 +186,8 @@
         private System.Windows.Forms.Button _okButton;
         private System.Windows.Forms.Button _cancelButton;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBox1;
-        private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label _fullDbLabel;
+        private System.Windows.Forms.Label _builtInDbLabel;
     }
 }

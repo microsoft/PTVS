@@ -64,13 +64,13 @@
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.Controls.Add(this._searchPathLabel, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this._interpreterPath, 1, 3);
+            this.tableLayoutPanel2.Controls.Add(this._searchPaths, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this._argumentsLabel, 0, 1);
-            this.tableLayoutPanel2.Controls.Add(this._interpArgs, 1, 2);
-            this.tableLayoutPanel2.Controls.Add(this._interpreterPathLabel, 0, 3);
             this.tableLayoutPanel2.Controls.Add(this._arguments, 1, 1);
             this.tableLayoutPanel2.Controls.Add(this._interpArgsLabel, 0, 2);
-            this.tableLayoutPanel2.Controls.Add(this._searchPaths, 1, 0);
+            this.tableLayoutPanel2.Controls.Add(this._interpArgs, 1, 2);
+            this.tableLayoutPanel2.Controls.Add(this._interpreterPathLabel, 0, 3);
+            this.tableLayoutPanel2.Controls.Add(this._interpreterPath, 1, 3);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(6, 21);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";

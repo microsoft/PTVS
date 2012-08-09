@@ -23,9 +23,9 @@ namespace Microsoft.PythonTools.Refactoring {
         private bool _firstActivation;
 
         public ExtractMethodDialog(ExtractMethodRequestView viewModel) {
-            InitializeComponent();
-
             DataContext = viewModel;
+
+            InitializeComponent();
 
             _firstActivation = true;
         }

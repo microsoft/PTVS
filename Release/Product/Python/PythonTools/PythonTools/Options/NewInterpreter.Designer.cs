@@ -93,9 +93,9 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this._cancel, 2, 2);
-            this.tableLayoutPanel1.Controls.Add(this._ok, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this._description, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this._ok, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this._cancel, 2, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";

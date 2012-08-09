@@ -118,9 +118,9 @@
             this.tableLayoutPanel3.ColumnCount = 1;
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.Controls.Add(this._completionCommitedByLabel, 0, 0);
-            this.tableLayoutPanel3.Controls.Add(this._newLineAfterCompleteCompletion, 0, 3);
-            this.tableLayoutPanel3.Controls.Add(this._enterCommits, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._completionCommitedBy, 0, 1);
+            this.tableLayoutPanel3.Controls.Add(this._enterCommits, 0, 2);
+            this.tableLayoutPanel3.Controls.Add(this._newLineAfterCompleteCompletion, 0, 3);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
@@ -197,9 +197,9 @@
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel4.Controls.Add(this._outliningOnOpen, 0, 0);
+            this.tableLayoutPanel4.Controls.Add(this._fillParaColumnLabel, 0, 1);
             this.tableLayoutPanel4.Controls.Add(this._fillParagraphText, 1, 1);
             this.tableLayoutPanel4.Controls.Add(this._pasteRemovesReplPrompts, 0, 2);
-            this.tableLayoutPanel4.Controls.Add(this._fillParaColumnLabel, 0, 1);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
@@ -266,8 +266,8 @@
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this._completionResultsGroupBox, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this._miscOptionsGroupBox, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this._selectionInCompletionGroupBox, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this._miscOptionsGroupBox, 0, 2);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);

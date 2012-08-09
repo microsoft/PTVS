@@ -30,17 +30,17 @@
             this._showSettingsFor = new System.Windows.Forms.ComboBox();
             this._interpreterSettingsGroup = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
-            this._path = new System.Windows.Forms.TextBox();
-            this._pathEnvVarLabel = new System.Windows.Forms.Label();
-            this._versionLabel = new System.Windows.Forms.Label();
-            this._archLabel = new System.Windows.Forms.Label();
-            this._windowsPathLabel = new System.Windows.Forms.Label();
             this._pathLabel = new System.Windows.Forms.Label();
-            this._windowsPath = new System.Windows.Forms.TextBox();
+            this._path = new System.Windows.Forms.TextBox();
             this._browsePath = new System.Windows.Forms.Button();
+            this._windowsPathLabel = new System.Windows.Forms.Label();
+            this._windowsPath = new System.Windows.Forms.TextBox();
             this._browseWindowsPath = new System.Windows.Forms.Button();
+            this._archLabel = new System.Windows.Forms.Label();
             this._arch = new System.Windows.Forms.ComboBox();
+            this._versionLabel = new System.Windows.Forms.Label();
             this._version = new System.Windows.Forms.TextBox();
+            this._pathEnvVarLabel = new System.Windows.Forms.Label();
             this._pathEnvVar = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this._generateCompletionDb = new System.Windows.Forms.Button();
@@ -78,7 +78,7 @@
             this._defaultInterpreter.Location = new System.Drawing.Point(113, 3);
             this._defaultInterpreter.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._defaultInterpreter.Name = "_defaultInterpreter";
-            this._defaultInterpreter.Size = new System.Drawing.Size(368, 21);
+            this._defaultInterpreter.Size = new System.Drawing.Size(290, 21);
             this._defaultInterpreter.TabIndex = 1;
             // 
             // _showSettingsForLabel
@@ -102,7 +102,7 @@
             this._showSettingsFor.Location = new System.Drawing.Point(113, 31);
             this._showSettingsFor.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._showSettingsFor.Name = "_showSettingsFor";
-            this._showSettingsFor.Size = new System.Drawing.Size(263, 21);
+            this._showSettingsFor.Size = new System.Drawing.Size(185, 21);
             this._showSettingsFor.TabIndex = 3;
             this._showSettingsFor.SelectedIndexChanged += new System.EventHandler(this.ShowSettingsForSelectedIndexChanged);
             // 
@@ -116,7 +116,7 @@
             this._interpreterSettingsGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._interpreterSettingsGroup.Name = "_interpreterSettingsGroup";
             this._interpreterSettingsGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._interpreterSettingsGroup.Size = new System.Drawing.Size(481, 207);
+            this._interpreterSettingsGroup.Size = new System.Drawing.Size(403, 201);
             this._interpreterSettingsGroup.TabIndex = 1;
             this._interpreterSettingsGroup.TabStop = false;
             this._interpreterSettingsGroup.Text = "Interpreter Settings";
@@ -129,17 +129,17 @@
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel3.Controls.Add(this._path, 1, 0);
-            this.tableLayoutPanel3.Controls.Add(this._pathEnvVarLabel, 0, 4);
-            this.tableLayoutPanel3.Controls.Add(this._versionLabel, 0, 3);
-            this.tableLayoutPanel3.Controls.Add(this._archLabel, 0, 2);
-            this.tableLayoutPanel3.Controls.Add(this._windowsPathLabel, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._pathLabel, 0, 0);
-            this.tableLayoutPanel3.Controls.Add(this._windowsPath, 1, 1);
+            this.tableLayoutPanel3.Controls.Add(this._path, 1, 0);
             this.tableLayoutPanel3.Controls.Add(this._browsePath, 2, 0);
+            this.tableLayoutPanel3.Controls.Add(this._windowsPathLabel, 0, 1);
+            this.tableLayoutPanel3.Controls.Add(this._windowsPath, 1, 1);
             this.tableLayoutPanel3.Controls.Add(this._browseWindowsPath, 2, 1);
+            this.tableLayoutPanel3.Controls.Add(this._archLabel, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._arch, 1, 2);
+            this.tableLayoutPanel3.Controls.Add(this._versionLabel, 0, 3);
             this.tableLayoutPanel3.Controls.Add(this._version, 1, 3);
+            this.tableLayoutPanel3.Controls.Add(this._pathEnvVarLabel, 0, 4);
             this.tableLayoutPanel3.Controls.Add(this._pathEnvVar, 1, 4);
             this.tableLayoutPanel3.Controls.Add(this.tableLayoutPanel4, 0, 6);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -153,70 +153,8 @@
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(469, 178);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(391, 172);
             this.tableLayoutPanel3.TabIndex = 0;
-            // 
-            // _path
-            // 
-            this._path.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._path.Location = new System.Drawing.Point(153, 4);
-            this._path.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._path.Name = "_path";
-            this._path.Size = new System.Drawing.Size(272, 20);
-            this._path.TabIndex = 1;
-            this._path.TextChanged += new System.EventHandler(this.PathTextChanged);
-            // 
-            // _pathEnvVarLabel
-            // 
-            this._pathEnvVarLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._pathEnvVarLabel.AutoEllipsis = true;
-            this._pathEnvVarLabel.AutoSize = true;
-            this._pathEnvVarLabel.Location = new System.Drawing.Point(6, 117);
-            this._pathEnvVarLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this._pathEnvVarLabel.Name = "_pathEnvVarLabel";
-            this._pathEnvVarLabel.Size = new System.Drawing.Size(135, 13);
-            this._pathEnvVarLabel.TabIndex = 10;
-            this._pathEnvVarLabel.Text = "Path Environment &Variable:";
-            this._pathEnvVarLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // _versionLabel
-            // 
-            this._versionLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._versionLabel.AutoEllipsis = true;
-            this._versionLabel.AutoSize = true;
-            this._versionLabel.Location = new System.Drawing.Point(6, 91);
-            this._versionLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this._versionLabel.Name = "_versionLabel";
-            this._versionLabel.Size = new System.Drawing.Size(96, 13);
-            this._versionLabel.TabIndex = 8;
-            this._versionLabel.Text = "Lan&guage Version:";
-            this._versionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // _archLabel
-            // 
-            this._archLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._archLabel.AutoEllipsis = true;
-            this._archLabel.AutoSize = true;
-            this._archLabel.Location = new System.Drawing.Point(6, 65);
-            this._archLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this._archLabel.Name = "_archLabel";
-            this._archLabel.Size = new System.Drawing.Size(67, 13);
-            this._archLabel.TabIndex = 6;
-            this._archLabel.Text = "&Architecture:";
-            this._archLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // _windowsPathLabel
-            // 
-            this._windowsPathLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._windowsPathLabel.AutoEllipsis = true;
-            this._windowsPathLabel.AutoSize = true;
-            this._windowsPathLabel.Location = new System.Drawing.Point(6, 37);
-            this._windowsPathLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this._windowsPathLabel.Name = "_windowsPathLabel";
-            this._windowsPathLabel.Size = new System.Drawing.Size(79, 13);
-            this._windowsPathLabel.TabIndex = 3;
-            this._windowsPathLabel.Text = "&Windows Path:";
-            this._windowsPathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _pathLabel
             // 
@@ -231,22 +169,22 @@
             this._pathLabel.Text = "&Path:";
             this._pathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // _windowsPath
+            // _path
             // 
-            this._windowsPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._windowsPath.Location = new System.Drawing.Point(153, 33);
-            this._windowsPath.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._windowsPath.Name = "_windowsPath";
-            this._windowsPath.Size = new System.Drawing.Size(272, 20);
-            this._windowsPath.TabIndex = 4;
-            this._windowsPath.TextChanged += new System.EventHandler(this.WindowsPathTextChanged);
+            this._path.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._path.Location = new System.Drawing.Point(153, 4);
+            this._path.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._path.Name = "_path";
+            this._path.Size = new System.Drawing.Size(194, 20);
+            this._path.TabIndex = 1;
+            this._path.TextChanged += new System.EventHandler(this.PathTextChanged);
             // 
             // _browsePath
             // 
             this._browsePath.Anchor = System.Windows.Forms.AnchorStyles.None;
             this._browsePath.AutoSize = true;
             this._browsePath.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._browsePath.Location = new System.Drawing.Point(437, 3);
+            this._browsePath.Location = new System.Drawing.Point(359, 3);
             this._browsePath.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._browsePath.Name = "_browsePath";
             this._browsePath.Size = new System.Drawing.Size(26, 23);
@@ -255,12 +193,35 @@
             this._browsePath.UseVisualStyleBackColor = true;
             this._browsePath.Click += new System.EventHandler(this.BrowsePathClick);
             // 
+            // _windowsPathLabel
+            // 
+            this._windowsPathLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._windowsPathLabel.AutoEllipsis = true;
+            this._windowsPathLabel.AutoSize = true;
+            this._windowsPathLabel.Location = new System.Drawing.Point(6, 37);
+            this._windowsPathLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._windowsPathLabel.Name = "_windowsPathLabel";
+            this._windowsPathLabel.Size = new System.Drawing.Size(79, 13);
+            this._windowsPathLabel.TabIndex = 3;
+            this._windowsPathLabel.Text = "&Windows Path:";
+            this._windowsPathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _windowsPath
+            // 
+            this._windowsPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._windowsPath.Location = new System.Drawing.Point(153, 33);
+            this._windowsPath.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._windowsPath.Name = "_windowsPath";
+            this._windowsPath.Size = new System.Drawing.Size(194, 20);
+            this._windowsPath.TabIndex = 4;
+            this._windowsPath.TextChanged += new System.EventHandler(this.WindowsPathTextChanged);
+            // 
             // _browseWindowsPath
             // 
             this._browseWindowsPath.Anchor = System.Windows.Forms.AnchorStyles.None;
             this._browseWindowsPath.AutoSize = true;
             this._browseWindowsPath.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._browseWindowsPath.Location = new System.Drawing.Point(437, 32);
+            this._browseWindowsPath.Location = new System.Drawing.Point(359, 32);
             this._browseWindowsPath.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._browseWindowsPath.Name = "_browseWindowsPath";
             this._browseWindowsPath.Size = new System.Drawing.Size(26, 23);
@@ -268,6 +229,19 @@
             this._browseWindowsPath.Text = "...";
             this._browseWindowsPath.UseVisualStyleBackColor = true;
             this._browseWindowsPath.Click += new System.EventHandler(this.BrowseWindowsPathClick);
+            // 
+            // _archLabel
+            // 
+            this._archLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._archLabel.AutoEllipsis = true;
+            this._archLabel.AutoSize = true;
+            this._archLabel.Location = new System.Drawing.Point(6, 65);
+            this._archLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._archLabel.Name = "_archLabel";
+            this._archLabel.Size = new System.Drawing.Size(67, 13);
+            this._archLabel.TabIndex = 6;
+            this._archLabel.Text = "&Architecture:";
+            this._archLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _arch
             // 
@@ -281,9 +255,22 @@
             this._arch.Location = new System.Drawing.Point(153, 61);
             this._arch.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._arch.Name = "_arch";
-            this._arch.Size = new System.Drawing.Size(310, 21);
+            this._arch.Size = new System.Drawing.Size(232, 21);
             this._arch.TabIndex = 7;
             this._arch.SelectedIndexChanged += new System.EventHandler(this.ArchSelectedIndexChanged);
+            // 
+            // _versionLabel
+            // 
+            this._versionLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._versionLabel.AutoEllipsis = true;
+            this._versionLabel.AutoSize = true;
+            this._versionLabel.Location = new System.Drawing.Point(6, 91);
+            this._versionLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._versionLabel.Name = "_versionLabel";
+            this._versionLabel.Size = new System.Drawing.Size(96, 13);
+            this._versionLabel.TabIndex = 8;
+            this._versionLabel.Text = "Lan&guage Version:";
+            this._versionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _version
             // 
@@ -292,9 +279,22 @@
             this._version.Location = new System.Drawing.Point(153, 88);
             this._version.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._version.Name = "_version";
-            this._version.Size = new System.Drawing.Size(310, 20);
+            this._version.Size = new System.Drawing.Size(232, 20);
             this._version.TabIndex = 9;
             this._version.TextChanged += new System.EventHandler(this.VersionTextChanged);
+            // 
+            // _pathEnvVarLabel
+            // 
+            this._pathEnvVarLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._pathEnvVarLabel.AutoEllipsis = true;
+            this._pathEnvVarLabel.AutoSize = true;
+            this._pathEnvVarLabel.Location = new System.Drawing.Point(6, 117);
+            this._pathEnvVarLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._pathEnvVarLabel.Name = "_pathEnvVarLabel";
+            this._pathEnvVarLabel.Size = new System.Drawing.Size(135, 13);
+            this._pathEnvVarLabel.TabIndex = 10;
+            this._pathEnvVarLabel.Text = "Path Environment &Variable:";
+            this._pathEnvVarLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _pathEnvVar
             // 
@@ -303,7 +303,7 @@
             this._pathEnvVar.Location = new System.Drawing.Point(153, 114);
             this._pathEnvVar.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._pathEnvVar.Name = "_pathEnvVar";
-            this._pathEnvVar.Size = new System.Drawing.Size(310, 20);
+            this._pathEnvVar.Size = new System.Drawing.Size(232, 20);
             this._pathEnvVar.TabIndex = 11;
             this._pathEnvVar.TextChanged += new System.EventHandler(this.PathEnvVarTextChanged);
             // 
@@ -311,21 +311,19 @@
             // 
             this.tableLayoutPanel4.AutoSize = true;
             this.tableLayoutPanel4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel4.ColumnCount = 5;
+            this.tableLayoutPanel4.ColumnCount = 2;
             this.tableLayoutPanel3.SetColumnSpan(this.tableLayoutPanel4, 3);
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 4F));
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 44F));
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 4F));
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 44F));
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 4F));
-            this.tableLayoutPanel4.Controls.Add(this._generateCompletionDb, 1, 0);
-            this.tableLayoutPanel4.Controls.Add(this._removeInterpreter, 3, 0);
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.tableLayoutPanel4.Controls.Add(this._generateCompletionDb, 0, 0);
+            this.tableLayoutPanel4.Controls.Add(this._removeInterpreter, 1, 0);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 140);
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(0, 137);
+            this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 1;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(463, 35);
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(391, 35);
             this.tableLayoutPanel4.TabIndex = 12;
             // 
             // _generateCompletionDb
@@ -333,13 +331,13 @@
             this._generateCompletionDb.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this._generateCompletionDb.AutoSize = true;
             this._generateCompletionDb.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._generateCompletionDb.Location = new System.Drawing.Point(24, 3);
+            this._generateCompletionDb.Location = new System.Drawing.Point(6, 3);
             this._generateCompletionDb.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._generateCompletionDb.Name = "_generateCompletionDb";
             this._generateCompletionDb.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._generateCompletionDb.Size = new System.Drawing.Size(191, 29);
+            this._generateCompletionDb.Size = new System.Drawing.Size(222, 29);
             this._generateCompletionDb.TabIndex = 0;
-            this._generateCompletionDb.Text = "&Generate Completion Database";
+            this._generateCompletionDb.Text = "&Generate IntelliSense Database";
             this._generateCompletionDb.UseVisualStyleBackColor = true;
             this._generateCompletionDb.Click += new System.EventHandler(this.GenerateCompletionDbClick);
             // 
@@ -348,11 +346,11 @@
             this._removeInterpreter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this._removeInterpreter.AutoSize = true;
             this._removeInterpreter.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._removeInterpreter.Location = new System.Drawing.Point(245, 3);
+            this._removeInterpreter.Location = new System.Drawing.Point(240, 3);
             this._removeInterpreter.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._removeInterpreter.Name = "_removeInterpreter";
             this._removeInterpreter.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._removeInterpreter.Size = new System.Drawing.Size(191, 29);
+            this._removeInterpreter.Size = new System.Drawing.Size(145, 29);
             this._removeInterpreter.TabIndex = 1;
             this._removeInterpreter.Text = "&Remove Interpreter";
             this._removeInterpreter.UseVisualStyleBackColor = true;
@@ -363,7 +361,7 @@
             this._addInterpreter.Anchor = System.Windows.Forms.AnchorStyles.None;
             this._addInterpreter.AutoSize = true;
             this._addInterpreter.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._addInterpreter.Location = new System.Drawing.Point(388, 30);
+            this._addInterpreter.Location = new System.Drawing.Point(310, 30);
             this._addInterpreter.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._addInterpreter.Name = "_addInterpreter";
             this._addInterpreter.Padding = new System.Windows.Forms.Padding(3, 0, 3, 0);
@@ -386,7 +384,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(493, 323);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(415, 323);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // tableLayoutPanel2
@@ -398,17 +396,17 @@
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayoutPanel2.Controls.Add(this._defaultInterpreterLabel, 0, 0);
-            this.tableLayoutPanel2.Controls.Add(this._addInterpreter, 2, 1);
-            this.tableLayoutPanel2.Controls.Add(this._showSettingsFor, 1, 1);
             this.tableLayoutPanel2.Controls.Add(this._defaultInterpreter, 1, 0);
             this.tableLayoutPanel2.Controls.Add(this._showSettingsForLabel, 0, 1);
+            this.tableLayoutPanel2.Controls.Add(this._showSettingsFor, 1, 1);
+            this.tableLayoutPanel2.Controls.Add(this._addInterpreter, 2, 1);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 2;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(487, 56);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(409, 56);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // PythonInterpreterOptionsControl
@@ -418,7 +416,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonInterpreterOptionsControl";
-            this.Size = new System.Drawing.Size(493, 323);
+            this.Size = new System.Drawing.Size(415, 323);
             this._interpreterSettingsGroup.ResumeLayout(false);
             this._interpreterSettingsGroup.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
