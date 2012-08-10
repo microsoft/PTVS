@@ -233,6 +233,10 @@
     <Resource Include="FastCgiTutorial\images\handler mappings.jpg" />
     <Resource Include="FastCgiTutorial\images\PyFastCgiMapping.png" />
     <Resource Include="FastCgiTutorial\images\AddModuleMapping.jpg" />
+    <Content Include="Templates\Projects\DjangoProject\settings.py" />
+    <Content Include="Templates\Projects\DjangoProject\urls.py" />
+    <Content Include="Templates\Projects\DjangoProject\wsgi.py" />
+    <Content Include="Templates\Projects\DjangoProject\__init__.py" />
     <Content Include="wfastcgi.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -263,9 +267,6 @@
     <Content Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Templates\Projects\DjangoProject\settings.py" />
-    <Content Include="Templates\Projects\DjangoProject\urls.py" />
-    <Content Include="Templates\Projects\DjangoProject\__init__.py" />
     <Resource Include="Templates\Projects\DjangoProject\__TemplateIcon.ico" />
   </ItemGroup>
   <ItemGroup>

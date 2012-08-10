@@ -20,10 +20,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="__init__.py" />
     <Compile Include="manage.py" />
-    <Compile Include="settings.py" />
-    <Compile Include="urls.py" />
+    <Compile Include="$safeprojectname$\__init__.py" />
+    <Compile Include="$safeprojectname$\settings.py" />
+    <Compile Include="$safeprojectname$\urls.py" />
+    <Compile Include="$safeprojectname$\wsgi.py" />
   </ItemGroup>
   <ItemGroup>
     <WebPiReference Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fDjango">

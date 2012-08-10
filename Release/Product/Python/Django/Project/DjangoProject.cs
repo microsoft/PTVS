@@ -564,7 +564,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     switch (prgCmds[i].cmdID) {
                         case PkgCmdIDList.cmdidStartNewApp:
                             var items = GetSelectedItems();
-                            if (items.Count() == 1 && GetSelectedItemType() == PythonProjectGuid) {
+                            if (CanAddAppToSelectedNode(items)) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             } else {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
@@ -573,13 +573,23 @@ namespace Microsoft.PythonTools.Django.Project {
                         case PkgCmdIDList.cmdidValidateDjangoApp:
                         case PkgCmdIDList.cmdidSyncDb:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            break;
+                            return VSConstants.S_OK;
                     }
                 }
 
             }
 
             return base.QueryStatusCommand(itemid, ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+        }
+
+        private bool CanAddAppToSelectedNode(IEnumerable<VSITEMSELECTION> items) {
+            if (items.Count() == 1) {
+                var selectedType = GetSelectedItemType();
+                if (selectedType == VSConstants.GUID_ItemType_PhysicalFolder || selectedType == PythonProjectGuid) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         protected override int ExecCommand(uint itemid, ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
@@ -622,6 +632,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private void StartNewApp() {
+            var selectedItems = GetSelectedItems();
             var dialog = new NewAppDialog();
             bool? res = dialog.ShowDialog();
             if (res != null && res.Value) {
@@ -634,7 +645,15 @@ namespace Microsoft.PythonTools.Django.Project {
                     )
                 );
 
-                // TODO: Check if app already exists
+                object selectedObj;
+                var selectedNode = selectedItems.First();
+                ErrorHandler.ThrowOnFailure(
+                    selectedNode.pHier.GetProperty(
+                        selectedNode.itemid,
+                        (int)__VSHPROPID.VSHPROPID_ExtObject,
+                        out selectedObj
+                    )
+                );
 
                 var project = projectObj as EnvDTE.Project;
                 if (project != null) {
@@ -643,9 +662,15 @@ namespace Microsoft.PythonTools.Django.Project {
                         return;
                     }
 
+                    EnvDTE.ProjectItems parentItems;
+                    if (selectedObj == projectObj) {
+                        parentItems = project.ProjectItems;
+                    } else {
+                        parentItems = ((EnvDTE.ProjectItem)selectedObj).ProjectItems;
+                    }
                     EnvDTE.ProjectItem newFolder;
                     try {
-                        newFolder = project.ProjectItems.AddFolder(dialog.ViewModel.Name);
+                        newFolder = parentItems.AddFolder(dialog.ViewModel.Name);
                     } catch (ArgumentException ex) {
                         MessageBox.Show(ex.Message);
                         return;

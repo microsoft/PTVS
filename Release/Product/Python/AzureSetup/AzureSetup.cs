@@ -98,7 +98,7 @@ namespace AzureSetup {
                                             Regex.Replace(
                                                 curOptions[1],
                                                 Regex.Escape("%RootDir%"),
-                                                Regex.Escape(physicalDir),
+                                                physicalDir,
                                                 RegexOptions.IgnoreCase
                                             )
                                         );
@@ -108,7 +108,7 @@ namespace AzureSetup {
                                             Regex.Replace(
                                                 curOptions[1],
                                                 Regex.Escape("%RootDir%"),
-                                                Regex.Escape(physicalDir),
+                                                physicalDir,
                                                 RegexOptions.IgnoreCase
                                             )
                                         );

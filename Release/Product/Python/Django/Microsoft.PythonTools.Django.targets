@@ -158,7 +158,10 @@
     <ItemGroup>
       <_FoundWebConfig Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
       <_FoundWebConfig Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
+      <_FoundTopLevelInit Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == '__init__.py' " />
+      <_FoundTopLevelInit Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == '__init__.py' " />
     </ItemGroup>
+    <Message Text="Didn't find top level init..." Condition="@(_FoundTopLevelInit) == ''"/>
     <Message Text="Generating web.config automatically..." Condition="@(_FoundWebConfig) == ''"/>
     <Message Text="Skipping generation of web.config automatically because it already exists in the project..." Condition="@(_FoundWebConfig) != ''"/>
     <PropertyGroup>
@@ -206,9 +209,9 @@ interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
 
     </PropertyGroup>
     <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == ''" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
-    <WriteLinesToFile File="AzureSetup.cfg"
+    <WriteLinesToFile File="bin\AzureSetup.cfg"
                       Lines="$(_AzureSetupInfo)" Overwrite="true"/>
-    <WriteLinesToFile File="AzureSetup.cfg"
+    <WriteLinesToFile File="bin\AzureSetup.cfg"
                       Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')" Overwrite="false"/>
   </Target>
   <Target
@@ -246,7 +249,7 @@ interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
       <ContentFiles Include="@(Compile)"></ContentFiles>
       <ContentFiles Include="@(Include)"></ContentFiles>
 
-      <GeneratedFiles  Include="AzureSetup.cfg"></GeneratedFiles>
+      <GeneratedFiles Include="bin\AzureSetup.cfg"/>
       <GeneratedFiles Include="@(InstallPython->'%(FullPath)')"/>
 
       <GeneratedFiles Include="$(PTVSSupportPath)WebPICmdLine.exe"/>
@@ -272,7 +275,7 @@ interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
     -->
       
       <TransformedFilenames Include="@(ContentFiles->'%(FullPath)')">
-        <DestinationRelativePath>$(MSBuildProjectName)\%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <DestinationRelativePath>%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
         <Exclude>false</Exclude>
         <FromTarget>Unknown</FromTarget>
         <Category>Run</Category>

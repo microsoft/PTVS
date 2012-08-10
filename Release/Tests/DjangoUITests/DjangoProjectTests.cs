@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Automation;
@@ -25,6 +26,8 @@ using TestUtilities.UI.Python.Django;
 namespace DjangoUITests {
     [TestClass]
     public class DjangoProjectTests {
+        private const string AddDjangoAppCmd = "ProjectandSolutionContextMenus.Project.Add.AddNewDjangoapp";
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);
@@ -49,10 +52,13 @@ namespace DjangoUITests {
             }
 
             Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("manage.py"));
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("settings.py"));
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("urls.py"));
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item("__init__.py"));
+            var curProj = app.Dte.Solution.Projects.Item(1);
+            var folder = curProj.ProjectItems.Item(curProj.Name);
+            Assert.AreNotEqual(null, curProj.ProjectItems.Item("manage.py"));
+            Assert.AreNotEqual(null, folder.ProjectItems.Item("settings.py"));
+            Assert.AreNotEqual(null, folder.ProjectItems.Item("urls.py"));
+            Assert.AreNotEqual(null, folder.ProjectItems.Item("__init__.py"));
+            Assert.AreNotEqual(null, folder.ProjectItems.Item("wsgi.py"));
         }
 
         /// <summary>
@@ -117,8 +123,9 @@ namespace DjangoUITests {
             System.Threading.Thread.Sleep(1000);
             ThreadPool.QueueUserWorkItem(x => {
                 try {
-                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.AddNewDjangoapp");
-                } catch {
+                    app.Dte.ExecuteCommand(AddDjangoAppCmd);
+                } catch(Exception e) {
+                    Debug.WriteLine("Failed to add new app: {0}", e);
                 }
             });
 
@@ -150,7 +157,8 @@ namespace DjangoUITests {
             ThreadPool.QueueUserWorkItem(x => {
                 try {
                     app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewProject.ValidateDjangoApp");
-                } catch {
+                } catch(Exception e) {
+                    Debug.WriteLine("Failed to execute command: {0}", e);
                 }
             });
 
@@ -175,7 +183,8 @@ namespace DjangoUITests {
             ThreadPool.QueueUserWorkItem(x => {
                 try {
                     app.Dte.ExecuteCommand("Project.AddNewItem");
-                } catch {
+                } catch(Exception e) {
+                    Debug.WriteLine("Couldn't execute command: {0}", e);
                 }
             });
 
@@ -216,8 +225,9 @@ namespace DjangoUITests {
 
             ThreadPool.QueueUserWorkItem(x => {
                 try {
-                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.AddNewDjangoapp");
-                } catch {
+                    app.Dte.ExecuteCommand(AddDjangoAppCmd);
+                } catch(Exception e) {
+                    Debug.WriteLine("Failed to add new app: {0}", e);
                 }
             });
 
@@ -237,7 +247,7 @@ namespace DjangoUITests {
             System.Threading.Thread.Sleep(1000);
             ThreadPool.QueueUserWorkItem(x => {
                 try {
-                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.AddNewDjangoapp");
+                    app.Dte.ExecuteCommand(AddDjangoAppCmd);
                 } catch {
                 }
             });
@@ -282,8 +292,9 @@ namespace DjangoUITests {
 
             ThreadPool.QueueUserWorkItem(x => {
                 try {
-                    app.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.AddNewDjangoapp");
-                } catch {
+                    app.Dte.ExecuteCommand(AddDjangoAppCmd);
+                } catch(Exception e) {
+                    Debug.WriteLine("Failed to add new app: {0}", e);
                 }
             });
 

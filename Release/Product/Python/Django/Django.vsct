@@ -72,7 +72,7 @@
       </Button>
 
       <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x120" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <!-- <Icon guid="guidImages" id="bmpPic2"/> -->
