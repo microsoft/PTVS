@@ -18,7 +18,7 @@
     </DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
-    <LinkerAdditionalOptions>-ext WixUIExtension</LinkerAdditionalOptions>
+    <LinkerAdditionalOptions>-ext WixUIExtension -ext WixUtilExtension</LinkerAdditionalOptions>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="PyKinectInstaller.wxs" />

@@ -19,6 +19,9 @@
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
                     <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.5' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools for Visual Studio\1.5\'/>
                 </RegistryKey>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.5' Value='Tool'/>
+                </RegistryKey>
             </Component>
             
             <!-- All user components -->

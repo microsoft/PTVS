@@ -13,6 +13,9 @@
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
                     <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,1.5' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Microsoft.VisualStudio.ReplWindow\1.5\'/>
                 </RegistryKey>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+                    <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,1.5' Value='Tool'/>
+                </RegistryKey>
             </Component>
 
             <!-- All user components -->
