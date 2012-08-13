@@ -1,6 +1,6 @@
 <VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
   <TemplateData>
-    <Name>IronPython Wpf Application</Name>
+    <Name>IronPython WPF Application</Name>
     <Description>Windows Presentation Foundation Application</Description>
     <ProjectType>Python</ProjectType>
     <ProjectSubType>
