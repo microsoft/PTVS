@@ -476,13 +476,6 @@ namespace Microsoft.PythonTools.Repl {
             _evaluators.Add(process.Id, evaluator);
 
             _activeEvaluator = evaluator;
-
-            var threads = process.GetThreads();
-            if (threads.Count > 0) {
-                _activeEvaluator.SwitchThread(threads[0], false);
-            }
-
-            ActiveProcessChanged();
         }
 
         internal void DetachProcess(PythonProcess process) {
@@ -608,13 +601,20 @@ namespace Microsoft.PythonTools.Repl {
             int portNum;
             CreateConnection(out conn, out portNum);
 
-            _process.ConnectRepl(portNum);
-
-            SetMultipleScopes(true);
-
             Process proc = System.Diagnostics.Process.GetProcessById(_process.Id);
-
             CreateListener(conn, false, proc);
+
+            _process.ConnectRepl(portNum);
+        }
+
+        protected override void OnConnected() {
+            // Finish initialization now that the socket connection has been established
+            var threads = _process.GetThreads();
+            if (threads.Count > 0) {
+                SwitchThread(threads[0], false);
+            }
+
+            OnMultipleScopeSupportChanged();
         }
 
         internal IList<PythonThread> GetThreads() {

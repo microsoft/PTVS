@@ -93,16 +93,23 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        protected virtual void OnConnected() {
+        }
+
         protected abstract PythonInteractiveCommonOptions CreatePackageOptions();
         protected abstract PythonInteractiveCommonOptions GetPackageOptions();
 
         protected void SetMultipleScopes(bool multipleScopes) {
             if (multipleScopes != _multipleScopes) {
-                var multiScopeSupportChanged = MultipleScopeSupportChanged;
-                if (multiScopeSupportChanged != null) {
-                    multiScopeSupportChanged(this, EventArgs.Empty);
-                }
+                OnMultipleScopeSupportChanged();
                 _multipleScopes = multipleScopes;
+            }
+        }
+
+        protected void OnMultipleScopeSupportChanged() {
+            var multiScopeSupportChanged = MultipleScopeSupportChanged;
+            if (multiScopeSupportChanged != null) {
+                multiScopeSupportChanged(this, EventArgs.Empty);
             }
         }
 
@@ -240,6 +247,11 @@ namespace Microsoft.PythonTools.Repl {
                     _socket = _socket.Accept();
                     using (new SocketLock(this)) {
                         _connected = true;
+                    }
+
+                    _eval.OnConnected();
+
+                    using (new SocketLock(this)) {
                         if (_executionFile != null) {
                             SendExecuteFile(_executionFile, _executionExtraArgs);
                             _executionFile = null;
