@@ -15,6 +15,7 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Django.Intellisense;
+using Microsoft.PythonTools.Language;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -48,6 +49,11 @@ namespace Microsoft.PythonTools.Django {
 
                 var controller = DjangoIntellisenseControllerProvider.GetOrCreateController(model, wpfView);
                 controller.AttachKeyboardFilter();
+
+#if DEV11
+                var viewFilter = new TextViewFilter();
+                viewFilter.AttachFilter(textView);
+#endif
             }
 
             ppCodeWinMgr = null;

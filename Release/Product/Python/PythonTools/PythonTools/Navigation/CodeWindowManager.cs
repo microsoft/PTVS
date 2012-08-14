@@ -42,8 +42,14 @@ namespace Microsoft.PythonTools.Navigation {
             EditFilter editFilter = _filter = new EditFilter(textView, factory.GetEditorOperations(textView));
             IntellisenseController intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);
 
-            editFilter.AttachKeyboardFilter(adaptersFactory.GetViewAdapter(textView));
+            var adapter = adaptersFactory.GetViewAdapter(textView);
+            editFilter.AttachKeyboardFilter(adapter);
             intellisenseController.AttachKeyboardFilter();
+
+#if DEV11
+            var viewFilter = new TextViewFilter();
+            viewFilter.AttachFilter(adapter);
+#endif
         }
 
         public static void OnIdle(IOleComponentManager compMgr) {

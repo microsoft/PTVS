@@ -228,6 +228,7 @@
     <Compile Include="PythonTools\Intellisense\RefactoringIconKind.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagController.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagControllerProvider.cs" />
+    <Compile Include="PythonTools\Navigation\TextViewFilter.cs" />
     <Compile Include="PythonTools\Options\PythonInteractiveCommonOptions.cs" />
     <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.cs">
       <SubType>UserControl</SubType>
