@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -150,10 +151,18 @@ namespace Microsoft.PythonTools.Designer {
             SuiteStatement suite = classDef.Body as SuiteStatement;
 
             if (suite != null) {
+                int requiredParamCount = eventDescription.Parameters.Count() + 1;
                 foreach (var methodCandidate in suite.Statements) {
                     FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
                     if (funcDef != null) {
-                        if (funcDef.Name.EndsWith("_" + eventDescription.Name)) {
+                        // Given that event handlers can be given any arbitrary 
+                        // name, it is important to not rely on the default naming 
+                        // to detect compatible methods.  Instead we look at the 
+                        // event parameters. We don't have param types in Python, 
+                        // so really the only thing that can be done is look at 
+                        // the method parameter count, which should be one more than
+                        // the event parameter count (to account for the self param).
+                        if (funcDef.Parameters.Count == requiredParamCount) {
                             yield return funcDef.Name;
                         }
                     }
