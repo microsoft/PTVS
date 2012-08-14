@@ -12,14 +12,13 @@
   <PropertyGroup>
     <Language>C++</Language>        <!-- Duplicated from the C++ targets file -->
     <Platform Condition="'$(Platform)'==''">Win32</Platform>
-    <PreprocessorDefinitions>_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
   </PropertyGroup>
   
-  <PropertyGroup Condition="'$(VSTarget)' == '11.0'">
+  <ItemDefinitionGroup Condition="'$(VSTarget)' == '11.0'">
     <ClCompile>
       <PreprocessorDefinitions>DEV11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-  </PropertyGroup>
+  </ItemDefinitionGroup>
 
   <ItemDefinitionGroup>
     <ClCompile>
