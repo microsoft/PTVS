@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal Dictionary<CallArgs, SequenceInfo> _starArgs;
         [ThreadStatic]
         private static List<Namespace> _descriptionStack;
-        const int MaximumCallCount = 150;
+        const int MaximumCallCount = 100;
 
         internal FunctionInfo(AnalysisUnit unit)
             : base(unit) {

@@ -3215,7 +3215,11 @@ namespace Microsoft.VisualStudio.Repl {
 
         private void UIThread(Action action) {
             if (!CheckAccess()) {
-                Dispatcher.Invoke(action);
+                try {
+                    Dispatcher.Invoke(action);
+                } catch (OperationCanceledException) {
+                    // VS is shutting down
+                }
                 return;
             }
             action();

@@ -16,6 +16,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Windows;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -175,8 +176,14 @@ namespace Microsoft.PythonTools.Project.Automation
                     Utilities.CheckNotNull(solution);
 
                     // Ask solution for unique name of project
-                    string uniqueName = string.Empty;
-                    ErrorHandler.ThrowOnFailure(solution.GetUniqueNameOfProject(this.project, out uniqueName));
+                    string uniqueName;
+                    
+                    ErrorHandler.ThrowOnFailure(
+                        solution.GetUniqueNameOfProject(
+                            HierarchyNode.GetOuterHierarchy(this.project), 
+                            out uniqueName
+                        )
+                    );
                     return uniqueName;
                 }
             }

@@ -247,6 +247,9 @@ namespace Microsoft.PythonTools.Commands {
             while (NextNotParaEnd(prefix, next_num, ln_num, next_txt, regexp)) {
                 ln_num = next_num;
                 next_num++;
+                if (next_num == point.Snapshot.LineCount) {
+                    break;
+                }
                 next_txt = point.Snapshot.GetLineFromLineNumber(next_num).GetText();
             }
 
