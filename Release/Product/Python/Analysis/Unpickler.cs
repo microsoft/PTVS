@@ -27,6 +27,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Unpickles a Python pickle stream but returns Dictionary[object, object] for PythonDictionaries,
         /// arrays for tuples, and List[object] for Python lists.  Classes are not supported.
         /// </summary>
+        /// <exception cref="System.Text.DecoderFallbackException"></exception>
+        /// <exception cref="System.ArgumentException"></exception>
+        /// <exception cref="System.InvalidOperationException"></exception>
         public static object Load(Stream file) {
             return new UnpicklerObject(file).Load();
         }
@@ -43,7 +46,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public string Read(int size) {
-                byte[] bytes  = new byte[size];
+                byte[] bytes = new byte[size];
 
                 int read = _stream.Read(bytes, 0, size);
                 if (read != size) {
@@ -70,7 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         curByte = _stream.ReadByte();
                     }
                     res.Append((char)curByte);
-                } while (curByte != '\n' );
+                } while (curByte != '\n');
                 return res.ToString();
             }
 
@@ -164,7 +167,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case Opcode.Unicode: LoadUnicode(); break;
                         case Opcode.Global: LoadGlobal(); break;
                         case Opcode.Stop: return PopStack();
-                        default: throw new InvalidOleVariantTypeException(String.Format("invalid opcode: {0}", opcode));
+                        default: throw new InvalidOperationException(String.Format("invalid opcode: {0}", opcode));
                     }
                 }
             }
@@ -172,8 +175,8 @@ namespace Microsoft.PythonTools.Intellisense {
             private void LoadGlobal() {
                 string module = ReadLineNoNewline();
                 string attr = ReadLineNoNewline();
-				Debug.Fail(String.Format("unexpected global in pickle stream {0}.{1}", module, attr));
-				_stack.Add(null);   // no support for actually loading the globals...
+                Debug.Fail(String.Format("unexpected global in pickle stream {0}.{1}", module, attr));
+                _stack.Add(null);   // no support for actually loading the globals...
             }
 
             private object PopStack() {
@@ -194,7 +197,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return res;
             }
 
-            private object MemoGet( int key) {
+            private object MemoGet(int key) {
                 object value;
 
                 if (key < _privMemo.Count && (value = _privMemo[key]) != _mark) {
@@ -521,14 +524,14 @@ namespace Microsoft.PythonTools.Intellisense {
             private void LoadTuple2() {
                 object item1 = PopStack();
                 object item0 = PopStack();
-                _stack.Add(new [] { item0, item1 });
+                _stack.Add(new[] { item0, item1 });
             }
 
             private void LoadTuple3() {
                 object item2 = PopStack();
                 object item1 = PopStack();
                 object item0 = PopStack();
-                _stack.Add(new [] { item0, item1, item2 });
+                _stack.Add(new[] { item0, item1, item2 });
             }
 
             private void LoadUnicode() {

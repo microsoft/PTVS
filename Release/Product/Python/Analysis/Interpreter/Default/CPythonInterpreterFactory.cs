@@ -63,23 +63,28 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     _typeDb = MakeTypeDatabase();
                 } else if (_typeDb.DatabaseDirectory != GetConfiguredDatabasePath() && ConfigurableDatabaseExists()) {
                     // database has been generated for this interpreter, switch to the specific version.
+                    _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
                     _typeDb = new PythonTypeDatabase(GetConfiguredDatabasePath(), Is3x);
+                    _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
                 }
 
                 var res = new CPythonInterpreter(this, _typeDb);
-
-                if (!ConfigurableDatabaseExists()) {
-                    _interpreters.Add(new WeakReference(res));
-                }
+                
+                _interpreters.Add(new WeakReference(res));
+                
                 return res;
             }
         }
 
         internal PythonTypeDatabase MakeTypeDatabase() {
             if (ConfigurableDatabaseExists()) {
-                return new PythonTypeDatabase(GetConfiguredDatabasePath(), Is3x);
+                var res = new PythonTypeDatabase(GetConfiguredDatabasePath(), Is3x);
+                res.DatabaseCorrupt += OnDatabaseCorrupt;
+                return res;
             }
-            return PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);
+
+            // default DB is "never" corrupt
+            return PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);            
         }
 
         private bool ConfigurableDatabaseExists() {
@@ -122,8 +127,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 () => {
                     lock (_interpreters) {
                         if (ConfigurableDatabaseExists()) {
-                            _typeDb = new PythonTypeDatabase(outPath, Is3x);
+                            if (_typeDb != null) {
+                                _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
+                            }
 
+                            _typeDb = new PythonTypeDatabase(outPath, Is3x);
+                            _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
                             OnNewDatabaseAvailable();
                         }
                     }
@@ -136,6 +145,16 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             return true;
+        }
+
+        private void OnDatabaseCorrupt(object sender, EventArgs args) {
+            _typeDb = PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);
+            OnNewDatabaseAvailable();
+
+            GenerateCompletionDatabaseWorker(
+                GenerateDatabaseOptions.StdLibDatabase | GenerateDatabaseOptions.BuiltinDatabase,
+                () => { }
+            );
         }
 
         private void OnNewDatabaseAvailable() {

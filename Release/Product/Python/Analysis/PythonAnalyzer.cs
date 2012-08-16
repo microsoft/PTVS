@@ -250,7 +250,8 @@ namespace Microsoft.PythonTools.Analysis {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (excludedPredicate(modName)) {
+                if (String.IsNullOrWhiteSpace(modName) ||
+                    excludedPredicate(modName)) {
                     continue;
                 }
 

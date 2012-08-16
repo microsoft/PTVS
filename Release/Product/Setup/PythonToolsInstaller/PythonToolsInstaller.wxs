@@ -5,7 +5,7 @@
 
   <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
     <Package InstallerVersion="300" Compressed="yes"  />
-    <MajorUpgrade AllowDowngrades="no"
+    <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes"
                   DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
@@ -30,7 +30,7 @@
         </DirectorySearch>
     </Property>
 
-    <Property Id="DEVENV_PATH">
+    <Property Id="DEVENV_PATH" Secure="yes">
       <RegistrySearch Id="DevEnvPath" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="EnvironmentPath" Type="file" />
     </Property>
 
@@ -186,7 +186,7 @@
         <?endif ?>
     </InstallExecuteSequence>
     <InstallUISequence>
-        <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="CostInitialize">NOT Installed</Show>
+        <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>
         <Show Dialog="CustomFeaturesDlg" After="CostFinalize">NOT Installed AND EasyInstall=0 AND WixAppFolder = "WixPerUserFolder"</Show>
         <Show Dialog="CustomInstallDirDlg" After="CostFinalize">NOT Installed AND EasyInstall=0 AND WixAppFolder = "WixPerMachineFolder"</Show>
         
@@ -197,6 +197,10 @@
     </InstallUISequence>
 
     <UI>
+        <?if "$(var.VSTargetVersion)" != "10.0" ?>
+            <ProgressText Action="DevEnv_Setup">Updating extension registration with Visual Studio...</ProgressText>
+        <?endif ?>
+        
         <Dialog Id="CustomAdvancedWelcomeEulaDlg" Width="370" Height="270" Title="!(loc.AdvancedWelcomeEulaDlg_Title)">
             <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.AdvancedWelcomeEulaDlgBannerBitmap)" />
             <Control Id="Title" Type="Text" X="20" Y="10" Width="300" Height="24" Transparent="yes" NoPrefix="yes" Text="!(loc.AdvancedWelcomeEulaDlgTitle)" />
@@ -386,6 +390,15 @@
     <UIRef Id="WixUI_Common" />
     
     <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    
+    <?if "$(var.VSTargetVersion)" = "10.0" ?>
+        <WixVariable Id="WixUIBannerBmp" Value="UIBanner2010.bmp" />
+        <WixVariable Id="WixUIDialogBmp" Value="Dialog2010.bmp" />
+    <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
+        <WixVariable Id="WixUIBannerBmp" Value="UIBanner2012.bmp" />
+        <WixVariable Id="WixUIDialogBmp" Value="Dialog2012.bmp" />
+    <?endif?>
+    
     <Property Id="WixAppFolder" Value="WixPerMachineFolder" />
 
     

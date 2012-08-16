@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
         private readonly bool _is3x;
         private readonly Version _langVersion;  // language version, null when we have a generated database, set when using the shared DB.
+        private readonly List<WeakReference> _corruptListeners = new List<WeakReference>();
         private IBuiltinPythonModule _builtinModule;
 
         public SharedDatabaseState(string databaseDirectory, bool is3x, IBuiltinPythonModule builtinsModule) {
@@ -319,6 +320,41 @@ namespace Microsoft.PythonTools.Interpreter {
                         assign(memberName, GetModule((string)modName, instanceDb));
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Raises the notification that the database is corrupt, called when reading
+        /// a module definition fails.
+        /// </summary>
+        public void OnDatabaseCorrupt() {
+            WeakReference[] listeners;
+            lock (_corruptListeners) {
+                listeners = _corruptListeners.ToArray();
+            }
+            for (int i = 0; i < listeners.Length; i++) {
+                var target = listeners[i].Target;
+                if (target != null) {
+                    ((PythonTypeDatabase)target).OnDatabaseCorrupt();
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Sets up a weak reference for notification of when the shared database
+        /// has become corrupted.  Doesn't keep the listening database alive.
+        /// </summary>
+        public void ListenForCorruptDatabase(PythonTypeDatabase db) {
+            lock (_corruptListeners) {
+                for (int i = 0; i < _corruptListeners.Count; i++) {
+                    var target = _corruptListeners[i].Target;
+                    if (target == null) {
+                        _corruptListeners[i].Target = db;
+                        return;
+                    }
+                }
+
+                _corruptListeners.Add(new WeakReference(db));
             }
         }
 

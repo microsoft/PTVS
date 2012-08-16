@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
+            _sharedState.ListenForCorruptDatabase(this);
         }
 
         /// <summary>
@@ -48,13 +49,21 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         internal PythonTypeDatabase(string databaseDirectory, Version languageVersion) {
             _sharedState = new SharedDatabaseState(databaseDirectory, languageVersion);
+            _sharedState.ListenForCorruptDatabase(this);
         }
 
         internal PythonTypeDatabase(SharedDatabaseState cloning) {
             _sharedState = cloning;
+            _sharedState.ListenForCorruptDatabase(this);
             _modules = new Dictionary<string, IPythonModule>();
             _constants = new Dictionary<IPythonType, CPythonConstant>();
         }
+
+        /// <summary>
+        /// Fired when the database is discovered to be corrrupted.  This can happen because a file
+        /// wasn't successfully flushed to disk, or if the user modified the database by hand.
+        /// </summary>
+        public event EventHandler DatabaseCorrupt;
 
         /// <summary>
         /// Creates a light weight copy of this PythonTypeDatabase which supports adding 
@@ -592,6 +601,17 @@ namespace Microsoft.PythonTools.Interpreter {
             Debug.Assert(instanceDb == null);
 
             _sharedState.ReadMember(memberName, memberValue, assign, container, this);
+        }
+
+        void ITypeDatabaseReader.OnDatabaseCorrupt() {
+            OnDatabaseCorrupt();
+        }
+
+        internal void OnDatabaseCorrupt() {
+            var dbCorrupt = DatabaseCorrupt;
+            if (dbCorrupt != null) {
+                dbCorrupt(this, EventArgs.Empty);
+            }
         }
 
         internal CPythonConstant GetConstant(IPythonType type) {

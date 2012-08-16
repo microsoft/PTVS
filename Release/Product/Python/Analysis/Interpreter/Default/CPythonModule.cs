@@ -51,9 +51,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         Dictionary<string, object> contents = null;
                         try {
                             contents = (Dictionary<string, object>)Unpickle.Load(stream);
+                        } catch (ArgumentException) {
+                            _typeDb.OnDatabaseCorrupt();
                         } catch (InvalidOperationException) {
                             // Bug 511 - http://pytools.codeplex.com/workitem/511
                             // Ignore a corrupt database file.
+                            _typeDb.OnDatabaseCorrupt();
                         }
 
                         if (contents != null) {

@@ -31,5 +31,6 @@ namespace Microsoft.PythonTools.Interpreter {
         void RunFixups();
         void LookupType(object type, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb = null);
         string GetBuiltinTypeName(BuiltinTypeId id);
+        void OnDatabaseCorrupt();
     }
 }

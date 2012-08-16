@@ -554,7 +554,7 @@ namespace Microsoft.PythonTools.Hpc {
 
                     // Add vs remote debugger components.
                     string basePath = Path.Combine(Path.Combine(vsInstallDir, "Remote Debugger"), _project.TargetPlatform().ToString()) + "\\";
-                    foreach (var file in Directory.GetFiles(basePath)) {
+                    foreach (var file in Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)) {
                         allFiles.Add(new CopyFile(file, file.Substring(basePath.Length)));
                     }
 
