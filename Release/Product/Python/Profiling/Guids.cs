@@ -28,5 +28,7 @@ namespace Microsoft.PythonTools.Profiling
 
         public static readonly Guid VsUIHierarchyWindow_guid = new Guid("{7D960B07-7AF8-11D0-8E5E-00A0C911005A}");
         public static readonly Guid guidEditorFactory = new Guid(guidEditorFactoryString);
+
+        public static readonly Guid GuidPerfPkg = new Guid("{F4A63B2A-49AB-4b2d-AA59-A10F01026C89}");
     };
 }

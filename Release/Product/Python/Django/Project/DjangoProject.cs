@@ -96,22 +96,20 @@ namespace Microsoft.PythonTools.Django.Project {
                 var analyzer = pyProj.GetProjectAnalyzer();
                 var projAnalyzer = pyProj.GetAnalyzer();
                 var djangoMod = analyzer.GetModule("django");
+                if (djangoMod.Count() == 0) {
+                    // cached analysis doesn't have Django, so let's see if we can find it
+                    // on our own - http://pytools.codeplex.com/workitem/775
+                    var interpreterDir = Path.GetDirectoryName(pyProj.GetPythonInterpreterFactory().Configuration.InterpreterPath);
+                    var djangoDir = Path.Combine(interpreterDir, "Lib", "site-packages", "django");
+                    if (Directory.Exists(djangoDir)) {
+                        HookAnalysis(analyzer, projAnalyzer, djangoDir);
+                    }
+                }
                 foreach (var mod in djangoMod) {
-
                     foreach (var loc in mod.Locations) {
                         // replace any cached analysis w/ a live one...
                         var dirName = Path.GetDirectoryName(loc.FilePath);
-                        projAnalyzer.AnalyzeDirectory(dirName);
-                        analyzer.SpecializeFunction("django.template.loader", "render_to_string", RenderToStringProcessor);
-
-                        analyzer.SpecializeFunction("django.template.base.Library", "filter", FilterProcessor);
-                        analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor);
-                        analyzer.SpecializeFunction("django.template.base.Parser", "parse", ParseProcessor);
-                        analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library");
-
-                        analyzer.SpecializeFunction("django.template.loader", "get_template", GetTemplateProcessor);
-                        analyzer.SpecializeFunction("django.template.context", "Context", ContextClassProcessor);
-                        analyzer.SpecializeFunction("django.template.base.Template", "render", TemplateRenderProcessor);
+                        HookAnalysis(analyzer, projAnalyzer, dirName);
                         break;
                     }
                 }
@@ -137,6 +135,20 @@ namespace Microsoft.PythonTools.Django.Project {
                     // extender doesn't exist...
                 }
             }
+        }
+
+        private void HookAnalysis(PythonAnalyzer analyzer, PythonTools.Intellisense.VsProjectAnalyzer projAnalyzer, string dirName) {
+            projAnalyzer.AnalyzeDirectory(dirName);
+            analyzer.SpecializeFunction("django.template.loader", "render_to_string", RenderToStringProcessor);
+
+            analyzer.SpecializeFunction("django.template.base.Library", "filter", FilterProcessor);
+            analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor);
+            analyzer.SpecializeFunction("django.template.base.Parser", "parse", ParseProcessor);
+            analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library");
+
+            analyzer.SpecializeFunction("django.template.loader", "get_template", GetTemplateProcessor);
+            analyzer.SpecializeFunction("django.template.context", "Context", ContextClassProcessor);
+            analyzer.SpecializeFunction("django.template.base.Template", "render", TemplateRenderProcessor);
         }
 
         private void AddCommand(OleMenuCommand menuItem) {

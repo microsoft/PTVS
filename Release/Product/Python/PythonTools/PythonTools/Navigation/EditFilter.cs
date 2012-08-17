@@ -788,9 +788,12 @@ namespace Microsoft.PythonTools.Language {
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
+#if !DEV11
                             if (!IsCSharpInstalled()) {
                                 QueryStatusRename(prgCmds, i);
-                            } else {
+                            } else 
+#endif
+                            {
                                 prgCmds[i].cmdf = CommandDisabledAndHidden;
                             }
                             return VSConstants.S_OK;
@@ -798,9 +801,12 @@ namespace Microsoft.PythonTools.Language {
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
+#if !DEV11
                             if (!IsCSharpInstalled()) {
                                 QueryStatusExtractMethod(prgCmds, i);
-                            } else {
+                            } else 
+#endif
+                            {
                                 prgCmds[i].cmdf = CommandDisabledAndHidden;
                             }
                             return VSConstants.S_OK;
@@ -858,6 +864,7 @@ namespace Microsoft.PythonTools.Language {
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
+#if !DEV11
         internal static bool IsCSharpInstalled() {
             IVsShell shell = (IVsShell)PythonToolsPackage.GetGlobalService(typeof(IVsShell));
             Guid csharpPacakge = GuidList.guidCSharpProjectPacakge;
@@ -867,6 +874,7 @@ namespace Microsoft.PythonTools.Language {
             );
             return installed != 0;
         }
+#endif
 
         private void QueryStatusExtractMethod(OLECMD[] prgCmds, int i) {
             var activeView = CommonPackage.GetActiveTextView();

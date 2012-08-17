@@ -95,15 +95,16 @@ namespace Microsoft.PythonTools.Profiling {
 
                 // Create the command for the menu item.
                 menuCommandID = new CommandID(GuidList.guidPythonProfilingCmdSet, (int)PkgCmdIDList.cmdidPerfExplorer);
-                menuItem = new MenuCommand(ShowPeformanceExplorer, menuCommandID);
-                mcs.AddCommand(menuItem);
+                var oleMenuItem = new OleMenuCommand(ShowPeformanceExplorer, menuCommandID);
+                oleMenuItem.BeforeQueryStatus += ShowPerfQueryStatus;
+                mcs.AddCommand(oleMenuItem);
 
                 menuCommandID = new CommandID(GuidList.guidPythonProfilingCmdSet, (int)PkgCmdIDList.cmdidAddPerfSession);
                 menuItem = new MenuCommand(AddPerformanceSession, menuCommandID);
                 mcs.AddCommand(menuItem);
 
                 menuCommandID = new CommandID(GuidList.guidPythonProfilingCmdSet, (int)PkgCmdIDList.cmdidStartProfiling);
-                var oleMenuItem = _startCommand = new OleMenuCommand(StartProfiling, menuCommandID);
+                oleMenuItem = _startCommand = new OleMenuCommand(StartProfiling, menuCommandID);
                 oleMenuItem.BeforeQueryStatus += IsProfilingActive;
                 mcs.AddCommand(oleMenuItem);
 
@@ -381,6 +382,28 @@ namespace Microsoft.PythonTools.Profiling {
             } else {
                 oleMenu.Enabled = false;
             }
+        }
+
+        private void ShowPerfQueryStatus(object sender, EventArgs args) {
+            var oleMenu = sender as OleMenuCommand;
+
+            if (IsProfilingInstalled()) {
+                oleMenu.Enabled = true;
+                oleMenu.Visible = true;
+            } else {
+                oleMenu.Enabled = false;
+                oleMenu.Visible = false;
+            }
+        }
+
+        internal static bool IsProfilingInstalled() {
+            IVsShell shell = (IVsShell)PythonToolsPackage.GetGlobalService(typeof(IVsShell));
+            Guid perfGuid = GuidList.GuidPerfPkg;
+            int installed;
+            ErrorHandler.ThrowOnFailure(
+                shell.IsPackageInstalled(ref perfGuid, out installed)
+            );
+            return installed != 0;
         }
 
         public bool IsProfiling {

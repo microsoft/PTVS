@@ -112,6 +112,8 @@
       <!-- View->Other Windows items -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000" type="Button">
         <Parent guid="guidDiagMenuGroup" id="IDG_VIEW_OTHERWINDOWS_DIAG_MENU"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <CommandName>cmdidPerfExplorer</CommandName>
           <ButtonText>Python Performance Explorer</ButtonText>
