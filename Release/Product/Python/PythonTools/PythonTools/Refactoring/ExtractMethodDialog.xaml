@@ -12,7 +12,7 @@
     ShowInTaskbar="False"
     WindowStartupLocation="CenterOwner"
     Title="Extract Method"
-    MinWidth="240" MinHeight="130"
+    MinWidth="340" MinHeight="240"
     TextOptions.TextFormattingMode="Display"
     Background="{x:Static SystemColors.ControlBrush}"
     WindowStyle="SingleBorderWindow" ResizeMode="CanResizeWithGrip">
@@ -30,7 +30,7 @@
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Grid.Column="0" Padding="0 0 4 0" VerticalAlignment="Center"
                Content="New method _name:" />
-        <TextBox Grid.Row="0" Grid.Column="1" Name="_methodName"
+        <TextBox Grid.Row="0" Grid.Column="1" MinHeight="23" Name="_methodName"
                  Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}"
                  AutomationProperties.AutomationId="Name"
                  HorizontalAlignment="Stretch"
@@ -39,6 +39,7 @@
         <Label Grid.Row="2" Grid.Column="0" Padding="0 0 4 0" VerticalAlignment="Center"
                Content="Extract _to:" />
         <ComboBox Grid.Row="2" Grid.Column="1"
+                  MinHeight="23"
                   ItemsSource="{Binding TargetScopes,Mode=OneWay}"
                   SelectedItem="{Binding TargetScope,Mode=TwoWay}"
                   AutomationProperties.AutomationId="TargetScope"

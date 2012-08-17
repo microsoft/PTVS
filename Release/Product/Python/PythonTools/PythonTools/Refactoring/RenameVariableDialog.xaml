@@ -7,6 +7,7 @@
     xmlns:ui="clr-namespace:Microsoft.PythonTools"
     mc:Ignorable="d" 
     Width="511" Height="auto"
+    MinWidth="240" MinHeight="185"
     SizeToContent="Height"
     x:ClassModifier="internal"
     Title="Rename"
@@ -26,8 +27,9 @@
             <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
         <Label Grid.Row="0" Padding="0 4">_New name:</Label>
-        <TextBox Grid.Row="1" Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}"
-                 Name="_newName" AutomationProperties.AutomationId="Name" />
+        <TextBox Grid.Row="1" MinHeight="23" Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}"
+                 Name="_newName" AutomationProperties.AutomationId="Name"
+                 VerticalContentAlignment="Center" />
         <StackPanel Grid.Row="2" Margin="0 4">
             <CheckBox Content="Pre_view reference changes" IsChecked="{Binding PreviewChanges}"
                       AutomationProperties.AutomationId="PreviewChanges"
