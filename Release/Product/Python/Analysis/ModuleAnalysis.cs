@@ -755,6 +755,12 @@ namespace Microsoft.PythonTools.Analysis {
             return GetAstFromText(exprText, privatePrefix);
         }
 
+        public string ModuleName {
+            get {
+                return _scopes[0].Name;
+            }
+        }
+
         private PythonAst GetAstFromText(string exprText, string privatePrefix) {
             using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion, new ParserOptions() { PrivatePrefix = privatePrefix, Verbatim = true })) {
                 return parser.ParseTopExpression();

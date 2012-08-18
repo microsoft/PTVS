@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools {
             engineKey.SetValue("SetNextStatement", 1);
             engineKey.SetValue("RemoteDebugging", 1);
             engineKey.SetValue("HitCountBP", 0);
+            //engineKey.SetValue("FunctionBP", 1); // TODO: Implement PythonLanguageInfo.ResolveName
 
             // provide class / assembly so we can be created remotely from the GAC w/o registering a CLSID 
             engineKey.SetValue("EngineClass", _debugEngine.FullName);

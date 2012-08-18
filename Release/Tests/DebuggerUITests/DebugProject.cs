@@ -21,6 +21,7 @@ using System.Windows.Automation;
 using EnvDTE;
 using EnvDTE90;
 using EnvDTE90a;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
@@ -99,6 +100,30 @@ namespace DebuggerUITests {
             } finally {
                 File.Delete(TestData.GetPath(@"TestData\Interpreter.exe"));
             }
+        }
+
+        [TestMethod, Priority(2), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestPendingBreakPointLocation() {
+
+            var project = OpenProject(@"TestData\DebuggerProject.sln", "BreakpointInfo.py");
+            var bpInfo = project.ProjectItems.Item("BreakpointInfo.py");
+
+            project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(x => true);
+
+            var bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 2);
+            Assert.AreEqual("Python", bp.Item(1).Language);
+            // FunctionName doesn't get queried for when adding the BP via EnvDTE, so we can't assert here :(
+            //Assert.AreEqual("BreakpointInfo.C", bp.Item(1).FunctionName);
+            bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 3);
+            Assert.AreEqual("Python", bp.Item(1).Language);
+            //Assert.AreEqual("BreakpointInfo.C.f", bp.Item(1).FunctionName);
+            bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 6);
+            Assert.AreEqual("Python", bp.Item(1).Language);
+            //Assert.AreEqual("BreakpointInfo", bp.Item(1).FunctionName);
+            bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 7);
+            Assert.AreEqual("Python", bp.Item(1).Language);
+            //Assert.AreEqual("BreakpointInfo.f", bp.Item(1).FunctionName);
         }
 
         [TestMethod, Priority(2), TestCategory("Core")]

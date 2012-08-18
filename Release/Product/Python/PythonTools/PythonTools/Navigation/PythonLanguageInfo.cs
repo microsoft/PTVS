@@ -14,11 +14,13 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 
 namespace Microsoft.PythonTools.Navigation {
     /// <summary>
@@ -94,9 +96,58 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset) {
+            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+            var service = model.GetService<IVsEditorAdaptersFactoryService>();
+            var buffer = service.GetDataBuffer(pBuffer);
+            IPythonProjectEntry projEntry;
+            if (buffer.TryGetPythonAnalysis(out projEntry)) {
+                var tree = projEntry.Tree;
+                var name = FindNodeInTree(tree, tree.Body as SuiteStatement, iLine);
+                if (name != null) {
+                    pbstrName = projEntry.Analysis.ModuleName + "." + name;
+                    piLineOffset = iCol;
+                } else {
+                    pbstrName = projEntry.Analysis.ModuleName;
+                    piLineOffset = iCol;
+                }
+                return VSConstants.S_OK;
+            }
+            
             pbstrName = "";
             piLineOffset = iCol;
             return VSConstants.S_OK;
+        }
+
+        private static string FindNodeInTree(PythonAst tree, SuiteStatement statement, int line) {
+            if (statement != null) {
+                foreach (var node in statement.Statements) {
+                    FunctionDefinition funcDef = node as FunctionDefinition;
+                    if (funcDef != null) {
+                        var span = funcDef.GetSpan(tree);
+                        if (span.Start.Line <= line && line <= span.End.Line) {
+                            var res = FindNodeInTree(tree, funcDef.Body as SuiteStatement, line);
+                            if (res != null) {
+                                return funcDef.Name + "." + res;
+                            }
+                            return funcDef.Name;
+                        }
+                        continue;
+                    }
+
+                    ClassDefinition classDef = node as ClassDefinition;
+                    if (classDef != null) {
+                        var span = classDef.GetSpan(tree);
+                        if (span.Start.Line <= line && line <= span.End.Line) {
+                            var res = FindNodeInTree(tree, classDef.Body as SuiteStatement, line);
+                            if (res != null) {
+                                return classDef.Name + "." + res;
+                            }
+                            return classDef.Name;
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
@@ -109,14 +160,35 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public int ResolveName(string pszName, uint dwFlags, out IVsEnumDebugName ppNames) {
+            /*if((((RESOLVENAMEFLAGS)dwFlags) & RESOLVENAMEFLAGS.RNF_BREAKPOINT) != 0) {
+                // TODO: This should go through the project/analysis and see if we can
+                // resolve the names...
+            }*/
             ppNames = null;
             return VSConstants.E_FAIL;
         }
 
-        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
+        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {            
+            // per the docs, even if we don't indend to validate, we need to set the span info:
+            // http://msdn.microsoft.com/en-us/library/microsoft.visualstudio.textmanager.interop.ivslanguagedebuginfo.validatebreakpointlocation.aspx
+            // 
+            // Caution
+            // Even if you do not intend to support the ValidateBreakpointLocation method but your 
+            // language does support breakpoints, you must implement this method and return a span 
+            // that contains the specified line and column; otherwise, breakpoints cannot be set 
+            // anywhere except line 1. You can return E_NOTIMPL to indicate that you do not otherwise 
+            // support this method but the span must always be set. The example shows how this can be done.
+
+            // http://pytools.codeplex.com/workitem/787
+            // We were previously returning S_OK here indicating to VS that we have in fact validated
+            // the breakpoint.  Validating breakpoints actually interacts and effectively disables
+            // the "Highlight entire source line for breakpoints and current statement" option as instead
+            // VS highlights the validated region.  So we return E_NOTIMPL here to indicate that we have 
+            // not validated the breakpoint, and then VS will happily respect the option when we're in 
+            // design mode.
             pCodeSpan[0].iStartLine = iLine;
             pCodeSpan[0].iEndLine = iLine;
-            return VSConstants.S_OK;
+            return VSConstants.E_NOTIMPL;
         }
 
         #endregion
