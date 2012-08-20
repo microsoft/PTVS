@@ -610,8 +610,27 @@ namespace Microsoft.PythonTools.Repl {
         protected override void OnConnected() {
             // Finish initialization now that the socket connection has been established
             var threads = _process.GetThreads();
-            if (threads.Count > 0) {
-                SwitchThread(threads[0], false);
+            PythonThread activeThread = null;
+
+            if (PythonToolsPackage.Instance != null) {
+                // If we are broken into the debugger, let's set the debug REPL active thread
+                // to be the one that is active in the debugger
+                var dteDebugger = PythonToolsPackage.Instance.DTE.Debugger;
+                if (dteDebugger.CurrentMode == EnvDTE.dbgDebugMode.dbgBreakMode &&
+                    dteDebugger.CurrentProcess != null &&
+                    dteDebugger.CurrentThread != null) {
+                    if (_process.Id == dteDebugger.CurrentProcess.ProcessID) {
+                        activeThread = threads.SingleOrDefault(t => t.Id == dteDebugger.CurrentThread.ID);
+                    }
+                }
+            }
+
+            if (activeThread == null) {
+                activeThread = threads.Count > 0 ? threads[0] : null;
+            }
+
+            if (activeThread != null) {
+                SwitchThread(activeThread, false);
             }
 
             OnMultipleScopeSupportChanged();
