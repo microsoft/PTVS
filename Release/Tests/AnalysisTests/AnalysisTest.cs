@@ -18,9 +18,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -911,6 +911,7 @@ some_bool = x[TWO]
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("some_int", 1), IntType);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("some_bool", 1), BoolType);
         }
+
         [TestMethod]
         public void TestCtorSignatures() {
             var entry = ProcessText(@"
@@ -956,6 +957,25 @@ class H(object):
             Assert.AreEqual(result.Length, 1);
             Assert.AreEqual(result[0].Parameters.Length, 1);
         }
+
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/798
+        /// </summary>
+        [TestMethod]
+        public void TestListSubclassSignatures() {
+            var text = @"
+class C(list):
+    pass
+
+a = C()
+a.count";
+            var entry = ProcessText(text);
+
+            var result = entry.GetSignaturesByIndex("a.count", text.IndexOf("a.count")).ToArray();
+            Assert.AreEqual(result.Length, 1);
+            Assert.AreEqual(result[0].Parameters.Length, 1);
+        }
+
 
         [TestMethod]
         public void TestDocStrings() {
@@ -2373,6 +2393,33 @@ abc.Cmeth(['foo'], 'bar')
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("xvar", text.IndexOf("pass")), ListType);
         }
+
+        internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);
+        internal static string GetSafeParameterName(ParameterResult result) {
+            var match = ValidParameterName.Match(result.Name);
+
+            return match.Success ? match.Value : result.Name;
+        }
+
+
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/799
+        /// </summary>
+        [TestMethod]
+        public void TestOverrideCompletions() {
+            var text = @"
+class bar(list):
+    pass
+";
+            var entry = ProcessText(text);
+            AssertUtil.ContainsExactly(
+                entry.GetOverrideableByIndex(text.IndexOf("pass")).Where(res => res.Name == "__init__").Select(
+                    x => string.Join(", ", x.Parameters.Select(GetSafeParameterName))
+                ), 
+                "self, sequence"
+            );
+        }
+
 
         [TestMethod]
         public void TestSimpleMethodCall() {

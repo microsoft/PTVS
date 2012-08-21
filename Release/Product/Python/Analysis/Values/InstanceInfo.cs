@@ -104,7 +104,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         continue;
                     }
                     // TODO: We should really do a get descriptor / call here
-                    // FIXME: new string[0]
                     getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, ProjectState._stringType.Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                 }
                 if (getattrRes.Count > 0) {

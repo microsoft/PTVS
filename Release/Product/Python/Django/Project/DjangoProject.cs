@@ -669,11 +669,6 @@ namespace Microsoft.PythonTools.Django.Project {
 
                 var project = projectObj as EnvDTE.Project;
                 if (project != null) {
-                    if (dialog.ViewModel.Name == project.Name) {
-                        MessageBox.Show("You cannot add an app with the same name as the project.");
-                        return;
-                    }
-
                     EnvDTE.ProjectItems parentItems;
                     if (selectedObj == projectObj) {
                         parentItems = project.ProjectItems;

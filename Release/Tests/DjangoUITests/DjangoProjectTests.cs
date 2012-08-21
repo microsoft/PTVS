@@ -265,6 +265,9 @@ namespace DjangoUITests {
             );
         }
 
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/748
+        /// </summary>
         [TestMethod, Priority(2), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewAppSameAsProjectName() {
@@ -303,11 +306,11 @@ namespace DjangoUITests {
             newAppDialog.AppName = app.Dte.Solution.Projects.Item(1).Name;
             newAppDialog.Ok();
 
-            System.Threading.Thread.Sleep(1000);
-
-            VisualStudioApp.CheckMessageBox(
-                TestUtilities.UI.MessageBoxButton.Ok,
-                "You cannot add an app with the same name as the project."
+            app.SolutionExplorerTreeView.WaitForItem(
+                app.Dte.Solution.FullName,
+                app.Dte.Solution.Projects.Item(1).Name,
+                app.Dte.Solution.Projects.Item(1).Name,
+                "models.py"
             );
         }
 

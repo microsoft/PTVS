@@ -285,6 +285,7 @@ def parse_args(tokens, cur_token, module):
                 arg['arg_format'] = star_args
             elif token == '...':
                 arg['arg_format'] = '*'
+                arg['name'] = 'args'
             
             while cur_token + 2 < len(tokens) and tokens[cur_token + 2] == ']':
                 cur_token += 2

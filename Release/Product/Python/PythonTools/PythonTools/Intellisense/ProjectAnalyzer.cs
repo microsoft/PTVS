@@ -1118,9 +1118,10 @@ namespace Microsoft.PythonTools.Intellisense {
             private readonly SemaphoreSlim _waitingToUpdate, _updating;
 
             public TaskProvider(IVsTaskList errorList) {
-                Debug.Assert(errorList != null);
                 _errorList = errorList;
-                ErrorHandler.ThrowOnFailure(_errorList.RegisterTaskProvider(this, out _cookie));
+                if (_errorList != null) {
+                    ErrorHandler.ThrowOnFailure(_errorList.RegisterTaskProvider(this, out _cookie));
+                }
                 _waitingToUpdate = new SemaphoreSlim(1);
                 _updating = new SemaphoreSlim(1);
             }
@@ -1144,7 +1145,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public void UpdateTasks() {
-                ThreadPool.QueueUserWorkItem(UpdateTasksInternal, this);
+                if (_errorList != null) {
+                    ThreadPool.QueueUserWorkItem(UpdateTasksInternal, this);
+                }
             }
 
 

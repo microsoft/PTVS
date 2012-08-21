@@ -15,6 +15,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -43,12 +44,21 @@ namespace PythonToolsTests {
                         TestData.GetPath("PythonScraper.py")
                     )
                 );
+                startInfo.RedirectStandardError = true;
+                startInfo.RedirectStandardOutput = true;
+                startInfo.UseShellExecute = false;
 
                 var process = Process.Start(startInfo);
+                var receiver = new OutputReceiver();
+                process.OutputDataReceived += receiver.OutputDataReceived;
+                process.ErrorDataReceived += receiver.OutputDataReceived;
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
+                
                 process.WaitForExit();
 
                 // it should succeed
-                Assert.AreEqual(process.ExitCode, 0);
+                Assert.AreEqual(process.ExitCode, 0, "Bad exit code: " + process.ExitCode + "\r\n" + receiver.Output.ToString());
 
                 // perform some basic validation
                 dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, path.Version.Is3x() ? "builtins.idb" : "__builtin__.idb"), FileMode.Open, FileAccess.Read));
@@ -56,6 +66,15 @@ namespace PythonToolsTests {
                     foreach (var overload in builtinDb["members"]["open"]["value"]["overloads"]) {
                         Assert.AreEqual(overload["ret_type"][0], "__builtin__");
                         Assert.AreEqual(overload["ret_type"][1], "file");
+                    }
+
+                    if (!path.Path.Contains("Iron")) {
+                        // http://pytools.codeplex.com/workitem/799
+                        var arr = (object[])builtinDb["members"]["list"]["value"]["members"]["__init__"]["value"]["overloads"];
+                        Assert.AreEqual(
+                            ((dynamic)(arr[0]))["args"][1]["name"],
+                            "args"
+                        );
                     }
                 }
 
@@ -74,6 +93,17 @@ namespace PythonToolsTests {
                 }
             }
         }
+
+        class OutputReceiver {
+            public readonly StringBuilder Output = new StringBuilder();
+
+            public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
+                if (e.Data != null) {
+                    Output.Append(e.Data);
+                }
+            }
+        }
+
 
         [TestMethod]
         public void TestPthFiles() {

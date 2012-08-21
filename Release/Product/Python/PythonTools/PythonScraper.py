@@ -227,7 +227,7 @@ def generate_type_new(type_obj, obj):
                          'overloads' : [
                                  {
                                   'doc': doc_str, 
-                                  'args': [{'arg_format': '*', 'name': '...'}]
+                                  'args': [{'arg_format': '*', 'name': 'args'}]
                                  }
                         ]                         
                 }
@@ -268,6 +268,9 @@ def generate_type(type_obj, is_hidden=False):
                 members_table[member] = {'kind' : 'function', 'value': { 'overloads': ({'args': [{'name': 'cls', 'type': (builtin_name, 'type'), 'ret_type': (builtin_name, 'object')}]})}}
             else:
                 members_table[member] = generate_type_new(type_obj, type_obj.__dict__[member])
+        elif member == '__getattribute__' and type(type_obj.__dict__[member]) is slot_wrapper_type and type_obj is not object:
+            # skip __getattribute__ on types other than object if it's just a slot wrapper.
+            continue
         else:
             members_table[member] = generate_member(type_obj.__dict__[member], from_type = True)
 
@@ -484,17 +487,17 @@ def thread_fixer(mod):
                                  'for other threads.',
                                     'overloads': None}},
             '__new__': {'kind': 'function',
-                        'value': {'doc': 'T.__new__(S, ...) -> a new object '
+                        'value': {'doc': 'T.__new__(S, *args) -> a new object '
                                   'with type S, a subtype of T',
                                     'overloads': ({'args': [{'name': 'S',
                                                         'type': ('builtins',
                                                                     'object')},
                                                         {'arg_format': '*',
-                                                        'name': '...',
+                                                        'name': 'args',
                                                         'type': ('builtins',
                                                                     'object')},
                                                         {'arg_format': '*',
-                                                        'name': '...',
+                                                        'name': 'args',
                                                         'type': ('builtins',
                                                                     'object')}],
                                                     'ret_type': ('',
@@ -619,7 +622,7 @@ def builtin_fixer(mod):
     mod['members']['print'] = {
         'kind': 'function',
         'value': {
-        'doc': 'print(value, ..., sep=\' \', end=\'\\n\', file=sys.stdout)\n\n'
+        'doc': 'print(value, *args, sep=\' \', end=\'\\n\', file=sys.stdout)\n\n'
         'Prints the values to a stream, or to sys.stdout by default.\nOptional'
         ' keyword arguments:\nfile: a file-like object (stream); defaults to '
         'the current sys.stdout.\nsep:  string inserted between values, '
@@ -657,11 +660,11 @@ def builtin_fixer(mod):
                                                         'type': ('builtins',
                                                                 'object')},
                                                     {'arg_format': '*',
-                                                        'name': '...',
+                                                        'name': 'args',
                                                         'type': ('builtins',
                                                                 'object')},
                                                     {'arg_format': '*',
-                                                        'name': '...',
+                                                        'name': 'args',
                                                         'type': ('builtins',
                                                                 'object')}],
                                             'ret_type': ('builtins',
@@ -673,11 +676,11 @@ def builtin_fixer(mod):
                                                     'type': ('builtins',
                                                                 'object')},
                                                     {'arg_format': '*',
-                                                    'name': '...',
+                                                    'name': 'args',
                                                     'type': ('builtins',
                                                                 'object')},
                                                     {'arg_format': '*',
-                                                    'name': '...',
+                                                    'name': 'args',
                                                     'type': ('builtins',
                                                                 'object')}],
                                             'ret_type': ('',
@@ -1034,11 +1037,11 @@ def itertools_fixer(mod):
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')}],
                                         'ret_type': ('',
@@ -1078,11 +1081,11 @@ def itertools_fixer(mod):
                                                     'type': ('builtins',
                                                                 'object')},
                                                     {'arg_format': '*',
-                                                    'name': '...',
+                                                    'name': 'args',
                                                     'type': ('builtins',
                                                                 'object')},
                                                     {'arg_format': '*',
-                                                    'name': '...',
+                                                    'name': 'args',
                                                     'type': ('builtins',
                                                                 'object')}],
                                             'ret_type': ('',
@@ -1149,11 +1152,11 @@ def _ast_fixer(mod):
                                             'type': ('builtins',
                                                         'object')},
                                             {'arg_format': '*',
-                                            'name': '...',
+                                            'name': 'args',
                                             'type': ('builtins',
                                                         'object')},
                                             {'arg_format': '*',
-                                            'name': '...',
+                                            'name': 'args',
                                             'type': ('builtins',
                                                         'object')}],
                                     'ret_type': ('',
@@ -1182,11 +1185,11 @@ def _ast_fixer(mod):
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')}],
                                         'ret_type': ('',
@@ -1214,11 +1217,11 @@ def _ast_fixer(mod):
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')}],
                                         'ret_type': ('',
@@ -1251,11 +1254,11 @@ def _ast_fixer(mod):
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')},
                                                 {'arg_format': '*',
-                                                'name': '...',
+                                                'name': 'args',
                                                 'type': ('builtins',
                                                             'object')}],
                                         'ret_type': ('',
@@ -1908,7 +1911,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('16')
+    f.write('17')
     f.close()
 
     # inspect extension modules installed into site-packages
