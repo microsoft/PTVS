@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Refactoring;
@@ -23,8 +23,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
-using TestUtilities.Mocks;
 using TestUtilities;
+using TestUtilities.Mocks;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -452,6 +452,9 @@ abc = 200
             );
             RefactorTest("foo", "abc for",
                 new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "abc = 100; x = (foo for foo in range(abc))") }
+            );
+            RefactorTest("foo", "abc for",
+                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc) for xyz in abc)", "abc = 100; x = (foo for foo in range(abc) for xyz in foo)") }
             );
         }
 
@@ -2358,17 +2361,10 @@ def g(a, b, c):
                             buffer.RaiseChangedLowPriority();
                         }
                     }
-                
-                    bool missingAnalysis;
-                    do {
-                        missingAnalysis = false;
-                        for (int i = 0; i < analysis.Count; i++) {
-                            if (!analysis[i].ProjectEntry.IsAnalyzed) {
-                                missingAnalysis = true;
-                            }
-                        }
-                        Thread.Sleep(10);
-                    } while (missingAnalysis);
+
+                    using (new DebugTimer("Waiting for analysis")) {
+                        analyzer.WaitForCompleteAnalysis(x => true);
+                    }
 
                     var caretPos = inputs[0].Input.IndexOf(caretText);
                     views[0].Caret.MoveTo(new SnapshotPoint(buffers[0].CurrentSnapshot, caretPos));

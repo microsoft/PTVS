@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 // list comprehension is in enclosing scope in 2.x
                 ListComprehension listComp = (ListComprehension)node;
 
-                WalkComprehension(ee, listComp);
+                WalkComprehension(ee, listComp, start: 0);
 
                 var listInfo = (ListInfo)ee.GlobalScope.GetOrMakeNodeVariable(
                     node,
@@ -333,8 +333,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        internal static void WalkComprehension(ExpressionEvaluator ee, Comprehension comp) {
-            for (int i = 0; i < comp.Iterators.Count; i++) {
+        internal static void WalkComprehension(ExpressionEvaluator ee, Comprehension comp, int start = 1) {
+            for (int i = start; i < comp.Iterators.Count; i++) {
                 ComprehensionFor compFor = comp.Iterators[i] as ComprehensionFor;
                 if (compFor != null) {
                     foreach (var listType in ee.Evaluate(compFor.List)) {

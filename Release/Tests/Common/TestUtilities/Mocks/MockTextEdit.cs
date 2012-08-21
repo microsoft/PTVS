@@ -78,20 +78,35 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextSnapshot Apply() {
-            _edits.Sort(CompareEdits);
-
             // this works for non-overlapping edits...
             StringBuilder text = new StringBuilder(_snapshot.GetText());
-            foreach (var edit in _edits) {
-                InsertionEdit insert = edit as InsertionEdit;
-                if (insert != null) {
-                    text.Insert(insert.Position, insert.Text);
-                } else {
-                    DeletionEdit delete = edit as DeletionEdit;
-                    text.Remove(delete.Position, delete.Length);
-                }
-            }
+            for (int i = 0; i < _edits.Count; i++) {
+                var curEdit = _edits[i];
 
+                int adjust = 0;
+                for (int j = 0; j < i; j++) {
+                    var compEdit = _edits[j];
+                    DeletionEdit del = compEdit as DeletionEdit;
+                    if (del != null) {
+                        if ((compEdit.Position) < curEdit.Position) {
+                            adjust -= del.Length;
+                        }
+                    } else {
+                        if ((compEdit.Position) <= curEdit.Position) {
+                            adjust += ((InsertionEdit)compEdit).Text.Length;
+                        }
+                    }
+                }
+
+                InsertionEdit insert = curEdit as InsertionEdit;
+                if (insert != null) {
+                    text.Insert(insert.Position + adjust, insert.Text);
+                } else {
+                    DeletionEdit delete = curEdit as DeletionEdit;
+                    text.Remove(delete.Position + adjust, delete.Length);
+                }
+
+            }
             var res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot((MockTextBuffer)_snapshot.TextBuffer, text.ToString());
             _applied = true;
             return res;

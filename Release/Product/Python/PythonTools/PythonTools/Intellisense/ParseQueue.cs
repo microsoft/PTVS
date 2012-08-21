@@ -111,7 +111,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void EnqueWorker(Action parser) {
             Interlocked.Increment(ref _analysisPending);
-            _parser.QueueActivityEvent.Set();
 
             ThreadPool.QueueUserWorkItem(
                 dummy => {
@@ -119,7 +118,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         parser();
                     } finally {
                         Interlocked.Decrement(ref _analysisPending);
-                        _parser.QueueActivityEvent.Set();
                     }
                 }
             );

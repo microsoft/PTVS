@@ -76,7 +76,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 for (int i = 0; i < _queue.Length; i++) {
                     if (_queue[i].Remove(item)) {
                         Interlocked.Decrement(ref _analysisPending);
-                        _analyzer.QueueActivityEvent.Set();
 
                         AnalysisPriority oldPri = (AnalysisPriority)i;
 
@@ -93,7 +92,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // enqueue the work item
                 Interlocked.Increment(ref _analysisPending);
-                _analyzer.QueueActivityEvent.Set();
                 if (priority == AnalysisPriority.High) {
                     // always try and process high pri items immediately
                     _queue[iPri].Insert(0, item);
@@ -138,7 +136,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     var res = _queue[i][0];
                     _queue[i].RemoveAt(0);
                     Interlocked.Decrement(ref _analysisPending);
-                    _analyzer.QueueActivityEvent.Set();
                     priority = (AnalysisPriority)i;
                     return res;
                 }
@@ -178,7 +175,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     _isAnalyzing = false;
                 } else {
                     _isAnalyzing = false;
-                    _workEvent.WaitOne();
+                    WaitHandle.SignalAndWait(
+                        _analyzer.QueueActivityEvent,
+                        _workEvent
+                    );
                 }   
             }
         }

@@ -12,8 +12,8 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -240,6 +240,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return false;
             }
         }
+
+        internal void CopyTo(VariableDef to) {
+            Debug.Assert(this != to);
+            foreach (var keyValue in _dependencies) {
+                var projEntry = keyValue.Key;
+                var dependencies = keyValue.Value;
+
+                to.AddTypes(projEntry, dependencies.Types);
+                if (dependencies._references != null) {
+                    foreach (var encodedLoc in dependencies._references) {
+                        to.AddReference(encodedLoc, projEntry);
+                    }
+                }
+                if (dependencies._assignments != null) {
+                    foreach (var assignment in dependencies._assignments) {
+                        to.AddAssignment(assignment, projEntry);
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// Checks to see if a variable still exists.  This depends upon the variable not

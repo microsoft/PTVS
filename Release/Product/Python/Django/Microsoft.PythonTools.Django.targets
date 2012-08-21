@@ -209,6 +209,7 @@ interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
 
     </PropertyGroup>
     <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == ''" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
+    <MakeDir Directories="bin"/>
     <WriteLinesToFile File="bin\AzureSetup.cfg"
                       Lines="$(_AzureSetupInfo)" Overwrite="true"/>
     <WriteLinesToFile File="bin\AzureSetup.cfg"

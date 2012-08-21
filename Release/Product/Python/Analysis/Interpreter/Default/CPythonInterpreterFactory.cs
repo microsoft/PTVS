@@ -119,7 +119,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
-            _generating = true;
+            lock (this) {
+                _generating = true;
+            }
             string outPath = GetConfiguredDatabasePath();
 
             if (!PythonTypeDatabase.Generate(
@@ -137,10 +139,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         }
                     }
                     databaseGenerationCompleted();
-
-                    _generating = false;
+                    lock (this) {
+                        _generating = false;
+                    }
                 })) {
-                _generating = false;
+                lock (this) {
+                    _generating = false;
+                }
                 return false;
             }
 
@@ -168,8 +173,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         void IInterpreterWithCompletionDatabase.AutoGenerateCompletionDatabase() {
-            if (!ConfigurableDatabaseExists() && !_generating) {
-                ThreadPool.QueueUserWorkItem(x => GenerateCompletionDatabaseWorker(GenerateDatabaseOptions.StdLibDatabase, () => { }));
+            lock (this) {
+                if (!ConfigurableDatabaseExists() && !_generating) {
+                    _generating = true;
+                    ThreadPool.QueueUserWorkItem(x => GenerateCompletionDatabaseWorker(GenerateDatabaseOptions.StdLibDatabase, () => { }));
+                }
             }
         }
 

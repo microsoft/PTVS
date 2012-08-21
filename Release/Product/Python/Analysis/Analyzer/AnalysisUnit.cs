@@ -275,7 +275,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         private void EnsureDecoratorCall(FunctionDefinition funcdef) {
             if (_decoratorCall == null) {
-                Expression decCall = new NameExpression(funcdef.Name);
+                Expression decCall = funcdef.NameExpression;
+
                 foreach (var d in funcdef.Decorators.Decorators) {
                     if (d != null) {
                         decCall = new CallExpression(
@@ -445,7 +446,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     funcScope.Variables[Ast.Parameters[i].Name] = oldParams[i];
 
                     if (_newParams[i] != oldParams[i]) {    // we don't yet copy dict params...
-                        CopyTypesTo(_newParams[i], oldParams[i]);
+                        _newParams[i].CopyTo(oldParams[i]);
                     }
                 }
 
@@ -455,7 +456,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         var newVar = variable.Specialized;
                         var oldVar = variable.Shared;
 
-                        CopyTypesTo(newVar, oldVar);
+                        newVar.CopyTo(oldVar);
 
                         variable.DefiningScope.Variables[variable.Name] = oldVar;
                     }
@@ -483,16 +484,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 Shared = shared;
                 DefiningScope = definingScope;
                 Name = name;
-            }
-        }
-
-        private static void CopyTypesTo(VariableDef from, VariableDef to) {
-            Debug.Assert(from != to);
-            foreach (var keyValue in from._dependencies) {
-                var projEntry = keyValue.Key;
-                var dependencies = keyValue.Value;
-
-                to.AddTypes(projEntry, dependencies.Types);
             }
         }
     }
@@ -620,7 +611,23 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         protected override void AnalyzeWorker(DDG ddg) {
+            // evaluate the 1st iterator in the outer scope
+            ddg.SetCurrentUnit(_outerUnit);
+            var comp = (Comprehension)Ast;
+            ComprehensionFor forComp = comp.Iterators[0] as ComprehensionFor;
+
+            ISet<Namespace> listTypes = null;
+            if (forComp != null) {
+                listTypes = ddg._eval.Evaluate(forComp.List);
+            }
+
             ddg.SetCurrentUnit(this);
+
+            if (forComp != null) {
+                foreach (var listType in listTypes) {
+                    ddg._eval.AssignTo(comp, forComp.Left, listType.GetEnumeratorTypes(comp, this));
+                }
+            }
 
             ExpressionEvaluator.WalkComprehension(ddg._eval, (Comprehension)Ast);
         }
