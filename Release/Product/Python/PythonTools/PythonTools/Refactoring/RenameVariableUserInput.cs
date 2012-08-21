@@ -16,9 +16,11 @@ using System;
 using System.Windows;
 using System.Windows.Interop;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
@@ -29,16 +31,66 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public const string RefactorGuidStr = "{5A822660-832B-4AF0-9A86-1048D33A05E7}";
         private static readonly Guid RefactorGuid = new Guid(RefactorGuidStr);
+        private const string RefactorKey = "Refactor";
+        private const string RenameKey = "Rename";
+        private const string PreviewChangesKey = "PreviewChanges";
 
         public RenameVariableRequest GetRenameInfo(string originalName) {
             var requestView = new RenameVariableRequestView(originalName);
+            LoadPreferences(requestView);
             var dialog = new RenameVariableDialog(requestView);
             bool res = dialog.ShowModal() ?? false;
             if (res) {
+                SavePreferences(requestView);
                 return requestView.GetRequest();
             }
 
             return null;
+        }
+
+        private void SavePreferences(RenameVariableRequestView requestView) {
+            SaveBool(PreviewChangesKey, requestView.PreviewChanges);
+        }
+
+        private void LoadPreferences(RenameVariableRequestView requestView) {
+            requestView.PreviewChanges = LoadBool(PreviewChangesKey) ?? true;
+        }
+
+        internal void SaveBool(string name, bool value) {
+            SaveString(name, value.ToString());
+        }
+
+        internal void SaveString(string name, string value) {
+            using (var pythonKey = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, true).CreateSubKey(PythonCoreConstants.BaseRegistryKey)) {
+                using (var refactorKey = pythonKey.CreateSubKey(RefactorKey)) {
+                    using (var renameKey = refactorKey.CreateSubKey(RenameKey)) {
+                        renameKey.SetValue(name, value, Win32.RegistryValueKind.String);
+                    }
+                }
+            }
+        }
+        
+        internal bool? LoadBool(string name) {
+            string res = LoadString(name);
+            if (res == null) {
+                return null;
+            }
+
+            bool val;
+            if (bool.TryParse(res, out val)) {
+                return val;
+            }
+            return null;
+        }
+
+        internal string LoadString(string name) {
+            using (var pythonKey = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, true).CreateSubKey(PythonCoreConstants.BaseRegistryKey)) {
+                using (var refactorKey = pythonKey.CreateSubKey(RefactorKey)) {
+                    using (var renameKey = refactorKey.CreateSubKey(RenameKey)) {
+                        return renameKey.GetValue(name) as string;
+                    }
+                }
+            }
         }
 
         public void CannotRename(string message) {

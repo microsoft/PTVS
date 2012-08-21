@@ -61,7 +61,12 @@ namespace Microsoft.PythonTools.Options {
             if (res == null) {
                 return null;
             }
-            return Convert.ToInt32(res);
+
+            int val;
+            if (int.TryParse(res, out val)) {
+                return val;
+            }
+            return null;
         }
 
         internal bool? LoadBool(string name) {
@@ -69,7 +74,12 @@ namespace Microsoft.PythonTools.Options {
             if (res == null) {
                 return null;
             }
-            return Convert.ToBoolean(res);
+
+            bool val;
+            if (bool.TryParse(res, out val)) {
+                return val;
+            }
+            return null;
         }
 
         internal string LoadString(string name) {
