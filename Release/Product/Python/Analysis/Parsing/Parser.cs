@@ -4142,6 +4142,8 @@ namespace Microsoft.PythonTools.Parsing {
 
                 case TokenKind.Comma:
 
+                case TokenKind.Colon:
+
                 case TokenKind.KeywordFor:
                 case TokenKind.KeywordIn:
                 case TokenKind.KeywordIf:

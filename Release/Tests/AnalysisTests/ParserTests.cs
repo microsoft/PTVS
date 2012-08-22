@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -1274,7 +1275,7 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid syntax", 110, 9, 7, 111, 9, 8),
                     new ErrorInfo("unexpected token 'lambda'", 124, 10, 7, 130, 10, 13),
                     new ErrorInfo("unexpected token ':'", 130, 10, 13, 131, 10, 14),
-                    new ErrorInfo("invalid syntax", 132, 10, 15, 133, 10, 16)
+                    new ErrorInfo("unexpected token '1'", 132, 10, 15, 133, 10, 16)
                 );
             }
         }
@@ -2028,6 +2029,8 @@ namespace AnalysisTests {
             };
 
             foreach (var curVersion in versions) {
+                Debug.WriteLine("Running: {0}", curVersion.Version);
+
                 string dir = Path.Combine(curVersion.Path);
                 List<string> files = new List<string>();
                 try {

@@ -2092,7 +2092,7 @@ class cls(cls):
             AssertUtil.ContainsExactly(entry.GetMembersByIndex("cls().abc", 1).Select(member => member.Name), _intMembers);
             AssertUtil.ContainsExactly(entry.GetMembersByIndex("cls.abc", 1).Select(member => member.Name), _intMembers);
             var sigs = entry.GetSignaturesByIndex("cls", 1).ToArray();
-            Assert.AreEqual(1, sigs.Length);
+            Assert.AreEqual(2, sigs.Length);    // 1 for object, one for cls
             Assert.AreEqual(null, sigs.First().Documentation);            
         }
 
@@ -2416,7 +2416,7 @@ class bar(list):
                 entry.GetOverrideableByIndex(text.IndexOf("pass")).Where(res => res.Name == "__init__").Select(
                     x => string.Join(", ", x.Parameters.Select(GetSafeParameterName))
                 ), 
-                "self, sequence"
+                this is IronPythonAnalysisTest ? "self, enumerable" : "self, sequence"
             );
         }
 
@@ -3304,6 +3304,73 @@ a = X(2)
 ";
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("value", text.IndexOf(" = value")), IntType);
+        }
+
+        /// <summary>
+        /// Verifies that regardless of how we get to imports/function return values that
+        /// we properly understand the imported value.
+        /// </summary>
+        [TestMethod]
+        public void ImportScopesOrder() {
+            var text1 = @"
+import mod2
+import mmap as mm
+
+import sys
+def f():
+    return sys
+
+def g():
+    return re
+
+def h():
+    return mod2.sys
+
+def i():
+    return op
+
+def j():
+    return mm
+
+def k():
+    return mod2.impp
+
+import operator as op
+
+import re
+
+";
+
+            var text2 = @"
+import sys
+import imp as impp
+";
+            PermutedTest("mod", new[] { text1, text2 }, entries => {
+                AssertUtil.ContainsExactly(
+                    GetVariableDescriptionsByIndex(entries[0].Analysis, "g", 1), 
+                    "def g(...) -> built-in module re"
+                );
+                AssertUtil.ContainsExactly(
+                    GetVariableDescriptionsByIndex(entries[0].Analysis, "f", 1),
+                    "def f(...) -> built-in module sys"
+                );
+                AssertUtil.ContainsExactly(
+                    GetVariableDescriptionsByIndex(entries[0].Analysis, "h", 1),
+                    "def h(...) -> built-in module sys"
+                );
+                AssertUtil.ContainsExactly(
+                    GetVariableDescriptionsByIndex(entries[0].Analysis, "i", 1),
+                    "def i(...) -> built-in module operator"
+                );
+                AssertUtil.ContainsExactly(
+                    GetVariableDescriptionsByIndex(entries[0].Analysis, "j", 1),
+                    "def j(...) -> built-in module mmap"
+                );
+                AssertUtil.ContainsExactly(
+                    GetVariableDescriptionsByIndex(entries[0].Analysis, "k", 1),
+                    "def k(...) -> built-in module imp"
+                );
+            });
         }
 
         [TestMethod]

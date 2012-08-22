@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         /// <summary>
-        /// Returns the overloads avaialble for calling the constructor of the type.
+        /// Returns the overloads available for calling the constructor of the type.
         /// </summary>
         public override ICollection<OverloadResult> Overloads {
             get {

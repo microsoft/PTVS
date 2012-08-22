@@ -338,10 +338,10 @@ e = System.Collections.ArrayList()
 
 def g():
     return System
-    return c.Length
 ";
             var entry = ProcessText(text);
 
+            AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "System", 1), "built-in module System");
             AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "System.String.Length", 1), "property of type int");
             AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "System.Environment.CurrentDirectory", 1), "str");
             AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "e", 1), "ArrayList");

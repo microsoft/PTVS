@@ -46,7 +46,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 if (_overloads == null) {
                     IPythonFunctionOverload[] res = new IPythonFunctionOverload[_infos.Length];
                     for (int i = 0; i < _infos.Length; i++) {
-                        res[i] = new IronPythonBuiltinFunctionTarget(_interpreter, _infos[i], (IronPythonType)DeclaringType);
+                        res[i] = new IronPythonConstructorFunctionTarget(_interpreter, _infos[i], (IronPythonType)DeclaringType);
                     }
                     _overloads = res;
                 }

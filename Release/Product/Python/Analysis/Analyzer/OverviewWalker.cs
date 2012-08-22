@@ -484,6 +484,19 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         public override bool Walk(ImportStatement node) {
+            for (int i = 0; i < node.Names.Count; i++) {
+                NameExpression name = null;
+                if (i < node.AsNames.Count && node.AsNames[i] != null) {
+                    name = node.AsNames[i];
+                } else if(node.Names[i].Names.Count > 0) {
+                    name = node.Names[i].Names[0];
+                }
+                
+                if (name != null) {
+                    CreateVariable(name);
+                }
+            }
+
             UpdateChildRanges(node);
             return base.Walk(node);
         }

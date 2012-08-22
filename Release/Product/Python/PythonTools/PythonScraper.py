@@ -265,7 +265,7 @@ def generate_type(type_obj, is_hidden=False):
         if member == '__new__':
             found_new = True
             if type_obj is object:
-                members_table[member] = {'kind' : 'function', 'value': { 'overloads': ({'args': [{'name': 'cls', 'type': (builtin_name, 'type'), 'ret_type': (builtin_name, 'object')}]})}}
+                members_table[member] = {'kind' : 'function', 'value': { 'overloads': ({'args': [{'name': 'cls', 'type': (builtin_name, 'type'), 'ret_type': (builtin_name, 'object')}]}, )}}
             else:
                 members_table[member] = generate_type_new(type_obj, type_obj.__dict__[member])
         elif member == '__getattribute__' and type(type_obj.__dict__[member]) is slot_wrapper_type and type_obj is not object:
@@ -1911,7 +1911,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('17')
+    f.write('18')
     f.close()
 
     # inspect extension modules installed into site-packages
