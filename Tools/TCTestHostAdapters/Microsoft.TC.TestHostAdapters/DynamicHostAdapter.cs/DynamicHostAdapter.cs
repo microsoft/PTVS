@@ -29,7 +29,11 @@ namespace Microsoft.TC.TestHostAdapters
     /// Registry: HKCU\SOFTWARE\Microsoft\VisualStudio\10.0\EnterpriseTools\QualityTools\HostAdapters\TC MTA\
     /// </summary>
     [RegisterHostAdapter(Constants.DynamicHostAdapterName, typeof(DynamicHostAdapter), null)]
+#if DEV1
     [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\11.0")]
+#else
+    [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\10.0")]
+#endif
     // We don't need to define Dispose, as IDisposable children are managed objects and we call Dispose on them when we clean up.
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     internal class DynamicHostAdapter : ITestAdapter

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
-    <BuildRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), Common.Build.settings))</BuildRoot>
+    <BuildRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>3.0</ProductVersion>
@@ -11,7 +11,7 @@
     <OutputType>Package</OutputType>
     <OutputPath>..\bin\</OutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
-    <WixTargetsPath>$(BuildRoot)\Tools\Wix\3.5\Targets\Wix2010.targets</WixTargetsPath>
+    <WixTargetsPath>$(BuildRoot)\Tools\Wix\3.5\Targets\Wix.targets</WixTargetsPath>
     <!--
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.5\Wix2010.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.5\Wix2010.targets</WixTargetsPath>
@@ -20,13 +20,15 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
+	<VsRegistryVersion Condition="'$(VsRegistryVersion)'==''">10.0</VsRegistryVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug</DefineConstants>
+    <DefineConstants>Debug;VsRegistryVersion=$(VsRegistryVersion)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+    <DefineConstants>VsRegistryVersion=$(VsRegistryVersion)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="TCTestHostAdapters.wxs" />

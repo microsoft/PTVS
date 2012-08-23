@@ -94,17 +94,6 @@ namespace PythonToolsTests {
             }
         }
 
-        class OutputReceiver {
-            public readonly StringBuilder Output = new StringBuilder();
-
-            public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
-                if (e.Data != null) {
-                    Output.Append(e.Data);
-                }
-            }
-        }
-
-
         [TestMethod]
         public void TestPthFiles() {
             var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());

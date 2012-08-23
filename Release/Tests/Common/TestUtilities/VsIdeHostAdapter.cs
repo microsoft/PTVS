@@ -240,10 +240,10 @@ namespace TestUtilities
             }
 
             if (System.Environment.GetEnvironmentVariable("RUN_NO_EXP") != null)
-                return "10.0";
+                return VSUtility.Version;
 
             // Default to the experimental hive for the development evnironment.
-            return "10.0Exp";
+            return VSUtility.Version + "Exp";
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace TestUtilities
                         // There is no index-by-name API, so we have to check all addins.
                         foreach (AddIn addin in _vsIde.Dte.AddIns)
                         {
-                            if (addin.Name == VsAddinName)
+                            if (addin.Name.StartsWith(VsAddinName))
                             {
                                 addinLookingFor = addin;
                                 break;
@@ -1114,7 +1114,6 @@ namespace TestUtilities
         internal static class VsRegistry
         {
             private const string ProcessName = "devenv.exe";
-            private const string TargetVSVersion = "10.0";
             internal const string VSRegistryRoot = @"SOFTWARE\Microsoft\VisualStudio";
 
             /// <summary>
@@ -1132,7 +1131,7 @@ namespace TestUtilities
             /// </summary>
             internal static string GetDefaultVersion()
             {
-                return TargetVSVersion;
+                return VSUtility.Version;
             }
 
             internal static bool UserSettingsArchiveExists(string registryHive)

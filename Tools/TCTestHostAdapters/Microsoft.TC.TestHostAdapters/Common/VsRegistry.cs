@@ -28,7 +28,11 @@ namespace Microsoft.TC.TestHostAdapters
     internal static class VsRegistry
     {
         private const string ProcessName = "devenv.exe";
+#if DEV11
+        private const string TargetVSVersion = "11.0";
+#else
         private const string TargetVSVersion = "10.0";
+#endif
 
         /// <summary>
         /// Obtains all installed Visual Studio versions.

@@ -165,7 +165,7 @@ namespace DebuggerTests {
             });
 
             AssertWaited(evalComplete);
-            Assert.IsTrue(evalRes != null);
+            Assert.IsTrue(evalRes != null, "didn't get evaluation result");
 
 
             if (children == null) {
@@ -175,7 +175,7 @@ namespace DebuggerTests {
                 Assert.IsTrue(evalRes.IsExpandable);
                 var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
 
-                Assert.AreEqual(children.Length, childrenReceived.Count);
+                Assert.AreEqual(children.Length, childrenReceived.Count, String.Format("received incorrect number of children: {0} expected, received {1}", children.Length, childrenReceived.Count));
                 for (int i = 0; i < children.Length; i++) {
                     var curChild = children[i];
                     bool foundChild = false;
@@ -197,9 +197,8 @@ namespace DebuggerTests {
                     }
                     Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.Expression)));
                 }
-                Assert.IsTrue(childrenReceived.Count == 0);
+                Assert.IsTrue(childrenReceived.Count == 0, "there's still some children left over which we didn't find");
             }
-
 
             process.Continue();
 
@@ -1204,8 +1203,8 @@ namespace DebuggerTests {
             process.Start();
             process.WaitForExit();
 
-            Assert.IsTrue(created);
-            Assert.IsTrue(exited);
+            Assert.IsTrue(created, "Never got notification of thread creation");
+            Assert.IsTrue(exited, "Process failed to exit");
         }
 
         private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null) {
@@ -1844,41 +1843,56 @@ int main(int argc, char* argv[]) {
             startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
             startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(GetVCInstallDir(), "INCLUDE") + ";" + Path.Combine(GetWindowsSDKDir(), "Include");
             startInfo.EnvironmentVariables["LIB"] = Path.Combine(GetVCInstallDir(), "LIB") + ";" + Path.Combine(GetWindowsSDKDir(), "Lib");
-            Debug.WriteLine(startInfo.EnvironmentVariables["LIB"]);
+            Console.WriteLine(startInfo.EnvironmentVariables["LIB"]);
 
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardError = true;
             startInfo.RedirectStandardOutput = true;
             var compileProcess = Process.Start(startInfo);
-            System.Threading.Thread.Sleep(1000);
 
-            compileProcess.OutputDataReceived += compileProcess_OutputDataReceived; // for debugging if you change the code...
-            compileProcess.ErrorDataReceived += compileProcess_OutputDataReceived;
+            var outputReceiver = new OutputReceiver();
+            compileProcess.OutputDataReceived += outputReceiver.OutputDataReceived; // for debugging if you change the code...
+            compileProcess.ErrorDataReceived += outputReceiver.OutputDataReceived;
             compileProcess.BeginErrorReadLine();
             compileProcess.BeginOutputReadLine();
             compileProcess.WaitForExit();
 
-            Assert.AreEqual(0, compileProcess.ExitCode);
-        }
-
-        void compileProcess_OutputDataReceived(object sender, DataReceivedEventArgs e) {
-            Debug.WriteLine(e.Data);
+            Assert.AreEqual(0, compileProcess.ExitCode, 
+                "Incorrect exit code: " + compileProcess.ExitCode + Environment.NewLine +
+                outputReceiver.Output.ToString()
+            );
         }
 
         private static string GetVCInstallDir() {
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\10.0\\Setup\\VC")) {
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + VSUtility.Version + "\\Setup\\VC")) {
                 return key.GetValue("ProductDir").ToString();
             }
         }
 
         private static string GetWindowsSDKDir() {
-            return (Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0", "InstallationFolder", null) ??
-                Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0a", "InstallationFolder", "C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0")).ToString();
+            string[] sdkVersions = new[] { "v7.0A", "v8.0A", "v7.0" };
+            object regValue = null;
+            foreach (var sdkVersion in sdkVersions) {
+                regValue = Registry.GetValue(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0",
+                    "InstallationFolder",
+                    null);
+
+                if (regValue != null && Directory.Exists(Path.Combine(regValue.ToString(), "Include"))) {
+                    break;
+                }
+            }
             
+            if (regValue == null) {
+                Assert.IsTrue(Directory.Exists("C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0\\Include"), "Windows SDK is not installed");
+                return "C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0";
+            }
+
+            return regValue.ToString();
         }
 
         private static string GetVSIDEInstallDir() {
-            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\10.0\\Setup\\VS")) {
+            using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + VSUtility.Version + "\\Setup\\VS")) {
                 return key.GetValue("EnvironmentDirectory").ToString();
             }
         }
@@ -1895,7 +1909,7 @@ int main(int argc, char* argv[]) {
                 bool gotOutput = false;
                 var process = DebugProcess(debugger, DebuggerTestPath + @"StdoutBuffer3x.py", (processObj, threadObj) => {
                     processObj.DebuggerOutput += (sender, args) => {
-                        Assert.IsTrue(!gotOutput);
+                        Assert.IsTrue(!gotOutput, "got output more than once");
                         gotOutput = true;
                         Assert.AreEqual(args.Output, "foo");
                     };
@@ -1904,7 +1918,7 @@ int main(int argc, char* argv[]) {
                 process.Start();
                 process.WaitForExit();
 
-                Assert.IsTrue(gotOutput);
+                Assert.IsTrue(gotOutput, "failed to get output");
             }
         }
 
