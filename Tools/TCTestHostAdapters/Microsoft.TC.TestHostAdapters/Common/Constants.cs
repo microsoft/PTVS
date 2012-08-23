@@ -25,9 +25,11 @@ namespace Microsoft.TC.TestHostAdapters
         public const string VsAddinName = "TcVsIdeTestHost";
 
         public const string IVsIdeTestHostAddinGuidString = "C525A97C-241C-45EF-BE9C-CF95650D9F00";
-
+#if DEV11
         public const string VsIdeTestHostAddinGuidString = "E80282C0-570E-4607-8190-02F30B681921";
-
+#else
+        public const string VsIdeTestHostAddinGuidString = "E80282C0-570E-4607-8190-02F30B681921";
+#endif
 
     }
 }

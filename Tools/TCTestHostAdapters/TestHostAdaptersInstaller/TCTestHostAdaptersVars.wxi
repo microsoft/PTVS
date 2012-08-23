@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Include>
-  <?define ProductName = "TC Test Host Adapters" ?>
+  <?define ProductName = "TC Test Host Adapters $(var.VsRegistryVersion)" ?>
   <?define ProductDescription = "Allows to run TC VSTS tests inside VS and other hosts." ?>
   <?define ProductUrl = "http://msdn.microsoft.com/vstudio/extend/" ?>
 
@@ -20,41 +20,62 @@
   <?define TestAdaptersKey = "Software\Microsoft\TCTestHostAdapters" ?>
   <?define TestAdaptersRevisionProperty = "Revision" ?>
 
-  <?define VsRegistryVersion="11.0"?>
-  
   <?define PublicKeyToken=null?>
 
   <?define DynamicAdapterName="TC Dynamic"?>
   <?define MtaAdapterName="TC MTA"?>
   <?define VsIdeAdapterName="TC VS IDE"?>
-  <?define VsAddinName=TcVsIdeTestHost?>
 
   <?define VsIdeFrameworkAssembly=Microsoft.TC.TestHostAdaptersFramework ?>
   <?define VsIdeHostAssembly=Microsoft.TC.TestHostAdapters ?>
   <?define RemoteTestAssembly=Microsoft.TC.RemoteTest ?>
   
   <!-- Product GUIDs: must match code declaration -->
-  <?define VsIdeTestHostAddinGuid=E80282C0-570E-4607-8190-02F30B681921?>
-  <?define IRemoteTestGuid=45C00F61-5394-4288-8AA5-66DBCF95FF20?>
-  <?define IRemoteTestProviderGuid=F579C434-4AB2-4180-A503-481D169AD3E7?>
-  <?define RemoteTestComponentGuid=613726D3-47AC-41C8-9818-5963113E577A?>
-  <?define DefaultRemoteTestProviderGuid=557C3B4F-1E9C-40B8-8E4B-1A3A1FEFEBB1?>
-  <?define RemoteTestTypeLibGuid=DC2E339B-A45C-40FC-BE1C-087D20203C9A?>
+  <?if "$(var.VsRegistryVersion)" = "10.0" ?>
+	  <?define VsAddinName=TcVsIdeTestHost.10.0?>
 
-  <!-- Product GUIDs: Must just be unique-->
-  <?define InstallerGuid=90DD084A-666E-47EC-9838-453BEA944D14?>
-  <?define InstallerUpgradeGuid=AD4D8D09-9C8F-46B7-B121-46F39122901F?>
+	  <?define VsIdeTestHostAddinGuid=E80282C0-570E-4607-8190-02F30B681921?>
+	  <?define IRemoteTestGuid=45C00F61-5394-4288-8AA5-66DBCF95FF20?>
+	  <?define IRemoteTestProviderGuid=F579C434-4AB2-4180-A503-481D169AD3E7?>
+	  <?define RemoteTestComponentGuid=613726D3-47AC-41C8-9818-5963113E577A?>
+	  <?define DefaultRemoteTestProviderGuid=557C3B4F-1E9C-40B8-8E4B-1A3A1FEFEBB1?>
+	  <?define RemoteTestTypeLibGuid=DC2E339B-A45C-40FC-BE1C-087D20203C9A?>
+	
+	  <!-- Product GUIDs: Must just be unique-->
+	  <?define InstallerGuid=90DD084A-666E-47EC-9838-453BEA944D14?>
+	  <?define InstallerUpgradeGuid=AD4D8D09-9C8F-46B7-B121-46F39122901F?>
+	
+	  <?define C_VsIdeTestHostAddinXml_Guid=5E573BDF-77F3-438F-A680-1AEFE2511109?>
+	  <?define C_VsIdeTestHostFrameworkDll_Guid=CB7DC8D1-9904-4546-9C9D-FF7D41C523D6?>
+	  <?define C_VSIdeTestHostFrameworkPdb_Guid=E878A1CF-F35F-44ED-ADFB-C1097ED7B2E1?>
+	  <?define C_VSIdeTestHostAddinDll_Guid=8DEA79E1-3868-4230-9B8E-518920C5B848?>
+	  <?define C_VSIdeTestHostAddinPdb_Guid=47BB87C7-48DE-449D-A339-9274E361ED21?>
+	  <?define C_RemoteTestDll_Guid=91E554A0-DA13-4733-B31C-B59574A513F5?>
+	  <?define C_RemoteTestTlb_Guid=C4886081-E541-47C0-95E1-CFA6BFCDE5EE?>	
+  <?else?>
+	  <?define VsAddinName=TcVsIdeTestHost.11.0?>
 
-  <?define C_VsIdeTestHostAddinXml_Guid=5E573BDF-77F3-438F-A680-1AEFE2511109?>
-  <?define C_VsIdeTestHostFrameworkDll_Guid=CB7DC8D1-9904-4546-9C9D-FF7D41C523D6?>
-  <?define C_VSIdeTestHostFrameworkPdb_Guid=E878A1CF-F35F-44ED-ADFB-C1097ED7B2E1?>
-  <?define C_VSIdeTestHostAddinDll_Guid=8DEA79E1-3868-4230-9B8E-518920C5B848?>
-  <?define C_VSIdeTestHostAddinPdb_Guid=47BB87C7-48DE-449D-A339-9274E361ED21?>
-  <?define C_RemoteTestDll_Guid=91E554A0-DA13-4733-B31C-B59574A513F5?>
-  <?define C_RemoteTestTlb_Guid=C4886081-E541-47C0-95E1-CFA6BFCDE5EE?>
+	  <?define VsIdeTestHostAddinGuid=32F55E70-9461-4998-827D-C4F9B16A282D?>
+	  <?define IRemoteTestGuid=33EE7772-E6BF-4C03-9ADC-6651698E06B5?>
+	  <?define IRemoteTestProviderGuid=746E04A7-E1FF-4559-AC1C-C98EDD5F0B94?>
+	  <?define RemoteTestComponentGuid=C39EE233-077E-45CD-897E-1A1871EDB330?>
+	  <?define DefaultRemoteTestProviderGuid=6E55C52D-011D-4FAA-A085-4ADFAE9588A3?>
+	  <?define RemoteTestTypeLibGuid=66A70079-5EE7-47B9-838A-28073967BF96?>
+	
+	  <!-- Product GUIDs: Must just be unique-->
+	  <?define InstallerGuid=29728B21-B536-4DD9-B6E4-478FE799FCD2?>
+	  <?define InstallerUpgradeGuid=B3824EF5-0235-4FC9-8FD9-F47EE3048FDB?>
+	
+	  <?define C_VsIdeTestHostAddinXml_Guid=A410ECEC-3AA8-4419-8BF0-FEC9EE30D541?>
+	  <?define C_VsIdeTestHostFrameworkDll_Guid=18E0E7EE-6DA8-426D-BBD8-5DE213AB27E2?>
+	  <?define C_VSIdeTestHostFrameworkPdb_Guid=19916E8E-EB98-4BA7-ABF2-EA96E49A62E4?>
+	  <?define C_VSIdeTestHostAddinDll_Guid=0DAFF7D8-F2B0-4B4A-9E88-3F25E51CC7D6?>
+	  <?define C_VSIdeTestHostAddinPdb_Guid=EB92A44C-2ABE-4706-8DC5-92FA818EA7D1?>
+	  <?define C_RemoteTestDll_Guid=3255F38E-C5F5-4973-8B13-FCCBDFECBCC2?>
+	  <?define C_RemoteTestTlb_Guid=F37D55F1-CCAE-40E5-BD5D-3C5896B2C1AC?>
+	
+  <?endif?>
 
   <!-- Product GUIDs: Must not change-->
-  <?define UnitTestTypeGuid=13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b?>
-
-
+  <?define UnitTestTypeGuid=13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b?> 
 </Include>
