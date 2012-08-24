@@ -29,7 +29,7 @@
           <Directory Id="Dir_MSBuild" Name="MSBuild"> 
               <Directory Id="Dir_MSBuildMS" Name="Microsoft"> 
                   <Directory Id="Dir_MSBuildVisualStudio" Name="VisualStudio"> 
-                      <Directory Id="Dir_VS10" Name="v10.0">
+                      <Directory Id="Dir_VSVersion" Name="v$(var.VSTargetVersion)">
                         <Directory Id="Dir_PythonToolsMsBuild" Name="Python Tools"> 
                         </Directory>
                       </Directory>
@@ -37,19 +37,6 @@
               </Directory> 
           </Directory> 
       </Directory>
-
-    <Directory Id="ProgramFiles64Folder">
-        <Directory Id="AzureSDK" Name="Windows Azure SDK">
-        <Directory Id="AzureSDKVersion" Name="v1.6">
-          <Directory Id="bin" Name="bin">
-            <Directory Id="plugins" Name="plugins">
-              <Directory Id="Dir_PythonToolsAzureSdk" Name="PythonTools"> 
-              </Directory>
-            </Directory>
-          </Directory>
-        </Directory> 
-        </Directory>
-    </Directory>
   </Directory> 
 
 

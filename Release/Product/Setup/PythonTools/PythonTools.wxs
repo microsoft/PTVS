@@ -26,7 +26,7 @@
           <Directory Id="Dir_MSBuild" Name="MSBuild"> 
               <Directory Id="Dir_MSBuildMS" Name="Microsoft"> 
                   <Directory Id="Dir_MSBuildVisualStudio" Name="VisualStudio"> 
-                      <Directory Id="Dir_VS10" Name="v10.0">
+                      <Directory Id="Dir_VSVersion" Name="v$(var.VSTargetVersion)">
                         <Directory Id="Dir_PythonToolsMsBuild" Name="Python Tools"> 
                         </Directory>
                       </Directory>
