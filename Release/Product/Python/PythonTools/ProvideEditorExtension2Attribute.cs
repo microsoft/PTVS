@@ -16,6 +16,9 @@ using System;
 using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.Shell;
+#if DEV11
+using Microsoft.VisualStudio.Shell.Interop;
+#endif
 
 namespace Microsoft.PythonTools {
 
@@ -40,6 +43,9 @@ namespace Microsoft.PythonTools {
         private string _editorName;
         private Guid _linkedEditorGuid;
         private readonly string[] _extensions;
+#if DEV11
+        private __VSPHYSICALVIEWATTRIBUTES _commonViewAttrs;
+#endif
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.ProvideEditorExtensionAttribute"]' />
         /// <devdoc>
@@ -64,6 +70,13 @@ namespace Microsoft.PythonTools {
             _editorFactoryNotify = false;
             _extensions = extensions;
         }
+
+#if DEV11
+        public ProvideEditorExtension2Attribute(object factoryType, string extension, int priority, __VSPHYSICALVIEWATTRIBUTES commonViewAttributes, params string[] extensions) :
+            this(factoryType, extension, priority, extensions) {
+            _commonViewAttrs = commonViewAttributes;
+        }
+#endif
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.Extension"]' />
         /// <devdoc>
@@ -105,6 +118,14 @@ namespace Microsoft.PythonTools {
             get { return _linkedEditorGuid.ToString(); }
             set { _linkedEditorGuid = new System.Guid(value); }
         }
+
+#if DEV11
+        public __VSPHYSICALVIEWATTRIBUTES CommonPhysicalViewAttributes {
+            get {
+                return _commonViewAttrs;
+            }
+        }
+#endif
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.EditorFactoryNotify"]/*' />
         public bool EditorFactoryNotify {
@@ -176,6 +197,11 @@ namespace Microsoft.PythonTools {
                 if (_linkedEditorGuid != Guid.Empty) {
                     editorKey.SetValue("LinkedEditorGuid", _linkedEditorGuid.ToString("B"));
                 }
+#if DEV11
+                if (_commonViewAttrs != 0) {
+                    editorKey.SetValue("CommonPhysicalViewAttributes", (int)_commonViewAttrs);
+                }
+#endif
                 editorKey.SetValue("Package", context.ComponentType.GUID.ToString("B"));
             }
 

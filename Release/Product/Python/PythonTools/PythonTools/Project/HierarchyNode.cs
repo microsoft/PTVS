@@ -829,7 +829,17 @@ namespace Microsoft.PythonTools.Project
                         }
                         break;
                     }
+            
             }
+
+#if DEV11
+            __VSHPROPID5 id5 = (__VSHPROPID5)propId;
+            switch(id5) {
+                case __VSHPROPID5.VSHPROPID_ProvisionalViewingStatus:
+                    result = ProvisionalViewingStatus;
+                    break;
+            }
+#endif
 #if DEBUG
             if (propId != LastTracedProperty)
             {
@@ -839,6 +849,14 @@ namespace Microsoft.PythonTools.Project
 #endif
             return result;
         }
+
+#if DEV11
+        public virtual __VSPROVISIONALVIEWINGSTATUS ProvisionalViewingStatus {
+            get {
+                return __VSPROVISIONALVIEWINGSTATUS.PVS_Disabled;
+            }
+        }
+#endif
 
         /// <summary>
         /// Sets the value of a property for a given property id

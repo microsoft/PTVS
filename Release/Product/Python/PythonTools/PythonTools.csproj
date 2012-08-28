@@ -190,6 +190,7 @@
   <ItemGroup>
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
+    <Compile Include="ProvideFileExtensionMapping.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="ProvideImportTemplatesAttribute.cs" />
     <Compile Include="PythonTools\DialogWindowVersioningWorkaround.cs" />

@@ -17,6 +17,9 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio;
+#if DEV11
+using Microsoft.VisualStudio.Shell.Interop;
+#endif
 
 namespace Microsoft.PythonTools.Project {
     //Set the projectsTemplatesDirectory to a non-existant path to prevent VS from including the working directory as a valid template path
@@ -26,10 +29,17 @@ namespace Microsoft.PythonTools.Project {
     [ProvideObject(typeof(PythonGeneralPropertyPage))]
     [ProvideObject(typeof(PythonDebugPropertyPage))]
     [ProvideObject(typeof(PublishPropertyPage))]
-    [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = VSConstants.CLSID.MiscellaneousFilesProject_string, NameResourceID = 3006, DefaultName = "module", TemplateDir = "Templates\\NewItem")]
+    [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = VSConstants.CLSID.MiscellaneousFilesProject_string, NameResourceID = 3004, DefaultName = "module", TemplateDir = "Templates\\NewItem")]
+    [ProvideFileExtensionMapping("{E23E32ED-3467-4401-A364-1352666A3502}", "Python Editor", typeof(PythonEditorFactory), "{" + PythonConstants.ProjectSystemPackageGuid + "}", 100)]
+#if DEV11
+    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, "*:1", ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
+    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, null, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
+    [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, ProjectGuid = "{" + PythonConstants.EditorFactoryPromptForEncodingGuid + "}", NameResourceID = 3015, LinkedEditorGuid = "{" + PythonConstants.EditorFactoryGuid + "}")]
+#else
     [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, "*:1", ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryPromptForEncodingGuid + "}", NameResourceID = 3015, LinkedEditorGuid = "{" + PythonConstants.EditorFactoryGuid + "}")]
+#endif
     [ProvideFileFilter("{" + PythonConstants.EditorFactoryGuid + "}", "/1", "Python Files;*.py,*.pyw", 100)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Designer_string)]
