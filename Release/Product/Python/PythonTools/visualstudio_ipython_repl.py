@@ -195,7 +195,11 @@ class IPythonBackend(ReplBackend):
         return ['--pylab=inline']
         
     def execute_file_as_main(self, filename):
-        contents = open(filename, 'rb').read().replace("\r\n", "\n")
+        f = open(filename, 'rb')
+        try:
+            contents = f.read().replace("\r\n", "\n")
+        finally:
+            f.close()
         code = '''
 import sys
 sys.argv = [%(filename)r]

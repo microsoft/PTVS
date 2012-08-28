@@ -45,6 +45,10 @@ while ((Test-Path $buildroot) -and -not (Test-Path ([System.IO.Path]::Combine($b
 $buildroot = [System.IO.Path]::GetFullPath($buildroot)
 "Build Root: $buildroot"
 Push-Location $buildroot
+
+$asmverfileBackedUp = 0
+$asmverfile = dir Build\AssemblyVersion.cs
+
 try {
     if ($uninstall)
     {
@@ -59,17 +63,6 @@ try {
             start -wait msiexec "/uninstall","{$guid}","/passive"
         }
     }
-    
-    $versionFiles = "Build\AssemblyVersion.cs"
-    foreach($versionedFile in $versionFiles) {
-        tf edit $versionedFile
-        if ($LASTEXITCODE -gt 0) {
-            # running outside of MS
-            attrib -r $versionedFile
-            copy -force $versionedFile ($versionedFile + ".bak")
-        }
-    }
-    
     
     $prevOutDir = $outDir
     
@@ -95,9 +88,6 @@ try {
     }
     
     foreach ($targetVs in $targetVersions) {
-        $asmverfile = dir Build\AssemblyVersion.cs
-    
-    
         if ($targetVs -eq "10.0") {
             $version = "1.1." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
             $outDir = $prevOutDir
@@ -106,7 +96,14 @@ try {
             $outDir = $prevOutDir + "\Dev" + $targetVs
         }
     
+        $asmverfileBackedUp = 0
         tf edit $asmverfile
+        if ($LASTEXITCODE -gt 0) {
+            # running outside of MS
+            attrib -r $asmverfile
+            copy -force $asmverfile ($asmverfile.FullName + ".bak")
+            $asmverfileBackedUp = 1
+        }
         (Get-Content $asmverfile) | %{ $_ -replace "0.7.4100.000", $version } | Set-Content $asmverfile
     
         Get-Content $asmverfile
@@ -130,7 +127,14 @@ try {
             }
         }
     
-        tf undo /noprompt $asmverfile
+        if ($asmverfileBackedUp) {
+            copy -force ($asmverfile.FullName + ".bak") $asmverfile
+            attrib +r $asmverfile
+            del ($asmverfile.FullName + ".bak")
+            $asmverfileBackedUp = 0
+        } else {
+            tf undo /noprompt $asmverfile
+        }
     
         mkdir $outdir\Debug
         copy -force Binaries\Debug\*.msi $outdir\Debug\
@@ -168,16 +172,15 @@ try {
     $outdir = $prevOutDir
     if (-not (Test-path $outdir\Sources\Incubation)) { mkdir $outdir\Sources\Incubation }
     robocopy /s . $outdir\Sources /xd TestResults
-    
-    foreach($versionedFile in $versionFiles) {
-        tf undo /noprompt $versionedFile
-        if ($LASTEXITCODE -gt 0) {
-            copy -force ($versionedFile + ".bak") $versionedFile
-            attrib +r $versionedFile
-            del ($versionedFile + ".bak")
-        }
-    }
 } finally {
+    if ($asmverfileBackedUp) {
+        copy -force ($asmverfile.FullName + ".bak") $asmverfile
+        attrib +r $asmverfile
+        del ($asmverfile.FullName + ".bak")
+    } else {
+        tf undo /noprompt $asmverfile
+    }
+    
     Pop-Location
 }
 

@@ -555,7 +555,11 @@ class BasicReplBackend(ReplBackend):
         return args_list
 
     def run_file_as_main(self, filename, args):
-        contents = open(filename, 'rb').read().replace(_cmd('\r\n'), _cmd('\n'))
+        f = open(filename, 'rb')
+        try:
+            contents = f.read().replace(_cmd('\r\n'), _cmd('\n'))
+        finally:
+            f.close()
         sys.argv = [filename]
         sys.argv.extend(self._command_line_to_args_list(args))
         self.exec_mod.__file__ = filename
