@@ -39,7 +39,7 @@ namespace PythonToolsUITests {
 
         #region Test Cases
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void UnregisteredFileExtensionEditor() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\UnregisteredFileExtension.sln");
@@ -59,7 +59,7 @@ namespace PythonToolsUITests {
         }
 
        
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OutliningTest() {
             OutlineTest("Program.py", 
@@ -71,7 +71,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OutlineNestedFuncDef() {
             OutlineTest("NestedFuncDef.py", 
@@ -82,7 +82,7 @@ namespace PythonToolsUITests {
         pass"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OutliningBadForStatement() {
             // there should be no exceptions and no outlining when parsing a malformed for statement
@@ -106,7 +106,7 @@ namespace PythonToolsUITests {
         }
 
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ClassificationTest() {            
             Classification.Verify(GetClassifications("Program.py"),
@@ -135,7 +135,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ClassificationMultiLineStringTest() {
             Classification.Verify(GetClassifications("MultiLineString.py"),
@@ -148,7 +148,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/749
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ClassificationMultiLineStringTest2() {
             Classification.Verify(GetClassifications("MultiLineString2.py"),
@@ -158,7 +158,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SignaturesTest() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Signatures.sln");
@@ -196,7 +196,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiLineSignaturesTest() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Signatures.sln");
@@ -247,7 +247,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionsCaseSensitive() {
             // http://pytools.codeplex.com/workitem/457
@@ -269,7 +269,7 @@ namespace PythonToolsUITests {
             doc.WaitForText("from foo import baz\r\nfrom foo import Baz");
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndent() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AutoIndent.sln");            
@@ -422,7 +422,7 @@ m()
 pass");
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndentExisting() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AutoIndent.sln");
@@ -503,7 +503,7 @@ pass");
             window.Document.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TypingTest() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\EditorTests.sln");
@@ -534,7 +534,7 @@ def f(): pass
  });
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionTests() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\EditorTests.sln");
@@ -585,7 +585,7 @@ x\
             Assert.AreEqual(actual, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OpenInvalidUnicodeFile() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ErrorProjectUnicode.sln");

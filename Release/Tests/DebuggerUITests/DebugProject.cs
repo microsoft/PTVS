@@ -47,7 +47,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and then unloads it, ensuring that the solution is created with a single project.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugPythonProject() {
             StartHelloWorldAndBreak();
@@ -59,7 +59,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads a project with the startup file in a subdirectory, ensuring that syspath is correct when debugging.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugPythonProjectSubFolderStartupFileSysPath() {
             OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
@@ -77,7 +77,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Tests using a custom interpreter path that is relative
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugPythonCustomInterpreter() {
             // try once when the interpreter doesn't exist...
@@ -102,7 +102,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPendingBreakPointLocation() {
 
@@ -126,7 +126,7 @@ namespace DebuggerUITests {
             //Assert.AreEqual("BreakpointInfo.f", bp.Item(1).FunctionName);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStep() {
             var project = OpenDebuggerProjectAndBreak("SteppingTest.py", 1);
@@ -140,7 +140,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStep3() {
             var project = OpenDebuggerProjectAndBreak("SteppingTest3.py", 2);
@@ -154,7 +154,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStep5() {
             var project = OpenDebuggerProjectAndBreak("SteppingTest5.py", 5);
@@ -168,7 +168,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestSetNextLine() {
             var project = OpenDebuggerProjectAndBreak("SetNextLine.py", 7);
@@ -200,7 +200,7 @@ namespace DebuggerUITests {
         }
 
         /*
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestBreakAll() {
             var project = OpenDebuggerProjectAndBreak("BreakAllTest.py", 1);
@@ -231,7 +231,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and then terminates the process while we're at a breakpoint.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestTerminateProcess() {
             StartHelloWorldAndBreak();
@@ -247,7 +247,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Loads the simple project and makes sure we get the correct module.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestEnumModules() {
             StartHelloWorldAndBreak();
@@ -264,7 +264,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestThread() {
             StartHelloWorldAndBreak();
@@ -281,7 +281,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExpressionEvaluation() {
             OpenDebuggerProject("Program.py");
@@ -328,19 +328,19 @@ namespace DebuggerUITests {
             Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestException() {
             ExceptionTest("SimpleException.py", "Exception occurred", "", "exceptions.Exception", 3);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestException2() {
             ExceptionTest("SimpleException2.py", "ValueError occurred", "bad value", "exceptions.ValueError", 3);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestExceptionUnhandled() {
             ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "exceptions.ValueError", 2);
@@ -376,7 +376,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestBreakpoints() {
             OpenDebuggerProjectAndBreak("BreakpointTest2.py", 3);
@@ -391,7 +391,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestBreakpointsDisable() {
             OpenDebuggerProjectAndBreak("BreakpointTest4.py", 2);
@@ -406,7 +406,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestBreakpointsDisableReenable() {
             var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
@@ -461,7 +461,7 @@ namespace DebuggerUITests {
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestLaunchWithErrorsDontRun() {
             var project = DebugProject.OpenProject(@"TestData\ErrorProject.sln");
@@ -487,7 +487,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure the presence of errors causes F5 to prevent running w/o a confirmation.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestLaunchWithErrorsRun() {
             var project = DebugProject.OpenProject(@"TestData\ErrorProject.sln");
@@ -513,7 +513,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure errors in a file show up in the error list window
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrors_ErrorList() {
             var project = DebugProject.OpenProject(@"TestData\ErrorProject.sln");
@@ -529,7 +529,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure deleting a project clears the error list
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsDeleteProject() {
             var project = DebugProject.OpenProject(@"TestData\ErrorProjectDelete.sln");
@@ -550,7 +550,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure deleting a project clears the error list
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsUnloadProject() {
             var project = DebugProject.OpenProject(@"TestData\ErrorProjectDelete.sln");
@@ -578,7 +578,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure deleting a file w/ errors clears the error list
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsDeleteFile() {
             var project = DebugProject.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
@@ -599,7 +599,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure deleting a file w/ errors clears the error list
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyWarning() {
             GetOptions().IndentationInconsistencySeverity = Severity.Warning;
@@ -621,7 +621,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure deleting a file w/ errors clears the error list
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyError() {
             GetOptions().IndentationInconsistencySeverity = Severity.Error;
@@ -643,7 +643,7 @@ namespace DebuggerUITests {
         /// <summary>
         /// Make sure deleting a file w/ errors clears the error list
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyIgnore() {
             GetOptions().IndentationInconsistencySeverity = Severity.Ignore;

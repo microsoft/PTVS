@@ -25,7 +25,7 @@ namespace FastCgiTest {
     [DeploymentItem(@"Release\Product\Python\Django\wfastcgi.py")]
     [DeploymentItem(@"Release\Product\Python\FastCgiTest\TestData\", "TestData")]
     public class FastCgiTests {
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DjangoNewApp() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoApplication.settings")) {
                 site.StartServer();
@@ -42,7 +42,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DjangoHelloWorld() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 site.StartServer();
@@ -60,7 +60,7 @@ namespace FastCgiTest {
         }
         /*
          * Currently disabled, we need to unify this w/ where web.config lives in Azure first 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ConfigVariables() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 File.Copy("TestData\\DjangoTestApp\\web.config", Path.Combine(site.SiteDir, "web.config"));
@@ -79,7 +79,7 @@ namespace FastCgiTest {
             }
         }*/
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void LargeResponse() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 File.Copy("TestData\\DjangoTestApp\\web.config", Path.Combine(site.SiteDir, "web.config"));
@@ -107,7 +107,7 @@ namespace FastCgiTest {
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DjangoHelloWorldParallel() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 site.StartServer();
@@ -139,7 +139,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void CustomHandler() {
             using (var site = ConfigureIISForCustomHandler(AppCmdPath, InterpreterPath, "custom_handler.handler")) {
                 CopyDir("TestData", site.SiteDir);
@@ -155,7 +155,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void CustomCallableHandler() {
             using (var site = ConfigureIISForCustomHandler(AppCmdPath, InterpreterPath, "custom_handler.callable_handler()")) {
                 CopyDir("TestData", site.SiteDir);
@@ -169,7 +169,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ErrorHandler() {
             using (var site = ConfigureIISForCustomHandler(AppCmdPath, InterpreterPath, "custom_handler.error_handler")) {
                 CopyDir("TestData", site.SiteDir);

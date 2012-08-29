@@ -37,7 +37,7 @@ namespace PythonToolsUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadRelativeProjects() {
             string fullPath = TestData.GetPath(@"TestData\ProjectHomeProjects.sln");
@@ -96,7 +96,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddDeleteItem() {
             string fullPath = TestData.GetPath(@"TestData\ProjectHomeSingleProject.sln");
@@ -128,7 +128,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddDeleteItem2() {
             string fullPath = TestData.GetPath(@"TestData\ProjectHomeSingleProject.sln");
@@ -162,7 +162,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddDeleteFolder() {
             string fullPath = TestData.GetPath(@"TestData\ProjectHomeSingleProject.sln");
@@ -186,7 +186,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddDeleteSubfolder() {
             string fullPath = TestData.GetPath(@"TestData\ProjectHomeSingleProject.sln");
@@ -212,7 +212,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveProjectAs() {
             try {
@@ -243,7 +243,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropTest() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropRelocatedTest.sln");
@@ -278,7 +278,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPasteTest() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\CutPasteRelocatedTest.sln");

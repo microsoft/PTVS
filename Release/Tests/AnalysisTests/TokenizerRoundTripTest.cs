@@ -16,7 +16,7 @@ namespace AnalysisTests {
         // (a, b, [whitespace]
         //  [more whitespace]   c, d)
         //
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SimpleTest() {
             var versions = new[] { 
                 new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
@@ -57,14 +57,14 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void BinaryTest() {
             var filename = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.System), "kernel32.dll");
             TestOneFile(filename, PythonLanguageVersion.V27, TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins);
             TestOneFile(filename, PythonLanguageVersion.V27, TokenizerOptions.Verbatim);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestErrors() {
             TestOneString(PythonLanguageVersion.V27, TokenizerOptions.Verbatim, "http://xkcd.com/353/\")");
             TestOneString(PythonLanguageVersion.V27, TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins, "http://xkcd.com/353/\")");

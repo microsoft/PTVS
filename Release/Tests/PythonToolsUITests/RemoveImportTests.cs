@@ -27,7 +27,7 @@ namespace PythonToolsUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImport1() {
             string expectedText = @"from sys import bar
@@ -38,7 +38,7 @@ bar";
             RemoveSmartTagTest("FromImport1.py", 1, 1, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImport2() {
             string expectedText = @"from sys import baz
@@ -48,7 +48,7 @@ baz";
             RemoveSmartTagTest("FromImport2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportParens1() {
             string expectedText = @"from sys import (bar)
@@ -58,7 +58,7 @@ bar";
             RemoveSmartTagTest("FromImportParens1.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportParens2() {
             string expectedText = @"from sys import (baz)
@@ -68,7 +68,7 @@ baz";
             RemoveSmartTagTest("FromImportParens2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportParensTrailingComma1() {
             string expectedText = @"from sys import (baz, )
@@ -78,7 +78,7 @@ baz";
             RemoveSmartTagTest("FromImportParensTrailingComma1.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportParensTrailingComma2() {
             string expectedText = @"from sys import (bar, )
@@ -88,7 +88,7 @@ bar";
             RemoveSmartTagTest("FromImportParensTrailingComma2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import1() {
             string expectedText = @"import bar
@@ -98,7 +98,7 @@ bar";
             RemoveSmartTagTest("Import1.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import2() {
             string expectedText = @"import baz
@@ -108,7 +108,7 @@ baz";
             RemoveSmartTagTest("Import2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import3() {
             string expectedText = @"import baz
@@ -118,7 +118,7 @@ baz";
             RemoveSmartTagTest("Import3.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import4() {
             string expectedText = @"import bar, quox
@@ -129,7 +129,7 @@ quox";
             RemoveSmartTagTest("Import4.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import5() {
             string expectedText = @"import bar, quox
@@ -140,7 +140,7 @@ quox";
             RemoveSmartTagTest("Import5.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import6() {
             string expectedText = @"import bar,          quox
@@ -151,7 +151,7 @@ quox";
             RemoveSmartTagTest("Import6.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportComment() {
             string expectedText = @"#baz
@@ -165,7 +165,7 @@ quox";
             RemoveSmartTagTest("ImportComment.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportComment() {
             string expectedText = @"#baz
@@ -179,7 +179,7 @@ quox";
             RemoveSmartTagTest("FromImportComment.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportDup() {
             string expectedText = @"";
@@ -187,7 +187,7 @@ quox";
             RemoveSmartTagTest("ImportDup.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportDup() {
             string expectedText = @"";
@@ -195,7 +195,7 @@ quox";
             RemoveSmartTagTest("FromImportDup.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import() {
             string expectedText = @"";
@@ -203,7 +203,7 @@ quox";
             RemoveSmartTagTest("Import.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImport() {
             string expectedText = @"";
@@ -211,7 +211,7 @@ quox";
             RemoveSmartTagTest("FromImport.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FutureImport() {
             string expectedText = @"from __future__ import with_statement";
@@ -219,7 +219,7 @@ quox";
             RemoveSmartTagTest("FutureImport.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LocalScopeDontRemoveGlobal() {
             string expectedText = @"import dne
@@ -232,7 +232,7 @@ def f():
             RemoveSmartTagTest("LocalScopeDontRemoveGlobal.py", 4, 10, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LocalScopeOnly() {
             string expectedText = @"import dne
@@ -244,7 +244,7 @@ def f():
             RemoveSmartTagTest("LocalScopeOnly.py", 4, 10, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportTrailingWhitespace() {
             string expectedText = @"foo";
@@ -252,7 +252,7 @@ def f():
             RemoveSmartTagTest("ImportTrailingWhitespace.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ClosureReference() {
             string expectedText = @"def f():
@@ -264,7 +264,7 @@ def f():
             RemoveSmartTagTest("ClosureReference.py", 2, 14, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NameMangledUnmangled() {
             string expectedText = @"class C:
@@ -276,7 +276,7 @@ def f():
             RemoveSmartTagTest("NameMangleUnmangled.py", 3, 14, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NameMangledMangled() {
             string expectedText = @"class C:
@@ -288,7 +288,7 @@ def f():
             RemoveSmartTagTest("NameMangleMangled.py", 3, 14, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EmptyFuncDef1() {
             string expectedText = @"def f():
@@ -298,7 +298,7 @@ def f():
             RemoveSmartTagTest("EmptyFuncDef1.py", 2, 7, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EmptyFuncDef2() {
             string expectedText = @"def f():
@@ -308,7 +308,7 @@ def f():
             RemoveSmartTagTest("EmptyFuncDef2.py", 2, 7, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EmptyFuncDefWhitespace() {
             string expectedText = @"def f():
@@ -318,7 +318,7 @@ def f():
             RemoveSmartTagTest("EmptyFuncDefWhitespace.py", 2, 7, false, expectedText);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportStar() {
             string expectedText = @"from sys import *";

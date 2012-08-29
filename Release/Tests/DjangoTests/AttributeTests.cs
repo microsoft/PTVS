@@ -29,7 +29,7 @@ using TestUtilities.Mocks;
 namespace DjangoTests {
     [TestClass]
     public class DjangoAttributeTests {
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         public void ProvideDebugLanguageTests() {
             var attr = new ProvideDebugLanguageAttribute("Django Templates",
                 DjangoPackage.DjangoTemplateLanguageId,
@@ -51,7 +51,7 @@ SetValue: Engine, 0{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         public void ProvideLanguageTemplatesAttributeTests() {
             var attr = new ProvideLanguageTemplatesAttribute(
                 "{349C5851-65DF-11DA-9384-00065B846F21}", 
@@ -84,7 +84,7 @@ Closed Key: Projects\{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         public void ProvideEditorExtension2AttributeTests() {
             var attr = new ProvideEditorExtension2Attribute(
                     typeof(DjangoEditorFactory),
@@ -117,7 +117,7 @@ RemovedKey: Projects\{a2fe74e1-b743-11d0-ae1a-00a0c90fffc3}\AddItemTemplates\Tem
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         public void SnapshotSpanSourceCodeReaderTests() {
             var text = "hello world\r\nHello again!";
             var buffer = new MockTextBuffer(text);

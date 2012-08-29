@@ -62,7 +62,7 @@ namespace DjangoTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TemplateStepping() {
             StepTest(
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "manage.py"),
@@ -103,7 +103,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void BreakInTemplate() {
             Init(DbState.BarApp);
 
@@ -123,7 +123,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TemplateLocals() {
             Init(DbState.BarApp);
 

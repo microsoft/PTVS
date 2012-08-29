@@ -33,7 +33,7 @@ namespace PythonToolsTests {
         private const string ErrorImportStar = "Cannot extract method containing from ... import * statement";
         private const string ErrorExtractFromClass = "Cannot extract statements from a class definition";
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestDefinitions() {
             SuccessTest("x = .. = h()",
 @"def f():
@@ -82,7 +82,7 @@ def f():
 ");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssignInIfStatementReadAfter() {
             ExtractMethodTest(@"class C:
     def foo(self):
@@ -127,7 +127,7 @@ def f():
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ExtractMethodIndexExpr() {
             ExtractMethodTest(@"class C:
     def process_kinect_event(self, e):
@@ -145,7 +145,7 @@ def f():
  ), scopeName: "C");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractLambda() {
             // lambda is present in the code
             ExtractMethodTest(
@@ -174,7 +174,7 @@ def f():
     abc = g()"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractGenerator() {
             var code = @"def f(imp = imp):
     yield 42";
@@ -188,7 +188,7 @@ def f(imp = g()):
     yield 42"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractDefaultValue() {
             var code = @"def f(imp = imp):
     pass";
@@ -202,14 +202,14 @@ def f(imp = g()):
     pass"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestFromImportStar() {
             ExtractMethodTest(
 @"def f():
     from sys import *", "from sys import *", TestResult.Error(ErrorImportStar));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfter() {
             SuccessTest("x = 42",
 @"def f():
@@ -227,7 +227,7 @@ def f():
         print x, y");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfterStmtList() {
             SuccessTest("x = 42",
 @"def f():
@@ -248,7 +248,7 @@ def f():
 
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfterStmtListRead() {
             SuccessTest("x = 100",
 @"def f():
@@ -270,7 +270,7 @@ def f():
 
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfterStmtListMultipleAssign() {
             SuccessTest("x = 100; x = 200",
 @"def f():
@@ -291,7 +291,7 @@ def f():
 
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractFromClass() {
             ExtractMethodTest(
 @"class C:
@@ -299,7 +299,7 @@ def f():
     bar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExtractSuiteWhiteSpace() {
             SuccessTest("x .. 200",
 @"def f():
@@ -335,7 +335,7 @@ def f():
         /// <summary>
         /// Test cases that verify we correctly identify when not all paths contain return statements.
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestNotAllCodePathsReturn() {            
             TestMissingReturn("for i .. 23", @"def f(x):
     for i in xrange(100):
@@ -395,7 +395,7 @@ def f():
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestReturnWithOutputVars() {
             TestReturnWithOutputs("if x .. 100", @"def f(x):
     if x:
@@ -407,7 +407,7 @@ def f():
 ");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestCannotRefactorYield() {
             TestBadYield("yield 42", @"def f(x):
     yield 42
@@ -419,7 +419,7 @@ def f():
 ");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestContinueWithoutLoop() {
             TestBadContinue("continue", @"def f(x):
     for i in xrange(100):
@@ -427,7 +427,7 @@ def f():
 ");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakWithoutLoop() {
             TestBadBreak("break", @"def f(x):
     for i in xrange(100):
@@ -439,7 +439,7 @@ def f():
         /// Test cases which make sure we have the right ranges for each statement when doing extract method
         /// and that we don't mess up the code before/after the statement.
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void StatementTests() {
             SuccessTest("b",
 @"def f():
@@ -859,7 +859,7 @@ class C:
         g()");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ClassTests() {
             SuccessTest("x = foo",
 @"class C(object):
@@ -969,7 +969,7 @@ class C:
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestComprehensions() {
             SuccessTest("i % 2 == 0", @"def f():
     x = [i for i in range(100) if i % 2 == 0]", @"def g(i):
@@ -1000,7 +1000,7 @@ def f():
     x = {k:v for k,v in range(100) if g(k, v)}", version: new Version(3, 2));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SuccessfulTests() {
             SuccessTest("x .. 100",
 @"def f():

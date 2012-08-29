@@ -36,7 +36,7 @@ namespace PythonToolsTests {
     [TestClass]
     public class ReplEvaluatorTests {
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -55,7 +55,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestAbort() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -70,7 +70,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
                 Assert.AreEqual(evaluator.CanExecuteText("print 'hello'"), true);

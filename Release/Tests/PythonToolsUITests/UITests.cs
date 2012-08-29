@@ -39,7 +39,7 @@ namespace PythonToolsUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DeferredSaveWithDot() {
             // http://pytools.codeplex.com/workitem/623
@@ -81,7 +81,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AbsolutePaths() {
             var proj = File.ReadAllText(TestData.GetPath(@"TestData\AbsolutePath\AbsolutePath.pyproj"));
@@ -99,7 +99,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, programPy);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyPasteFile() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -125,7 +125,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy (2).py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolder() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -148,7 +148,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "MyNewFolder"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddSearchPathRelativePath() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddSearchPaths.sln");
@@ -173,7 +173,7 @@ namespace PythonToolsUITests {
             Assert.IsTrue(text.Contains("<SearchPath>..\\Outlining\\</SearchPath>"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolderNested() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -216,7 +216,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY", "BreakpointTest.py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameProjectToExisting() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\RenameProjectTestUI.sln");
@@ -257,7 +257,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorldExisting"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameItemsTest() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\RenameItemsTestUI.sln");
@@ -298,7 +298,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "NewName.txt"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossProjectCopy() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -320,7 +320,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder3"));
         }
         
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossProjectCutPaste() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -343,7 +343,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPaste() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -366,7 +366,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderOnToSelf() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -386,7 +386,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropTest() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropTest.sln");
@@ -411,7 +411,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Drag a file onto another file in the same directory, nothing should happen
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropFileToFileTest() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropTest.sln");
@@ -437,7 +437,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Drag a file onto it's containing folder, nothing should happen
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropFileToContainingFolderTest() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropTest.sln");
@@ -459,7 +459,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragLeaveTest() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropTest.sln");
@@ -488,7 +488,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragLeaveFolderTest() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropTest.sln");
@@ -517,7 +517,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder"));
         }
         
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderInToSelf() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -536,7 +536,7 @@ namespace PythonToolsUITests {
             VisualStudioApp.CheckMessageBox("Cannot copy 'TestFolder'. The destination folder is a subfolder of the source folder.");
         }
         
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiSelectCopyAndPaste() {
             DebuggerUITests.DebugProject.OpenProject(@"TestData\DebuggerProject.sln");
@@ -567,7 +567,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControl() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -611,7 +611,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify the glyph change APIs update the glyphs appropriately
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControlGlyphChanged() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -657,7 +657,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we don't get called for a project which doesn't have source control enabled.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControlNoControl() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -681,7 +681,7 @@ namespace PythonToolsUITests {
             app.SelectSourceControlProvider("None");
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewProject() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -704,7 +704,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TransferItem() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -734,7 +734,7 @@ namespace PythonToolsUITests {
             System.IO.File.Delete(filename);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAs() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SaveAsUI.sln");
@@ -764,7 +764,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, solutionTree.WaitForItem("Solution 'SaveAsUI' (1 project)", "HelloWorld", "Program2.py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExtensionReference() {
             var curDir =System.IO.Directory.GetCurrentDirectory();

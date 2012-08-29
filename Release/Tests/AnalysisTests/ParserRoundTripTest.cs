@@ -24,7 +24,7 @@ namespace AnalysisTests {
     /// </summary>
     [TestClass]
     public class ParserRoundTripTest {
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExpressions() {            
             // TODO: Trailing white space tests
             // Unary Expressions
@@ -237,7 +237,7 @@ namespace AnalysisTests {
             //TestOneString(PythonLanguageVersion.V27, "{1:2, 2 :3, 3: 4]");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestMangledPrivateName() {
             TestOneString(PythonLanguageVersion.V27, @"class C:
     def f(__a):
@@ -269,7 +269,7 @@ namespace AnalysisTests {
 ");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestComments() {
 
             TestOneString(PythonLanguageVersion.V27, @"x = foo(
@@ -287,7 +287,7 @@ namespace AnalysisTests {
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestWhiteSpaceAfterDocString() {
             TestOneString(PythonLanguageVersion.V27, @"'''hello
 
@@ -297,7 +297,7 @@ this is some documentation
 import foo");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestMutateStdLib() {
             var versions = new[] { 
                 new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
@@ -356,13 +356,13 @@ import foo");
             TestOneString(version, originalText);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBinaryFiles() {
             var filename = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.System), "kernel32.dll");
             TestOneString(PythonLanguageVersion.V27, filename);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestErrors() {
             TestOneString(PythonLanguageVersion.V30, ":   ...");
 
@@ -593,13 +593,13 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "try  :   pass\r\finally    :     pass");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExplicitLineJoin() {
             TestOneString(PythonLanguageVersion.V27, @"foo(4 + \
                     5)");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestStatements() {
             // TODO: Vary all of these tests by putting the test case in a function def
             // TODO: Vary all of these tests by adding trailing comments                        
@@ -994,7 +994,7 @@ def f(): pass");
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void StdLibTest() {
             var versions = new[] { 
                 new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },

@@ -22,7 +22,7 @@ namespace PythonToolsTests {
     public class CPythonInterpreterTests {
         internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider();
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FactoryProvider() {
             var provider = InterpFactory;
             var factories = provider.GetInterpreterFactories().ToArray();

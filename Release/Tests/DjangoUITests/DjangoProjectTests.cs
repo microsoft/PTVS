@@ -33,7 +33,7 @@ namespace DjangoUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewDjangoProject() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -64,7 +64,7 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/778
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoCommandsNonDjangoApp() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -97,7 +97,7 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewApp() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -198,7 +198,7 @@ namespace DjangoUITests {
             Assert.AreNotEqual(null, solutionFolder.Item("NewPage.html"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewAppDuplicateName() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -268,7 +268,7 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/748
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewAppSameAsProjectName() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -314,7 +314,7 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugProjectProperties() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);

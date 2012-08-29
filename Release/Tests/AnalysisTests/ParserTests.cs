@@ -41,7 +41,7 @@ namespace AnalysisTests {
 
         #region Test Cases
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void MixedWhiteSpace() {
             // mixed, but in different blocks, which is ok
             ParseErrors("MixedWhitespace1.py", PythonLanguageVersion.V27, Severity.Error);
@@ -59,7 +59,7 @@ namespace AnalysisTests {
             ParseErrors("MixedWhitespace5.py", PythonLanguageVersion.V27, Severity.Error);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Errors() {
             ParseErrors("AllErrors.py",
                 PythonLanguageVersion.V24,
@@ -389,7 +389,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void InvalidUnicodeLiteral() {
             foreach (var version in V26AndUp) {
                 ParseErrors("InvalidUnicodeLiteral26Up.py",
@@ -414,7 +414,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DedentError() {
             foreach (var version in AllVersions) {
                 ParseErrors("DedentError.py",
@@ -424,7 +424,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DedentErrorLargeFile() {
             foreach (var version in AllVersions) {
                 ParseErrors("DedentErrorLargeFile.py",
@@ -434,7 +434,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Literals() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -549,7 +549,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Literals26() {
             foreach (var version in V26AndUp) {
                 CheckAst(
@@ -570,7 +570,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Keywords25() {
             foreach (var version in V24_V25Versions) {
                 CheckAst(
@@ -594,7 +594,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Keywords2x() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -615,7 +615,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Keywords30() {
             foreach (var version in V3Versions) {
                 CheckAst(
@@ -638,7 +638,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void BinaryOperators() {
             foreach (var version in AllVersions) {
 
@@ -674,7 +674,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void BinaryOperatorsV2() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -693,7 +693,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void GroupingRecovery() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -706,7 +706,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void UnaryOperators() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -721,7 +721,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void StringPlus() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -733,7 +733,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void BytesPlus() {
             foreach (var version in V26AndUp) {
                 CheckAst(
@@ -752,7 +752,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void UnicodePlus() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -772,7 +772,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Delimiters() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -807,7 +807,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DelimitersV2() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -831,7 +831,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ForStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -849,7 +849,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void WithStmt() {
             foreach (var version in V26AndUp) {
                 CheckAst(
@@ -888,7 +888,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Semicolon() {
             foreach (var version in V26AndUp) {
                 CheckAst(
@@ -909,7 +909,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DelStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -927,7 +927,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void IndexExpr() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -939,7 +939,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DelStmtIllegal() {
             foreach (var version in AllVersions) {
                 ParseErrors("DelStmtIllegal.py", version,
@@ -950,7 +950,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void YieldStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -967,7 +967,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void YieldExpr() {
             foreach (var version in V25AndUp) {
                 CheckAst(
@@ -987,7 +987,7 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void YieldStmtIllegal() {
             foreach (var version in AllVersions) {
                 ParseErrors("YieldStmtIllegal.py", version,
@@ -998,7 +998,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ImportStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1025,7 +1025,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void GlobalStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1042,7 +1042,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void NonlocalStmt() {
             foreach (var version in V3Versions) {
                 CheckAst(
@@ -1105,7 +1105,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void NonlocalStmtIllegal() {
             foreach (var version in V3Versions) {
                 ParseErrors("NonlocalStmtIllegal.py", version,
@@ -1121,7 +1121,7 @@ namespace AnalysisTests {
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void WhileStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1134,7 +1134,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TryStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1202,7 +1202,7 @@ namespace AnalysisTests {
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void RaiseStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1245,7 +1245,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void PrintStmt() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -1280,7 +1280,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssertStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1293,7 +1293,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ListComp() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1307,7 +1307,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ListComp2x() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -1326,7 +1326,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void GenComp() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1341,7 +1341,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DictComp() {
             foreach (var version in V27AndUp) {
                 CheckAst(
@@ -1363,7 +1363,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SetComp() {
             foreach (var version in V27AndUp) {
                 CheckAst(
@@ -1385,7 +1385,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SetLiteral() {
             foreach (var version in V27AndUp) {
                 CheckAst(
@@ -1405,7 +1405,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void IfStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1419,7 +1419,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FromImportStmt() {
 
             foreach (var version in AllVersions) {
@@ -1463,7 +1463,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FromImportStmtIllegal() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1481,7 +1481,7 @@ namespace AnalysisTests {
             }
         }
         
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FromImportStmtIncomplete() {
 
             foreach (var version in AllVersions) {
@@ -1506,7 +1506,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DecoratorsFuncDef() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1521,7 +1521,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DecoratorsClassDef() {
             foreach (var version in V26AndUp) {
                 CheckAst(
@@ -1546,7 +1546,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DecoratorsIllegal() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1566,7 +1566,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Calls() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1585,7 +1585,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void CallsIllegal() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1606,7 +1606,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void LambdaExpr() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1620,7 +1620,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FuncDef() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1640,7 +1640,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FuncDefV2() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -1658,7 +1658,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FuncDefV3() {
             foreach (var version in V3Versions) {
                 CheckAst(
@@ -1712,7 +1712,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FuncDefV3Illegal() {
             foreach (var version in V3Versions) {
                 ParseErrors("FuncDefV3Illegal.py", version,
@@ -1723,7 +1723,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ClassDef() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1748,7 +1748,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ClassDef3x() {
             foreach (var version in V3Versions) {
                 CheckAst(
@@ -1782,7 +1782,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssignStmt() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -1803,7 +1803,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssignStmt2x() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -1816,7 +1816,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssignStmt25() {
             foreach (var version in V25AndUp) {
                 CheckAst(
@@ -1842,7 +1842,7 @@ namespace AnalysisTests {
             );
         }
         
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssignStmtV3() {
             foreach (var version in V3Versions) {
                 CheckAst(
@@ -1866,7 +1866,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssignStmtIllegalV3() {
             foreach (var version in V3Versions) {
                 CheckAst(
@@ -1885,7 +1885,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AssignStmtIllegal() {
            foreach (var version in AllVersions) {
                 CheckAst(
@@ -1919,7 +1919,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ExecStmt() {
             foreach (var version in V2Versions) {
                 CheckAst(
@@ -1948,7 +1948,7 @@ namespace AnalysisTests {
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void EllipsisExpr() {
             foreach (var version in V3Versions) {
                 CheckAst(
@@ -1972,7 +1972,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FromFuture() {
             foreach (var version in AllVersions) {
                 CheckAst(
@@ -2015,7 +2015,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod,  Priority(2)]
+        [TestMethod,  Priority(0)]
         public void StdLib() {
             var versions = new[] { 
                 new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 },

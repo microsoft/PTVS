@@ -31,7 +31,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Imports get added after a doc string
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DocString() {
             string expectedText = @"'''foo'''
@@ -45,7 +45,7 @@ itertools";
         /// <summary>
         /// Imports get added after a unicode doc string
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void UnicodeDocString() {
             string expectedText = @"u'''foo'''
@@ -59,7 +59,7 @@ itertools";
         /// <summary>
         /// Future import gets added after doc string, but before other imports.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DocStringFuture() {
             string expectedText = @"'''foo'''
@@ -75,7 +75,7 @@ with_statement";
         /// <summary>
         /// Add a from .. import for a function in another module
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFrom() {
             string expectedText = @"from test_module import module_func
@@ -87,7 +87,7 @@ module_func()";
         /// <summary>
         /// Add a from .. import for a function in a subpackage
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromSubpackage() {
             string expectedText = @"from test_package.sub_package import subpackage_method
@@ -99,7 +99,7 @@ subpackage_method()";
         /// <summary>
         /// We should understand assignment from import statements even in the face of errors
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportWithErrors() {
             // http://pytools.codeplex.com/workitem/547
@@ -110,7 +110,7 @@ subpackage_method()";
         /// <summary>
         /// Add a from .. import for a function in a built-in module
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportBuiltinFunction() {
             string expectedText = @"from sys import getrecursionlimit
@@ -122,7 +122,7 @@ getrecursionlimit()";
         /// <summary>
         /// Add a from ... import for a function in another module when a from import already exists for the same module.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImport() {
             string expectedText = @"from test_module import module_func_2, module_func
@@ -135,7 +135,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import is an "from ... import bar as baz" import.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportAsName() {
             string expectedText = @"from test_module import module_func_2 as bar, module_func
@@ -148,7 +148,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportParens() {
             string expectedText = @"from test_module import (module_func_2, module_func)
@@ -161,7 +161,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list and the existing import contains an "as" import.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportParensAsName() {
             string expectedText = @"from test_module import (module_func_2 as bar, module_func)
@@ -175,7 +175,7 @@ module_func()";
         /// the existing import contains parens around the imported items list and the existing import contains an "as" import
         /// and there's a trailing comma at the end.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma() {
             string expectedText = @"from test_module import (module_func_2 as bar, module_func)
@@ -188,7 +188,7 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list and there's a trailing comma at the end.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportParensTrailingComma() {
             string expectedText = @"from test_module import (module_func_2, module_func)
@@ -200,7 +200,7 @@ module_func()";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportPackage() {
             string expectedText = @"import test_package
@@ -212,7 +212,7 @@ test_package";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportSubPackage() {
             string expectedText = @"from test_package import sub_package
@@ -226,7 +226,7 @@ sub_package";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Parameters() {            
             var getreclimit = new [] { "from sys import getrecursionlimit" };
@@ -263,7 +263,7 @@ sub_package";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AssignedWithoutTypeInfo() {
             AddSmartTagTest("Assignments.py", 1, 2, _NoSmartTags);

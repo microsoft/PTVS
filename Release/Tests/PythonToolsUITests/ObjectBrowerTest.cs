@@ -42,7 +42,7 @@ namespace PythonToolsUITests
             }
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserBasicTest()
         {
@@ -73,7 +73,7 @@ namespace PythonToolsUITests
             Assert.AreEqual("Program.py", str.Trim(), "");
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserSearchTextTest()
         {
@@ -131,7 +131,7 @@ namespace PythonToolsUITests
             Assert.AreEqual(1, nodeCount, "Node Count: " + nodeCount.ToString());
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserExpandTypeBrowserTest()
         {
@@ -162,7 +162,7 @@ namespace PythonToolsUITests
             Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserCommentsTest()
         {
@@ -219,7 +219,7 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserInheritanceRelationshipTest()
         {
@@ -267,7 +267,7 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserNavigationTest()
         {
@@ -323,7 +323,7 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserContextMenuBasicTest()
         {
@@ -397,7 +397,7 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserTypeBrowserViewTest()
         {
@@ -449,7 +449,7 @@ namespace PythonToolsUITests
             Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserTypeBrowserSortTest()
         {
@@ -546,7 +546,7 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserNavigateVarContextMenuTest()
         {
@@ -611,7 +611,7 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
         }
 
-        [TestMethod, Priority(1), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserFindAllReferencesTest()
         {

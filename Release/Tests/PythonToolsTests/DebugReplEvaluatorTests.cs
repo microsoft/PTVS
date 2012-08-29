@@ -63,7 +63,7 @@ namespace PythonToolsTests {
             _processes.ForEach(proc => proc.WaitForExit(5000));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DisplayVariables() {
             Attach("DebugReplTest1.py", 3);
 
@@ -71,7 +71,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DisplayFunctionLocalsAndGlobals() {
             Attach("DebugReplTest2.py", 13);
 
@@ -79,7 +79,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("5", ExecuteText("print(global_val)"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ChangeVariables() {
             Attach("DebugReplTest2.py", 13);
 
@@ -87,7 +87,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("1", ExecuteText("print(innermost_val)"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ChangeModule() {
             Attach("DebugReplTest1.py", 3);
 
@@ -105,7 +105,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ChangeFrame() {
             Attach("DebugReplTest2.py", 13);
 
@@ -139,7 +139,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("1", ExecuteCommand(new DebugReplFrameCommand(), ""));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ChangeThread() {
             Attach("DebugReplTest3.py", 39);
 
@@ -168,7 +168,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'thread1'", ExecuteText("t1_val"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ChangeProcess() {
             Attach("DebugReplTest4A.py", 3);
             Attach("DebugReplTest4B.py", 3);
@@ -195,7 +195,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("60", ExecuteText("b2"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Abort() {
             Attach("DebugReplTest5.py", 3);
 
@@ -207,7 +207,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void StepInto()
         {
             // Make sure that we don't step into the internal repl code

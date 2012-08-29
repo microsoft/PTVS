@@ -29,14 +29,14 @@ using TestUtilities;
 namespace DebuggerTests {
     [TestClass]
     public class DebuggerTests : BaseDebuggerTests {
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestThreads() {
             // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.
         }
 
         #region Enum Children Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void EnumChildrenTest() {
             const int lastLine = 40;
 
@@ -88,7 +88,7 @@ namespace DebuggerTests {
             return existing;
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void EnumChildrenTestPrevFrame() {
             const int breakLine = 2;
 
@@ -110,7 +110,7 @@ namespace DebuggerTests {
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void GeneratorChildrenTest() {
             if (Version.Version <= PythonLanguageVersion.V25) {
                 // gi_code new in 2.6
@@ -227,7 +227,7 @@ namespace DebuggerTests {
 
         #region Set Next Line Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SetNextLineTest() {
             if (GetType() == typeof(DebuggerTestsIpy)) {
                 //http://ironpython.codeplex.com/workitem/30129
@@ -304,7 +304,7 @@ namespace DebuggerTests {
         #region BreakAll Tests
 
         
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakAll() {
             var debugger = new PythonDebugger();
 
@@ -337,7 +337,7 @@ namespace DebuggerTests {
             process.Terminate();
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakAllThreads() {
             var debugger = new PythonDebugger();
 
@@ -376,7 +376,7 @@ namespace DebuggerTests {
 
         #region Eval Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void EvalTest() {
             EvalTest("LocalsTest4.py", 2, "g", 1, EvalResult.Value("baz", "int", "42"));
             EvalTest("LocalsTest3.py", 2, "f", 0, EvalResult.Value("x", "int", "42"));
@@ -476,7 +476,7 @@ namespace DebuggerTests {
         /// <summary>
         /// Verify it takes more than just an items() method for us to treat something like a dictionary.
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void CloseToDictExpansionBug484() {
             PythonThread thread = RunAndBreak("LocalsTestBug484.py", 7);
             
@@ -498,7 +498,7 @@ namespace DebuggerTests {
             thread.Process.WaitForExit();
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void LocalsTest() {
             LocalsTest("LocalsTest.py", 3, new string[] { }, new string[] { "x" });
 
@@ -507,7 +507,7 @@ namespace DebuggerTests {
             LocalsTest("LocalsTest3.py", 2, new string[] { "x" }, new string[] { "y" });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void GlobalsTest() {
             if (Version.Version >= PythonLanguageVersion.V32) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__" });
@@ -522,7 +522,7 @@ namespace DebuggerTests {
 
         #region Stepping Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void StepTest() {
             // Bug 507: http://pytools.codeplex.com/workitem/507
             StepTest(DebuggerTestPath + @"SteppingTestBug507.py",
@@ -660,7 +660,7 @@ namespace DebuggerTests {
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void StepStdLib() {
             // http://pytools.codeplex.com/workitem/504 - test option for stepping into std lib.
             var debugger = new PythonDebugger();
@@ -735,7 +735,7 @@ namespace DebuggerTests {
 
         #region Breakpoint Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void BreakpointNonMainFileRemoved() {
             // http://pytools.codeplex.com/workitem/638
 
@@ -751,7 +751,7 @@ namespace DebuggerTests {
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void BreakpointNonMainThreadMainThreadExited() {
             // http://pytools.codeplex.com/workitem/638
 
@@ -766,7 +766,7 @@ namespace DebuggerTests {
                 checkThread: false);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpointsFilenameColide() {
             // http://pytools.codeplex.com/workitem/565
 
@@ -780,7 +780,7 @@ namespace DebuggerTests {
                 checkBound: false);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpointsSimpleFilename() {
             // http://pytools.codeplex.com/workitem/522
 
@@ -794,7 +794,7 @@ namespace DebuggerTests {
                 checkBound: false);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpointHitOtherThreadStackTrace() {
             // http://pytools.codeplex.com/workitem/483
 
@@ -832,37 +832,37 @@ namespace DebuggerTests {
             process.Terminate();
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpoints() {
             BreakpointTest("BreakpointTest.py", new[] { 1 }, new[] { 1 });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpoints2() {
             BreakpointTest("BreakpointTest2.py", new[] { 3 }, new[] { 3, 3, 3 });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpoints3() {
             BreakpointTest("BreakpointTest3.py", new[] { 1 }, new[] { 1 });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpointsConditional() {
             BreakpointTest("BreakpointTest2.py", new[] { 3 }, new[] { 3 }, new[] { "i == 1" });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpointsConditionalOnChange() {
             BreakpointTest("BreakpointTest5.py", new[] { 4 }, new[] { 4, 4, 4, 4, 4 }, new[] { "j" }, new[] { true });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpointRemove() {
             BreakpointTest("BreakpointTest2.py", new[] { 3 }, new[] { -3 });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestBreakpointFailed() {
             var debugger = new PythonDebugger();
 
@@ -937,7 +937,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExceptions() {
             var debugger = new PythonDebugger();
             for (int i = 0; i < 2; i++) {
@@ -1049,7 +1049,7 @@ namespace DebuggerTests {
         /// <summary>
         /// Test cases for http://pytools.codeplex.com/workitem/367
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExceptionsSysExitZero() {
             var debugger = new PythonDebugger();
 
@@ -1084,7 +1084,7 @@ namespace DebuggerTests {
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestExceptionHandlers() {
             var debugger = new PythonDebugger();
 
@@ -1132,7 +1132,7 @@ namespace DebuggerTests {
 
         #region Module Load Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestModuleLoad() {
             var debugger = new PythonDebugger();
 
@@ -1169,7 +1169,7 @@ namespace DebuggerTests {
 
         #region Exit Code Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestStartup() {
             var debugger = new PythonDebugger();
 
@@ -1225,7 +1225,7 @@ namespace DebuggerTests {
 
         #region Argument Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestInterpreterArguments() {
             var debugger = new PythonDebugger();
 
@@ -1242,7 +1242,7 @@ namespace DebuggerTests {
         /// in addition to patching the thread method so that breakpoints on threads created after
         /// attach via the threading module can be hit.
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachThreadingStartNewThread() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 // http://pytools.codeplex.com/workitem/638
@@ -1307,7 +1307,7 @@ namespace DebuggerTests {
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachReattach() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
@@ -1353,7 +1353,7 @@ namespace DebuggerTests {
         /// hits resume the thread will eventually return back to Python code, and then we'll block it
         /// because we haven't cleared the stepping bit.
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachMultithreadedSleeper() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
@@ -1381,7 +1381,7 @@ namespace DebuggerTests {
         }
 
         /*
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachReattach64() {
             Process p = Process.Start("C:\\Python27_x64\\python.exe", "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
             System.Threading.Thread.Sleep(1000);
@@ -1401,7 +1401,7 @@ namespace DebuggerTests {
             p.Kill();
         }*/
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachReattachThreadingInited() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
                 Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
@@ -1435,7 +1435,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachReattachInfiniteThreads() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
                 Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
@@ -1470,7 +1470,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachTimeout() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
 
@@ -1506,7 +1506,7 @@ int main(int argc, char* argv[]) {
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyGILState_Ensure
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachNewThread_PyGILState_Ensure() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
 
@@ -1629,7 +1629,7 @@ void main()
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyThreadState_New
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachNewThread_PyThreadState_New() {
 
             if (GetType() != typeof(DebuggerTestsIpy) &&    // IronPython doesn't support attach
@@ -1763,7 +1763,7 @@ void main()
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachTimeoutThreadsInitialized() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
 
@@ -1901,7 +1901,7 @@ int main(int argc, char* argv[]) {
 
         #region Output Tests
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Test3xStdoutBuffer() {
             if (Version.Version.Is3x()) {
                 var debugger = new PythonDebugger();

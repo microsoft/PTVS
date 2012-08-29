@@ -27,7 +27,7 @@ namespace PythonToolsTests {
     [TestClass]
     public class CompletionDBTest {
         
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestOpen() {
             foreach (var path in PythonPaths.Versions) {
                 Console.WriteLine(path.Path);
@@ -94,7 +94,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestPthFiles() {
             var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(outputPath);
@@ -130,7 +130,7 @@ namespace PythonToolsTests {
         /// Checks that members removed or introduced in later versions show up or don't in
         /// earlier versions as appropriate.
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void VersionedSharedDatabase() {
             var twoFive = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 5));
             var twoSix = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 6));

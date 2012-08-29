@@ -42,7 +42,7 @@ namespace PythonToolsUITests {
         }
 
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFiles() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -72,7 +72,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesControlled() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\PublishTest.sln");
@@ -104,7 +104,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonate() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -147,7 +147,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonateNoMachineName() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -186,7 +186,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonateWrongCredentials() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -224,7 +224,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonateCancelCredentials() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -262,7 +262,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFtp() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");

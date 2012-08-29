@@ -36,7 +36,7 @@ namespace PythonToolsTests {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
         public static ScriptEngine PythonEngine = Python.CreateEngine();
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_CtrlSpace() {
             string code = @"def f(param1, param2):
     g()";
@@ -72,7 +72,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_Keywords() {
             string code = @"";
 
@@ -103,7 +103,7 @@ namespace PythonToolsTests {
             Assert.IsFalse(completionList.Contains("def"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_KeywordOrIdentifier() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -141,7 +141,7 @@ yield_expression = 42
             Assert.IsTrue(completionList.Contains("yield_expression"));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_CtrlSpaceAfterKeyword() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -166,7 +166,7 @@ print
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_Exceptions() {
             foreach (string code in new[] { 
                 @"raise None", 
@@ -205,7 +205,7 @@ except (None)"}) {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_MemberCompletion() {
             // TODO: Negative tests
             //       Import / from import tests
@@ -257,7 +257,7 @@ except (None)"}) {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_MemberCompletion_Imports() {
             var code = "import sys, ";
             var completions = GetCompletions(code.Length - 1, code);
@@ -278,7 +278,7 @@ except (None)"}) {
             return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_CompletionInTripleQuotedString() {
             string code = @"
 '''
@@ -306,7 +306,7 @@ baz
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_GotoDefinition() {
             string code = @"
 class C:
@@ -329,7 +329,7 @@ C().fff";
             Assert.AreEqual(defAnalysis.Expression, "fff");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_QuickInfo() {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
@@ -373,7 +373,7 @@ while True:
 e): <no type information available>");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_NormalOverrides() {
             foreach (var code in new[] {
 @"class Foo(object):
@@ -441,7 +441,7 @@ class Baz(Foo, Bar):
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_BuiltinOverrides() {
             var code = @"class Foo(str):
     def None
@@ -599,7 +599,7 @@ class Baz(Foo, Bar):
         }
 
 #if FALSE
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Scenario_RemoteScriptFactory() {
             using (var factory = RemotePythonEvaluator.CreateFactory()) {
                 var runtime = (ScriptRuntime)factory.CreateRuntime(Python.CreateRuntimeSetup(new Dictionary<string, object>()));

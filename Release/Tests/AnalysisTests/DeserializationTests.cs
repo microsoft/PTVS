@@ -22,7 +22,7 @@ using TestUtilities;
 namespace AnalysisTests {
     [TestClass]
     public class DeserializationTests {
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestSimpleDeserialize() {
             var obj = Unpickle.Load(TestData.Open(@"TestData\empty_dict.pickle"));
 

@@ -86,7 +86,7 @@ namespace DebuggerUITests {
 
         #endregion
         #region Tests
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAttachBasic() {
 
@@ -108,7 +108,7 @@ namespace DebuggerUITests {
 
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAttachBreakImmediately() {
 
@@ -133,7 +133,7 @@ namespace DebuggerUITests {
 
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAttachUserSetsBreakpoint() {
 
@@ -157,7 +157,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAttachThreadsBreakAllAndSetExitFlag() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
@@ -190,7 +190,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAttachThreadsBreakOneAndSetExitFlag() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");
@@ -225,7 +225,7 @@ namespace DebuggerUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAttachLotsOfThreads() {
             string debugSolution = TestData.GetPath(@"TestData\DebugAttach\DebugAttach.sln");

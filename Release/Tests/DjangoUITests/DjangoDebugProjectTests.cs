@@ -23,7 +23,7 @@ using TestUtilities.UI;
 namespace DjangoUITests {
     [TestClass]
     public class DjangoDebugProjectTests {
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugDjangoProject() {
             DebuggerUITests.DebugProject.OpenProjectAndBreak(@"TestData\DjangoDebugProject.sln", @"TestApp\views.py", 5, false);

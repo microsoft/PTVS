@@ -51,7 +51,7 @@ namespace ReplWindowUITests {
         /// f( should bring signature help up
         /// 
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SimpleSignatureHelp() {
             var interactive = Prepare();
@@ -78,7 +78,7 @@ namespace ReplWindowUITests {
         /// “x = 42”
         /// “x.” should bring up intellisense completion
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SimpleCompletion() {
             var interactive = Prepare();
@@ -124,7 +124,7 @@ namespace ReplWindowUITests {
         /// “x = 42”
         /// “x “ should not being up any completions.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SimpleCompletionSpaceNoCompletion() {
             var interactive = Prepare();
@@ -146,7 +146,7 @@ namespace ReplWindowUITests {
         /// “x = 42”
         /// “x “ should not being up any completions.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStdOutRedirected() {
             var interactive = Prepare();
@@ -165,7 +165,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Pasting CSV data
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CsvPaste() {
             var interactive = Prepare();
@@ -200,7 +200,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// x = 42; x.car[enter] – should type “car” not complete to “conjugate”
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionWrongText() {
             var interactive = Prepare();
@@ -224,7 +224,7 @@ namespace ReplWindowUITests {
         /// x = 42; x.conjugate[enter] – should respect enter completes option, and should respect enter at end of word 
         /// completes option.  When it does execute the text the output should be on the next line.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionFullText() {
             var interactive = Prepare();
@@ -267,7 +267,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Enter in a middle of a line should insert new line
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EnterInMiddleOfLine() {
             var interactive = Prepare();
@@ -284,7 +284,7 @@ namespace ReplWindowUITests {
             interactive.WaitForText(ReplPrompt + "def f(): ", SecondPrompt + "    pass#foo", ReplPrompt);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Reset() {
             var interactive = Prepare();
@@ -304,7 +304,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Prompts always inserted at the beginning of a line.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void PromptPositions() {
             var interactive = Prepare();
@@ -327,7 +327,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Enter in a middle of a line should insert new line
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EnterAtBeginningOfLine() {
             // TODO (bug): complete statement detection
@@ -348,7 +348,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// LineBReak should insert a new line and not submit.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LineBreak() {
             var interactive = Prepare();
@@ -373,7 +373,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Escape should clear both lines
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EscapeClearsMultipleLines() {
             var interactive = Prepare();
@@ -394,7 +394,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// “x=42” left left ctrl-enter should commit assignment
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlEnterCommits() {
             var interactive = Prepare();
@@ -410,7 +410,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// while True: pass / Right Click -> Break Execution (or Ctrl-Break) should break execution
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlBreakInterrupts() {
             var interactive = Prepare();
@@ -428,7 +428,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Ctrl-Break while running should result in a new prompt
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlBreakNotRunning() {
             var interactive = Prepare();
@@ -447,7 +447,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Ctrl-Break while entering standard input should return an empty input and append a primary prompt.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlBreakInStandardInput() {
             var interactive = Prepare();
@@ -516,7 +516,7 @@ namespace ReplWindowUITests {
         /// 
         /// This version runs for 1/2 second which kicks in the running UI.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlBreakInterruptsLongRunning() {
             var interactive = Prepare();
@@ -536,7 +536,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Ctrl-Enter on previous input should paste input to end of buffer (doing it again should paste again – appending onto previous input)
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlEnterOnPreviousInput() {
             var interactive = Prepare();
@@ -562,7 +562,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Type some text, hit Ctrl-Enter, should execute current line
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlEnterForceCommit() {
             var interactive = Prepare();
@@ -580,7 +580,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Type a function definition, go to next line, type pass, navigate left, hit ctrl-enter, should immediately execute func def.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CtrlEnterMultiLineForceCommit() {
             var interactive = Prepare();
@@ -604,7 +604,7 @@ namespace ReplWindowUITests {
         /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
         /// scroll back through both function definitions
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void HistoryUpdateDef() {
             var interactive = Prepare();
@@ -643,7 +643,7 @@ namespace ReplWindowUITests {
         /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
         /// scroll back through both function definitions
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void HistoryAppendDef() {
             var interactive = Prepare();
@@ -678,7 +678,7 @@ namespace ReplWindowUITests {
         /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
         /// scroll back through both function definitions
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void HistoryBackForward() {
             var interactive = Prepare();
@@ -705,7 +705,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that maximum length of history is enforced and stores correct items.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void HistoryMaximumLength() {
             var interactive = Prepare();
@@ -741,7 +741,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we remember a partially typed input when we move to the history.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void HistoryUncommittedInput1() {
             var interactive = Prepare();
@@ -770,7 +770,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we don't restore on submit an uncomitted input saved for history.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void HistoryUncommittedInput2() {
             var interactive = Prepare();
@@ -798,7 +798,7 @@ namespace ReplWindowUITests {
         /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
         /// scroll back through both function definitions
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void HistorySearch() {
             var interactive = Prepare();
@@ -839,7 +839,7 @@ namespace ReplWindowUITests {
         /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
         /// scroll back through both function definitions
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RegressionImportSysBackspace() {
             var item = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
@@ -868,7 +868,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Enter “while True: pass”, then hit up/down arrow, should move the caret in the edit buffer
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CursorWhileCodeIsRunning() {
             var interactive = Prepare();
@@ -907,7 +907,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Type “raise Exception()”, hit enter, raise Exception() should have appropriate syntax color highlighting.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SyntaxHighlightingRaiseException() {
             GetInteractiveOptions().ExecutionMode = "Standard";
@@ -937,7 +937,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReplCommandUnknown() {
             var interactive = Prepare();
@@ -953,7 +953,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReplCommandComment() {
             var interactive = Prepare();
@@ -968,7 +968,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests backspacing pass the prompt to the previous line
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BackspacePrompt() {
             var interactive = Prepare();
@@ -998,7 +998,7 @@ namespace ReplWindowUITests {
             interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BackspaceSmartDedent() {
             var interactive = Prepare();
@@ -1021,7 +1021,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Inserts code to REPL while input is accepted. 
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void InsertCode() {
             var interactive = Prepare();
@@ -1052,7 +1052,7 @@ namespace ReplWindowUITests {
         /// Inserts code to REPL while submission execution is in progress. 
         /// The inserted input should be appended to uncommitted input and show up when the execution is finished/aborted.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void InsertCodeWhileRunning() {
             var interactive = Prepare();
@@ -1093,7 +1093,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command help
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReplCommandHelp() {
             var interactive = Prepare();
@@ -1107,7 +1107,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommandsLoadScript() {
             var interactive = Prepare();
@@ -1125,7 +1125,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommandsLoadScriptWithQuotes() {
             var interactive = Prepare();
@@ -1143,7 +1143,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests REPL command $load, with multiple statements including a class definition.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommandsLoadScriptWithClass() {
             // http://pytools.codeplex.com/workitem/632
@@ -1165,7 +1165,7 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests $load command with file that includes multiple submissions.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommandsLoadScriptMultipleSubmissions() {
             var interactive = Prepare();
@@ -1201,7 +1201,7 @@ foo()
         /// <summary>
         /// Tests that ClearScreen doesn't cancel pending submissions queue.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommandsLoadScriptMultipleSubmissionsWithClearScreen() {
             var interactive = Prepare();
@@ -1231,7 +1231,7 @@ $cls
         /// <summary>
         /// Tests inline images
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void InlineImage() {
             var interactive = Prepare();
@@ -1320,7 +1320,7 @@ $cls
         /// Tests pressing back space when to the left of the caret we have the secondary prompt.  The secondary prompt
         /// should be removed and the lines should be joined.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditDeleteSecondPrompt() {
             var interactive = Prepare();
@@ -1344,7 +1344,7 @@ $cls
         /// <summary>
         /// Tests entering a single line of text, moving to the middle, and pressing enter.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditInsertInMiddleOfLine() {
             var interactive = Prepare();
@@ -1369,7 +1369,7 @@ $cls
         /// <summary>
         /// Tests using the $cls clear screen command
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ClearScreenCommand() {
             var interactive = Prepare();
@@ -1385,7 +1385,7 @@ $cls
         /// <summary>
         /// Tests deleting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditDeleteSecondaryPromptSelected() {
             if (SecondPrompt.Length > 0) {
@@ -1417,7 +1417,7 @@ $cls
         /// <summary>
         /// Tests typing when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditTypeSecondaryPromptSelected() {
             if (SecondPrompt.Length > 0) {
@@ -1440,7 +1440,7 @@ $cls
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SelectAll() {
             var interactive = Prepare();
@@ -1519,7 +1519,7 @@ $cls
         /// <summary>
         /// Tests typing when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditCutIncludingPrompt() {
             if (SecondPrompt.Length > 0) {
@@ -1549,7 +1549,7 @@ $cls
         /// <summary>
         /// Tests pasting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditPasteSecondaryPromptSelected() {
             if (SecondPrompt.Length > 0) {
@@ -1591,7 +1591,7 @@ $cls
         /// Same as EditPasteSecondaryPromptSelected, but the selection is reversed so that the
         /// caret is in the prompt.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditPasteSecondaryPromptSelectedInPromptMargin() {
             if (SecondPrompt.Length > 0) {
@@ -1631,7 +1631,7 @@ $cls
         /// <summary>
         /// Tests getting/setting the repl window options.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReplWindowOptions() {
             if (SecondPrompt.Length > 0) {
@@ -1666,7 +1666,7 @@ $cls
         /// <summary>
         /// Calling input while executing user code.  This should let the user start typing.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestRawInput() {
             var interactive = Prepare();
@@ -1690,7 +1690,7 @@ $cls
         /// <summary>
         /// Calling input while executing user code.  This should let the user start typing.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DeleteSelectionInRawInput() {
             var interactive = Prepare();
@@ -1723,7 +1723,7 @@ $cls
         /// <summary>
         /// Replacing a snippet including a single line break with another snippet that also includes a single line break (line delta is zero).
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectionBuffers_ZeroLineDeltaChange() {
             var interactive = Prepare();
@@ -1785,7 +1785,7 @@ $cls
         /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestDelNoTextSelected() {
             var interactive = Prepare();
@@ -1803,7 +1803,7 @@ $cls
         /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestDelAtEndOfLine() {
             var interactive = Prepare();
@@ -1835,7 +1835,7 @@ $cls
         /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestDelAtEndOfBuffer() {
             var interactive = Prepare();
@@ -1860,7 +1860,7 @@ $cls
         /// Type some text that leaves auto-indent at the end of the input and also outputs, make sure the auto indent (regression for http://pytools.codeplex.com/workitem/92)
         /// is gone before we do the input.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPrintWithParens() {
             var interactive = Prepare();
@@ -1884,7 +1884,7 @@ $cls
         /// <summary>
         /// Make sure that we can successfully delete an autoindent inputted span (regression for http://pytools.codeplex.com/workitem/93)
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestUndeletableIndent() {
             var interactive = Prepare();
@@ -1915,7 +1915,7 @@ $cls
         /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestDelInOutput() {
             var interactive = Prepare();
@@ -1936,7 +1936,7 @@ $cls
         /// <summary>
         /// Calling ReadInput while no code is running - this should remove the prompt and let the user type input
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIndirectInput() {
             var interactive = Prepare();
@@ -1964,7 +1964,7 @@ $cls
         /// <summary>
         /// Simple test case of Ipython execution mode.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonMode() {
             if (!IPythonSupported) {
@@ -2008,7 +2008,7 @@ $cls
         /// <summary>
         /// Simple test case of Ipython execution mode.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonCtrlBreakAborts() {
             if (!IPythonSupported) {
@@ -2054,7 +2054,7 @@ $cls
         /// “x = 42”
         /// “x.” should bring up intellisense completion
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IPythonSimpleCompletion() {
             if (!IPythonSupported) {
@@ -2112,7 +2112,7 @@ $cls
         /// f( should bring signature help up
         /// 
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IPythonSimpleSignatureHelp() {
             if (!IPythonSupported) {
@@ -2151,7 +2151,7 @@ $cls
         /// <summary>
         /// Simple test case of Ipython execution mode.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonInlineGraph() {
             if (!IPythonSupported) {
@@ -2187,7 +2187,7 @@ $cls
         /// Simple test case of Ipython Debug->Execute in Interactive which then accesses __file__
         /// during the script.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonStartInInteractive() {
             if (!IPythonSupported) {
@@ -2210,7 +2210,7 @@ $cls
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgv() {
             // project is typed to 2.6 so execute in interactive always executes there
@@ -2225,7 +2225,7 @@ $cls
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgvScriptArgs() {
             // project is typed to 2.6 so execute in interactive always executes there
@@ -2240,7 +2240,7 @@ $cls
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplUnicodeFilename() {
             // project is typed to 2.6 so execute in interactive always executes there
@@ -2255,7 +2255,7 @@ $cls
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AttachReplTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -2298,7 +2298,7 @@ $cls
         /// <summary>
         /// Directed unit tests for the repl evaluator's spliting code into individual statements...
         /// </summary>
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ReplSplitCodeTest() {
             // http://pytools.codeplex.com/workitem/606
             var eval = new PythonReplEvaluator(
@@ -2361,7 +2361,7 @@ g()",
         /// <summary>
         /// x = 42; x.car[enter] – should type “car” not complete to “conjugate”
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Comments() {
             var interactive = Prepare();
@@ -2383,7 +2383,7 @@ g()",
         /// <summary>
         /// x = 42; x.car[enter] – should type “car” not complete to “conjugate”
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommentPaste() {
             var interactive = Prepare();
@@ -2428,7 +2428,7 @@ g()",
         /// def g(): pass
         /// 
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void PasteWithError() {
             var interactive = Prepare();
@@ -2454,7 +2454,7 @@ def g(): pass
 
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void QuitAndReset() {
             var interactive = Prepare();
@@ -2640,7 +2640,7 @@ def g(): pass
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteProjectUnicodeFile() {
             var interactive = Prepare();
@@ -2695,7 +2695,7 @@ def g(): pass
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void IronPythonModuleName() {
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
             var replWindow = new MockReplWindow(replEval);
@@ -2708,7 +2708,7 @@ def g(): pass
             replWindow.ClearScreen();
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void IronPythonSignatures() {
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
             var replWindow = new MockReplWindow(replEval);
@@ -2722,7 +2722,7 @@ def g(): pass
             Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void IronPythonCommentInput() {
             // http://pytools.codeplex.com/workitem/649
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
@@ -2733,7 +2733,7 @@ def g(): pass
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ConsoleWriteLineTest() {
             // http://pytools.codeplex.com/workitem/649
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
@@ -2759,7 +2759,7 @@ def g(): pass
             Assert.AreEqual(replWindow.Output, "42");
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void GenericMethodCompletions() {
             // http://pytools.codeplex.com/workitem/661
             var factProvider = new IronPythonInterpreterFactoryProvider();
@@ -2792,7 +2792,7 @@ def g(): pass
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
@@ -2809,7 +2809,7 @@ def g(): pass
             replWindow.ClearScreen();
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void CommentFollowedByBlankLine() {
             // http://pytools.codeplex.com/workitem/659
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
@@ -2822,7 +2822,7 @@ def g(): pass
         }
 
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
             var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);

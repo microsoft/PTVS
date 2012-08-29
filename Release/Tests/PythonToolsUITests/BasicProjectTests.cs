@@ -42,7 +42,7 @@ namespace PythonToolsUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestSetDefaultInterpreter() {
             var props = VsIdeTestHostContext.Dte.get_Properties("Python Tools", "Interpreters");
@@ -62,7 +62,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadPythonProject() {
             string fullPath = Path.GetFullPath(@"TestData\HelloWorld.sln");
@@ -78,7 +78,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual("HelloWorld.pyproj", Path.GetFileName(project.FileName), "Wrong project file name");
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadFlavoredProject() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\FlavoredProject.sln");
@@ -92,7 +92,7 @@ namespace PythonToolsUITests {
             project.Save();
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveProjectAs() {
             try {
@@ -131,7 +131,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameProjectTest() {
             try {
@@ -181,7 +181,7 @@ namespace PythonToolsUITests {
 
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectAddItem() {
             try {
@@ -220,7 +220,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectAddFolder() {
             try {
@@ -262,7 +262,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectBuild() {
             try {
@@ -276,7 +276,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectRenameAndDeleteItem() {
             try {
@@ -355,7 +355,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ChangeDefaultInterpreterProjectClosed() {
             try {
@@ -373,7 +373,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddTemplateItem() {
             try {
@@ -396,7 +396,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAutomationProperties() {
             try {
@@ -424,7 +424,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAutomationProject() {
             try {
@@ -469,7 +469,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectItemAutomation() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -489,7 +489,7 @@ namespace PythonToolsUITests {
             AssertError<ArgumentException>(() => item.Open("ThisIsNotTheGuidYoureLookingFor"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestRelativePaths() {
             // link to outside file should show up as top-level item
@@ -499,7 +499,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(item);
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectConfiguration() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -527,7 +527,7 @@ namespace PythonToolsUITests {
             AssertError<COMException>(() => project.ConfigurationManager.DeletePlatform("NewPlatform"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DependentNodes() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\XamlProject.sln");
@@ -538,7 +538,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, project.ProjectItems.Item("NewProgram.py").ProjectItems.Item("NewProgram.xaml"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DotNetReferences() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\XamlProject.sln");
@@ -556,7 +556,7 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET project.  Makes sure we get completion after a build, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DotNetProjectReferences() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProjectReference\ProjectReference.sln", expectedProjects: 2, projectName: "PythonApplication");
@@ -606,7 +606,7 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DotNetAssemblyReferences() {
             CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
@@ -636,7 +636,7 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultipleDotNetAssemblyReferences() {
             CompileFile("ClassLibrary.cs", "ClassLibrary.dll");
@@ -701,7 +701,7 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiProjectAnalysis() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln", projectName: "PythonApplication", expectedProjects: 2);
@@ -735,7 +735,7 @@ namespace PythonToolsUITests {
         /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
         /// sure the completion info changes.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddFolderExists() {
             Directory.CreateDirectory(TestData.GetPath(@"TestData\\AddFolderExists\\X"));
@@ -778,7 +778,7 @@ namespace PythonToolsUITests {
             WaitForItem(project, "X");
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddFolderCopyAndPasteFile() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddFolderCopyAndPasteFile.sln");
@@ -822,7 +822,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo", "Program.py"));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyAndPasteFolder() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\CopyAndPasteFolder.sln");
@@ -873,7 +873,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we can copy a folder with multiple items in it.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderWithMultipleItems() {
             // http://mpfproj10.codeplex.com/workitem/11618
@@ -900,7 +900,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Verify we can start the interactive window when focus in within solution explorer in one of our projects.
         /// </summary>
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OpenInteractiveFromSolutionExplorer() {
             // http://pytools.codeplex.com/workitem/765
@@ -937,7 +937,7 @@ namespace PythonToolsUITests {
             return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
         }
 
-        [TestMethod, Priority(2), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadProjectWithDuplicateItems() {
             var solution = DebuggerUITests.DebugProject.OpenProject(@"TestData\DuplicateItems.sln");

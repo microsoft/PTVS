@@ -28,7 +28,7 @@ namespace AnalysisTests {
     [TestClass]
     public class AnalysisSaveTest : BaseAnalysisTest {        
         
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SaveLoad() {
             string code = @"def f(a, *b, **c): pass
 
@@ -150,7 +150,7 @@ WithInstanceMembers = test.WithInstanceMembers
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SaveRecursionClasses() {
             string code = @"
 class C(object): pass
@@ -161,7 +161,7 @@ C.abc = C
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SaveModuleRef() {
             string foo = @"
 import bar

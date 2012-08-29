@@ -31,7 +31,7 @@ namespace PythonToolsTests {
     public class RefactorRenameTests {
         private const string ErrorModuleName = "Cannot rename a module name";
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void PrivateMemberMangling() {
             RefactorTest("foo", "__f",
                 new[] { 
@@ -206,7 +206,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityClassField() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -396,7 +396,7 @@ abc = 200
             );
         }
         
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void InheritedClassField() {
 
             RefactorTest("foo", "abc",
@@ -444,7 +444,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void RenameGeneratorVariable() {
             // http://pytools.codeplex.com/workitem/454
             RefactorTest("foo", "abc",
@@ -458,7 +458,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TypelessForVariable() {
             RefactorTest("baz", "abc",
                 new[] { 
@@ -476,7 +476,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TupleForVariable() {
             RefactorTest("baz", "abc",
                 new[] { 
@@ -569,7 +569,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityInstanceField() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -615,7 +615,7 @@ a.foo
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityParameter() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -754,7 +754,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityLocal() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -815,7 +815,7 @@ def h(abc):
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityClosure() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -875,7 +875,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityLambda() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -929,7 +929,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityInlineIf() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -959,7 +959,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityGenerator() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -1025,7 +1025,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityGeneratorFilter() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -1082,7 +1082,7 @@ abc = 200
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanitySlices() {
             RefactorTest("foo", "abc", version: new Version(3, 2),
             inputs: new[] { 
@@ -1109,7 +1109,7 @@ x = y[foo-1:foo:foo+1]
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityGlobal() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -1192,7 +1192,7 @@ foo = 100
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityNonLocal() {
             RefactorTest("foo", "abc", version: new Version(3, 2),
             inputs: new[] { 
@@ -1269,7 +1269,7 @@ abc = 100
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityRenameClass() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -1386,7 +1386,7 @@ class x(foo):
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void RenameMetaclass() {
             RefactorTest("foo", "abc", version: new Version(2, 7),
             inputs: new[] { 
@@ -1424,7 +1424,7 @@ class x(metaclass=foo):
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityRenameFunction() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -1481,7 +1481,7 @@ fdoc = foo.func_doc"
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityDelLocal() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -1500,7 +1500,7 @@ def f():
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityDelInstanceMember() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -1531,7 +1531,7 @@ def f():
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityDelClassMember() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -1560,7 +1560,7 @@ def f():
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void SanityDelGlobal() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -1607,7 +1607,7 @@ foo = 100
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void DelNonLocal() {
             RefactorTest("foo", "abc", version: new Version(3, 2),
             inputs: new[] { 
@@ -1635,7 +1635,7 @@ abc = 100
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Decorators() {
             RefactorTest("abc", "foo",
             new[] { 
@@ -1763,7 +1763,7 @@ def f():
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TryStatement() {
             RefactorTest("abc", "foo", 
             new[] { 
@@ -1803,7 +1803,7 @@ except Exception as abc:
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FinallyStatement() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -1828,7 +1828,7 @@ finally:
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void RaiseStatement() {
             RefactorTest("foo", "abc", version: new Version(2, 7),
             inputs: new[] { 
@@ -1863,7 +1863,7 @@ raise Exception() from foo
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ExecStatement() {
             RefactorTest("foo", "abc", version: new Version(2, 7),
             inputs: new[] { 
@@ -1942,7 +1942,7 @@ exec('abc = 1', foo, foo)
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void WithStatement() {
             RefactorTest("abc", "foo", version: new Version(3, 2),
             inputs: new[] { 
@@ -1960,7 +1960,7 @@ with abc as abc:
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void YieldStatement() {
             RefactorTest("foo", "abc", 
             inputs: new[] { 
@@ -1979,7 +1979,7 @@ def a():
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void KeywordParameter() {
             RefactorTest("foo", "abc", 
             new[] { 
@@ -2049,7 +2049,7 @@ f(foo = abc)
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void ImportAsStatement() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -2106,7 +2106,7 @@ x = foo
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void FromImportAsStatement() {
             RefactorTest("foo", "abc",
             new[] { 
@@ -2146,7 +2146,7 @@ x = foo
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void Annotations() {
             RefactorTest("foo", "abc", version: new Version(3, 2),
                 inputs: new[] { 
@@ -2201,7 +2201,7 @@ abc = 200
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void NestedFunctions() {
             RefactorTest("h", "g",
                 new[] { 
@@ -2230,7 +2230,7 @@ def g(a, b, c):
 
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void CrossModuleRename() {
             RefactorTest("foo", "abc",
                 new[] { 
@@ -2275,7 +2275,7 @@ def g(a, b, c):
             );
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void CannotRename() {
             CannotRename("abc", "import abc", ErrorModuleName);
             CannotRename("abc", "from abc import bar", ErrorModuleName);
