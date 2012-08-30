@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Description {
             get {
                 // set({k})
-                Namespace valueType = _valueTypes.Types.GetUnionType();
+                Namespace valueType = _valueTypes.TypesNoCopy.GetUnionType();
                 string valueName = valueType == null ? null : valueType.ShortDescription;
 
                 if (valueName != null) {

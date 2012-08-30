@@ -30,6 +30,18 @@ namespace Microsoft.PythonTools.Analysis {
             _value2 = value2;
         }
 
+        public T Value1 {
+            get {
+                return _value1;
+            }
+        }
+
+        public T Value2 {
+            get {
+                return _value2;
+            }
+        }
+
         public bool Add(T item) {
             throw new NotImplementedException();
         }

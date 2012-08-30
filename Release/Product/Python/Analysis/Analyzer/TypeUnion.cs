@@ -19,42 +19,38 @@ using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
-    class TypeUnion<T> : ICollection<T> where T : Namespace {
-        private ISet<T> _ns;
-        private const int MaxUniqueNamespaces = 10;
+    class TypeUnion : ICollection<Namespace> {
+        private ISet<Namespace> _ns;
+        public const int MaxUniqueNamespaces = 10;
 
-        private static IEqualityComparer<T> ObjectComparer = EqualityComparer<T>.Default;
-        public static IEqualityComparer<T> UnionComparer = new UnionEqualityComparer();
-        private static HashSet<T> Empty = new HashSet<T>();
+        public static readonly IEqualityComparer<Namespace> ObjectComparer = EqualityComparer<Namespace>.Default;
+        public static readonly IEqualityComparer<Namespace> UnionComparer = new UnionEqualityComparer();
 
-        public TypeUnion() {
+        public bool Add(Namespace ns) {
+            return Add(ref _ns, ns);
         }
 
-        public bool Add(T ns) {
-            if (_ns == Empty) {
-                return false;
-            }
-            SetOfOne<T> one;
-            if (_ns == null) {
-                _ns = new SetOfOne<T>(ns);
+        internal static bool Add(ref ISet<Namespace> set, Namespace ns) {
+            Namespace one;
+            if (set == null) {
+                set = ns;
                 return true;
-            } else if ((one = _ns as SetOfOne<T>) != null) {
+            } else if ((one = set as Namespace) != null) {
                 if (!one.Contains(ns)) {
-                    _ns = new SetOfTwo<T>(one.Value, ns);
+                    set = new SetOfTwo<Namespace>(one, ns);
                     return true;
                 }
-                return false;
-            } else if (_ns is SetOfTwo<T>) {
-                if (_ns.Contains(ns)) {
+            } else if (set is SetOfTwo<Namespace>) {
+                if (set.Contains(ns)) {
                     return false;
                 }
-                _ns = new HashSet<T>(_ns);
-            }
-
-            if (_ns.Add(ns)) {
-                if (_ns.Count > MaxUniqueNamespaces) {
-                    if (((HashSet<T>)_ns).Comparer == ObjectComparer) {
-                        _ns = new HashSet<T>(_ns, UnionComparer);
+                set = new HashSet<Namespace>(set);
+                set.Add(ns);
+                return true;
+            } else if (set.Add(ns)) {
+                if (set.Count > MaxUniqueNamespaces) {
+                    if (((HashSet<Namespace>)set).Comparer == ObjectComparer) {
+                        set = new HashSet<Namespace>(set, UnionComparer);
                     }
                 }
                 return true;
@@ -72,36 +68,36 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public bool Contains(T ns) {
+        public bool Contains(Namespace ns) {
             if (_ns != null) {
                 return _ns.Contains(ns);
             }
             return false;
         }
 
-        public ISet<T> ToSet() {
+        public ISet<Namespace> ToSet() {
             if (_ns == null) {
-                return EmptySet<T>.Instance;
-            } else if (_ns is SetOfOne<T> || _ns is SetOfTwo<T>) {
+                return EmptySet<Namespace>.Instance;
+            } else if (_ns is SetOfOne<Namespace> || _ns is SetOfTwo<Namespace>) {
                 return _ns;
             }
 
-            return new HashSet<T>(_ns);
+            return new HashSet<Namespace>(_ns);
         }
 
-        public ISet<T> ToSetNoCopy() {
+        public ISet<Namespace> ToSetNoCopy() {
             if (Count == 0) {
-                return EmptySet<T>.Instance;
+                return EmptySet<Namespace>.Instance;
             }
 
             return _ns;
         }
 
-        #region IEnumerable<T> Members
+        #region IEnumerable<Namespace> Members
 
-        public IEnumerator<T> GetEnumerator() {
+        public IEnumerator<Namespace> GetEnumerator() {
             if (_ns == null) {
-                return EmptySet<T>.EmptyEnum;
+                return EmptySet<Namespace>.EmptyEnum;
             }
             return _ns.GetEnumerator();
         }
@@ -112,30 +108,30 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
             if (_ns == null) {
-                return EmptySet<T>.EmptyEnum;
+                return EmptySet<Namespace>.EmptyEnum;
             }
             return _ns.GetEnumerator();
         }
 
         #endregion
 
-        class UnionEqualityComparer : IEqualityComparer<T> {
-            #region IEqualityComparer<T> Members
+        class UnionEqualityComparer : IEqualityComparer<Namespace> {
+            #region IEqualityComparer<Namespace> Members
 
-            public bool Equals(T x, T y) {
+            public bool Equals(Namespace x, Namespace y) {
                 return x.UnionEquals(y);
             }
 
-            public int GetHashCode(T obj) {
+            public int GetHashCode(Namespace obj) {
                 return obj.UnionHashCode();
             }
 
             #endregion
         }
 
-        #region ICollection<T> Members
+        #region ICollection<Namespace> Members
 
-        void ICollection<T>.Add(T item) {
+        void ICollection<Namespace>.Add(Namespace item) {
             throw new InvalidOperationException();
         }
 
@@ -143,7 +139,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             throw new InvalidOperationException();
         }
 
-        public void CopyTo(T[] array, int arrayIndex) {
+        public void CopyTo(Namespace[] array, int arrayIndex) {
             throw new NotImplementedException();
         }
 
@@ -151,7 +147,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             get { return true; }
         }
 
-        public bool Remove(T item) {
+        public bool Remove(Namespace item) {
             throw new InvalidOperationException();
         }
 

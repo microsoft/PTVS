@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -124,25 +125,77 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// 
     /// TODO: We should store built-in types not keyed off of the ModuleInfo.
     /// </summary>
-    class VariableDef<T> : DependentData<TypedDependencyInfo<T>>, IReferenceable where T : Namespace {
+    class VariableDef : DependentData<TypedDependencyInfo<Namespace>>, IReferenceable {
+        internal static VariableDef[] EmptyArray = new VariableDef[0];
+        internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();
+
         public VariableDef() { }
 
-        protected override TypedDependencyInfo<T> NewDefinition(int version) {
-            return new TypedDependencyInfo<T>(version);
+#if VARDEF_STATS
+        ~VariableDef() {
+            if (_dependencies.Count == 0) {
+                IncStat("NoDeps");
+            } else {
+                IncStat(String.Format("TypeCount_{0:D3}", Types.Count));
+                IncStat(String.Format("DepCount_{0:D3}", _dependencies.Count));
+                IncStat(
+                    String.Format(
+                        "TypeXDepCount_{0:D3},{1:D3}", 
+                        Types.Count, 
+                        _dependencies.Count
+                    )
+                );
+                IncStat(String.Format("References_{0:D3}", References.Count()));
+                IncStat(String.Format("Assignments_{0:D3}", Definitions.Count()));
+                foreach (var dep in _dependencies.Values) {
+                    IncStat(String.Format("DepUnits_{0:D3}", dep.DependentUnits == null ? 0 : dep.DependentUnits.Count));
+                }
+            }
         }
 
-        public bool AddTypes(AnalysisUnit unit, IEnumerable<T> newTypes, bool enqueue = true) {
+        private static void IncStat(string stat) {
+            if (_variableDefStats.ContainsKey(stat)) {
+                _variableDefStats[stat] += 1;
+            } else {
+                _variableDefStats[stat] = 1;
+            }
+        }
+
+        internal static void DumpStats() {
+            for (int i = 0; i < 3; i++) {
+                GC.Collect(2, GCCollectionMode.Forced);
+                GC.WaitForPendingFinalizers();
+            }
+
+            List<string> values = new List<string>();
+            foreach (var keyValue in VariableDef._variableDefStats) {
+                values.Add(String.Format("{0}: {1}", keyValue.Key, keyValue.Value));
+            }
+            values.Sort();
+            foreach (var value in values) {
+                Console.WriteLine(value);
+            }
+        }
+#endif
+
+        protected override TypedDependencyInfo<Namespace> NewDefinition(int version) {
+            return new TypedDependencyInfo<Namespace>(version);
+        }
+
+        public bool AddTypes(AnalysisUnit unit, IEnumerable<Namespace> newTypes, bool enqueue = true) {
             return AddTypes(unit.ProjectEntry, newTypes, enqueue);
         }
 
-        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<T> newTypes, bool enqueue = true) {
+        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<Namespace> newTypes, bool enqueue = true) {
             bool added = false;
             foreach (var value in newTypes) {
                 var declaringModule = value.DeclaringModule;
                 if (declaringModule == null || declaringModule.AnalysisVersion == value.DeclaringVersion) {
-                    var dependencies = GetDependentItems(value.DeclaringModule ?? projectEntry);
+                    var newTypesEntry = value.DeclaringModule ?? projectEntry;
 
-                    if (dependencies.Types.Add(value)) {
+                    var dependencies = GetDependentItems(newTypesEntry);
+
+                    if (dependencies.AddType(value)) {
                         added = true;
                     }
                 }
@@ -155,28 +208,78 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return added;
         }
 
-        public ISet<T> Types {
+        /// <summary>
+        /// Returns a possibly mutable hash set of types.  Because the set may be mutable
+        /// you can only use this version if you are directly consuming the set and know
+        /// that this VariableDef will not be mutated while you would be enumerating over
+        /// the resulting set.
+        /// </summary>
+        public ISet<Namespace> TypesNoCopy {
             get {
                 if (_dependencies.Count != 0) {
-                    TypedDependencyInfo<T> oneDependency;
+                    TypedDependencyInfo<Namespace> oneDependency;
                     if (_dependencies.TryGetSingleValue(out oneDependency)) {
-                        return oneDependency.Types.ToSet();
+                        return oneDependency.Types ?? EmptySet<Namespace>.Instance;
                     }
 
-                    ISet<T> res = null;
+                    ISet<Namespace> res = null;
+                    bool madeSet = false;
                     foreach (var mod in _dependencies.DictValues) {
                         if (mod.HasTypes) {
                             if (res == null) {
-                                res = new HashSet<T>(mod.Types.ToSetNoCopy());
+                                res = mod.Types;
                             } else {
-                                res.UnionWith(mod.Types.ToSetNoCopy());
+                                res = res.Union(mod.Types, ref madeSet);
                             }
                         }
                     }
-                    return res ?? EmptySet<T>.Instance;
+
+                    return res ?? EmptySet<Namespace>.Instance;
                 }
 
-                return EmptySet<T>.Instance;
+                return EmptySet<Namespace>.Instance;
+            }
+        }
+
+        /// <summary>
+        /// Returns the set of types which currently are stored in the VariableDef.  The
+        /// resulting set will not mutate in the future even if the types in the VariableDef
+        /// change in the future.
+        /// </summary>
+        public ISet<Namespace> Types {
+            get {
+                if (_dependencies.Count != 0) {
+                    TypedDependencyInfo<Namespace> oneDependency;
+                    if (_dependencies.TryGetSingleValue(out oneDependency)) {
+                        return oneDependency.ToImmutableTypeSet();
+                    }
+
+                    ISet<Namespace> res = null;
+                    bool ownsTypes = false;
+                    foreach (var mod in _dependencies.DictValues) {
+                        var types = mod.Types;
+                        if (types != null) {
+                            if (res == null) {
+                                res = types;
+                            } else {
+                                if (!ownsTypes) {
+                                    res = new HashSet<Namespace>(res);
+                                    ownsTypes = true;
+                                }
+
+                                res.UnionWith(types);
+                            }
+                        }
+                    }
+
+                    if (!ownsTypes && res is HashSet<Namespace>) {
+                        return new HashSet<Namespace>(res);
+                    }
+
+                    return res ?? EmptySet<Namespace>.Instance;
+                }
+
+                return EmptySet<Namespace>.Instance;
             }
         }
 
@@ -186,7 +289,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public TypedDependencyInfo<T> AddReference(EncodedLocation location, IProjectEntry module) {
+        public TypedDependencyInfo<Namespace> AddReference(EncodedLocation location, IProjectEntry module) {
             var depUnits = GetDependentItems(module);
             depUnits.AddReference(location);
             return depUnits;
@@ -230,10 +333,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
         }
-    }
-
-    class VariableDef : VariableDef<Namespace> {
-        internal static VariableDef[] EmptyArray = new VariableDef[0];
 
         public virtual bool IsEphemeral {
             get {
@@ -247,7 +346,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var projEntry = keyValue.Key;
                 var dependencies = keyValue.Value;
 
-                to.AddTypes(projEntry, dependencies.Types);
+                if (dependencies.HasTypes) {
+                    to.AddTypes(projEntry, dependencies.Types);
+                }
                 if (dependencies._references != null) {
                     foreach (var encodedLoc in dependencies._references) {
                         to.AddReference(encodedLoc, projEntry);
@@ -268,7 +369,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// </summary>
         public bool VariableStillExists {
             get {
-                return !IsEphemeral && (_dependencies.Count > 0 || Types.Count > 0);
+                return !IsEphemeral && (_dependencies.Count > 0 || TypesNoCopy.Count > 0);
             }
         }
     }
@@ -282,7 +383,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     sealed class EphemeralVariableDef : VariableDef {
         public override bool IsEphemeral {
             get {
-                return Types.Count == 0;
+                return TypesNoCopy.Count == 0;
             }
         }
     }

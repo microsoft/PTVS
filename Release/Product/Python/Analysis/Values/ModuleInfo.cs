@@ -56,8 +56,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = new Dictionary<string, ISet<Namespace>>();
             foreach (var kvp in _scope.Variables) {
                 kvp.Value.ClearOldValues();
-                if (kvp.Value._dependencies.Count > 0 || kvp.Value.Types.Count > 0) {
-                    res[kvp.Key] = kvp.Value.Types;
+                if (kvp.Value._dependencies.Count > 0) {
+                    var types = kvp.Value.Types;
+                    if (types.Count > 0) {
+                        res[kvp.Key] = types;
+                    }
                 }
             }
             return res;
@@ -141,7 +144,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else if ((lastIndex = name.LastIndexOf('.')) != -1 && 
                 Scope.Variables.TryGetValue(name.Substring(0, lastIndex), out def)) {
                     var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
-                    foreach (var v in def.Types) {
+                    foreach (var v in def.TypesNoCopy) {
                         ClassInfo ci = v as ClassInfo;
                         if (ci != null) {
                             VariableDef methodDef;
@@ -155,7 +158,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private static void SpecializeVariableDef(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, VariableDef def, bool analyze) {
             List<Namespace> items = new List<Namespace>();
-            foreach (var v in def.Types) {
+            foreach (var v in def.TypesNoCopy) {
                 if (!(v is SpecializedNamespace) && v.DeclaringModule != null) {
                     items.Add(v);
                 }

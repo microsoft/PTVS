@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             VariableDef def = referenceable as VariableDef;
             if (def != null) {
-                foreach (var type in def.Types) {
+                foreach (var type in def.TypesNoCopy) {
                     foreach (var location in type.Locations) {
                         yield return new AnalysisVariable(VariableType.Value, location);
                     }
@@ -470,7 +470,7 @@ namespace Microsoft.PythonTools.Analysis {
             var scopes = FindScopes(index);
             foreach (var scope in scopes) {
                 foreach (var kvp in scope.Variables) {
-                    result[kvp.Key] = new List<Namespace>(kvp.Value.Types);
+                    result[kvp.Key] = new List<Namespace>(kvp.Value.TypesNoCopy);
                 }
             }
 
@@ -563,7 +563,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (scope.VisibleToChildren || scope == chain[chain.Count - 1]) {
                     VariableDef v;
                     if (scope.Variables.TryGetValue(name, out v)) {
-                        foreach (var ns in v.Types) {
+                        foreach (var ns in v.TypesNoCopy) {
                             if (ns != null && ns.PythonType != null) {
                                 result.Add(ns.PythonType);
                             }

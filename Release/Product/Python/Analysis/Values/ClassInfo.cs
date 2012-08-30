@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly int _declVersion;
         private VariableDef _metaclass;
         private ReferenceDict _references;
-        private VariableDef<ClassInfo> _subclasses;
+        private VariableDef _subclasses;
         private Namespace _baseUserType;    // base most user defined type, used for unioning types during type explosion
 
         internal ClassInfo(AnalysisUnit unit, ClassDefinition klass)
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private void AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, ISet<Namespace>[] argumentVars) {
-            var init = GetMember(node, unit, "__init__");
+            var init = GetMemberNoReferences(node, unit, "__init__", false);
             var initArgs = Utils.Concat(_instanceInfo.SelfSet, argumentVars);
 
             foreach (var initFunc in init) {
@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             // TODO: If we checked for metaclass, we could pass it in as the cls arg here
-            var n = GetMember(node, unit, "__new__");
+            var n = GetMemberNoReferences(node, unit, "__new__", false);
             var newArgs = Utils.Concat(EmptySet<Namespace>.Instance, argumentVars);
             foreach (var newFunc in n) {
                 // TODO: Really we should be returning the result of __new__ if it's overridden
@@ -90,10 +90,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public VariableDef<ClassInfo> SubClasses {
+        public VariableDef SubClasses {
             get {
                 if (_subclasses == null) {
-                    _subclasses = new VariableDef<ClassInfo>();
+                    _subclasses = new VariableDef();
                 }
                 return _subclasses;
             }
@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 VariableDef init;
                 if (Scope.Variables.TryGetValue("__init__", out init)) {
                     // this type overrides __init__, display that for it's help
-                    foreach (var initFunc in init.Types) {
+                    foreach (var initFunc in init.TypesNoCopy) {
                         foreach (var overload in initFunc.Overloads) {
                             result.Add(GetInitOverloadResult(overload));
                         }
@@ -164,7 +164,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 VariableDef @new;
                 if (Scope.Variables.TryGetValue("__new__", out @new)) {
-                    foreach (var newFunc in @new.Types) {
+                    foreach (var newFunc in @new.TypesNoCopy) {
                         foreach (var overload in newFunc.Overloads) {
                             result.Add(GetNewOverloadResult(overload));
                         }
@@ -386,36 +386,38 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
         }
 
-        public ISet<Namespace> GetMemberNoReferences(Node node, AnalysisUnit unit, string name) {
+        public ISet<Namespace> GetMemberNoReferences(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             ISet<Namespace> result = null;
             bool ownResult = false;
-            var v = Scope.GetVariable(node, unit, name);
+            var v = Scope.GetVariable(node, unit, name, addRef);
             if (v != null) {
                 ownResult = false;
                 result = v.Types;
             }
 
             // TODO: Need to search MRO, not bases
-            foreach (var baseClass in _bases) {
-                foreach (var baseRef in baseClass) {
-                    if (baseRef.Push()) {
-                        try {
-                            ClassInfo klass = baseRef as ClassInfo;
-                            ISet<Namespace> baseMembers;
-                            if (klass != null) {
-                                baseMembers = klass.GetMember(node, unit, name);
-                            } else {
-                                BuiltinClassInfo builtinClass = baseRef as BuiltinClassInfo;
-                                if (builtinClass != null) {
-                                    baseMembers = builtinClass.GetMember(node, unit, name);
+            if (result == null || result.Count == 0) {
+                foreach (var baseClass in _bases) {
+                    foreach (var baseRef in baseClass) {
+                        if (baseRef.Push()) {
+                            try {
+                                ClassInfo klass = baseRef as ClassInfo;
+                                ISet<Namespace> baseMembers;
+                                if (klass != null) {
+                                    baseMembers = klass.GetMemberNoReferences(node, unit, name, addRef);
                                 } else {
-                                    baseMembers = baseRef.GetMember(node, unit, name);
+                                    BuiltinClassInfo builtinClass = baseRef as BuiltinClassInfo;
+                                    if (builtinClass != null) {
+                                        baseMembers = builtinClass.GetMember(node, unit, name);
+                                    } else {
+                                        baseMembers = baseRef.GetMember(node, unit, name);
+                                    }
                                 }
-                            }
 
-                            AddNewMembers(ref result, ref ownResult, baseMembers);
-                        } finally {
-                            baseRef.Pop();
+                                AddNewMembers(ref result, ref ownResult, baseMembers);
+                            } finally {
+                                baseRef.Pop();
+                            }
                         }
                     }
                 }

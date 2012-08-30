@@ -49,9 +49,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             bool added = false;
             foreach (var key in keyTypes) {
-                TypeUnion<Namespace> values;
+                TypeUnion values;
                 if (!dependencies.KeyValues.TryGetValue(key, out values)) {
-                    dependencies.KeyValues[key] = values = new TypeUnion<Namespace>();
+                    dependencies.KeyValues[key] = values = new TypeUnion();
                     added = true;
                 }
 
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_dependencies.Count != 0) {
                 Namespace ns = keyTypes as Namespace;
                 foreach (var keyValue in _dependencies.Values) {
-                    TypeUnion<Namespace> union;
+                    TypeUnion union;
                     if (ns != null) {
                         // optimize for the case where we're just looking up
                         // a single Namespace object which hasn't been copied into
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res ?? EmptySet<Namespace>.Instance;
         }
 
-        private static ISet<Namespace> UpdateSet(ISet<Namespace> res, TypeUnion<Namespace> union) {
+        private static ISet<Namespace> UpdateSet(ISet<Namespace> res, TypeUnion union) {
             if (res == null) {
                 res = union.ToSet();
             } else {
@@ -204,9 +204,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var deps = GetDependentItems(otherDependency.Key);
 
                 foreach (var keyValue in otherDependency.Value.KeyValues) {
-                    TypeUnion<Namespace> union;
+                    TypeUnion union;
                     if (!deps.KeyValues.TryGetValue(keyValue.Key, out union)) {
-                        deps.KeyValues[keyValue.Key] = union = new TypeUnion<Namespace>();
+                        deps.KeyValues[keyValue.Key] = union = new TypeUnion();
                     }
 
                     foreach (var type in keyValue.Value) {

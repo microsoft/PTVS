@@ -1874,7 +1874,7 @@ int main(int argc, char* argv[]) {
             object regValue = null;
             foreach (var sdkVersion in sdkVersions) {
                 regValue = Registry.GetValue(
-                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\v7.0",
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\" + sdkVersion,
                     "InstallationFolder",
                     null);
 

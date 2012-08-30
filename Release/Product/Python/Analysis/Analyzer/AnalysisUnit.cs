@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     /// AnalysisUnit which is dependent upon the variable.  If the value of a variable changes then all of the dependent
     /// AnalysisUnit's will be re-enqueued.  This proceeds until we reach a fixed point.
     /// </summary>
-    internal class AnalysisUnit {
+    internal class AnalysisUnit : ISet<AnalysisUnit> {
         private readonly Node _ast;
         private readonly InterpreterScope[] _scopes;
         private bool _inQueue, _forEval;
@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             foreach (var variableInfo in DeclaringModule.Scope.Variables) {
                 variableInfo.Value.ClearOldValues(ProjectEntry);
                 if (variableInfo.Value._dependencies.Count == 0 &&
-                    variableInfo.Value.Types.Count == 0) {
+                    variableInfo.Value.TypesNoCopy.Count == 0) {
                     if (toRemove == null) {
                         toRemove = new List<KeyValuePair<string, VariableDef>>();
                     }
@@ -200,6 +200,96 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 return name;
             }
         }
+
+        #region SelfSet
+
+        bool ISet<AnalysisUnit>.Add(AnalysisUnit item) {
+            throw new NotImplementedException();
+        }
+
+        void ISet<AnalysisUnit>.ExceptWith(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        void ISet<AnalysisUnit>.IntersectWith(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        bool ISet<AnalysisUnit>.IsProperSubsetOf(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        bool ISet<AnalysisUnit>.IsProperSupersetOf(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        bool ISet<AnalysisUnit>.IsSubsetOf(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        bool ISet<AnalysisUnit>.IsSupersetOf(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        bool ISet<AnalysisUnit>.Overlaps(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        bool ISet<AnalysisUnit>.SetEquals(IEnumerable<AnalysisUnit> other) {
+            var enumerator = other.GetEnumerator();
+            if (enumerator.MoveNext()) {
+                if (((ISet<AnalysisUnit>)this).Contains(enumerator.Current)) {
+                    return !enumerator.MoveNext();
+                }
+            }
+            return false;
+        }
+
+        void ISet<AnalysisUnit>.SymmetricExceptWith(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        void ISet<AnalysisUnit>.UnionWith(IEnumerable<AnalysisUnit> other) {
+            throw new NotImplementedException();
+        }
+
+        void ICollection<AnalysisUnit>.Add(AnalysisUnit item) {
+            throw new InvalidOperationException();
+        }
+
+        void ICollection<AnalysisUnit>.Clear() {
+            throw new InvalidOperationException();
+        }
+
+        bool ICollection<AnalysisUnit>.Contains(AnalysisUnit item) {
+            return item == this;
+        }
+
+        void ICollection<AnalysisUnit>.CopyTo(AnalysisUnit[] array, int arrayIndex) {
+            throw new InvalidOperationException();
+        }
+
+        int ICollection<AnalysisUnit>.Count {
+            get { return 1; }
+        }
+
+        bool ICollection<AnalysisUnit>.IsReadOnly {
+            get { return true; }
+        }
+
+        bool ICollection<AnalysisUnit>.Remove(AnalysisUnit item) {
+            throw new InvalidOperationException();
+        }
+
+        IEnumerator<AnalysisUnit> IEnumerable<AnalysisUnit>.GetEnumerator() {
+            return new SetOfOneEnumerator<AnalysisUnit>(this);
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
+            yield return this;
+        }
+
+        #endregion
     }
 
     /// <summary>
@@ -416,7 +506,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     var listVar = (ListParameterVariableDef)_newParams[i];
                     ISet<Namespace>[] argTypes = new ISet<Namespace>[listVar.List.IndexTypes.Length];
                     for (int j = 0; j < argTypes.Length; j++) {
-                        argTypes[j] = new HashSet<Namespace>(listVar.List.IndexTypes[j].Types.Where(x => !(x is StarArgsSequenceInfo)));
+                        argTypes[j] = new HashSet<Namespace>(listVar.List.IndexTypes[j].TypesNoCopy.Where(x => !(x is StarArgsSequenceInfo)));
                     }
                     var callArgs = new FunctionInfo.CallArgs(argTypes, ExpressionEvaluator.EmptyNames, false);
                     SequenceInfo seqInfo;
@@ -462,6 +552,20 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     }
                 }
             }
+        }
+
+        public override string ToString() {
+            StringBuilder res = new StringBuilder(base.ToString());
+            res.AppendLine();
+            for (int i = 0; i < _newParams.Length; i++) {
+                res.AppendFormat("Arg {0}:", i);
+                res.AppendLine();
+                foreach (var type in _newParams[i].TypesNoCopy) {
+                    res.AppendFormat("    {0}", type.Description);
+                    res.AppendLine();
+                }
+            }
+            return res.ToString();
         }
 
         /// <summary>

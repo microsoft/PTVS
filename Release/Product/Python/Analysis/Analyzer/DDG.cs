@@ -478,11 +478,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var lookupRes = _eval.Evaluate(node.Expression);
 
                 var retVal = curFunc.Function.ReturnValue;
-                int typeCount = retVal.Types.Count;
+                int typeCount = retVal.TypesNoCopy.Count;
                 foreach (var type in lookupRes) {
                     retVal.AddTypes(_unit, type);
                 }
-                if (typeCount != retVal.Types.Count) {
+                if (typeCount != retVal.TypesNoCopy.Count) {
                     retVal.EnqueueDependents();
                 }
             }
@@ -585,9 +585,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         if (seqInfo != null && seqInfo.Push()) {
                             try {
                                 foreach (var indexVar in seqInfo.IndexTypes) {
-                                    foreach (var type in indexVar.Types) {
-                                        PropagateIsInstanceTypes(node, type, variable);
-                                    }
+                                    PropagateIsInstanceTypes(node, indexVar.Types, variable);
                                 }
                             } finally {
                                 seqInfo.Pop();

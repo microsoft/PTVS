@@ -275,8 +275,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 StringBuilder result = new StringBuilder();
                 bool first = true;
-                if (ReturnValue.Types.Count <= 10) {
-                    foreach (var ns in ReturnValue.Types) {
+                var retTypes = ReturnValue.TypesNoCopy;
+                if (retTypes.Count <= 10) {
+                    foreach (var ns in retTypes) {
                         if (ns == null) {
                             continue;
                         }
@@ -593,7 +594,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     res[variable.Key] = existing = new HashSet<Namespace>(existing);
                 }
 
-                existing.UnionWith(variable.Value.Types);
+                existing.UnionWith(variable.Value.TypesNoCopy);
             }
             return res;
         }
@@ -656,9 +657,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             private int _hashCode;
 
             public CallArgs(ISet<Namespace>[] args, NameExpression[] keywordArgs, bool overflowed) {
+                if (!overflowed) {
+                    for (int i = 0; i < args.Length; i++) {
+                        if (args[i].Count >= 10) {
+                            overflowed = true;
+                            break;
+                        }
+                    }
+                }
                 if (overflowed) {
                     for (int i = 0; i < args.Length; i++) {
-                        args[i] = new HashSet<Namespace>(args[i], TypeUnion<Namespace>.UnionComparer);
+                        args[i] = new HashSet<Namespace>(args[i], TypeUnion.UnionComparer);
                     }
                 }
                 Args = args;

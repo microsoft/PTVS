@@ -38,7 +38,7 @@ namespace AnalysisTests {
         public AnalysisTest(IPythonInterpreter interpreter)
             : base(interpreter) {
         }
-
+        
         public static int Main(string[] args) {
             int res = 0;
             Type attr = typeof(TestMethodAttribute);
@@ -2391,7 +2391,7 @@ abc = Cxxxx()
 abc.Cmeth(['foo'], 'bar')
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("xvar", text.IndexOf("pass")), ListType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("avar", text.IndexOf("pass")), ListType);
         }
 
         internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);

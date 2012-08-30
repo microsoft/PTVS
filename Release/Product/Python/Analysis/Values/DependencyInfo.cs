@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void AddDependentUnit(AnalysisUnit unit) {
-            HashSetExtensions.AddValue(ref _dependentUnits, unit);
+            AddValue(ref _dependentUnits, unit);
         }
 
         public int Version {
@@ -47,10 +47,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _version;
             }
         }
+
+        internal static bool AddValue(ref ISet<AnalysisUnit> references, AnalysisUnit value) {
+            AnalysisUnit prevNs;
+            SetOfTwo<AnalysisUnit> prevSetOfTwo;
+            if (references == null) {
+                references = value;
+                return true;
+            } else if ((prevNs = references as AnalysisUnit) != null) {
+                if (references != value) {
+                    references = new SetOfTwo<AnalysisUnit>(prevNs, value);
+                    return true;
+                }
+            } else if ((prevSetOfTwo = references as SetOfTwo<AnalysisUnit>) != null) {
+                if (value != prevSetOfTwo.Value1 && value != prevSetOfTwo.Value2) {
+                    references = new HashSet<AnalysisUnit>(prevSetOfTwo);
+                    references.Add(value);
+                    return true;
+                }
+            } else {
+                return references.Add(value);
+            }
+            return false;
+        }
     }
 
     internal class KeyValueDependencyInfo : DependencyInfo {
-        internal Dictionary<Namespace, TypeUnion<Namespace>> KeyValues = new Dictionary<Namespace,TypeUnion<Namespace>>();
+        internal Dictionary<Namespace, TypeUnion> KeyValues = new Dictionary<Namespace,TypeUnion>();
 
         public KeyValueDependencyInfo(int version)
             : base(version) {
@@ -59,34 +82,36 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     internal class TypedDependencyInfo<T> : DependencyInfo where T : Namespace {
-        private TypeUnion<T> _union;
+        private ISet<Namespace> _types;
         public ISet<EncodedLocation> _references, _assignments;
 
         public TypedDependencyInfo(int version)
             : base(version) {
         }
 
-        public TypeUnion<T> Types {
-            get {
-                if (_union == null) {
-                    _union = new TypeUnion<T>();
-                }
-                return _union;
+        public bool AddType(Namespace ns) {
+            return TypeUnion.Add(ref _types, ns);
+        }
+
+        public ISet<Namespace> ToImmutableTypeSet() {
+            if (_types == null) {
+                return EmptySet<Namespace>.Instance;
+            } else if (_types is Namespace || _types is SetOfTwo<Namespace>) {
+                return _types;
             }
-            set {
-                _union = value;
+
+            return new HashSet<Namespace>(_types);
+        }
+
+        public ISet<Namespace> Types {
+            get {
+                return _types;
             }
         }
 
         public bool HasTypes {
             get {
-                return _union != null && _union.Count > 0;
-            }
-        }
-
-        public bool HasReferences {
-            get {
-                return _references != null;
+                return _types != null;
             }
         }
 
@@ -94,18 +119,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             HashSetExtensions.AddValue(ref _references, location);
         }
 
-        public ISet<EncodedLocation> References {
+        public IEnumerable<EncodedLocation> References {
             get {
                 return _references;
-            }
-            set {
-                _references = value;
-            }
-        }
-
-        public bool HasAssignments {
-            get {
-                return _assignments != null;
             }
         }
 
@@ -113,12 +129,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             HashSetExtensions.AddValue(ref _assignments, location);
         }
 
-        public ISet<EncodedLocation> Assignments {
+        public IEnumerable<EncodedLocation> Assignments {
             get {
                 return _assignments;
-            }
-            set {
-                _assignments = value;
             }
         }
     }

@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             
             if (types.Count > 0) {
                 // simplify the types.
-                var set = new HashSet<Namespace>(types, TypeUnion<Namespace>.UnionComparer);
+                var set = new HashSet<Namespace>(types, TypeUnion.UnionComparer);
                 if (set.Count == 1) {
                     type = System.Linq.Enumerable.First(set);
                 }

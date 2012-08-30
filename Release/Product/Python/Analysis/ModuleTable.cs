@@ -371,21 +371,22 @@ namespace Microsoft.PythonTools.Analysis {
 
                 ModuleInfo modInfo = Module as ModuleInfo;
                 if (modInfo != null) {
-                    VariableDef varDef;
+                    VariableDef varDef;                    
                     if (modInfo.Scope.Variables.TryGetValue(name, out varDef) &&
-                        varDef.VariableStillExists &&
-                        varDef.Types.Count > 0) {
-
-                        foreach (var type in varDef.Types) {
-                            if (type is ModuleInfo || type is BuiltinModule) {
-                                // we find modules via our modules list, dont duplicate these
-                                return false;
-                            }
-
-                            foreach (var location in type.Locations) {
-                                if (location.ProjectEntry != modInfo.ProjectEntry) {
-                                    // declared in another module
+                        varDef.VariableStillExists) {
+                        var types = varDef.TypesNoCopy;
+                        if (types.Count > 0) {
+                            foreach (var type in types) {
+                                if (type is ModuleInfo || type is BuiltinModule) {
+                                    // we find modules via our modules list, dont duplicate these
                                     return false;
+                                }
+
+                                foreach (var location in type.Locations) {
+                                    if (location.ProjectEntry != modInfo.ProjectEntry) {
+                                        // declared in another module
+                                        return false;
+                                    }
                                 }
                             }
                         }

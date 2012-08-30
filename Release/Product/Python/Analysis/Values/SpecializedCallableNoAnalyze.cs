@@ -43,8 +43,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_inst != null) {
                 realArgs = Utils.Concat(_inst.SelfSet, args);
             }
-            
-            return _call((CallExpression)node, unit, realArgs, keywordArgNames) ?? EmptySet<Namespace>.Instance;
+
+            if (node is CallExpression) {
+                return _call((CallExpression)node, unit, realArgs, keywordArgNames) ?? EmptySet<Namespace>.Instance;
+            }
+            return EmptySet<Namespace>.Instance;
         }
 
         protected override SpecializedNamespace Clone(Namespace original, Namespace instance) {

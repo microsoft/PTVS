@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = new Dictionary<string, ISet<Namespace>>();
             if (_instanceAttrs != null) {
                 foreach (var kvp in _instanceAttrs) {
-                    var types = kvp.Value.Types;
+                    var types = kvp.Value.TypesNoCopy;
                     var key = kvp.Key;
                     kvp.Value.ClearOldValues();
                     if (kvp.Value.VariableStillExists) {
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 foreach (var kvp in baseClass.Instance._instanceAttrs) {
                                     kvp.Value.ClearOldValues();
                                     if (kvp.Value.VariableStillExists) {
-                                        MergeTypes(res, kvp.Key, kvp.Value.Types);
+                                        MergeTypes(res, kvp.Key, kvp.Value.TypesNoCopy);
                                     }
                                 }
                             }
@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             if (baseClass != null &&
                                 baseClass.Instance._instanceAttrs != null &&
                                 baseClass.Instance._instanceAttrs.TryGetValue(name, out def)) {
-                                res = res.Union(def.Types, ref madeSet);
+                                res = res.Union(def.TypesNoCopy, ref madeSet);
                             }
                         } finally {
                             ns.Pop();

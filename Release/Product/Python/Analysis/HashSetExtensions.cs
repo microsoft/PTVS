@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static ISet<Namespace> Union(this ISet<Namespace> self, ISet<Namespace> value, ref bool madeSet) {
             Namespace selfOne, valueOne;
 
-            if (self.Count == 0) {
+            if (self == null || self.Count == 0) {
                 return value;
             } else if (value.Count == 0) {
                 return self;
