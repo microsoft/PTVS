@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Remoting;
-using IronPython.Hosting;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
@@ -33,7 +32,7 @@ namespace AnalysisTests {
     public class IronPythonAnalysisTest : AnalysisTest {
         private string[] _objectMembersClr, _strMembersClr;
 
-        public IronPythonAnalysisTest() : base(CreateInterperter()) {
+        public IronPythonAnalysisTest() : base(CreateInterpreter()) {
             _objectMembersClr = PyObjectType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
             _strMembersClr = StringType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
 
@@ -41,7 +40,7 @@ namespace AnalysisTests {
             Assert.IsTrue(_strMembers.Length < _strMembersClr.Length);
         }
 
-        private static IPythonInterpreter CreateInterperter() {
+        private static IPythonInterpreter CreateInterpreter() {
             var res = new IronPythonInterpreter(new IronPythonInterpreterFactory());
             res.Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
             return res;

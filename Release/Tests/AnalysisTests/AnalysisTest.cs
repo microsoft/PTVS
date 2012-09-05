@@ -623,7 +623,103 @@ z = None
         }
 
         [TestMethod, Priority(0)]
-        public void TestGenerator() {
+        public void TestIterator() {
+            var entry = ProcessText(@"
+A = [1, 2, 3]
+B = 'abc'
+C = [1.0, 'a', 3]
+
+iA = iter(A)
+iB = iter(B)
+iC = iter(C)
+", PythonLanguageVersion.V27);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("iA", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("iB", 1), Interpreter.GetBuiltinType(BuiltinTypeId.StrIterator));
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("iC", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
+
+            entry = ProcessText(@"
+A = [1, 2, 3]
+B = 'abc'
+C = [1.0, 'a', 3]
+
+iA = A.__iter__()
+iB = B.__iter__()
+iC = C.__iter__()
+", PythonLanguageVersion.V27);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("iA", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("iB", 1), Interpreter.GetBuiltinType(BuiltinTypeId.StrIterator));
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("iC", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
+
+
+            entry = ProcessText(@"
+A = [1, 2, 3]
+B = 'abc'
+C = [1.0, 'a', 3]
+
+iA, iB, iC = A.__iter__(), B.__iter__(), C.__iter__()
+a = iA.next()
+b = next(iB)
+_next = next
+c = _next(iC)
+", PythonLanguageVersion.V27);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), StringType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType, StringType, FloatType);
+
+            if (!(this is IronPythonAnalysisTest)) {
+                entry = ProcessText(@"
+A = [1, 2, 3]
+B = 'abc'
+C = [1.0, 'a', 3]
+
+iA, iB, iC = A.__iter__(), B.__iter__(), C.__iter__()
+a = iA.__next__()
+b = next(iB)
+_next = next
+c = _next(iC)
+", PythonLanguageVersion.V30);
+
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), IntType);
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), UnicodeType);
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType, UnicodeType, FloatType);
+            }
+
+            entry = ProcessText(@"
+iA = iter(lambda: 1, 2)
+iB = iter(lambda: 'abc', None)
+iC = iter(lambda: 1, 'abc')
+
+a = next(iA)
+b = next(iB)
+c = next(iC)
+", PythonLanguageVersion.V27);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), StringType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+
+            if (!(this is IronPythonAnalysisTest)) {
+                entry = ProcessText(@"
+iA = iter(lambda: 1, 2)
+iB = iter(lambda: 'abc', None)
+iC = iter(lambda: 1, 'abc')
+
+a = next(iA)
+b = next(iB)
+c = next(iC)
+", PythonLanguageVersion.V30);
+
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), IntType);
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), UnicodeType);
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestGenerator2x() {
             var entry = ProcessText(@"
 def f():
     yield 1
@@ -635,11 +731,17 @@ b = a.next()
 
 for c in f():
     print c
-            ");
+d = a.__next__()
+            ", PythonLanguageVersion.V27);
 
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+            if (this is IronPythonAnalysisTest) {
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1));
+            } else {
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1), PyObjectType);
+            }
 
             entry = ProcessText(@"
 def f(x):
@@ -650,11 +752,17 @@ b = a.next()
 
 for c in f():
     print c
-            ");
+d = a.__next__()
+            ", PythonLanguageVersion.V27);
 
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+            if (this is IronPythonAnalysisTest) {
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1));
+            } else {
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1), PyObjectType);
+            }
 
             var text = @"
 def f():
@@ -663,13 +771,180 @@ def f():
 
 a = f()
 b = a.next()
-c = a.send('abc')";
-            entry = ProcessText(text);
+c = a.send('abc')
+d = a.__next__()";
+            entry = ProcessText(text, PythonLanguageVersion.V27);
 
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
             AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
-            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("x", text.IndexOf("yield 2")), StringType);
+            if (this is IronPythonAnalysisTest) {
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1));
+            } else {
+                AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1), PyObjectType);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestGenerator3x() {
+            if (this is IronPythonAnalysisTest) {
+                Assert.Inconclusive("IronPython does not yet support __next__() method");
+            }
+
+            var entry = ProcessText(@"
+def f():
+    yield 1
+    yield 2
+    yield 3
+
+a = f()
+b = a.__next__()
+
+for c in f():
+    print c
+
+d = a.next()
+            ", PythonLanguageVersion.V30);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1), PyObjectType);
+
+            entry = ProcessText(@"
+def f(x):
+    yield x
+
+a = f(42)
+b = a.__next__()
+
+for c in f():
+    print c
+d = a.next()
+            ", PythonLanguageVersion.V30);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1), PyObjectType);
+
+            var text = @"
+def f():
+    yield 1
+    x = yield 2
+
+a = f()
+b = a.__next__()
+c = a.send('abc')
+d = a.next()";
+            entry = ProcessText(text, PythonLanguageVersion.V30);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("x", text.IndexOf("yield 2")), UnicodeType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("d", 1), PyObjectType);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestGeneratorDelegation() {
+            if (this is IronPythonAnalysisTest) {
+                Assert.Inconclusive("IronPython does not yet support yield from.");
+            }
+            
+            var entry = ProcessText(@"
+def f():
+    yield 1
+    yield 2
+    yield 3
+
+def g():
+    yield from f()
+
+a = g()
+a2 = iter(a)
+b = next(a)
+
+for c in g():
+    print(c)
+            ", PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a2", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+
+            entry = ProcessText(@"
+def f(x):
+    yield from x
+
+a = f([42, 1337])
+b = a.__next__()
+
+for c in f():
+    print(c)
+            ", PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+
+            var text = @"
+def g():
+    yield 1
+    x = yield 2
+
+def f(fn):
+    yield from fn()
+
+a = f(g)
+b = a.__next__()
+c = a.send('abc')
+";
+            entry = ProcessText(text, PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("c", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("x", text.IndexOf("yield 2")), UnicodeType);
+
+            text = @"
+def g():
+    yield 1
+    return 'abc'
+
+def f(fn):
+    x = yield from fn()
+
+a = f(g)
+b = a.__next__()
+";
+            entry = ProcessText(text, PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("x", text.IndexOf("yield from fn()")), UnicodeType);
+
+            text = @"
+def g():
+    yield 1
+    return 'abc', 1.5
+
+def h(fn):
+    return (yield from fn())
+
+def f(fn):
+    x, y = yield from h(fn)
+
+a = f(g)
+b = next(a)
+";
+            entry = ProcessText(text, PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("a", 1), GeneratorType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("b", 1), IntType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("x", text.IndexOf("yield from h(fn)")), UnicodeType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("y", text.IndexOf("yield from h(fn)")), FloatType);
         }
 
         
@@ -1935,7 +2210,7 @@ x = {42:'abc'}
         public void TestDictMethods() {
             var entry = ProcessText(@"
 x = {42:'abc'}
-            ");
+            ", PythonLanguageVersion.V27);
 
             Assert.AreEqual(entry.GetValuesByIndex("x.items()[0][0]", 1).Select(x => x.PythonType).First(), IntType);
             Assert.AreEqual(entry.GetValuesByIndex("x.items()[0][1]", 1).Select(x => x.PythonType).First(), StringType);

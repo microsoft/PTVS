@@ -148,6 +148,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             { typeof(ParenthesisExpression),  ExpressionEvaluator.EvaluateParenthesis},
             { typeof(UnaryExpression),  ExpressionEvaluator.EvaluateUnary },
             { typeof(YieldExpression),  ExpressionEvaluator.EvaluateYield},
+            { typeof(YieldFromExpression),  ExpressionEvaluator.EvaluateYieldFrom},
             { typeof(TupleExpression),  ExpressionEvaluator.EvaluateSequence},
             { typeof(ListExpression),  ExpressionEvaluator.EvaluateSequence},            
             { typeof(SliceExpression),  ExpressionEvaluator.EvaluateSlice},            
@@ -308,6 +309,20 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 gen.AddYield(ee.Evaluate(yield.Expression));
 
                 return gen.Sends.Types;
+            }
+
+            return EmptySet<Namespace>.Instance;
+        }
+
+        private static ISet<Namespace> EvaluateYieldFrom(ExpressionEvaluator ee, Node node) {
+            var yield = (YieldFromExpression)node;
+            var funcDef = ee._currentScopes[ee._currentScopes.Length - 1].Namespace as GeneratorFunctionInfo;
+            if (funcDef != null) {
+                var gen = funcDef.Generator;
+
+                gen.AddYieldFrom(node, ee._unit, ee.Evaluate(yield.Expression));
+
+                return gen.Returns.Types;
             }
 
             return EmptySet<Namespace>.Instance;

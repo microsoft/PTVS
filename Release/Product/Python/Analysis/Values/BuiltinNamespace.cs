@@ -33,9 +33,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
-            ISet<Namespace> specialziedRes;
-            if (_specializedValues != null && _specializedValues.TryGetValue(name, out specialziedRes)) {
-                return specialziedRes;
+            ISet<Namespace> specializedRes;
+            if (_specializedValues != null && _specializedValues.TryGetValue(name, out specializedRes)) {
+                return specializedRes;
             }
 
             var res = _type.GetMember(unit.DeclaringModule.InterpreterContext, name);

@@ -12,13 +12,9 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Refactoring {
 
@@ -244,6 +240,10 @@ namespace Microsoft.PythonTools.Refactoring {
         // YieldExpression
         public override bool Walk(YieldExpression node) { return ShouldWalkWorker(node); }
         public override void PostWalk(YieldExpression node) { PostWalkWorker(node); }
+
+        // YieldFromExpression
+        public override bool Walk(YieldFromExpression node) { return ShouldWalkWorker(node); }
+        public override void PostWalk(YieldFromExpression node) { PostWalkWorker(node); }
 
         // StarredExpression
         public override bool Walk(StarredExpression node) { return ShouldWalkWorker(node); }

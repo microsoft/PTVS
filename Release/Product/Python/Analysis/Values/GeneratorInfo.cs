@@ -26,16 +26,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class GeneratorInfo : BuiltinInstanceInfo {
         private readonly AnalysisUnit _unit;
         private readonly GeneratorNextBoundBuiltinMethodInfo _nextMethod;
-        private readonly GeneratorSendBoundBuiltinMethodInfo _sendMethod;        
+        private readonly GeneratorSendBoundBuiltinMethodInfo _sendMethod;
         private ISet<Namespace> _yields = EmptySet<Namespace>.Instance;
-        private VariableDef _sends, _callers;
+        private ISet<Namespace> _yieldsFrom = EmptySet<Namespace>.Instance;
+        private VariableDef _sends, _callers, _returns;
 
         public GeneratorInfo(AnalysisUnit unit)
             : base(unit.ProjectState._generatorType) {
             _unit = unit;
 
             ISet<Namespace> nextMeth, sendMeth;
-            if (TryGetMember("__next__", out nextMeth) || TryGetMember("next", out nextMeth)) {
+            string nextName = (unit.ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
+
+            if (TryGetMember(nextName, out nextMeth)) {
                 _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
             }
 
@@ -45,12 +48,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             _sends = new VariableDef();
             _callers = new VariableDef();
+            _returns = new VariableDef();
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
             switch(name) {
                 case "next":
-                    if (_nextMethod != null) {
+                    if (_nextMethod != null && unit.ProjectState.LanguageVersion.Is2x()) {
+                        return _nextMethod.SelfSet;
+                    }
+                    break;
+                case "__next__":
+                    if (_nextMethod != null && unit.ProjectState.LanguageVersion.Is3x()) {
                         return _nextMethod.SelfSet;
                     }
                     break;
@@ -62,6 +71,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             
             return base.GetMember(node, unit, name);
+        }
+
+        public override ISet<Namespace> GetIterator(Node node, AnalysisUnit unit) {
+            return SelfSet;
         }
 
         public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
@@ -76,15 +89,44 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public void AddReturn(Node node, AnalysisUnit unit, ISet<Namespace> returnValue) {
+            if (_returns.AddTypes(unit, returnValue)) {
+                _unit.Enqueue();
+            }
+        }
+
         public void AddSend(Node node, AnalysisUnit unit, ISet<Namespace> sendValue) {
             if (_sends.AddTypes(unit, sendValue)) {
                 _unit.Enqueue();
             }
         }
 
+        public void AddYieldFrom(Node node, AnalysisUnit unit, ISet<Namespace> yieldsFrom) {
+            int count = _yieldsFrom.Count;
+            _yieldsFrom = _yieldsFrom.Union(yieldsFrom);
+            if (_yieldsFrom.Count != count) {
+                _callers.EnqueueDependents();
+            }
+
+            foreach (var ns in yieldsFrom) {
+                AddYield(ns.GetEnumeratorTypes(node, unit));
+                var gen = ns as GeneratorInfo;
+                if (gen != null) {
+                    gen.AddSend(node, unit, Sends.Types);
+                    AddReturn(node, unit, gen.Returns.Types);
+                }
+            }
+        }
+
         public ISet<Namespace> Yields {
             get {
                 return _yields;
+            }
+        }
+
+        public VariableDef Returns {
+            get {
+                return _returns;
             }
         }
 
@@ -102,6 +144,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public VariableDef Callers {
             get {
                 return _callers;
+            }
+        }
+
+        /// <summary>
+        /// Tracks generators that we 'yield from' on.
+        /// </summary>
+        public ISet<Namespace> YieldsFrom {
+            get {
+                return _yieldsFrom;
             }
         }
     }

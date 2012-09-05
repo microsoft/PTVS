@@ -1009,7 +1009,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 case BuiltinTypeId.Ellipsis: return MakeHandle(GetTypeFromType(typeof(Ellipsis)));
                 case BuiltinTypeId.DictKeys: return MakeHandle(GetTypeFromType(typeof(DictionaryKeyEnumerator)));
                 case BuiltinTypeId.DictValues: return MakeHandle(GetTypeFromType(typeof(DictionaryValueEnumerator)));
+                case BuiltinTypeId.DictItems: return MakeHandle(GetTypeFromType(typeof(DictionaryItemEnumerator)));
                 case BuiltinTypeId.Module: return MakeHandle(GetTypeFromType(typeof(PythonModule)));
+                case BuiltinTypeId.ListIterator: return MakeHandle(GetTypeFromType(typeof(ListIterator)));
+                case BuiltinTypeId.TupleIterator: return MakeHandle(GetTypeFromType(typeof(TupleEnumerator)));
+                case BuiltinTypeId.SetIterator: return MakeHandle(GetTypeFromType(typeof(SetIterator)));
+                case BuiltinTypeId.StrIterator: return MakeHandle(GetTypeFromType(typeof(IEnumeratorOfTWrapper<string>)));
+                case BuiltinTypeId.BytesIterator: return MakeHandle(GetTypeFromType(typeof(IEnumeratorOfTWrapper<string>)));
                 default:
                     return new ObjectIdentityHandle();
             }

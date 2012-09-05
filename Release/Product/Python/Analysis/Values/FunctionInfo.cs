@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
@@ -249,7 +248,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (FunctionDefinition.IsLambda) {
                     result = new StringBuilder("lambda ...: ");
                     if (FunctionDefinition.IsGenerator) {
-                        result.Append(((YieldExpression)((ExpressionStatement)FunctionDefinition.Body).Expression).Expression.ToCodeString(DeclaringModule.Tree));
+                        var lambdaExpr = ((ExpressionStatement)FunctionDefinition.Body).Expression;
+                        Expression yieldExpr = null;
+                        YieldExpression ye;
+                        YieldFromExpression yfe;
+                        if ((ye = lambdaExpr as YieldExpression) != null) {
+                            yieldExpr = ye.Expression;
+                        } else if ((yfe = lambdaExpr as YieldFromExpression) != null) {
+                            yieldExpr = yfe.Expression;
+                        } else {
+                            Debug.Assert(false, "lambdaExpr is not YieldExpression or YieldFromExpression");
+                        }
+                        result.Append(yieldExpr.ToCodeString(DeclaringModule.Tree));
                     } else {
                         result.Append(((ReturnStatement)FunctionDefinition.Body).Expression.ToCodeString(DeclaringModule.Tree));
                     }

@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         /// <summary>
         /// The type returned by dict.iterkeys (2.x) or dict.keys (3.x)
+        /// Also the type returned by iter(dict())
         /// </summary>
         DictKeys,
 
@@ -56,8 +57,24 @@ namespace Microsoft.PythonTools.Interpreter {
         DictValues,
 
         /// <summary>
+        /// The type returned by dict.iteritems (2.x) or dict.items (3.x)
+        /// </summary>
+        DictItems,
+
+        /// <summary>
         /// The type of a module
         /// </summary>
-        Module
+        Module,
+
+        ListIterator,
+        TupleIterator,
+        SetIterator,
+        
+        /// <summary>
+        /// StrIterator is the same as BytesIterator on 2.x but not 3.x.
+        /// StrIterator is the same as for Unicode on both 2.x and 3.x.
+        /// </summary>
+        StrIterator,
+        BytesIterator
     }
 }

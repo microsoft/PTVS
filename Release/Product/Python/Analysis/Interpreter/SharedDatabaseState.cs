@@ -190,11 +190,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.BuiltinMethodDescriptor: name = "builtin_method_descriptor"; break;
                 case BuiltinTypeId.DictKeys: name = "dict_keys"; break;
                 case BuiltinTypeId.DictValues: name = "dict_values"; break;
+                case BuiltinTypeId.DictItems: name = "dict_items"; break;
                 case BuiltinTypeId.Function: name = "function"; break;
                 case BuiltinTypeId.Generator: name = "generator"; break;
                 case BuiltinTypeId.NoneType: name = "NoneType"; break;
                 case BuiltinTypeId.Ellipsis: name = "ellipsis"; break;
                 case BuiltinTypeId.Module: name = "module_type"; break;
+                case BuiltinTypeId.ListIterator: name = "list_iterator"; break;
+                case BuiltinTypeId.TupleIterator: name = "tuple_iterator"; break;
+                case BuiltinTypeId.SetIterator: name = "set_iterator"; break;
+                case BuiltinTypeId.StrIterator: name = "str_iterator"; break;
+                case BuiltinTypeId.BytesIterator: name = "bytes_iterator"; break;
 
                 default: return null;
             }
@@ -477,6 +483,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 case "ellipsis": return BuiltinTypeId.Ellipsis;
                 case "dict_keys": return BuiltinTypeId.DictKeys;
                 case "dict_values": return BuiltinTypeId.DictValues;
+                case "dict_items": return BuiltinTypeId.DictItems;
+                case "list_iterator": return BuiltinTypeId.ListIterator;
+                case "tuple_iterator": return BuiltinTypeId.TupleIterator;
+                case "set_iterator": return BuiltinTypeId.SetIterator;
+                case "str_iterator": return BuiltinTypeId.StrIterator;
+                case "bytes_iterator": return BuiltinTypeId.BytesIterator;
             }
             return BuiltinTypeId.Unknown;
         }

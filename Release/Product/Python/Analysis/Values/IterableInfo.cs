@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -24,6 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class IterableInfo : BuiltinInstanceInfo {
         private ISet<Namespace> _unionType;        // all types that have been seen
         private VariableDef[] _indexTypes;     // types for known indices
+        private IterBoundBuiltinMethodInfo _iterMethod;
 
         public IterableInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
             : base(seqType) {
@@ -54,6 +56,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             EnsureUnionType();
             return _unionType;
+        }
+
+        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+            if (name == "__iter__") {
+                if (_iterMethod == null) {
+                    var iterImpl = (base.GetMember(node, unit, name).FirstOrDefault() as BuiltinMethodInfo) ?? new IterBuiltinMethodInfo(PythonType, ProjectState);
+                    _iterMethod = new IterBoundBuiltinMethodInfo(this, iterImpl);
+                }
+                return _iterMethod;
+            }
+            
+            return base.GetMember(node, unit, name);
         }
 
         internal bool AddTypes(AnalysisUnit unit, ISet<Namespace>[] types) {

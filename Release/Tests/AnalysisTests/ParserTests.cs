@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
@@ -29,15 +30,18 @@ namespace AnalysisTests {
     /// </summary>
     [TestClass]
     public class ParserTests {
-        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, };
-        internal static readonly PythonLanguageVersion[] V25AndUp = new[] { PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, };
-        internal static readonly PythonLanguageVersion[] V26AndUp = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, };
-        internal static readonly PythonLanguageVersion[] V27AndUp = new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, };
+        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
+        internal static readonly PythonLanguageVersion[] V25AndUp = new[] { PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
+        internal static readonly PythonLanguageVersion[] V26AndUp = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
+        internal static readonly PythonLanguageVersion[] V27AndUp = new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
         internal static readonly PythonLanguageVersion[] V2Versions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27,  };
         internal static readonly PythonLanguageVersion[] V24_V26Versions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26 };
         internal static readonly PythonLanguageVersion[] V24_V25Versions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25 };
+        internal static readonly PythonLanguageVersion[] V25_V27Versions = new[] { PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27 };
         internal static readonly PythonLanguageVersion[] V26_V27Versions = new[] { PythonLanguageVersion.V26, PythonLanguageVersion.V27 };
-        internal static readonly PythonLanguageVersion[] V3Versions = new[] { PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32 };
+        internal static readonly PythonLanguageVersion[] V30_V32Versions = new[] { PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32 };
+        internal static readonly PythonLanguageVersion[] V3Versions = new[] { PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33 };
+        internal static readonly PythonLanguageVersion[] V33AndUp = new[] { PythonLanguageVersion.V33 };
 
         #region Test Cases
 
@@ -319,7 +323,7 @@ namespace AnalysisTests {
                 new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
             );
 
-            foreach (var version in V3Versions) {
+            foreach (var version in V30_V32Versions) {
                 ParseErrors("AllErrors.py",
                     version,
                     new ErrorInfo("future statement does not support import *", 0, 1, 1, 24, 1, 25),
@@ -353,6 +357,72 @@ namespace AnalysisTests {
                     new ErrorInfo("misplaced yield", 552, 55, 1, 557, 55, 6),
                     new ErrorInfo("'return' with argument inside generator", 581, 59, 5, 590, 59, 14),
                     new ErrorInfo("'return' with argument inside generator", 596, 60, 5, 606, 60, 15),
+                    new ErrorInfo("two starred expressions in assignment", 660, 68, 8, 662, 68, 10),
+                    new ErrorInfo("illegal expression for augmented assignment", 674, 70, 1, 676, 70, 3),
+                    new ErrorInfo("missing module name", 692, 72, 6, 698, 72, 12),
+                    new ErrorInfo("import * only allowed at module level", 720, 75, 5, 735, 75, 20),
+                    new ErrorInfo("from __future__ imports must occur at the beginning of the file", 749, 78, 1, 780, 78, 32),
+                    new ErrorInfo("nonlocal declaration not allowed at module level", 788, 82, 1, 796, 82, 9),
+                    new ErrorInfo("invalid syntax, only exception value is allowed in 3.x.", 814, 83, 10, 819, 83, 15),
+                    new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
+                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
+                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
+                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1048, 111, 14),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1077, 114, 15),
+                    new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1112, 117, 16),
+                    new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
+                    new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
+                    new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                    new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
+                    new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
+                    new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
+                    new ErrorInfo("cannot mix bytes and nonbytes literals", 1404, 147, 8, 1409, 147, 13),
+                    new ErrorInfo("cannot mix bytes and nonbytes literals", 1417, 148, 7, 1423, 148, 13),
+                    new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                    new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                    new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
+                    new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
+                    new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
+                    new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
+                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                    new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
+                    new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
+                );
+            }
+
+            foreach (var version in V33AndUp) {
+                ParseErrors("AllErrors.py",
+                    version,
+                    new ErrorInfo("future statement does not support import *", 0, 1, 1, 24, 1, 25),
+                    new ErrorInfo("future feature is not defined: *", 0, 1, 1, 24, 1, 25),
+                    new ErrorInfo("not a chance", 26, 2, 1, 55, 2, 30),
+                    new ErrorInfo("future feature is not defined: unknown", 57, 3, 1, 87, 3, 31),
+                    new ErrorInfo("default value must be specified here", 106, 5, 16, 107, 5, 17),
+                    new ErrorInfo("non-keyword arg after keyword arg", 134, 8, 12, 135, 8, 13),
+                    new ErrorInfo("only one * allowed", 147, 9, 10, 149, 9, 12),
+                    new ErrorInfo("only one ** allowed", 162, 10, 11, 165, 10, 14),
+                    new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
+                    new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
+                    new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
+                    new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                    new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
+                    new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
+                    new ErrorInfo("'continue' not supported inside 'finally' clause", 374, 34, 9, 382, 34, 17),
+                    new ErrorInfo("expected expression after del", 386, 36, 1, 389, 36, 4),
+                    new ErrorInfo("can't delete binary operator", 396, 37, 5, 399, 37, 8),
+                    new ErrorInfo("can't delete unary operator", 405, 38, 5, 407, 38, 7),
+                    new ErrorInfo("can't delete or expression", 413, 39, 5, 421, 39, 13),
+                    new ErrorInfo("can't delete and expression", 427, 40, 5, 436, 40, 14),
+                    new ErrorInfo("can't delete dictionary display", 442, 41, 5, 444, 41, 7),
+                    new ErrorInfo("can't delete literal", 450, 42, 5, 454, 42, 9),
+                    new ErrorInfo("can't delete literal", 460, 43, 5, 464, 43, 9),
+                    new ErrorInfo("can't assign to literal", 468, 45, 1, 472, 45, 5),
+                    new ErrorInfo("can't assign to literal", 482, 46, 1, 486, 46, 5),
+                    new ErrorInfo("'return' outside function", 498, 48, 1, 504, 48, 7),
+                    new ErrorInfo("misplaced yield", 552, 55, 1, 557, 55, 6),
                     new ErrorInfo("two starred expressions in assignment", 660, 68, 8, 662, 68, 10),
                     new ErrorInfo("illegal expression for augmented assignment", 674, 70, 1, 676, 70, 3),
                     new ErrorInfo("missing module name", 692, 72, 6, 698, 72, 12),
@@ -511,7 +581,7 @@ namespace AnalysisTests {
                 );
             }
 
-            foreach (var version in V3Versions) {
+            foreach (var version in V30_V32Versions) {
                 ParseErrors("LiteralsV2.py", 
                     version,
                     new ErrorInfo("bad char for the integer value: 'L' (base 10)", 0, 1, 1, 5, 1, 6),
@@ -545,6 +615,48 @@ namespace AnalysisTests {
                     new ErrorInfo("bad char for the integer value: 'L' (base 10)", 550, 30, 2, 561, 30, 13),
                     new ErrorInfo("invalid token", 563, 31, 1, 567, 31, 5),
                     new ErrorInfo("bad char for the integer value: 'L' (base 10)", 570, 32, 2, 574, 32, 6)
+                );
+            }
+
+            foreach (var version in V33AndUp) {
+                ParseErrors("LiteralsV2.py",
+                    version,
+                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 0, 1, 1, 5, 1, 6),
+                    new ErrorInfo("bad char for the integer value: 'l' (base 10)", 536, 29, 2, 547, 29, 13),
+                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 550, 30, 2, 561, 30, 13),
+                    new ErrorInfo("invalid token", 563, 31, 1, 567, 31, 5),
+                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 570, 32, 2, 574, 32, 6)
+                );
+                CheckAst(
+                    ParseFile("LiteralsV3.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("unicode string"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("raw unicode"),
+                        CheckConstantStmt("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A"),
+                        IgnoreStmt()  // u'\N{COLON}'
+                    )
                 );
             }
         }
@@ -754,7 +866,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void UnicodePlus() {
-            foreach (var version in V2Versions) {
+            foreach (var version in V2Versions.Concat(V33AndUp)) {
                 CheckAst(
                     ParseFile("UnicodePlus.py", ErrorSink.Null, version),
                     CheckSuite(
@@ -763,7 +875,7 @@ namespace AnalysisTests {
                 );
             }
 
-            foreach (var version in V3Versions) {
+            foreach (var version in V30_V32Versions) {
                 ParseErrors("UnicodePlus.py", version,
                     new ErrorInfo("invalid syntax", 1, 1, 2, 8, 1, 9),
                     new ErrorInfo("unexpected token 'u'", 9, 1, 10, 10, 1, 11)
@@ -973,27 +1085,111 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("YieldExpr.py", ErrorSink.Null, version),
                     CheckSuite(
+                        CheckFuncDef("f", NoParameters, CheckSuite(
+                            CheckYieldStmt(None)
+                        )),
+                        CheckFuncDef("f", NoParameters, CheckSuite(
+                            CheckAssignment(Foo, CheckYieldExpr(None))
+                        )),
+                        CheckFuncDef("f", NoParameters, CheckSuite(
+                            CheckAssignment(Baz, CheckListComp(CheckYieldExpr(Bar), CompFor(Bar, Foo)))
+                        ))
+                    )
+                );
+            }
+
+            ParseErrors("YieldExpr.py", PythonLanguageVersion.V24,
+                new ErrorInfo("invalid syntax", 19, 2, 10, 21, 3, 1),
+                new ErrorInfo("unexpected token 'yield'", 43, 5, 11, 48, 5, 16)
+                // [(yield bar) for ...] should be an error, but it is not raised.
+                // V24 is not supported by PTVS, so don't fail the test because of this.
+                //new ErrorInfo("unexpected token 'yield'", 74, 8, 13, 79, 8, 18)
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void YieldStmtIllegal() {
+            foreach (var version in V2Versions.Concat(V30_V32Versions)) {
+                ParseErrors("YieldStmtIllegal.py", version,
+                    new ErrorInfo("misplaced yield", 0, 1, 1, 5, 1, 6),
+                    new ErrorInfo("'return' with argument inside generator", 25, 4, 5, 34, 4, 14),
+                    new ErrorInfo("'return' with argument inside generator", 78, 9, 5, 87, 9, 14)
+                );
+            }
+
+            // return inside generator is legal as of 3.3
+            foreach (var version in V33AndUp) {
+                ParseErrors("YieldStmtIllegal.py", version,
+                    new ErrorInfo("misplaced yield", 0, 1, 1, 5, 1, 6)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void YieldFromStmt() {
+            foreach (var version in V33AndUp) {
+                CheckAst(
+                    ParseFile("YieldFromStmt.py", ErrorSink.Null, version),
+                    CheckSuite(
                         CheckFuncDef("f", NoParameters,
                             CheckSuite(
-                                CheckYieldStmt(None)
+                                CheckYieldFromStmt(Foo)
+                            )
+                        )
+                    )
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void YieldFromExpr() {
+            foreach (var version in V33AndUp) {
+                CheckAst(
+                    ParseFile("YieldFromExpr.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckFuncDef("f", NoParameters,
+                            CheckSuite(
+                                CheckYieldFromStmt(Foo),
+                                CheckAssignment(Bar, CheckYieldFromExpr(Foo)),
+                                CheckAssignment(Baz, CheckListComp(CheckYieldFromExpr(Bar), CompFor(Bar, Foo)))
                             )
                         )
                     )
                 );
             }
 
-            ParseErrors("YieldExpr.py", PythonLanguageVersion.V24, 
-                new ErrorInfo("invalid syntax", 19, 2, 10, 19, 2, 10)
-            );
+            foreach (var version in V25_V27Versions.Concat(V30_V32Versions)) {
+                ParseErrors("YieldFromExpr.py", version,
+                    new ErrorInfo("invalid syntax", 20, 2, 11, 24, 2, 15),
+                    new ErrorInfo("invalid syntax", 46, 3, 17, 50, 3, 21),
+                    new ErrorInfo("invalid syntax", 74, 4, 19, 78, 4, 23)
+                );
+            }
         }
 
         [TestMethod, Priority(0)]
-        public void YieldStmtIllegal() {
-            foreach (var version in AllVersions) {
-                ParseErrors("YieldStmtIllegal.py", version,
+        public void YieldFromStmtIllegal() {
+            foreach (var version in V25_V27Versions.Concat(V30_V32Versions)) {
+                if (version == PythonLanguageVersion.V24) {
+                    continue;
+                }
+                ParseErrors("YieldFromStmtIllegal.py", version,
                     new ErrorInfo("misplaced yield", 0, 1, 1, 5, 1, 6),
-                    new ErrorInfo("'return' with argument inside generator", 25, 4, 5, 34, 4, 14),
-                    new ErrorInfo("'return' with argument inside generator", 78, 9, 5, 87, 9, 14)
+                    new ErrorInfo("invalid syntax", 6, 1, 7, 10, 1, 11),
+                    new ErrorInfo("'return' with argument inside generator", 30, 4, 5, 39, 4, 14),
+                    new ErrorInfo("invalid syntax", 51, 5, 11, 55, 5, 15),
+                    new ErrorInfo("invalid syntax", 81, 8, 11, 85, 8, 15),
+                    new ErrorInfo("'return' with argument inside generator", 93, 9, 5, 102, 9, 14),
+                    new ErrorInfo("invalid syntax", 126, 12, 11, 130, 12, 15),
+                    new ErrorInfo("invalid syntax", 154, 15, 11, 158, 15, 15)
+                );
+            }
+
+            foreach (var version in V33AndUp) {
+                ParseErrors("YieldFromStmtIllegal.py", version,
+                    new ErrorInfo("misplaced yield", 0, 1, 1, 5, 1, 6),
+                    new ErrorInfo("invalid syntax", 130, 12, 15, 132, 13, 1),
+                    new ErrorInfo("invalid syntax", 159, 15, 16, 166, 15, 23)
                 );
             }
         }
@@ -2112,7 +2308,7 @@ namespace AnalysisTests {
             }
 
             string finalErrors = foundErrors.ToString();
-            Assert.AreEqual(errors.Length, sink.Errors.Count, "Unexpected errors: " + Environment.NewLine + finalErrors);
+            Assert.AreEqual(errors.Length, sink.Errors.Count, "Version: " + version + Environment.NewLine + "Unexpected errors: " + Environment.NewLine + finalErrors);
 
             for (int i = 0; i < errors.Length; i++) {
                 if (sink.Errors[i].Message != errors[i].Message) {
@@ -2962,6 +3158,19 @@ namespace AnalysisTests {
             return expr => {
                 Assert.AreEqual(typeof(YieldExpression), expr.GetType());
                 var yield = (YieldExpression)expr;
+
+                value(yield.Expression);
+            };
+        }
+
+        private Action<Statement> CheckYieldFromStmt(Action<Expression> value) {
+            return CheckExprStmt(CheckYieldFromExpr(value));
+        }
+
+        private Action<Expression> CheckYieldFromExpr(Action<Expression> value) {
+            return expr => {
+                Assert.AreEqual(typeof(YieldFromExpression), expr.GetType());
+                var yield = (YieldFromExpression)expr;
 
                 value(yield.Expression);
             };

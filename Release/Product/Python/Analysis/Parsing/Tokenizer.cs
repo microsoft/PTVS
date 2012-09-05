@@ -488,7 +488,8 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'u':
                     case 'U':
                         _state.LastNewLine = false;
-                        if (_langVersion.Is2x()) {
+                        // The u prefix was reintroduced to Python 3.3 in PEP 414
+                        if (_langVersion.Is2x() || _langVersion >= PythonLanguageVersion.V33) {
                             return ReadNameOrUnicodeString();
                         }
                         return ReadName();

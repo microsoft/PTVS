@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         case 0: return PythonLanguageVersion.V30;
                         case 1: return PythonLanguageVersion.V31;
                         case 2: return PythonLanguageVersion.V32;
+                        case 3: return PythonLanguageVersion.V33;
                     }
                     break;
             }

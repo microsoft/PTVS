@@ -89,6 +89,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         /// <summary>
+        /// Performs a get iterator operation propagating any iterator types into the value and returns 
+        /// the associated types associated with the object.
+        /// </summary>
+        public static ISet<Namespace> GetIterator(this ISet<Namespace> self, Node node, AnalysisUnit unit) {
+            ISet<Namespace> res = EmptySet<Namespace>.Instance;
+            bool madeSet = false;
+            foreach (var ns in self) {
+                var iter = ns.GetIterator(node, unit);
+                
+                res = res.Union(iter, ref madeSet);
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Performs a get index operation propagating any index types into the value and returns 
         /// the associated types associated with the object.
         /// </summary>

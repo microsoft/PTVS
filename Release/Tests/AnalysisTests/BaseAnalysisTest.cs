@@ -12,19 +12,14 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using IronPython.Runtime.Types;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
-using TestUtilities;
-using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace AnalysisTests {
     /// <summary>
@@ -32,7 +27,7 @@ namespace AnalysisTests {
     /// </summary>
     public class BaseAnalysisTest {
         public IPythonInterpreter Interpreter;
-        public IPythonType PyObjectType, IntType, StringType, FloatType, TypeType, ListType, TupleType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
+        public IPythonType PyObjectType, IntType, StringType, UnicodeType, FloatType, TypeType, ListType, TupleType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
         public string[] _objectMembers, _functionMembers;
         public string[] _strMembers;
         public string[] _listMembers, _intMembers;
@@ -47,6 +42,7 @@ namespace AnalysisTests {
             IntType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);
             ComplexType = Interpreter.GetBuiltinType(BuiltinTypeId.Complex);
             StringType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
+            UnicodeType = Interpreter.GetBuiltinType(BuiltinTypeId.Str);
             FloatType = Interpreter.GetBuiltinType(BuiltinTypeId.Float);
             TypeType = Interpreter.GetBuiltinType(BuiltinTypeId.Type);
             ListType = Interpreter.GetBuiltinType(BuiltinTypeId.List);

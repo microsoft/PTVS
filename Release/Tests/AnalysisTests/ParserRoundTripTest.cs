@@ -206,6 +206,12 @@ namespace AnalysisTests {
             TestOneString(PythonLanguageVersion.V27, "yield lambda: 42");
             TestOneString(PythonLanguageVersion.V27, "yield 42, ");
 
+            // yield from expression
+            TestOneString(PythonLanguageVersion.V33, "yield from foo");
+            TestOneString(PythonLanguageVersion.V33, "yield from  foo");
+            TestOneString(PythonLanguageVersion.V33, "yield  from foo");
+            TestOneString(PythonLanguageVersion.V33, "yield  from  foo");
+            TestOneString(PythonLanguageVersion.V33, "x  =  yield  from  foo");
 
             // tuples
             TestOneString(PythonLanguageVersion.V27, "(1, 2, 3)");
@@ -306,7 +312,8 @@ import foo");
                 
                 new { Path = "C:\\Python30\\Lib", Version = PythonLanguageVersion.V30 },
                 new { Path = "C:\\Python31\\Lib", Version = PythonLanguageVersion.V31 },
-                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 } 
+                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 }, 
+                new { Path = "C:\\Python33\\Lib", Version = PythonLanguageVersion.V33 } 
             };
 
             for (int i = 0; i < 100; i++) {
@@ -1003,7 +1010,8 @@ def f(): pass");
                 
                 new { Path = "C:\\Python30\\Lib", Version = PythonLanguageVersion.V30 },
                 new { Path = "C:\\Python31\\Lib", Version = PythonLanguageVersion.V31 },
-                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 } 
+                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 },
+                new { Path = "C:\\Python33\\Lib", Version = PythonLanguageVersion.V33 } 
             };
 
             foreach (var version in versions) {

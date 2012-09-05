@@ -380,6 +380,11 @@ namespace Microsoft.PythonTools.Refactoring {
                 ContainsYield = true;
                 return base.Walk(node);
             }
+
+            public override bool Walk(YieldFromExpression node) {
+                ContainsYield = true;
+                return base.Walk(node);
+            }
         }
 
         class ImportStarWalker : PythonWalker {

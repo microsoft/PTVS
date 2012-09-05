@@ -15,9 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
@@ -34,25 +34,32 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             Instance = this;
 
             HashSet<string> registeredPaths = new HashSet<string>();
-            foreach(var baseKey in new[] { Registry.LocalMachine, Registry.CurrentUser }) {
-                using (var python = baseKey.OpenSubKey(PythonCorePath)) {
-                    if (python != null) {
-                        RegisterInterpreters(registeredPaths, python, _cpyInterpreterGuid, "Python", ProcessorArchitecture.X86);
-                    }
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
+                if (python != null) {
+                    RegisterInterpreters(registeredPaths, python, _cpyInterpreterGuid, "Python", ProcessorArchitecture.X86);
                 }
             }
 
             if (Environment.Is64BitOperatingSystem) {
-                foreach (var baseHive in new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser }) {
-                    var python64 = RegistryKey.OpenBaseKey(baseHive, RegistryView.Registry64).OpenSubKey(PythonCorePath);
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                using (var python64 = baseKey.OpenSubKey(PythonCorePath)) {
                     if (python64 != null) {
                         RegisterInterpreters(registeredPaths, python64, _cpy64InterpreterGuid, "Python 64-bit", ProcessorArchitecture.Amd64);
                     }
                 }
             }
+
+            var arch = Environment.Is64BitOperatingSystem ? null : (ProcessorArchitecture?)ProcessorArchitecture.X86;
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
+            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
+                if (python != null) {
+                    RegisterInterpreters(registeredPaths, python, _cpy64InterpreterGuid, "Python", arch);
+                }
+            }
         }
 
-        private void RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey python, Guid id, string description, ProcessorArchitecture arch) {
+        private void RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey python, Guid id, string description, ProcessorArchitecture? arch) {
             foreach (var key in python.GetSubKeyNames()) {
                 Version version;
                 if (Version.TryParse(key, out version)) {
@@ -83,7 +90,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                                 Path.Combine(basePath, "python.exe"),
                                 Path.Combine(basePath, "pythonw.exe"),
                                 "PYTHONPATH",
-                                arch
+                                arch.HasValue ? arch.Value : NativeMethods.GetBinaryType(Path.Combine(basePath, "python.exe"))
                             )
                         );
                     }

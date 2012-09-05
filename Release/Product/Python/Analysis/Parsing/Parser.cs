@@ -577,7 +577,7 @@ namespace Microsoft.PythonTools.Parsing {
                 expr = ParseTestListAsExpr();
             }
 
-            if (expr != null) {
+            if (expr != null && _langVersion < PythonLanguageVersion.V33) {
                 if (_isGenerator) {
                     ReportSyntaxError(returnToken.Span.Start, expr.EndIndex, "'return' with argument inside generator");
                 } else {
@@ -615,7 +615,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             _isGenerator = true;
-            if (_returnsWithValue != null) {
+            if (_returnsWithValue != null && _langVersion < PythonLanguageVersion.V33) {
                 foreach (var span in _returnsWithValue) {
                     ReportSyntaxError(span.Start, span.End, "'return' with argument inside generator");
                 }
@@ -633,17 +633,17 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         /// <summary>
-        /// Peek if the next token is a 'yield' and parse a yield expression. Else return null.
+        /// Peek if the next token is a 'yield' and parse a yield or yield from expression. Else return null.
         /// 
         /// Called w/ yield already eaten.
         /// </summary>
-        /// <returns>A yield expression if present, else null. </returns>
+        /// <returns>A yield or yield from expression if present, else null.</returns>
         // yield_expression: "yield" [expression_list] 
         private Expression ParseYieldExpression() {
             // Mark that this function is actually a generator.
             // If we're in a generator expression, then we don't have a function yet.
             //    g=((yield i) for i in range(5))
-            // In that acse, the genexp will mark IsGenerator. 
+            // In that case, the genexp will mark IsGenerator. 
             FunctionDefinition current = CurrentFunction;
             if (current != null) {
                 current.IsGenerator = true;
@@ -656,19 +656,41 @@ namespace Microsoft.PythonTools.Parsing {
             // 1) empty, in which case it becomes 'yield None'
             // 2) a single expression
             // 3) multiple expression, in which case it's wrapped in a tuple.
+            // 4) 'from', in which case we expect a single expression and return YieldFromExpression
             Expression yieldResult;
+            
+            bool isYieldFrom = PeekToken(TokenKind.KeywordFrom);
+            bool suppressSyntaxError = false;
+            string fromWhitespace = string.Empty;
+
+            if (isYieldFrom) {
+                if (_langVersion < PythonLanguageVersion.V33) {
+                    // yield from added to 3.3
+                    ReportSyntaxError("invalid syntax");
+                    suppressSyntaxError = true;
+                }
+                NextToken();
+                fromWhitespace = _tokenWhiteSpace;
+            }
 
             bool trailingComma;
             List<string> itemWhiteSpace;
             List<Expression> l = ParseTestListAsExpr(null, out itemWhiteSpace, out trailingComma);                
             if (l.Count == 0) {
-                if (_langVersion < PythonLanguageVersion.V25) {
+                if (_langVersion < PythonLanguageVersion.V25 && !suppressSyntaxError) {
                     // 2.4 doesn't allow plain yield
+                    ReportSyntaxError("invalid syntax");
+                } else if (isYieldFrom && !suppressSyntaxError) {
+                    // yield from requires one expression
                     ReportSyntaxError("invalid syntax");
                 }
                 // Check empty expression and convert to 'none'
                 yieldResult = new ConstantExpression(null);
             } else if (l.Count != 1) {
+                if (isYieldFrom && !suppressSyntaxError) {
+                    // yield from requires one expression
+                    ReportSyntaxError(l[0].StartIndex, l[l.Count - 1].EndIndex, "invalid syntax");
+                }
                 // make a tuple
                 yieldResult = MakeTupleOrExpr(l, itemWhiteSpace, trailingComma, true);
             } else {
@@ -676,9 +698,18 @@ namespace Microsoft.PythonTools.Parsing {
                 yieldResult = l[0];
             }
 
-            Expression yieldExpression = new YieldExpression(yieldResult);
+            Expression yieldExpression;
+            if (isYieldFrom) {
+                yieldExpression = new YieldFromExpression(yieldResult);
+            } else {
+                yieldExpression = new YieldExpression(yieldResult);
+            }
             if (_verbatim) {
                 AddPreceedingWhiteSpace(yieldExpression, whitespace);
+                if (!string.IsNullOrEmpty(fromWhitespace)) {
+                    AddSecondPreceedingWhiteSpace(yieldExpression, fromWhitespace);
+                }
+
                 if (l.Count == 0) {
                     AddIsAltForm(yieldExpression);
                 } else if (l.Count == 1 && trailingComma) {

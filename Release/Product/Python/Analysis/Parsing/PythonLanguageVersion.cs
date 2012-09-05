@@ -26,7 +26,8 @@ namespace Microsoft.PythonTools.Parsing {
         V27 = 0x0207,
         V30 = 0x0300,
         V31 = 0x0301,
-        V32 = 0x0302
+        V32 = 0x0302,
+        V33 = 0x0303
     }
 
     public static class PythonLanguageVersionExtensions {

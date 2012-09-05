@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
         internal ISet<Namespace> _objectSet;
         internal Namespace _functionType;
-        internal BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _longType, _floatType, _unicodeType, _bytesType, _complexType;
+        internal BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _dictItemsType, _longType, _floatType, _unicodeType, _bytesType, _complexType, _listIteratorType, _tupleIteratorType, _setIteratorType, _strIteratorType, _bytesIteratorType;
         internal ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
         private KnownTypes _types;
@@ -112,11 +112,24 @@ namespace Microsoft.PythonTools.Analysis {
             _floatType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Float));
             _dictKeysType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictKeys));
             _dictValuesType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictValues));
+            _dictItemsType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictItems));
+
+            _listIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
+            _tupleIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.TupleIterator));
+            _setIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.SetIterator));
+            _strIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.StrIterator));
+            if (_langVersion.Is2x()) {
+                _bytesIteratorType = _strIteratorType;
+            } else {
+                _bytesIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator));
+            }
 
             SpecializeFunction("__builtin__", "range", (n, unit, args, argNames) => unit.DeclaringModule.GetOrMakeNodeVariable(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet), analyze: false);
             SpecializeFunction("__builtin__", "min", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "max", ReturnUnionOfInputs);
             SpecializeFunction("__builtin__", "getattr", SpecialGetAttr, analyze: false);
+            SpecializeFunction("__builtin__", "next", SpecialNext, analyze: false);
+            SpecializeFunction("__builtin__", "iter", SpecialIter, analyze: false);
 
             // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
             // copied, and always returns the same type).  So we specialize these away so they return the type passed
@@ -734,6 +747,28 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
             return res;
+        }
+
+        private ISet<Namespace> SpecialNext(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
+            var nextName = (unit.ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
+            var newArgs = args.Skip(1).ToArray();
+            var newNames = argNames.Skip(1).ToArray();
+
+            return args[0].GetMember(call, unit, nextName).Call(call, unit, newArgs, newNames);
+        }
+
+        private ISet<Namespace> SpecialIter(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
+            if (args.Length == 1) {
+                return args[0].GetIterator(call, unit);
+            } else if (args.Length == 2) {
+                var gen = new GeneratorInfo(unit);
+                // callable object
+                gen.AddYield(args[0].Call(call, unit, new ISet<Namespace>[0], ExpressionEvaluator.EmptyNames));
+                // the sentinel's type is never seen, so don't include it
+                return gen;
+            } else {
+                return EmptySet<Namespace>.Instance;
+            }
         }
         
         private ISet<Namespace> ReturnUnionOfInputs(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {

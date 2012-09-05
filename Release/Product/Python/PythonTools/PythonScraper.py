@@ -349,11 +349,22 @@ def generate_builtin_module():
     if sys.version_info[0] == 2:
         members_table['dict_keys'] = generate_member(type({}.iterkeys()), is_hidden=True)
         members_table['dict_values'] = generate_member(type({}.itervalues()), is_hidden=True)
+        members_table['dict_items'] = generate_member(type({}.iteritems()), is_hidden=True)
     else:
         members_table['dict_keys'] = generate_member(type({}.keys()), is_hidden=True)
         members_table['dict_values'] = generate_member(type({}.values()), is_hidden=True)
-            
+        members_table['dict_items'] = generate_member(type({}.items()), is_hidden=True)
+    
     members_table['object']['value']['doc'] = "The most base type"
+    members_table['list_iterator'] = generate_member(type(iter(list())), is_hidden=True)
+    members_table['tuple_iterator'] = generate_member(type(iter(tuple())), is_hidden=True)
+    members_table['set_iterator'] = generate_member(type(iter(set())), is_hidden=True)
+    members_table['str_iterator'] = generate_member(type(iter("")), is_hidden=True)
+    if sys.version_info[0] == 2:
+        members_table['bytes_iterator'] = generate_member(type(iter("")), is_hidden=True)
+    else:
+        members_table['bytes_iterator'] = generate_member(type(iter(bytes())), is_hidden=True)
+
     return res
 
 
@@ -590,6 +601,13 @@ def builtin_fixer(mod):
                                'BytesWarning', 'next', 'BufferError'], '2.6')
     mark_minimum_version(mod, ['memoryview'], '2.7')
 
+    for iter_type in ['generator', 'list_iterator', 'tuple_iterator', 'set_iterator', 'str_iterator', 'bytes_iterator']:
+        next2x = mod['members'][iter_type]['value']['members']['next']
+        next3x = dict(next2x)
+        next2x['version'] = '<=2.7'
+        next3x['version'] = '>=3.0'
+        mod['members'][iter_type]['value']['members']['__next__'] = next3x
+    mod['members']['bytes_iterator']['value']['version'] = '>=3.0'
 
     # new in 3x: exec, ascii, ResourceWarning, print
 
@@ -618,7 +636,7 @@ def builtin_fixer(mod):
         }
     }
     
-
+    
     mod['members']['print'] = {
         'kind': 'function',
         'value': {
@@ -1911,7 +1929,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('18')
+    f.write('19')
     f.close()
 
     # inspect extension modules installed into site-packages

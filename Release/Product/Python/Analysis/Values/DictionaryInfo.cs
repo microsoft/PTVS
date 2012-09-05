@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
@@ -441,7 +440,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict.KeyValueTupleVariable }, unit.ProjectState._dictValuesType);
+                    _list = new IteratorInfo(new[] { _myDict.KeyValueTupleVariable }, unit.ProjectState._dictItemsType);
                 }
                 return _list;
             }

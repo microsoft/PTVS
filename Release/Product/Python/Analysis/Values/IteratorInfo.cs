@@ -13,8 +13,9 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -22,16 +23,49 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class IteratorInfo : IterableInfo {
+        private IterBoundBuiltinMethodInfo _iter;
         private NextBoundMethod _next;
 
-        public IteratorInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
-            : base(indexTypes, seqType) {
+        internal static BuiltinClassInfo GetIteratorTypeFromType(BuiltinClassInfo klass, AnalysisUnit unit) {
+            switch (klass.PythonType.TypeId) {
+                case BuiltinTypeId.List:
+                    return unit.ProjectState._listIteratorType;
+                case BuiltinTypeId.Tuple:
+                    return unit.ProjectState._tupleIteratorType;
+                case BuiltinTypeId.Set:
+                    return unit.ProjectState._setIteratorType;
+                case BuiltinTypeId.Str:
+                    return unit.ProjectState._strIteratorType;
+                case BuiltinTypeId.Bytes:
+                    return unit.ProjectState._bytesIteratorType;
+                case BuiltinTypeId.Generator:
+                case BuiltinTypeId.DictKeys:
+                case BuiltinTypeId.DictValues:
+                case BuiltinTypeId.DictItems:
+                case BuiltinTypeId.ListIterator:
+                case BuiltinTypeId.TupleIterator:
+                case BuiltinTypeId.SetIterator:
+                case BuiltinTypeId.StrIterator:
+                case BuiltinTypeId.BytesIterator:
+                    return klass;
+                default:
+                    return null;
+            }
+        }
+
+        public IteratorInfo(VariableDef[] indexTypes, BuiltinClassInfo iterType)
+            : base(indexTypes, iterType) {
+        }
+
+        public override ISet<Namespace> GetIterator(Node node, AnalysisUnit unit) {
+            return SelfSet;
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
-            if (name == "next") {
+            if (unit.ProjectState.LanguageVersion.Is2x() && name == "next" ||
+                unit.ProjectState.LanguageVersion.Is3x() && name == "__next__") {
                 if (_next == null) {
-                    var next = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, "next");
+                    var next = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
                     if (next != null) {
                         _next = new NextBoundMethod((BuiltinMethodInfo)unit.ProjectState.GetNamespaceFromObjects(next), this);
                     }
@@ -39,6 +73,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 if (_next != null) {
                     return _next.SelfSet;
+                }
+            } else if (name == "__iter__") {
+                if (_iter == null) {
+                    var iter = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
+                    if (iter != null) {
+                        _iter = new IterBoundBuiltinMethodInfo((BuiltinMethodInfo)unit.ProjectState.GetNamespaceFromObjects(iter), this);
+                    }
+                }
+
+                if (_iter != null) {
+                    return _iter.SelfSet;
                 }
             }
             return base.GetMember(node, unit, name);

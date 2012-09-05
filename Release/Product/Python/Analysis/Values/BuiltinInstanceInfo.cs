@@ -21,6 +21,11 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     class BuiltinInstanceInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer {
         private readonly BuiltinClassInfo _klass;
+        private ISet<Namespace> _iterMethod;
+
+        private bool IsIterable {
+            get { return _klass.PythonType.TypeId == BuiltinTypeId.Str || _klass.PythonType.TypeId == BuiltinTypeId.Bytes; }
+        }
 
         public BuiltinInstanceInfo(BuiltinClassInfo klass)
             : base(klass._type, klass.ProjectState) {
@@ -68,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            if (_klass == ProjectState._stringType || _klass == ProjectState._bytesType) {
+            if (IsIterable) {
                 // indexing/slicing strings should return the string type.
                 return _klass.Instance;
             }
@@ -77,6 +82,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+            if (IsIterable && name == "__iter__") {
+                if (_iterMethod == null) {
+                    var indexTypes = new VariableDef[1];
+                    indexTypes[0] = new VariableDef();
+                    indexTypes[0].AddTypes(unit, _klass.SelfSet);
+                    _iterMethod = new IterBoundBuiltinMethodInfo(indexTypes, _klass);
+                }
+                return _iterMethod;
+            }
+            
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _klass.AddMemberReference(node, unit, name);

@@ -177,6 +177,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return GetIndex(node, unit, unit.ProjectState._intType.SelfSet);
         }
 
+        public virtual ISet<Namespace> GetIterator(Node node, AnalysisUnit unit) {
+            return GetMember(node, unit, "__iter__").Call(node, unit, new ISet<Namespace>[0], ExpressionEvaluator.EmptyNames);
+        }
+
         public virtual ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
             return GetMember(node, unit, "__getitem__").Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
         }
