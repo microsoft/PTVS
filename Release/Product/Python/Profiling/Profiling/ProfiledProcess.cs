@@ -174,7 +174,8 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             }
 
-            return null;
+            Debug.Assert(false, "Unable to determine Python Tools installation path");
+            return string.Empty;
         }
 
         private static Win32.RegistryKey OpenVisualStudioKey() {

@@ -963,13 +963,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         wchar_t debuggerModuleFilePath[MAX_PATH];
         wchar_t replModuleFilePath[MAX_PATH];
-#if defined(_AMD64_)
-        _wmakepath_s(debuggerModuleFilePath, drive, dir, L"..\\visualstudio_py_debugger", L".py");
-        _wmakepath_s(replModuleFilePath, drive, dir, L"..\\visualstudio_py_repl", L".py");
-#else
         _wmakepath_s(debuggerModuleFilePath, drive, dir, L"visualstudio_py_debugger", L".py");
         _wmakepath_s(replModuleFilePath, drive, dir, L"visualstudio_py_repl", L".py");
-#endif
 
         // visualstudio_py_debugger has a dependency on visualstudio_py_repl, so we need to load that one first
         auto replModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_repl"));

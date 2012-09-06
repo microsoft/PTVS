@@ -956,7 +956,8 @@ namespace Microsoft.PythonTools.Hpc {
                 }
             }
 
-            return null;
+            Debug.Assert(false, "Unable to determine Python Tools installation path");
+            return string.Empty;
         }
 
         internal static string GetPythonHpcToolsInstallPath() {

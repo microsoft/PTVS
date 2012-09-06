@@ -1396,6 +1396,41 @@ def g():
         }
 
         [TestMethod, Priority(0)]
+        public void TestConstantMath() {
+            
+            var text2x = @"
+a = 1. + 2. + 3. # no type info for a, b or c
+b = 1 + 2. + 3.
+c = 1. + 2 + 3.
+d = 1. + 2. + 3 # d is 'int', should be 'float'
+e = 1 + 1L # e is a 'float', should be 'long' under v2.x (error under v3.x)
+f = 1 / 2 # f is 'int', should be 'float' under v3.x";
+
+            var res = ProcessText(text2x, PythonLanguageVersion.V27);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("a", text2x.IndexOf("a =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("b", text2x.IndexOf("b =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("c", text2x.IndexOf("c =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("d", text2x.IndexOf("d =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("e", text2x.IndexOf("e =")), Interpreter.GetBuiltinType(BuiltinTypeId.Long));
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("f", text2x.IndexOf("f =")), IntType);
+
+            var text3x = @"
+a = 1. + 2. + 3. # no type info for a, b or c
+b = 1 + 2. + 3.
+c = 1. + 2 + 3.
+d = 1. + 2. + 3 # d is 'int', should be 'float'
+f = 1 / 2 # f is 'int', should be 'float' under v3.x";
+
+
+            res = ProcessText(text3x, PythonLanguageVersion.V30);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("a", text3x.IndexOf("a =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("b", text3x.IndexOf("b =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("c", text3x.IndexOf("c =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("d", text3x.IndexOf("d =")), FloatType);
+            AssertUtil.ContainsExactly(res.GetTypesFromNameByIndex("f", text3x.IndexOf("f =")), FloatType);
+        }
+
+        [TestMethod, Priority(0)]
         public void TestStringFormatting() {
             var text = @"
 x = u'abc %d'
@@ -2651,6 +2686,7 @@ class bar(object):
 
 class baz(bar):
     def Call(self, xvar, yvar):
+        x = 42
         pass
 
 class Cxxxx(object):
@@ -2666,7 +2702,8 @@ abc = Cxxxx()
 abc.Cmeth(['foo'], 'bar')
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("avar", text.IndexOf("pass")), ListType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("xvar", text.IndexOf("x = 42")), ListType);
+            AssertUtil.ContainsExactly(entry.GetTypesFromNameByIndex("xvar", text.IndexOf("pass")));
         }
 
         internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);

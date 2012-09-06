@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static Process CreateProcess(string args, string exeName) {
             string basePath = GetPythonToolsInstallPath();
-            if (basePath == null) {
+            if (string.IsNullOrEmpty(basePath)) {
                 return null;
             }
 
@@ -276,7 +276,7 @@ namespace Microsoft.PythonTools.Debugger {
                 }
 
                 string dllPath;
-                if (basePath == null || !File.Exists(dllPath = Path.Combine(basePath, dll))) {
+                if (string.IsNullOrEmpty(basePath) || !File.Exists(dllPath = Path.Combine(basePath, dll))) {
                     return new DebugAttach(ConnErrorMessages.PyDebugAttachNotFound);
                 }
 
@@ -373,7 +373,8 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
 
-            return null;
+            Debug.Assert(false, "Unable to determine Python Tools installation path");
+            return string.Empty;
         }
 
         private static Win32.RegistryKey OpenVisualStudioKey() {

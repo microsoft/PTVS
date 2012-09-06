@@ -1748,7 +1748,7 @@ class _DebuggerOutput(object):
     def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout
         self.old_out = old_out
-        if sys.version >= '3.':
+        if sys.version >= '3.' and hasattr(old_out, 'buffer'):
             self.buffer = DebuggerBuffer(old_out.buffer)
 
     def flush(self):

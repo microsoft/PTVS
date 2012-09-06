@@ -629,7 +629,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 }
             }
 
-            return null;
+            Debug.Assert(false, "Unable to determine Python Tools installation path");
+            return string.Empty;
         }
 
         #region IVsComponentSelectorProvider Members

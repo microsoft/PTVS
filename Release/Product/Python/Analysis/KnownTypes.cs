@@ -50,7 +50,9 @@ namespace Microsoft.PythonTools.PyAnalysis {
             TupleIterator = interpreter.GetBuiltinType(BuiltinTypeId.TupleIterator);
             SetIterator = interpreter.GetBuiltinType(BuiltinTypeId.SetIterator);
             StrIterator = interpreter.GetBuiltinType(BuiltinTypeId.StrIterator);
-            BytesIterator = interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator);
+            if (state.LanguageVersion.Is3x()) {
+                BytesIterator = interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator);
+            }
         }
     }
 }

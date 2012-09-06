@@ -1183,8 +1183,29 @@ namespace DebuggerTests {
             TestExitCode(debugger, DebuggerTestPath + @"ExceptionalExit.py", 1);
         }
 
-        private void TestExitCode(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null) {
-            var process = DebugProcess(debugger, filename, interpreterOptions: interpreterOptions);
+        [TestMethod, Priority(0)]
+        public void TestWindowsStartup() {
+            var debugger = new PythonDebugger();
+
+            string pythonwExe = Path.Combine(Path.GetDirectoryName(Version.Path), "pythonw.exe");
+            if (!File.Exists(pythonwExe)) {
+                pythonwExe = Path.Combine(Path.GetDirectoryName(Version.Path), "ipyw.exe");
+            }
+
+            if (File.Exists(pythonwExe)) {
+                // hello world
+                TestExitCode(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), 0, pythonExe: pythonwExe);
+
+                // test which calls sys.exit(23)
+                TestExitCode(debugger, DebuggerTestPath + @"SysExit.py", 23, pythonExe: pythonwExe);
+
+                // test which calls raise Exception()
+                TestExitCode(debugger, DebuggerTestPath + @"ExceptionalExit.py", 1, pythonExe: pythonwExe);
+            }
+        }
+
+        private void TestExitCode(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null, string pythonExe = null) {
+            var process = DebugProcess(debugger, filename, interpreterOptions: interpreterOptions, pythonExe: pythonExe);
 
             bool created = false, exited = false;
             process.ThreadCreated += (sender, args) => {
@@ -1207,10 +1228,10 @@ namespace DebuggerTests {
             Assert.IsTrue(exited, "Process failed to exit");
         }
 
-        private PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null) {
+        private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string pythonExe = null) {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
-            var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
+            var process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
             process.ProcessLoaded += (sender, args) => {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);

@@ -1,0 +1,16 @@
+﻿rb'\foo'
+rb'''\foo'''
+rb"\foo"
+rb"""\foo"""
+Rb'\foo'
+Rb'''\foo'''
+Rb"\foo"
+Rb"""\foo"""
+rB'\foo'
+rB'''\foo'''
+rB"\foo"
+rB"""\foo"""
+RB'\foo'
+RB'''\foo'''
+RB"\foo"
+RB"""\foo"""

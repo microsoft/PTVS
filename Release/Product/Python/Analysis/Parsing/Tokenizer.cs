@@ -654,8 +654,12 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Token ReadNameOrRawString() {
-            if (NextChar('\"')) return ReadString('\"', true, false, false);
-            if (NextChar('\'')) return ReadString('\'', true, false, false);
+            bool isBytes = false;
+            if (this._langVersion >= PythonLanguageVersion.V33) {
+                isBytes = NextChar('b') || NextChar('B');
+            }
+            if (NextChar('\"')) return ReadString('\"', true, false, isBytes);
+            if (NextChar('\'')) return ReadString('\'', true, false, isBytes);
             return ReadName();
         }
 

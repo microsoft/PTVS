@@ -133,9 +133,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
 
                     goto case PythonOperator.Add;
+                case PythonOperator.Divide:
+                    if (unit.ProjectState.LanguageVersion.Is3x()) {
+                        goto case PythonOperator.TrueDivide;
+                    }
+                    goto case PythonOperator.Add;
                 case PythonOperator.Add:
                 case PythonOperator.Subtract:
-                case PythonOperator.Divide:
                 case PythonOperator.BitwiseAnd:
                 case PythonOperator.BitwiseOr:
                 case PythonOperator.Xor:
@@ -151,10 +155,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                         if (curType <= BuiltinTypeId.Complex && typeId <= BuiltinTypeId.Complex) {
                             switch (NumericResultType[(int)curType, (int)typeId]) {
-                                case BuiltinTypeId.Complex: res = res.Union(unit.ProjectState._complexType, ref madeSet); break;
-                                case BuiltinTypeId.Long: res = res.Union(unit.ProjectState._floatType, ref madeSet); break;
-                                case BuiltinTypeId.Float: res = res.Union(unit.ProjectState._floatType, ref madeSet); break;
-                                case BuiltinTypeId.Int: res = res.Union(unit.ProjectState._intType, ref madeSet); break;
+                                case BuiltinTypeId.Complex: res = res.Union(unit.ProjectState._complexType.Instance, ref madeSet); break;
+                                case BuiltinTypeId.Long: res = res.Union(unit.ProjectState._longType.Instance, ref madeSet); break;
+                                case BuiltinTypeId.Float: res = res.Union(unit.ProjectState._floatType.Instance, ref madeSet); break;
+                                case BuiltinTypeId.Int: res = res.Union(unit.ProjectState._intType.Instance, ref madeSet); break;
                                 default:
                                     res = res.Union(type.ReverseBinaryOperation(node, unit, operation, lhs), ref madeSet);
                                     break;

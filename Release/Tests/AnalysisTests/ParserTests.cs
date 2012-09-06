@@ -885,6 +885,54 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
+        public void RawBytes() {
+            foreach (var version in V33AndUp) {
+                CheckAst(
+                    ParseFile("RawBytes.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\foo")))
+                    )
+                );
+            }
+
+            foreach (var version in AllVersions.Except(V33AndUp)) {
+                ParseErrors("RawBytes.py", version,
+                    new ErrorInfo("invalid syntax", 2, 1, 3, 8, 1, 9),
+                    new ErrorInfo("invalid syntax", 12, 2, 3, 22, 2, 13),
+                    new ErrorInfo("invalid syntax", 26, 3, 3, 32, 3, 9),
+                    new ErrorInfo("invalid syntax", 36, 4, 3, 46, 4, 13),
+                    new ErrorInfo("invalid syntax", 50, 5, 3, 56, 5, 9),
+                    new ErrorInfo("invalid syntax", 60, 6, 3, 70, 6, 13),
+                    new ErrorInfo("invalid syntax", 74, 7, 3, 80, 7, 9),
+                    new ErrorInfo("invalid syntax", 84, 8, 3, 94, 8, 13),
+                    new ErrorInfo("invalid syntax", 98, 9, 3, 104, 9, 9),
+                    new ErrorInfo("invalid syntax", 108, 10, 3, 118, 10, 13),
+                    new ErrorInfo("invalid syntax", 122, 11, 3, 128, 11, 9),
+                    new ErrorInfo("invalid syntax", 132, 12, 3, 142, 12, 13),
+                    new ErrorInfo("invalid syntax", 146, 13, 3, 152, 13, 9),
+                    new ErrorInfo("invalid syntax", 156, 14, 3, 166, 14, 13),
+                    new ErrorInfo("invalid syntax", 170, 15, 3, 176, 15, 9),
+                    new ErrorInfo("invalid syntax", 180, 16, 3, 190, 16, 13)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void Delimiters() {
             foreach (var version in AllVersions) {
                 CheckAst(
