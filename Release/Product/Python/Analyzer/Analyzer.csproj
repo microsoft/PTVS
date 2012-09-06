@@ -4,10 +4,12 @@
     <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags></FileUpgradeFlags>
-        <UpgradeBackupLocation></UpgradeBackupLocation>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
         <OldToolsVersion>4.0</OldToolsVersion>
-       </PropertyGroup>
+      </PropertyGroup>
     </When>
   </Choose>
   <Import Project="..\ProjectBefore.settings" />
@@ -43,6 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\PythonTools\PythonTools\CommonUtils.cs">
+      <Link>CommonUtils.cs</Link>
+    </Compile>
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>

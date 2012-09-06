@@ -216,6 +216,7 @@ namespace Microsoft.PythonTools.Analysis {
             List<string> libFiles = new List<string>();
             files.Add(libFiles);
 
+            HashSet<string> sitePackages = new HashSet<string>();
             foreach (var subdir in Directory.GetDirectories(dir)) {
                 if (Path.GetFileName(subdir) == "site-packages") {
                     // site packages can be big, analyze each package alone
@@ -223,8 +224,11 @@ namespace Microsoft.PythonTools.Analysis {
                         var list = new List<string>();
                         files.Add(list);
                         CollectPackage(sitePackageDir, list, allFiles);
+
+                        sitePackages.Add(CommonUtils.NormalizeDirectoryPath(sitePackageDir));
                     }
 
+                    
                     foreach (var file in Directory.GetFiles(subdir)) {
                         if (IsPthFile(file)) {
                             string[] lines = File.ReadAllLines(file);
@@ -236,7 +240,8 @@ namespace Microsoft.PythonTools.Analysis {
                                         pthDir = Path.Combine(subdir, pthDir);
                                     }
 
-                                    if (Directory.Exists(pthDir)) {
+                                    if (Directory.Exists(pthDir) &&
+                                        !sitePackages.Contains(CommonUtils.NormalizeDirectoryPath(pthDir))) {
                                         pthDirs.Add(pthDir);
                                     }
                                 }
