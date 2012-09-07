@@ -23,13 +23,14 @@ namespace TestUtilities.Mocks {
         private readonly ITextBuffer _buffer;
         private readonly PropertyCollection _props = new PropertyCollection();
         private readonly MockTextSelection _selection;
-        private readonly MockTextCaret _caret = new MockTextCaret();
+        private readonly MockTextCaret _caret;
         private readonly MockBufferGraph _bufferGraph;
 
         public MockTextView(ITextBuffer buffer) {
             _buffer = buffer;
             _selection = new MockTextSelection(this);
             _bufferGraph = new MockBufferGraph();
+            _caret = new MockTextCaret(this);
         }
 
         public IBufferGraph BufferGraph {

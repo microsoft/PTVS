@@ -13,11 +13,8 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace TestUtilities.Mocks {
     public class MockTextSelection : ITextSelection {
@@ -94,6 +91,13 @@ namespace TestUtilities.Mocks {
             _start = new VirtualSnapshotPoint(selectionSpan.Start);
             _end = new VirtualSnapshotPoint(selectionSpan.End);
             _isReversed = isReversed;
+            _isActive = true;
+
+            if (_isReversed) {
+                ((MockTextCaret)_view.Caret).SetPosition(_end.Position);
+            } else {
+                ((MockTextCaret)_view.Caret).SetPosition(_start.Position);
+            }
         }
 
         public NormalizedSnapshotSpanCollection SelectedSpans {

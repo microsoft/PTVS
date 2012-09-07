@@ -18,6 +18,11 @@ using Microsoft.VisualStudio.Text;
 namespace TestUtilities.Mocks {
     public class MockTextCaret : ITextCaret {
         private SnapshotPoint _position;
+        private readonly MockTextView _view;
+
+        public MockTextCaret(MockTextView view) {
+            _view = view;
+        }
 
         public double Bottom {
             get { throw new System.NotImplementedException(); }
@@ -73,6 +78,7 @@ namespace TestUtilities.Mocks {
         }
 
         public CaretPosition MoveTo(Microsoft.VisualStudio.Text.SnapshotPoint bufferPosition) {
+            _view.Selection.Clear();
             _position = bufferPosition;
             return Position;
         }
@@ -111,6 +117,10 @@ namespace TestUtilities.Mocks {
                 new MockMappingPoint(), 
                 PositionAffinity.Predecessor); 
             }
+        }
+
+        internal void SetPosition(SnapshotPoint position) {
+            _position = position;
         }
 
         public event System.EventHandler<CaretPositionChangedEventArgs> PositionChanged {

@@ -17,8 +17,23 @@ using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
     public class MockTextVersion : ITextVersion {
+        private readonly int _version;
+        private readonly MockTextSnapshot _snapshot;
+        private MockTextVersion _nextVersion;
+        private INormalizedTextChangeCollection _changes;
+        
+        public MockTextVersion(int version, MockTextSnapshot snapshot) {
+            _version = version;
+            _snapshot = snapshot;
+        }
+
+        /// <summary>
+        /// changes to get to the next version
+        /// </summary>
         public INormalizedTextChangeCollection Changes {
-            get { throw new NotImplementedException(); }
+            get {
+                return _changes;
+            }
         }
 
         public ITrackingSpan CreateCustomTrackingSpan(Span span, TrackingFidelityMode trackingFidelity, object customState, CustomTrackToVersion behavior) {
@@ -50,11 +65,11 @@ namespace TestUtilities.Mocks {
         }
 
         public int Length {
-            get { throw new NotImplementedException(); }
+            get { return _snapshot.Length; }
         }
 
         public ITextVersion Next {
-            get { throw new NotImplementedException(); }
+            get { return _nextVersion; }
         }
 
         public int ReiteratedVersionNumber {
@@ -62,11 +77,16 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextBuffer TextBuffer {
-            get { throw new NotImplementedException(); }
+            get { return _snapshot.TextBuffer; }
         }
 
         public int VersionNumber {
-            get { throw new NotImplementedException(); }
+            get { return _version; }
+        }
+
+        internal void SetNext(MockTextVersion nextVersion, params ITextChange[] changes) {
+            _nextVersion = nextVersion;
+            _changes = new MockNormalizedTextChangeCollection(changes);
         }
     }
 }

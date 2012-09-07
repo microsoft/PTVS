@@ -15,17 +15,25 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
     public class MockTextSnapshot : ITextSnapshot {
-        private readonly StringBuilder _text;
+        private readonly string _text;
         private readonly MockTextBuffer _buffer;
+        private readonly MockTextVersion _version;
 
         public MockTextSnapshot(MockTextBuffer buffer, string text) {
-            _text = new StringBuilder(text);
+            _text = text;
             _buffer = buffer;
+            _version = new MockTextVersion(0, this);
+        }
+
+        public MockTextSnapshot(MockTextBuffer buffer, string text, MockTextSnapshot prevVersion, params ITextChange[] changes) {
+            _text = text;
+            _buffer = buffer;
+            _version = new MockTextVersion(prevVersion.Version.VersionNumber + 1, this);
+            ((MockTextVersion)prevVersion.Version).SetNext(_version, changes);
         }
 
         public Microsoft.VisualStudio.Utilities.IContentType ContentType {
@@ -61,18 +69,17 @@ namespace TestUtilities.Mocks {
         }
 
         private string[] GetLines() {
-            return _text.ToString().Split(new[] { "\r\n" }, StringSplitOptions.None);
+            return _text.Split(new[] { "\r\n" }, StringSplitOptions.None);
         }
 
         public ITextSnapshotLine GetLineFromLineNumber(int lineNumber) {
-            var text = _text.ToString();
             for (int curLine = 0, curPosition = 0; ; curLine++) {
-                int endOfLine = text.IndexOf('\r', curPosition);
+                int endOfLine = _text.IndexOf('\r', curPosition);
                 if (curLine == lineNumber) {
                     if (endOfLine == -1) {
-                        return new MockTextSnapshotLine(this, text.Substring(curPosition), lineNumber, curPosition, false);
+                        return new MockTextSnapshotLine(this, _text.Substring(curPosition), lineNumber, curPosition, false);
                     } else {
-                        return new MockTextSnapshotLine(this, text.Substring(curPosition, endOfLine - curPosition), lineNumber, curPosition, true);
+                        return new MockTextSnapshotLine(this, _text.Substring(curPosition, endOfLine - curPosition), lineNumber, curPosition, true);
                     }
                 }
                 if (endOfLine == -1) {
@@ -84,11 +91,10 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextSnapshotLine GetLineFromPosition(int position) {
-            var text = _text.ToString();
             int lineNo = 0;
             int curPos = 0;
             while (curPos < position) {
-                curPos = text.IndexOf('\n', curPos);
+                curPos = _text.IndexOf('\n', curPos);
                 if (curPos == -1 || curPos >= position) {
                     var res = GetLineFromLineNumber(lineNo);
                     Debug.Assert(position >= res.Start);
@@ -139,7 +145,7 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextVersion Version {
-            get { return new MockTextVersion(); }
+            get { return _version; }
         }
 
         public void Write(System.IO.TextWriter writer) {
@@ -152,12 +158,6 @@ namespace TestUtilities.Mocks {
 
         public char this[int position] {
             get { return _text[position]; }
-        }
-
-        public StringBuilder Text {
-            get {
-                return _text;
-            }
         }
     }
 }

@@ -56,7 +56,7 @@ namespace TestUtilities.Mocks {
             var changed = ChangedLowPriority;
             if (changed != null) {
                 var oldSnapshot = _snapshot;
-                var newSnapshot = new MockTextSnapshot(this, _snapshot.GetText());
+                var newSnapshot = new MockTextSnapshot(this, _snapshot.GetText(), _snapshot);
                 _snapshot = newSnapshot;
                 changed(this, new TextContentChangedEventArgs(oldSnapshot, newSnapshot, EditOptions.None, null));
             }
@@ -74,7 +74,7 @@ namespace TestUtilities.Mocks {
             if (EditInProgress) {
                 throw new InvalidOperationException();
             }
-            _edit = new MockTextEdit(CurrentSnapshot);
+            _edit = new MockTextEdit((MockTextSnapshot)CurrentSnapshot);
             return _edit;
         }
 
@@ -96,6 +96,10 @@ namespace TestUtilities.Mocks {
 
         public bool EditInProgress {
             get { return _edit != null; }
+        }
+
+        internal void EditApplied() {
+            _edit = null;
         }
 
         public NormalizedSpanCollection GetReadOnlyExtents(Span span) {
@@ -125,8 +129,18 @@ namespace TestUtilities.Mocks {
         public ITextSnapshot Replace(Span replaceSpan, string replaceWith) {
             var oldText = _snapshot.GetText();
             string newText = oldText.Remove(replaceSpan.Start, replaceSpan.Length);
-            newText  = newText .Insert(replaceSpan.Start, replaceWith);
-            _snapshot = new MockTextSnapshot(this, newText);
+            newText  = newText.Insert(replaceSpan.Start, replaceWith);
+
+            _snapshot = new MockTextSnapshot(
+                this, 
+                newText, 
+                _snapshot, 
+                new MockTextChange(
+                    new SnapshotSpan(_snapshot, replaceSpan), 
+                    replaceSpan.Start,
+                    replaceWith
+                )
+            );
             return _snapshot;
         }
 

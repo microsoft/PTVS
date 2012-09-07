@@ -13,9 +13,9 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Editor.Core {
     public static class EditorExtensions {
@@ -28,6 +28,18 @@ namespace Microsoft.PythonTools.Editor.Core {
                 start = view.Selection.Start.Position;
                 end = view.Selection.End.Position;
                 mappedStart = MapPoint(view, start);
+
+                var endLine = end.GetContainingLine();
+                if (endLine.Start == end) {
+                    // http://pytools.codeplex.com/workitem/814
+                    // User selected one extra line, but no text on that line.  So let's
+                    // back it up to the previous line.  It's impossible that we're on the
+                    // 1st line here because we have a selection, and we end at the start of
+                    // a line.  In normal selection this is only possible if we wrapped onto the
+                    // 2nd line, and it's impossible to have a box selection with a single line.
+                    end = end.Snapshot.GetLineFromLineNumber(endLine.LineNumber - 1).End;
+                }
+
                 mappedEnd = MapPoint(view, end);
             } else {
                 // comment the current line
@@ -44,7 +56,7 @@ namespace Microsoft.PythonTools.Editor.Core {
 
                 // TODO: select multiple spans?
                 // Select the full region we just commented, do not select if in projection buffer 
-                // (the selection migth span non-language buffer regions)
+                // (the selection might span non-language buffer regions)
                 if (PythonCoreConstants.IsPythonContent(view.TextBuffer)) {
                     UpdateSelection(view, start, end);
                 }
@@ -89,16 +101,13 @@ namespace Microsoft.PythonTools.Editor.Core {
                 // second pass, place the comment
                 for (int i = start.GetContainingLine().LineNumber; i <= end.GetContainingLine().LineNumber; i++) {
                     var curLine = snapshot.GetLineFromLineNumber(i);
-                    if (curLine.Length == 0) {
+                    if (String.IsNullOrWhiteSpace(curLine.GetText())) {
                         continue;
                     }
 
-                    if (curLine.Length < minColumn) {
-                        // need extra white space
-                        edit.Insert(curLine.Start.Position + curLine.Length, new String(' ', minColumn - curLine.Length) + "#");
-                    } else {
-                        edit.Insert(curLine.Start.Position + minColumn, "#");
-                    }
+                    Debug.Assert(curLine.Length >= minColumn);
+
+                    edit.Insert(curLine.Start.Position + minColumn, "#");
                 }
 
                 edit.Apply();
@@ -133,13 +142,13 @@ namespace Microsoft.PythonTools.Editor.Core {
                 }
 
                 edit.Apply();
-            }            
+            }
         }
 
         private static void UpdateSelection(ITextView view, SnapshotPoint start, SnapshotPoint end) {
             view.Selection.Select(
                 new SnapshotSpan(
-                    // translate to the new snapshot version:
+                // translate to the new snapshot version:
                     start.GetContainingLine().Start.TranslateTo(view.TextBuffer.CurrentSnapshot, PointTrackingMode.Negative),
                     end.GetContainingLine().End.TranslateTo(view.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive)
                 ),

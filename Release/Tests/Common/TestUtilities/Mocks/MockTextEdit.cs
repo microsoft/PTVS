@@ -12,18 +12,18 @@
  *
  * ***************************************************************************/
 
-using Microsoft.VisualStudio.Text;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Text;
+using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
     public class MockTextEdit : ITextEdit {
         private readonly List<Edit> _edits = new List<Edit>();
-        private readonly ITextSnapshot _snapshot;
+        private readonly MockTextSnapshot _snapshot;
         private bool _canceled, _applied;
 
-        public MockTextEdit(ITextSnapshot snapshot) {
+        public MockTextEdit(MockTextSnapshot snapshot) {
             _snapshot = snapshot;
         }
 
@@ -80,6 +80,7 @@ namespace TestUtilities.Mocks {
         public ITextSnapshot Apply() {
             // this works for non-overlapping edits...
             StringBuilder text = new StringBuilder(_snapshot.GetText());
+            List<MockTextChange> changes = new List<MockTextChange>();
             for (int i = 0; i < _edits.Count; i++) {
                 var curEdit = _edits[i];
 
@@ -100,15 +101,44 @@ namespace TestUtilities.Mocks {
 
                 InsertionEdit insert = curEdit as InsertionEdit;
                 if (insert != null) {
+                    changes.Add(
+                        new MockTextChange(
+                            new SnapshotSpan(
+                                _snapshot, 
+                                insert.Position + adjust, 
+                                0
+                            ),
+                            insert.Position + adjust, 
+                            insert.Text
+                        )
+                    );
                     text.Insert(insert.Position + adjust, insert.Text);
                 } else {
                     DeletionEdit delete = curEdit as DeletionEdit;
+                    changes.Add(
+                        new MockTextChange(
+                            new SnapshotSpan(
+                                _snapshot, 
+                                delete.Position, 
+                                delete.Length
+                            ), 
+                            delete.Position + adjust,
+                            ""
+                        )
+                    );
                     text.Remove(delete.Position + adjust, delete.Length);
                 }
 
             }
-            var res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot((MockTextBuffer)_snapshot.TextBuffer, text.ToString());
+
+            var res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot(
+                (MockTextBuffer)_snapshot.TextBuffer, 
+                text.ToString(), 
+                _snapshot,
+                changes.ToArray()
+            );
             _applied = true;
+            ((MockTextBuffer)_snapshot.TextBuffer).EditApplied();
             return res;
         }
 
