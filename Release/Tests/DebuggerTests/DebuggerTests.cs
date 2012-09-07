@@ -735,6 +735,44 @@ namespace DebuggerTests {
 
         #region Breakpoint Tests
 
+        /// <summary>
+        /// Sets 2 breakpoints on one line after another, hits the 1st one, then steps onto
+        /// the next one.  Makes sure we only break in once.
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void BreakStepStep() {
+            // http://pytools.codeplex.com/workitem/815
+
+            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
+            var debugger = new PythonDebugger();
+            string fn = Path.Combine(cwd, "StepBreakBreak.py");
+            var process = DebugProcess(debugger, fn, (newproc, newthread) => {
+                PythonBreakpoint breakPoint = AddBreakPoint(newproc, 2, fn);
+                breakPoint.Add();
+
+                breakPoint = AddBreakPoint(newproc, 3, fn);
+                breakPoint.Add();
+            }, cwd: cwd);
+
+            bool hitBp = false;
+            process.BreakpointHit += (sender, args) => {
+                Assert.IsTrue(!hitBp);
+                hitBp = true;
+                args.Thread.StepOver();
+            };
+            bool sentStep = false;
+            process.StepComplete += (sender, args) => {
+                if (sentStep) {
+                    process.Continue();
+                } else {
+                    args.Thread.StepOver();
+                    sentStep = true;
+                }
+            };
+            process.Start();
+            process.WaitForExit();
+        }
+
         [TestMethod, Priority(0)]
         public void BreakpointNonMainFileRemoved() {
             // http://pytools.codeplex.com/workitem/638
@@ -1503,11 +1541,18 @@ namespace DebuggerTests {
 
                 var hostCode = @"#include <python.h>
 #include <windows.h>
+#include <stdio.h>
 
 int main(int argc, char* argv[]) {
     Py_Initialize();
     auto event = OpenEventA(EVENT_ALL_ACCESS, FALSE, argv[1]);
-    WaitForSingleObject(event, INFINITE);
+    if(!event) {
+        printf(""Failed to open event\r\n"");
+    }
+    printf(""Waiting for event\r\n"");
+    if(WaitForSingleObject(event, INFINITE)) {
+        printf(""Wait failed\r\n"");
+    }
 
     auto loc = PyDict_New ();
     auto glb = PyDict_New ();
@@ -1827,30 +1872,44 @@ int main(int argc, char* argv[]) {
             // start the test process w/ our handle
             var eventName = Guid.NewGuid().ToString();
             EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.AutoReset, eventName);
-            Process p = Process.Start("test.exe", eventName);
+            ProcessStartInfo psi = new ProcessStartInfo("test.exe", eventName);
+            psi.UseShellExecute = false;
+            psi.RedirectStandardError = psi.RedirectStandardOutput = true;
+            psi.CreateNoWindow = true;
 
-            // start the attach with the GIL held
-            AutoResetEvent attached = new AutoResetEvent(false);
-            PythonProcess proc;
-            ConnErrorMessages errReason;
-            if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                Assert.Fail("Failed to attach {0}", errReason);
+            Process p = Process.Start(psi);
+            var outRecv = new OutputReceiver();
+            p.OutputDataReceived += outRecv.OutputDataReceived;
+            p.ErrorDataReceived += outRecv.OutputDataReceived;
+            p.BeginErrorReadLine();
+            p.BeginOutputReadLine();
+
+            try {
+                // start the attach with the GIL held
+                AutoResetEvent attached = new AutoResetEvent(false);
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                }
+
+                bool isAttached = false;
+                proc.ProcessLoaded += (sender, args) => {
+                    attached.Set();
+                    isAttached = false;
+                };
+                proc.StartListening();
+
+                Assert.AreEqual(false, isAttached); // we shouldn't have attached yet, we should be blocked
+                handle.Set();   // let the code start running
+
+                Assert.IsTrue(attached.WaitOne(20000));
+                proc.Detach();
+
+                p.Kill();
+            } finally {
+                Debug.WriteLine(String.Format("Process output: {0}", outRecv.Output.ToString()));
             }
-
-            bool isAttached = false;
-            proc.ProcessLoaded += (sender, args) => {
-                attached.Set();
-                isAttached = false;
-            };
-            proc.StartListening();
-
-            Assert.AreEqual(false, isAttached); // we shouldn't have attached yet, we should be blocked
-            handle.Set();   // let the code start running
-
-            Assert.IsTrue(attached.WaitOne(20000));
-            proc.Detach();
-
-            p.Kill();
         }
 
         private void CompileCode(string hostCode) {
@@ -1861,6 +1920,7 @@ int main(int argc, char* argv[]) {
                 Path.Combine(GetVCInstallDir(), "bin", "cl.exe"),
                 String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.Path))
             );
+            
             startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
             startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(GetVCInstallDir(), "INCLUDE") + ";" + Path.Combine(GetWindowsSDKDir(), "Include");
             startInfo.EnvironmentVariables["LIB"] = Path.Combine(GetVCInstallDir(), "LIB") + ";" + Path.Combine(GetWindowsSDKDir(), "Lib");
@@ -1869,6 +1929,7 @@ int main(int argc, char* argv[]) {
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardError = true;
             startInfo.RedirectStandardOutput = true;
+            startInfo.CreateNoWindow = true;
             var compileProcess = Process.Start(startInfo);
 
             var outputReceiver = new OutputReceiver();

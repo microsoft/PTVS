@@ -838,7 +838,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         if (version == PythonVersion_Unknown) {
             connInfo.ReportError(ConnError_UnknownVersion);
             return false;
-        } else if(version >= PythonVersion_27) {
+        } else if(version >= PythonVersion_27 && version != PythonVersion_30) {
             threadSafeAddPendingCall = true;
         }
         connInfo.SetVersion(version);

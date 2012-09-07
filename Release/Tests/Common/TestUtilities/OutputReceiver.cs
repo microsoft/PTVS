@@ -21,7 +21,7 @@ namespace TestUtilities {
 
         public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
             if (e.Data != null) {
-                Output.Append(e.Data);
+                Output.AppendLine(e.Data);
             }
         }
     }

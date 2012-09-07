@@ -549,6 +549,11 @@ class Thread(object):
     def handle_line(self, frame, arg):
         if not DETACHED:
             stepping = self.stepping
+
+            # http://pytools.codeplex.com/workitem/815
+            # if we block for a step into/over we don't want to block again for a breakpoint
+            blocked_for_stepping = False
+
             if stepping is not STEPPING_NONE:   # check for the common case of no stepping first...
                 if (((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
                     or stepping == STEPPING_LAUNCH_BREAK 
@@ -558,9 +563,10 @@ class Thread(object):
                         # don't break into inital Python code needed to set things up
                         return self.trace_func
                     
+                    blocked_for_stepping = stepping != STEPPING_LAUNCH_BREAK and stepping != STEPPING_ATTACH_BREAK
                     self.block_maybe_attach()
 
-            if BREAKPOINTS:
+            if BREAKPOINTS and blocked_for_stepping is False:
                 bp = BREAKPOINTS.get(frame.f_lineno)
                 if bp is not None:
                     for (filename, bp_id), (condition, bound) in bp.items():

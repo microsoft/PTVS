@@ -48,6 +48,7 @@
     <None Include="SysExit.py" />
     <None Include="UnicodeException.py" />
     <None Include="BreakpointInfo.py" />
+    <None Include="StepBreakBreak.py" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>
