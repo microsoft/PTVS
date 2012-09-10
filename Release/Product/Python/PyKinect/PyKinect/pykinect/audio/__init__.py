@@ -24,7 +24,7 @@ if not os.path.exists(_audio_path):
 
 _PYAUDIODLL = ctypes.CDLL(_audio_path)
 _OpenKinectAudio = _PYAUDIODLL.OpenKinectAudio
-_OpenKinectAudio.argtypes = [ctypes.POINTER(ctypes.c_voidp)]
+_OpenKinectAudio.argtypes = [ctypes.c_voidp, ctypes.POINTER(ctypes.c_voidp)]
 _OpenKinectAudio.restype = ctypes.HRESULT
 
 _OpenAudioStream = _PYAUDIODLL.OpenAudioStream
@@ -266,9 +266,15 @@ class KinectAudioSource(object):
     def __init__(self, device = None):
         self._dmo = None
         dmo = ctypes.c_voidp()
-        _OpenKinectAudio(ctypes.byref(dmo))
+        if device is None:
+            from pykinect import nui
+            
+            device = nui.Runtime(nui.RuntimeOptions.uses_audio)
+                
+        _OpenKinectAudio(device._nui, ctypes.byref(dmo))
         self._dmo = dmo
         self._file = None
+        self._device = device
 
     def __del__(self):
         if self._dmo is not None:
@@ -280,6 +286,7 @@ class KinectAudioSource(object):
     def __exit__(self, type, value, traceback):
         _IUnknownRelease(self._dmo)
         self._dmo = None
+        self._device = None
 
     def start(self, readStaleThreshold = 500):
         """Starts capturing audio from the Kinect sensor's microphone array into a buffer.   Returns a file-like object that represents the audio stream, which is in 16khz, 16 bit PCM format. 
