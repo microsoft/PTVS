@@ -1766,7 +1766,8 @@ class _DebuggerOutput(object):
             self.buffer = DebuggerBuffer(old_out.buffer)
 
     def flush(self):
-        self.old_out.flush()
+        if self.old_out:
+            self.old_out.flush()
     
     def writelines(self, lines):
         for line in lines:
@@ -1783,7 +1784,8 @@ class _DebuggerOutput(object):
                 conn.send(OUTP)
                 conn.send(struct.pack('i', thread.get_ident()))
                 write_string(value)
-        self.old_out.write(value)
+        if self.old_out:
+            self.old_out.write(value)
     
     def isatty(self):
         return True
