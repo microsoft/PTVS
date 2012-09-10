@@ -414,6 +414,14 @@ def get_django_frame_source(frame):
 
     return None
 
+class ModuleExitFrame(object):
+    def __init__(self, real_frame):
+        self.real_frame = real_frame
+        self.f_lineno = real_frame.f_lineno + 1
+
+    def __getattr__(self, name):
+        return getattr(self.real_frame, name)
+
 class Thread(object):
     def __init__(self, id = None):
         if id is not None:
@@ -611,7 +619,7 @@ class Thread(object):
                 elif stepping in USER_STEPPING and should_debug_code(frame.f_code):
                     if self.cur_frame is None or frame.f_code.co_name == "<module>" :
                         # restore back the module frame for the step out of a module
-                        self.push_frame(frame)
+                        self.push_frame(ModuleExitFrame(frame))
                         self.stepping = STEPPING_NONE
                         update_all_thread_stacks(self)
                         self.block(lambda: report_step_finished(self.id))

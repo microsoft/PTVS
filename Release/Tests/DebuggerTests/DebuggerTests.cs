@@ -538,7 +538,7 @@ namespace DebuggerTests {
             // Bug 508: http://pytools.codeplex.com/workitem/508
             StepTest(DebuggerTestPath + @"SteppingTestBug508.py",
                     new ExpectedStep(StepKind.Into, 1),     // step print (should step over)
-                    new ExpectedStep(StepKind.Resume, 1)     // step print (should step over)
+                    new ExpectedStep(StepKind.Resume, 2)     // step print (should step over)
                 );
 
             // Bug 509: http://pytools.codeplex.com/workitem/509
@@ -601,7 +601,7 @@ namespace DebuggerTests {
                 new ExpectedStep(StepKind.Over, 1),     // step over print 'hello world'
                 new ExpectedStep(StepKind.Over, 2),     // step over a = set([i for i in range(256)])
                 new ExpectedStep(StepKind.Over, 3),     // step over print a
-                new ExpectedStep(StepKind.Resume, 3)    // let the program exit
+                new ExpectedStep(StepKind.Resume, 4)    // let the program exit
             );
 
             StepTest(DebuggerTestPath + @"SteppingTest5.py",
@@ -628,7 +628,7 @@ namespace DebuggerTests {
             StepTest(DebuggerTestPath + @"SteppingTest3.py",
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Over, 5),     // step over f()
-                new ExpectedStep(StepKind.Resume, 5)    // let the program exit
+                new ExpectedStep(StepKind.Resume, 6)    // let the program exit
             );
 
             StepTest(DebuggerTestPath + @"SteppingTest3.py",
@@ -655,7 +655,7 @@ namespace DebuggerTests {
             StepTest(DebuggerTestPath + @"SteppingTest.py",
                 new ExpectedStep(StepKind.Over, 1),     // step over print "hello"
                 new ExpectedStep(StepKind.Over, 2),     // step over print "goodbye"
-                new ExpectedStep(StepKind.Resume, 2)   // let the program exit
+                new ExpectedStep(StepKind.Resume, 3)   // let the program exit
             );
 
         }
