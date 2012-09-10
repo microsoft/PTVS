@@ -47,7 +47,8 @@ namespace Microsoft.PythonTools.Editor.Core {
                 mappedStart = mappedEnd = MapPoint(view, start);
             }
 
-            if (mappedStart != null && mappedEnd != null) {
+            if (mappedStart != null && mappedEnd != null &&
+                mappedStart.Value <= mappedEnd.Value) {
                 if (comment) {
                     CommentRegion(view, mappedStart.Value, mappedEnd.Value);
                 } else {

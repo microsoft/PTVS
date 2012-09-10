@@ -177,6 +177,23 @@ print 'goodbye'"));
         }
 
         [TestMethod, Priority(0)]
+        public void TestCommentBlankLine() {
+            var view = new MockTextView(
+                new MockTextBuffer(@"print('hi')
+
+print('bye')"));
+
+            view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+
+            EditorExtensions.CommentOrUncommentBlock(view, true);
+
+            Assert.AreEqual(view.TextBuffer.CurrentSnapshot.GetText(),
+                @"print('hi')
+
+print('bye')");
+        }
+
+        [TestMethod, Priority(0)]
         public void TestCommentIndentedWhiteSpaceLine() {
             var view = new MockTextView(
                 new MockTextBuffer(@"def f():
