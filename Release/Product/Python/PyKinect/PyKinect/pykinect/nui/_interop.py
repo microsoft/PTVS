@@ -194,6 +194,14 @@ class _NuiInstance(ctypes.c_voidp):
         return res.value
 
     def NuiSkeletonTrackingEnable(self, hNextFrameEvent = 0, dwFlags = 0):
+        """Enables skeleton tracking.  Succeeds or raises an exception.
+
+        hNextFrameEvent: A handle to an application-allocated, manual reset event that will be set whenever a new frame
+        of skeleton data is available, and will be reset whenever the latest frame data is returned.
+        This can be None.
+
+        dwFlags: Flags that control skeleton tracking, as a bitwise-OR combination SkeletonTracking values.
+        """
         _NuiInstance._NuiSkeletonTrackingEnable(self, hNextFrameEvent, dwFlags)
 
     def NuiSkeletonTrackingDisable(self):

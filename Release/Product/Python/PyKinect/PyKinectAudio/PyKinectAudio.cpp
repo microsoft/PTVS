@@ -24,10 +24,10 @@ typedef void (__stdcall _EnumRecognizersCallback)(LPWSTR id, LPWSTR description,
 
 // Flat C API for exposing to Python
 extern "C" {
-    __declspec(dllexport) HRESULT OpenKinectAudio(IMediaObject** ppDMO) {
+    __declspec(dllexport) HRESULT OpenKinectAudio(INuiSensor* pSensor, IMediaObject** ppDMO) {
         IMediaObject* pDMO;
         INuiAudioBeam* pAudioBeam;
-        HRESULT hr = NuiGetAudioSource(&pAudioBeam);
+        HRESULT hr = pSensor->NuiGetAudioSource(&pAudioBeam);
         if(FAILED(hr)) {
             return hr;
         }

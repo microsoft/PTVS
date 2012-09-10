@@ -10,6 +10,8 @@
 """defines the core data structures used for communicating w/ the Kinect APIs"""
 
 import ctypes
+from ctypes import Array
+from pykinect.nui import _NUIDLL
 
 NUI_SKELETON_COUNT = 6
 
@@ -96,6 +98,89 @@ class Vector(ctypes.Structure):
     def __repr__(self):
         return '<x=%r, y=%r, z=%r, w=%r>' % (self.x, self.y, self.z, self.w)
 
+
+class Matrix4(Array):
+    """4x4 matrix.  Can be accessed using matrix[0,0] ... matrix[3,3] or can be accessed using
+       matrix.M11 ... matrix.M44 for similarity to .NET and the C data structures.  matrix[0,1] is
+       the same as matrix.M12.
+    
+        Used to provide bone rotation information.   
+    """
+
+    _length_ = 16
+    _type_ = ctypes.c_float
+
+    def __getitem__(self, index):
+        return Array.__getitem__(self, index[1] + index[0] * 4)
+
+    def __setitem__(self, index, value):
+        return Array.__setitem__(self, index[1] + index[0] * 4, value)
+
+    def get_M11(self): return Array.__getitem__(0)
+    def set_M11(self, value): Array.__setitem__(0, value)
+    M11 = property(get_M11, set_M11)
+
+    def get_M12(self): return Array.__getitem__(1)
+    def set_M12(self, value): Array.__setitem__(1, value)
+    M12 = property(get_M12, set_M12)
+
+    def get_M13(self): return Array.__getitem__(2)
+    def set_M13(self, value): Array.__setitem__(2, value)
+    M13 = property(get_M13, set_M13)
+
+    def get_M14(self): return Array.__getitem__(3)
+    def set_M14(self, value): Array.__setitem__(3, value)
+    M14 = property(get_M14, set_M14)
+
+    def get_M21(self): return Array.__getitem__(4)
+    def set_M21(self, value): Array.__setitem__(4, value)
+    M21 = property(get_M21, set_M21)
+
+    def get_M22(self): return Array.__getitem__(5)
+    def set_M22(self, value): Array.__setitem__(5, value)
+    M22 = property(get_M22, set_M22)
+
+    def get_M23(self): return Array.__getitem__(6)
+    def set_M23(self, value): Array.__setitem__(6, value)
+    M23 = property(get_M23, set_M23)
+
+    def get_M24(self): return Array.__getitem__(7)
+    def set_M24(self, value): Array.__setitem__(7, value)
+    M24 = property(get_M24, set_M24)
+
+    def get_M31(self): return Array.__getitem__(8)
+    def set_M31(self, value): Array.__setitem__(8, value)
+    M31 = property(get_M31, set_M31)
+
+    def get_M32(self): return Array.__getitem__(9)
+    def set_M32(self, value): Array.__setitem__(9, value)
+    M32 = property(get_M32, set_M32)
+
+    def get_M33(self): return Array.__getitem__(10)
+    def set_M33(self, value): Array.__setitem__(10, value)
+    M33 = property(get_M33, set_M33)
+
+    def get_M34(self): return Array.__getitem__(11)
+    def set_M34(self, value): Array.__setitem__(11, value)
+    M34 = property(get_M34, set_M34)
+
+    def get_M41(self): return Array.__getitem__(12)
+    def set_M41(self, value): Array.__setitem__(12, value)
+    M41 = property(get_M41, set_M41)
+
+    def get_M42(self): return Array.__getitem__(13)
+    def set_M42(self, value): Array.__setitem__(13, value)
+    M42 = property(get_M42, set_M42)
+
+    def get_M43(self): return Array.__getitem__(14)
+    def set_M43(self, value): Array.__setitem__(14, value)
+    M43 = property(get_M43, set_M43)
+
+    def get_M44(self): return Array.__getitem__(15)
+    def set_M44(self, value): Array.__setitem__(15, value)
+    M44 = property(get_M44, set_M44)
+
+
 class _NuiLockedRect(ctypes.Structure):
     _fields_ = [('pitch', ctypes.c_int32), 
                 ('size', ctypes.c_int32),
@@ -179,6 +264,12 @@ class ImageResolution(_Enumeration):
     resolution_1280x1024 = Resolution1280x1024 = 3                      # for hires color only
 
 
+class SkeletonTracking(_Enumeration):
+    suppress_no_frame_data       = 0x00000001   # Prevents NuiSkeletonGetNextFrame from returning E_NUI_FRAME_NO_DATA errors. Instead, calls to NuiSkeletonGetNextFrame block until data is available or the timeout period passes.
+    title_sets_tracked_skeletons = 0x00000002   # Disables the default player selection mode and enables the title to manage which players have tracked skeletons.
+    enable_seated_support        = 0x00000004   # Uses seated skeleton tracking mode. The 10 lower-body joints of each skeleton will not be tracked.
+    enable_in_near_range         = 0x00000008
+
 class ImageDigitalZoom(_Enumeration):
     """Specifies the zoom factor."""
 
@@ -253,6 +344,23 @@ class JointId(_Enumeration):
     foot_right = FootRight = 19
     count = Count = 20
 
+class SkeletonBoneRotation(ctypes.Structure):
+    _fields_ = [('rotation_matrix', Matrix4), 
+                ('rotation_quaternion', Vector)]
+
+    def __repr__(self):
+        return '<SkeletonBoneRotation(%r, %r)>' % (self.rotation_matrix, self.rotation_quaternion)
+
+class SkeletonBoneOrientation(ctypes.Structure):
+    _fields_ = [('end_joint', JointId), 
+                ('start_joint', JointId),
+                ('hierarchical_rotation', SkeletonBoneRotation),
+                ('absolute_rotation', SkeletonBoneRotation),
+                ]
+
+    def __repr__(self):
+        return '<SkeletonBoneOrientation(%r, %r, %r, %r)>' % (self.end_joint, self.start_joint, self.hierarchical_rotation, self.absolute_rotation)
+
 
 class JointTrackingState(_Enumeration):
     """Specifies the joint tracking state. """
@@ -272,6 +380,7 @@ class SkeletonFrameQuality(_Enumeration):
     camera_motion = CameraMotion = 0x01
     extrapolated_floor = ExtrapolatedFloor 	 = 0x02
     upper_body_skeleton = UpperBodySkeleton = 0x04
+    seated_support_enabled = 0x08
 
 
 class SkeletonQuality(_Enumeration):
@@ -360,6 +469,20 @@ class SkeletonData(ctypes.Structure):
 
     skeleton_quality = property(get_skeleton_quality, set_skeleton_quality)
 
+    def calculate_bone_orientations(self):
+        """Calculate bone orientations for a skeleton.
+
+        The function calculates hierarchical and absolute joint angles for the skeleton, which can
+        be used in animating an avatar (Avateering). The HipCenter joint is the root of the hierarchy,
+        and describes an absolute rotation in the right-hand camera coordinate system. All other
+        joints describe rotations relative to their parent joint orientation. The angles are returned
+        in the same order as the joints are defined.
+
+        Returns a sequence of SkeletonBoneOrientation objects."""
+        arr = (SkeletonBoneOrientation*JointId.Count)()
+        _NuiSkeletonCalculateBoneOrientations(self, arr)
+        return tuple(arr)
+
     def __repr__(self):
         return '<Tracking: %r, ID: %r, Position: %r>' % (self.eTrackingState, 
                                                             self.dwTrackingID, 
@@ -383,6 +506,14 @@ class SkeletonData(ctypes.Structure):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __nonzero__(self):
+        return self.tracking_state != SkeletonTrackingState.not_tracked
+
+_NuiSkeletonCalculateBoneOrientations = _NUIDLL.NuiSkeletonCalculateBoneOrientations
+_NuiSkeletonCalculateBoneOrientations.argtypes = [ctypes.POINTER(SkeletonData), ctypes.POINTER(SkeletonBoneOrientation)]
+_NuiSkeletonCalculateBoneOrientations.restype = ctypes.HRESULT
+
 
 class SkeletonFrame(ctypes.Structure):
     _pack_ = 16

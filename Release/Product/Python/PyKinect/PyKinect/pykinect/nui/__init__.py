@@ -75,11 +75,12 @@ _FLT_EPSILON     = 1.192092896e-07
 
 class RuntimeOptions(object):
     """Specifies the runtime options for a Kinect sensor. """
-    UseColor = 2
-    UseDepth = 0x20
-    UseDepthAndPlayerIndex = 1
-    UseSkeletalTracking = 8
-    UsesAudio = 0x10000000
+    uses_depth_and_player_index = UseDepthAndPlayerIndex = 0x01
+    uses_color = UseColor = 0x02
+    uses_skeletal_tracking = UseSkeletalTracking = 0x08
+    uses_depth = UseDepth = 0x20
+    uses_high_quality_color = 0x40   # implies COLOR stream will be from uncompressed YUY2 @ 15fps
+    uses_audio = UsesAudio = 0x10000000
 
 
 class Device(object):
@@ -101,7 +102,7 @@ class Runtime(object):
     """Represents a Kinect sensor."""
 
     def __init__(self, 
-                 nui_init_flags = RuntimeOptions.UseColor | RuntimeOptions.UseDepth | RuntimeOptions.UseDepthAndPlayerIndex | RuntimeOptions.UseSkeletalTracking,                 
+                 nui_init_flags = RuntimeOptions.uses_color| RuntimeOptions.uses_depth | RuntimeOptions.uses_depth_and_player_index | RuntimeOptions.uses_skeletal_tracking,                 
                  index = 0):
         """Creates a new runtime.  By default initialized to the 1st installed kinect device and tracking all events"""
         self._nui = self._skeleton_event = self._image_event = self._depth_event = None
@@ -205,9 +206,9 @@ class Runtime(object):
 
 class ImageStreamType(object):
     """Specifies an image stream type. """
-    Depth = 0
-    Video = 1
-    Invalid = -1
+    depth = Depth = 0
+    video = Video = 1
+    invalid = Invalid = -1
 
 
 class ImageStream(object):
