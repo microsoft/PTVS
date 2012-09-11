@@ -504,6 +504,7 @@ namespace Microsoft.PythonTools.Hpc {
         private static readonly string[] _pyDebuggerFiles = new string[] {
             "visualstudio_py_debugger.py",
             "visualstudio_py_launcher.py",
+            "visualstudio_py_repl.py",
             "PyDebugAttach.dll",
             "PyDebugAttachX86.dll",
             "Microsoft.PythonTools.Debugger.dll",

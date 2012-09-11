@@ -15,6 +15,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -102,7 +103,7 @@ namespace Microsoft.PythonTools.MpiShim {
                     writer.WriteLine(exe);
                     writer.WriteLine(curDir);
                     writer.WriteLine(projectDir);
-                    writer.WriteLine(String.Join(" ", args, 7, args.Length - 7));
+                    writer.WriteLine(String.Join(" ", args.Skip(7).Select(MaybeQuote)));
                     writer.WriteLine(launchId + "@" + Environment.MachineName);
                     writer.WriteLine(options);
                     writer.Flush();
@@ -137,6 +138,19 @@ namespace Microsoft.PythonTools.MpiShim {
 
         private static void Help() {
             Console.WriteLine("{0}: <port number> <auth guid> <ip address> <cur dir> <project dir> <debugger options> <exe> <command line...>", typeof(MpiShim).Assembly.GetName().Name);
+        }
+
+        private static string MaybeQuote(string source) {
+            if (source.IndexOf(' ') >= 0) {
+                var escaped = source.Replace("\"", "\\\"");
+                if (source.Last() == '\\') {
+                    return "\"" + escaped + "\\\"";
+                } else {
+                    return "\"" + escaped + "\"";
+                }
+            } else {
+                return source;
+            }
         }
     }
 }
