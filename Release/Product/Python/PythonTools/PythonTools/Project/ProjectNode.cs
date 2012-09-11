@@ -1609,34 +1609,40 @@ namespace Microsoft.PythonTools.Project
 
                         ErrorHandler.ThrowOnFailure(this.Save(this.filename, 1, 0));
 
-                        // now we do have the project file saved. we need to create embedded files.
-                        foreach (MSBuild.ProjectItem item in this.BuildProject.Items)
+                        string unresolvedProjectHome = this.ProjectMgr.GetProjectProperty(CommonConstants.ProjectHome);
+                        string basePath = CommonUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(fileName), unresolvedProjectHome);
+                        string baseLocation = CommonUtils.GetAbsoluteDirectoryPath(location, unresolvedProjectHome);
+
+                        if (!CommonUtils.IsSameDirectory(basePath, baseLocation))
                         {
-                            // Ignore the item if it is a reference or folder
-                            if (this.FilterItemTypeToBeAddedToHierarchy(item.ItemType))
+                            // now we do have the project file saved. we need to create embedded files.
+                            foreach (MSBuild.ProjectItem item in this.BuildProject.Items)
                             {
-                                continue;
-                            }
+                                // Ignore the item if it is a reference or folder
+                                if (this.FilterItemTypeToBeAddedToHierarchy(item.ItemType))
+                                {
+                                    continue;
+                                }
 
-                            // MSBuilds tasks/targets can create items (such as object files),
-                            // such items are not part of the project per say, and should not be displayed.
-                            // so ignore those items.
-                            if (!this.IsItemTypeFileType(item.ItemType))
-                            {
-                                continue;
-                            }
+                                // MSBuilds tasks/targets can create items (such as object files),
+                                // such items are not part of the project per say, and should not be displayed.
+                                // so ignore those items.
+                                if (!this.IsItemTypeFileType(item.ItemType))
+                                {
+                                    continue;
+                                }
 
-                            string strRelFilePath = item.EvaluatedInclude;
-                            string basePath = Path.GetDirectoryName(fileName);
-                            string strPathToFile;
-                            string newFileName;
-                            // taking the base name from the project template + the relative pathname,
-                            // and you get the filename
-                            strPathToFile = CommonUtils.GetAbsoluteFilePath(basePath, strRelFilePath);
-                            // the new path should be the base dir of the new project (location) + the rel path of the file
-                            newFileName = CommonUtils.GetAbsoluteFilePath(location, strRelFilePath);
-                            // now the copy file
-                            AddFileFromTemplate(strPathToFile, newFileName);
+                                string strRelFilePath = item.EvaluatedInclude;
+                                string strPathToFile;
+                                string newFileName;
+                                // taking the base name from the project template + the relative pathname,
+                                // and you get the filename
+                                strPathToFile = CommonUtils.GetAbsoluteFilePath(basePath, strRelFilePath);
+                                // the new path should be the base dir of the new project (location) + the rel path of the file
+                                newFileName = CommonUtils.GetAbsoluteFilePath(baseLocation, strRelFilePath);
+                                // now the copy file
+                                AddFileFromTemplate(strPathToFile, newFileName);
+                            }
                         }
                     }
                     else

@@ -41,10 +41,12 @@
     <Assembly AssemblyName="Microsoft.PythonTools, Version=1.8.50330.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">|%CurrentProject%|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.ImportWizard;AssemblyName|">|Microsoft.PythonTools.ImportWizard|</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.Analysis|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.Debugger|</MefComponent>
     <ProjectTemplate>Templates\Projects\ConsoleAppProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\FromExistingCode</ProjectTemplate>
     <ItemTemplate>Templates\Files\EmptyPyFile</ItemTemplate>
     <ItemTemplate>Templates\Files\PyClass</ItemTemplate>
     <ItemTemplate>Templates\Files\TextFile</ItemTemplate>

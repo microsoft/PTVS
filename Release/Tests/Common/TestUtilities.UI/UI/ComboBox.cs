@@ -24,8 +24,11 @@ namespace TestUtilities.UI {
             ExpandCollapsePattern pat = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
             pat.Expand();
 
-            var item = Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, name)); 
- 
+            var item = Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, name));
+
+            if (item == null) {
+                throw new ElementNotAvailableException(name + " is not in the combobox");
+            }
             ((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
 
             pat.Collapse();

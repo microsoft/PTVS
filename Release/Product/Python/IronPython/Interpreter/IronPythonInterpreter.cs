@@ -44,7 +44,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private static int _interpreterCount;
 #endif
 
-        public IronPythonInterpreter(IronPythonInterpreterFactory factory) {
+        public IronPythonInterpreter(IronPythonInterpreterFactory factory)
+            : this(factory, null) {
+        }
+
+        public IronPythonInterpreter(IronPythonInterpreterFactory factory, PythonTypeDatabase typeDb) {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
             Debug.WriteLine(String.Format("IronPython Interpreter Created {0}", _id));
@@ -64,7 +68,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             LoadModules();
 
-            if (factory.ConfigurableDatabaseExists()) {
+            if (typeDb != null) {
+                _typeDb = typeDb;
+                lock (this) {
+                    _typeDb.BuiltinModule = (IronPythonBuiltinModule)_modules["__builtin__"];
+                }
+            } else if (factory.ConfigurableDatabaseExists()) {
                 LoadNewTypeDb();
             }
         }

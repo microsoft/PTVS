@@ -117,35 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CanNotCreateWindow" xml:space="preserve">
-    <value>Can not create tool window.</value>
-  </data>
-  <data name="ExecutingStartupScript" xml:space="preserve">
-    <value />
-  </data>
-  <data name="InitializingFromProject" xml:space="preserve">
-    <value />
-  </data>
-  <data name="MissingStartupScript" xml:space="preserve">
-    <value />
-  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="PythonProject" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>PythonProject.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="ReferencesNodeName" xml:space="preserve">
-    <value>References</value>
-  </data>
-  <data name="SettingWorkDir" xml:space="preserve">
-    <value />
-  </data>
-  <data name="ToolWindowTitle" xml:space="preserve">
-    <value>Python Command Line</value>
-  </data>
-  <data name="UpdatingSearchPath" xml:space="preserve">
-    <value />
-  </data>
-  <data name="WarningAnalysisNotCurrent" xml:space="preserve">
-    <value>Warning: the intellisense database is currently not up to date and completions may be missing.</value>
+    <value>..\Resources\PythonProject.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

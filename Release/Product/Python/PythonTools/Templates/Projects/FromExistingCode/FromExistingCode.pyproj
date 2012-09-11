@@ -2,13 +2,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{00000000-0000-0000-0000-000000000000}</ProjectGuid>
-    <ProjectHome>.</ProjectHome>
-    <StartupFile></StartupFile>
-    <SearchPath></SearchPath>
+    <ProjectGuid>$guid1$</ProjectGuid>
+    <ProjectHome>$projecthome$</ProjectHome>
+    <StartupFile>$startupfile$</StartupFile>
+    <SearchPath>$searchpaths$</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-  </PropertyGroup>
+$interpreter$  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
@@ -17,5 +17,6 @@
     <DebugSymbols>true</DebugSymbols>    
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
+$content$
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

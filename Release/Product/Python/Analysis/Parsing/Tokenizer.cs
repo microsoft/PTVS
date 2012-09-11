@@ -923,8 +923,12 @@ namespace Microsoft.PythonTools.Parsing {
 
                     case 'l':
                     case 'L':
-                        if (_langVersion.Is2x()) {
+                        {
                             MarkTokenEnd();
+                            
+                            if (_langVersion.Is3x()) {
+                                ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
+                            }
                             string tokenStr = GetTokenString();
                             try {
                                 // TODO: parse in place
@@ -937,7 +941,6 @@ namespace Microsoft.PythonTools.Parsing {
                                 return new ErrorToken(e.Message, tokenStr);
                             }
                         }
-                        break;
                     case '0':
                     case '1':
                     case '2':
@@ -1000,6 +1003,10 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L':
                         MarkTokenEnd();
 
+                        if (_langVersion.Is3x()) {
+                            ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
+                        }
+
                         if (Verbatim) {
                             return new VerbatimConstantValueToken(useBigInt ? bigInt : (BigInteger)iVal, GetTokenString());
                         }
@@ -1034,6 +1041,10 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'l':
                     case 'L':
                         MarkTokenEnd();
+
+                        if (_langVersion.Is3x()) {
+                            ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
+                        }
 
                         // TODO: parse in place
                         if (Verbatim) {
@@ -1087,6 +1098,10 @@ namespace Microsoft.PythonTools.Parsing {
                     case 'L':
                         MarkTokenEnd();
 
+                        if (_langVersion.Is3x()) {
+                            ReportSyntaxError(new IndexSpan(_tokenEndIndex - 1, 1), "invalid token", ErrorCodes.SyntaxError);
+                        }
+                        
                         // TODO: parse in place
                         if (Verbatim) {
                             return new VerbatimConstantValueToken(LiteralParser.ParseBigInteger(GetTokenSubstring(2, TokenLength - 3), 16), GetTokenString());

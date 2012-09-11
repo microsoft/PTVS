@@ -70,6 +70,10 @@
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ImportWizard\ImportWizard.csproj">
+      <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
+      <Name>Microsoft.PythonTools.ImportWizard</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
@@ -125,9 +129,6 @@
     </Reference>
     <Reference Include="microsoft.visualstudio.commonide, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Editor" />
-    <Reference Include="Microsoft.VisualStudio.ImportProjectFolderWizard">
-      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\ProjectWizards\Microsoft.VisualStudio.ImportProjectFolderWizard.Dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.NavigateTo.Interfaces, Version=0.0.0.0, Culture=neutral">
       <SpecificVersion>False</SpecificVersion>
@@ -146,6 +147,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -192,7 +194,6 @@
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileExtensionMapping.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
-    <Compile Include="ProvideImportTemplatesAttribute.cs" />
     <Compile Include="PythonTools\DialogWindowVersioningWorkaround.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
@@ -627,6 +628,20 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj">
+      <OutputSubPath>FromExistingCode</OutputSubPath>
+    </None>
+    <None Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
+      <SubType>Designer</SubType>
+      <OutputSubPath>FromExistingCode</OutputSubPath>
+    </None>
+    <Content Include="Templates\Projects\FromExistingCode\FromExistingCode.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <None Include="Templates\Projects\FromExistingCode\__TemplateIcon.ico">
+      <OutputSubPath>FromExistingCode</OutputSubPath>
+    </None>
     <Content Include="WebPiCmdLine\Microsoft.Web.Deployment.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -696,14 +711,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="PythonFile.ico">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Templates\Projects\ImportProject\ImportConApp.pyproj">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Templates\Projects\ImportProject\ImportWinApp.pyproj">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

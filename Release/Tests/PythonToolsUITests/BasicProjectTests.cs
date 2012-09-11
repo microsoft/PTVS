@@ -360,7 +360,15 @@ namespace PythonToolsUITests {
         public void ChangeDefaultInterpreterProjectClosed() {
             try {
                 var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-                app.SelectDefaultInterpreter("Python 2.6");
+                try {
+                    app.SelectDefaultInterpreter("Python 2.6");
+                } catch (System.Windows.Automation.ElementNotAvailableException) {
+                    try {
+                        app.SelectDefaultInterpreter("Python 3.2");
+                    } catch (System.Windows.Automation.ElementNotAvailableException) {
+                        Assert.Inconclusive("Test needs Python 2.7 and one of 2.6 or 3.2");
+                    }
+                }
 
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
                 VsIdeTestHostContext.Dte.Solution.Close();
@@ -906,10 +914,20 @@ namespace PythonToolsUITests {
             // http://pytools.codeplex.com/workitem/765
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
 
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);            
-            app.SelectDefaultInterpreter("Python 2.6");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var interpreterName = "Python 2.6";
+            try {
+                app.SelectDefaultInterpreter(interpreterName);
+            } catch (System.Windows.Automation.ElementNotAvailableException) {
+                try {
+                    interpreterName = "Python 2.7";
+                    app.SelectDefaultInterpreter(interpreterName);
+                } catch (System.Windows.Automation.ElementNotAvailableException) {
+                    Assert.Inconclusive("Test requires Python 2.6 or 2.7");
+                }
+            }
             
-            var options = GetInteractiveOptions("Python 2.6 Interactive");
+            var options = GetInteractiveOptions(interpreterName + " Interactive");
 
             options.InlinePrompts = true;
             options.UseInterpreterPrompts = false;
@@ -928,7 +946,7 @@ namespace PythonToolsUITests {
             Keyboard.PressAndRelease(System.Windows.Input.Key.I, System.Windows.Input.Key.LeftAlt);
 
             Keyboard.Type("print('hi')\r");
-            var interactive = app.GetInteractiveWindow("Python 2.6 Interactive");
+            var interactive = app.GetInteractiveWindow(interpreterName + " Interactive");
             interactive.WaitForTextEnd("hi", ">>> ");
         }
 

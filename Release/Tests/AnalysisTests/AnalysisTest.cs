@@ -2022,7 +2022,7 @@ abc()
         }
 
         private static void LocationNames(List<IAnalysisVariable> vars, StringBuilder error) {
-            foreach (var var in vars) {
+            foreach (var var in vars.OrderBy(v => v.Location.Line).ThenBy(v => v.Location.Column)) {
                 error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.Line, var.Location.Column, var.Type);
                 error.AppendLine();
             }

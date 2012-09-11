@@ -15,6 +15,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
@@ -161,16 +162,20 @@ namespace PythonToolsUITests {
             var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", "Search Path");
             projectNode.SetFocus();
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddSearchPath"));
+            // Need to lock inside the worker and around the SaveAll command to ensure that AddSearchPath
+            // has a chance to complete before saving the project. Otherwise, the search paths will never
+            // show up.
+            ThreadPool.QueueUserWorkItem(x => { lock(app) app.Dte.ExecuteCommand("Project.AddSearchPath"); });
 
             var dialog = new SelectFolderDialog(app.WaitForDialog());
             dialog.FolderName = TestData.GetPath(@"TestData\Outlining");
             dialog.SelectFolder();
 
-            app.Dte.ExecuteCommand("File.SaveAll");
+            lock (app) app.Dte.ExecuteCommand("File.SaveAll");
 
             var text = File.ReadAllText(TestData.GetPath(@"TestData\AddSearchPaths\AddSearchPaths.pyproj"));
-            Assert.IsTrue(text.Contains("<SearchPath>..\\Outlining\\</SearchPath>"));
+            string actual = Regex.Match(text, @"<SearchPath>.*</SearchPath>", RegexOptions.Singleline).Value;
+            Assert.AreEqual("<SearchPath>..\\Outlining\\</SearchPath>", actual);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

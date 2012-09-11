@@ -1,0 +1,20 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>From Existing Python code</Name>
+    <Description>Create a new project using code files that are already in a folder hierarchy.</Description>
+    <Icon>__TemplateIcon.ico</Icon>
+    <ProjectType>Python</ProjectType>
+    <SortOrder>10</SortOrder>
+    <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>false</CreateNewFolder>
+    <DefaultName>PythonApplication</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="FromExistingCode.pyproj" ReplaceParameters="true"></Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ImportWizard, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ImportWizard.Wizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

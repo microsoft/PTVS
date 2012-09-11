@@ -32,15 +32,15 @@ namespace Microsoft.PythonTools.Project {
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = VSConstants.CLSID.MiscellaneousFilesProject_string, NameResourceID = 3004, DefaultName = "module", TemplateDir = "Templates\\NewItem")]
     [ProvideFileExtensionMapping("{E23E32ED-3467-4401-A364-1352666A3502}", "Python Editor", typeof(PythonEditorFactory), "{" + PythonConstants.ProjectSystemPackageGuid + "}", 100)]
 #if DEV11
-    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, "*:1", ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
-    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, null, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
-    [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, ProjectGuid = "{" + PythonConstants.EditorFactoryPromptForEncodingGuid + "}", NameResourceID = 3015, LinkedEditorGuid = "{" + PythonConstants.EditorFactoryGuid + "}")]
+    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, "*:1", ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3004, DefaultName = "module")]
+    [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, null, ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3004, DefaultName = "module")]
+    [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3015, LinkedEditorGuid = "{" + PythonConstants.EditorFactoryGuid + "}")]
 #else
     [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, "*:1", ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryGuid + "}", NameResourceID = 3004, DefaultName = "module")]
     [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, ProjectGuid = "{" + PythonConstants.EditorFactoryPromptForEncodingGuid + "}", NameResourceID = 3015, LinkedEditorGuid = "{" + PythonConstants.EditorFactoryGuid + "}")]
 #endif
-    [ProvideFileFilter("{" + PythonConstants.EditorFactoryGuid + "}", "/1", "Python Files;*.py,*.pyw", 100)]
+    [ProvideFileFilter(PythonConstants.ProjectFactoryGuid, "/1", "Python Files;*.py,*.pyw", 100)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Designer_string)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactory), VSConstants.LOGVIEWID.Code_string)]
@@ -49,7 +49,6 @@ namespace Microsoft.PythonTools.Project {
     [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.Designer_string)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.Code_string)]
     [ProvideEditorLogicalView(typeof(PythonEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.Debugging_string)]
-    [ProvideImportTemplates("#111", PythonConstants.ProjectFactoryGuid, "$PackageFolder$\\Templates\\Projects\\ImportProject", "ImportWinApp.pyproj", "ImportConApp.pyproj", "ImportConApp.pyproj")]
     [Guid(PythonConstants.ProjectSystemPackageGuid)]
     [DeveloperActivity("Python", typeof(PythonProjectPackage))]
     public class PythonProjectPackage : CommonProjectPackage {

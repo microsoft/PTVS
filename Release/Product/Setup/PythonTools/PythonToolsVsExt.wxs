@@ -41,6 +41,10 @@
                 <Condition>ALLUSERS = 1</Condition>
                 <File Id="filD4798D96AC5E4F9A96A44CA110175A98" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.dll" Assembly=".net"/>
             </Component>
+            <Component Id="cmp6E562A0FD5B04BC1ABA4B46F899FFABC" Directory="GAC" Guid="{72A17B9C-E63D-4399-9B5D-755552C444A7}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil2D46C9A322D8435988BAED1587312F45" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.ImportWizard.dll" Assembly=".net"/>
+            </Component>
 
             <!-- Both per user and all user components -->
             <Component Id="cmp859EFD7B5E5F8E214EC472E7DC763EBF" Directory="INSTALLLOCATION" Guid="{FCF50E4C-2843-4D32-A900-B1D0FCE2F297}">
@@ -75,6 +79,9 @@
             </Component>
             <Component Id="cmpEDB9BE8986ED443DAE68C5B39405ACEF" Directory="INSTALLLOCATION" Guid="{25135ADF-6873-420E-AAA3-242214599B63}">
                 <File Id="fil2EE3FFF3C2CA48CF8452EE5B975F0F0D" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.dll" />
+            </Component>
+            <Component Id="cmp7BC1D524BF6A4012B043A09263C70396" Directory="INSTALLLOCATION" Guid="{5B186383-5754-44E0-B443-34C0B9A8FC80}">
+                <File Id="filA20456929DAF4C77AC6C2BB6741C622C" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.ImportWizard.dll" />
             </Component>
             <Component Id="cmpAECA7C7BA8604DC995F00FFD6208A8AE" Directory="INSTALLLOCATION" Guid="{C69AD6BF-3B48-41EF-A2DE-AB1EB65C72A1}">
                 <File Id="fil83E122C66D1C4B21ABC1129A0FC1C2F1" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analyzer.exe" />
@@ -136,11 +143,8 @@
             <Component Id="cmpF2FFD4C8F8F3A803EFF2ACC027975136" Directory="dir8A804F37A06868229FBCA080587FD3F2" Guid="{5D696F4F-0141-4CC9-A3EB-DAB200E4E3AB}">
                 <File Id="filF3356809E63779C8D279862E6C856094" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ConsoleAppProject\ConsoleApp.zip" />
             </Component>
-            <Component Id="cmpE0B39F7BE20943E1B7941CB9174D5D5A" Directory="dirCE1E9645E1374D358540CE76B38DABB4" Guid="{E9604582-07C9-4CF4-B333-DC8554CC7F8B}">
-                <File Id="filFE41C48AD4554B90AB1BAD5F554A6A8D" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ImportProject\ImportConApp.pyproj" />
-            </Component>
-            <Component Id="cmp2AAF88C03D5F49F29AF8AFD617B7E223" Directory="dirCE1E9645E1374D358540CE76B38DABB4" Guid="{8826AF26-D4FC-415B-89EA-19CCFE09EC13}">
-                <File Id="filD56FD6E607A249B78B508CB8FE88E979" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ImportProject\ImportWinApp.pyproj" />
+            <Component Id="cmp8135586F02804D91A8DB72CC7FC6ACD4" Directory="dirC7642DBB71044CACB35A2064AA9697E4" Guid="{5982C49A-8FAA-4351-BA08-2F6DDD71B0F8}">
+                <File Id="filA06AE3FFF4054E38B7EBD00CA9F67187" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\FromExistingCode\FromExistingCode.zip" />
             </Component>
             <Component Id="cmp5E1CEDE43A189A6AACBB60829AD63E1D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6BF9570B-B452-4D37-AC11-7376E0D43881}">
                 <File Id="filF929E14C8F0D95906776F9E4446FE9C8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\array.idb" />
@@ -328,6 +332,9 @@
         <DirectoryRef Id="dir8A804F37A06868229FBCA080587FD3F2" />
     </Fragment>
     <Fragment>
+        <DirectoryRef Id="dirC7642DBB71044CACB35A2064AA9697E4" />
+    </Fragment>
+    <Fragment>
         <DirectoryRef Id="dir0D2EB39806B8FE87825F141262A782D4">
             <Directory Id="dir09D551762C64E912856A96ED35E3D478" Name="Files" />
         </DirectoryRef>
@@ -363,13 +370,13 @@
         </DirectoryRef>
     </Fragment>
     <Fragment>
-        <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
-            <Directory Id="dirD5195BC5D1C101171FEF8AD9B89AA866" Name="EmptyPackage" />
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dirC7642DBB71044CACB35A2064AA9697E4" Name="FromExistingCode" />
         </DirectoryRef>
     </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
-            <Directory Id="dirCE1E9645E1374D358540CE76B38DABB4" Name="ImportProject" />
+  <Fragment>
+        <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
+            <Directory Id="dirD5195BC5D1C101171FEF8AD9B89AA866" Name="EmptyPackage" />
         </DirectoryRef>
     </Fragment>
 </Wix>

@@ -91,6 +91,7 @@ foreach ($version in ("10.0","11.0")) {
               "Microsoft.PythonTools.Debugger.dll", 
               "Microsoft.PythonTools.dll", 
               "Microsoft.PythonTools.Hpc.dll", 
+              "Microsoft.PythonTools.ImportWizard.dll", 
               "Microsoft.PythonTools.IronPython.dll", 
               "Microsoft.PythonTools.MpiShim.exe", 
               "Microsoft.PythonTools.Profiling.dll", 

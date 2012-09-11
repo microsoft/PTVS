@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools {
 
         public ProvideFileFilterAttribute(string projectGuid, string name, string filter, int sortPriority) {
             _name = name;
-            _id = projectGuid;
+            _id = Guid.Parse(projectGuid).ToString("B");
             _filter = filter;
             _sortPriority = sortPriority;
         }

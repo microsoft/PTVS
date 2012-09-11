@@ -998,15 +998,20 @@ namespace Microsoft.PythonTools.Project {
             // save the new project to to disk
             SaveMSBuildProjectFileAs(pszProjectFilename);
 
-            // ProjectHome is always "." initially, but was set by SaveMSBuildProjectFileAs to point to
-            // the temporary directory.
-            BuildProject.SetProperty(CommonConstants.ProjectHome, ".");
+            if (CommonUtils.IsSameDirectory(ProjectHome, basePath)) {
+                // ProjectHome was set by SaveMSBuildProjectFileAs to point to the temporary directory.
+                BuildProject.SetProperty(CommonConstants.ProjectHome, ".");
 
-            // save the project again w/ updated file info
-            BuildProjectLocationChanged();
+                // save the project again w/ updated file info
+                BuildProjectLocationChanged();
 
-            // remove all the children, saving any dirty files, and collecting the list of open files
-            MoveFilesForDeferredSave(this, basePath, newName);
+                // remove all the children, saving any dirty files, and collecting the list of open files
+                MoveFilesForDeferredSave(this, basePath, newName);
+            } else {
+                // Project referenced external files only, so just update its location without moving
+                // files around.
+                BuildProjectLocationChanged();
+            }
 
             BuildProject.Save();
 

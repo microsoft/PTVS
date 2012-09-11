@@ -1115,38 +1115,99 @@ namespace Microsoft.PythonTools.Intellisense {
             private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string, List<ErrorResult>>();
             private readonly uint _cookie;
             private readonly IVsTaskList _errorList;
-            private readonly SemaphoreSlim _waitingToUpdate, _updating;
+            
+
+            private class WorkerMessage {
+                public enum MessageType { Clear, Warnings, Errors, Update }
+                public MessageType Type;
+                public string Filename;
+                public List<ErrorResult> Errors;
+
+                public readonly static WorkerMessage Update = new WorkerMessage { Type = MessageType.Update };
+            }
+            private readonly SemaphoreSlim _workerRunning;
+            private readonly ConcurrentQueue<WorkerMessage> _workerQueue;
 
             public TaskProvider(IVsTaskList errorList) {
                 _errorList = errorList;
                 if (_errorList != null) {
                     ErrorHandler.ThrowOnFailure(_errorList.RegisterTaskProvider(this, out _cookie));
                 }
-                _waitingToUpdate = new SemaphoreSlim(1);
-                _updating = new SemaphoreSlim(1);
+                _workerRunning = new SemaphoreSlim(1);
+                _workerQueue = new ConcurrentQueue<WorkerMessage>();
             }
 
-            private static void UpdateTasksInternal(object param) {
-                var self = (TaskProvider)param;
-                if (self._waitingToUpdate.Wait(0)) {
-                    try {
-                        Thread.Sleep(500);
-                        self._updating.Wait();
-                    } finally {
-                        self._waitingToUpdate.Release();
+            private void Worker(object param) {
+                if (!_workerRunning.Wait(100)) {
+                    return;
+                }
+
+                try {
+                    bool updateAtEnd = false, changed = false;
+                    WorkerMessage msg;
+                    List<ErrorResult> existing;
+
+                    for (int timeout = 10; timeout > 0; --timeout) {
+                        while (_workerQueue.TryDequeue(out msg)) {
+                            switch (msg.Type) {
+                                case WorkerMessage.MessageType.Clear:
+                                    lock (this) {
+                                        changed = _errors.Remove(msg.Filename) || changed;
+                                        changed = _warnings.Remove(msg.Filename) || changed;
+                                    }
+                                    break;
+                                case WorkerMessage.MessageType.Warnings:
+                                    lock (this) {
+                                        if (_warnings.TryGetValue(msg.Filename, out existing)) {
+                                            existing.AddRange(msg.Errors);
+                                        } else {
+                                            _warnings[msg.Filename] = msg.Errors;
+                                        }
+                                    }
+                                    changed = true;
+                                    break;
+                                case WorkerMessage.MessageType.Errors:
+                                    lock (this) {
+                                        if (_errors.TryGetValue(msg.Filename, out existing)) {
+                                            existing.AddRange(msg.Errors);
+                                        } else {
+                                            _errors[msg.Filename] = msg.Errors;
+                                        }
+                                    }
+                                    changed = true;
+                                    break;
+                                case WorkerMessage.MessageType.Update:
+                                    updateAtEnd = true;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        Thread.Sleep(50);
                     }
 
-                    try {
-                        self._errorList.RefreshTasks(self._cookie);
-                    } finally {
-                        self._updating.Release();
+                    if (updateAtEnd && changed) {
+                        _errorList.RefreshTasks(_cookie);
                     }
+                } finally {
+                    _workerRunning.Release();
                 }
             }
 
+            private void SendMessage(WorkerMessage msg) {
+                _workerQueue.Enqueue(msg);
+                if (_workerRunning.Wait(0)) {
+                    try {
+                        ThreadPool.QueueUserWorkItem(Worker);
+                    } finally {
+                        _workerRunning.Release();
+                    }
+                }
+            }
+            
             public void UpdateTasks() {
                 if (_errorList != null) {
-                    ThreadPool.QueueUserWorkItem(UpdateTasksInternal, this);
+                    SendMessage(WorkerMessage.Update);
                 }
             }
 
@@ -1167,7 +1228,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private static Dictionary<string, ErrorResult[]> CopyErrorList(Dictionary<string, List<ErrorResult>> input) {
-                Dictionary<string, ErrorResult[]> errors = new Dictionary<string, ErrorResult[]>();
+                Dictionary<string, ErrorResult[]> errors = new Dictionary<string, ErrorResult[]>(input.Count);
                 foreach (var keyvalue in input) {
                     errors[keyvalue.Key] = keyvalue.Value.ToArray();
                 }
@@ -1198,25 +1259,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
             internal void AddErrors(string filename, IList<ErrorResult> errors) {
                 if (errors.Count > 0) {
-                    lock (this) {
-                        List<ErrorResult> errorList;
-                        if (!_errors.TryGetValue(filename, out errorList)) {
-                            _errors[filename] = errorList = new List<ErrorResult>();
-                        }
-                        errorList.AddRange(errors);
-                    }
+                    SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Errors, Filename = filename, Errors = new List<ErrorResult>(errors) });
                 }
             }
 
             internal void AddWarnings(string filename, IList<ErrorResult> errors) {
                 if (errors.Count > 0) {
-                    lock (this) {
-                        List<ErrorResult> errorList;
-                        if (!_warnings.TryGetValue(filename, out errorList)) {
-                            _warnings[filename] = errorList = new List<ErrorResult>();
-                        }
-                        errorList.AddRange(errors);
-                    }
+                    SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Warnings, Filename = filename, Errors = new List<ErrorResult>(errors) });
                 }
             }
 
@@ -1225,13 +1274,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             internal void Clear(string filename, bool updateList) {
-                bool removed;
-                lock (this) {
-                    removed = _warnings.Remove(filename);
-                    removed = _errors.Remove(filename) || removed;
-                }
-                if (updateList && removed) {
-                    UpdateTasks();
+                SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Clear, Filename = filename });
+                if (updateList) {
+                    SendMessage(WorkerMessage.Update);
                 }
             }
 

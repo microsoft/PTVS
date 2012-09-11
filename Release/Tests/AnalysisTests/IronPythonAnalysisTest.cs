@@ -41,7 +41,7 @@ namespace AnalysisTests {
         }
 
         private static IPythonInterpreter CreateInterpreter() {
-            var res = new IronPythonInterpreter(new IronPythonInterpreterFactory());
+            var res = new IronPythonInterpreter(new IronPythonInterpreterFactory(), PythonTypeDatabase.CreateDefaultTypeDatabase());
             res.Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
             return res;
         }

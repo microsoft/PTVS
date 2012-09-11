@@ -584,7 +584,7 @@ namespace AnalysisTests {
             foreach (var version in V30_V32Versions) {
                 ParseErrors("LiteralsV2.py", 
                     version,
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 0, 1, 1, 5, 1, 6),
+                    new ErrorInfo("invalid token", 4, 1, 5, 5, 1, 6),
                     new ErrorInfo("invalid syntax", 8, 2, 2, 24, 2, 18),
                     new ErrorInfo("invalid syntax", 27, 3, 2, 43, 3, 18),
                     new ErrorInfo("invalid syntax", 47, 4, 3, 60, 4, 16),
@@ -611,21 +611,21 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid syntax", 460, 25, 3, 477, 25, 20),
                     new ErrorInfo("invalid syntax", 480, 26, 2, 519, 27, 36),
                     new ErrorInfo("invalid syntax", 522, 28, 2, 533, 28, 13),
-                    new ErrorInfo("bad char for the integer value: 'l' (base 10)", 536, 29, 2, 547, 29, 13),
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 550, 30, 2, 561, 30, 13),
+                    new ErrorInfo("invalid token", 546, 29, 12, 547, 29, 13),
+                    new ErrorInfo("invalid token", 560, 30, 12, 561, 30, 13),
                     new ErrorInfo("invalid token", 563, 31, 1, 567, 31, 5),
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 570, 32, 2, 574, 32, 6)
+                    new ErrorInfo("invalid token", 573, 32, 5, 574, 32, 6)
                 );
             }
 
             foreach (var version in V33AndUp) {
                 ParseErrors("LiteralsV2.py",
                     version,
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 0, 1, 1, 5, 1, 6),
-                    new ErrorInfo("bad char for the integer value: 'l' (base 10)", 536, 29, 2, 547, 29, 13),
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 550, 30, 2, 561, 30, 13),
+                    new ErrorInfo("invalid token", 4, 1, 5, 5, 1, 6),
+                    new ErrorInfo("invalid token", 546, 29, 12, 547, 29, 13),
+                    new ErrorInfo("invalid token", 560, 30, 12, 561, 30, 13),
                     new ErrorInfo("invalid token", 563, 31, 1, 567, 31, 5),
-                    new ErrorInfo("bad char for the integer value: 'L' (base 10)", 570, 32, 2, 574, 32, 6)
+                    new ErrorInfo("invalid token", 573, 32, 5, 574, 32, 6)
                 );
                 CheckAst(
                     ParseFile("LiteralsV3.py", ErrorSink.Null, version),
