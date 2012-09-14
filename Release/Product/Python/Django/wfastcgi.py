@@ -380,7 +380,7 @@ if __name__ == '__main__':
                     os.environ.update(env)
                     response = ''.join(handler(record.params, start_response))
                 except:
-                    send_response(record.req_id, FCGI_STDERR, errors.getvalue())
+                    send_response(record.req_id, FCGI_STDERR, errors.getvalue() + '\n\n' + traceback.format_exc())
                 else:
                     status = 'Status: ' + status_line + '\r\n'
                     headers = ''.join('%s: %s\r\n' % (name, value) for name, value in response_headers)
