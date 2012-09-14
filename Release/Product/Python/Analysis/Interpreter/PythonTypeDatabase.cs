@@ -401,13 +401,14 @@ namespace Microsoft.PythonTools.Interpreter {
                     proc.Start();
                     proc.BeginErrorReadLine();
                     proc.BeginOutputReadLine();
-                    proc.OutputDataReceived += (sender, args) => output.Append(args.Data);
-                    proc.ErrorDataReceived += (sender, args) => output.Append(args.Data);
+                    proc.OutputDataReceived += (sender, args) => output.AppendLine(args.Data);
+                    proc.ErrorDataReceived += (sender, args) => output.AppendLine(args.Data);
                     proc.WaitForExit();
+                    LogEvent(request, "OUTPUT\r\n    " + output.Replace("\r\n", "\r\n    "));
                 } catch (Win32Exception ex) {
                     // failed to start process, interpreter doesn't exist?           
                     LogEvent(request, "FAIL_SCRAPE " + ex.ToString().Replace("\r\n", " -- "));
-                    LogEvent(request, "    " + output.Replace("\r\n", "    \r\n"));
+                    LogEvent(request, "    " + output.Replace("\r\n", "\r\n    "));
                     databaseGenerationCompleted();
                     return;
                 }

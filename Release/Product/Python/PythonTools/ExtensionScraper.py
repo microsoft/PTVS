@@ -27,10 +27,10 @@ except:
 # Expects either:
 # scrape [filename] [output_path]
 #       Scrapes the file and saves the analysis to the specified filename, exits w/ nonzero exit code if anything goes wrong.
-if len(sys.argv) == 4:
+if len(sys.argv) == 5:
     if sys.argv[1] == 'scrape':
         filename = sys.argv[2]
-        mod_name = path.splitext(path.basename(filename))[0]
+        mod_name = sys.argv[4]
         try:
             module = imp.load_dynamic(mod_name, filename)
         except ImportError:

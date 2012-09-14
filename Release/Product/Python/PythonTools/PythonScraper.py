@@ -237,7 +237,7 @@ def generate_type_new(type_obj, obj):
 def oldstyle_mro(type_obj, res):
     for base in type_obj.__bases__:
         if base not in res:
-            res.append(base)
+            res.append(type_to_name(base))
 
     for base in type_obj.__bases__:
         oldstyle_mro(base, res)
@@ -1951,7 +1951,8 @@ if __name__ == "__main__":
                             "\"" + os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py') + "\"",
                             'scrape',
                             "\"" + os.path.join(dirname, filename) + "\"",
-                            "\"" + os.path.join(outpath, pkg_name) + "\""
+                            "\"" + os.path.join(outpath, pkg_name) + "\"",
+							pkg_name
                 )
 
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
