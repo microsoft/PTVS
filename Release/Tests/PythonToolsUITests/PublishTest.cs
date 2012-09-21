@@ -36,6 +36,11 @@ namespace PythonToolsUITests {
         private const string PrivateSharePassword = "!10ctopus";
         private const string PrivateSharePasswordIncorrect = "NotThisPassword";
 
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

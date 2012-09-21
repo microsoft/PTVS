@@ -196,7 +196,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 psi.RedirectStandardError = true;
                 psi.Arguments =
                     "\"" + Path.Combine(GetPythonToolsInstallPath(), "ExtensionScraper.py") + "\"" +      // script to run
-                    " scrape" +                                                                           // scrape are
+                    " scrape" +                                                                           // scrape
+                    " -" +                                                                                // no module name
                     " \"" + extensionModuleFilename + "\"" +                                              // extension module path
                     " \"" + dbFile.Substring(0, dbFile.Length - 4) + "\"";                                // output file path (minus .idb)
 

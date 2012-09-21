@@ -12,12 +12,93 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools;
 
 namespace TestUtilities {
     public static class TestData {
+        const string BinariesSourcePath = @"Binaries\" +
+#if DEBUG
+            @"Debug" + 
+#else
+            @"Release" + 
+#endif
+#if DEV11
+            @"11.0\";
+#else
+            @"10.0\";
+#endif
+        const string BinariesOutPath = "";
+
+        const string DataSourcePath = @"Release\Tests\Common\TestData\";
+        const string DataOutPath = @"TestData\";
+
+        private static string GetSolutionDir() {
+            var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
+            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir) && !File.Exists(Path.Combine(dir, "PythonTools.sln"))) {
+                dir = Path.GetDirectoryName(dir);
+            }
+            return dir;
+        }
+
+        private static void CopyFiles(string sourceDir, string destDir) {
+            try {
+                Directory.CreateDirectory(destDir);
+            } catch (IOException) {
+            }
+            
+            var newDirectories = new HashSet<string>(from d in Directory.EnumerateDirectories(sourceDir, "*", SearchOption.AllDirectories)
+                                                     where d.StartsWith(sourceDir)
+                                                     select d.Substring(sourceDir.Length));
+            newDirectories.ExceptWith(from d in Directory.EnumerateDirectories(destDir, "*", SearchOption.AllDirectories)
+                                      where d.StartsWith(destDir)
+                                      select d.Substring(destDir.Length));
+
+            foreach (var newDir in newDirectories.OrderBy(i => i.Length).Select(i => Path.Combine(destDir, i))) {
+                try {
+                    Directory.CreateDirectory(newDir);
+                } catch {
+                    Debug.WriteLine("Failed to create directory " + newDir);
+                }
+            }
+
+            var newFiles = new HashSet<string>(from f in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories)
+                                               where f.StartsWith(sourceDir)
+                                               select f.Substring(sourceDir.Length));
+            newFiles.ExceptWith(from f in Directory.EnumerateFiles(destDir, "*", SearchOption.AllDirectories)
+                                where f.StartsWith(destDir)
+                                select f.Substring(destDir.Length));
+
+            foreach (var newFile in newFiles) {
+                var copyFrom = Path.Combine(sourceDir, newFile);
+                var copyTo = Path.Combine(destDir, newFile);
+                try {
+                    File.Copy(copyFrom, copyTo);
+                    File.SetAttributes(copyTo, FileAttributes.Normal);
+                } catch {
+                    Debug.WriteLine("Failed to copy " + copyFrom + " to " + copyTo);
+                }
+            }
+        }
+
+        public static void Deploy() {
+            var sourceRoot = GetSolutionDir();
+            var deployRoot = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
+
+            var binSource = Path.Combine(sourceRoot, BinariesSourcePath);
+            var binDest = Path.Combine(deployRoot, BinariesOutPath);
+            if (binSource == binDest) {
+                Debug.Fail("Select the default.testsettings file before running tests.");
+            }
+
+            CopyFiles(binSource, binDest);
+            CopyFiles(Path.Combine(sourceRoot, DataSourcePath), Path.Combine(deployRoot, DataOutPath));
+        }
+
         /// <summary>
         /// Returns the full path to the deployed file.
         /// </summary>

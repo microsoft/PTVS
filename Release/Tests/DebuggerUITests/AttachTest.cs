@@ -42,6 +42,11 @@ namespace DebuggerUITests {
     /// </summary>
     [TestClass]
     public class AttachTest {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         public AttachTest() {
             //
             // TODO: Add constructor logic here

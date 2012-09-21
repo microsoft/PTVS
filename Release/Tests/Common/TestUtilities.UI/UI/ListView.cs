@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -54,7 +55,7 @@ namespace TestUtilities.UI {
 
         public ListItem GetFirstByColumnIdAndValue(int col, string val) {
             foreach (ListItem r in Items) {
-                if (r[col] == val) return r;
+                if (r[col].Equals(val, StringComparison.CurrentCulture)) return r;
             }
             Assert.Fail("No item found with column {0} == {1}", col, val);
             return null;

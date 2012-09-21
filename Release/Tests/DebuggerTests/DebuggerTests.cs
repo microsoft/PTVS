@@ -29,6 +29,11 @@ using TestUtilities;
 namespace DebuggerTests {
     [TestClass]
     public class DebuggerTests : BaseDebuggerTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0)]
         public void TestThreads() {
             // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.

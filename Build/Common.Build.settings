@@ -20,14 +20,24 @@
     <CodeCoverageEnabled Condition="'$(CodeCoverageEnabled)'==''">true</CodeCoverageEnabled>
 
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
+    <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
+    <TargetFrameworkVersion Condition="'$(VSTarget)' == '10.0'">v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5</TargetFrameworkVersion>
+
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
 
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <TargetsPath>$(BuildRoot)\Build</TargetsPath>
     <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' != '' and $(OutDir.EndsWith(`\`))">$(OutDir)</OutputPath>
     <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' != '' and !$(OutDir.EndsWith(`\`))">$(OutDir)\</OutputPath>
-    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' == ''">$(BuildRoot)\Binaries\$(Configuration)\</OutputPath>
+    <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' == ''">$(BuildRoot)\Binaries\$(Configuration)$(VSTarget)\</OutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(IntDir)' != '' and $(IntDir.EndsWith(`\`))">$(IntDir)</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(IntDir)' != '' and !$(IntDir.EndsWith(`\`))">$(IntDir)\</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">obj\Dev$(VSTarget)\$(Configuration)\</IntermediateOutputPath>
+
     <OutDir>$(OutputPath)</OutDir>
+    <IntDir>$(IntermediateOutputPath)</IntDir>
   </PropertyGroup>
 
 

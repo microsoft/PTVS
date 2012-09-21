@@ -29,6 +29,11 @@ using TestUtilities.Mocks;
 namespace DjangoTests {
     [TestClass]
     public class DjangoAttributeTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         public void ProvideDebugLanguageTests() {
             var attr = new ProvideDebugLanguageAttribute("Django Templates",

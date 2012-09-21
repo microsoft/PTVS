@@ -13,7 +13,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-      ObjDir=$(BuildRoot)\Release\Product\Python\PyKinect\obj\$(Configuration);
+      ObjDir=$(BuildRoot)\Release\Product\Python\PyKinect\obj\Dev$(VSTarget)\$(Configuration);
       PyKinectDir=$(BuildRoot)\Release\Product\Python\PyKinect\;
       VSTargetVersion=$(VSTarget)
     </DefineConstants>

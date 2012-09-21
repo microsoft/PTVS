@@ -22,6 +22,11 @@ using TestUtilities.UI;
 namespace PythonToolsUITests {
     [TestClass]
     public class AddImportTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

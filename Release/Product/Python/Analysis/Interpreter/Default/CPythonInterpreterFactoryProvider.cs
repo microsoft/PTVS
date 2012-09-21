@@ -82,13 +82,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                             continue;
                         }
 
-                        if (!arch.HasValue) {
-                            arch = NativeMethods.GetBinaryType(Path.Combine(basePath, "python.exe"));
+                        var actualArch = arch;
+                        if (!actualArch.HasValue) {
+                            actualArch = NativeMethods.GetBinaryType(Path.Combine(basePath, "python.exe"));
                         }
 
                         var id = _cpyInterpreterGuid;
                         var description = "Python";
-                        if (arch == ProcessorArchitecture.Amd64) {
+                        if (actualArch == ProcessorArchitecture.Amd64) {
                             id = _cpy64InterpreterGuid;
                             description = "Python 64-bit";
                         }
@@ -101,7 +102,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                                 Path.Combine(basePath, "python.exe"),
                                 Path.Combine(basePath, "pythonw.exe"),
                                 "PYTHONPATH",
-                                arch ?? ProcessorArchitecture.None
+                                actualArch ?? ProcessorArchitecture.None
                             )
                         );
                     }

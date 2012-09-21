@@ -13,7 +13,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-      ObjDir=$(BuildRoot)\Release\Product\Python\Pyvot\obj\$(Configuration);
+      ObjDir=$(BuildRoot)\Release\Product\Python\Pyvot\obj\Dev$(VSTarget)\$(Configuration);
       PyvotDir=$(BuildRoot)\Release\Product\Python\Pyvot\Pyvot;
       VSTargetVersion=$(VSTarget)
     </DefineConstants>

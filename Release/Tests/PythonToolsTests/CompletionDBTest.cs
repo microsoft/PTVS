@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -26,10 +27,20 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 namespace PythonToolsTests {
     [TestClass]
     public class CompletionDBTest {
-        
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0)]
         public void TestOpen() {
+            var untested = new List<string>();
+
             foreach (var path in PythonPaths.Versions) {
+                if (!File.Exists(path.Path)) {
+                    untested.Add(path.Version.ToString());
+                    continue;
+                }
                 Console.WriteLine(path.Path);
 
                 Guid testId = Guid.NewGuid();
@@ -91,6 +102,10 @@ namespace PythonToolsTests {
                     Assert.IsTrue(members.ContainsKey("SRE_Pattern"));
                     Assert.IsTrue(members.ContainsKey("SRE_Match"));
                 }
+            }
+
+            if (untested.Count > 0) {
+                Assert.Inconclusive("Did not test with version(s) " + string.Join(", ", untested));
             }
         }
 

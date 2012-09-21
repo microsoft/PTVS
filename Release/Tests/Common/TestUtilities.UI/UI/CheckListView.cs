@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -49,7 +50,7 @@ namespace TestUtilities.UI {
 
         public CheckBox GetFirstByName(string name) {
             foreach (CheckBox r in Items) {
-                if (r.Name == name) return r;
+                if (r.Name.Equals(name, StringComparison.CurrentCulture)) return r;
             }
             Assert.Fail("No item found with Name == {0}", name);
             return null;

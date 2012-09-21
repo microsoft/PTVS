@@ -45,6 +45,10 @@ using Keyboard = TestUtilities.UI.Keyboard;
 namespace ReplWindowUITests {
     [TestClass]
     public class ReplWindowTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
 
         /// <summary>
         /// “def f(): pass” + 2 ENTERS
@@ -2631,7 +2635,7 @@ def g(): pass
             }
         }
     }
-    
+
     [TestClass]
     public class Python31ReplWindowTests : Python3kReplWindowTests {
         protected override string InterpreterDescription {

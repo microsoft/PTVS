@@ -13,7 +13,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-        ObjDir=$(BuildRoot)\Release\Product\Python\IronPython\obj\$(Configuration);
+        ObjDir=$(BuildRoot)\Release\Product\Python\IronPython\obj\Dev$(VSTarget)\$(Configuration);
         VSTargetVersion=$(VSTarget)
     </DefineConstants>
   </PropertyGroup>

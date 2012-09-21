@@ -1,8 +1,7 @@
 param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch, [string] $vsTarget)
 
-try {
-    get-command msbuild >out-null
-} catch {
+if (-not (get-command msbuild -EA 0))
+{
     Write-Error "Visual Studio x86 build tools are required."
     exit 1
 }
@@ -17,6 +16,7 @@ if (-not $noclean)
 {
     if (Test-Path $outdir)
     {
+        "Cleaning previous release..."
         rmdir -Recurse -Force $outdir
         if (-not $?)
         {
@@ -24,7 +24,7 @@ if (-not $noclean)
             exit 1
         }
     }
-    mkdir $outdir
+    mkdir $outdir | Out-Null
     if (-not $?)
     {
         Write-Error "Could not make output directory: $outdir"
@@ -47,7 +47,7 @@ $buildroot = [System.IO.Path]::GetFullPath($buildroot)
 Push-Location $buildroot
 
 $asmverfileBackedUp = 0
-$asmverfile = dir Build\AssemblyVersion.cs
+$asmverfile = Get-ChildItem Build\AssemblyVersion.cs
 
 try {
     if ($uninstall)
@@ -66,66 +66,79 @@ try {
     
     $prevOutDir = $outDir
     
-    $dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir 2> out-null
-    $dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir 2> out-null
-    $dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir 2> out-null
-    $dev10InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\10.0" -name InstallDir 2> out-null
+    $dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
+    $dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
+    $dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir -EA 0
+    $dev10InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\10.0" -name InstallDir -EA 0
     
     $targetVersions = New-Object System.Collections.ArrayList($null)
     
     if ($dev11InstallDir64 -or $dev11InstallDir) {
         if (-not $vsTarget -or $vsTarget -eq "11.0") {
-            echo "Will build for Dev11"
-            $targetVersions.Add("11.0")
+            echo "Will build for VS 2012"
+            $targetVersions.Add(@{number="11.0"; name="VS 2012"}) | Out-Null
         }
     }
     
     if ($dev10InstallDir64 -or $dev10InstallDir) {
         if (-not $vsTarget -or $vsTarget -eq "10.0") {
-            echo "Will build for Dev10"
-            $targetVersions.Add("10.0")
+            echo "Will build for VS 2010"
+            $targetVersions.Add(@{number="10.0"; name="VS 2010"}) | Out-Null
         }
     }
     
     foreach ($targetVs in $targetVersions) {
-		$version = "1.5." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
-        if ($targetVs -eq "10.0") {
-            $outDir = $prevOutDir
-        } else {
-            $outDir = $prevOutDir + "\Dev" + $targetVs
-        }
-    
+        $version = "1.5." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
+        
         $asmverfileBackedUp = 0
         tf edit $asmverfile
         if ($LASTEXITCODE -gt 0) {
             # running outside of MS
             attrib -r $asmverfile
-            copy -force $asmverfile ($asmverfile.FullName + ".bak")
+            copy -force $asmverfile $($asmverfile.FullName).bak
             $asmverfileBackedUp = 1
         }
         (Get-Content $asmverfile) | %{ $_ -replace "0.7.4100.000", $version } | Set-Content $asmverfile
-    
+        
         Get-Content $asmverfile
-    
+        
         foreach ($config in ("Release","Debug"))
         {
             if (-not $skiptests)
             {
-                msbuild Release\Tests\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
+                msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).tests.log" /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$($targetVs.number) /p:VisualStudioVersion=$($targetVs.number) Release\Tests\dirs.proj
                 if ($LASTEXITCODE -gt 0)
                 {
                     Write-Error "Test build failed: $config"
                     exit 4
                 }
             }
-    
-            msbuild Release\Product\Setup\dirs.proj /m /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$targetVs /p:VisualStudioVersion=$targetVs
+            
+            msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).log" /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$($targetVs.number) /p:VisualStudioVersion=$($targetVs.number) Release\Product\Setup\dirs.proj
             if ($LASTEXITCODE -gt 0) {
                 Write-Error "Build failed: $config"
                 exit 3
             }
+            
+            $bindir = "Binaries\$config$($targetVs.number)"
+            $destdir = "$outdir\$($targetVs.name)\$config"
+            
+            if (-not (Test-Path $destdir)) { mkdir $destdir }
+            copy -force $bindir\*.msi $destdir\
+            copy -force Prerequisites\*.reg $destdir\
+            
+            mkdir $destdir\Symbols
+            copy -force -recurse $bindir\*.pdb $destdir\Symbols\
+            
+            mkdir $destdir\Binaries
+            copy -force -recurse $bindir\*.dll $destdir\Binaries\
+            copy -force -recurse $bindir\*.exe $destdir\Binaries\
+            copy -force -recurse $bindir\*.pkgdef $destdir\Binaries\
+            
+            mkdir $destdir\Binaries\ReplWindow
+            copy -force -recurse Release\Product\Python\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
         }
-    
+        
         if ($asmverfileBackedUp) {
             copy -force ($asmverfile.FullName + ".bak") $asmverfile
             attrib +r $asmverfile
@@ -134,43 +147,12 @@ try {
         } else {
             tf undo /noprompt $asmverfile
         }
-    
-        mkdir $outdir\Debug
-        copy -force Binaries\Debug\*.msi $outdir\Debug\
-        copy -force Prerequisites\*.reg $outdir\Debug\
-    
-        mkdir $outdir\Debug\Symbols
-        copy -force -recurse Binaries\Debug\*.pdb $outdir\Debug\Symbols\
-    
-        mkdir $outdir\Debug\Binaries
-        copy -force -recurse Binaries\Debug\*.dll $outdir\Debug\Binaries\
-        copy -force -recurse Binaries\Debug\*.exe $outdir\Debug\Binaries\
-        copy -force -recurse Binaries\Debug\*.pkgdef $outdir\Debug\Binaries\
-    
-        mkdir $outdir\Debug\Binaries\ReplWindow
-        copy -force -recurse Release\Product\Python\ReplWindow\obj\Debug\extension.vsixmanifest $outdir\Debug\Binaries\ReplWindow
-    
-        mkdir $outdir\Release
-        copy -force Binaries\Release\*.msi $outdir\Release\
-        copy -force Prerequisites\*.reg $outdir\Release\
-    
-        mkdir $outdir\Release\Symbols
-        copy -force -recurse Binaries\Release\*.pdb $outdir\Release\Symbols\
-    
-        mkdir $outdir\Release\Binaries
-        copy -force -recurse Binaries\Release\*.dll $outdir\Release\Binaries\
-        copy -force -recurse Binaries\Release\*.exe $outdir\Release\Binaries\
-        copy -force -recurse Binaries\Release\*.pkgdef $outdir\Release\Binaries\
-    
-        mkdir $outdir\Release\Binaries\ReplWindow
-        copy -force -recurse Release\Product\Python\ReplWindow\obj\Release\extension.vsixmanifest $outdir\Release\Binaries\ReplWindow
     }
     
     if ($scorch) { tfpt scorch /noprompt }
     
     $outdir = $prevOutDir
-    if (-not (Test-path $outdir\Sources\Incubation)) { mkdir $outdir\Sources\Incubation }
-    robocopy /s . $outdir\Sources /xd TestResults
+    robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing | Out-Null
 } finally {
     if ($asmverfileBackedUp) {
         copy -force ($asmverfile.FullName + ".bak") $asmverfile

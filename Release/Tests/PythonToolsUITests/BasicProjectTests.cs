@@ -37,6 +37,11 @@ using ST = System.Threading;
 namespace PythonToolsUITests {
     [TestClass]
     public class BasicProjectTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

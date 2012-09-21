@@ -22,6 +22,11 @@ using TestUtilities;
 namespace AnalysisTests {
     [TestClass]
     public class DeserializationTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0)]
         public void TestSimpleDeserialize() {
             var obj = Unpickle.Load(TestData.Open(@"TestData\empty_dict.pickle"));

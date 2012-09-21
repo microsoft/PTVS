@@ -23,10 +23,15 @@ using TestUtilities.UI;
 namespace DjangoUITests {
     [TestClass]
     public class DjangoDebugProjectTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugDjangoProject() {
-            DebuggerUITests.DebugProject.OpenProjectAndBreak(@"TestData\DjangoDebugProject.sln", @"TestApp\views.py", 5, false);
+            DebuggerUITests.DebugProject.OpenProjectAndBreak(TestData.GetPath(@"TestData\DjangoDebugProject.sln"), @"TestApp\views.py", 5, false);
         }
     }
 }

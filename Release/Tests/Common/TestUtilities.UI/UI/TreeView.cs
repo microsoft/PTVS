@@ -67,7 +67,7 @@ namespace TestUtilities.UI {
                 var node = nodes[i];
                 var name = node.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
 
-                if (name == splitPath[depth]) {
+                if (name.Equals(splitPath[depth], StringComparison.CurrentCulture)) {
                     if (depth == splitPath.Length - 1) {
                         return node;
                     }

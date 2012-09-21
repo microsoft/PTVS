@@ -33,8 +33,12 @@ using Path = System.IO.Path;
 
 namespace PythonToolsUITests {
     [TestClass]
-    [DeploymentItem("Binaries\\Debug\\spam.dll")]
     public class UITests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);
@@ -772,23 +776,23 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExtensionReference() {
-            var curDir =System.IO.Directory.GetCurrentDirectory();
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ExtensionReference.sln");
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
             app.OpenSolutionExplorer();
             var solutionTree = app.SolutionExplorerTreeView;
 
-            // open the solution, add a reference to our spam.dll Python extension module
+            // open the solution, add a reference to our spam.pyd Python extension module
             var folderNode = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References");
-            folderNode.SetFocus();
+            Mouse.MoveTo(folderNode.GetClickablePoint());
+            Mouse.Click();
             Keyboard.PressAndRelease(Key.Apps); // context menu
             Keyboard.PressAndRelease(Key.R);    // Add Reference
 
             var dialog = new AddReferenceDialog(AutomationElement.FromHandle(app.WaitForDialog()));
             dialog.ActivateBrowseTab();
 
-            dialog.BrowseFilename = Path.Combine(curDir, "spam.dll");
+            dialog.BrowseFilename = TestData.GetPath(@"TestData\spam.pyd");
             dialog.ClickOK();
 
             app.WaitForDialogDismissed();
@@ -796,7 +800,7 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(2000);
             
             // make sure the reference got added
-            var spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References", "spam.dll");
+            var spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References", "spam.pyd");
             Assert.IsNotNull(spamItem);
 
             // now open a file and make sure we get completions against the spam module
@@ -812,8 +816,8 @@ namespace PythonToolsUITests {
             
             System.Threading.Thread.Sleep(1000);
             var session = doc.WaitForSession<ICompletionSession>();
-            
-            var completion = session.CompletionSets.First().Completions.Select(x => x.InsertionText).FirstOrDefault(x => x == "quoxbar");
+
+            var completion = session.CompletionSets.First().Completions.Select(x => x.InsertionText).FirstOrDefault(x => x == "system");
             Assert.IsNotNull(completion);
 
             // now clear the text we just typed
@@ -823,11 +827,11 @@ namespace PythonToolsUITests {
             }
 
             // remove the extension
-            VsIdeTestHostContext.Dte.Solution.Projects.Item(1).ProjectItems.Item("References").ProjectItems.Item("spam.dll").Remove();
+            VsIdeTestHostContext.Dte.Solution.Projects.Item(1).ProjectItems.Item("References").ProjectItems.Item("spam.pyd").Remove();
             System.Threading.Thread.Sleep(3000);
 
             // make sure it got removed
-            spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References", "spam.dll");
+            spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References", "spam.pyd");
             Assert.AreEqual(spamItem, null);
 
             window.Activate();

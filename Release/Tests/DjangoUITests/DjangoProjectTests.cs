@@ -28,6 +28,11 @@ namespace DjangoUITests {
     public class DjangoProjectTests {
         private const string AddDjangoAppCmd = "ProjectandSolutionContextMenus.Project.Add.AddNewDjangoapp";
 
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

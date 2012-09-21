@@ -24,6 +24,11 @@ using TestUtilities;
 namespace PythonToolsTests {
     [TestClass]
     public class ImportWizardTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0)]
         public void ImportWizardSimple() {
             var wizard = new Wizard();

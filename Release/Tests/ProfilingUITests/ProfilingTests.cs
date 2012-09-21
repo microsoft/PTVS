@@ -27,6 +27,11 @@ using TestUtilities.UI.Python;
 namespace ProfilingUITests {
     [TestClass]
     public class ProfilingTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             for (int i = 0; i < 100; i++) {

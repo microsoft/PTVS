@@ -2,13 +2,13 @@ param( $outdir, $build_name )
 
 if (-not $outdir)
 {
-    Write-Error "Must provide $outdir, the directory the release will be saved."
-	exit 1
+    Write-Error ("Must provide outdir parameter, the directory the release will be saved.")
+    exit 1
 }
 if (-not $build_name)
 {
     Write-Error "Must provide build_name parameter, such as '1.5 Alpha'"
-	exit 1
+    exit 1
 }
 
 if (Test-Path $outdir)
@@ -30,20 +30,17 @@ $buildroot = [System.IO.Path]::GetFullPath($buildroot)
 
 $prevOutDir = $outDir
 
+$versions = @{number="11.0"; name="VS 2012"}, @{number="10.0"; name="VS 2010"}
 
-foreach ($version in ("10.0","11.0")) {
+foreach ($version in $versions) {
     ###################################################################
     # Build the actual binaries
     echo "Building release to $outdir ..."
-
-    & $buildroot\Release\Product\Setup\BuildRelease.ps1 $outdir -vsTarget $version -noclean > release_output.txt
     
-    if ($version -eq "10.0") {
-        $outDir = $prevOutDir
-    } else {
-        $outDir = $prevOutDir + "\Dev" + $version
-    }
-
+    & $buildroot\Release\Product\Setup\BuildRelease.ps1 $outdir -vsTarget $version.number -noclean > release_output.txt
+    
+    $outDir = "$prevOutDir\$($version.name)"
+    
     ###################################################################
     # Index symbols
     
@@ -72,7 +69,7 @@ foreach ($version in ("10.0","11.0")) {
     #################################################################
     # Submit managed binaries
     
-    $approvers = "smortaz", "arturl", "weidongh", "dinov", "stevdo"
+    $approvers = "smortaz", "arturl", "dinov", "stevdo"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     
     $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
@@ -106,7 +103,6 @@ foreach ($version in ("10.0","11.0")) {
     
     foreach ($filename in $files) {
         $fullpath =  "$outdir\Release\Binaries\$filename"
-        $filename
         $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
     }
     $job.Send()
@@ -136,7 +132,7 @@ foreach ($version in ("10.0","11.0")) {
     # wait for both jobs to finish being signed...
     $jobs = $firstjob, $secondjob
     foreach($job in $jobs) {
-        $activity = "Job ID " + $job.JobID + " still processing"
+        $activity = "Job ID $($job.JobID) still processing"
         $percent = 0
         do {
             $files = dir $job.JobCompletionPath
@@ -156,8 +152,8 @@ foreach ($version in ("10.0","11.0")) {
     robocopy $secondjob.JobCompletionPath $destpath\
     
     # copy files back to binaries for re-building the MSI
-    robocopy $firstjob.JobCompletionPath $buildroot\Binaries\Release\
-    robocopy $secondjob.JobCompletionPath $buildroot\Binaries\Release\
+    robocopy $firstjob.JobCompletionPath $buildroot\Binaries\Release$($version.number)\
+    robocopy $secondjob.JobCompletionPath $buildroot\Binaries\Release$($version.number)\
     
     # now generate MSI with signed binaries.
     $file = Get-Content release_output.txt
@@ -200,22 +196,15 @@ foreach ($version in ("10.0","11.0")) {
         }
     }
     
-    $destpath = "$outdir\Release\UnsignedMsi"
-    mkdir $destpath
-    move $outdir\Release\PythonToolsInstaller.msi "$outdir\Release\UnsignedMsi\PythonToolsInstaller Dev $version.msi"
-    move $outdir\Release\PyKinectInstaller.msi "$outdir\Release\UnsignedMsi\PyKinectInstaller Dev $version.msi"
-    move $outdir\Release\PyvotInstaller.msi "$outdir\Release\UnsignedMsi\PyvotInstaller Dev $version.msi"
+    mkdir $outdir\Release\UnsignedMsi
+    foreach ($msi in (Get-ChildItem $outdir\Release\*.msi)) {
+        move $msi "$outdir\Release\UnsignedMsi\$($msi.BaseName) $($version.name).msi"
+    }
     
-    $destpath = "$outdir\Release\SignedBinariesUnsignedMsi"
-    mkdir $destpath
-    copy  $buildroot\Binaries\Release\PythonToolsInstaller.msi "$prevOutDir\Release\SignedBinariesUnsignedMsi\PythonToolsInstaller Dev $version.msi"
-    copy  $buildroot\Binaries\Release\PythonToolsInstaller.msi "$prevOutDir\Release\PythonToolsInstaller Dev $version.msi"
-    
-    copy  $buildroot\Binaries\Release\PyKinectInstaller.msi "$prevOutDir\Release\SignedBinariesUnsignedMsi\PyKinectInstaller Dev $version.msi"
-    copy  $buildroot\Binaries\Release\PyKinectInstaller.msi "$prevOutDir\Release\PyKinectInstaller Dev $version.msi"
-    
-    copy  $buildroot\Binaries\Release\PyvotInstaller.msi "$prevOutDir\Release\SignedBinariesUnsignedMsi\PyvotInstaller Dev $version.msi"
-    copy  $buildroot\Binaries\Release\PyvotInstaller.msi "$prevOutDir\Release\PyvotInstaller Dev $version.msi"
+    mkdir $outdir\Release\SignedBinariesUnsignedMsi
+    foreach ($msi in (Get-ChildItem $buildroot\Binaries\Release$($version.number)\*.msi)) {
+        move $msi "$outdir\Release\SignedBinariesUnsignedMsi\$($msi.BaseName) $($version.name).msi"
+    }
     
     #################################################################
     ### Now submit the MSI for signing
@@ -228,13 +217,13 @@ foreach ($version in ("10.0","11.0")) {
     
     foreach ($approver in $approvers) { $job.AddApprover($approver) }
     
-    $job.AddFile($buildroot + "\Binaries\Release\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-    $job.AddFile($buildroot + "\Binaries\Release\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-    $job.AddFile($buildroot + "\Binaries\Release\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+    $job.AddFile("$buildroot\Binaries\Release$($version.number)\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+    $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+    $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
     
     $job.Send()
     
-    $activity = "Job ID " + $job.JobID + " still processing"
+    $activity = "Job ID $($job.JobID) still processing"
     $percent = 0
     do {
         $files = dir $job.JobCompletionPath
@@ -243,7 +232,10 @@ foreach ($version in ("10.0","11.0")) {
         sleep -seconds 5
     } while(-not $files);
     
-    copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$prevOutDir\Release\PTVS $build_name Dev $version.msi"
-    copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$prevOutDir\Release\PTVS $build_name Dev $version - PyKinect Sample.msi"
-    copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$prevOutDir\Release\PTVS $build_name Dev $version - Pyvot Sample.msi"
+    copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name).msi"
+    copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name) - PyKinect Sample.msi"
+    copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name) - Pyvot Sample.msi"
+
+    copy release_output.txt $env:TEMP\release_output_$($version.number).txt
+    tfpt scorch /noprompt
 }

@@ -94,7 +94,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100; i++) {
                 WaitForIdleState();
                 expected = GetExpectedText(text);
-                if (expected == Text) {
+                if (expected.Equals(Text, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -112,7 +112,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100; i++) {
                 WaitForIdleState();
                 expected = GetExpectedText(text);
-                if (expected == GetIPythonText()) {
+                if (expected.Equals(GetIPythonText(), StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -145,7 +145,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100; i++) {
                 string curText = Text;
 
-                if (Text.StartsWith(expected)) {
+                if (Text.StartsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -160,7 +160,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100; i++) {
                 string curText = Text;
 
-                if (GetIPythonText().StartsWith(expected)) {
+                if (GetIPythonText().StartsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -175,7 +175,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100; i++) {
                 string curText = Text;
 
-                if (Text.EndsWith(expected)) {
+                if (Text.EndsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -278,7 +278,7 @@ namespace TestUtilities.UI {
         private IReplWindow GetReplWindow(IReplWindowProvider replWindowProvider) {
             IReplWindow curWindow = null;
             foreach (var provider in replWindowProvider.GetReplWindows()) {
-                if (provider.Title == _title) {
+                if (provider.Title.Equals(_title, StringComparison.CurrentCulture)) {
                     curWindow = provider;
                     break;
                 }

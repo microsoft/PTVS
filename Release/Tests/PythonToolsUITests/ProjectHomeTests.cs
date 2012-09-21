@@ -32,6 +32,11 @@ using Path = System.IO.Path;
 namespace PythonToolsUITests {
     [TestClass]
     public class ProjectHomeTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

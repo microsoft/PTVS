@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
+using System.Text;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnalysisTests {
     /// <summary>
@@ -25,7 +23,8 @@ namespace AnalysisTests {
                 
                 new { Path = "C:\\Python30\\Lib", Version = PythonLanguageVersion.V30 },
                 new { Path = "C:\\Python31\\Lib", Version = PythonLanguageVersion.V31 },
-                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 } 
+                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 },
+                new { Path = "C:\\Python33\\Lib", Version = PythonLanguageVersion.V33 }
             };
 
             foreach (var optionSet in new[] { TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins, TokenizerOptions.Verbatim }) {

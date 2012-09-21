@@ -37,6 +37,11 @@ namespace PythonToolsTests {
         private MockReplWindow _window;
         private List<PythonProcess> _processes;
 
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal virtual string DebuggerTestPath {
             get {
                 return TestData.GetPath(@"TestData\DebuggerProject\");

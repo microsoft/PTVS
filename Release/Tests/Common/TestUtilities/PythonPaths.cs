@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.Win32;
 
@@ -28,6 +29,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python30 = GetCPythonVersion(PythonLanguageVersion.V30);
         public static readonly PythonVersion Python31 = GetCPythonVersion(PythonLanguageVersion.V31);
         public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32);
+        public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33);
         public static readonly PythonVersion IronPython27 = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\ipy.exe", PythonLanguageVersion.V27);
 
         private static PythonVersion GetIronPythonVersion() {
@@ -97,7 +99,8 @@ namespace TestUtilities {
                 yield return Python27;
                 yield return Python30;
                 yield return Python31;
-                yield return Python31;
+                yield return Python32;
+                yield return Python33;
                 yield return IronPython27;
             }
         }

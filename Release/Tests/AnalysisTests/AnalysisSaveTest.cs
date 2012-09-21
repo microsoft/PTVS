@@ -26,8 +26,12 @@ using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace AnalysisTests {
     [TestClass]
-    public class AnalysisSaveTest : BaseAnalysisTest {        
-        
+    public class AnalysisSaveTest : BaseAnalysisTest {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0)]
         public void SaveLoad() {
             string code = @"def f(a, *b, **c): pass

@@ -33,6 +33,11 @@ namespace DjangoTests {
             BarApp
         }
 
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         /// <summary>
         /// Ensures the app is initialized with the appropriate set of data.  If we're
         /// already initialized that way we don't re-initialize.

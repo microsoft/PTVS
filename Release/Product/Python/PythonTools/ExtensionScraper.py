@@ -12,9 +12,7 @@
  #
  # ###########################################################################
 
-import imp
 import sys
-from os import path
 
 try:
     # disable error reporting in our process, bad extension modules can crash us, and we don't
@@ -24,22 +22,34 @@ try:
 except:
     pass
 
-# Expects either:
-# scrape [filename] [output_path]
-#       Scrapes the file and saves the analysis to the specified filename, exits w/ nonzero exit code if anything goes wrong.
-if len(sys.argv) == 5:
-    if sys.argv[1] == 'scrape':
-        filename = sys.argv[2]
-        mod_name = sys.argv[4]
-        try:
-            module = imp.load_dynamic(mod_name, filename)
-        except ImportError:
-            e = sys.exc_info()[1]
-            print(e)
-            sys.exit(1)
+# Scrapes the file and saves the analysis to the specified filename, exits w/ nonzero exit code if anything goes wrong.
+# Usage: ExtensionScraper.py scrape [mod_name or '-'] [mod_path or '-'] [output_path]
 
-        import PythonScraper
-        analysis = PythonScraper.generate_module(module)
-        PythonScraper.write_analysis(sys.argv[3], analysis)
+if len(sys.argv) != 5 or sys.argv[1].lower() != 'scrape':
+    raise ValueError('Expects "ExtensionScraper.py scrape [mod_name|'-'] [mod_path|'-'] [output_path]"')
 
- 
+mod_name, mod_path, output_path = sys.argv[2:]
+module = None
+
+if mod_name and mod_name != '-':
+    try:
+        __import__(mod_name)
+        module = sys.modules[mod_name]
+    finally:
+        if not module:
+            print('__import__("' + mod_name + '")')
+elif mod_path and mod_path != '-':
+    try:
+        import imp
+        import os.path
+        mod_name = os.path.splitext(os.path.split(mod_path)[1])[0]
+        module = imp.load_dynamic(mod_name, mod_path)
+    finally:
+        if not module:
+            print('imp.load_dynamic("' + mod_name + '", "' + mod_path + '")')
+else:
+    raise ValueError('No module name or path provided')
+
+import PythonScraper
+analysis = PythonScraper.generate_module(module)
+PythonScraper.write_analysis(output_path, analysis)

@@ -23,6 +23,11 @@ using TestUtilities.UI;
 namespace DjangoUITests {
     [TestClass]
     public class DjangoAzureProjectTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddCloudProject() {

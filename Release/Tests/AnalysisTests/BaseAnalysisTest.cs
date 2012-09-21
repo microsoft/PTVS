@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
+using TestUtilities;
 
 namespace AnalysisTests {
     /// <summary>
@@ -37,6 +38,8 @@ namespace AnalysisTests {
         }
 
         public BaseAnalysisTest(IPythonInterpreter interpreter) {
+            TestData.Deploy();
+
             Interpreter = interpreter;
             PyObjectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
             IntType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);

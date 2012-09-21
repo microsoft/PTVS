@@ -126,10 +126,10 @@ def memoize_type_name(name):
 
 
 if sys.platform == "cli":
-	# provides extra type info when generating against IronPython which can be used w/ CPython completions
+    # provides extra type info when generating against IronPython which can be used w/ CPython completions
     import IronPythonScraper as BuiltinScraper 
 else:
-	import BuiltinScraper
+    import BuiltinScraper
 
 
 def generate_builtin_function(function, is_method = False):
@@ -1945,14 +1945,23 @@ if __name__ == "__main__":
                     pkg_name = tail + '.' + pkg_name
                     cur_dirname = head
 
+                # The win32com package automatically loads extension modules from
+                # "site-packages\win32comext" and exposes them as children of itself.
+                # For example, "win32comext\axcontrol\axcontrol.pyd" should be imported
+                # as "win32com.axcontrol.axcontrol"
+                # win32comext\ does not include "__init__.py", so it will be the last part
+                # of the remaining path name.
+                if os.path.split(cur_dirname)[1] == 'win32comext':
+                    pkg_name = 'win32com.' + pkg_name
+
                 os.spawnl(os.P_WAIT, 
                             sys.executable,
                             sys.executable,
                             "\"" + os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py') + "\"",
                             'scrape',
-                            "\"" + os.path.join(dirname, filename) + "\"",
-                            "\"" + os.path.join(outpath, pkg_name) + "\"",
-							pkg_name
+                            pkg_name,
+                            '-',        # providing __import__ name rather than a path
+                            "\"" + os.path.join(outpath, pkg_name) + "\""
                 )
 
     site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')

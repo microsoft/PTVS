@@ -28,6 +28,11 @@ using MSBuild = Microsoft.Build.Evaluation;
 namespace PythonToolsUITests {
     [TestClass]
     public class LinkedFileTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

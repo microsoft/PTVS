@@ -27,6 +27,11 @@ using TestUtilities.UI;
 namespace DjangoUITests {
     [TestClass]
     public class DjangoEditingTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

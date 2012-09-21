@@ -58,7 +58,7 @@
     <IncludePath>$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(IncludePath)</IncludePath>
     <LibraryPath>$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(LibraryPath)</LibraryPath>
     <TargetExt>.dll</TargetExt>
-    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
+    <IntDir>$(IntDir)$(Platform)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">

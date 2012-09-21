@@ -458,7 +458,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected override string AddReferenceExtensions {
             get {
-                return "*.dll;*.pyd";
+                return "Python Extension Modules (*.dll;*.pyd)\0*.dll;*.pyd\0All Files (*.*)\0*.*\0";
             }
         }
 

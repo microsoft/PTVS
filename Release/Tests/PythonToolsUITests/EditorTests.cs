@@ -32,6 +32,11 @@ using TestUtilities.UI;
 namespace PythonToolsUITests {
     [TestClass]
     public class EditorTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
             VsIdeTestHostContext.Dte.Solution.Close(false);

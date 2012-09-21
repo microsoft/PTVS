@@ -1496,7 +1496,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return "*.dll";
+                return "Dynamic Link Libraries (*.dll)\0*.dll\0All Files (*.*)\0*.*\0";
             }
         }
 
