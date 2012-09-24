@@ -35,6 +35,10 @@
   </PropertyGroup>
   
   <PropertyGroup>
+    <VSCTDefinitions Condition="'$(VSTarget)' != '10.0'">DEV11</VSCTDefinitions>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <SignManifests>false</SignManifests>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(TargetsPath)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
