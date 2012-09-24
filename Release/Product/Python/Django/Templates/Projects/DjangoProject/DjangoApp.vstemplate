@@ -4,7 +4,7 @@
     
     <Name>Django Application</Name>
     <Description>A project for creating a Django application</Description>
-    <Icon>__TemplateIcon.ico</Icon>
+    <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="410" />
     <ProjectType>Python</ProjectType>
     <SortOrder>60</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>

@@ -140,15 +140,18 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
+    <ConditionalEmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
-    </EmbeddedResource>
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
+    </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
+    <Content Include="PyKinect\GreenScreen.py" />
+    <Content Include="PyKinect\PyGameDemo.py" />
     <Content Include="PyKinect\pykinect\audio\__init__.py">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -203,21 +206,21 @@
     <None Include="Resources\Images_32bit.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\Package.ico" />
     <Content Include="Templates\Projects\PyKinectPyGame\Program.py" />
     <Content Include="Templates\Projects\PyKinectPyGame\KinectGame.pyproj" />
     <Content Include="Templates\Projects\PyKinectPyGame\KinectGame.vstemplate">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="..\PythonTools\PythonProject.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="..\PythonTools\PythonProjectBig.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Resource Include="Templates\Projects\PyKinectPyGame\__TemplateIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

@@ -59,15 +59,5 @@ namespace Microsoft.PythonTools.ImportWizard.Properties {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap PythonProject {
-            get {
-                object obj = ResourceManager.GetObject("PythonProject", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
     }
 }

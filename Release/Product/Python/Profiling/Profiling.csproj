@@ -41,7 +41,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'"/>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget)">
       <Private>false</Private>
@@ -149,26 +149,27 @@
     <Compile Include="Profiling\StandaloneTargetView.cs" />
     <Compile Include="Profiling\TreeViewIconIndex.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="PythonProfilingPackage.cs" />
+    <Compile Include="PkgCmdID.cs" />
+    <Compile Include="Profiling\SessionsNode.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="PythonProfilingPackage.cs" />
-    <Compile Include="PkgCmdID.cs" />
-    <Compile Include="Profiling\SessionsNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
+    <ConditionalEmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
-    </EmbeddedResource>
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
+    </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
@@ -182,25 +183,21 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\Images_32bit.bmp" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="proflaun.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Resource Include="Resources\cmdbar.bmp" />
-    <Content Include="PythonProject.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="PythonProjectBig.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="Resources\Package.ico" />
-    <Resource Include="Resources\treeview.bmp" />
-    <None Include="Resources\PythonProject.ico" />
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\ProfilingTreeView.png" />
     <Content Include="vspyprof.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

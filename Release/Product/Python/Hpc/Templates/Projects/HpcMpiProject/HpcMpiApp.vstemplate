@@ -2,7 +2,7 @@
   <TemplateData>
     <Name>Python MPI Application</Name>
     <Description>A project for creating an mpi4py project</Description>
-    <Icon>__TemplateIcon.ico</Icon>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="401" />
     <ProjectType>Python</ProjectType>
     <SortOrder>70</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>

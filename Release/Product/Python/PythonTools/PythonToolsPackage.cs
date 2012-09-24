@@ -59,8 +59,9 @@ namespace Microsoft.PythonTools {
     /// </summary>    
     [PackageRegistration(UseManagedResourcesOnly = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
 #pragma warning disable 0436    // InternalsVisibleTo in debugger causes us to conflict on AssemblyVersionInfo
-    [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version,        // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
-        IconResourceID = 400)]
+
+    // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
+    [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
 #pragma warning restore 0436
     [ProvideMenuResource(1000, 1)]                              // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]

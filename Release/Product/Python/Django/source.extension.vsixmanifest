@@ -10,7 +10,7 @@
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
     <Locale>1033</Locale>
-    <InstalledByMsi>false</InstalledByMsi>
+    <InstalledByMsi>true</InstalledByMsi>
     <SupportedProducts>
       <VisualStudio Version="10.0">
         <Edition>Ultimate</Edition>

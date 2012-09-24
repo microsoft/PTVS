@@ -17,7 +17,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -254,12 +256,10 @@ namespace Microsoft.PythonTools.Profiling {
         #endregion
 
         private static ImageList InitImageList() {
-            var imageList = new ImageList();
-            imageList.ColorDepth = ColorDepth.Depth24Bit;
-            imageList.ImageSize = new Size(16, 16);
-            imageList.TransparentColor = Color.Magenta;
-            imageList.Images.AddStrip(Resources.TreeViewImageList);
-            return imageList;
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.PythonTools.ProfilingTreeView.png");
+            return Utilities.GetImageList(
+                stream
+            );
         }
 
         private SessionNode GetItem(uint itemid) {

@@ -215,8 +215,11 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used 
             inside a button definition. An important aspect of this declaration is that the element id 
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidCmdBarImages" href="Resources\cmdbar.bmp" usedList="unused, sessionIcon, openFolder, saveIcon, startIcon, unused2, graph, newSessionIcon, wizardIcon, stopIcon, document, f, unused2, unused3, unused4, unused5, unused6, compareReports"/>
+      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev10.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
+              Condition="!Defined(DEV11)"/>
 
+      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev11.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
+              Condition="Defined(DEV11)"/>
     </Bitmaps>
  
   </Commands>
@@ -285,25 +288,10 @@
     </GuidSymbol>
 
     <GuidSymbol name="guidCmdBarImages" value="{D0023B39-E866-4995-9C8A-50BB0D72E074}">
-      <IDSymbol name="unused" value="1"/>
-      <IDSymbol name="sessionIcon" value="2"/>
-      <IDSymbol name="openFolder" value="3"/>
-      <IDSymbol name="saveIcon" value="4"/>
-      <IDSymbol name="startIcon" value="5"/>
-      <IDSymbol name="unused2" value="6"/>
-      <IDSymbol name="graph" value="7"/>
-      <IDSymbol name="newSessionIcon" value="8"/>
-      <IDSymbol name="wizardIcon" value="9"/>
-      <IDSymbol name="stopIcon" value="10"/>
-      <IDSymbol name="document" value="11"/>
-      <IDSymbol name="f" value="12"/>
-      <IDSymbol name="unused2" value="13"/>
-      <IDSymbol name="unused3" value="14"/>
-      <IDSymbol name="unused4" value="15"/>
-      <IDSymbol name="unused5" value="16"/>
-      <IDSymbol name="unused6" value="17"/>
-      <IDSymbol name="compareReports" value="18"/>
-      
+      <IDSymbol name="startIcon" value="1"/>
+      <IDSymbol name="newSessionIcon" value="2"/>
+      <IDSymbol name="stopIcon" value="3"/>
+      <IDSymbol name="compareReports" value="4"/>
     </GuidSymbol>
 
     <!-- External Guids and IDs which we need to hook into -->

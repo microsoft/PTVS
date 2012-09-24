@@ -70,6 +70,7 @@ typedef void* (PyThread_get_key_value)(int);
 typedef int (PyThread_set_key_value)(int, void*);
 typedef void (PyThread_delete_key_value)(int);
 typedef PyGILState_STATE PyGILState_EnsureFunc(void);
+typedef void PyGILState_ReleaseFunc(PyGILState_STATE);
 typedef PyObject* PyInt_FromSize_t(size_t ival);
 typedef PyThreadState *PyThreadState_NewFunc(PyInterpreterState *interp);
 
@@ -813,13 +814,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto getThreadTls = (PyThread_get_key_value*)GetProcAddress(module, "PyThread_get_key_value");
         auto setThreadTls = (PyThread_set_key_value*)GetProcAddress(module, "PyThread_set_key_value");
         auto delThreadTls = (PyThread_delete_key_value*)GetProcAddress(module, "PyThread_delete_key_value");
+		auto pyGilStateEnsure = (PyGILState_EnsureFunc*)GetProcAddress(module, "PyGILState_Ensure");
+		auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
 
         if (addPendingCall== nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease== nullptr || threadHead==nullptr ||
             initThreads==nullptr || releaseLock== nullptr || threadsInited== nullptr || threadNext==nullptr || threadSwap==nullptr ||
             pyDictNew==nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
-            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr) {
+            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr ||
+			pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);
                 return false;
@@ -907,8 +911,25 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 if (!threadsInited()) { 
                     if(*curPythonThread == nullptr) {
                         // no threads are currently running, it is safe to initialize multi threading.
+						PyGILState_STATE gilState;
+						if(version >= PythonVersion_32) {
+							// in 3.2 due to the new GIL and later we can't call Py_InitThreads 
+							// without a thread being initialized.  
+							// So we use PyGilState_Ensure here to first
+							// initialize the current thread, and then we use
+							// Py_InitThreads to bring up multi-threading.
+							// Some context here: http://bugs.python.org/issue11329
+							// http://pytools.codeplex.com/workitem/834
+							gilState = pyGilStateEnsure();
+						}
                         initThreads();
-                        releaseLock();
+						
+						if(version >= PythonVersion_32) {
+							// we will release the GIL here
+							pyGilStateRelease(gilState);
+						} else {
+	                        releaseLock();
+						}
                     }else if(!addedPendingCall) {
                         // someone holds the GIL but no one is actively adding any pending calls.  We can pend our call
                         // and initialize threads.

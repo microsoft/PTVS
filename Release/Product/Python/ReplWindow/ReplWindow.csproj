@@ -196,10 +196,11 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
+    <ConditionalEmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
-    </EmbeddedResource>
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
+    </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
@@ -213,11 +214,8 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\completionset.bmp" />
-    <Resource Include="Resources\ReplToolBarImages.bmp" />
-    <Content Include="Resources\Package.ico" />
+    <Folder Include="Resources\" />
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
     <RegisterOutputPackage>true</RegisterOutputPackage>

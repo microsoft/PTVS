@@ -139,11 +139,11 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
+    <ConditionalEmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
+    </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Pyvot\setup.py2.cfg">
@@ -205,7 +205,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="Templates\Projects\Pyvot\PyvotSample.xlsx" />
-    <Resource Include="Templates\Projects\Pyvot\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\Pyvot\Pyvot.pyproj" />
     <Content Include="Templates\Projects\Pyvot\Pyvot.vstemplate">
       <SubType>Designer</SubType>
@@ -219,17 +218,15 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Images_32bit.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\Package.ico" />
-    <Content Include="..\PythonTools\PythonProject.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="..\PythonTools\PythonProjectBig.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
   </ItemGroup>
   <ItemGroup>
@@ -242,6 +239,9 @@
       <Name>PythonTools</Name>
       <Private>False</Private>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>

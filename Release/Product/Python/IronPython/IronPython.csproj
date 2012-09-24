@@ -164,15 +164,16 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="PythonProject.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="PythonProjectBig.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <None Include="Resources\PythonProject.ico" />
     <Content Include="Templates\Files\WpfWindow\WpfWindow.py" />
     <Content Include="Templates\Files\WpfWindow\WpfWindow.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -185,11 +186,9 @@
     </Content>
     <None Include="Templates\Projects\WinformsProject\WinformsApp.pyproj" />
     <Content Include="Templates\Files\WpfWindow\WpfWindow.vstemplate" />
-    <Content Include="Templates\Files\WpfWindow\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\ConsoleProject\Program.html" />
     <None Include="Templates\Projects\ConsoleProject\Program.py" />
     <Content Include="Templates\Projects\ConsoleProject\ConsoleProject.vstemplate" />
-    <Content Include="Templates\Projects\ConsoleProject\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\WinformsProject\WinformsApp.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -197,9 +196,7 @@
     <None Include="Templates\Projects\WpfProject\Program.py" />
     <None Include="Templates\Projects\WinformsProject\Program.py" />
     <Content Include="Templates\Projects\WinformsProject\WinformsApp.vstemplate" />
-    <Content Include="Templates\Projects\WinformsProject\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\WpfProject\WpfApp.vstemplate" />
-    <Content Include="Templates\Projects\WpfProject\__TemplateIcon.ico" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -218,7 +215,6 @@
     <Content Include="Templates\Projects\SilverlightProject\Program.html" />
     <Content Include="Templates\Projects\SilverlightProject\SilverlightProject.vstemplate" />
     <None Include="Templates\Projects\SilverlightProject\Program.py" />
-    <Content Include="Templates\Projects\SilverlightProject\__TemplateIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Debugger\IronPythonLauncherOptions.resx">

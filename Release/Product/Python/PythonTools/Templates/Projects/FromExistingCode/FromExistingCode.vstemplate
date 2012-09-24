@@ -2,7 +2,7 @@
   <TemplateData>
     <Name>From Existing Python code</Name>
     <Description>Create a new project using code files that are already in a folder hierarchy.</Description>
-    <Icon>__TemplateIcon.ico</Icon>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="401" />
     <ProjectType>Python</ProjectType>
     <SortOrder>10</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>

@@ -222,11 +222,6 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoTemplate.html" />
-    <Content Include="DjangoTemplateFile.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <EmbeddedResource Include="Resources\imagelis.bmp" />
     <Content Include="FastCgiTutorial\FastCGI Getting Started.html" />
     <Resource Include="FastCgiTutorial\images\IIS - Enable FastCGI Role.png" />
     <Resource Include="FastCgiTutorial\images\CGI in Vista.png" />
@@ -267,7 +262,6 @@
     <Content Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
       <SubType>Designer</SubType>
     </Content>
-    <Resource Include="Templates\Projects\DjangoProject\__TemplateIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Debugger\DjangoLauncherOptions.resx">
@@ -278,11 +272,11 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
+    <ConditionalEmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
-      <ManifestResourceName>VSPackage</ManifestResourceName>
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
+    </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
@@ -304,11 +298,16 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Images_32bit.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\File.ico" />
-    <Content Include="Resources\Package.ico" />
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
@@ -346,6 +345,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>

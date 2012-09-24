@@ -81,14 +81,15 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="bin\Debug\PythonProject.ico" />
-    <Content Include="PythonProject.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="PythonProjectBig.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <Content Include="Templates\Projects\HpcMpiProject\HpcMpiApp.zip">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -129,7 +130,10 @@
     <EmbeddedResource Include="HpcSupport\ClusterSelector.resx">
       <DependentUpon>ClusterSelector.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx" />
+    <ConditionalEmbeddedResource Include="VSPackage.resx">
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
+    </ConditionalEmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MpiShim\MpiShim.csproj">
@@ -145,10 +149,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\Package.ico" />
     <Content Include="Templates\Projects\HpcMpiProject\Program.py" />
     <Content Include="Templates\Projects\HpcMpiProject\HpcMpiApp.vstemplate" />
-    <Content Include="Templates\Projects\HpcMpiProject\__TemplateIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>

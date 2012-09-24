@@ -97,16 +97,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
-        /// </summary>
-        internal static System.Drawing.Icon PythonProject {
-            get {
-                object obj = ResourceManager.GetObject("PythonProject", resourceCulture);
-                return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to References.
         /// </summary>
         internal static string ReferencesNodeName {

@@ -639,9 +639,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="Templates\Projects\FromExistingCode\__TemplateIcon.ico">
-      <OutputSubPath>FromExistingCode</OutputSubPath>
-    </None>
     <Content Include="WebPiCmdLine\Microsoft.Web.Deployment.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -662,16 +659,20 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <None Include="Resources\PythonProject.ico" />
     <Content Include="ExtensionScraper.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="PythonProjectBig.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="Resources\Refactoring_Commands.bmp" />
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
     <Content Include="Templates\Files\TextFile\textfile.txt" />
     <Content Include="Templates\Files\TextFile\textfile.vstemplate" />
     <Content Include="Templates\NewItem\class.py">
@@ -702,15 +703,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="PythonProject.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="Templates\Files\TextFile\TextFile.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="PythonFile.ico">
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonFile.ico">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -932,6 +929,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.bmp" />
     <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">
       <DependentUpon>DiagnosticsForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -960,7 +958,9 @@
       <DependentUpon>Resources.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Project\Resources\imagelis.bmp" />
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\imagelis.bmp">
+      <Link>PythonTools\Project\Resources\imagelis.bmp</Link>
+    </EmbeddedResource>
     <Content Include="PythonScraper.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -989,15 +989,12 @@
     <Content Include="Templates\Files\EmptyPyFile\empty.vstemplate">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Templates\Files\EmptyPyFile\__TemplateIcon.ico" />
     <Content Include="Templates\Files\PyClass\class.vstemplate" />
-    <Content Include="Templates\Files\PyClass\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\ConsoleAppProject\PythonApp.pyproj" />
     <Content Include="Templates\Projects\ConsoleAppProject\Program.py" />
     <Content Include="Templates\Projects\ConsoleAppProject\PythonConsoleApp.vstemplate">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Templates\Projects\ConsoleAppProject\__TemplateIcon.ico" />
     <Content Include="Templates\Projects\ConsoleAppProject\ConsoleApp.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -1011,11 +1008,6 @@
     <EmbeddedResource Include="PythonTools\Project\WebPiComponentPickerControl.resx">
       <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\completionset.bmp" />
-    <Content Include="Resources\Images_24bit.bmp" />
-    <Content Include="Resources\Images_32bit.bmp" />
-    <Content Include="Resources\Images_32bit.png" />
-    <Content Include="Resources\Package.ico" />
     <EmbeddedResource Include="PythonTools\Navigation\Resources.resx" />
     <EmbeddedResource Include="PythonTools\Options\PythonInterpreterOptionsControl.resx">
       <DependentUpon>PythonInterpreterOptionsControl.cs</DependentUpon>
@@ -1029,16 +1021,21 @@
     <EmbeddedResource Include="PythonTools\Project\PythonGeneralPropertyPageControl.resx">
       <DependentUpon>PythonGeneralPropertyPageControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonImageList.bmp" />
-    <EmbeddedResource Include="Resources\PythonPackageIcons.bmp" />
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\completionset.bmp">
+      <Link>Resources\completionset.bmp</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.bmp">
+      <Link>Resources\PythonPackageIcons.bmp</Link>
+    </EmbeddedResource>
     <EmbeddedResource Include="VisualStudio.Project.resx">
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="VSPackage.resx">
+    <ConditionalEmbeddedResource Include="VSPackage.resx">
       <SubType>Designer</SubType>
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
-    </EmbeddedResource>
+      <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
+    </ConditionalEmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
