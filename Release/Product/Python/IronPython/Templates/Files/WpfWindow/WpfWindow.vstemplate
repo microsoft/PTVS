@@ -2,7 +2,7 @@
   <TemplateData>
     <Name>IronPython WPF Window</Name>
     <Description>A WPF Window consisting of a XAML file and an associated .py file which loads the XAML.</Description>
-    <Icon>__TemplateIcon.ico</Icon>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="402" />
     <ProjectType>Python</ProjectType>
     <DefaultName>Window</DefaultName>
   </TemplateData>
