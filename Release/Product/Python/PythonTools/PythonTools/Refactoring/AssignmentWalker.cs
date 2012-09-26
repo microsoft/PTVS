@@ -106,6 +106,9 @@ namespace Microsoft.PythonTools.Refactoring {
                     item.ContextManager.Walk(this);
                 }
             }
+            if (node.Body != null) {
+                node.Body.Walk(this);
+            }
             return false;
         }
 

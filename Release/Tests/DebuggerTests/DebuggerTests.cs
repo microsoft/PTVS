@@ -1444,6 +1444,38 @@ namespace DebuggerTests {
             }
         }
 
+        /// <summary>
+        /// Python 3.2 changes the rules about when we can call Py_InitThreads.
+        /// 
+        /// http://pytools.codeplex.com/workitem/834
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void AttachSingleThreadedSleeper() {
+            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+                // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
+                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
+                System.Threading.Thread.Sleep(1000);
+
+                AutoResetEvent attached = new AutoResetEvent(false);
+
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                }
+
+                proc.ProcessLoaded += (sender, args) => {
+                    attached.Set();
+                };
+                proc.StartListening();
+
+                Assert.IsTrue(attached.WaitOne(10000));
+                proc.Resume();
+                Debug.WriteLine("Waiting for exit");
+                proc.Terminate();
+            }
+        }
+
         /*
         [TestMethod, Priority(0)]
         public void AttachReattach64() {
@@ -2039,6 +2071,11 @@ int main(int argc, char* argv[]) {
 
     [TestClass]
     public class DebuggerTests30 : DebuggerTests3x {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python30;
@@ -2048,6 +2085,11 @@ int main(int argc, char* argv[]) {
 
     [TestClass]
     public class DebuggerTests31 : DebuggerTests3x {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python31;
@@ -2057,6 +2099,11 @@ int main(int argc, char* argv[]) {
 
     [TestClass]
     public class DebuggerTests32 : DebuggerTests3x {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python32;
@@ -2066,6 +2113,11 @@ int main(int argc, char* argv[]) {
 
     [TestClass]
     public class DebuggerTests27 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python27;
@@ -2075,6 +2127,11 @@ int main(int argc, char* argv[]) {
 
     [TestClass]
     public class DebuggerTests25 : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python25;
@@ -2084,6 +2141,11 @@ int main(int argc, char* argv[]) {
 
     [TestClass]
     public class DebuggerTestsIpy : DebuggerTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.IronPython27;

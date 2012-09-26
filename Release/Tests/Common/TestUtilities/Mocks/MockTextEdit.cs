@@ -105,7 +105,7 @@ namespace TestUtilities.Mocks {
                         new MockTextChange(
                             new SnapshotSpan(
                                 _snapshot, 
-                                insert.Position + adjust, 
+                                0, 
                                 0
                             ),
                             insert.Position + adjust, 

@@ -267,8 +267,11 @@ def log(txt):
     """Logs fatal errors to a log file if WSGI_LOG env var is defined"""
     log_file = os.environ.get('WSGI_LOG')
     if log_file:
-        with file(log_file, 'a+') as f:
+        f = file(log_file, 'a+')
+        try:
             f.write(txt)
+        finally:
+          f.close()
 
 
 def send_response(id, resp_type, content, streaming = True):
@@ -318,7 +321,8 @@ def get_environment():
     d = {}
     if os.path.exists(web_config):
         try:
-            with file(web_config) as wc:
+            wc = file(web_config) 
+            try:
                 doc = minidom.parse(wc)
                 config = doc.getElementsByTagName('configuration')
                 for configSection in config:
@@ -330,6 +334,8 @@ def get_environment():
                             value = curAdd.getAttribute('value')
                             if key and value:
                                 d[key] = value
+            finally:
+              wc.close()
         except:
             # unable to read file
             log(traceback.format_exc())

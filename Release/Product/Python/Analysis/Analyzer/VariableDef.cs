@@ -127,11 +127,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     class VariableDef : DependentData<TypedDependencyInfo<Namespace>>, IReferenceable {
         internal static VariableDef[] EmptyArray = new VariableDef[0];
-        internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();
 
         public VariableDef() { }
 
 #if VARDEF_STATS
+        internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();
+
         ~VariableDef() {
             if (_dependencies.Count == 0) {
                 IncStat("NoDeps");

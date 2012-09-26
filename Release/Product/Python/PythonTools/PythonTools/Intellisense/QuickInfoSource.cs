@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class QuickInfoSource : IQuickInfoSource {
         private readonly ITextBuffer _textBuffer;
         private readonly QuickInfoSourceProvider _provider;
+        private IQuickInfoSession _curSession;
 
         public QuickInfoSource(QuickInfoSourceProvider provider, ITextBuffer textBuffer) {
             _textBuffer = textBuffer;
@@ -32,12 +33,24 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IQuickInfoSource Members
 
         public void AugmentQuickInfoSession(IQuickInfoSession session, System.Collections.Generic.IList<object> quickInfoContent, out ITrackingSpan applicableToSpan) {
+            if (_curSession != null && !_curSession.IsDismissed) {
+                _curSession.Dismiss();
+                _curSession = null;
+            }
+
+            _curSession = session;
+            _curSession.Dismissed += CurSessionDismissed;
+
             var vars = _textBuffer.CurrentSnapshot.AnalyzeExpression(
                 session.CreateTrackingSpan(_textBuffer),
                 false
             );
 
             AugmentQuickInfoWorker(vars, quickInfoContent, out applicableToSpan);
+        }
+
+        private void CurSessionDismissed(object sender, EventArgs e) {
+            _curSession = null;
         }
 
         internal static void AugmentQuickInfoWorker(ExpressionAnalysis vars, System.Collections.Generic.IList<object> quickInfoContent, out ITrackingSpan applicableToSpan) {

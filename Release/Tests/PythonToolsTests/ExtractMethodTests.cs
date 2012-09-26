@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using TestUtilities;
 using TestUtilities.Mocks;
 
 namespace PythonToolsTests {
@@ -32,6 +33,11 @@ namespace PythonToolsTests {
         private const string ErrorReturnWithOutputs = "Cannot extract method that assigns to variables and returns";
         private const string ErrorImportStar = "Cannot extract method containing from ... import * statement";
         private const string ErrorExtractFromClass = "Cannot extract statements from a class definition";
+
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
 
         [TestMethod, Priority(0)]
         public void TestDefinitions() {
@@ -836,6 +842,21 @@ def g():
 g()
 
 x = 2");
+
+            SuccessTest("with .. (name)",
+@"def f():
+    name = 'hello'
+    with open('Foo', 'rb') as f:
+        print(name)
+",
+@"def g(name):
+    with open('Foo', 'rb') as f:
+        print(name)
+
+def f():
+    name = 'hello'
+    g(name)
+");
 
             SuccessTest("x .. Bar()",
 @"class C:
