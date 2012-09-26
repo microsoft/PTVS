@@ -269,6 +269,52 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ProjectAddFolderThroughUI() {
+            try {
+                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddFolderExists.sln");
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var solutionExplorer = app.SolutionExplorerTreeView;
+
+                var solutionNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)");
+                var projectNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists");
+
+                ProjectNewFolderWithName(app, solutionNode, projectNode, "A");
+
+                var folderA = project.ProjectItems.Item("A");
+                var folderANode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A");
+
+                Assert.AreEqual(TestData.GetPath("TestData\\AddFolderExists\\A\\"), folderA.Properties.Item("FullPath").Value);
+                Assert.IsTrue(Directory.Exists(TestData.GetPath("TestData\\AddFolderExists\\A\\")));
+
+                ProjectNewFolderWithName(app, solutionNode, folderANode, "B");
+
+                var folderB = folderA.ProjectItems.Item("B");
+                var folderBNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A", "B");
+
+                Assert.AreEqual(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\"), folderB.Properties.Item("FullPath").Value);
+                Assert.IsTrue(Directory.Exists(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\")));
+
+                ProjectNewFolderWithName(app, solutionNode, folderBNode, "C");
+
+                var folderC = folderB.ProjectItems.Item("C");
+                var folderCNode = solutionExplorer.FindItem("Solution 'AddFolderExists' (1 project)", "AddFolderExists", "A", "B", "C");
+
+                // 817 & 836: Nested subfolders
+                // Setting the wrong VirtualNodeName in FolderNode.FinishFolderAdd caused C's fullpath to be ...\AddFolderExists\B\C\
+                // instead of ...\AddFolderExists\A\B\C\.
+                Assert.AreEqual(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\C\\"), folderC.Properties.Item("FullPath").Value);
+                Assert.IsTrue(Directory.Exists(TestData.GetPath("TestData\\AddFolderExists\\A\\B\\C\\")));
+            }
+            finally
+            {
+                VsIdeTestHostContext.Dte.Solution.Close();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectBuild() {
             try {
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
@@ -769,13 +815,21 @@ namespace PythonToolsUITests {
             Keyboard.Type("."); // bad filename
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
+#if DEV11
+            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
+#else
             VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
+#endif
             System.Threading.Thread.Sleep(1000);
 
             Keyboard.Type(".."); // another bad filename
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
+#if DEV11
+            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
+#else
             VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
+#endif
             System.Threading.Thread.Sleep(1000);
 
             Keyboard.Type("Y"); // another bad filename
@@ -1019,6 +1073,24 @@ namespace PythonToolsUITests {
                 Mouse.Click();
                 System.Threading.Thread.Sleep(1000);
             }
+        }
+
+        private static void ProjectNewFolderWithName(VisualStudioApp app, System.Windows.Automation.AutomationElement solutionNode, System.Windows.Automation.AutomationElement projectNode, string name) {
+            Mouse.MoveTo(projectNode.GetClickablePoint());
+            Mouse.Click(System.Windows.Input.MouseButton.Right);
+
+            System.Threading.Thread.Sleep(500);
+
+            Keyboard.Type("d");
+            Keyboard.PressAndRelease(System.Windows.Input.Key.Right);
+            Keyboard.Type("d");
+
+            System.Threading.Thread.Sleep(500);
+
+            Keyboard.Type(name);
+            Keyboard.Type("\n");
+
+            System.Threading.Thread.Sleep(1000);
         }
 
         private static ProjectItem WaitForItem(Project project, string name) {

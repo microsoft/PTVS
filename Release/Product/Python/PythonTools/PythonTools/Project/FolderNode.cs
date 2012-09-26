@@ -214,7 +214,7 @@ namespace Microsoft.PythonTools.Project
                         ProjectMgr.ProjectHome,
                         Path.Combine(Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), label));
                     this.ItemNode.Rename(relativePath);
-                    this.VirtualNodeName = filename;
+                    this.VirtualNodeName = relativePath;
 
                     this.OnItemDeleted();
                     this.Parent.RemoveChild(this);
