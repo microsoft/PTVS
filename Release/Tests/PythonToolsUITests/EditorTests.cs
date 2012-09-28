@@ -627,6 +627,7 @@ x\
                 Assert.AreEqual(expected[i].Start, start);
                 Assert.AreEqual(expected[i].End, end);
                 Assert.AreEqual(expected[i].Text, buffer.CurrentSnapshot.GetText(Span.FromBounds(start, end)));
+                Assert.AreEqual(ltags[i].Tag.IsImplementation, true);
             }
         }
 

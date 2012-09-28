@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.Project {
         private FileSystemWatcher _watcher;
         private int _suppressFileWatcherCount;
         private bool _isRefreshing;
+        internal bool _boldedStartupItem;
         private object _automationObject;
         private CommonPropertyPage _propPage;
 
@@ -462,9 +463,27 @@ namespace Microsoft.PythonTools.Project {
                 libraryManager.RegisterHierarchy(InteropSafeHierarchy);
             }
 
+
             //If this is a WPFFlavor-ed project, then add a project-level DesignerContext service to provide
             //event handler generation (EventBindingProvider) for the XAML designer.
             this.OleServiceProvider.AddService(typeof(DesignerContext), new OleServiceProvider.ServiceCreatorCallback(this.CreateServices), false);
+        }
+
+        internal void BoldStartupItem(HierarchyNode startupItem) {
+            if (!_boldedStartupItem) {
+                IVsUIHierarchyWindow2 windows = VsShellUtilities.GetUIHierarchyWindow(
+                    ProjectMgr.Site as IServiceProvider,
+                    new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+
+                if (ErrorHandler.Succeeded(windows.SetItemAttribute(
+                    this,
+                    startupItem.ID,
+                    (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
+                    true
+                ))) {
+                    _boldedStartupItem = true;
+                }
+            }
         }
 
         /// <summary>
@@ -729,11 +748,29 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Returns first immediate child node (non-recursive) of a given type.
         /// </summary>
-        private static void RefreshStartupFile(HierarchyNode parent, string oldFile, string newFile) {
+        private void RefreshStartupFile(HierarchyNode parent, string oldFile, string newFile) {
+            IVsUIHierarchyWindow2 windows = VsShellUtilities.GetUIHierarchyWindow(
+                Site,
+                new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+
             for (HierarchyNode n = parent.FirstChild; n != null; n = n.NextSibling) {
                 // TODO: Distinguish between real Urls and fake ones (eg. "References")
                 var absUrl = CommonUtils.GetAbsoluteFilePath(parent.ProjectMgr.ProjectHome, n.Url);
-                if (CommonUtils.IsSamePath(oldFile, absUrl) || CommonUtils.IsSamePath(newFile, absUrl)) {
+                if (CommonUtils.IsSamePath(oldFile, absUrl)) {
+                    windows.SetItemAttribute(
+                        this,
+                        n.ID,
+                        (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
+                        false
+                    );
+                    n.ReDraw(UIHierarchyElement.Icon);
+                } else if (CommonUtils.IsSamePath(newFile, absUrl)) {
+                    windows.SetItemAttribute(
+                        this,
+                        n.ID,
+                        (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
+                        true
+                    );
                     n.ReDraw(UIHierarchyElement.Icon);
                 }
 
@@ -1083,5 +1120,20 @@ namespace Microsoft.PythonTools.Project {
                 _watcher.EnableRaisingEvents = true;
             }
         }
+
+#if DEV11
+        public override object GetProperty(int propId) {            
+            CommonFolderNode.BoldStartupOnIcon(propId, this);
+
+            return base.GetProperty(propId);
+        }
+#else
+        public override int SetProperty(int propid, object value) {
+            CommonFolderNode.BoldStartupOnExpand(propid, this);
+
+            return base.SetProperty(propid, value);
+        }
+#endif
+
     }
 }

@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools {
 
                             tagSpan = new TagSpan(
                                 new SnapshotSpan(snapshot, span),
-                                new OutliningTag(snapshot, span, false)
+                                new OutliningTag(snapshot, span, true)
                             );
                         }
                     }

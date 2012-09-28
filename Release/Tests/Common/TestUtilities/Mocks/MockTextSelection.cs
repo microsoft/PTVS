@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace TestUtilities.Mocks {
     public class MockTextSelection : ITextSelection {
         private VirtualSnapshotPoint _start, _end;
-        private bool _isReversed, _isActive;
+        private bool _isReversed, _isActive = true;
         private readonly ITextView _view;
 
         public MockTextSelection(ITextView view) {
@@ -44,7 +44,6 @@ namespace TestUtilities.Mocks {
         }
 
         public void Clear() {
-            _isActive = false;
             _start = new VirtualSnapshotPoint();
             _end = new VirtualSnapshotPoint();
         }

@@ -21,7 +21,7 @@ namespace TestUtilities.UI {
     /// </summary>
     class NewProjectDialog  : AutomationWrapper {
         private TreeView _installedTemplates;
-        private Table _projectTypesTable;
+        private ListView _projectTypesTable;
 
         public NewProjectDialog(AutomationElement element)
             : base(element) {
@@ -44,15 +44,25 @@ namespace TestUtilities.UI {
                         TreeScope.Descendants,
                         new PropertyCondition(
                             AutomationElement.AutomationIdProperty,
+#if DEV11
+                            "Installed"
+#else
                             "Installed Templates"
+#endif
                         )
                     );
+                    ;
+                    
 
                     // all the templates have the same name (Installed, Recent, etc...)
                     // so we need to find the one that actually has our templates.
                     foreach (AutomationElement template in templates) {
                         var temp = new TreeView(template);
+#if DEV11
+                        var item = temp.FindItem("Templates");
+#else
                         var item = temp.FindItem("Visual C#");
+#endif
                         if (item != null) {
                             _installedTemplates = temp;
                             break;
@@ -66,7 +76,7 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Gets the project types table which enables selecting an individual project type.
         /// </summary>
-        public Table ProjectTypes {
+        public ListView ProjectTypes {
             get {
                 if (_projectTypesTable == null) {
                     var extensions = Element.FindAll(
@@ -80,7 +90,7 @@ namespace TestUtilities.UI {
                     if (extensions.Count != 1) {
                         throw new Exception("multiple controls match");
                     }
-                    _projectTypesTable = new Table(extensions[0]);
+                    _projectTypesTable = new ListView(extensions[0]);
 
                 }
                 return _projectTypesTable;
@@ -101,11 +111,15 @@ namespace TestUtilities.UI {
         }
 
         public void FocusLanguageNode(string name = "Python") {
+#if DEV11
+            var item = InstalledTemplates.FindItem("Templates", name);
+#else
             var item = InstalledTemplates.FindItem("Other Languages", name);
             if (item == null) {
                 // VS can be configured so that there is no Other Languages category
                 item = InstalledTemplates.FindItem(name);
             }
+#endif
             item.SetFocus();
         }
 

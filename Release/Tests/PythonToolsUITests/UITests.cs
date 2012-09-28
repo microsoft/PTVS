@@ -61,7 +61,7 @@ namespace PythonToolsUITests {
                 newProjDialog.FocusLanguageNode();
 
                 var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-                consoleApp.SetFocus();
+                consoleApp.Select();
                 newProjDialog.ProjectName = "Foo.Bar";
                 newProjDialog.ClickOK();
 
@@ -699,7 +699,7 @@ namespace PythonToolsUITests {
             newProjDialog.FocusLanguageNode();
 
             var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-            consoleApp.SetFocus();
+            consoleApp.Select();
 
             newProjDialog.ClickOK();
 

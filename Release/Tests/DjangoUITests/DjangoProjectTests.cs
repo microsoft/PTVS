@@ -45,9 +45,8 @@ namespace DjangoUITests {
             var newProjDialog = app.FileNewProject();
 
             newProjDialog.FocusLanguageNode();
-
             var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
-            djangoApp.SetFocus();
+            djangoApp.Select();
 
             newProjDialog.ClickOK();
 
@@ -78,7 +77,7 @@ namespace DjangoUITests {
             newProjDialog.FocusLanguageNode();
 
             var djangoApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-            djangoApp.SetFocus();
+            djangoApp.Select();
 
             newProjDialog.ClickOK();
 
@@ -111,7 +110,7 @@ namespace DjangoUITests {
             newProjDialog.FocusLanguageNode();
 
             var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
-            djangoApp.SetFocus();
+            djangoApp.Select();
 
             newProjDialog.ClickOK();
 
@@ -212,7 +211,7 @@ namespace DjangoUITests {
             newProjDialog.FocusLanguageNode();
 
             var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
-            djangoApp.SetFocus();
+            djangoApp.Select();
 
             newProjDialog.ClickOK();
 
@@ -282,7 +281,7 @@ namespace DjangoUITests {
             newProjDialog.FocusLanguageNode();
 
             var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
-            djangoApp.SetFocus();
+            djangoApp.Select();
 
             newProjDialog.ClickOK();
 
@@ -328,7 +327,7 @@ namespace DjangoUITests {
             newProjDialog.FocusLanguageNode();
 
             var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
-            djangoApp.SetFocus();
+            djangoApp.Select();
 
             newProjDialog.ClickOK();
 

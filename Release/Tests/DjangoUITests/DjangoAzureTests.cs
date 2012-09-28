@@ -37,7 +37,7 @@ namespace DjangoUITests {
             newProjDialog.FocusLanguageNode();
 
             var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
-            djangoApp.SetFocus();
+            djangoApp.Select();
 
             newProjDialog.ClickOK();
 

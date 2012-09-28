@@ -61,5 +61,20 @@ namespace TestUtilities.UI {
             return null;
         }
 
+        public ListItem FindItem(string name) {
+            var res = Element.FindFirst(
+                TreeScope.Children,
+                new PropertyCondition(
+                    AutomationElement.NameProperty,
+                    name
+                )
+            );
+
+            if (res != null) {
+                return new ListItem(res, this);
+            }
+
+            return null;
+        }
     }
 }

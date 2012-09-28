@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Editor.Core {
             SnapshotPoint start, end;
             SnapshotPoint? mappedStart, mappedEnd;
 
-            if (view.Selection.IsActive) {
+            if (view.Selection.IsActive && !view.Selection.IsEmpty) {
                 // comment every line in the selection
                 start = view.Selection.Start.Position;
                 end = view.Selection.End.Position;

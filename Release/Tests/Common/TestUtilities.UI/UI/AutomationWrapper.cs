@@ -244,5 +244,9 @@ namespace TestUtilities.UI {
                 DumpElement(child, depth + 1);
             }
         }
+
+        public void SetFocus() {
+            Element.SetFocus();
+        }
     }
 } 
