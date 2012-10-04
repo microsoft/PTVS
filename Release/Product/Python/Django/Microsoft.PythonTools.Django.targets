@@ -185,6 +185,10 @@
     </trace>
   </system.diagnostics>
 
+  <appSettings>
+    <add key="WSGI_HANDLER" value="django.core.handlers.wsgi.WSGIHandler()"/>
+  </appSettings>
+
   <system.web>
     <compilation debug="true" targetFramework="4.0" />
   </system.web>

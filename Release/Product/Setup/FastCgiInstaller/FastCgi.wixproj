@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+  <PropertyGroup>
+    <ProductVersion>3.5</ProductVersion>
+    <ProjectGuid>{A1DAEA3E-6A47-4D65-A4AB-5F8BFEB4CD42}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>WFastCGI</OutputName>
+    <OutputType>Package</OutputType>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <DefineConstants>
+      DjangoDir=$(BuildRoot)\Release\Product\Python\Django;MsiVersion=$(WixVersion);
+    </DefineConstants>
+    <LinkerAdditionalOptions>-ext WixUIExtension -ext WixUtilExtension</LinkerAdditionalOptions>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="FastCgiInstaller.wxs" />
+  </ItemGroup>
+  <Import Project="..\SetupProjectAfter.settings" />
+</Project>

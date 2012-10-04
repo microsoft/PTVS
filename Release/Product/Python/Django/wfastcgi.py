@@ -318,7 +318,11 @@ terminate the stream"""
 def get_environment():
     cur_dir = path.dirname(__file__)
     web_config = path.join(cur_dir, 'Web.config')
+    if not os.path.exists(web_config):
+        web_config = path.join(cur_dir, '..', 'Web.config')
+
     d = {}
+
     if os.path.exists(web_config):
         try:
             wc = file(web_config) 
@@ -343,8 +347,15 @@ def get_environment():
     return d
 
 
-if __name__ == '__main__':
-    handler_name = os.getenv('WSGI_HANDLER', 'django.core.handlers.wsgi.WSGIHandler()')
+if __name__ == '__main__': 
+    env = get_environment()
+    os.environ.update(env)
+
+    handler_name = os.getenv('WSGI_HANDLER')
+    if not handler_name:
+        sys.stderr.write('WSGI_HANDLER env var must be set')
+        sys.exit(1)
+
     module, callable = handler_name.rsplit('.', 1)
     if callable.endswith('()'):
         callable = callable.rstrip('()')
@@ -359,7 +370,6 @@ if __name__ == '__main__':
     except ImportError:
         pass
 
-    env = get_environment()
 
     _REQUESTS = {}
 
@@ -373,6 +383,10 @@ if __name__ == '__main__':
                 record.params['wsgi.multiprocess'] = True
                 record.params['wsgi.multithread'] = False
                 record.params['wsgi.run_once'] = False
+                if 'HTTP_X_ORIGINAL_URL' in record.params and 'SCRIPT_URL' not in record.params:
+                    # store the original un-rewritten URL where Django expects it (which
+                    # is where Apache puts it)
+                    record.params['SCRIPT_URL'] = record.params['HTTP_X_ORIGINAL_URL']
 
                 def start_response(status, headers, exc_info = None):
                     global response_headers, status_line
@@ -381,7 +395,13 @@ if __name__ == '__main__':
                 
                 errors = sys.stderr = sys.__stderr__ = record.params['wsgi.errors'] = cStringIO.StringIO()
                 sys.stdout = sys.__stdout__ = cStringIO.StringIO()
-                record.params['SCRIPT_NAME'] = ''
+
+                # SCRIPT_NAME + PATH_INFO is supposed to be the full path http://www.python.org/dev/peps/pep-0333/
+                # but by default (http://msdn.microsoft.com/en-us/library/ms525840(v=vs.90).aspx) IIS is sending us 
+                # the full URL in PATH_INFO, so we need to chop the script name off here
+                if 'AllowPathInfoForScriptMappings' not in os.environ:
+                    record.params['PATH_INFO'] = record.params['PATH_INFO'][len(record.params['SCRIPT_NAME']):]
+
                 try:
                     os.environ.update(env)
                     response = ''.join(handler(record.params, start_response))

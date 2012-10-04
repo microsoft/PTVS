@@ -220,6 +220,7 @@ foreach ($version in $versions) {
     $job.AddFile("$buildroot\Binaries\Release$($version.number)\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
     $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
     $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+    $job.AddFile("$buildroot\Binaries\Release$($version.number)\WFastCGI.msi", "Python Tools for Visual Studio - WFastCGI", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
     
     $job.Send()
     
@@ -235,6 +236,7 @@ foreach ($version in $versions) {
     copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name).msi"
     copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name) - PyKinect Sample.msi"
     copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name) - Pyvot Sample.msi"
+    copy -force "$($job.JobCompletionPath)\WFastCGI.msi" "$outDir\Release\WFastCGI $build_name $($version.name).msi"
 
     copy release_output.txt $env:TEMP\release_output_$($version.number).txt
     tfpt scorch /noprompt
