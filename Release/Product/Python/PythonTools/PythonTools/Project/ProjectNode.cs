@@ -548,9 +548,15 @@ namespace Microsoft.PythonTools.Project
             {
                 if (null == imageHandler)
                 {
-                    imageHandler = new ImageHandler(typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp"));
+                    imageHandler = new ImageHandler(ProjectIconsImageStripStream);
                 }
                 return imageHandler;
+            }
+        }
+
+        protected virtual Stream ProjectIconsImageStripStream {
+            get {
+                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp");
             }
         }
 
@@ -1978,6 +1984,12 @@ namespace Microsoft.PythonTools.Project
         public virtual bool IsCodeFile(string fileName)
         {
             return false;
+        }
+
+        public virtual string[] CodeFileExtensions {
+            get {
+                return new string[0];
+            }
         }
 
         /// <summary>

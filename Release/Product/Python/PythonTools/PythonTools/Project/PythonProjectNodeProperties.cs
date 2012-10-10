@@ -57,5 +57,10 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public uint TargetFramework {
+            get {
+                return 0x40000;
+            }
+        }
     }
 }

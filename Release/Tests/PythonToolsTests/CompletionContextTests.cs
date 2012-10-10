@@ -36,6 +36,11 @@ namespace PythonToolsTests {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
         public static ScriptEngine PythonEngine = Python.CreateEngine();
 
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0)]
         public void Scenario_CtrlSpace() {
             string code = @"def f(param1, param2):

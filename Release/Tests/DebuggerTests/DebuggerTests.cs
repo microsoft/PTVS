@@ -2030,7 +2030,7 @@ int main(int argc, char* argv[]) {
                     processObj.DebuggerOutput += (sender, args) => {
                         Assert.IsTrue(!gotOutput, "got output more than once");
                         gotOutput = true;
-                        Assert.AreEqual(args.Output, "foo");
+                        Assert.AreEqual("foo", args.Output);
                     };
                 }, debugOptions: PythonDebugOptions.RedirectOutput);
 
@@ -2039,6 +2039,31 @@ int main(int argc, char* argv[]) {
 
                 Assert.IsTrue(gotOutput, "failed to get output");
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestInputFunction() {
+            // 845 Python 3.3 Bad argument type for the debugger output wrappers
+            // A change to the Python 3.3 implementation of input() now requires
+            // that `errors` be set to a valid value on stdout. This test
+            // ensures that calls to `input` continue to work.
+
+            var debugger = new PythonDebugger();
+            var expectedOutput = "Provide A: foo\n";
+            string actualOutput = string.Empty;
+
+            var process = DebugProcess(debugger, DebuggerTestPath + @"InputFunction.py", (processObj, threadObj) => {
+                processObj.DebuggerOutput += (sender, args) => {
+                    actualOutput += args.Output;
+                };
+            }, debugOptions: PythonDebugOptions.RedirectOutput | PythonDebugOptions.RedirectInput);
+
+            process.Start();
+            Thread.Sleep(1000);
+            process.SendStringToStdInput("foo\n");
+            process.WaitForExit();
+
+            Assert.AreEqual(expectedOutput, actualOutput);
         }
 
         #endregion

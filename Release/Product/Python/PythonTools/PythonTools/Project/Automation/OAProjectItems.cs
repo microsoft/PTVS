@@ -57,13 +57,13 @@ namespace Microsoft.PythonTools.Project.Automation
                 result.ProjectItems.AddFromDirectory(Path.Combine(directory, subdirectory));
             }
 
-            foreach (string filename in Directory.EnumerateFiles(directory, "*" + PythonConstants.FileExtension))
-            {
-                result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
-            }
-            foreach (string filename in Directory.EnumerateFiles(directory, "*" + PythonConstants.WindowsFileExtension))
-            {
-                result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
+            foreach (var extension in this.Project.Project.CodeFileExtensions) {
+                foreach (string filename in Directory.EnumerateFiles(directory, "*" + extension)) {
+                    result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
+                }
+                foreach (string filename in Directory.EnumerateFiles(directory, "*" + extension)) {
+                    result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
+                }
             }
             return result;
         }
@@ -198,10 +198,10 @@ namespace Microsoft.PythonTools.Project.Automation
         /// <returns>A ProjectItem object. </returns>
         protected virtual EnvDTE.ProjectItem AddItem(string path, VSADDITEMOPERATION op)
         {
+            CheckProjectIsValid();
+
             string ext = Path.GetExtension(path);
-            if (String.Compare(ext, PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) != 0 &&
-                String.Compare(ext, PythonConstants.WindowsFileExtension, StringComparison.OrdinalIgnoreCase) != 0)
-            {
+            foreach (var extension in this.Project.Project.CodeFileExtensions) {
                 // http://pytools.codeplex.com/workitem/617
                 // We are currently in create project from existing code mode.  The wizard walks all of the top-level
                 // files and adds them.  It then lets us handle any subdirectories by calling AddFromDirectory.
@@ -209,27 +209,26 @@ namespace Microsoft.PythonTools.Project.Automation
                 // PageManager and track when we're running the wizard and adding files for the wizard.  If we are
                 // currently adding them ignore anything other than a .py/.pyw files - returnning null is fine
                 // here, the wizard doesn't care about the result.
-                return null;
+                if (String.Compare(ext, extension, StringComparison.OrdinalIgnoreCase) == 0) {
+                    ProjectNode proj = this.Project.Project;
+
+                    EnvDTE.ProjectItem itemAdded = null;
+                    using (AutomationScope scope = new AutomationScope(this.Project.Project.Site)) {
+                        VSADDRESULT[] result = new VSADDRESULT[1];
+                        ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
+
+                        string fileName = System.IO.Path.GetFileName(path);
+                        string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
+                        string filePathInProject = System.IO.Path.Combine(fileDirectory, fileName);
+
+                        itemAdded = this.EvaluateAddResult(result[0], filePathInProject);
+                    }
+
+                    return itemAdded;
+                }
             }
 
-            CheckProjectIsValid();
-
-            ProjectNode proj = this.Project.Project;
-
-            EnvDTE.ProjectItem itemAdded = null;
-            using (AutomationScope scope = new AutomationScope(this.Project.Project.Site))
-            {
-                VSADDRESULT[] result = new VSADDRESULT[1];
-                ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
-
-                string fileName = System.IO.Path.GetFileName(path);
-                string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
-                string filePathInProject = System.IO.Path.Combine(fileDirectory, fileName);
-
-                itemAdded = this.EvaluateAddResult(result[0], filePathInProject);
-            }
-
-            return itemAdded;
+            return null;
         }
 
         /// <summary>

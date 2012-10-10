@@ -123,7 +123,7 @@ namespace DjangoUITests {
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name
             );
-            projItem.SetFocus();
+            AutomationWrapper.Select(projItem);
             System.Threading.Thread.Sleep(1000);
             ThreadPool.QueueUserWorkItem(x => {
                 try {
@@ -156,7 +156,7 @@ namespace DjangoUITests {
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name
             );
-            projItem.SetFocus();
+            AutomationWrapper.Select(projItem);
             System.Threading.Thread.Sleep(1000);
             ThreadPool.QueueUserWorkItem(x => {
                 try {
@@ -181,7 +181,7 @@ namespace DjangoUITests {
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name
             );
-            projItem.SetFocus();
+            AutomationWrapper.Select(projItem);
             System.Threading.Thread.Sleep(1000);
 
             ThreadPool.QueueUserWorkItem(x => {
@@ -224,7 +224,7 @@ namespace DjangoUITests {
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name
             );
-            projItem.SetFocus();
+            AutomationWrapper.Select(projItem);
             System.Threading.Thread.Sleep(1000);
 
             ThreadPool.QueueUserWorkItem(x => {
@@ -247,7 +247,7 @@ namespace DjangoUITests {
                 "models.py"
             );
 
-            projItem.SetFocus();
+            AutomationWrapper.Select(projItem);
             System.Threading.Thread.Sleep(1000);
             ThreadPool.QueueUserWorkItem(x => {
                 try {
@@ -294,7 +294,7 @@ namespace DjangoUITests {
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name
             );
-            projItem.SetFocus();
+            AutomationWrapper.Select(projItem);
             System.Threading.Thread.Sleep(1000);
 
             ThreadPool.QueueUserWorkItem(x => {
@@ -340,7 +340,7 @@ namespace DjangoUITests {
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name
             );
-            projItem.SetFocus();
+            AutomationWrapper.Select(projItem);
 
             app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewMultiselectProjectreferencesItems.Properties");
             EnvDTE.Window window = null;

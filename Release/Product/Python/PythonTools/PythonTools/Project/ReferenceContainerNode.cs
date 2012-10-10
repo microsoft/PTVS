@@ -350,16 +350,6 @@ namespace Microsoft.PythonTools.Project
             {
                 node = this.CreateProjectReferenceNode(element);
             } 
-            else if (referenceType == ProjectFileConstants.WebPiReference) 
-            {
-                node = new WebPiReferenceNode(
-                    ProjectMgr,
-                    element,
-                    element.GetMetadata("Feed"),
-                    element.GetMetadata("ProductId"),
-                    element.GetMetadata("FriendlyName")
-                );
-            }
 
             return node;
         }
@@ -376,17 +366,6 @@ namespace Microsoft.PythonTools.Project
                 // This is the case for managed assembly
                 case VSCOMPONENTTYPE.VSCOMPONENTTYPE_ComPlus:
                     node = this.CreateFileComponent(selectorData);
-                    break;
-                case VSCOMPONENTTYPE.VSCOMPONENTTYPE_Custom:
-                    if (selectorData.lCustom == 0 ) {
-                        node = new WebPiReferenceNode(
-                            (PythonProjectNode)ProjectMgr,
-                            selectorData.bstrFile,
-                            selectorData.bstrTitle,
-                            selectorData.bstrProjRef
-                        );
-                        
-                    }
                     break;
 #if FALSE
                 case VSCOMPONENTTYPE.VSCOMPONENTTYPE_Com2:

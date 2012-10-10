@@ -115,15 +115,15 @@ namespace PythonToolsUITests {
 
             // find Program.py, send copy & paste, verify copy of file is there
             var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py");
-            
-            programPy.SetFocus();
+
+            AutomationWrapper.Select(programPy);
 
             Keyboard.ControlC();
             Keyboard.ControlV();
 
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy.py"));
 
-            programPy.SetFocus();
+            AutomationWrapper.Select(programPy);
             Keyboard.ControlC();
             Keyboard.ControlV();
             
@@ -141,7 +141,7 @@ namespace PythonToolsUITests {
 
             // find Program.py, send copy & paste, verify copy of file is there
             var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
             Keyboard.PressAndRelease(Key.D);
@@ -164,7 +164,7 @@ namespace PythonToolsUITests {
 
             // find Program.py, send copy & paste, verify copy of file is there
             var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", "Search Path");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             // Need to lock inside the worker and around the SaveAll command to ensure that AddSearchPath
             // has a chance to complete before saving the project. Otherwise, the search paths will never
@@ -193,7 +193,7 @@ namespace PythonToolsUITests {
 
             // find Program.py, send copy & paste, verify copy of file is there
             var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
             Keyboard.PressAndRelease(Key.D);
@@ -205,7 +205,7 @@ namespace PythonToolsUITests {
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX"));
 
             var folderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
 
             Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
             Keyboard.PressAndRelease(Key.D);
@@ -216,7 +216,7 @@ namespace PythonToolsUITests {
 
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY"));
             var innerFolderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY");
-            innerFolderNode.SetFocus();
+            AutomationWrapper.Select(innerFolderNode);
 
             var newItem = project.ProjectItems.Item("FolderX").Collection.Item("FolderY").Collection.AddFromFile(
                 TestData.GetPath(@"TestData\DebuggerProject\BreakpointTest.py")
@@ -238,7 +238,7 @@ namespace PythonToolsUITests {
             var projectNode = window.FindItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorld");
             
             // rename once, cancel renaming to existing file....
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.PressAndRelease(Key.F2);
             System.Threading.Thread.Sleep(100);
 
@@ -251,7 +251,7 @@ namespace PythonToolsUITests {
             VisualStudioApp.CheckMessageBox("HelloWorldExisting.pyproj", "overwrite");
 
             // rename again, don't cancel...
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.PressAndRelease(Key.F2);
             System.Threading.Thread.Sleep(100);
 
@@ -279,7 +279,7 @@ namespace PythonToolsUITests {
             var projectNode = window.FindItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "Program.py");
 
             // rename once, cancel renaming to existing file....
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.PressAndRelease(Key.F2);
             System.Threading.Thread.Sleep(100);
 
@@ -292,7 +292,7 @@ namespace PythonToolsUITests {
             VisualStudioApp.CheckMessageBox(MessageBoxButton.Cancel, "file name extension");
 
             // rename again, don't cancel...
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.PressAndRelease(Key.F2);
             System.Threading.Thread.Sleep(100);
 
@@ -317,13 +317,13 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder3");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
             
             Keyboard.ControlC();
 
             var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
 
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.ControlV();
 
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder3"));
@@ -339,13 +339,13 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
 
             Keyboard.ControlX();
 
             var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
 
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.ControlV();
 
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder2"));
@@ -362,13 +362,13 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
-            subItem.SetFocus();
+            AutomationWrapper.Select(subItem);
 
             Keyboard.ControlX();
 
             var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2");
 
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.ControlV();
 
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "SubItem.py"));
@@ -385,11 +385,11 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
-            folder.SetFocus();
+            AutomationWrapper.Select(folder);
 
             Keyboard.ControlC();
 
-            folder.SetFocus();
+            AutomationWrapper.Select(folder);
             Keyboard.ControlV();
 
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy"));
@@ -536,11 +536,11 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
-            folder.SetFocus();
+            AutomationWrapper.Select(folder);
             Keyboard.ControlC();
 
             var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
-            subItem.SetFocus();
+            AutomationWrapper.Select(subItem);
             Keyboard.ControlV();
             VisualStudioApp.CheckMessageBox("Cannot copy 'TestFolder'. The destination folder is a subfolder of the source folder.");
         }
@@ -555,7 +555,7 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             var folderNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest.py");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
 
             Keyboard.Press(Key.LeftShift);
             Keyboard.PressAndRelease(Key.Down);
@@ -565,7 +565,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject");
 
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
             Keyboard.ControlV();
 
             Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest - Copy.py"));

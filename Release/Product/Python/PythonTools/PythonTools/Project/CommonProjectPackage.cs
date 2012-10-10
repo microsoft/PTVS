@@ -56,7 +56,10 @@ namespace Microsoft.PythonTools.Project {
         protected override void Initialize() {
             base.Initialize();
             this.RegisterProjectFactory(CreateProjectFactory());
-            this.RegisterEditorFactory(CreateEditorFactory());
+            var editFactory = CreateEditorFactory();
+            if (editFactory != null) {
+                this.RegisterEditorFactory(editFactory);
+            }
             var encodingEditorFactory = CreateEditorFactoryPromptForEncoding();
             if (encodingEditorFactory != null) {
                 RegisterEditorFactory(encodingEditorFactory);

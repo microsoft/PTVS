@@ -106,6 +106,7 @@ namespace Microsoft.PythonTools.Debugger {
             processInfo.CreateNoWindow = (options & PythonDebugOptions.CreateNoWindow) != 0;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
+            processInfo.RedirectStandardInput = (options & PythonDebugOptions.RedirectInput) != 0;
 
             processInfo.Arguments = 
                 (String.IsNullOrWhiteSpace(interpreterOptions) ? "" : (interpreterOptions + " ")) +
@@ -1035,6 +1036,10 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static byte[] MakeCommand(string command) {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };
+        }
+
+        internal void SendStringToStdInput(string text) {
+            _process.StandardInput.Write(text);
         }
 
         #endregion

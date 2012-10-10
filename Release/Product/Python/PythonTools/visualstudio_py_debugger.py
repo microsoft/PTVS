@@ -1757,7 +1757,7 @@ def do_wait():
 
 class _DebuggerOutput(object):
     """file like object which redirects output to the repl window."""
-    errors = None
+    errors = 'strict'
 
     def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout

@@ -50,7 +50,7 @@ namespace PythonToolsUITests {
             // implicitly linked node
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "ImplicitLinkedFile.py");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             try {
                 app.Dte.ExecuteCommand("File.Rename");
@@ -63,7 +63,7 @@ namespace PythonToolsUITests {
             // explicitly linked node
             var explicitLinkedFile = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "ExplicitDir","ExplicitLinkedFile.py");
             Assert.IsNotNull(explicitLinkedFile, "explicitLinkedFile");
-            explicitLinkedFile.SetFocus();
+            AutomationWrapper.Select(explicitLinkedFile);
 
             try {
                 app.Dte.ExecuteCommand("File.Rename");
@@ -100,12 +100,12 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFile.py");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             app.Dte.ExecuteCommand("Edit.Cut");
 
             var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
 
             app.Dte.ExecuteCommand("Edit.Paste");
 
@@ -118,11 +118,11 @@ namespace PythonToolsUITests {
             Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\\MoveToFolder\\MovedLinkedFile.py")));
 
             // now move it back
-            movedLinkedFile.SetFocus();
+            AutomationWrapper.Select(movedLinkedFile);
             app.Dte.ExecuteCommand("Edit.Cut");
 
             var originalFolder = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles");
-            originalFolder.SetFocus();
+            AutomationWrapper.Select(originalFolder);
             app.Dte.ExecuteCommand("Edit.Paste");
 
             var movedLinkedFilePaste = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFile.py");
@@ -156,12 +156,12 @@ namespace PythonToolsUITests {
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFileOpen.py");
             
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             app.Dte.ExecuteCommand("Edit.Cut");
 
             var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
 
             app.Dte.ExecuteCommand("Edit.Paste");
 
@@ -194,12 +194,12 @@ namespace PythonToolsUITests {
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFileOpenEdit.py");
 
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             app.Dte.ExecuteCommand("Edit.Cut");
 
             var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
 
             app.Dte.ExecuteCommand("Edit.Paste");
 
@@ -229,12 +229,12 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FileNotInProject.py");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             app.Dte.ExecuteCommand("Edit.Cut");
 
             var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
-            folderNode.SetFocus();
+            AutomationWrapper.Select(folderNode);
 
             app.Dte.ExecuteCommand("Edit.Paste");
 
@@ -258,7 +258,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "DeletedLinkedFile.py");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             app.Dte.ExecuteCommand("Edit.Delete");
 
@@ -361,7 +361,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
 
@@ -391,7 +391,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
 
             ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
@@ -423,7 +423,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Bar");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
 
@@ -450,7 +450,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
 
             ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
@@ -478,7 +478,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
 
             ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
@@ -506,7 +506,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
 
             ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
@@ -535,7 +535,7 @@ namespace PythonToolsUITests {
 
             var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo");
             Assert.IsNotNull(projectNode, "projectNode");
-            projectNode.SetFocus();
+            AutomationWrapper.Select(projectNode);
 
             ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
 

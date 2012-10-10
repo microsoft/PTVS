@@ -31,6 +31,11 @@ namespace PythonToolsTests {
     public class RefactorRenameTests {
         private const string ErrorModuleName = "Cannot rename a module name";
 
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         [TestMethod, Priority(0)]
         public void PrivateMemberMangling() {
             RefactorTest("foo", "__f",

@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.Windows.Design.Host;
+using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
@@ -40,9 +41,13 @@ namespace Microsoft.PythonTools.Project {
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
         private bool _defaultInterpreter;
         private PythonDebugPropertyPage _debugPropPage;
+        private CommonSearchPathContainerNode _searchPathContainer;
 
         public PythonProjectNode(CommonProjectPackage package)
             : base(package, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
+
+            Type projectNodePropsType = typeof(PythonProjectNodeProperties);
+            AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
         }
 
         public override CommonFileNode CreateCodeFileNode(MsBuildProjectElement item) {
@@ -73,6 +78,14 @@ namespace Microsoft.PythonTools.Project {
             base.LinkFileAdded(filename);
         }
 
+        protected override Guid[] GetConfigurationIndependentPropertyPages() {
+            return new[] { 
+                GetGeneralPropertyPageType().GUID,
+                typeof(PythonDebugPropertyPage).GUID,
+                typeof(PublishPropertyPage).GUID
+            };
+        }
+
         /// <summary>
         /// Evaluates if a file is a current language code file based on is extension
         /// </summary>
@@ -80,6 +93,12 @@ namespace Microsoft.PythonTools.Project {
         /// <returns>true if is a code file</returns>
         public override bool IsCodeFile(string strFileName) {
             return IsPythonFile(strFileName);
+        }
+
+        public override string[] CodeFileExtensions {
+            get {
+                return new[] { PythonConstants.FileExtension, PythonConstants.WindowsFileExtension };
+            }
         }
 
         internal static bool IsPythonFile(string strFileName) {
@@ -126,8 +145,119 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override void Reload() {
+            _searchPathContainer = new CommonSearchPathContainerNode(this);
+            this.AddChild(_searchPathContainer);
+            RefreshCurrentWorkingDirectory();
+
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
+        }
+
+        private void RefreshCurrentWorkingDirectory() {
+            try {
+                IsRefreshing = true;
+                string projHome = ProjectHome;
+                string workDir = GetWorkingDirectory();
+
+                //Refresh CWD node
+                bool needCWD = !CommonUtils.IsSameDirectory(projHome, workDir);
+                var cwdNode = FindImmediateChild<CurrentWorkingDirectoryNode>(_searchPathContainer);
+                if (needCWD) {
+                    if (cwdNode == null) {
+                        //No cwd node yet
+                        _searchPathContainer.AddChild(new CurrentWorkingDirectoryNode(this, workDir));
+                    } else if (!CommonUtils.IsSameDirectory(cwdNode.Url, workDir)) {
+                        //CWD has changed, recreate the node
+                        cwdNode.Remove(false);
+                        _searchPathContainer.AddChild(new CurrentWorkingDirectoryNode(this, workDir));
+                    }
+                } else {
+                    //No need to show CWD, remove if exists
+                    if (cwdNode != null) {
+                        cwdNode.Remove(false);
+                    }
+                }
+            } finally {
+                IsRefreshing = false;
+            }
+        }
+
+        private void RefreshSearchPaths() {
+            try {
+                IsRefreshing = true;
+
+                string projHome = ProjectHome;
+                string workDir = GetWorkingDirectory();
+                IList<string> searchPath = ParseSearchPath();
+
+                //Refresh regular search path nodes
+
+                //We need to update search path nodes according to the search path property.
+                //It's quite expensive to remove all and build all nodes from scratch, 
+                //so we are going to perform some smarter update.
+                //We are looping over paths in the search path and if a corresponding node
+                //exists, we only update its index (sort order), creating new node otherwise.
+                //At the end all nodes that haven't been updated have to be removed - they are
+                //not in the search path anymore.
+                var searchPathNodes = new List<CommonSearchPathNode>();
+                this.FindNodesOfType<CommonSearchPathNode>(searchPathNodes);
+                bool[] updatedNodes = new bool[searchPathNodes.Count];
+                int index;
+                for (int i = 0; i < searchPath.Count; i++) {
+                    string path = searchPath[i];
+                    //ParseSearchPath() must resolve all paths
+                    Debug.Assert(Path.IsPathRooted(path));
+                    var node = FindSearchPathNodeByPath(searchPathNodes, path, out index);
+                    bool alreadyShown = CommonUtils.IsSameDirectory(workDir, path) ||
+                                        CommonUtils.IsSameDirectory(projHome, path);
+                    if (!alreadyShown) {
+                        if (node != null) {
+                            //existing path, update index (sort order)
+                            node.Index = i;
+                            updatedNodes[index] = true;
+                        } else {
+                            //new path - create new node
+                            _searchPathContainer.AddChild(new CommonSearchPathNode(this, path, i));
+                        }
+                    }
+                }
+
+                //Refresh nodes and remove non-updated ones
+                for (int i = 0; i < searchPathNodes.Count; i++) {
+                    if (!updatedNodes[i]) {
+                        searchPathNodes[i].Remove();
+                    }
+                }
+            } finally {
+                IsRefreshing = false;
+            }
+        }
+
+        /// <summary>
+        /// Returns first immediate child node (non-recursive) of a given type.
+        /// </summary>
+        private static T FindImmediateChild<T>(HierarchyNode parent)
+            where T : HierarchyNode {
+            for (HierarchyNode n = parent.FirstChild; n != null; n = n.NextSibling) {
+                if (n is T) {
+                    return (T)n;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Finds Search Path node by a given search path and returns it along with the node's index. 
+        /// </summary>
+        private CommonSearchPathNode FindSearchPathNodeByPath(IList<CommonSearchPathNode> nodes, string path, out int index) {
+            index = 0;
+            for (int j = 0; j < nodes.Count; j++) {
+                if (CommonUtils.IsSameDirectory(nodes[j].Url, path)) {
+                    index = j;
+                    return nodes[j];
+                }
+            }
+            return null;
         }
 
         private void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
@@ -139,12 +269,15 @@ namespace Microsoft.PythonTools.Project {
                     }
                     break;
                 case CommonConstants.WorkingDirectory:
+                    RefreshCurrentWorkingDirectory();
                     genProp = GeneralPropertyPageControl;
                     if (genProp != null) {
                         genProp.WorkingDirectory = e.NewValue;
                     }
                     break;
                 case CommonConstants.SearchPath:
+                    RefreshSearchPaths();
+
                     // we need to remove old files from the analyzer and add the new files
                     HashSet<string> oldDirs = new HashSet<string>(ParseSearchPath(e.OldValue), StringComparer.OrdinalIgnoreCase);
                     HashSet<string> newDirs = new HashSet<string>(ParseSearchPath(e.NewValue), StringComparer.OrdinalIgnoreCase);
@@ -460,6 +593,33 @@ namespace Microsoft.PythonTools.Project {
             get {
                 return "Python Extension Modules (*.dll;*.pyd)\0*.dll;*.pyd\0All Files (*.*)\0*.*\0";
             }
+        }
+
+        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
+                switch ((VsCommands2K)cmd) {
+                    case VsCommands2K.ECMD_PUBLISHSELECTION:
+                    case VsCommands2K.ECMD_PUBLISHSLNCTX:
+                        Publish(PublishProjectOptions.Default, true);
+                        return VSConstants.S_OK;
+                    case CommonConstants.OpenFolderInExplorerCmdId:
+                        Process.Start(this.ProjectHome);
+                        return VSConstants.S_OK;
+                }
+            }
+            return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                switch ((int)cmd) {
+                    case CommonConstants.AddSearchPathCommandId:
+                    case CommonConstants.StartWithoutDebuggingCmdId:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
+                }
+            }
+            return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
         #region IPythonProject Members

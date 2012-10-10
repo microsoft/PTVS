@@ -51,6 +51,12 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Set if you do not want to create a window
         /// </summary>
-        CreateNoWindow = 0x40
+        CreateNoWindow = 0x40,
+
+        /// <summary>
+        /// Passing this flag will allow the PythonProcess.SendStringToStdInput function to be used. It
+        /// is not passed to the debuggee in any way.
+        /// </summary>
+        RedirectInput = 0x80
     }
 }

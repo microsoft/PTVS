@@ -49,7 +49,6 @@ namespace Microsoft.PythonTools.Project {
         private static ImageList _imageList;
         private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;
         private static int _imageOffset;
-        private CommonSearchPathContainerNode _searchPathContainer;
         private FileSystemWatcher _watcher;
         private int _suppressFileWatcherCount;
         private bool _isRefreshing;
@@ -131,6 +130,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public bool IsRefreshing {
             get { return _isRefreshing; }
+            set { _isRefreshing = value; }
         }
 
         /// <summary>
@@ -199,13 +199,6 @@ namespace Microsoft.PythonTools.Project {
                         result = QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch ((int)cmd) {
-                    case CommonConstants.AddSearchPathCommandId:
-                    case CommonConstants.StartWithoutDebuggingCmdId:
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                        return VSConstants.S_OK;
-                }
             } else if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.ECMD_PUBLISHSELECTION:
@@ -243,18 +236,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch ((int)cmd) {
-                    case CommonConstants.AddSearchPathCommandId:
-                        AddSearchPath();
-                        return VSConstants.S_OK;
-                    case CommonConstants.StartWithoutDebuggingCmdId:
-                        EnvDTE.Project automationObject = this.GetAutomationObject() as EnvDTE.Project;
-                        string activeConfigName = Utilities.GetActiveConfigurationName(automationObject);
-                        CommonProjectConfig config = MakeConfiguration(activeConfigName);
-                        return config.DebugLaunch((uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug);
-                }
-            } else if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
+            if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.ECMD_PUBLISHSELECTION:
                     case VsCommands2K.ECMD_PUBLISHSLNCTX:
@@ -344,12 +326,7 @@ namespace Microsoft.PythonTools.Project {
         /// Overriding main project loading method to inject our hierarachy of nodes.
         /// </summary>
         protected override void Reload() {
-            _searchPathContainer = new CommonSearchPathContainerNode(this);
-            this.AddChild(_searchPathContainer);
             base.Reload();
-
-            RefreshCurrentWorkingDirectory();
-            RefreshSearchPaths();
 
             OnProjectPropertyChanged += CommonProjectNode_OnProjectPropertyChanged;
 
@@ -492,9 +469,7 @@ namespace Microsoft.PythonTools.Project {
         /// <returns></returns>
         protected override Guid[] GetConfigurationIndependentPropertyPages() {
             return new[] { 
-                GetGeneralPropertyPageType().GUID,
-                typeof(PythonDebugPropertyPage).GUID,
-                typeof(PublishPropertyPage).GUID
+                GetGeneralPropertyPageType().GUID
             };
         }
 
@@ -623,86 +598,6 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public abstract IProjectLauncher/*!*/ GetLauncher();
 
-        private void RefreshCurrentWorkingDirectory() {
-            try {
-                _isRefreshing = true;
-                string projHome = ProjectHome;
-                string workDir = GetWorkingDirectory();
-
-                //Refresh CWD node
-                bool needCWD = !CommonUtils.IsSameDirectory(projHome, workDir);
-                var cwdNode = FindImmediateChild<CurrentWorkingDirectoryNode>(_searchPathContainer);
-                if (needCWD) {
-                    if (cwdNode == null) {
-                        //No cwd node yet
-                        _searchPathContainer.AddChild(new CurrentWorkingDirectoryNode(this, workDir));
-                    } else if (!CommonUtils.IsSameDirectory(cwdNode.Url, workDir)) {
-                        //CWD has changed, recreate the node
-                        cwdNode.Remove(false);
-                        _searchPathContainer.AddChild(new CurrentWorkingDirectoryNode(this, workDir));
-                    }
-                } else {
-                    //No need to show CWD, remove if exists
-                    if (cwdNode != null) {
-                        cwdNode.Remove(false);
-                    }
-                }
-            } finally {
-                _isRefreshing = false;
-            }
-        }
-
-        private void RefreshSearchPaths() {
-            try {
-                _isRefreshing = true;
-
-                string projHome = ProjectHome;
-                string workDir = GetWorkingDirectory();
-                IList<string> searchPath = ParseSearchPath();
-
-                //Refresh regular search path nodes
-
-                //We need to update search path nodes according to the search path property.
-                //It's quite expensive to remove all and build all nodes from scratch, 
-                //so we are going to perform some smarter update.
-                //We are looping over paths in the search path and if a corresponding node
-                //exists, we only update its index (sort order), creating new node otherwise.
-                //At the end all nodes that haven't been updated have to be removed - they are
-                //not in the search path anymore.
-                var searchPathNodes = new List<CommonSearchPathNode>();
-                this.FindNodesOfType<CommonSearchPathNode>(searchPathNodes);
-                bool[] updatedNodes = new bool[searchPathNodes.Count];
-                int index;
-                for (int i = 0; i < searchPath.Count; i++) {
-                    string path = searchPath[i];
-                    //ParseSearchPath() must resolve all paths
-                    Debug.Assert(Path.IsPathRooted(path));
-                    var node = FindSearchPathNodeByPath(searchPathNodes, path, out index);
-                    bool alreadyShown = CommonUtils.IsSameDirectory(workDir, path) ||
-                                        CommonUtils.IsSameDirectory(projHome, path);
-                    if (!alreadyShown) {
-                        if (node != null) {
-                            //existing path, update index (sort order)
-                            node.Index = i;
-                            updatedNodes[index] = true;
-                        } else {
-                            //new path - create new node
-                            _searchPathContainer.AddChild(new CommonSearchPathNode(this, path, i));
-                        }
-                    }
-                }
-
-                //Refresh nodes and remove non-updated ones
-                for (int i = 0; i < searchPathNodes.Count; i++) {
-                    if (!updatedNodes[i]) {
-                        searchPathNodes[i].Remove();
-                    }
-                }
-            } finally {
-                _isRefreshing = false;
-            }
-        }
-
         /// <summary>
         /// Returns resolved value of the current working directory property.
         /// </summary>
@@ -735,12 +630,6 @@ namespace Microsoft.PythonTools.Project {
                     RefreshStartupFile(this,
                         CommonUtils.GetAbsoluteFilePath(ProjectHome, e.OldValue),
                         CommonUtils.GetAbsoluteFilePath(ProjectHome, e.NewValue));
-                    break;
-                case CommonConstants.WorkingDirectory:
-                    RefreshCurrentWorkingDirectory();
-                    break;
-                case CommonConstants.SearchPath:
-                    RefreshSearchPaths();
                     break;
             }
         }
@@ -779,40 +668,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Returns first immediate child node (non-recursive) of a given type.
-        /// </summary>
-        private static T FindImmediateChild<T>(HierarchyNode parent)
-            where T : HierarchyNode {
-            for (HierarchyNode n = parent.FirstChild; n != null; n = n.NextSibling) {
-                if (n is T) {
-                    return (T)n;
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Finds Search Path node by a given search path and returns it along with the node's index. 
-        /// </summary>
-        private CommonSearchPathNode FindSearchPathNodeByPath(IList<CommonSearchPathNode> nodes, string path, out int index) {
-            index = 0;
-            for (int j = 0; j < nodes.Count; j++) {
-                if (CommonUtils.IsSameDirectory(nodes[j].Url, path)) {
-                    index = j;
-                    return nodes[j];
-                }
-            }
-            return null;
-        }
-
-        /// <summary>
         /// Provide mapping from our browse objects and automation objects to our CATIDs
         /// </summary>
         private void InitializeCATIDs() {
-            Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             Type fileNodePropsType = typeof(FileNodeProperties);
             // The following properties classes are specific to current language so we can use their GUIDs directly
-            AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
             AddCATIDMapping(typeof(OAProject), typeof(OAProject).GUID);
             // The following is not language specific and as such we need a separate GUID
             AddCATIDMapping(typeof(FolderNodeProperties), new Guid(CommonConstants.FolderNodePropertiesGuid));
@@ -821,7 +681,7 @@ namespace Microsoft.PythonTools.Project {
             // Because our property page pass itself as the object to display in its grid, 
             // we need to make it have the same CATID
             // as the browse object of the project node so that filtering is possible.
-            AddCATIDMapping(GetGeneralPropertyPageType(), projectNodePropsType.GUID);
+            AddCATIDMapping(GetGeneralPropertyPageType(), GetGeneralPropertyPageType().GUID);
             // We could also provide CATIDs for references and the references container node, if we wanted to.
         }
 

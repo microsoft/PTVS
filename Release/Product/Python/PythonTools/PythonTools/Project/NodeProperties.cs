@@ -834,56 +834,6 @@ namespace Microsoft.PythonTools.Project
         #endregion
     }
 
-    [CLSCompliant(false), ComVisible(true)]
-    public class WebPiReferenceNodeProperties : NodeProperties {
-        #region properties
-        [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.RefName)]
-        [SRDescriptionAttribute(SR.RefNameDescription)]
-        [Browsable(true)]
-        [AutomationBrowsable(true)]
-        public override string Name {
-            get {
-                return this.Node.Caption;
-            }
-        }
-
-        [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.WebPiFeed)]
-        [SRDescriptionAttribute(SR.WebPiFeedDescription)]
-        [Browsable(true)]
-        public string Feed {
-            get {
-                return this.GetProperty("Feed", "");
-            }
-        }
-
-        [SRCategoryAttribute(SR.Misc)]
-        [LocDisplayName(SR.WebPiProduct)]
-        [SRDescriptionAttribute(SR.WebPiProductDescription)]
-        [Browsable(true)]
-        public virtual string ProductId {
-            get {
-                return this.GetProperty("ProductID", "");
-            }
-        }
-
-        #endregion
-
-        #region ctors
-        public WebPiReferenceNodeProperties(WebPiReferenceNode node)
-            : base(node) {
-        }
-        #endregion
-
-        #region overridden methods
-        public override string GetClassName() {
-            return SR.GetString(SR.WebPiReferenceProperties, CultureInfo.CurrentUICulture);
-        }
-        #endregion
-    }
-
-
     [ComVisible(true)]
     public class ProjectReferencesProperties : ReferenceNodeProperties
     {

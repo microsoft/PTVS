@@ -63,7 +63,7 @@ namespace PythonToolsUITests {
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
 
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
                 System.Threading.Thread.Sleep(2000);
@@ -93,7 +93,7 @@ namespace PythonToolsUITests {
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.FindItem("Solution 'PublishTest' (1 project)", "HelloWorld");
 
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
                 System.Threading.Thread.Sleep(2000);
@@ -125,7 +125,7 @@ namespace PythonToolsUITests {
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
 
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
 
@@ -168,7 +168,7 @@ namespace PythonToolsUITests {
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
 
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
 
@@ -207,7 +207,7 @@ namespace PythonToolsUITests {
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
 
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
 
@@ -245,7 +245,7 @@ namespace PythonToolsUITests {
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
 
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
 
@@ -284,7 +284,7 @@ namespace PythonToolsUITests {
                 // find Program.py, send copy & paste, verify copy of file is there
                 var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
 
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
                 System.Threading.Thread.Sleep(2000);
@@ -294,7 +294,7 @@ namespace PythonToolsUITests {
 
                 // do it again w/ the directories already existing
                 File.Delete(files[0]);
-                programPy.SetFocus();
+                AutomationWrapper.Select(programPy);
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
                 System.Threading.Thread.Sleep(2000);
                 files = Directory.GetFiles(dir);

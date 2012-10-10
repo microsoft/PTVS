@@ -1186,7 +1186,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         Thread.Sleep(50);
                     }
 
-                    if (updateAtEnd && changed) {
+                    if (updateAtEnd && changed && _errorList != null) {
                         _errorList.RefreshTasks(_cookie);
                     }
                 } finally {

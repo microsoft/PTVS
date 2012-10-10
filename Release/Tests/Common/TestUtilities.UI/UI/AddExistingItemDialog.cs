@@ -41,6 +41,7 @@ namespace TestUtilities.UI {
             // click the chevron to open the menu
             var bottomRight = addButton.Current.BoundingRectangle.BottomRight;
             Mouse.MoveTo(new Point(bottomRight.X - 3, bottomRight.Y - 3));
+
             Mouse.Click(MouseButton.Left);
 
             // type the keyboard short cut for Add to Link

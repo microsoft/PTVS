@@ -12,12 +12,14 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
-
+using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Project {
 
@@ -55,6 +57,66 @@ namespace Microsoft.PythonTools.Project {
                     fullName.Append('.');
                 }
             }
+        }
+
+        protected override int ExecCommandOnNode(Guid guidCmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            Debug.Assert(this.ProjectMgr != null, "The Dynamic FileNode has no project manager");
+
+            Utilities.CheckNotNull(this.ProjectMgr);
+            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+                switch (cmd) {
+                    case CommonConstants.SetAsStartupFileCmdId:
+                        // Set the StartupFile project property to the Url of this node
+                        ProjectMgr.SetProjectProperty(
+                            CommonConstants.StartupFile,
+                            CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
+                        );
+                        return VSConstants.S_OK;
+                    case CommonConstants.StartDebuggingCmdId:
+                    case CommonConstants.StartWithoutDebuggingCmdId:
+                        CommonProjectPackage package = (CommonProjectPackage)ProjectMgr.Package;
+                        IProjectLauncher starter = ((CommonProjectNode)ProjectMgr).GetLauncher();
+                        if (starter != null) {
+                            starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
+                        }
+                        return VSConstants.S_OK;
+                }
+            }
+
+            return base.ExecCommandOnNode(guidCmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        protected override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+                if (this.ProjectMgr.IsCodeFile(this.Url)) {
+                    switch (cmd) {
+                        case CommonConstants.SetAsStartupFileCmdId:
+                            //We enable "Set as StartUp File" command only on current language code files, 
+                            //the file is in project home dir and if the file is not the startup file already.
+                            string startupFile = ((CommonProjectNode)ProjectMgr).GetStartupFile();
+                            if (IsInProjectHome() && !CommonUtils.IsSamePath(startupFile, this.Url)) {
+                                result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                            }
+                            return VSConstants.S_OK;
+                        case CommonConstants.StartDebuggingCmdId:
+                        case CommonConstants.StartWithoutDebuggingCmdId:
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                            return VSConstants.S_OK;
+                    }
+                }
+            }
+            return base.QueryStatusOnNode(guidCmdGroup, cmd, pCmdText, ref result);
+        }
+
+        private bool IsInProjectHome() {
+            HierarchyNode parent = this.Parent;
+            while (parent != null) {
+                if (parent is CommonSearchPathNode) {
+                    return false;
+                }
+                parent = parent.Parent;
+            }
+            return true;
         }
 
         public override void Remove(bool removeFromStorage) {

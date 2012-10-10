@@ -27,10 +27,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
-using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
 namespace Microsoft.PythonTools.Project {
     public class CommonFileNode : FileNode {
@@ -231,33 +229,6 @@ namespace Microsoft.PythonTools.Project {
             return adapter.GetWpfTextView(viewAdapter);
         }
 
-        protected override int ExecCommandOnNode(Guid guidCmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            Debug.Assert(this.ProjectMgr != null, "The Dynamic FileNode has no project manager");
-
-            Utilities.CheckNotNull(this.ProjectMgr);
-            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch (cmd) {
-                    case CommonConstants.SetAsStartupFileCmdId:
-                        // Set the StartupFile project property to the Url of this node
-                        ProjectMgr.SetProjectProperty(
-                            CommonConstants.StartupFile,
-                            CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
-                        );
-                        return VSConstants.S_OK;
-                    case CommonConstants.StartDebuggingCmdId:
-                    case CommonConstants.StartWithoutDebuggingCmdId:
-                        CommonProjectPackage package = (CommonProjectPackage)_project.Package;
-                        IProjectLauncher starter = _project.GetLauncher();
-                        if (starter != null) {
-                            starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
-                        }
-                        return VSConstants.S_OK;
-                }
-            }
-
-            return base.ExecCommandOnNode(guidCmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
-        }
-
         /// <summary>
         /// Handles the menuitems
         /// </summary>
@@ -268,24 +239,8 @@ namespace Microsoft.PythonTools.Project {
                         result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                 }
-            } else if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
-                if (this.ProjectMgr.IsCodeFile(this.Url)) {
-                    switch (cmd) {
-                        case CommonConstants.SetAsStartupFileCmdId:
-                            //We enable "Set as StartUp File" command only on current language code files, 
-                            //the file is in project home dir and if the file is not the startup file already.
-                            string startupFile = _project.GetStartupFile();
-                            if (IsInProjectHome() && !CommonUtils.IsSamePath(startupFile, this.Url)) {
-                                result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            }
-                            return VSConstants.S_OK;
-                        case CommonConstants.StartDebuggingCmdId:
-                        case CommonConstants.StartWithoutDebuggingCmdId:
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                    }
-                }
-            }
+            } 
+
             return base.QueryStatusOnNode(guidCmdGroup, cmd, pCmdText, ref result);
         }
 
@@ -317,16 +272,6 @@ namespace Microsoft.PythonTools.Project {
             return service;
         }
 
-        private bool IsInProjectHome() {
-            HierarchyNode parent = this.Parent;
-            while (parent != null) {
-                if (parent is CommonSearchPathNode) {
-                    return false;
-                }
-                parent = parent.Parent;
-            }
-            return true;
-        }
         #endregion
     }
 }
