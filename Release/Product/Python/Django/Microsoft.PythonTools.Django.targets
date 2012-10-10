@@ -25,6 +25,9 @@
   </PropertyGroup>
 
   <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+  <Target Name="GetTargetFrameworkDirectories" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+  <Target Name="GetTargetFrameworkMoniker" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+  <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
   <Target Name="CreateManifestResourceNames" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
