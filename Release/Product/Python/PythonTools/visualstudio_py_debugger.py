@@ -164,7 +164,7 @@ def get_thread_from_id(id):
         THREADS_LOCK.release()
 
 def should_send_frame(frame):
-    return  frame is not None and frame.f_code is not get_code(debug) and frame.f_code is not get_code(new_thread_wrapper)
+    return frame is not None and frame.f_code not in (get_code(debug), get_code(execfile), get_code(new_thread_wrapper))
 
 def lookup_builtin(name, frame):
     try:
@@ -194,10 +194,14 @@ BREAK_TYPE_UNHANLDED = 1
 BREAK_TYPE_HANDLED = 2
 
 class ExceptionBreakInfo(object):
+    BUILT_IN_HANDLERS = {
+        '<frozen importlib._bootstrap>': ((0, getattr(sys, 'maxsize', sys.maxint), '*'),)
+    }
+
     def __init__(self):
         self.default_mode = BREAK_MODE_UNHANDLED
         self.break_on = { }
-        self.handler_cache = { }
+        self.handler_cache = dict(self.BUILT_IN_HANDLERS)
         self.handler_lock = thread.allocate_lock()
         self.AddException('exceptions.IndexError', BREAK_MODE_NEVER)
         self.AddException('exceptions.KeyError', BREAK_MODE_NEVER)
@@ -208,7 +212,7 @@ class ExceptionBreakInfo(object):
     def Clear(self):
         self.default_mode = BREAK_MODE_UNHANDLED
         self.break_on.clear()
-        self.handler_cache.clear()
+        self.handler_cache = dict(self.BUILT_IN_HANDLERS)
 
     def ShouldBreak(self, thread, ex_type, ex_value, trace):
         probe_stack()
@@ -1076,7 +1080,7 @@ class ConditionInfo(object):
         self.last_value = BREAK_WHEN_CHANGED_DUMMY
 
 def get_code(func):
-    return getattr(func, 'func_code', None) or func.__code__
+    return getattr(func, 'func_code', None) or getattr(func, '__code__', None)
 
 
 class DebuggerExitException(Exception): pass
@@ -1839,15 +1843,15 @@ def is_same_py_file(file1, file2):
 
 def print_exception():
     # count the debugger frames to be removed
-    tb_value = sys.exc_info()[2]
-    debugger_count = 0
-    while tb_value is not None:
-        if is_same_py_file(tb_value.tb_frame.f_code.co_filename, __file__):
-            debugger_count += 1
-        tb_value = tb_value.tb_next
+    tb = traceback.extract_tb(sys.exc_info()[2])
+    debugger_count = len(tb)
+    while debugger_count:
+        if is_same_py_file(tb[debugger_count - 1][0], __file__):
+            break
+        debugger_count -= 1
         
     # print the traceback
-    tb = traceback.extract_tb(sys.exc_info()[2])[debugger_count:]         
+    tb = tb[debugger_count:]
     if tb:
         print('Traceback (most recent call last):')
         for out in traceback.format_list(tb):
@@ -1856,7 +1860,11 @@ def print_exception():
     # print the exception
     for out in traceback.format_exception_only(sys.exc_info()[0], sys.exc_info()[1]):
         sys.stdout.write(out)
-    
+
+def silent_excepthook(exc_type, exc_value, exc_tb):
+    # Used to avoid displaying the exception twice on exit.
+    pass
+
 def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit, break_on_systemexit_zero = False, debug_stdlib = False, django_debugging = False):
     # remove us from modules so there's no trace of us
     sys.modules['$visualstudio_py_debugger'] = sys.modules['visualstudio_py_debugger']
@@ -1909,9 +1917,17 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
         if (wait_on_exception and sys.exc_info()[1].code != 0) or (wait_on_exit and sys.exc_info()[1].code == 0):
             print_exception()
             do_wait()
+        if sys.excepthook == sys.__excepthook__:
+            # If the user has reassigned excepthook then let theirs run.
+            # Otherwise, suppress the extra traceback.
+            sys.excepthook = silent_excepthook
         raise
     except:
         print_exception()
         if wait_on_exception:
             do_wait()
+        if sys.excepthook == sys.__excepthook__:
+            # If the user has reassigned excepthook then let theirs run.
+            # Otherwise, suppress the extra traceback.
+            sys.excepthook = silent_excepthook
         raise
