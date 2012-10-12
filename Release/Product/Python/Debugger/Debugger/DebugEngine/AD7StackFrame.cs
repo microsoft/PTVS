@@ -78,13 +78,22 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     } else {
                         funcName = _stackFrame.FileName + " unknown code";
                     }
-                } else {
-                    funcName = funcName + " in " + Path.GetFileNameWithoutExtension(_stackFrame.FileName);
+                } else if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE) != 0) {
+                    funcName += " in " + Path.GetFileNameWithoutExtension(_stackFrame.FileName);
+                    frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
                 }
-                frameInfo.m_bstrFuncName = funcName + " line " + this._stackFrame.LineNo;
+
+
+                if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES) != 0) {
+                    frameInfo.m_bstrFuncName = funcName + " line " + _stackFrame.LineNo;
+                    frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
+                }
+
+                frameInfo.m_bstrFuncName = funcName;
                 frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME;
             }
 
+            
             if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_LANGUAGE) != 0) {
                 switch (_stackFrame.Kind) {
                     case FrameKind.Python:
