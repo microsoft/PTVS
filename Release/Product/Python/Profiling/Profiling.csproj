@@ -197,7 +197,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\ProfilingTreeView.png" />
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\ProfilingTreeView.bmp" />
     <Content Include="vspyprof.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -35,11 +35,11 @@ $versions = @{number="11.0"; name="VS 2012"}, @{number="10.0"; name="VS 2010"}
 foreach ($version in $versions) {
     ###################################################################
     # Build the actual binaries
+    $outDir = "$prevOutDir\$($version.name)"
+    
     echo "Building release to $outdir ..."
     
     & $buildroot\Release\Product\Setup\BuildRelease.ps1 $outdir -vsTarget $version.number -noclean > release_output.txt
-    
-    $outDir = "$prevOutDir\$($version.name)"
     
     ###################################################################
     # Index symbols
@@ -47,7 +47,7 @@ foreach ($version in $versions) {
     $buildid = $prevOutDir.Substring($prevOutDir.LastIndexOf('\') + 1)
     
     $request = `
-    "BuildId=$buildid
+    "BuildId=$buildid $($version.name)
     BuildLabPhone=7058786
     BuildRemark=beta
     ContactPeople=$env:username;dinov;smortaz

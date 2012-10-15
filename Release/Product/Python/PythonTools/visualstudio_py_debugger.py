@@ -195,7 +195,7 @@ BREAK_TYPE_HANDLED = 2
 
 class ExceptionBreakInfo(object):
     BUILT_IN_HANDLERS = {
-        '<frozen importlib._bootstrap>': ((0, getattr(sys, 'maxsize', sys.maxint), '*'),)
+        '<frozen importlib._bootstrap>': ((None, None, '*'),)
     }
 
     def __init__(self):
@@ -271,7 +271,7 @@ class ExceptionBreakInfo(object):
 
                 line = cur_frame.f_lineno
                 for line_start, line_end, expressions in handlers:
-                    if line_start <= line < line_end:
+                    if line_start is None or line_start <= line < line_end:
                         if '*' in expressions:
                             return True
 

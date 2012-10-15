@@ -256,7 +256,7 @@ namespace Microsoft.PythonTools.Profiling {
         #endregion
 
         private static ImageList InitImageList() {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.PythonTools.ProfilingTreeView.png");
+            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.PythonTools.ProfilingTreeView.bmp");
             return Utilities.GetImageList(
                 stream
             );
