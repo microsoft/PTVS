@@ -793,8 +793,12 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         PyInt_FromSize_t* intFromSizeT;
         if(version >= PythonVersion_30) {
             intFromLong = (PyInt_FromLong*)GetProcAddress(module, "PyLong_FromLong");
-            strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicodeUCS2_FromString");
             intFromSizeT = (PyInt_FromSize_t*)GetProcAddress(module, "PyLong_FromSize_t");
+			if(version >= PythonVersion_33) {
+				strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicode_FromString");
+			} else {
+				strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicodeUCS2_FromString");
+			}
         }else{
             intFromLong = (PyInt_FromLong*)GetProcAddress(module, "PyInt_FromLong");
             strFromString = (PyString_FromString*)GetProcAddress(module, "PyString_FromString");
@@ -1285,6 +1289,7 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
             case PythonVersion_30:
             case PythonVersion_31:
             case PythonVersion_32:
+			case PythonVersion_33:
                 curThread->_30_31.c_tracefunc(curThread->_30_31.c_traceobj, frame, what, arg);
                 break;
         }

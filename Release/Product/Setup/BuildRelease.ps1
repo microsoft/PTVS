@@ -1,4 +1,4 @@
-param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch, [string] $vsTarget)
+param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch, [string] $vsTarget, [switch] $nocopy, [switch] $skipdebug)
 
 if (-not (get-command msbuild -EA 0))
 {
@@ -64,8 +64,6 @@ try {
         }
     }
     
-    $prevOutDir = $outDir
-    
     $dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
     $dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
     $dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir -EA 0
@@ -87,6 +85,9 @@ try {
         }
     }
     
+    $targetConfigs = ("Release", "Debug")
+    if ($skipdebug) { $targetConfigs = ("Release") }
+    
     foreach ($targetVs in $targetVersions) {
         $version = "1.5." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
         
@@ -102,7 +103,7 @@ try {
         
         Get-Content $asmverfile
         
-        foreach ($config in ("Release","Debug"))
+        foreach ($config in $targetConfigs)
         {
             if (-not $skiptests)
             {
@@ -151,8 +152,7 @@ try {
     
     if ($scorch) { tfpt scorch /noprompt }
     
-    $outdir = $prevOutDir
-    robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing | Out-Null
+    if (-not $nocopy) { robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing | Out-Null }
 } finally {
     if ($asmverfileBackedUp) {
         copy -force ($asmverfile.FullName + ".bak") $asmverfile

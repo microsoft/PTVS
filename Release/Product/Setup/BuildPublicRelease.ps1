@@ -1,6 +1,6 @@
-param( $outdir, $build_name )
+param( $outDir, $build_name, [switch] $fast )
 
-if (-not $outdir)
+if (-not $outDir)
 {
     Write-Error ("Must provide outdir parameter, the directory the release will be saved.")
     exit 1
@@ -11,12 +11,12 @@ if (-not $build_name)
     exit 1
 }
 
-if (Test-Path $outdir)
+if (Test-Path $outDir)
 {
-    rmdir -Recurse -Force $outdir
+    rmdir -Recurse -Force $outDir
     if (-not $?)
     {
-        Write-Error "Could not clean output directory: $outdir"
+        Write-Error "Could not clean output directory: $outDir"
         exit 1
     }
 }
@@ -27,6 +27,7 @@ while ((Test-Path $buildroot) -and -not (Test-Path ([System.IO.Path]::Combine($b
 }
 $buildroot = [System.IO.Path]::GetFullPath($buildroot)
 "Build Root: $buildroot"
+if (-not $fast) { tfpt scorch /noprompt $buildroot }
 
 $prevOutDir = $outDir
 
@@ -36,10 +37,15 @@ foreach ($version in $versions) {
     ###################################################################
     # Build the actual binaries
     $outDir = "$prevOutDir\$($version.name)"
+    mkdir $outDir
     
-    echo "Building release to $outdir ..."
+    echo "Building release to $outDir ..."
     
-    & $buildroot\Release\Product\Setup\BuildRelease.ps1 $outdir -vsTarget $version.number -noclean > release_output.txt
+    if ($fast) {
+        & $buildroot\Release\Product\Setup\BuildRelease.ps1 $prevOutdir -vsTarget $version.number -noclean -nocopy -skiptests -skipdebug > $outDir\release_output.txt
+    } else {
+        & $buildroot\Release\Product\Setup\BuildRelease.ps1 $prevOutdir -vsTarget $version.number -noclean -nocopy > $outDir\release_output.txt
+    }
     
     ###################################################################
     # Index symbols
@@ -51,7 +57,7 @@ foreach ($version in $versions) {
     BuildLabPhone=7058786
     BuildRemark=beta
     ContactPeople=$env:username;dinov;smortaz
-    Directory=$outdir\Release\Symbols
+    Directory=$outDir\Release\Symbols
     Project=TechnicalComputing
     Recursive=yes
     StatusMail=$env:username;dinov;smortaz
@@ -63,7 +69,7 @@ foreach ($version in $versions) {
     $request | Out-File -Encoding ascii -FilePath request.txt
     \\symbols\tools\createrequest.cmd -i request.txt -d .\requests -c -s
     
-    [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.4, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
+    [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.6, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
     [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
     
     #################################################################
@@ -102,7 +108,7 @@ foreach ($version in $versions) {
     
     
     foreach ($filename in $files) {
-        $fullpath =  "$outdir\Release\Binaries\$filename"
+        $fullpath =  "$outDir\Release\Binaries\$filename"
         $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
     }
     $job.Send()
@@ -123,7 +129,7 @@ foreach ($version in $versions) {
     $files = "PyDebugAttach.dll", "PyDebugAttachX86.dll", "VsPyProf.dll", "VsPyProfX86.dll", "PyKinectAudio.dll"
     
     foreach ($filename in $files) {
-        $fullpath = "$outdir\Release\Binaries\$filename"
+        $fullpath = "$outDir\Release\Binaries\$filename"
         $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
     }
     $job.Send()
@@ -143,7 +149,7 @@ foreach ($version in $versions) {
     }
     
     # save binaries to release share
-    $destpath = "$outdir\Release\SignedBinaries"
+    $destpath = "$outDir\Release\SignedBinaries"
     mkdir $destpath
     # copy files back to binaries
     echo 'Completion path', $firstjob.JobCompletionPath
@@ -156,7 +162,7 @@ foreach ($version in $versions) {
     robocopy $secondjob.JobCompletionPath $buildroot\Binaries\Release$($version.number)\
     
     # now generate MSI with signed binaries.
-    $file = Get-Content release_output.txt
+    $file = Get-Content $outDir\release_output.txt
     foreach($line in $file) {
         if($line.IndexOf('Light.exe') -ne -1) { 
             if($line.IndexOf('Release') -ne -1) { 
@@ -196,14 +202,14 @@ foreach ($version in $versions) {
         }
     }
     
-    mkdir $outdir\Release\UnsignedMsi
-    foreach ($msi in (Get-ChildItem $outdir\Release\*.msi)) {
-        move $msi "$outdir\Release\UnsignedMsi\$($msi.BaseName) $($version.name).msi"
+    mkdir $outDir\Release\UnsignedMsi
+    foreach ($msi in (Get-ChildItem $outDir\Release\*.msi)) {
+        move $msi "$outDir\Release\UnsignedMsi\$($msi.BaseName) $($version.name).msi"
     }
     
-    mkdir $outdir\Release\SignedBinariesUnsignedMsi
+    mkdir $outDir\Release\SignedBinariesUnsignedMsi
     foreach ($msi in (Get-ChildItem $buildroot\Binaries\Release$($version.number)\*.msi)) {
-        move $msi "$outdir\Release\SignedBinariesUnsignedMsi\$($msi.BaseName) $($version.name).msi"
+        copy $msi "$outDir\Release\SignedBinariesUnsignedMsi\$($msi.BaseName) $($version.name).msi"
     }
     
     #################################################################
@@ -237,7 +243,7 @@ foreach ($version in $versions) {
     copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name) - PyKinect Sample.msi"
     copy -force "$($job.JobCompletionPath)\PyvotInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name) - Pyvot Sample.msi"
     copy -force "$($job.JobCompletionPath)\WFastCGI.msi" "$outDir\Release\WFastCGI $build_name $($version.name).msi"
-
-    copy release_output.txt $env:TEMP\release_output_$($version.number).txt
-    tfpt scorch /noprompt
 }
+
+echo "Copying source files ..."
+robocopy /s $buildRoot $prevOutDir\Sources /xd TestResults Binaries Servicing | Out-Null

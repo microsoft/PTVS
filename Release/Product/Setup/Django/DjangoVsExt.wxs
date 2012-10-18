@@ -70,6 +70,9 @@
             <Component Id="cmpB5F5D813C5064532B18AE23510C59445" Directory="Dir_PythonToolsMsBuild" Guid="{69BC20F5-7A60-41BC-AEAD-632388B532BC}" >
                 <File Id="fil9FC854A330164BC08899E2EE5352F14B" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe" />
             </Component>
+            <Component Id="cmp93917E0E57784690AA56E4655F77CCD2" Directory="Dir_PythonToolsMsBuild" Guid="{EA371872-4305-4DB9-9281-1B21F1A56BC6}" >
+                <File Id="fil9943C86CCCD64C819C835AD211971097" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe.config" />
+            </Component>
         </ComponentGroup>
     </Fragment>
     <Fragment>

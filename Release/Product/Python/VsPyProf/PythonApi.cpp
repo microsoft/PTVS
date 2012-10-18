@@ -62,6 +62,8 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
 	auto getItemFromStringFunc = (PyDict_GetItemString*)GetProcAddress(pythonModule, "PyDict_GetItemString");
 	auto pyCFuncType = (PyObject*)GetProcAddress(pythonModule, "PyCFunction_Type");
 	auto pyInstType = (PyObject*)GetProcAddress(pythonModule, "PyInstance_Type");
+	auto unicodeAsUnicode = (PyUnicode_AsUnicode*)GetProcAddress(pythonModule, "PyUnicode_AsUnicode");
+	auto unicodeGetLength = (PyUnicode_GetLength*)GetProcAddress(pythonModule, "PyUnicode_GetLength");	
 
 	if (getVersion != NULL && pyCodeType != NULL && pyStrType != NULL && pyUniType != NULL && setProfileFunc != NULL &&
 		pyCFuncType != NULL && getItemFromStringFunc != NULL && pyDictType != NULL && pyTupleType != NULL && pyTypeType != NULL &&
@@ -80,8 +82,28 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
 			}
 
 			if((major == 2 && (minor == 4 || minor == 5 || minor == 6 || minor == 7)) ||
-				(major == 3 && (minor == 0 || minor == 1 || minor == 2))) {
-				return new VsPyProf(pythonModule, major, minor, enterFunction, exitFunction, nameToken, sourceLine, pyCodeType, pyStrType, pyUniType, setProfileFunc, pyCFuncType, getItemFromStringFunc, pyDictType, pyTupleType, pyTypeType, pyFuncType, pyModuleType, pyInstType);
+				(major == 3 && (minor == 0 || minor == 1 || minor == 2 || minor == 3))) {
+				return new VsPyProf(pythonModule, 
+					major, 
+					minor, 
+					enterFunction, 
+					exitFunction, 
+					nameToken, 
+					sourceLine, 
+					pyCodeType, 
+					pyStrType, 
+					pyUniType, 
+					setProfileFunc, 
+					pyCFuncType, 
+					getItemFromStringFunc, 
+					pyDictType, 
+					pyTupleType, 
+					pyTypeType, 
+					pyFuncType, 
+					pyModuleType, 
+					pyInstType, 
+					unicodeAsUnicode, 
+					unicodeGetLength);
 			}
 		}
 	}
@@ -102,8 +124,10 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
 
 		if (MajorVersion == 2) {
 			filename = ((PyCodeObject24_27*)codeObj)->co_filename;
-		} else {
+		} else if(MinorVersion < 3) {
 			filename = ((PyCodeObject3k*)codeObj)->co_filename;
+		} else {
+			filename = ((PyCodeObject33*)codeObj)->co_filename;
 		}			
 		module = (DWORD_PTR)filename;
 		
@@ -169,18 +193,17 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
 			// register function
 			_registeredObjects.insert(func);
 
-			if (MajorVersion == 2) {
-				RegisterName(func, ((PyCodeObject24_27*)codeObj)->co_name, &moduleName);
-			} else {
-				RegisterName(func, ((PyCodeObject3k*)codeObj)->co_name, &moduleName);
-			}
-			
 			// associate source information
 			int lineno;
-			if(MajorVersion == 2) {
+			if (MajorVersion == 2) {
+				RegisterName(func, ((PyCodeObject24_27*)codeObj)->co_name, &moduleName);
 				lineno = ((PyCodeObject24_27*)codeObj)->co_firstlineno;
-			} else {
+			} else if(MinorVersion < 2) {
+				RegisterName(func, ((PyCodeObject3k*)codeObj)->co_name, &moduleName);
 				lineno = ((PyCodeObject3k*)codeObj)->co_firstlineno;
+			} else {
+				RegisterName(func, ((PyCodeObject33*)codeObj)->co_name, &moduleName);
+				lineno = ((PyCodeObject33*)codeObj)->co_firstlineno;
 			}
 
 			// give the profiler the line number of this function
@@ -420,8 +443,12 @@ bool VsPyProf::GetName(PyObject* object, wstring& name) {
 			name.append(1, (wchar_t)str->ob_sval[i]);
 		}
 	} else if (object->ob_type == PyUni_Type) {
-		auto uni = (PyUnicodeObject*)object;
-		name.append(uni->str, uni->length);
+		if(MajorVersion == 3 && MinorVersion > 2) {
+			name.append(_asUnicode(object), _unicodeGetLength(object));
+		} else {
+			auto uni = (PyUnicodeObject*)object;
+			name.append(uni->str, uni->length);
+		}
 	} else {
 		name.append(L"Unidentifiable Method");
 		return false;
@@ -434,16 +461,24 @@ void VsPyProf::GetNameAscii(PyObject* object, string& name) {
 		auto str = (PyStringObject*)object;
 		name.append(str->ob_sval, str->ob_size);
 	} else if (object->ob_type == PyUni_Type) {
-		auto uni = (PyUnicodeObject*)object;
-		for (size_t i = 0; i < uni->length; i++) {
-			name.append(1, (char)uni->str[i]);
+		if(MajorVersion == 3 && MinorVersion > 2) {
+			size_t length = _unicodeGetLength(object);
+			wchar_t* value = _asUnicode(object);
+			for (size_t i = 0; i < length; i++) {
+				name.append(1, (char)value[i]);
+			}
+		} else {
+			auto uni = (PyUnicodeObject*)object;
+			for (size_t i = 0; i < uni->length; i++) {
+				name.append(1, (char)uni->str[i]);
+			}
 		}
 	} else {
 		name.append("Unidentifiable Method");
 	}
 }
 
-VsPyProf::VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType, PyObject* pyInstType) 
+VsPyProf::VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType, PyObject* pyInstType, PyUnicode_AsUnicode* asUnicode, PyUnicode_GetLength* unicodeGetLength) 
 	: _pythonModule(pythonModule), 
 	  MajorVersion(majorVersion),
 	  MinorVersion(minorVersion),
@@ -462,7 +497,9 @@ VsPyProf::VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, Ent
 	  PyType_Type(pyTypeType),
 	  PyFunction_Type(pyFuncType),
 	  PyModule_Type(pyModuleType),
-	  PyInstance_Type(pyInstType)
+	  PyInstance_Type(pyInstType),
+	  _asUnicode(asUnicode),
+	  _unicodeGetLength(unicodeGetLength)
 {
 }
 

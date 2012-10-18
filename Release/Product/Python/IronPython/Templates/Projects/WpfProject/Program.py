@@ -8,4 +8,4 @@ class MyWindow(Window):
     
 
 if __name__ == '__main__':
-	Application().Run(MyWindow())
+    Application().Run(MyWindow())

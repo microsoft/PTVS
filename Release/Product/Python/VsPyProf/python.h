@@ -80,6 +80,30 @@ public:
     void *co_zombieframe;     /* for optimization only (see frameobject.c) */
 };
 
+// 3.3
+class PyCodeObject33 : public PyObject {
+public:
+    int co_argcount;		/* #arguments, except *args */
+    int co_kwonlyargcount;	/* #keyword only arguments */
+    int co_nlocals;		/* #local variables */
+    int co_stacksize;		/* #entries needed for evaluation stack */
+    int co_flags;		/* CO_..., see below */
+    PyObject *co_code;		/* instruction opcodes */
+    PyObject *co_consts;	/* list (constants used) */
+    PyObject *co_names;		/* list of strings (names used) */
+    PyObject *co_varnames;	/* tuple of strings (local variable names) */
+    PyObject *co_freevars;	/* tuple of strings (free variable names) */
+    PyObject *co_cellvars;      /* tuple of strings (cell variable names) */
+    /* The rest doesn't count for hash or comparisons */
+    unsigned char *co_cell2arg; /* Maps cell vars which are arguments. */
+    PyObject *co_filename;	/* unicode (where it was loaded from) */
+    PyObject *co_name;		/* unicode (name, for reference) */
+    int co_firstlineno;		/* first source line number */
+    PyObject *co_lnotab;	/* string (encoding addr<->lineno mapping) */
+    void *co_zombieframe;     /* for optimization only (see frameobject.c) */
+};
+
+
 // 2.4 - 3.1
 class PyFunctionObject : public PyObject {
 public:
@@ -103,7 +127,7 @@ public:
      */
 };
 
-// 2.4 - 3.1 compatible
+// 2.4 - 3.2 compatible
 typedef struct {
     PyObject_HEAD
     size_t length;		/* Length of raw Unicode data in buffer */
@@ -118,6 +142,7 @@ public:
 	union {
 		PyCodeObject24_27 *f_code_24_27;	/* code segment */
 		PyCodeObject3k    *f_code_3k;		/* code segment */
+		PyCodeObject33    *f_code_33;		/* code segment */
 	};
     PyObject *f_builtins;	/* builtin symbol table (PyDictObject) */
     PyObject *f_globals;	/* global symbol table (PyDictObject) */
@@ -472,7 +497,8 @@ enum PythonVersion {
     PythonVersion_27 = 0x0207,
     PythonVersion_30 = 0x0300,
     PythonVersion_31 = 0x0301,
-    PythonVersion_32 = 0x0302
+    PythonVersion_32 = 0x0302,
+	PythonVersion_33 = 0x0303
 };
 
 typedef const char* (GetVersionFunc) ();
@@ -493,6 +519,7 @@ static PythonVersion GetPythonVersion(HMODULE hMod) {
                 case '0': return PythonVersion_30;
                 case '1': return PythonVersion_31;
                 case '2': return PythonVersion_32;
+				case '3': return PythonVersion_33;
                 }
 
             }

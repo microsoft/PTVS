@@ -40,6 +40,9 @@ typedef void (__stdcall *EnterFunctionFunc)(DWORD_PTR FunctionToken, DWORD_PTR M
 // notify function exit
 typedef void (__stdcall *ExitFunctionFunc)(DWORD_PTR FunctionToken, DWORD_PTR ModuleToken);
 
+typedef wchar_t* PyUnicode_AsUnicode(PyObject *unicode           /* Unicode object */);
+typedef size_t PyUnicode_GetLength(PyObject *unicode);
+
 class VsPyProf;
 
 class VsPyProfThread : public PyObject {
@@ -63,6 +66,8 @@ class VsPyProf {
 	HMODULE _pythonModule;
 	PyEval_SetProfileFunc* _setProfileFunc;
 	PyDict_GetItemString* _getItemStringFunc;
+	PyUnicode_AsUnicode* _asUnicode;
+	PyUnicode_GetLength* _unicodeGetLength;
 	
 	hash_set<DWORD_PTR> _registeredObjects;
 	hash_set<PyObject*> _referencedObjects;
@@ -86,7 +91,7 @@ class VsPyProf {
 	NameTokenFunc _nameToken;
 	SourceLineFunc _sourceLine;
 
-	VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType, PyObject* pyInstType);
+	VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, EnterFunctionFunc enterFunction, ExitFunctionFunc exitFunction, NameTokenFunc nameToken, SourceLineFunc sourceLine, PyObject* pyCodeType, PyObject* pyStringType, PyObject* pyUnicodeType, PyEval_SetProfileFunc* setProfileFunc, PyObject* cfunctionType, PyDict_GetItemString* getItemStringFunc, PyObject* pyDictType, PyObject* pyTupleType, PyObject* pyTypeType, PyObject* pyFuncType, PyObject* pyModuleType, PyObject* pyInstType, PyUnicode_AsUnicode* asUnicode, PyUnicode_GetLength* unicodeGetLength);
 
 	// Extracts the function and module identifier from a user defined function
 	bool GetUserToken(PyFrameObject *frame, DWORD_PTR& func, DWORD_PTR& module);	

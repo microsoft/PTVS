@@ -150,11 +150,13 @@
     </Copy>
     <MakeDir Directories="$(IntermediateOutputPath)\bin"/>
     <Copy SourceFiles="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe" DestinationFolder="bin"/>
+    <Copy SourceFiles="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config" DestinationFolder="bin"/>
     <Message Text="AzureSupport: $(AzureDjangoSupportPath)"/>
 
     <!-- <WriteLinesToFile File="$(IntermediateOutputPath)\bin\InstallPython.cmd" Lines="$(_DjangoInstallPythonCode)" Overwrite="true"/> -->
     <ItemGroup>
       <InstallPython Include="bin\Microsoft.PythonTools.AzureSetup.exe"/>
+      <InstallPython Include="bin\Microsoft.PythonTools.AzureSetup.exe.config"/>
     </ItemGroup>
     <Message Text="FilesCopiedToIntermediate=@(FilesCopiedToIntermediate)" Importance="low"/>
   </Target>
