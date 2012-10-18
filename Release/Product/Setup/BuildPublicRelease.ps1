@@ -75,7 +75,7 @@ foreach ($version in $versions) {
     #################################################################
     # Submit managed binaries
     
-    $approvers = "smortaz", "arturl", "dinov", "stevdo"
+    $approvers = "smortaz", "dinov", "stevdo", "zacha", "huvalo", "pminaev"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     
     $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)

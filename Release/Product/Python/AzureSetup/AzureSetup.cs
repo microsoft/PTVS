@@ -21,7 +21,6 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Win32;
-using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace AzureSetup {
     class Program {
@@ -42,12 +41,6 @@ namespace AzureSetup {
             var roleRoot = Environment.GetEnvironmentVariable("RoleRoot");
             if (!roleRoot.EndsWith("\\")) {
                 roleRoot = roleRoot + "\\";
-            }
-
-            string interpreter = null;
-            try {
-                interpreter = RoleEnvironment.GetConfigurationSettingValue("Microsoft.PythonTools.Azure.PythonInterpreter");
-            } catch {
             }
 
             var doc = new XPathDocument(Path.Combine(roleRoot, "RoleModel.xml"));
@@ -77,6 +70,7 @@ namespace AzureSetup {
                 }
             }
 
+            string interpreter = null;
             if (physicalDir != null) {
                 string fastCgiPath = "\"" + Path.Combine(physicalDir, "bin\\wfastcgi.py") + "\"";
                 string webpiCmdLinePath = Path.Combine(physicalDir, "bin\\WebPICmdLine.exe");
@@ -256,7 +250,7 @@ namespace AzureSetup {
             var webCloudConfig = Path.Combine(physicalDir, "web.cloud.config");
             var webConfig = Path.Combine(physicalDir, "web.config");
             string readFrom;
-            if (!RoleEnvironment.IsEmulated && File.Exists(webCloudConfig)) {
+            if (Environment.GetEnvironmentVariable("EMULATED") == null && File.Exists(webCloudConfig)) {
                 readFrom = webCloudConfig;
             } else {
                 readFrom = webConfig;
@@ -267,7 +261,7 @@ namespace AzureSetup {
         }
 
         private static void InstallWebPiProducts(string webpiCmdLinePath, List<string> webpiInstalls) {
-            if (RoleEnvironment.IsEmulated) {
+            if (Environment.GetEnvironmentVariable("EMULATED") != null) {
                 // Don't run installs in the emulator
                 return;
             }
