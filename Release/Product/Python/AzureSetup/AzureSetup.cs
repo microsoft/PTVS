@@ -148,7 +148,6 @@ namespace AzureSetup {
             }
         }
 
-
         private static void UpdateIISAppCmd(string interpreter, string physicalDir, bool isDebug, string fastCgiPath, string settingsName, string pythonPath) {
             var appCmd = Environment.GetEnvironmentVariable("APPCMD");
             if (String.IsNullOrEmpty(appCmd)) {
@@ -250,7 +249,7 @@ namespace AzureSetup {
             var webCloudConfig = Path.Combine(physicalDir, "web.cloud.config");
             var webConfig = Path.Combine(physicalDir, "web.config");
             string readFrom;
-            if (Environment.GetEnvironmentVariable("EMULATED") == null && File.Exists(webCloudConfig)) {
+            if (!IsEmulated() && File.Exists(webCloudConfig)) {
                 readFrom = webCloudConfig;
             } else {
                 readFrom = webConfig;
@@ -261,7 +260,7 @@ namespace AzureSetup {
         }
 
         private static void InstallWebPiProducts(string webpiCmdLinePath, List<string> webpiInstalls) {
-            if (Environment.GetEnvironmentVariable("EMULATED") != null) {
+            if (IsEmulated()) {
                 // Don't run installs in the emulator
                 return;
             }
@@ -324,6 +323,16 @@ namespace AzureSetup {
                     key.SetValue(localAppData, oldValue, RegistryValueKind.ExpandString);
                 }
             }
+        }
+
+        private static bool IsEmulated() {
+            string emulated = Environment.GetEnvironmentVariable("EMULATED");
+            bool res;
+            if (String.IsNullOrEmpty(emulated) || !Boolean.TryParse(emulated, out res)) {
+                return false;
+            }
+
+            return res;
         }
     }
 }
