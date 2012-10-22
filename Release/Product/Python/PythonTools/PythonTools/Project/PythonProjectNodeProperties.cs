@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [PropertyNameAttribute("WebApplication.AspNetDebugging")]
+        [Browsable(false)]
         public bool AspNetDebugging {
             get {
                 return true;
@@ -51,12 +52,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         [PropertyNameAttribute("WebApplication.NativeDebugging")]
+        [Browsable(false)]
         public bool NativeDebugging {
             get {
                 return false;
             }
         }
 
+        [Browsable(false)]
         public uint TargetFramework {
             get {
                 return 0x40000;

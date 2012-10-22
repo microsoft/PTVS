@@ -184,6 +184,32 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LoadSearchPath() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LoadSearchPaths.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            // Entered in file as ..\AddSearchPaths\
+            var path1 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "..\\AddSearchPaths");
+            Assert.IsNotNull(path1, "Could not find ..\\AddSearchPaths");
+
+            // Entered in file as ..\HelloWorld
+            var path2 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "..\\HelloWorld");
+            Assert.IsNotNull(path2, "Could not find ..\\HelloWorld");
+
+            // Entered in file as ..\LoadSearchPaths\NotHere\..\ - resolves to .\
+            var path3 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", ".");
+            Assert.IsNotNull(path3, "Could not find .");
+            
+            // Entered in file as .\NotHere\
+            var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "NotHere");
+            Assert.IsNotNull(path4, "Could not find NotHere");
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolderNested() {
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
 

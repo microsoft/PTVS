@@ -1,3 +1,6 @@
+# If this is your first PyKinect project, you may need to install PyKinect into
+# your Python 2.7 library through the Tools->Python Tools->Samples->PyKinect
+# menu.
 from pykinect import nui
 
 import pygame

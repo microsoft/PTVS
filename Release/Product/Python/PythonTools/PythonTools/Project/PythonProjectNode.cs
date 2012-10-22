@@ -148,6 +148,7 @@ namespace Microsoft.PythonTools.Project {
             _searchPathContainer = new CommonSearchPathContainerNode(this);
             this.AddChild(_searchPathContainer);
             RefreshCurrentWorkingDirectory();
+            RefreshSearchPaths();
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
@@ -208,17 +209,13 @@ namespace Microsoft.PythonTools.Project {
                     //ParseSearchPath() must resolve all paths
                     Debug.Assert(Path.IsPathRooted(path));
                     var node = FindSearchPathNodeByPath(searchPathNodes, path, out index);
-                    bool alreadyShown = CommonUtils.IsSameDirectory(workDir, path) ||
-                                        CommonUtils.IsSameDirectory(projHome, path);
-                    if (!alreadyShown) {
-                        if (node != null) {
-                            //existing path, update index (sort order)
-                            node.Index = i;
-                            updatedNodes[index] = true;
-                        } else {
-                            //new path - create new node
-                            _searchPathContainer.AddChild(new CommonSearchPathNode(this, path, i));
-                        }
+                    if (node != null) {
+                        //existing path, update index (sort order)
+                        node.Index = i;
+                        updatedNodes[index] = true;
+                    } else {
+                        //new path - create new node
+                        _searchPathContainer.AddChild(new CommonSearchPathNode(this, path, i));
                     }
                 }
 

@@ -16,7 +16,7 @@ using System;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio;
-
+using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
@@ -55,11 +55,22 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (Directory.Exists(this.Url) ?
-                (int)CommonImageName.SearchPath :
-                (int)CommonImageName.MissingSearchPath));
+            return this.ProjectMgr.ImageHandler.GetIconHandle(CommonProjectNode.ImageOffset +
+#if DEV11
+                (int)CommonImageName.SearchPath
+#else
+                (Directory.Exists(Url) ? (int)CommonImageName.SearchPath : (int)CommonImageName.MissingSearchPath)
+#endif
+            );
         }
+
+#if DEV11
+        protected override VSOVERLAYICON OverlayIconIndex {
+            get {
+                return Directory.Exists(Url) ? base.OverlayIconIndex : (VSOVERLAYICON)__VSOVERLAYICON2.OVERLAYICON_NOTONDISK;
+            }
+        }
+#endif
 
         /// <summary>
         /// Search path node cannot be dragged.
