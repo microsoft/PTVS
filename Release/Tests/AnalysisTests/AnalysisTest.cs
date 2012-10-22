@@ -38,7 +38,12 @@ namespace AnalysisTests {
         public AnalysisTest(IPythonInterpreter interpreter)
             : base(interpreter) {
         }
-        
+
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         public static int Main(string[] args) {
             int res = 0;
             Type attr = typeof(TestMethodAttribute);
@@ -3928,6 +3933,11 @@ class return_func_class:
     def return_func(self):
         '''some help'''
         return self.return_func
+
+
+def docstr_func():
+    '''useful documentation'''
+    return 42
 ";
             var entry = ProcessText(text);
 
@@ -3956,6 +3966,7 @@ class return_func_class:
             AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "None", 1), "None");
             AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "f.func_name", 1), "property of type str");
             AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "h", 1), "def h(...) -> def f(...) -> str, def g(...)");
+            AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "docstr_func", 1), "def docstr_func(...) -> int\r\nuseful documentation");
 
             // method which returns it's self, we shouldn't stack overflow producing the help...
             AssertUtil.ContainsExactly(GetVariableDescriptionsByIndex(entry, "return_func_class().return_func", 1), @"method return_func of return_func_class objects  -> method return_func of return_func_class objects ...

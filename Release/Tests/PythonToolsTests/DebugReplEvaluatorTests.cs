@@ -85,6 +85,17 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
+        public void ErrorInInput() {
+            Attach("DebugReplTest2.py", 13);
+            
+            Assert.AreEqual("", ExecuteText("print(does_not_exist)", false));
+            Assert.AreEqual(@"Traceback (most recent call last):
+  File ""<debug input>"", line 1, in <module>
+NameError: name 'does_not_exist' is not defined
+", _window.Error);
+        }
+
+        [TestMethod, Priority(0)]
         public void ChangeVariables() {
             Attach("DebugReplTest2.py", 13);
 

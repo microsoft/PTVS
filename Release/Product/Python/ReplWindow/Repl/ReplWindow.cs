@@ -2384,24 +2384,24 @@ namespace Microsoft.VisualStudio.Repl {
             var cmdnames = new List<IReplCommand>(_commands.Where(x => x.Command != null));
             cmdnames.Sort((x, y) => String.Compare(x.Command, y.Command));
 
-            const string helpFmt = "  {0,-16}  {1}";
-            WriteLine(string.Format(helpFmt, "help", "Show a list of REPL commands"));
+            const string helpFmt = "  {0,-24}  {1}";
+            WriteLine(string.Format(helpFmt, _commandPrefix + "help", "Show a list of REPL commands"));
 
             foreach (var cmd in cmdnames) {
                 WriteLine(string.Format(helpFmt, GetCommandNameWithAliases(cmd), cmd.Description));
             }
         }
 
-        private static string GetCommandNameWithAliases(IReplCommand cmd) {
+        private string GetCommandNameWithAliases(IReplCommand cmd) {
             var cmd2 = cmd as IReplCommand2;
             if (cmd2 != null && cmd2.Aliases != null) {
-                string aliases = string.Join(",", cmd2.Aliases);
+                string aliases = string.Join(",", cmd2.Aliases.Select(x => _commandPrefix + x));
                 if (aliases.Length > 0) {
-                    return string.Join(",", cmd.Command, aliases);
+                    return string.Join(",", _commandPrefix + cmd.Command, aliases);
                 }
             }
 
-            return cmd.Command;
+            return _commandPrefix + cmd.Command;
         }
 
         #endregion

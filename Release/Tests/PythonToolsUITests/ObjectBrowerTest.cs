@@ -25,8 +25,7 @@ namespace PythonToolsUITests
     public class ObjectBrowerTest
     {
         [ClassInitialize]
-        private static void DoDeployment()
-        {
+        public static void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
 

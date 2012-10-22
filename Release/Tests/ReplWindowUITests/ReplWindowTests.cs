@@ -1105,7 +1105,7 @@ namespace ReplWindowUITests {
             const string code = "$help";
             Keyboard.Type(code + "\r");
 
-            interactive.WaitForTextStart(ReplPrompt + code, String.Format("  {0,-16}  {1}", "help", "Show a list of REPL commands"));
+            interactive.WaitForTextStart(ReplPrompt + code, String.Format("  {0,-24}  {1}", "$help", "Show a list of REPL commands"));
         }
 
         /// <summary>

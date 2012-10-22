@@ -720,6 +720,66 @@ namespace ProfilingUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MultipleTargetsWithProjectHome() {
+            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+
+            // no sessions yet
+            Assert.AreEqual(profiling.GetSession(1), null);
+
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest2.sln");
+
+            var session = profiling.LaunchProject(project, false);
+            IPythonProfileSession session2 = null;
+            try {
+                {
+                    while (profiling.IsProfiling) {
+                        System.Threading.Thread.Sleep(100);
+                    }
+
+                    var report = session.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("HelloWorld"));
+
+                    Assert.AreEqual(session.GetReport(2), null);
+
+                    Assert.AreNotEqual(session.GetReport(report.Filename), null);
+
+                    VerifyReport(report, "Program.f", "time.sleep");
+                }
+
+                {
+                    session2 = profiling.LaunchProcess("C:\\Python26\\python.exe",
+                        TestData.GetPath(@"TestData\ProfileTest\Program.py"),
+                        TestData.GetPath(@"TestData\ProfileTest"),
+                        "",
+                        false
+                    );
+
+                    while (profiling.IsProfiling) {
+                        System.Threading.Thread.Sleep(100);
+                    }
+
+                    var report = session2.GetReport(1);
+                    var filename = report.Filename;
+                    Assert.IsTrue(filename.Contains("Program"));
+
+                    Assert.AreEqual(session2.GetReport(2), null);
+
+                    Assert.AreNotEqual(session2.GetReport(report.Filename), null);
+
+                    VerifyReport(report, "Program.f", "time.sleep");
+                }
+
+            } finally {
+                profiling.RemoveSession(session, true);
+                if (session2 != null) {
+                    profiling.RemoveSession(session2, true);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultipleReports() {
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
 

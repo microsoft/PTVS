@@ -50,6 +50,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ConnErrorMessages.cs" />
     <Compile Include="PyAttacher.cs" />
   </ItemGroup>

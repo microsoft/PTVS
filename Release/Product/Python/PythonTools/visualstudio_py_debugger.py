@@ -816,9 +816,9 @@ class Thread(object):
 
     def compile(self, text, cur_frame):
         try:
-            code = compile(text, cur_frame.f_code.co_name, 'eval')
+            code = compile(text, '<debug input>', 'eval')
         except:
-            code = compile(text, cur_frame.f_code.co_name, 'exec')
+            code = compile(text, '<debug input>', 'exec')
         return code
 
     def run_locally(self, text, cur_frame, execution_id, frame_kind):

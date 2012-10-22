@@ -267,16 +267,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     result = new StringBuilder("def ");
                     result.Append(FunctionDefinition.Name);
                     result.Append("(...)"); // TOOD: Include parameter information?
-                    if (!String.IsNullOrEmpty(Documentation)) {
-                        result.AppendLine();
-                        result.Append(Documentation);
-                    }
                 }
 
                 var desc = FunctionDescription;
                 if (!String.IsNullOrWhiteSpace(desc)) {
                     result.Append(desc);
                 }
+
+                if (!String.IsNullOrEmpty(Documentation)) {
+                    result.AppendLine();
+                    result.Append(Documentation);
+                }
+                
                 return result.ToString();
             }
         }

@@ -233,7 +233,10 @@ namespace Microsoft.PythonTools.Profiling {
 
             string workingDir = projectToProfile.Properties.Item("WorkingDirectory").Value as string;
             if (String.IsNullOrEmpty(workingDir) || workingDir == ".") {
-                workingDir = Path.GetDirectoryName(projectToProfile.FullName);
+                workingDir = projectToProfile.Properties.Item("ProjectHome").Value as string;
+                if (String.IsNullOrEmpty(workingDir)) {
+                    workingDir = Path.GetDirectoryName(projectToProfile.FullName);
+                }
             }
 
             var env = new Dictionary<string, string>();

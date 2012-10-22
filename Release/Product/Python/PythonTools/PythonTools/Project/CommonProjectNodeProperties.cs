@@ -113,6 +113,17 @@ namespace Microsoft.PythonTools.Project {
                 //Do nothing
             }
         }
+
+        /// <summary>
+        /// Gets the home directory for the project.
+        /// </summary>
+        [Browsable(false)]
+        public string ProjectHome {
+            get {
+                return Node.ProjectMgr.ProjectHome;
+            }
+        }
+
         #endregion
     }
 }
