@@ -151,6 +151,9 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ZeroDivisionError")]
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue="#4000")]
+#if DEV11
+    [ProvideX64DebuggerFixForIntegratedShell]
+#endif
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider {
         private LanguagePreferences _langPrefs;
         public static PythonToolsPackage Instance;

@@ -75,7 +75,7 @@ foreach ($version in $versions) {
     #################################################################
     # Submit managed binaries
     
-    $approvers = "smortaz", "dinov", "stevdo", "zacha", "huvalo", "pminaev"
+    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     
     $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
@@ -154,8 +154,8 @@ foreach ($version in $versions) {
     # copy files back to binaries
     echo 'Completion path', $firstjob.JobCompletionPath
     
-    robocopy $firstjob.JobCompletionPath $destpath\
-    robocopy $secondjob.JobCompletionPath $destpath\
+    robocopy $firstjob.JobCompletionPath $destpath
+    robocopy $secondjob.JobCompletionPath $destpath
     
     # copy files back to binaries for re-building the MSI
     robocopy $firstjob.JobCompletionPath $buildroot\Binaries\Release$($version.number)\

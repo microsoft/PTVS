@@ -285,6 +285,7 @@
       <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
+    <Compile Include="PythonTools\ProvideX64DebuggerFixForIntegratedShellAttribute.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />

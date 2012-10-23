@@ -115,7 +115,7 @@ try {
                 }
             }
             
-            msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).log" /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$($targetVs.number) /p:VisualStudioVersion=$($targetVs.number) Release\Product\Setup\dirs.proj
+            msbuild /v:n /m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).log" /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$($targetVs.number) /p:VisualStudioVersion=$($targetVs.number) Release\Product\Setup\dirs.proj
             if ($LASTEXITCODE -gt 0) {
                 Write-Error "Build failed: $config"
                 exit 3
