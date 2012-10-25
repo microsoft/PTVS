@@ -716,6 +716,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="WebPiCmdLine\WebPICmdLine.exe.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <VSCTCompile Include="PythonTools.vsct">
       <ResourceName>1000</ResourceName>
       <SubType>Designer</SubType>

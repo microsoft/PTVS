@@ -313,6 +313,9 @@
             <Component Id="cmp3BF695351809415F9720EAFCFCDB5B92" Directory="Dir_PythonToolsMsBuild" Guid="{E36E9F62-19E4-4BE6-A5E5-6AE24E6AE48C}">
                 <File Id="fil709C98DE8F9D4037A908D337A11E2FF9" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\WebPICmdLine.exe" />
             </Component>
+            <Component Id="cmp109DC1ED01AD41309094176C759C5993" Directory="Dir_PythonToolsMsBuild" Guid="{51CAF78D-F4A6-4E69-BF75-7642CB5A6AD2}">
+                <File Id="filE50FABEC7DFA46A2B15E45A40C1F2696" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\WebPICmdLine.exe.config" />
+            </Component>
 
         </ComponentGroup>
     </Fragment>

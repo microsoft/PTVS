@@ -121,6 +121,11 @@
             SkipUnchangedFiles="true">
       <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
     </Copy>
+    <Copy SourceFiles="$(PTVSSupportPath)WebPICmdLine.exe.config"
+            DestinationFiles="bin\WebPICmdLine.exe.config"
+            SkipUnchangedFiles="true">
+      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
+    </Copy>
     <Copy SourceFiles="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"
             DestinationFiles="bin\Microsoft.Web.PlatformInstaller.UI.dll"
             SkipUnchangedFiles="true">
@@ -268,6 +273,7 @@ interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
       <GeneratedFiles Include="@(InstallPython->'%(FullPath)')"/>
 
       <GeneratedFiles Include="$(PTVSSupportPath)WebPICmdLine.exe"/>
+      <GeneratedFiles Include="$(PTVSSupportPath)WebPICmdLine.exe.config"/>
       <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"/>
       <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll"/>
       <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.Deployment.dll"/>

@@ -1,0 +1,11 @@
+BuildId=51025.03 VS 2012
+    BuildLabPhone=7058786
+    BuildRemark=beta
+    ContactPeople=dinov;dinov;smortaz
+    Directory=\\pytools\release\1.5\51025.03\VS 2012\Release\Symbols
+    Project=TechnicalComputing
+    Recursive=yes
+    StatusMail=dinov;dinov;smortaz
+    UserName=dinov
+    SubmitToArchive=ALL
+    SubmitToInternet=Yes

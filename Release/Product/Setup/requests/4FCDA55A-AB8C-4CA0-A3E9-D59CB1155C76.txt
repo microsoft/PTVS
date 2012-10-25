@@ -1,0 +1,3 @@
+CreateRequestVersion=3
+RequestType=Indexing
+RequestFilePath=\\symbols\Projects\TechnicalComputing\add_requests\TechnicalComputing_51025.03 VS 2012_beta.ssi

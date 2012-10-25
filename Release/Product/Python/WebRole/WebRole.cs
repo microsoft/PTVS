@@ -1,33 +1,13 @@
-﻿// ----------------------------------------------------------------------------------
-// Microsoft Developer & Platform Evangelism
-// 
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// 
-// THIS CODE AND INFORMATION ARE PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, 
-// EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES 
-// OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
-// ----------------------------------------------------------------------------------
-// The example companies, organizations, products, domain names,
-// e-mail addresses, logos, people, places, and events depicted
-// herein are fictitious.  No association with any real company,
-// organization, product, domain name, email address, logo, person,
-// places, or events is intended or should be inferred.
-// ----------------------------------------------------------------------------------
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.WindowsAzure;
-using Microsoft.WindowsAzure.Diagnostics;
-using Microsoft.WindowsAzure.ServiceRuntime;
-
-namespace Microsoft.PythonTools.WebRole {
-    public class WebRole : RoleEntryPoint {
-        public override bool OnStart() {
-            // For information on handling configuration changes
-            // see the MSDN topic at http://go.microsoft.com/fwlink/?LinkId=166357.
-
-            return base.OnStart();
-        }
-    }
-}
+﻿/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/

@@ -75,7 +75,7 @@ foreach ($version in $versions) {
     #################################################################
     # Submit managed binaries
     
-    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl"
+    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "zacha"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     
     $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
@@ -191,9 +191,19 @@ foreach ($version in $versions) {
                 if ($targetdir -eq "DjangoMsm") {
                     $targetdir = "Django"
                 }
+                if ($targetdir -eq "WFastCGI") {
+                    $targetdir = "FastCgiInstaller"
+                }
                 echo $targetdir
     
-                cd $targetdir
+                try {
+                  cd $targetdir
+                } catch {
+                  echo "Unable to cd to $targetDir to execute line $line"
+                  echo "Enter directory name to cd to: "
+                  $targetDir = [Console]::ReadLine()
+                  cd $targetdir
+                }
                 
                 Invoke-Expression $line
                 
