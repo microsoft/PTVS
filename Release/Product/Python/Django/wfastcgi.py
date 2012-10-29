@@ -315,11 +315,8 @@ terminate the stream"""
         if len_remaining == 0 or not streaming:
             break
 
-def get_environment():
-    cur_dir = path.dirname(__file__)
-    web_config = path.join(cur_dir, 'Web.config')
-    if not os.path.exists(web_config):
-        web_config = path.join(cur_dir, '..', 'Web.config')
+def get_environment(dir):
+    web_config = path.join(dir, 'Web.config')
 
     d = {}
 
@@ -348,21 +345,6 @@ def get_environment():
 
 
 if __name__ == '__main__': 
-    env = get_environment()
-    os.environ.update(env)
-
-    handler_name = os.getenv('WSGI_HANDLER')
-    if not handler_name:
-        sys.stderr.write('WSGI_HANDLER env var must be set')
-        sys.exit(1)
-
-    module, callable = handler_name.rsplit('.', 1)
-    if callable.endswith('()'):
-        callable = callable.rstrip('()')
-        handler = getattr(__import__(module, fromlist=[callable]), callable)()
-    else:
-        handler = getattr(__import__(module, fromlist=[callable]), callable)
-
     stdout = sys.stdin.fileno()
     try:
         import msvcrt
@@ -370,8 +352,9 @@ if __name__ == '__main__':
     except ImportError:
         pass
 
-
     _REQUESTS = {}
+    
+    initialized = False
 
     while True:
         try:
@@ -383,11 +366,35 @@ if __name__ == '__main__':
                 record.params['wsgi.multiprocess'] = True
                 record.params['wsgi.multithread'] = False
                 record.params['wsgi.run_once'] = False
-                if 'HTTP_X_ORIGINAL_URL' in record.params and 'SCRIPT_URL' not in record.params:
-                    # store the original un-rewritten URL where Django expects it (which
-                    # is where Apache puts it)
-                    record.params['SCRIPT_URL'] = record.params['HTTP_X_ORIGINAL_URL']
 
+                physical_path = record.params.get('DOCUMENT_ROOT', path.dirname(__file__))
+                
+                if not initialized:
+                    env = get_environment(physical_path)
+                    os.environ.update(env)
+                    for env_name in env:
+                        if env_name.lower() == 'pythonpath':
+                            for path_location in env[env_name].split(';'):
+                                sys.path.append(path_location)
+                            break
+                    
+                    handler_name = os.getenv('WSGI_HANDLER')
+                    if not handler_name:
+                        sys.stderr.write('WSGI_HANDLER env var must be set')
+                        sys.exit(1)
+
+                    module, _, callable = handler_name.rpartition('.')
+                    if not module:
+                        sys.stderr.write('WSGI_HANDLER must be set to module_name.wsgi_handler, got %s' % handler_name)
+                        sys.exit(2)
+
+                    if callable.endswith('()'):
+                        callable = callable.rstrip('()')
+                        handler = getattr(__import__(module, fromlist=[callable]), callable)()
+                    else:
+                        handler = getattr(__import__(module, fromlist=[callable]), callable)
+                    initialized = True
+                    
                 def start_response(status, headers, exc_info = None):
                     global response_headers, status_line
                     response_headers = headers
@@ -395,16 +402,20 @@ if __name__ == '__main__':
                 
                 errors = sys.stderr = sys.__stderr__ = record.params['wsgi.errors'] = cStringIO.StringIO()
                 sys.stdout = sys.__stdout__ = cStringIO.StringIO()
-
+                
+                os.environ.update(env)
+                if 'HTTP_X_ORIGINAL_URL' in record.params:
+                    # We've been re-written for shared FastCGI hosting, send the original URL as the PATH_INFO.
+                    record.params['PATH_INFO'] = record.params['HTTP_X_ORIGINAL_URL']
+                
                 # SCRIPT_NAME + PATH_INFO is supposed to be the full path http://www.python.org/dev/peps/pep-0333/
                 # but by default (http://msdn.microsoft.com/en-us/library/ms525840(v=vs.90).aspx) IIS is sending us 
-                # the full URL in PATH_INFO, so we need to chop the script name off here
+                # the full URL in PATH_INFO, so we need to clear the script name here
                 if 'AllowPathInfoForScriptMappings' not in os.environ:
-                    record.params['PATH_INFO'] = record.params['PATH_INFO'][len(record.params['SCRIPT_NAME']):]
+                    record.params['SCRIPT_NAME'] = ''
 
-                try:
-                    os.environ.update(env)
-                    response = ''.join(handler(record.params, start_response))
+                try: 
+                    response = ''.join(handler(record.params, start_response)) 
                 except:
                     send_response(record.req_id, FCGI_STDERR, errors.getvalue() + '\n\n' + traceback.format_exc())
                 else:
@@ -413,12 +424,10 @@ if __name__ == '__main__':
                     full_response = status + headers + '\r\n' + response
                     send_response(record.req_id, FCGI_STDOUT, full_response)
 
-                # for testing of throughput of fastcgi handler vs static pages
-                #send_response(record.req_id, FCGI_STDOUT, 'Content-type: text/html\r\n\r\n\r\n<html>\n<body>bar</body></html>')
-
                 send_response(record.req_id, FCGI_END_REQUEST, '\x00\x00\x00\x00\x00\x00\x00\x00', streaming=False)
                 del _REQUESTS[record.req_id]
         except _ExitException:
             break
         except:
-            log(traceback.format_exc())        
+            log(traceback.format_exc())    
+
