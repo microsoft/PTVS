@@ -198,7 +198,7 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
 			if (MajorVersion == 2) {
 				RegisterName(func, ((PyCodeObject24_27*)codeObj)->co_name, &moduleName);
 				lineno = ((PyCodeObject24_27*)codeObj)->co_firstlineno;
-			} else if(MinorVersion < 2) {
+			} else if(MinorVersion < 3) {
 				RegisterName(func, ((PyCodeObject3k*)codeObj)->co_name, &moduleName);
 				lineno = ((PyCodeObject3k*)codeObj)->co_firstlineno;
 			} else {

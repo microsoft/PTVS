@@ -78,66 +78,89 @@ foreach ($version in $versions) {
     $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "zacha"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     
-    $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
-    $job.Description = "Python Tools for Visual Studio - managed code"
-    $job.Keywords = "PTVS; Visual Studio; Python"
-    
-    $job.SelectCertificate("10006")  # Authenticode
-    $job.SelectCertificate("67")     # StrongName key
-    
-    foreach ($approver in $approvers) { $job.AddApprover($approver) }
-    
-    $files = ("Microsoft.PythonTools.Analysis.dll", 
-              "Microsoft.PythonTools.Analyzer.exe", 
-              "Microsoft.PythonTools.Attacher.exe", 
-              "Microsoft.PythonTools.AttacherX86.exe", 
-              "Microsoft.PythonTools.Debugger.dll", 
-              "Microsoft.PythonTools.dll", 
-              "Microsoft.PythonTools.Hpc.dll", 
-              "Microsoft.PythonTools.ImportWizard.dll", 
-              "Microsoft.PythonTools.IronPython.dll", 
-              "Microsoft.PythonTools.MpiShim.exe", 
-              "Microsoft.PythonTools.Profiling.dll", 
-              "Microsoft.VisualStudio.ReplWindow.dll",
-              "Microsoft.PythonTools.PyKinect.dll",
-              "Microsoft.PythonTools.WebRole.dll",
-              "Microsoft.PythonTools.Django.dll",
-              "Microsoft.PythonTools.AzureSetup.exe",
-              "Microsoft.IronPythonTools.Resolver.dll",
-              "Microsoft.PythonTools.Pyvot.dll")
-    
-    
-    foreach ($filename in $files) {
-        $fullpath =  "$outDir\Release\Binaries\$filename"
-        $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+    while($True) {
+      try {
+          $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
+          $job.Description = "Python Tools for Visual Studio - managed code"
+          $job.Keywords = "PTVS; Visual Studio; Python"
+          
+          $job.SelectCertificate("10006")  # Authenticode
+          $job.SelectCertificate("67")     # StrongName key
+          
+          foreach ($approver in $approvers) { $job.AddApprover($approver) }
+          
+          $files = ("Microsoft.PythonTools.Analysis.dll", 
+                    "Microsoft.PythonTools.Analyzer.exe", 
+                    "Microsoft.PythonTools.Attacher.exe", 
+                    "Microsoft.PythonTools.AttacherX86.exe", 
+                    "Microsoft.PythonTools.Debugger.dll", 
+                    "Microsoft.PythonTools.dll", 
+                    "Microsoft.PythonTools.Hpc.dll", 
+                    "Microsoft.PythonTools.ImportWizard.dll", 
+                    "Microsoft.PythonTools.IronPython.dll", 
+                    "Microsoft.PythonTools.MpiShim.exe", 
+                    "Microsoft.PythonTools.Profiling.dll", 
+                    "Microsoft.VisualStudio.ReplWindow.dll",
+                    "Microsoft.PythonTools.PyKinect.dll",
+                    "Microsoft.PythonTools.WebRole.dll",
+                    "Microsoft.PythonTools.Django.dll",
+                    "Microsoft.PythonTools.AzureSetup.exe",
+                    "Microsoft.IronPythonTools.Resolver.dll",
+                    "Microsoft.PythonTools.Pyvot.dll")
+          
+          $firstjobCount = $files.Length
+          foreach ($filename in $files) {
+              $fullpath =  "$outDir\Release\Binaries\$filename"
+              $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+          }
+
+          $job.Send()
+          break;
+      }catch [Exception] {
+        echo $_.Exception.Message
+        sleep 60
+      }
     }
-    $job.Send()
     
     $firstjob = $job
     
     #################################################################
     ### Submit native binaries
     
-    $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
-    $job.Description = "Python Tools for Visual Studio - native code"
-    $job.Keywords = "PTVS; Visual Studio; Python"
-    
-    $job.SelectCertificate("10006")  # Authenticode
-    
-    foreach ($approver in $approvers) { $job.AddApprover($approver) }
-    
-    $files = "PyDebugAttach.dll", "PyDebugAttachX86.dll", "VsPyProf.dll", "VsPyProfX86.dll", "PyKinectAudio.dll"
-    
-    foreach ($filename in $files) {
-        $fullpath = "$outDir\Release\Binaries\$filename"
-        $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+     while($True) {
+       try {
+          $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
+          $job.Description = "Python Tools for Visual Studio - native code"
+          $job.Keywords = "PTVS; Visual Studio; Python"
+          
+          $job.SelectCertificate("10006")  # Authenticode
+          
+          foreach ($approver in $approvers) { $job.AddApprover($approver) }
+          
+          $files = "PyDebugAttach.dll", "PyDebugAttachX86.dll", "VsPyProf.dll", "VsPyProfX86.dll", "PyKinectAudio.dll"
+          $secondjobCount = $files.Length
+          
+          foreach ($filename in $files) {
+              $fullpath = "$outDir\Release\Binaries\$filename"
+              $job.AddFile($fullpath, "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+          }
+          $job.Send()
+          break;
+      }catch [Exception] {
+        echo $_.Exception.Message
+        sleep 60
+      }
     }
-    $job.Send()
+
     $secondjob = $job
     
     # wait for both jobs to finish being signed...
     $jobs = $firstjob, $secondjob
-    foreach($job in $jobs) {
+    $expectedFiles = $firstjobCount, $secondjobCount
+    for($i = 0; $i -lt $jobs.Length; $i++) { 
+        $job = $jobs[$i]
+        $expectedFileLength = $expectedFiles[$i]
+        
         $activity = "Job ID $($job.JobID) still processing"
         $percent = 0
         do {
@@ -145,7 +168,7 @@ foreach ($version in $versions) {
             write-progress -activity $activity -status "Waiting for completion:" -percentcomplete $percent;
             $percent = ($percent + 1) % 100
             sleep -seconds 5
-        } while(-not $files);
+        } while(-not $files -or $files.Length -ne $expectedFileLength);
     }
     
     # save binaries to release share
@@ -225,20 +248,29 @@ foreach ($version in $versions) {
     #################################################################
     ### Now submit the MSI for signing
     
-    $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
-    $job.Description = "Python Tools for Visual Studio - managed code"
-    $job.Keywords = "PTVS; Visual Studio; Python"
-    
-    $job.SelectCertificate("10006")  # Authenticode
-    
-    foreach ($approver in $approvers) { $job.AddApprover($approver) }
-    
-    $job.AddFile("$buildroot\Binaries\Release$($version.number)\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-    $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-    $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-    $job.AddFile("$buildroot\Binaries\Release$($version.number)\WFastCGI.msi", "Python Tools for Visual Studio - WFastCGI", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
-    
-    $job.Send()
+    while($True) {
+      try {
+        $job = [CODESIGN.Submitter.Job]::Initialize("codesign.gtm.microsoft.com", 9556, $True)
+        $job.Description = "Python Tools for Visual Studio - managed code"
+        $job.Keywords = "PTVS; Visual Studio; Python"
+        
+        $job.SelectCertificate("10006")  # Authenticode
+        
+        foreach ($approver in $approvers) { $job.AddApprover($approver) }
+        
+        $job.AddFile("$buildroot\Binaries\Release$($version.number)\PythonToolsInstaller.msi", "Python Tools for Visual Studio", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+        $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyKinectInstaller.msi", "Python Tools for Visual Studio - PyKinect", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+        $job.AddFile("$buildroot\Binaries\Release$($version.number)\PyvotInstaller.msi", "Python Tools for Visual Studio - Pyvot", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+        $job.AddFile("$buildroot\Binaries\Release$($version.number)\WFastCGI.msi", "Python Tools for Visual Studio - WFastCGI", "http://pytools.codeplex.com", [CODESIGN.JavaPermissionsTypeEnum]::None)
+        $expectedFileCount = 4
+        
+        $job.Send()
+        break;
+      } catch [Exception] {
+        echo $_.Exception.Message
+        sleep 60
+      }
+    }
     
     $activity = "Job ID $($job.JobID) still processing"
     $percent = 0
@@ -247,7 +279,7 @@ foreach ($version in $versions) {
         write-progress -activity $activity -status "Waiting for completion:" -percentcomplete $percent;
         $percent = ($percent + 1) % 100
         sleep -seconds 5
-    } while(-not $files);
+    } while(-not $files -or $files.Length -ne $expectedFileCount);
     
     copy -force "$($job.JobCompletionPath)\PythonToolsInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name).msi"
     copy -force "$($job.JobCompletionPath)\PyKinectInstaller.msi" "$outDir\Release\PTVS $build_name $($version.name) - PyKinect Sample.msi"

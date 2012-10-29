@@ -554,7 +554,17 @@ namespace Microsoft.PythonTools.Hpc {
                     }
 
                     // Add vs remote debugger components.
-                    string basePath = Path.Combine(Path.Combine(vsInstallDir, "Remote Debugger"), _project.TargetPlatform().ToString()) + "\\";
+                    string basePath = Path.Combine(Path.Combine(vsInstallDir, "Remote Debugger"), _project.TargetPlatform().ToString());
+                    if (!Directory.Exists(basePath)) {
+                        basePath = Path.Combine(
+                            (string)HpcSupportPackage.Instance.ApplicationRegistryRoot.GetValue("ShellFolder", ""),
+                            "Common7",
+                            "Packages",
+                            "Debugger",
+                            _project.TargetPlatform().ToString()
+                        );
+                    }
+                    basePath += "\\";
                     foreach (var file in Directory.GetFiles(basePath, "*", SearchOption.AllDirectories)) {
                         allFiles.Add(new CopyFile(file, file.Substring(basePath.Length)));
                     }

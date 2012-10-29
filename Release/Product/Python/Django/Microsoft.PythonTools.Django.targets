@@ -223,6 +223,7 @@
 settings_module=$(MSBuildProjectName).settings
 python_path=%RootDir%
 interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
+interpreter_path_emulated=$(PythonInterpreterPath)
 ]]>
       </_AzureSetupInfo>
 

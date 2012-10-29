@@ -70,7 +70,7 @@ namespace AzureSetup {
                 }
             }
 
-            string interpreter = null;
+            string interpreter = null, interpreterEmulated = null;
             if (physicalDir != null) {
                 string fastCgiPath = "\"" + Path.Combine(physicalDir, "bin\\wfastcgi.py") + "\"";
                 string webpiCmdLinePath = Path.Combine(physicalDir, "bin\\WebPICmdLine.exe");
@@ -107,6 +107,16 @@ namespace AzureSetup {
                                             )
                                         );
                                         break;
+                                    case "interpreter_path_emulated":
+                                        interpreterEmulated = Environment.ExpandEnvironmentVariables(
+                                            Regex.Replace(
+                                                curOptions[1],
+                                                Regex.Escape("%RootDir%"),
+                                                physicalDir,
+                                                RegexOptions.IgnoreCase
+                                            )
+                                        );
+                                        break;
                                     case "webpi_install":
                                         webpiInstalls.Add(
                                             curOptions[1]
@@ -120,6 +130,10 @@ namespace AzureSetup {
                 }
 
                 InstallWebPiProducts(webpiCmdLinePath, webpiInstalls);
+
+                if (interpreterEmulated != null && IsEmulated()) {
+                    interpreter = interpreterEmulated;
+                }
 
                 if (String.IsNullOrEmpty(interpreter)) {
                     // TODO: Better discovery....
