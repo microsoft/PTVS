@@ -290,6 +290,11 @@ NameError: name 'does_not_exist' is not defined
 
     [TestClass]
     public class DebugReplEvaluatorTests30 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python30;
@@ -299,6 +304,11 @@ NameError: name 'does_not_exist' is not defined
 
     [TestClass]
     public class DebugReplEvaluatorTests31 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python31;
@@ -308,6 +318,11 @@ NameError: name 'does_not_exist' is not defined
 
     [TestClass]
     public class DebugReplEvaluatorTests32 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python32;
@@ -317,6 +332,11 @@ NameError: name 'does_not_exist' is not defined
 
     [TestClass]
     public class DebugReplEvaluatorTests27 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python27;
@@ -326,6 +346,11 @@ NameError: name 'does_not_exist' is not defined
 
     [TestClass]
     public class DebugReplEvaluatorTests25 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python25;
@@ -335,6 +360,11 @@ NameError: name 'does_not_exist' is not defined
 
     [TestClass]
     public class DebugReplEvaluatorTestsIPy : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         internal override PythonVersion Version {
             get {
                 return PythonPaths.IronPython27;

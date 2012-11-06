@@ -2560,6 +2560,11 @@ def g(): pass
 
     [TestClass]
     public class PrimaryPromptOnlyReplWindowTests : ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         protected override string ReplPrompt {
             get {
                 return "> ";
@@ -2583,6 +2588,11 @@ def g(): pass
 
     [TestClass]
     public class GlyphPromptReplWindowTests : ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         protected override string ReplPrompt {
             get {
                 return "";
@@ -2605,6 +2615,11 @@ def g(): pass
     }
 
     public class Python3kReplWindowTests : ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         protected override string RawInput {
             get {
                 return "input";
@@ -2638,6 +2653,11 @@ def g(): pass
 
     [TestClass]
     public class Python31ReplWindowTests : Python3kReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         protected override string InterpreterDescription {
             get {
                 return "Python 3.1 Interactive";
@@ -2659,6 +2679,11 @@ def g(): pass
 
     [TestClass]
     public class Python32ReplWindowTests : Python3kReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         protected override string InterpreterDescription {
             get {
                 return "Python 3.2 Interactive";
@@ -2687,6 +2712,11 @@ def g(): pass
 
     [TestClass]
     public class IronPythonReplTests : ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         protected override string InterpreterDescription {
             get {
                 return "IronPython 2.7 Interactive";

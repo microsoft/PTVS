@@ -16,12 +16,18 @@ using System;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace PythonToolsTests {
     [TestClass]
     public class CPythonInterpreterTests {
         internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider();
 
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+        
         [TestMethod, Priority(0)]
         public void FactoryProvider() {
             var provider = InterpFactory;
