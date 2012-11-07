@@ -72,6 +72,10 @@
       <Group guid="guidPythonToolsCmdSet" id="RefactoringCommon" priority="0x0600">
         <Parent guid="guidPythonToolsCmdSet" id="RefactoringCtxMenuIntShell" />
       </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="DocWinTabGroup" priority="0x0600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_EZDOCWINTAB"/>
+      </Group>
     </Groups>
 
     <Menus>
@@ -157,6 +161,16 @@
         <Strings>
           <ButtonText>Send to &amp;Defining Module</ButtonText>
           <CommandName>SendToModule</CommandName>
+        </Strings>
+      </Button>
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidDebugAsScript" priority="0x100" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="DocWinTabGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Debug as Script</ButtonText>
+          <CommandName>DebugAsScript</CommandName>
         </Strings>
       </Button>
       
@@ -487,6 +501,10 @@
       <Parent guid="guidPythonToolsCmdSet" id="EditorContextGroup"/>
     </CommandPlacement>
 
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidDebugAsScript" priority="0x102">
+      <Parent guid="guidPythonToolsCmdSet" id="EditorContextGroup"/>
+    </CommandPlacement>
+
     <!-- Make some commands also available via Tools/Python Tools menu for discoverability -->
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x102">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
@@ -594,6 +612,7 @@
       <IDSymbol name="cmdidRemoveImportsCurrentScope" value ="0x0108" />
       <IDSymbol name="cmdidRefactorRename" value ="0x0109" />
       <IDSymbol name="cmdidExtractMethod" value ="0x010a" />
+      <IDSymbol name="cmdidDebugAsScript" value ="0x010b" />
       
       <IDSymbol name="cmdidReplWindow" value="0x0201" />
       <IDSymbol name="cmdidReplWindow2" value="0x0202" />
@@ -624,6 +643,7 @@
       <IDSymbol name="CodeFileGroup" value="0x1053" />
       <IDSymbol name="RemoveImportsGroup" value ="0x1054" />
       <IDSymbol name="RefactoringCommon" value="0x1055" />
+      <IDSymbol name="DocWinTabGroup" value="0x1056" />
       
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value ="0x2001" />

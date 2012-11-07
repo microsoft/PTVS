@@ -261,6 +261,25 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return adapter.GetDocumentBuffer(lines);            
         }
 
+        internal static IProjectLauncher GetLauncher(IPythonProject project) {
+            var launchProvider = project.GetProperty(PythonConstants.LaunchProvider);
+
+            IPythonLauncherProvider defaultLaunchProvider = null;
+            foreach (var launcher in ComponentModel.GetExtensions<IPythonLauncherProvider>()) {
+                if (launcher.Name == launchProvider) {
+                    return launcher.CreateLauncher(project);
+                }
+
+                if (launcher.Name == DefaultLauncherProvider.DefaultLauncherDescription) {
+                    defaultLaunchProvider = launcher;
+                }
+            }
+
+            // no launcher configured, use the default one.
+            Debug.Assert(defaultLaunchProvider != null);
+            return (defaultLaunchProvider != null) ? defaultLaunchProvider.CreateLauncher(project) : null;
+        }
+
         private static void OpenDocument(string filename, out IVsTextView viewAdapter, out IVsWindowFrame pWindowFrame) {
             IVsTextManager textMgr = (IVsTextManager)Instance.GetService(typeof(SVsTextManager));
 
@@ -481,6 +500,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new OpenDebugReplCommand(), 
                 new ExecuteInReplCommand(), 
                 new SendToReplCommand(), 
+                new DebugAsScriptCommand(), 
                 new FillParagraphCommand(), 
                 new SendToDefiningModuleCommand(), 
                 new DiagnosticsCommand(),

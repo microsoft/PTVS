@@ -211,6 +211,7 @@
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToDefiningModuleCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
+    <Compile Include="PythonTools\Commands\DebugAsScriptCommand.cs" />
     <Compile Include="PythonTools\CommonConstants.cs" />
     <Compile Include="PythonTools\CommonPackage.cs" />
     <Compile Include="PythonTools\CommonUtils.cs" />
@@ -324,6 +325,7 @@
     <Compile Include="PythonTools\Project\DefaultPythonLauncherOptions.Designer.cs">
       <DependentUpon>DefaultPythonLauncherOptions.cs</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Project\DefaultPythonProject.cs" />
     <Compile Include="PythonTools\Project\DirtyChangedEventArgs.cs" />
     <Compile Include="PythonTools\Project\FtpPublisher.cs" />
     <Compile Include="PythonTools\Project\FilePublisher.cs" />

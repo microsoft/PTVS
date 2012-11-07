@@ -80,13 +80,14 @@ namespace Microsoft.PythonTools.Project {
         /// Returns full path of the language specific interpreter executable file.
         /// </summary>
         public string GetInterpreterExecutable(out bool isWindows) {
-            isWindows = Convert.ToBoolean(_project.GetProperty(CommonConstants.IsWindowsApplication));
+            var isWindowsString = _project.GetProperty(CommonConstants.IsWindowsApplication);
+            isWindows = (isWindowsString != null) ? Convert.ToBoolean(isWindowsString) : false;
             return isWindows ? WindowsInterpreterExecutable : InterpreterExecutable;
         }
 
         private string/*!*/ GetInterpreterExecutableInternal(out bool isWindows) {
             string result;
-            result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? "").Trim();
+            result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? string.Empty).Trim();
             if (!String.IsNullOrEmpty(result)) {
                 result = CommonUtils.GetAbsoluteFilePath(_project.GetWorkingDirectory(), result);
 
@@ -109,8 +110,8 @@ namespace Microsoft.PythonTools.Project {
         /// Creates language specific command line for starting the project without debigging.
         /// </summary>
         public string CreateCommandLineNoDebug(string startupFile) {
-            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
-            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments) ?? string.Empty;
+            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments) ?? string.Empty;
 
             return String.Format("{0} \"{1}\" {2}", interpArgs, startupFile, cmdLineArgs);
         }
@@ -119,7 +120,7 @@ namespace Microsoft.PythonTools.Project {
         /// Creates language specific command line for starting the project with debigging.
         /// </summary>
         public string CreateCommandLineDebug(string startupFile) {
-            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
+            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments) ??  string.Empty;
 
             return String.Format("\"{0}\" {1}", startupFile, cmdLineArgs);
         }

@@ -361,28 +361,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override IProjectLauncher GetLauncher() {
-            var compModel = PythonToolsPackage.ComponentModel;
-            var launchers = compModel.GetExtensions<IPythonLauncherProvider>();
-            var launchProvider = GetProjectProperty(PythonConstants.LaunchProvider, false);
-
-            IProjectLauncher res = null;
-            IPythonLauncherProvider defaultLaunchProvider = null;
-            foreach (var launcher in launchers) {
-                if (launcher.Name == launchProvider) {
-                    res = launcher.CreateLauncher(this);
-                    break;
-                } else if (res == null && launcher.Name == DefaultLauncherProvider.DefaultLauncherDescription) {
-                    defaultLaunchProvider = launcher;
-                }
-            }
-
-            if (res == null) {
-                // no launcher configured, use the default one.
-                Debug.Assert(defaultLaunchProvider != null);
-                res = defaultLaunchProvider.CreateLauncher(this);
-            }
-
-            return res;
+            return PythonToolsPackage.GetLauncher(this);
         }
 
         public override void BeforeClose() {

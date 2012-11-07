@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools
         public const uint cmdidRemoveImportsCurrentScope = 0x108;
         public const uint cmdidRefactorRenameIntegratedShell = 0x109;
         public const uint cmdidExtractMethodIntegratedShell = 0x10a;
+        public const uint cmdidDebugAsScript = 0x10b;
 
         public const uint cmdidReplWindow = 0x201;
         public const uint cmdidReplWindow2 = 0x202;
