@@ -104,6 +104,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public virtual AnalysisUnit AnalysisUnit {
+            get { return null; }
+        }
+
         #endregion
 
         #region Dynamic Operations

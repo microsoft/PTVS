@@ -21,5 +21,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected UserDefinedInfo(AnalysisUnit analysisUnit) {
             _analysisUnit = analysisUnit;
         }
+
+        public override AnalysisUnit AnalysisUnit {
+            get {
+                return _analysisUnit;
+            }
+        }
     }
 }

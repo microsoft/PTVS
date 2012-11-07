@@ -63,8 +63,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<ISet<Namespace>> GetMro() {
-            return new[] { SelfSet };
+        public IEnumerable<ISet<Namespace>> Mro {
+            get { return new[] { SelfSet }; }
         }
 
         public BuiltinInstanceInfo Instance {

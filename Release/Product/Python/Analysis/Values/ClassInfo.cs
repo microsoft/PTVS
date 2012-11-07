@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
@@ -23,6 +24,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class ClassInfo : UserDefinedInfo, IReferenceableContainer {
         private readonly List<ISet<Namespace>> _bases;
+        private Mro _mro;
         private readonly InstanceInfo _instanceInfo;
         private readonly ClassScope _scope;
         private readonly int _declVersion;
@@ -37,6 +39,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _bases = new List<ISet<Namespace>>();
             _scope = new ClassScope(this, klass);
             _declVersion = unit.ProjectEntry.AnalysisVersion;
+            _mro = new Mro(this);
         }
 
         public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
@@ -226,86 +229,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void AddBase(ISet<Namespace> baseClasses) {
-            _bases.Add(baseClasses);
-            _baseUserType = null;
+        public Mro Mro {
+            get {
+                return _mro;
+            }
         }
 
         public void ClearBases() {
             _bases.Clear();
             _baseUserType = null;
+            Mro.Recompute();
         }
 
-        /// <summary>
-        /// Calculates the method resolution order according to the C3 rules that have been in use
-        /// since Python 2.3. These rules are described at http://www.python.org/download/releases/2.3/mro/
-        /// </summary>
-        public IEnumerable<ISet<Namespace>> GetMro() {
-            if (_bases.Count == 0) {
-                return new[] { SelfSet };
-            }
+        public void SetBases(IEnumerable<ISet<Namespace>> bases) {
+            _bases.Clear();
+            _bases.AddRange(bases);
+            _baseUserType = null;
+            Mro.Recompute();
+        }
 
-            var result = new List<ISet<Namespace>>();
-            result.Add(SelfSet);
-
-            var mergeList = new List<List<Namespace>>();
-            var finalMro = new List<Namespace>();
-
-            foreach (var baseClass in _bases.SelectMany(x => x)) {
-                var klass = baseClass as ClassInfo;
-                var builtInClass = baseClass as BuiltinClassInfo;
-                if (klass != null && klass.Push()) {
-                    try {
-                        finalMro.Add(klass);
-                        mergeList.Add(klass.GetMro().SelectMany(x => x).ToList());
-                    } finally {
-                        klass.Pop();
-                    }
-                } else if (builtInClass != null && builtInClass.Push()) {
-                    try {
-                        finalMro.Add(builtInClass);
-                        mergeList.Add(builtInClass.GetMro().SelectMany(x => x).ToList());
-                    } finally {
-                        builtInClass.Pop();
-                    }
-                }
-            }
-            if (finalMro.Any()) {
-                mergeList.Add(finalMro);
-            }
-
-            while (mergeList.Count > 0) {
-                Namespace nextInMro = null;
-
-                for (int i = 0; i < mergeList.Count; ++i) {
-                    // Select candidate head
-                    var candidate = mergeList[i][0];
-
-                    // Look for the candidate in the tails of every other MRO
-                    if (!mergeList.Any(baseMro => baseMro.Skip(1).Contains(candidate))) {
-                        // Candidate is good, so stop searching.
-                        nextInMro = candidate;
-                        break;
-                    }
-                }
-
-                // No valid MRO for this class
-                if (nextInMro == null) {
-                    return null;
-                }
-
-                result.Add(nextInMro);
-
-                // Remove all instances of that class from potentially being returned again
-                foreach (var mro in mergeList) {
-                    mro.RemoveAll(ns => ns == nextInMro);
-                }
-
-                // Remove all lists that are now empty.
-                mergeList.RemoveAll(mro => mro.Count == 0);
-            }
-
-            return result;
+        public void SetBase(int index, ISet<Namespace> baseSet) {
+            _bases[index] = baseSet;
+            _baseUserType = null;
+            Mro.Recompute();
         }
 
         public InstanceInfo Instance {
@@ -314,8 +260,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
+        /// <summary>
+        /// Gets all members of this class that are not inherited from its base classes.
+        /// </summary>
+        public IDictionary<string, ISet<Namespace>> GetAllImmediateMembers(IModuleContext moduleContext) {
             var result = new Dictionary<string, ISet<Namespace>>(Scope.Variables.Count);
+
             foreach (var v in Scope.Variables) {
                 v.Value.ClearOldValues();
                 if (v.Value.VariableStillExists) {
@@ -323,28 +273,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            foreach (var b in _bases) {
-                foreach (var ns in b) {
-                    if (ns.Push()) {
-                        try {
-                            foreach (var kvp in ns.GetAllMembers(moduleContext)) {
-                                ISet<Namespace> existing;
-                                if (!result.TryGetValue(kvp.Key, out existing) || existing.Count == 0) {
-                                    result[kvp.Key] = kvp.Value;
-                                } else {
-                                    HashSet<Namespace> tmp = new HashSet<Namespace>();
-                                    tmp.UnionWith(existing);
-                                    tmp.UnionWith(kvp.Value);
-
-                                    result[kvp.Key] = tmp;
-                                }
-                            }
-                        } finally {
-                            ns.Pop();
-                        }
-                    }
-                }
+            if (!result.ContainsKey("__doc__")) {
+                result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
             }
+            if (!result.ContainsKey("__class__")) {
+                result["__class__"] = GetObjectMember(moduleContext, "__class__");
+            }
+
+            return result;
+        }
+
+        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
+            var result = Mro.GetAllMembers(moduleContext);
 
             if (_metaclass != null) {
                 foreach (var type in _metaclass.Types) {
@@ -358,13 +298,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                     }
                 }
-            }
-
-            if (!result.ContainsKey("__doc__")) {
-                result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
-            }
-            if (!result.ContainsKey("__class__")) {
-                result["__class__"] = GetObjectMember(moduleContext, "__class__");
             }
             return result;
         }
@@ -386,51 +319,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
         }
 
-        public ISet<Namespace> GetMemberNoReferences(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+        /// <summary>
+        /// Get the member of this class by name that is not inherited from one of its base classes.
+        /// </summary>
+        public ISet<Namespace> GetImmediateMemberNoReferences(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             ISet<Namespace> result = null;
-            bool ownResult = false;
             var v = Scope.GetVariable(node, unit, name, addRef);
             if (v != null) {
-                ownResult = false;
                 result = v.Types;
             }
+            return result;
+        }
 
-            // TODO: Need to search MRO, not bases
-            if (result == null || result.Count == 0) {
-                foreach (var baseClass in _bases) {
-                    foreach (var baseRef in baseClass) {
-                        if (baseRef.Push()) {
-                            try {
-                                ClassInfo klass = baseRef as ClassInfo;
-                                ISet<Namespace> baseMembers;
-                                if (klass != null) {
-                                    baseMembers = klass.GetMemberNoReferences(node, unit, name, addRef);
-                                } else {
-                                    BuiltinClassInfo builtinClass = baseRef as BuiltinClassInfo;
-                                    if (builtinClass != null) {
-                                        baseMembers = builtinClass.GetMember(node, unit, name);
-                                    } else {
-                                        baseMembers = baseRef.GetMember(node, unit, name);
-                                    }
-                                }
-
-                                AddNewMembers(ref result, ref ownResult, baseMembers);
-                            } finally {
-                                baseRef.Pop();
-                            }
-                        }
-                    }
-                }
+        public ISet<Namespace> GetMemberNoReferences(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            var result = Mro.GetMemberNoReferences(node, unit, name, addRef);
+            if (result != null && result.Count > 0) {
+                return result;
             }
-
-            if ((result == null || result.Count == 0) && _metaclass != null) {
-                result = EmptySet<Namespace>.Instance;
+            
+            if (_metaclass != null) {
                 foreach (var type in _metaclass.Types) {
                     if (type.Push()) {
                         try {
                             foreach (var metaValue in type.GetMember(node, unit, name)) {
                                 foreach (var boundValue in metaValue.GetDescriptor(node, this, type, unit)) {
-                                    result = result.Union(boundValue, ref ownResult);
+                                    result = result.Union(boundValue);
                                 }
                             }
                         } finally {
@@ -438,9 +351,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                     }
                 }
+
+                if (result != null && result.Count > 0) {
+                    return result;
+                }
             }
 
-            return result ?? GetOldStyleMember(name, unit.DeclaringModule.InterpreterContext);
+            return GetOldStyleMember(name, unit.DeclaringModule.InterpreterContext);
         }
 
         private ISet<Namespace> GetOldStyleMember(string name, IModuleContext context) {
@@ -462,27 +379,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var v = Scope.GetVariable(node, unit, name);
             if (v != null) {
                 v.AddReference(node, unit);
-            }
-        }
-
-        private static void AddNewMembers(ref ISet<Namespace> result, ref bool ownResult, ISet<Namespace> newMembers) {
-            if (!ownResult) {
-                if (result != null) {
-                    // merging with unowned set for first time
-                    if (result.Count == 0) {
-                        result = newMembers;
-                    } else if (newMembers.Count != 0) {
-                        result = new HashSet<Namespace>(result);
-                        result.UnionWith(newMembers);
-                        ownResult = true;
-                    }
-                } else {
-                    // getting members for the first time
-                    result = newMembers;
-                }
-            } else {
-                // just merging in the new members
-                result.UnionWith(newMembers);
             }
         }
 
@@ -601,5 +497,197 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Represents the method resolution order of a Python class according to C3 rules.
+    /// </summary>
+    /// <remarks>
+    /// The rules are described in detail at http://www.python.org/download/releases/2.3/mro/
+    /// </remarks>
+    internal class Mro : DependentData, IEnumerable<ISet<Namespace>> {
+        private readonly ClassInfo _classInfo;
+        private List<ISet<Namespace>> _mroList;
+        private bool _isValid = true;
+
+        public Mro(ClassInfo classInfo) {
+            _classInfo = classInfo;
+            _mroList = new List<ISet<Namespace>> { classInfo };
+        }
+
+        public bool IsValid {
+            get { return _isValid; }
+        }
+
+        public IEnumerator<ISet<Namespace>> GetEnumerator() {
+            return _mroList.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
+        }
+
+        public void Recompute() {
+            var mroList = new List<ISet<Namespace>> { _classInfo.SelfSet };
+            var isValid = true;
+
+            var bases = _classInfo.Bases;
+            if (bases.Any()) {
+                var mergeList = new List<List<Namespace>>();
+                var finalMro = new List<Namespace>();
+
+                foreach (var baseClass in bases.SelectMany(x => x)) {
+                    var klass = baseClass as ClassInfo;
+                    var builtInClass = baseClass as BuiltinClassInfo;
+                    if (klass != null && klass.Push()) {
+                        try {
+                            if (!klass.Mro.IsValid) {
+                                isValid = false;
+                                break;
+                            }
+                            finalMro.Add(klass);
+                            mergeList.Add(klass.Mro.SelectMany(x => x).ToList());
+                        } finally {
+                            klass.Pop();
+                        }
+                    } else if (builtInClass != null && builtInClass.Push()) {
+                        try {
+                            finalMro.Add(builtInClass);
+                            mergeList.Add(builtInClass.Mro.SelectMany(x => x).ToList());
+                        } finally {
+                            builtInClass.Pop();
+                        }
+                    }
+                }
+
+                if (isValid) {
+                    if (finalMro.Any()) {
+                        mergeList.Add(finalMro);
+                    }
+
+                    while (mergeList.Count > 0) {
+                        Namespace nextInMro = null;
+
+                        for (int i = 0; i < mergeList.Count; ++i) {
+                            // Select candidate head
+                            var candidate = mergeList[i][0];
+
+                            // Look for the candidate in the tails of every other MRO
+                            if (!mergeList.Any(baseMro => baseMro.Skip(1).Contains(candidate))) {
+                                // Candidate is good, so stop searching.
+                                nextInMro = candidate;
+                                break;
+                            }
+                        }
+
+                        // No valid MRO for this class
+                        if (nextInMro == null) {
+                            isValid = false;
+                            break;
+                        }
+
+                        mroList.Add(nextInMro);
+
+                        // Remove all instances of that class from potentially being returned again
+                        foreach (var mro in mergeList) {
+                            mro.RemoveAll(ns => ns == nextInMro);
+                        }
+
+                        // Remove all lists that are now empty.
+                        mergeList.RemoveAll(mro => mro.Count == 0);
+                    }
+                }
+            }
+
+            // If the MRO is invalid, we only want the class itself to be there so that we
+            // will show all members defined in it, but nothing else.
+            if (!isValid) {
+                mroList.Clear();
+                mroList.Add(_classInfo.SelfSet);
+            }
+
+            if (_isValid != isValid || !_mroList.SequenceEqual(mroList)) {
+                _isValid = isValid;
+                _mroList = mroList;
+                EnqueueDependents();
+            }
+        }
+
+        public IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
+            return GetAllMembersOfMro(this, moduleContext);
+        }
+
+        /// <summary>
+        /// Compute a list of all members, given the MRO list of types, and taking override rules into account.
+        /// </summary>
+        public static IDictionary<string, ISet<Namespace>> GetAllMembersOfMro(IEnumerable<ISet<Namespace>> mro, IModuleContext moduleContext) {
+            var result = new Dictionary<string, ISet<Namespace>>();
+
+            // MRO is a list of namespaces corresponding to classes, but each entry can be a union of several different classes.
+            // Therefore, within a single entry, we want to make a union of members from each; but between entries, we
+            // want the first entry in MRO to suppress any members with the same names from the following entries.
+            foreach (var entry in mro) {
+                var entryMembers = new Dictionary<string, ISet<Namespace>>();
+                foreach (var ns in entry) {
+                    // If it's another non-builtin class, we don't want its inherited members, since we'll account
+                    // for them while processing our own MRO - we only want its immediate members.
+                    var classInfo = ns as ClassInfo;
+                    var classMembers = classInfo != null ? classInfo.GetAllImmediateMembers(moduleContext) : ns.GetAllMembers(moduleContext);
+
+                    foreach (var kvp in classMembers) {
+                        ISet<Namespace> existing;
+                        bool ownExisting = false;
+                        if (!entryMembers.TryGetValue(kvp.Key, out existing) || existing.Count == 0) {
+                            entryMembers[kvp.Key] = kvp.Value;
+                        } else {
+                            ISet<Namespace> tmp = existing.Union(kvp.Value, ref ownExisting);
+                            entryMembers[kvp.Key] = tmp;
+                        }
+                    }
+                }
+
+                foreach (var member in entryMembers) {
+                    if (!result.ContainsKey(member.Key)) {
+                        result.Add(member.Key, member.Value);
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public ISet<Namespace> GetMemberNoReferences(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            return GetMemberFromMroNoReferences(this, node, unit, name, addRef);
+        }
+
+        /// <summary>
+        /// Get the member by name, given the MRO list, and taking override rules into account.
+        /// </summary>
+        public static ISet<Namespace> GetMemberFromMroNoReferences(IEnumerable<ISet<Namespace>> mro, Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            if (mro == null) {
+                return EmptySet<Namespace>.Instance;
+            }
+
+            // Union all members within a single MRO entry, but stop at the first entry that yields a non-empty set since it overrides any that follow.
+            ISet<Namespace> result = null;
+            foreach (var mroEntry in mro) {
+                foreach (var ns in mroEntry) {
+                    var classInfo = ns as ClassInfo;
+                    if (classInfo != null) {
+                        var v = classInfo.Scope.GetVariable(node, unit, name, addRef);
+                        if (v != null) {
+                            result = result.Union(v.Types);
+                        }
+                    } else {
+                        result = result.Union(ns.GetMember(node, unit, name));
+                    }
+                }
+
+                if (result != null && result.Count > 0) {
+                    break;
+                }
+            }
+            return result;
+        }
     }
 }

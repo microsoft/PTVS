@@ -67,7 +67,8 @@ namespace Microsoft.PythonTools.Analysis {
             var privatePrefix = GetPrivatePrefixClassName(scopes);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
-            var eval = new ExpressionEvaluator(_unit.CopyForEval(), scopes.ToArray());
+            var unit = GetNearestEnclosingAnalysisUnit(scopes);
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scopes.ToArray());
 
             var res = eval.Evaluate(expr);
             foreach (var v in res) {
@@ -147,7 +148,8 @@ namespace Microsoft.PythonTools.Analysis {
             string privatePrefix = GetPrivatePrefixClassName(scopes);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
-            var eval = new ExpressionEvaluator(_unit.CopyForEval(), scopes.ToArray());
+            var unit = GetNearestEnclosingAnalysisUnit(scopes);
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scopes.ToArray());
             NameExpression name = expr as NameExpression;
             if (name != null) {
                 for (int i = scopes.Count - 1; i >= 0; i--) {
@@ -316,7 +318,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return new MemberResult[0];
             }
 
-            var lookup = new ExpressionEvaluator(_unit.CopyForEval(), scopes).Evaluate(expr);
+            var unit = GetNearestEnclosingAnalysisUnit(scopes);
+            var lookup = new ExpressionEvaluator(unit.CopyForEval(), scopes).Evaluate(expr);
             return GetMemberResults(lookup, scopes, options);
         }
 
@@ -337,8 +340,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="index">The 0-based absolute index into the file.</param>
         public IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
             try {
-
-                var eval = new ExpressionEvaluator(_unit.CopyForEval(), FindScopes(index).ToArray());
+                var scopes = FindScopes(index).ToArray();
+                var unit = GetNearestEnclosingAnalysisUnit(scopes);
+                var eval = new ExpressionEvaluator(unit.CopyForEval(), scopes);
                 using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
                     var expr = GetExpression(parser.ParseTopExpression().Body);
                     if (expr is ListExpression ||
@@ -393,7 +397,12 @@ namespace Microsoft.PythonTools.Analysis {
                 var cls = (ClassScope)FindScopes(index).LastOrDefault();
                 var handled = new HashSet<string>(cls.Children.Select(child => child.Name));
 
-                foreach (var baseClass in cls.Class.GetMro().Skip(1).SelectMany(x => x)) {
+                var mro = cls.Class.Mro;
+                if (mro == null) {
+                    return result;
+                }
+
+                foreach (var baseClass in mro.Skip(1).SelectMany(x => x)) {
                     ClassInfo klass;
                     BuiltinClassInfo builtinClass;
                     IEnumerable<Namespace> source;
@@ -942,6 +951,20 @@ namespace Microsoft.PythonTools.Analysis {
             // line is 1 based, and index 0 in the array is the position of the 2nd line in the file.
             line -= 2;
             return _unit.Tree._lineLocations[line];
+        }
+
+        /// <summary>
+        /// Finds the best available analysis unit for lookup. This will be the one that is provided
+        /// by the nearest enclosing scope that is capable of providing one.
+        /// </summary>
+        private AnalysisUnit GetNearestEnclosingAnalysisUnit(IEnumerable<InterpreterScope> scopes) {
+            var units = from scope in scopes.Reverse()
+                        let ns = scope.Namespace
+                        where ns != null
+                        let unit = ns.AnalysisUnit
+                        where unit != null
+                        select unit;
+            return units.FirstOrDefault() ?? _unit;
         }
     }
 }

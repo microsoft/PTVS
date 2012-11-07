@@ -130,6 +130,7 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("__builtin__", "getattr", SpecialGetAttr, analyze: false);
             SpecializeFunction("__builtin__", "next", SpecialNext, analyze: false);
             SpecializeFunction("__builtin__", "iter", SpecialIter, analyze: false);
+            SpecializeFunction("__builtin__", "super", SpecialSuper, analyze: false);
 
             // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
             // copied, and always returns the same type).  So we specialize these away so they return the type passed
@@ -769,6 +770,64 @@ namespace Microsoft.PythonTools.Analysis {
             } else {
                 return EmptySet<Namespace>.Instance;
             }
+        }
+
+        private ISet<Namespace> SpecialSuper(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {
+            if (args.Length < 0 || args.Length > 2) {
+                return EmptySet<Namespace>.Instance;
+            }
+
+            ISet<Namespace> classes = null;
+            ISet<Namespace> instances = null;
+
+            if (args.Length == 0) {
+                if (unit.ProjectState.LanguageVersion.Is3x()) {
+                    // No-arg version is magic in 3k - first arg is implicitly the enclosing class, and second is implicitly
+                    // the first argument of the enclosing method. Look up that information from the scope.
+                    // We want to find the nearest enclosing class scope, and the function scope that is immediately beneath
+                    // that class scope. If there is no such combo, a no-arg super() is invalid.
+                    var scopes = unit.Scopes;
+                    ClassScope classScope = null;
+                    FunctionScope funcScope = null;
+                    for (int i = scopes.Length - 1; i > 0; --i) {
+                        var scope = scopes[i];
+                        funcScope = scope as FunctionScope;
+                        if (funcScope != null) {
+                            classScope = scopes[i - 1] as ClassScope;
+                            if (classScope != null) {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (classScope != null && funcScope != null) {
+                        classes = classScope.Class.SelfSet;
+                        // Get first arg of function.
+                        var paramTypes = funcScope.Function.ParameterTypes;
+                        if (paramTypes.Length > 0) {
+                            instances = paramTypes[0].Types;
+                            paramTypes[0].AddDependency(unit);
+                        }
+                    }
+                }
+            } else {
+                classes = args[0];
+                if (args.Length > 1) {
+                    instances = args[1];
+                }
+            }
+
+            if (classes == null) {
+                return EmptySet<Namespace>.Instance;
+            }
+
+            return unit.DeclaringModule.GetOrMakeNodeVariable(call, (node) => {
+                var result = new HashSet<Namespace>();
+                foreach (var classInfo in classes.OfType<ClassInfo>()) {
+                    result.Add(new SuperInfo(unit, classInfo, instances));
+                }
+                return result;
+            });
         }
         
         private ISet<Namespace> ReturnUnionOfInputs(CallExpression call, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] argNames) {

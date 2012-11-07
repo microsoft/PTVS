@@ -605,8 +605,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     class ClassBaseAnalysisUnit : AnalysisUnit {
         private readonly Expression _baseClassNode;
         private readonly AnalysisUnit _outerUnit;
-        public ClassBaseAnalysisUnit(ClassDefinition node, InterpreterScope[] scopes, Expression baseClassNode, AnalysisUnit outerUnit)
+        private readonly int _indexInBasesList;
+
+        public ClassBaseAnalysisUnit(ClassDefinition node, InterpreterScope[] scopes, int indexInBasesList, Expression baseClassNode, AnalysisUnit outerUnit)
             : base(node, scopes) {
+            _indexInBasesList = indexInBasesList;
             _outerUnit = outerUnit;
             _baseClassNode = baseClassNode;
         }
@@ -619,11 +622,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 return;
             }
 
-            ClassAnalysisUnit.EvaluateBaseClass(
+            var classInfo = ((ClassScope)scope).Class;
+            var bases = ClassAnalysisUnit.EvaluateBaseClass(
                 ddg,
-                ((ClassScope)scope).Class,
+                classInfo,
+                _indexInBasesList,
                 _baseClassNode
             );
+            classInfo.SetBase(_indexInBasesList, bases);
 
             _outerUnit.Enqueue();
         }
@@ -637,7 +643,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             _outerUnit = outerUnit;
             _baseEvals = new ClassBaseAnalysisUnit[node.Bases.Count];
             for (int i = 0; i < node.Bases.Count; i++) {
-                _baseEvals[i] = new ClassBaseAnalysisUnit(node, outerUnit.Scopes, node.Bases[i].Expression, this);
+                _baseEvals[i] = new ClassBaseAnalysisUnit(node, outerUnit.Scopes, i, node.Bases[i].Expression, this);
             }
         }
 
@@ -653,13 +659,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 return;
             }
             
-            var newScope = (scope as ClassScope).Class;
+            var classInfo = ((ClassScope)scope).Class;
+            var bases = new List<ISet<Namespace>>();
 
-            newScope.ClearBases();
             if (Ast.Bases.Count == 0) {
                 if (ddg.ProjectState.LanguageVersion.Is3x()) {
                     // 3.x all classes inherit from object by default
-                    newScope.AddBase(ddg.ProjectState._objectSet);
+                   bases.Add(ddg.ProjectState._objectSet);
                 }
             } else {
                 // Process base classes
@@ -674,26 +680,33 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                             metaClass.Walk(ddg);
                             var metaClassValue = ddg._eval.Evaluate(metaClass);
                             if (metaClassValue.Count > 0) {
-                                newScope.GetOrCreateMetaclassVariable().AddTypes(_outerUnit, metaClassValue);
+                                classInfo.GetOrCreateMetaclassVariable().AddTypes(_outerUnit, metaClassValue);
                             }
                         }
                         continue;
                     }
 
-                    var baseClass = baseClassArg.Expression;
+                    var baseExpr = baseClassArg.Expression;
+                    var baseSet = EvaluateBaseClass(ddg, classInfo, i, baseExpr);
+                    bases.Add(baseSet);
+                }
+            }
 
-                    EvaluateBaseClass(ddg, newScope, baseClass);
+            classInfo.SetBases(bases);
+
+            foreach (var baseSet in bases) {
+                foreach (var baseClassInfo in baseSet.OfType<ClassInfo>()) {
+                    baseClassInfo.Mro.AddDependency(this);
                 }
             }
 
             ddg.SetCurrentUnit(this);
-            ddg.WalkBody(Ast.Body, newScope._analysisUnit);
+            ddg.WalkBody(Ast.Body, classInfo._analysisUnit);
         }
 
-        internal static void EvaluateBaseClass(DDG ddg, ClassInfo newScope, Expression baseClass) {
+        internal static ISet<Namespace> EvaluateBaseClass(DDG ddg, ClassInfo newScope, int indexInBaseList, Expression baseClass) {
             baseClass.Walk(ddg);
             var bases = ddg._eval.Evaluate(baseClass);
-            newScope.AddBase(bases);
 
             foreach (var baseValue in bases) {
                 ClassInfo ci = baseValue as ClassInfo;
@@ -701,6 +714,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     ci.SubClasses.AddTypes(newScope._analysisUnit, new[] { newScope });
                 }
             }
+
+            return bases;
         }
     }
     

@@ -533,7 +533,7 @@ a = A()
 
             var clsA = entry.GetValuesByIndex("A", code.IndexOf("a =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsA);
-            var mroA = clsA.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            var mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
             AssertUtil.ContainsExactly(mroA, "A", "B", "C", "D", "E", "F", "type object");
 
             // Unsuccessful: cannot order X and Y
@@ -552,7 +552,7 @@ c = C()
 
             var clsC = entry.GetValuesByIndex("C", code.IndexOf("c =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsC);
-            Assert.IsNull(clsC.GetMro());
+            Assert.IsFalse(clsC.Mro.IsValid);
 
             // Unsuccessful: cannot order F and E
             code = @"
@@ -565,7 +565,7 @@ G.remember2buy
             entry = ProcessText(code);
             var clsG = entry.GetValuesByIndex("G", code.IndexOf("G.remember2buy")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsG);
-            Assert.IsNull(clsG.GetMro());
+            Assert.IsFalse(clsG.Mro.IsValid);
 
 
             // Successful: exchanging bases of G fixes the ordering issue
@@ -579,7 +579,7 @@ G.remember2buy
             entry = ProcessText(code);
             clsG = entry.GetValuesByIndex("G", code.IndexOf("G.remember2buy")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsG);
-            var mroG = clsG.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            var mroG = clsG.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
             AssertUtil.ContainsExactly(mroG, "G", "E", "F", "type object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
@@ -599,7 +599,7 @@ z = Z()
             entry = ProcessText(code);
             var clsZ = entry.GetValuesByIndex("Z", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsZ);
-            var mroZ = clsZ.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            var mroZ = clsZ.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
             AssertUtil.ContainsExactly(mroZ, "Z", "K1", "K2", "K3", "D", "A", "B", "C", "E", "type object");
 
             // Successful: MRO is Z K1 K2 K3 D A B C E object
@@ -613,17 +613,17 @@ z = None
             entry = ProcessText(code);
             clsA = entry.GetValuesByIndex("A", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsA);
-            mroA = clsA.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
             AssertUtil.ContainsExactly(mroA, "A", "type int");
 
             var clsB = entry.GetValuesByIndex("B", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsB);
-            var mroB = clsB.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            var mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
             AssertUtil.ContainsExactly(mroB, "B", "type float");
             
             clsC = entry.GetValuesByIndex("C", code.IndexOf("z =")).FirstOrDefault() as Microsoft.PythonTools.Analysis.Values.ClassInfo;
             Assert.IsNotNull(clsC);
-            var mroC = clsC.GetMro().SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
+            var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
             AssertUtil.ContainsExactly(mroC, "C", "type str");
         }
 
@@ -4401,6 +4401,95 @@ x = MyClass().func1()
 
             var values = entry.GetValuesByIndex("x", code.IndexOf("x = ")).Select(x => x.PythonType.Name);
             AssertUtil.ContainsExactly(values, "str");
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestSuper() {
+            var code = @"
+class Base1(object):
+    def base_func(self, x): pass
+    def base1_func(self): pass
+class Base2(object):
+    def base_func(self, x, y, z): pass
+    def base2_func(self): pass
+class Derived1(Base1, Base2):
+    def derived1_func(self):
+        print('derived1_func')
+class Derived2(Base2, Base1):
+    def derived2_func(self):
+        print('derived2_func')
+class Derived3(object):
+    def derived3_func(self):
+        cls = Derived1
+        cls = Derived2
+        print('derived3_func')
+";
+            foreach (var langVersion in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V32 }) {
+                var entry = ProcessText(code, langVersion);
+
+                // super(Derived1)
+                {
+                    // Member from derived class should not be present
+                    Assert.IsFalse(entry.GetMembersByIndex("super(Derived1)", code.IndexOf("print('derived1_func')")).Any(member => member.Name == "derived1_func"));
+
+                    // Members from both base classes with distinct names should be present, and should have all parameters including self
+                    Assert.AreEqual(1, entry.GetSignaturesByIndex("super(Derived1).base1_func", code.IndexOf("print('derived1_func')")).First().Parameters.Length); // (self)
+                    Assert.AreEqual(1, entry.GetSignaturesByIndex("super(Derived1).base2_func", code.IndexOf("print('derived1_func')")).First().Parameters.Length); // (self)
+
+                    // Only one member with clashing names should be present, and it should be from Base1
+                    var sigs = entry.GetSignaturesByIndex("super(Derived1).base_func", code.IndexOf("print('derived1_func')")).ToArray();
+                    Assert.AreEqual(1, sigs.Length);
+                    Assert.AreEqual(2, sigs[0].Parameters.Length); // (self, x)
+                }
+
+                // super(Derived2)
+                {
+                    // Only one member with clashing names should be present, and it should be from Base2
+                    var sigs = entry.GetSignaturesByIndex("super(Derived2).base_func", code.IndexOf("print('derived2_func')")).ToArray();
+                    Assert.AreEqual(1, sigs.Length);
+                    Assert.AreEqual(4, sigs[0].Parameters.Length); // (self, x, y, z)
+                }
+
+                // super(Derived1, self), or Py3k magic super() to the same effect
+                var supers = new List<string> { "super(Derived1, self)" };
+                if (langVersion == PythonLanguageVersion.V32) {
+                    supers.Add("super()");
+                }
+                foreach (var super in supers) {
+                    // Member from derived class should not be present
+                    Assert.IsFalse(entry.GetMembersByIndex(super, code.IndexOf("print('derived1_func')")).Any(member => member.Name == "derived1_func"));
+
+                    // Members from both base classes with distinct names should be present, but shouldn't have self
+                    Assert.AreEqual(0, entry.GetSignaturesByIndex(super + ".base1_func", code.IndexOf("print('derived1_func')")).First().Parameters.Length); // ()
+                    Assert.AreEqual(0, entry.GetSignaturesByIndex(super + ".base2_func", code.IndexOf("print('derived1_func')")).First().Parameters.Length); // ()
+
+                    // Only one member with clashing names should be present, and it should be from Base1
+                    var sigs = entry.GetSignaturesByIndex(super + ".base_func", code.IndexOf("print('derived1_func')")).ToArray();
+                    Assert.AreEqual(1, sigs.Length);
+                    Assert.AreEqual(1, sigs[0].Parameters.Length); // (x)
+                }
+
+                // super(Derived2, self), or Py3k magic super() to the same effect
+                supers = new List<string> { "super(Derived2, self)" };
+                if (langVersion == PythonLanguageVersion.V32) {
+                    supers.Add("super()");
+                }
+                foreach (var super in supers) {
+                    // Only one member with clashing names should be present, and it should be from Base2
+                    var sigs = entry.GetSignaturesByIndex(super + ".base_func", code.IndexOf("print('derived2_func')")).ToArray();
+                    Assert.AreEqual(1, sigs.Length);
+                    Assert.AreEqual(3, sigs[0].Parameters.Length); // (x, y, z)
+                }
+
+                // super(Derived1 union Derived1)
+                {
+                    // Members with clashing names from both potential bases should be unioned
+                    var sigs = entry.GetSignaturesByIndex("super(cls).base_func", code.IndexOf("print('derived3_func')")).ToArray();
+                    Assert.AreEqual(2, sigs.Length);
+                    Assert.IsTrue(sigs.Any(overload => overload.Parameters.Length == 2)); // (self, x)
+                    Assert.IsTrue(sigs.Any(overload => overload.Parameters.Length == 4)); // (self, x, y, z)
+                }
+            }
         }
 
         protected IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {

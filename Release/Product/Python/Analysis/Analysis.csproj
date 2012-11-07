@@ -293,6 +293,7 @@
     <Compile Include="Values\SliceInfo.cs" />
     <Compile Include="Values\SpecializedCallable.cs" />
     <Compile Include="Values\SpecializedNamespace.cs" />
+    <Compile Include="Values\SuperInfo.cs" />
     <Compile Include="Values\TupleBuiltinClassInfo.cs" />
     <Compile Include="Values\UserDefinedInfo.cs" />
     <Compile Include="Values\Utils.cs" />
