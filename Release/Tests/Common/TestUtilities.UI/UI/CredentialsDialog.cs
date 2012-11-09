@@ -61,6 +61,7 @@ namespace TestUtilities.UI {
                 )
             );
         }
+
         private AutomationElement GetPasswordEditBox() {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(

@@ -13,10 +13,13 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -27,11 +30,12 @@ using TestUtilities.UI;
 namespace PythonToolsUITests {
     [TestClass]
     public class PublishTest {
-        private const string TestFtpUrl = "ftp://anonymous:blazzz@dinov1/testdir";
-        private const string FtpValidateDir = "\\\\dinov1\\ftproot\\testdir";
-        private const string TestSharePublic = "\\\\dinov1\\Test";
-        private const string TestSharePrivate = "\\\\dinov1\\PubTest";
-        private const string PrivateShareUser = "dinov1\\TestUser";
+        private static string TestFtpUrl = "ftp://anonymous:blazzz@" + GetPyToolsIp() + "/testdir";
+
+        private const string FtpValidateDir = "\\\\pytools\\ftproot$\\testdir";
+        private const string TestSharePublic = "\\\\pytools\\Test$";
+        private const string TestSharePrivate = "\\\\pytools\\PubTest$";
+        private const string PrivateShareUser = "pytools\\TestUser";
         private const string PrivateShareUserWithoutMachine = "TestUser";
         private const string PrivateSharePassword = "!10ctopus";
         private const string PrivateSharePasswordIncorrect = "NotThisPassword";
@@ -46,6 +50,21 @@ namespace PythonToolsUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
+        private static string GetPyToolsIp() {
+            // try ipv4
+            foreach (var entry in Dns.GetHostEntry("pytools").AddressList) {
+                if (entry.AddressFamily == AddressFamily.InterNetwork) {
+                    return entry.ToString();
+                }
+            }
+
+            // fallback to anything
+            foreach (var entry in Dns.GetHostEntry("pytools").AddressList) {
+                return entry.ToString();
+            }
+
+            throw new InvalidOperationException();
+        }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
@@ -112,54 +131,13 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonate() {
+            ClearShares();
+
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
                 project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                string dir = Path.Combine(TestSharePrivate, subDir);
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-
-                app.OpenSolutionExplorer();
-                var window = app.SolutionExplorerTreeView;
-
-                // find Program.py, send copy & paste, verify copy of file is there
-                var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-
-                AutomationWrapper.Select(programPy);
-
-                ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
-
-                var creds = new CredentialsDialog(app.WaitForDialog());
-                creds.UserName = PrivateShareUser;
-                creds.Password = PrivateSharePassword;
-                creds.Ok();
-
-                System.Threading.Thread.Sleep(2000);
-
-                using (var impHelper = new ImpersonationHelper(new System.Net.NetworkCredential(PrivateShareUser.Split('\\')[1], PrivateSharePassword, PrivateShareUser.Split('\\')[0]))) {
-                    for (int i = 0; i < 10 && !Directory.Exists(dir); i++) {
-                        System.Threading.Thread.Sleep(1000);
-                    }
-
-                    var files = Directory.GetFiles(dir);
-                    Assert.AreEqual(files.Length, 1);
-                    Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
-
-                    Directory.Delete(dir, true);
-                }
-            } finally {
-                project.Properties.Item("PublishUrl").Value = "";
-            }
-        }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void TestPublishFilesImpersonateNoMachineName() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
-            try {
-                string subDir = Guid.NewGuid().ToString();
-                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                string dir = Path.Combine(TestSharePrivate, subDir);
+                
                 var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
                 app.OpenSolutionExplorer();
@@ -179,7 +157,95 @@ namespace PythonToolsUITests {
 
                 System.Threading.Thread.Sleep(2000);
 
-                using (var impHelper = new ImpersonationHelper(new System.Net.NetworkCredential(PrivateShareUser.Split('\\')[1], PrivateSharePassword, PrivateShareUser.Split('\\')[0]))) {
+                try {
+                    string dir = Path.Combine(TestSharePrivate, subDir);
+
+                    for (int i = 0; i < 10 && !Directory.Exists(dir); i++) {
+                        System.Threading.Thread.Sleep(1000);
+                    }
+
+                    var files = Directory.GetFiles(dir);
+                    Assert.AreEqual(files.Length, 1);
+                    Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
+
+                    Directory.Delete(dir, true);
+                } finally {
+                    ClearShares();
+                }
+            } finally {
+                project.Properties.Item("PublishUrl").Value = "";
+            }
+        }
+
+        class NetUseHelper : IDisposable {
+            public readonly string Drive;   // drive, with colon, without backslash
+
+            public NetUseHelper() {
+                var procInfo = new ProcessStartInfo(
+                    Path.Combine(Environment.SystemDirectory, "net.exe"),
+                    String.Format("use * {0} /user:{1} {2}",
+                        TestSharePrivate,
+                        PrivateShareUser,
+                        PrivateSharePassword
+                    )
+                );
+                procInfo.RedirectStandardOutput = true;
+                procInfo.RedirectStandardError = true;
+                procInfo.UseShellExecute = false;
+                procInfo.CreateNoWindow = true;
+                var process = Process.Start(procInfo);
+                var line = process.StandardOutput.ReadToEnd();
+                if (!line.StartsWith("Drive ")) {
+                    throw new InvalidOperationException("didn't get expected drive output " + line);
+                }
+                Drive = line.Substring(6, 2);
+                process.Close();
+            }
+
+            public void Dispose() {
+                var procInfo = new ProcessStartInfo(
+                    Path.Combine(Environment.SystemDirectory, "net.exe"),
+                    "use /delete " + Drive                        
+                );
+                procInfo.RedirectStandardOutput = true;
+                procInfo.UseShellExecute = false;
+                procInfo.CreateNoWindow = true;
+                var process = Process.Start(procInfo);
+                process.WaitForExit();
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestPublishFilesImpersonateNoMachineName() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+            try {
+                ClearShares();
+
+                string subDir = Guid.NewGuid().ToString();
+                project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
+                
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
+
+                // find Program.py, send copy & paste, verify copy of file is there
+                var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
+
+                AutomationWrapper.Select(programPy);
+
+                ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
+
+                var creds = new CredentialsDialog(app.WaitForDialog());
+                creds.UserName = PrivateShareUserWithoutMachine;
+                creds.Password = PrivateSharePassword;
+                creds.Ok();
+
+                System.Threading.Thread.Sleep(2000);                
+
+                using (var helper = new NetUseHelper()) {
+                    string dir = Path.Combine(helper.Drive + "\\", subDir);
                     var files = Directory.GetFiles(dir);
                     Assert.AreEqual(files.Length, 1);
                     Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
@@ -191,9 +257,47 @@ namespace PythonToolsUITests {
             }
         }
 
+        [DllImport("mpr")]
+        static extern uint WNetCancelConnection2(string lpName, uint dwFlags, bool fForce);
+
+        private void ClearShares() {
+            var procInfo = new ProcessStartInfo(
+                Path.Combine(Environment.SystemDirectory, "net.exe"),
+                String.Format("use /delete * /y",
+                    TestSharePrivate,
+                    PrivateShareUser,
+                    PrivateSharePassword
+                )
+            );
+            procInfo.RedirectStandardOutput = true;
+            procInfo.UseShellExecute = false;
+            procInfo.CreateNoWindow = true;
+            var process = Process.Start(procInfo);
+            process.WaitForExit();
+
+            WNetCancelConnection2(TestSharePrivate, 0, true);
+
+            // there's some cache which immediately reauthenticates us even though
+            // we've deleted the shares.  So we'll try and wait until we no longer 
+            // have access to the private share.
+            int timeout = 30;
+            for (int i = 0; i < 4; i++) {
+                try {
+                    Directory.GetFiles(TestSharePrivate);
+                } catch (UnauthorizedAccessException) {
+                    break;
+                }
+
+                Thread.Sleep(timeout * 1000);
+                timeout *= 2;
+            }
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonateWrongCredentials() {
+            ClearShares();
+
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
@@ -216,13 +320,18 @@ namespace PythonToolsUITests {
                 creds.Password = PrivateSharePasswordIncorrect;
                 creds.Ok();
 
-                System.Threading.Thread.Sleep(2000);
-
-                var statusBar = (IVsStatusbar)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsStatusbar));
-                string text;
-                ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
-
                 const string expected = "Publish failed: Incorrect user name or password: ";
+
+                string text = "";
+                for (int i = 0; i < 5; i++) {
+                    var statusBar = (IVsStatusbar)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsStatusbar));
+                    ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
+                    if (text.StartsWith(expected)) {
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(2000);
+                }
+
                 Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
             } finally {
                 project.Properties.Item("PublishUrl").Value = "";
@@ -232,6 +341,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonateCancelCredentials() {
+            ClearShares();
+
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
@@ -254,13 +365,19 @@ namespace PythonToolsUITests {
                 creds.Password = PrivateSharePasswordIncorrect;
                 creds.Cancel();
 
-                System.Threading.Thread.Sleep(2000);
-
                 var statusBar = (IVsStatusbar)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsStatusbar));
-                string text;
-                ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
+                string text = null;
+                const string expected = "Publish failed: Access to the path";
 
-                const string expected = "Publish failed: Access to the path '";
+                for (int i = 0; i < 10; i++) {
+                    ErrorHandler.ThrowOnFailure(statusBar.GetText(out text));
+
+                    if (text.StartsWith(expected)) {
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(1000);
+                }
+
                 Assert.IsTrue(text.StartsWith(expected), "Expected '{0}', got '{1}'", expected, text);
             } finally {
                 project.Properties.Item("PublishUrl").Value = "";
@@ -276,6 +393,7 @@ namespace PythonToolsUITests {
                 string url = TestFtpUrl + "/" + subDir;
                 project.Properties.Item("PublishUrl").Value = url;
                 string dir = Path.Combine(FtpValidateDir, subDir);
+                Debug.WriteLine(dir);
                 var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
                 app.OpenSolutionExplorer();
@@ -288,7 +406,7 @@ namespace PythonToolsUITests {
 
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
                 System.Threading.Thread.Sleep(2000);
-                var files = Directory.GetFiles(dir);
+                var files = WaitForFiles(dir);
                 Assert.AreEqual(files.Length, 1);
                 Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
 
@@ -296,8 +414,7 @@ namespace PythonToolsUITests {
                 File.Delete(files[0]);
                 AutomationWrapper.Select(programPy);
                 ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
-                System.Threading.Thread.Sleep(2000);
-                files = Directory.GetFiles(dir);
+                files = WaitForFiles(dir);
                 Assert.AreEqual(files.Length, 1);
                 Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
 
@@ -305,6 +422,18 @@ namespace PythonToolsUITests {
             } finally {
                 project.Properties.Item("PublishUrl").Value = "";
             }
+        }
+
+        private static string[] WaitForFiles(string dir) {
+            string[] files = null;
+            for (int i = 0; i < 10; i++) {
+                files = Directory.GetFiles(dir);
+                if (files.Length != 0) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(3000);
+            }
+            return files;
         }
     }
 }

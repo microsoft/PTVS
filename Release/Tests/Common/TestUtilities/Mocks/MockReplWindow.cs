@@ -95,7 +95,60 @@ namespace TestUtilities.Mocks {
         }
 
         public void WriteLine(string text) {
-            _output.AppendLine(text);
+            if (text.IndexOf('\x1b') != -1) {
+                AppendEscapedText(text);
+            } else {
+                _output.AppendLine(text);
+            }
+        }
+
+        private void AppendEscapedText(string text) {
+            // http://en.wikipedia.org/wiki/ANSI_escape_code
+            // process any ansi color sequences...
+
+            int escape = text.IndexOf('\x1b');
+            int start = 0;
+            do {
+                if (escape != start) {
+                    // add unescaped text
+                    _output.Append(text.Substring(start, escape - start));
+                }
+
+                // process the escape sequence                
+                if (escape < text.Length - 1 && text[escape + 1] == '[') {
+                    // We have the Control Sequence Introducer (CSI) - ESC [
+
+                    int? value = 0;
+                    for (int i = escape + 2; i < text.Length; i++) { // skip esc + [
+                        if (text[i] >= '0' && text[i] <= '9') {
+                            // continue parsing the integer...
+                            if (value == null) {
+                                value = 0;
+                            }
+                            value = 10 * value.Value + (text[i] - '0');
+                        } else if (text[i] == ';') {
+                            if (value != null) {
+                                value = null;
+                            } else {
+                                // CSI ; - invalid or CSI ### ;;, both invalid
+                                break;
+                            }
+                        } else if (text[i] == 'm') {
+                            // parsed a valid code
+                            start = i + 1;
+                        } else {
+                            // unknown char, invalid escape
+                            break;
+                        }
+                    }
+
+                    escape = text.IndexOf('\x1b', escape + 1);
+                }// else not an escape sequence, process as text
+
+            } while (escape != -1);
+            if (start != text.Length - 1) {
+                _output.Append(text.Substring(start));
+            }
         }
 
         public void WriteOutput(object value) {

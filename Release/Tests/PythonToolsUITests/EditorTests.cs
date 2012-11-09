@@ -536,6 +536,10 @@ def f(): pass
      System.Threading.Thread.Sleep(5000);
      Keyboard.Type("classmethod");
      System.Threading.Thread.Sleep(5000);
+
+     // VS Bug 
+     // 72635 Exception occurrs and you're not prompted to save file when you close it while completion list is up. 
+     Keyboard.Type(System.Windows.Input.Key.Escape);
  });
         }
 

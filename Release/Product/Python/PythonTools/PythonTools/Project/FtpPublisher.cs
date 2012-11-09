@@ -97,22 +97,24 @@ namespace Microsoft.PythonTools.Project {
             FtpWebRequest request = (FtpWebRequest)WebRequest.Create(new Uri(dirLoc));
             request.Method = WebRequestMethods.Ftp.MakeDirectory;
 
-            var response = (FtpWebResponse)request.GetResponse();
-            if (response.StatusCode != FtpStatusCode.PathnameCreated) {
-                throw new IOException(String.Format("Failed to create directory: {0}", response.StatusDescription));
+            using (var response = (FtpWebResponse)request.GetResponse()) {
+                if (response.StatusCode != FtpStatusCode.PathnameCreated) {
+                    throw new IOException(String.Format("Failed to create directory: {0}", response.StatusDescription));
+                }
             }
         }
 
         private static bool FtpDirExists(string dirLoc) {
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(new Uri(dirLoc));
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(new Uri(dirLoc + "/"));
             request.Method = WebRequestMethods.Ftp.ListDirectory;
 
             try {
-                var response = (FtpWebResponse)request.GetResponse();
-                if (response.StatusCode != FtpStatusCode.DataAlreadyOpen) {
-                    throw new IOException(String.Format("Failed to check if directory exists: {0}", response.StatusDescription));
+                using (var response = (FtpWebResponse)request.GetResponse()) {
+                    if (response.StatusCode != FtpStatusCode.DataAlreadyOpen) {
+                        throw new IOException(String.Format("Failed to check if directory exists: {0}", response.StatusDescription));
+                    }
+                    return true;
                 }
-                return true;
             } catch (WebException) {
                 return false;
             }

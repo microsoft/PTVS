@@ -706,9 +706,10 @@ namespace TestUtilities
                 string hiveVersion = versionRegex.Match(startupInfo.RegistryHive).Value;
                 string hiveSuffix = versionRegex.Replace(startupInfo.RegistryHive, string.Empty);
 
-                if (!string.IsNullOrEmpty(hiveSuffix))
-                {
-                    process.StartInfo.Arguments = "/RootSuffix " + hiveSuffix;
+                if (!string.IsNullOrEmpty(hiveSuffix)) {
+                    process.StartInfo.Arguments = "/RootSuffix " + hiveSuffix + " /Log";
+                } else {
+                    process.StartInfo.Arguments = "/Log";
                 }
 
                 process.StartInfo.FileName = VsRegistry.GetVsLocation(hiveVersion);
@@ -876,24 +877,24 @@ namespace TestUtilities
                                 bool timedOut = true;
                                 do
                                 {
-                                    try
+                                    try 
                                     {
                                         _dte.Quit();
                                         timedOut = false;
                                         break;
-                                    }
-                                    catch (COMException ex)
+                                    } 
+                                    catch (COMException ex) 
                                     {
-                                        if (ex.ErrorCode == CallRejectedByCalleeErrorCode)
+                                        if (ex.ErrorCode == CallRejectedByCalleeErrorCode) 
                                         {
                                             System.Threading.Thread.Sleep(_baseSleepDoubleDuration);
-                                        }
-                                        else
+                                        } 
+                                        else 
                                         {
                                             throw;
                                         }
-                                    }
-                                    catch (Exception)
+                                    } 
+                                    catch (Exception) 
                                     {
                                         throw;
                                     }

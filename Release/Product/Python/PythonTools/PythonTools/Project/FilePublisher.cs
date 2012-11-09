@@ -14,8 +14,11 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -26,83 +29,82 @@ namespace Microsoft.PythonTools.Project {
         #region IProjectPublisher Members
 
         public void PublishFiles(IPublishProject project, Uri destination) {
-            ImpersonationHelper helper = null;
-            NetworkCredential creds = null;
-            bool impersonated = false;
+            var files = project.Files;
 
-            // Use ECWGC here so that a filter cannot run while we're impersonated (and so we always un-impersonate)
-            System.Runtime.CompilerServices.RuntimeHelpers.ExecuteCodeWithGuaranteedCleanup(
-                (_) => {
-                    var files = project.Files;
+            for (int i = 0; i < files.Count; i++) {
+                var item = files[i];
 
-                    for (int i = 0; i < files.Count; i++) {
-                        var item = files[i];
+                try {
+                    // try copying without impersonating first...
+                    CopyOneFile(destination, item);
+                } catch (UnauthorizedAccessException) {
+                    var resource = new _NETRESOURCE();
+                    resource.dwType = RESOURCETYPE_DISK;
+                    resource.lpRemoteName = Path.GetPathRoot(destination.LocalPath);
+                    
+                    NetworkCredential creds = null;
+                    var res = VsCredentials.PromptForCredentials(
+                        PythonToolsPackage.Instance, 
+                        destination, 
+                        new[] { "NTLM" }, "", out creds);
 
-                        try {
-                            // try copying without impersonating first...
-                            CopyOneFile(destination, item, ref helper, creds);
-                        } catch (UnauthorizedAccessException) {
-                            if (impersonated) {
-                                // user entered incorrect credentials
-                                throw;
-                            }
-
-                            // prompt for new credentials and switch to them if available.
-                            var res = VsCredentials.PromptForCredentials(PythonToolsPackage.Instance, destination, new[] { "NTLM" }, "", out creds);
-                            if (res == System.Windows.Forms.DialogResult.OK) {
-                                impersonated = true;
-                                helper = new ImpersonationHelper(creds);
-                            } else {
-                                throw;
-                            }
-
-                            // re-try the file copy w/ the new credentials.
-                            CopyOneFile(destination, item, ref helper, creds);
-                        }
-
-                        project.Progress = (int)(((double)i / (double)files.Count) * 100);
+                    if (res != DialogResult.OK) {
+                        throw;
                     }
-                },
-                (data, exception) => {
-                    if (helper != null) {
-                        helper.Dispose();
+
+                    var netAddRes = WNetAddConnection3(
+                        Process.GetCurrentProcess().MainWindowHandle, 
+                        ref resource,
+                        creds.Password, 
+                        creds.Domain + "\\" + creds.UserName, 
+                        0
+                    );
+
+                    if (netAddRes != 0) {
+                        string msg = Marshal.GetExceptionForHR((int)(((uint)0x80070000) | netAddRes)).Message;
+                        throw new Exception("Incorrect user name or password: " + msg);
                     }
-                },
-                null
-            );
+
+                    // re-try the file copy now that we're authenticated
+                    CopyOneFile(destination, item);
+                }
+
+                project.Progress = (int)(((double)i / (double)files.Count) * 100);
+            }
         }
 
-        private static void CopyOneFile(Uri destination, IPublishFile item, ref ImpersonationHelper impersonate, NetworkCredential creds) {
+        [DllImport("mpr")]
+        static extern uint WNetAddConnection3(IntPtr handle, ref _NETRESOURCE lpNetResource, string lpPassword, string lpUsername, uint dwFlags);
+
+        private const int CONNECT_INTERACTIVE = 0x08;
+        private const int CONNECT_PROMPT = 0x10;
+        private const int RESOURCETYPE_DISK = 1;
+
+        struct _NETRESOURCE {
+            public uint dwScope;
+            public uint dwType;
+            public uint dwDisplayType;
+            public uint dwUsage;
+            public string lpLocalName;
+            public string lpRemoteName;
+            public string lpComment;
+            public string lpProvider;
+        }
+
+        private static void CopyOneFile(Uri destination, IPublishFile item) {
             var destFile = CommonUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
+            Debug.WriteLine("CopyingOneFile: " + destFile);
             string destDir = Path.GetDirectoryName(destFile);
             if (!Directory.Exists(destDir)) {
                 // don't create a file share (\\foo\bar)
                 if (!Path.IsPathRooted(destDir) || Path.GetPathRoot(destDir) != destDir) {
                     Directory.CreateDirectory(destDir);
+                    Debug.WriteLine("Created dir: " + destDir);
                 }
             }
 
-            if (impersonate != null) {
-                // we need to unimpersonate to read the file, then re-impersonate when we're done.
-                using (FileStream destStream = new FileStream(destFile, FileMode.Create, FileAccess.ReadWrite, FileShare.None)) {
-                    impersonate.UndoImpersonate();
-                    impersonate = null;
-                    try {
-
-                        using (FileStream file = new FileStream(item.SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete)) {
-                            byte[] buffer = new byte[1024];
-                            int bytesRead;
-                            while ((bytesRead = file.Read(buffer, 0, buffer.Length)) != 0) {
-                                destStream.Write(buffer, 0, bytesRead);
-                            }
-                        }
-                    } finally {
-                        impersonate = new ImpersonationHelper(creds);
-                    }
-                }
-            } else {
-                File.Copy(item.SourceFile, destFile, true);
-            }
+            File.Copy(item.SourceFile, destFile, true);
+            Debug.WriteLine("Copied file: " + destFile);
         }
 
         public string DestinationDescription {
