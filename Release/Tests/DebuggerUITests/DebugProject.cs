@@ -309,7 +309,7 @@ namespace DebuggerUITests {
                         
             var local = curFrame.Locals.Item("i");
             Assert.AreEqual("42", local.Value);
-            Assert.AreEqual("f in Program line 14", curFrame.FunctionName);
+            Assert.AreEqual("f", curFrame.FunctionName);
             Assert.IsTrue(((StackFrame2)curFrame).FileName.EndsWith("Program.py"));
             Assert.AreEqual((uint)14, ((StackFrame2)curFrame).LineNumber);
             Assert.AreEqual("Program", ((StackFrame2)curFrame).Module);
@@ -349,7 +349,13 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestExceptionUnhandled() {
-            ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "exceptions.ValueError", 2);
+            var waitOnAbnormalExit = GetOptions().WaitOnAbnormalExit;
+            GetOptions().WaitOnAbnormalExit = false;
+            try {
+                ExceptionTest("SimpleExceptionUnhandled.py", "ValueError was unhandled by user code", "bad value", "exceptions.ValueError", 2);
+            } finally {
+                GetOptions().WaitOnAbnormalExit = waitOnAbnormalExit;
+            }
         }
 
         private static void ExceptionTest(string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
@@ -367,13 +373,13 @@ namespace DebuggerUITests {
             debug3.ExceptionGroups.ResetAll();
 
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var excepDialog = new ExceptionHelperDialog(AutomationElement.FromHandle(app.WaitForDialog()));
+            var excepDialog = app.WaitForException();
             AutomationWrapper.DumpElement(excepDialog.Element);
 
             Assert.AreEqual(excepDialog.Description, expectedDescription);
             Assert.AreEqual(excepDialog.Title, expectedTitle);
 
-            excepDialog.Ok();
+            excepDialog.Cancel();
 
             Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)expectedLine);
 
@@ -775,8 +781,6 @@ namespace DebuggerUITests {
             return (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
         }
 
-
-        
         #endregion
 
         #region Helpers

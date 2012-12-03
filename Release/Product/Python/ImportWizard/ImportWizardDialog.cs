@@ -225,12 +225,24 @@ namespace Microsoft.PythonTools.ImportWizard {
                         ImageKey = "PythonFile"
                     });
                 }
+
+                // Also include *.pyw files if they were in the filter list
+                var pywFilters = filterTextBox.Text.Split(';').Where(filter => filter.TrimEnd().EndsWith(".pyw", StringComparison.OrdinalIgnoreCase)).ToArray();
+                foreach (var pywFilter in pywFilters) {
+                    foreach (var file in Directory.GetFiles(sourcePathTextBox.Text, pywFilter, SearchOption.TopDirectoryOnly)) {
+                        startupFileList.Items.Add(new ListViewItem {
+                            Name = file,
+                            Text = Path.GetFileName(file),
+                            ImageKey = "PythonFile"
+                        });
+                    }
+                }
             } catch (Exception ex) {
                 Debug.Assert(false, "Creating startup file list failed:\n" + ex.ToString());
             }
 
             if (startupFileList.Items.Count == 0) {
-                startupFileList.Items.Add(new ListViewItem { Text = "(No .py files found in project root)", ImageKey = null });
+                startupFileList.Items.Add(new ListViewItem { Text = "(No Python files found in project root)", ImageKey = null });
                 startupFileList.Enabled = false;
             } else {
                 startupFileList.Enabled = true;

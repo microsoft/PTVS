@@ -36,6 +36,7 @@
             System.Windows.Forms.Label label9;
             System.Windows.Forms.Label label10;
             System.Windows.Forms.Label label11;
+            System.Windows.Forms.Label label12;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImportWizardDialog));
             this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
@@ -65,6 +66,7 @@
             label9 = new System.Windows.Forms.Label();
             label10 = new System.Windows.Forms.Label();
             label11 = new System.Windows.Forms.Label();
+            label12 = new System.Windows.Forms.Label();
             flowLayoutPanel1.SuspendLayout();
             this.step1Panel.SuspendLayout();
             this.iconPanel.SuspendLayout();
@@ -162,7 +164,7 @@
             label4.AutoSize = true;
             label4.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             label4.ForeColor = System.Drawing.SystemColors.GrayText;
-            label4.Location = new System.Drawing.Point(21, 216);
+            label4.Location = new System.Drawing.Point(21, 237);
             label4.Margin = new System.Windows.Forms.Padding(15, 0, 3, 6);
             label4.Name = "label4";
             label4.Size = new System.Drawing.Size(327, 30);
@@ -181,7 +183,7 @@
             // label7
             // 
             label7.AutoSize = true;
-            label7.Location = new System.Drawing.Point(9, 201);
+            label7.Location = new System.Drawing.Point(9, 222);
             label7.Name = "label7";
             label7.Size = new System.Drawing.Size(245, 15);
             label7.TabIndex = 7;
@@ -250,6 +252,18 @@
             label11.Text = "If it is not in this list, you can right-click any file in your project and choos" +
     "e \"Set as startup file\"";
             // 
+            // label12
+            // 
+            label12.AutoSize = true;
+            label12.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            label12.ForeColor = System.Drawing.SystemColors.GrayText;
+            label12.Location = new System.Drawing.Point(21, 160);
+            label12.Margin = new System.Windows.Forms.Padding(15, 0, 3, 6);
+            label12.Name = "label12";
+            label12.Size = new System.Drawing.Size(258, 15);
+            label12.TabIndex = 8;
+            label12.Text = "Files with the .py extension are always included.";
+            // 
             // step1Panel
             // 
             this.step1Panel.ColumnCount = 2;
@@ -259,17 +273,19 @@
             this.step1Panel.Controls.Add(label2, 0, 2);
             this.step1Panel.Controls.Add(this.sourcePathTextBox, 0, 3);
             this.step1Panel.Controls.Add(this.browsePathButton, 1, 3);
-            this.step1Panel.Controls.Add(label4, 0, 7);
+            this.step1Panel.Controls.Add(label4, 0, 8);
             this.step1Panel.Controls.Add(label5, 0, 1);
-            this.step1Panel.Controls.Add(label7, 0, 6);
-            this.step1Panel.Controls.Add(this.browseSearchPathButton, 1, 8);
-            this.step1Panel.Controls.Add(this.searchPathTextBox, 0, 8);
+            this.step1Panel.Controls.Add(label7, 0, 7);
+            this.step1Panel.Controls.Add(this.browseSearchPathButton, 1, 9);
+            this.step1Panel.Controls.Add(this.searchPathTextBox, 0, 9);
             this.step1Panel.Controls.Add(label8, 0, 4);
-            this.step1Panel.Controls.Add(this.filterTextBox, 0, 5);
+            this.step1Panel.Controls.Add(this.filterTextBox, 0, 6);
+            this.step1Panel.Controls.Add(label12, 0, 5);
             this.step1Panel.Location = new System.Drawing.Point(125, 0);
             this.step1Panel.Name = "step1Panel";
             this.step1Panel.Padding = new System.Windows.Forms.Padding(6);
-            this.step1Panel.RowCount = 9;
+            this.step1Panel.RowCount = 10;
+            this.step1Panel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.step1Panel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.step1Panel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.step1Panel.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -279,7 +295,7 @@
             this.step1Panel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.step1Panel.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.step1Panel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.step1Panel.Size = new System.Drawing.Size(393, 270);
+            this.step1Panel.Size = new System.Drawing.Size(403, 285);
             this.step1Panel.TabIndex = 1;
             // 
             // sourcePathTextBox
@@ -291,7 +307,7 @@
             this.sourcePathTextBox.Location = new System.Drawing.Point(9, 107);
             this.sourcePathTextBox.Margin = new System.Windows.Forms.Padding(3, 3, 3, 15);
             this.sourcePathTextBox.Name = "sourcePathTextBox";
-            this.sourcePathTextBox.Size = new System.Drawing.Size(343, 23);
+            this.sourcePathTextBox.Size = new System.Drawing.Size(353, 23);
             this.sourcePathTextBox.TabIndex = 3;
             // 
             // browsePathButton
@@ -299,7 +315,7 @@
             this.browsePathButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.browsePathButton.AutoSize = true;
             this.browsePathButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.browsePathButton.Location = new System.Drawing.Point(358, 107);
+            this.browsePathButton.Location = new System.Drawing.Point(368, 107);
             this.browsePathButton.Name = "browsePathButton";
             this.browsePathButton.Size = new System.Drawing.Size(26, 25);
             this.browsePathButton.TabIndex = 4;
@@ -312,7 +328,7 @@
             this.browseSearchPathButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.browseSearchPathButton.AutoSize = true;
             this.browseSearchPathButton.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.browseSearchPathButton.Location = new System.Drawing.Point(358, 255);
+            this.browseSearchPathButton.Location = new System.Drawing.Point(368, 276);
             this.browseSearchPathButton.Name = "browseSearchPathButton";
             this.browseSearchPathButton.Size = new System.Drawing.Size(26, 14);
             this.browseSearchPathButton.TabIndex = 10;
@@ -324,22 +340,22 @@
             // 
             this.searchPathTextBox.AcceptsReturn = true;
             this.searchPathTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.searchPathTextBox.Location = new System.Drawing.Point(9, 255);
+            this.searchPathTextBox.Location = new System.Drawing.Point(9, 276);
             this.searchPathTextBox.Multiline = true;
             this.searchPathTextBox.Name = "searchPathTextBox";
-            this.searchPathTextBox.Size = new System.Drawing.Size(343, 14);
+            this.searchPathTextBox.Size = new System.Drawing.Size(353, 14);
             this.searchPathTextBox.TabIndex = 9;
             // 
             // filterTextBox
             // 
             this.filterTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.filterTextBox.Location = new System.Drawing.Point(9, 163);
+            this.filterTextBox.Location = new System.Drawing.Point(9, 184);
             this.filterTextBox.Margin = new System.Windows.Forms.Padding(3, 3, 3, 15);
             this.filterTextBox.Name = "filterTextBox";
-            this.filterTextBox.Size = new System.Drawing.Size(343, 23);
+            this.filterTextBox.Size = new System.Drawing.Size(353, 23);
             this.filterTextBox.TabIndex = 6;
-            this.filterTextBox.Text = "*.py;*.pyw;*.txt;*.htm;*.html;*.css;*.png;*.jpg;*.gif;*.bmp;*.ico;*.svg";
+            this.filterTextBox.Text = "*.pyw;*.txt;*.htm;*.html;*.css;*.png;*.jpg;*.gif;*.bmp;*.ico;*.svg";
             // 
             // iconPanel
             // 

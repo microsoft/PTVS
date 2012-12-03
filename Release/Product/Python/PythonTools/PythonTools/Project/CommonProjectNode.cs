@@ -448,7 +448,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal void BoldStartupItem(HierarchyNode startupItem) {
             if (!_boldedStartupItem) {
-                IVsUIHierarchyWindow2 windows = VsShellUtilities.GetUIHierarchyWindow(
+                IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
                     ProjectMgr.Site as IServiceProvider,
                     new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
@@ -635,10 +635,38 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
+        /// Same as VsShellUtilities.GetUIHierarchyWindow, but it doesn't contain a useless cast to IVsWindowPane
+        /// which fails on Dev10 with the solution explorer window.
+        /// </summary>
+        private static IVsUIHierarchyWindow GetUIHierarchyWindow(IServiceProvider serviceProvider, Guid guidPersistenceSlot) {
+            if (serviceProvider == null) {
+                throw new ArgumentException("serviceProvider");
+            }
+            IVsUIShell service = serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (service == null) {
+                throw new InvalidOperationException();
+            }
+            object pvar = null;
+            IVsWindowFrame ppWindowFrame = null;
+            IVsUIHierarchyWindow window = null;
+            try {
+                ErrorHandler.ThrowOnFailure(service.FindToolWindow(0, ref guidPersistenceSlot, out ppWindowFrame));
+                ErrorHandler.ThrowOnFailure(ppWindowFrame.GetProperty(-3001, out pvar));
+            } catch (COMException exception) {
+                Trace.WriteLine("Exception :" + exception.Message);
+            } finally {
+                if (pvar != null) {
+                    window = (IVsUIHierarchyWindow)pvar;
+                }
+            }
+            return window;
+        }
+
+        /// <summary>
         /// Returns first immediate child node (non-recursive) of a given type.
         /// </summary>
         private void RefreshStartupFile(HierarchyNode parent, string oldFile, string newFile) {
-            IVsUIHierarchyWindow2 windows = VsShellUtilities.GetUIHierarchyWindow(
+            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
                 Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 

@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Options {
                     _version.Text = curOptions.Version;
                     _pathEnvVar.Text = curOptions.PathEnvironmentVariable;
 
-                    _generateCompletionDb.Enabled = curOptions.SupportsCompletionDb;
+                    UpdateGenerateCompletionDb_Enabled();
                 } finally {
                     _loadingOptions = false;
                 }
@@ -141,6 +141,7 @@ namespace Microsoft.PythonTools.Options {
                     CurrentOptions.InterpreterPath = _path.Text;
                     HideErrorBalloon(_invalidPathToolTip, _pathLabel);
                 }
+                UpdateGenerateCompletionDb_Enabled();
             }
         }
 
@@ -169,6 +170,7 @@ namespace Microsoft.PythonTools.Options {
                     CurrentOptions.WindowsInterpreterPath = _windowsPath.Text;
                     HideErrorBalloon(_invalidWindowsPathToolTip, _windowsPathLabel);
                 }
+                UpdateGenerateCompletionDb_Enabled();
             }
         }
 
@@ -193,6 +195,7 @@ namespace Microsoft.PythonTools.Options {
                 } else {
                     ShowErrorBalloon(_invalidVersionToolTip, _versionLabel, _version, "Version is an invalid format and will not be saved.\r\n\r\nValid formats are in the form of Major.Minor[.Build[.Revision]].");
                 }
+                UpdateGenerateCompletionDb_Enabled();
             }
         }
 
@@ -226,7 +229,12 @@ namespace Microsoft.PythonTools.Options {
                     _defaultInterpreter.Enabled = true;
                     _showSettingsFor.Enabled = true;
                 }
-                var newOptions = new InterpreterOptions() { Display = newInterp.InterpreterDescription, Added = true, IsConfigurable = true };
+                var newOptions = new InterpreterOptions() { 
+                    Display = newInterp.InterpreterDescription, 
+                    Added = true, 
+                    IsConfigurable = true,
+                    SupportsCompletionDb = true
+                };
 
                 // two indicies to track: the indicies in our drop down (the realIndex) and the indicies in our
                 // options list which may still have uncommitted changes.
@@ -242,10 +250,7 @@ namespace Microsoft.PythonTools.Options {
                     }
                 }                
 
-                OptionsPage._options.Insert(
-                    optionsIndex,
-                    new InterpreterOptions() { Display = newInterp.InterpreterDescription, Added = true, IsConfigurable = true }
-                );
+                OptionsPage._options.Insert(optionsIndex, newOptions);
                 _showSettingsFor.Items.Insert(realIndex, newInterp.InterpreterDescription);
                 _showSettingsFor.SelectedIndex = realIndex;
                 _defaultInterpreter.Items.Insert(realIndex, newInterp.InterpreterDescription);
@@ -279,6 +284,21 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
+        private void UpdateGenerateCompletionDb_Enabled() {
+            Version ver;
+
+            if (CurrentOptions.SupportsCompletionDb &&
+                (!CurrentOptions.IsConfigurable ||
+                 (!string.IsNullOrWhiteSpace(_path.Text) && _path.Text.IndexOfAny(Path.GetInvalidPathChars()) == -1 &&
+                  !string.IsNullOrWhiteSpace(_windowsPath.Text) && _windowsPath.Text.IndexOfAny(Path.GetInvalidPathChars()) == -1 &&
+                  !string.IsNullOrWhiteSpace(_version.Text) && Version.TryParse(_version.Text, out ver)))) {
+
+                _generateCompletionDb.Enabled = true;
+            } else {
+                _generateCompletionDb.Enabled = false;
+            }
+        }
+        
         private void GenerateCompletionDbClick(object sender, EventArgs e) {
             if (CurrentOptions.IsConfigurable && CurrentOptions.Factory == null) {
                 // we need to create a dummy factory for kicking off the configuration.
@@ -287,7 +307,7 @@ namespace Microsoft.PythonTools.Options {
                 }
                 Version vers;
                 Version.TryParse(_version.Text, out vers);
-
+                
                 var factCreator = PythonToolsPackage.ComponentModel.GetService<IPythonConfigurableInterpreterFactoryProvider>();
                 CurrentOptions.Factory = factCreator.CreateConfigurableInterpreterFactory(
                     CurrentOptions.Id,

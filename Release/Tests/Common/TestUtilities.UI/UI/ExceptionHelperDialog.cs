@@ -43,12 +43,8 @@ namespace TestUtilities.UI {
             
         }
 
-        public void Ok() {
-            ClickButtonByName("OK");
-        }
-
-        public void Continue() {
-            ClickButtonByName("&Continue");
+        public void Cancel() {
+            ClickButtonByName("Cancel Button");
         }
     }
 }

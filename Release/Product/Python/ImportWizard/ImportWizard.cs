@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.ImportWizard {
 
             content.AppendLine("  <ItemGroup>");
 
-            var files = Enumerable.Empty<string>();
+            var files = Directory.EnumerateFiles(settings.SourceFilesPath, "*.py", SearchOption.AllDirectories);
             foreach (var pattern in settings.Filter.Split(';')) {
                 try {
                     var theseFiles = Directory.EnumerateFiles(settings.SourceFilesPath, pattern.Trim(), SearchOption.AllDirectories);
@@ -113,6 +113,7 @@ namespace Microsoft.PythonTools.ImportWizard {
             } catch (WizardBackoutException) {
                 try {
                     Directory.Delete(replacementsDictionary["$destinationdirectory$"]);
+                    Directory.Delete(replacementsDictionary["$solutiondirectory$"]);
                 } catch {
                     // If it fails (doesn't exist/contains files/read-only), let the directory stay.
                 }

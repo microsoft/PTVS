@@ -342,11 +342,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 return new NormalCompletionAnalysis(
                     snapshot.TextBuffer.GetAnalyzer(),
-                    String.Empty, 
-                    loc.Start, 
-                    parser.Snapshot, 
-                    parser.Span, 
-                    parser.Buffer, 
+                    String.Empty,
+                    loc.Start,
+                    parser.Snapshot,
+                    parser.Span,
+                    parser.Buffer,
                     options
                 );
             }
@@ -374,11 +374,11 @@ namespace Microsoft.PythonTools.Intellisense {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
             var loc = parser.Span.GetSpan(parser.Snapshot.Version);
-            
+
             int paramIndex;
             SnapshotPoint? sigStart;
             string lastKeywordArg;
-            bool isParameterName;            
+            bool isParameterName;
             var exprRange = parser.GetExpressionRange(1, out paramIndex, out sigStart, out lastKeywordArg, out isParameterName);
             if (exprRange == null || sigStart == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
@@ -689,32 +689,31 @@ namespace Microsoft.PythonTools.Intellisense {
                 _squiggles.RemoveTagSpans(x => true);
 
                 if (_filename != null) {
-                    AddWarnings(_snapshot, _errorSink, _squiggles, _filename, _provider);
+                    AddWarnings(_snapshot, _errorSink, _squiggles, _filename);
 
-                    AddErrors(_snapshot, _errorSink, _squiggles, _filename, _provider);
+                    AddErrors(_snapshot, _errorSink, _squiggles, _filename);
+
+                    if (_provider != null) {
+                        _provider.AddWarnings(_filename, _errorSink.Warnings);
+                        _provider.AddErrors(_filename, _errorSink.Errors);
+                    }
                 }
             }
         }
 
-        private static void AddErrors(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename, TaskProvider provider) {
+        private static void AddErrors(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename) {
             foreach (ErrorResult error in errorSink.Errors) {
                 var span = error.Span;
                 var tspan = CreateSpan(snapshot, span);
                 squiggles.CreateTagSpan(tspan, new ErrorTag(PredefinedErrorTypeNames.SyntaxError, error.Message));
-                if (provider != null) {
-                    provider.AddErrors(filename, new[] { error });
-                }
             }
         }
 
-        private static void AddWarnings(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename, TaskProvider provider) {
+        private static void AddWarnings(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename) {
             foreach (ErrorResult warning in errorSink.Warnings) {
                 var span = warning.Span;
                 var tspan = CreateSpan(snapshot, span);
                 squiggles.CreateTagSpan(tspan, new ErrorTag(PredefinedErrorTypeNames.Warning, warning.Message));
-                if (provider != null) {
-                    provider.AddWarnings(filename, new[] { warning });
-                }
             }
         }
 
@@ -947,8 +946,8 @@ namespace Microsoft.PythonTools.Intellisense {
             // name expression which we're hitting Ctrl-Space after.
             var enumerator = ReverseExpressionParser.ReverseClassificationSpanEnumerator(parser.Classifier, exprRange.Value.End);
             bool hitName = false, firstToken = true, hitOther = false;
-            while(enumerator.MoveNext()) {
-                if(enumerator.Current == null) {
+            while (enumerator.MoveNext()) {
+                if (enumerator.Current == null) {
                     break;
                 } else if (enumerator.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
                     !hitName) {
@@ -1115,7 +1114,7 @@ namespace Microsoft.PythonTools.Intellisense {
             private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string, List<ErrorResult>>();
             private readonly uint _cookie;
             private readonly IVsTaskList _errorList;
-            
+
 
             private class WorkerMessage {
                 public enum MessageType { Clear, Warnings, Errors, Update }
@@ -1125,92 +1124,81 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 public readonly static WorkerMessage Update = new WorkerMessage { Type = MessageType.Update };
             }
-            private readonly SemaphoreSlim _workerRunning;
-            private readonly ConcurrentQueue<WorkerMessage> _workerQueue;
+            private bool _hasWorker;
+            private readonly BlockingCollection<WorkerMessage> _workerQueue;
 
             public TaskProvider(IVsTaskList errorList) {
                 _errorList = errorList;
                 if (_errorList != null) {
                     ErrorHandler.ThrowOnFailure(_errorList.RegisterTaskProvider(this, out _cookie));
                 }
-                _workerRunning = new SemaphoreSlim(1);
-                _workerQueue = new ConcurrentQueue<WorkerMessage>();
+                _workerQueue = new BlockingCollection<WorkerMessage>();
             }
 
             private void Worker(object param) {
-                if (!_workerRunning.Wait(100)) {
-                    return;
-                }
+                bool changed = false;
+                WorkerMessage msg;
+                List<ErrorResult> existing;
 
-                try {
-                    bool updateAtEnd = false, changed = false;
-                    WorkerMessage msg;
-                    List<ErrorResult> existing;
-
-                    for (int timeout = 10; timeout > 0; --timeout) {
-                        while (_workerQueue.TryDequeue(out msg)) {
-                            switch (msg.Type) {
-                                case WorkerMessage.MessageType.Clear:
-                                    lock (this) {
-                                        changed = _errors.Remove(msg.Filename) || changed;
-                                        changed = _warnings.Remove(msg.Filename) || changed;
+                for (; ; ) {
+                    while (_workerQueue.TryTake(out msg, 5000)) {
+                        switch (msg.Type) {
+                            case WorkerMessage.MessageType.Clear:
+                                lock (this) {
+                                    changed = _errors.Remove(msg.Filename) || changed;
+                                    changed = _warnings.Remove(msg.Filename) || changed;
+                                }
+                                break;
+                            case WorkerMessage.MessageType.Warnings:
+                                lock (this) {
+                                    if (_warnings.TryGetValue(msg.Filename, out existing)) {
+                                        existing.AddRange(msg.Errors);
+                                    } else {
+                                        _warnings[msg.Filename] = msg.Errors;
                                     }
-                                    break;
-                                case WorkerMessage.MessageType.Warnings:
-                                    lock (this) {
-                                        if (_warnings.TryGetValue(msg.Filename, out existing)) {
-                                            existing.AddRange(msg.Errors);
-                                        } else {
-                                            _warnings[msg.Filename] = msg.Errors;
-                                        }
+                                }
+                                changed = true;
+                                break;
+                            case WorkerMessage.MessageType.Errors:
+                                lock (this) {
+                                    if (_errors.TryGetValue(msg.Filename, out existing)) {
+                                        existing.AddRange(msg.Errors);
+                                    } else {
+                                        _errors[msg.Filename] = msg.Errors;
                                     }
-                                    changed = true;
-                                    break;
-                                case WorkerMessage.MessageType.Errors:
-                                    lock (this) {
-                                        if (_errors.TryGetValue(msg.Filename, out existing)) {
-                                            existing.AddRange(msg.Errors);
-                                        } else {
-                                            _errors[msg.Filename] = msg.Errors;
-                                        }
-                                    }
-                                    changed = true;
-                                    break;
-                                case WorkerMessage.MessageType.Update:
-                                    updateAtEnd = true;
-                                    break;
-                                default:
-                                    break;
-                            }
+                                }
+                                changed = true;
+                                break;
+                            case WorkerMessage.MessageType.Update:
+                                changed = true;
+                                break;
                         }
-                        Thread.Sleep(50);
                     }
 
-                    if (updateAtEnd && changed && _errorList != null) {
-                        _errorList.RefreshTasks(_cookie);
+                    lock (_workerQueue) {
+                        if (_workerQueue.Count == 0) {
+                            _hasWorker = false;
+                            break;
+                        }
                     }
-                } finally {
-                    _workerRunning.Release();
                 }
             }
 
             private void SendMessage(WorkerMessage msg) {
-                _workerQueue.Enqueue(msg);
-                if (_workerRunning.Wait(0)) {
-                    try {
+                lock (_workerQueue) {
+                    _workerQueue.Add(msg);
+                    if (!_hasWorker) {
+                        _hasWorker = true;
                         ThreadPool.QueueUserWorkItem(Worker);
-                    } finally {
-                        _workerRunning.Release();
                     }
                 }
             }
-            
+
             public void UpdateTasks() {
                 if (_errorList != null) {
                     SendMessage(WorkerMessage.Update);
                 }
             }
-
 
             public uint Cookie {
                 get {
@@ -1257,15 +1245,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
             #endregion
 
-            internal void AddErrors(string filename, IList<ErrorResult> errors) {
+            internal void AddErrors(string filename, List<ErrorResult> errors) {
                 if (errors.Count > 0) {
-                    SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Errors, Filename = filename, Errors = new List<ErrorResult>(errors) });
+                    SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Errors, Filename = filename, Errors = errors });
                 }
             }
 
-            internal void AddWarnings(string filename, IList<ErrorResult> errors) {
-                if (errors.Count > 0) {
-                    SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Warnings, Filename = filename, Errors = new List<ErrorResult>(errors) });
+            internal void AddWarnings(string filename, List<ErrorResult> warnings) {
+                if (warnings.Count > 0) {
+                    SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Warnings, Filename = filename, Errors = warnings });
                 }
             }
 

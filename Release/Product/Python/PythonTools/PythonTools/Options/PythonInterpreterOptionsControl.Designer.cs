@@ -172,6 +172,8 @@
             // _path
             // 
             this._path.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._path.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this._path.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this._path.Location = new System.Drawing.Point(153, 4);
             this._path.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._path.Name = "_path";
@@ -209,6 +211,8 @@
             // _windowsPath
             // 
             this._windowsPath.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._windowsPath.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
+            this._windowsPath.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this._windowsPath.Location = new System.Drawing.Point(153, 33);
             this._windowsPath.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._windowsPath.Name = "_windowsPath";
