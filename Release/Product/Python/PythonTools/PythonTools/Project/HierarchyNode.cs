@@ -1415,6 +1415,9 @@ namespace Microsoft.PythonTools.Project
                     case (uint)VSConstants.VsUIHierarchyWindowCmdIds.UIHWCMDID_EnterKey:
                         this.DoDefaultAction();
                         return VSConstants.S_OK;
+                    case (uint)VSConstants.VsUIHierarchyWindowCmdIds.UIHWCMDID_CancelLabelEdit:
+                        this.OnCancelLabelEdit();
+                        return VSConstants.S_OK;
                 }
                 return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
             }
@@ -2043,6 +2046,14 @@ namespace Microsoft.PythonTools.Project
         protected virtual int AfterSaveItemAs(IntPtr docData, string newName)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Invoked when the node receives UIHWCMDID_CancelLabelEdit hierarchy window command, which occurs
+        /// when user cancels the label editing operation.
+        /// </summary>
+        protected virtual void OnCancelLabelEdit()
+        {
         }
 
         /// <summary>

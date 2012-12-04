@@ -15,8 +15,8 @@
   </TemplateData>
   <TemplateContent>
     <Project TargetFileName="$safeprojectname$.pyproj" File="WpfApp.pyproj" ReplaceParameters="true">
-      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$.py">Program.py</ProjectItem>
-      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$.xaml">Program.xaml</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$.py" OpenInEditor="true">Program.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$.xaml" OpenInEditor="true">Program.xaml</ProjectItem>
     </Project>
   </TemplateContent>
 </VSTemplate>

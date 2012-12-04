@@ -475,7 +475,7 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        internal void OnCancelLabelEdit()
+        protected override void OnCancelLabelEdit()
         {
             if (_isBeingCreated)
             {
