@@ -89,9 +89,29 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start = _stopwatch.ElapsedMilliseconds;
 
+            var pos = _pos;
+
+            var pyAnalysis = TextBuffer.GetPythonAnalysis();
+            Microsoft.PythonTools.Parsing.Ast.PythonAst ast;
+            IAnalysisCookie cookie;
+            pyAnalysis.GetTreeAndCookie(out ast, out cookie);
+            SnapshotCookie sCookie = cookie as SnapshotCookie;
+            if (sCookie != null) {
+                // Map the analysis position to its location in the analyzed
+                // snapshot, but keep the indent level unchanged. This ensures
+                // that if the user has typed 'def' before the analysis is
+                // updated they will get completions for the correct class.
+                var currentLine = Span.GetStartPoint(TextBuffer.CurrentSnapshot).GetContainingLine();
+                var oldLine = Span.GetStartPoint(sCookie.Snapshot).GetContainingLine();
+                if (currentLine.LineNumber != oldLine.LineNumber) {
+                    var indent = _pos - currentLine.Start.Position;
+                    pos = oldLine.Start.Position + indent;
+                }
+            }
+
             var analysis = GetAnalysisEntry();
-            var cls = analysis.GetDefinitionTreeByIndex(_pos).LastOrDefault(member => member.MemberType == Interpreter.PythonMemberType.Class);
-            var members = analysis.GetOverrideableByIndex(_pos).ToArray();
+            var cls = analysis.GetDefinitionTreeByIndex(pos).LastOrDefault(member => member.MemberType == Interpreter.PythonMemberType.Class);
+            var members = analysis.GetOverrideableByIndex(pos).ToArray();
             Array.Sort(members, OverrideSort);
             var completions = members
                 .Select(member => PythonCompletion(glyphService,

@@ -2735,6 +2735,23 @@ class bar(list):
                 ), 
                 this is IronPythonAnalysisTest ? "self, enumerable" : "self, sequence"
             );
+
+            // Ensure that nested classes are correctly resolved.
+            text = @"
+class bar(int):
+    class foo(dict):
+        pass
+";
+            entry = ProcessText(text);
+            var barItems = entry.GetOverrideableByIndex(text.IndexOf("    pass")).Select(x => x.Name).ToSet();
+            var fooItems = entry.GetOverrideableByIndex(text.IndexOf("pass")).Select(x => x.Name).ToSet();
+            Assert.IsFalse(barItems.Contains("keys"));
+            Assert.IsFalse(barItems.Contains("items"));
+            Assert.IsTrue(barItems.Contains("bit_length"));
+
+            Assert.IsTrue(fooItems.Contains("keys"));
+            Assert.IsTrue(fooItems.Contains("items"));
+            Assert.IsFalse(fooItems.Contains("bit_length"));
         }
 
 

@@ -94,11 +94,11 @@ namespace PythonToolsTests {
             Assert.AreEqual("..\\..\\HelloWorld2\\", dict["$projecthome$"]);
             Assert.AreEqual("", dict["$searchpaths$"]);
             Assert.AreEqual(@"  <ItemGroup>
-    <Content Include=""HelloWorld2.pyproj"" />
     <Compile Include=""Program.py"" />
     <Compile Include=""TestFolder\SubItem.py"" />
     <Compile Include=""TestFolder2\SubItem.py"" />
     <Compile Include=""TestFolder3\SubItem.py"" />
+    <Content Include=""HelloWorld2.pyproj"" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include=""TestFolder"" />

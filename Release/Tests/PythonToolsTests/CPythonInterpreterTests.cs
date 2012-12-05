@@ -33,11 +33,18 @@ namespace PythonToolsTests {
             var provider = InterpFactory;
             var factories = provider.GetInterpreterFactories().ToArray();
 
-            if (factories.Length > 0) {
-                Assert.IsTrue(factories[0].Description == "Python");
-                Assert.IsTrue(factories[0].Configuration.Version.Major == 2 || factories[0].Configuration.Version.Major == 3);
-                Assert.IsTrue(factories[0].Id == new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"));
-                Assert.IsTrue(factories[0].CreateInterpreter() != null);
+            foreach (var factory in factories) {
+                if (factory.Id == new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}")) {
+                    Assert.IsTrue(factory.Description == "Python");
+                    Assert.IsTrue(factory.Configuration.Version.Major == 2 || factory.Configuration.Version.Major == 3);
+                    Assert.IsTrue(factory.CreateInterpreter() != null);
+                } else if (factory.Id == new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}")) {
+                    Assert.IsTrue(factory.Description == "Python 64-bit");
+                    Assert.IsTrue(factory.Configuration.Version.Major == 2 || factory.Configuration.Version.Major == 3);
+                    Assert.IsTrue(factory.CreateInterpreter() != null);
+                } else {
+                    Assert.Fail("Expected Id == {2AF0F10D-7135-4994-9156-5D01C9C11B7E} or {9A7A9026-48C1-4688-9D5D-E5699D47D074}");
+                }
             }
         }
     }

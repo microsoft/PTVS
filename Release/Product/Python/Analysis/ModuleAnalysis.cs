@@ -394,7 +394,11 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 var result = new List<IOverloadResult>();
 
-                var cls = (ClassScope)FindScopes(index).LastOrDefault();
+                var scopes = FindScopes(index, useIndent: true);
+                var cls = scopes.LastOrDefault() as ClassScope;
+                if (cls == null) {
+                    return result;
+                }
                 var handled = new HashSet<string>(cls.Children.Select(child => child.Name));
 
                 var mro = cls.Class.Mro;
@@ -425,14 +429,14 @@ namespace Microsoft.PythonTools.Analysis {
                     }
 
                     foreach (var child in source) {
-                        try {
-                            var overload = child.Overloads.First();
+                        if (!child.Overloads.Any()) {
+                            continue;
+                        }
 
-                            foreach (var o in child.Overloads.Skip(1)) {
-                                if (o.Parameters.Length > overload.Parameters.Length) {
-                                    overload = o;
-                                }
-                            }
+                        try {
+                            var overload = child.Overloads.Aggregate(
+                                (best, o) => o.Parameters.Length > best.Parameters.Length ? o : best
+                            );
 
                             if (handled.Contains(overload.Name)) {
                                 continue;
@@ -789,10 +793,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private List<InterpreterScope> FindScopes(int index) {
+        private List<InterpreterScope> FindScopes(int index, bool useIndent = false) {
             InterpreterScope curScope = ScopeTree.First();
             InterpreterScope prevScope = null;
             var chain = new List<InterpreterScope> { Scopes[0] };
+            var parent = _unit.Tree;
 
             while (curScope != prevScope) {
                 prevScope = curScope;
@@ -805,7 +810,6 @@ namespace Microsoft.PythonTools.Analysis {
                 //     pass
                 // def g():  # starts on 3, ends on 4
                 //     pass
-                var parent = _unit.Tree;
                 int lastStart = curScope.GetStart(parent) - 1;
 
                 for (int i = curScope.Children.Count - 1; i >= 0; i--) {
@@ -816,9 +820,31 @@ namespace Microsoft.PythonTools.Analysis {
                     if (curStart < index) {
                         var curEnd = scope.GetStop(parent);
 
-                        if (curEnd >= index ||                                      // we fit in this scope
-                            (i == curScope.Children.Count - 1 && curEnd < index) || // last scope, we're implicitly in it
-                            index < lastStart) {                                    // gap in scopes, we are in this one.
+                        bool inScope = curEnd >= index;
+                        if (!inScope || useIndent) {
+                            // Artificially extend the scope up to the start of the following
+                            // child, but only if index is at an indentation that is not as
+                            // deep as the current child.
+                            int scopeIndent = int.MaxValue, indexIndent;
+                            if (scope.Node != null) {
+                                scopeIndent = scope.Node.GetStart(parent).Column;
+                            }
+
+                            if (index <= parent.EndIndex) {
+                                indexIndent = parent.IndexToLocation(index).Column;
+                            } else {
+                                // This implicitly includes one character for a newline.
+                                // When using CRLF, this may place the indent at one
+                                // character less than it should be, but this will only
+                                // affect scope resolution if the user is indenting by
+                                // one space instead of four.
+                                indexIndent = index - parent.EndIndex;
+                            }
+
+                            inScope = (inScope || i == curScope.Children.Count - 1 || index < lastStart) && indexIndent > scopeIndent;
+                        }
+
+                        if (inScope) {
                             if (!(scope is StatementScope)) {
                                 curScope = scope;
                                 chain.Add(curScope);

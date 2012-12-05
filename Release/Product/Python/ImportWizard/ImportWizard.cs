@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.ImportWizard {
                 }
             }
 
-            foreach (var file in files) {
+            foreach (var file in files.Distinct(StringComparer.OrdinalIgnoreCase)) {
                 var relFile = CommonUtils.GetRelativeFilePath(settings.SourceFilesPath, file);
                 var dir = Path.GetDirectoryName(relFile);
                 if (!String.IsNullOrWhiteSpace(dir)) {

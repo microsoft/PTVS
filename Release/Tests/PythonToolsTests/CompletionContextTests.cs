@@ -440,9 +440,9 @@ class Baz(Foo, Bar):
                 var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
 
                 Assert.IsTrue(completionList.Contains(@"func_a(self, a = 100):
-        return super(Baz, self).func_a(a)"));
+        return super(Baz, self).func_a(a)"), code);
                 Assert.IsTrue(completionList.Contains(@"func_b(self, b, *p, **kw):
-        return super(Baz, self).func_b(b, *p, **kw)"));
+        return super(Baz, self).func_b(b, *p, **kw)"), code);
             }
         }
 
@@ -471,6 +471,76 @@ class Baz(Foo, Bar):
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
             Assert.IsTrue(completionList.Contains(@"index(self, item, start, stop):
         return super(Foo, self).index(item, start, stop)"));
+        }
+
+        [TestMethod, Priority(0)]
+        public void OverridesWithMismatchedAnalysis() {
+            // Here we create a buffer and analyze. We then add some newlines
+            // and a def, expecting completions from A (int). Because the def
+            // has moved down into class B, GetCompletions() rolls it back
+            // to find out where in the analysis to look - without this, we
+            // would get completions for dict rather than int.
+            var code = @"
+class A(int):
+    pass
+
+class B(dict):
+    pass
+
+";
+
+            var editText = "\r\n\r\n\r\n    def ";
+            var editInsert = code.IndexOf("pass") + 4;
+            var completions = EditAndGetCompletions(code, editText, editInsert, "def ");
+
+            AssertUtil.Contains(completions, "bit_length");
+            AssertUtil.Contains(completions, "conjugate");
+            AssertUtil.DoesntContain(completions, "keys");
+
+            editText = "\r\n\r\n\r\n\r\n\r\n    def ";
+            editInsert = code.IndexOf("pass", editInsert) + 4;
+            completions = EditAndGetCompletions(code, editText, editInsert, "def ");
+
+            AssertUtil.Contains(completions, "keys");
+            AssertUtil.Contains(completions, "__contains__");
+            AssertUtil.DoesntContain(completions, "bit_length");
+        }
+
+        private static HashSet<string> EditAndGetCompletions(string code, string editText, int editInsert, string completeAfter) {
+            CompletionAnalysis context;
+
+            var fact = new CPythonInterpreterFactory();
+            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+                var buffer = new MockTextBuffer(code);
+                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+
+                var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
+                analyzer.WaitForCompleteAnalysis(x => true);
+                while (((IPythonProjectEntry)buffer.GetAnalysis()).Analysis == null) {
+                    System.Threading.Thread.Sleep(500);
+                }
+                analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
+
+                var edit = buffer.CreateEdit();
+                edit.Insert(editInsert, editText);
+                edit.Apply();
+
+                var newSnapshot = (MockTextSnapshot)snapshot.Version.Next.TextBuffer.CurrentSnapshot;
+                Assert.AreNotSame(snapshot, newSnapshot);
+                int location = newSnapshot.GetText().IndexOf(completeAfter) + completeAfter.Length;
+
+                context = newSnapshot.GetCompletions(new MockTrackingSpan(newSnapshot, location, 0),
+                    new CompletionOptions {
+                        ConvertTabsToSpaces = true,
+                        IndentSize = 4
+                    }
+                );
+            }
+
+            var completions = context.GetCompletions(new MockGlyphService()).Completions
+                .Select(c => c.DisplayText).ToSet();
+            return completions;
         }
 
         private static void TestQuickInfo(string code, int start, int end, params string[] expected) {
