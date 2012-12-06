@@ -722,11 +722,15 @@ namespace Microsoft.PythonTools.Repl {
             public void SetScope(string scopeName) {
                 try {
                     using (new SocketLock(this)) {
-                        Socket.Send(SetModuleCommandBytes);
-                        SendString(scopeName);
-                        _currentScope = scopeName;
+                        if (!String.IsNullOrWhiteSpace(scopeName)) {
+                            Socket.Send(SetModuleCommandBytes);
+                            SendString(scopeName);
+                            _currentScope = scopeName;
 
-                        _eval._window.WriteLine(String.Format("Current module changed to {0}", scopeName));
+                            _eval._window.WriteLine(String.Format("Current module changed to {0}", scopeName));
+                        } else {
+                            _eval._window.WriteLine(_currentScope);
+                        }
                     }
                 } catch (SocketException) {
                     _eval._window.WriteError("Cannot change module, interactive window is disconnected.");
