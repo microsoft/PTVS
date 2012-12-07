@@ -245,6 +245,16 @@ except (None)"}) {
                 new { Expr = "f(z, lambda a, b, c: 42", Param = 1, Function="f" } ,
                 new { Expr = "f(z, lambda a, b, c", Param = 1, Function="f" } ,
                 new { Expr = "f(z, lambda a: lambda b, c: 42", Param = 1, Function="f" } ,
+                new { Expr = "f([a for b in c", Param = 0, Function="f" },
+                // No function for f(( because ReverseExpressionParser will stop at the unmatched (
+                new { Expr = "f((a for b in c", Param = 0, Function="" },
+                new { Expr = "f({a for b in c", Param = 0, Function="f" },
+                new { Expr = "f([a for b in c],", Param = 1, Function="f" },
+                new { Expr = "f((a for b in c),", Param = 1, Function="f" },
+                new { Expr = "f({a for b in c},", Param = 1, Function="f" },
+                new { Expr = "f(0, [a for b in c],", Param = 2, Function="f" },
+                new { Expr = "f(0, (a for b in c),", Param = 2, Function="f" },
+                new { Expr = "f(0, {a for b in c},", Param = 2, Function="f" },
                 new { Expr = "f([1,2", Param = 0, Function="f" } ,
                 new { Expr = "f([1,2,", Param = 0, Function="f" } ,
                 new { Expr = "f({1:2,", Param = 0, Function="f" } ,
@@ -668,8 +678,8 @@ class B(dict):
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
                 var context = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
-                Assert.AreEqual(context.Text, expectedExpression);
-                Assert.AreEqual(context.ParameterIndex, paramIndex);
+                Assert.AreEqual(expectedExpression, context.Text, sourceCode);
+                Assert.AreEqual(paramIndex, context.ParameterIndex, sourceCode);
             }
         }
 

@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
             "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**="
         };
         private static readonly string[] _stmtKeywords = new[] {
-            "assert", "print" , "break" ,  "del" ,  "except" ,  "finally" ,  "for" ,  "global" ,  
+            "assert", "print" , "break" ,  "del" ,  "except" ,  "finally" ,  "global" ,  
             "nonlocal" ,  "pass" ,  "raise" ,  "return" ,  "try" ,  "while" ,  "with" ,  "class" ,  
             "def"
         };
