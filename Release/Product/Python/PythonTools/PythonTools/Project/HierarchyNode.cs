@@ -3000,7 +3000,7 @@ namespace Microsoft.PythonTools.Project
             return FindChild(name, true);
         }
 
-        internal HierarchyNode FindChild(string name, bool recurse)
+        internal virtual HierarchyNode FindChild(string name, bool recurse)
         {
             if (String.IsNullOrEmpty(name))
             {

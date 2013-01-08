@@ -144,6 +144,42 @@ namespace Microsoft.PythonTools.Project
             DoNotTriggerTrackerQueryEvents = 4
         }
 
+        private class HierarchyEventsSink : IVsHierarchyEvents {
+            private readonly ProjectNode projectNode;
+
+            public HierarchyEventsSink(ProjectNode projectNode) {
+                this.projectNode = projectNode;
+            }
+
+            public int OnInvalidateIcon(IntPtr hicon) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnInvalidateItems(uint itemidParent) {
+                projectNode.findChildCache.Clear();
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemAdded(uint itemidParent, uint itemidSiblingPrev, uint itemidAdded) {
+                projectNode.findChildCache.Clear();
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemDeleted(uint itemid) {
+                projectNode.findChildCache.Clear();
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemsAppended(uint itemidParent) {
+                projectNode.findChildCache.Clear();
+                return VSConstants.S_OK;
+            }
+
+            public int OnPropertyChanged(uint itemid, int propid, uint flags) {
+                return VSConstants.S_OK;
+            }
+        }
+
         #endregion
 
         #region constants
@@ -290,6 +326,11 @@ namespace Microsoft.PythonTools.Project
         /// The internal package implementation.
         /// </summary>
         private ProjectPackage package;
+
+        /// <summary>
+        /// Lookup cache from item names to their hierarchy nodes, used by <see cref="FindChild"/> to speed up repeated lookups.
+        /// </summary>
+        private readonly Dictionary<string, HierarchyNode> findChildCache = new Dictionary<string, HierarchyNode>(StringComparer.OrdinalIgnoreCase);
 
         // Has the object been disposed.
         private bool isDisposed;
@@ -1282,6 +1323,25 @@ namespace Microsoft.PythonTools.Project
                 return new ProjectDesignerDocumentManager(this);
             }
             return null;
+        }
+
+        internal override HierarchyNode FindChild(string name, bool recurse) {
+            HierarchyNode node;
+            if (recurse) {
+                if (findChildCache.TryGetValue(name, out node)) {
+                    return node;
+                }
+            }
+
+            node = base.FindChild(name, recurse);
+            if (recurse) {
+                // Set some large but definite limit on cache size, so that we don't OOM if we keep looking for things and not finding them.
+                if (findChildCache.Count > 8192) {
+                    findChildCache.Clear();
+                }
+                findChildCache[name] = node;
+            }
+            return node;
         }
 
         #endregion
@@ -4323,6 +4383,16 @@ namespace Microsoft.PythonTools.Project
                             else
                             {
                                 PackageUtilities.CopyUrlToLocal(new Uri(file), newFileName);
+
+                                // Reset RO attribute on file if present - for example, if source file was under TFS control and not checked out.
+                                try {
+                                    var fileInfo = new FileInfo(newFileName);
+                                    if (fileInfo.Attributes.HasFlag(FileAttributes.ReadOnly)) {
+                                        fileInfo.Attributes &= ~FileAttributes.ReadOnly;
+                                    }
+                                } catch (Exception) {
+                                    // Best-effort, but no big deal if this fails.
+                                }
                             }
                         }
                         finally
@@ -5373,6 +5443,9 @@ If the files in the existing folder have the same names as files in the folder y
         {
             this.ID = VSConstants.VSITEMID_ROOT;
             this.tracker = new TrackDocumentsHelper(this);
+
+            uint cookie;
+            this.AdviseHierarchyEvents(new HierarchyEventsSink(this), out cookie);
         }
 
         /// <summary>
