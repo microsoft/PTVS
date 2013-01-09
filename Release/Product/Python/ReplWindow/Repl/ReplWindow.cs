@@ -225,7 +225,6 @@ namespace Microsoft.VisualStudio.Repl {
             _commands = CreateCommands();
 
             textView.TextBuffer.Properties.AddProperty(typeof(IReplEvaluator), _evaluator);
-            SetDefaultFontSize(ComponentModel, textView);
 
             _uiScheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
@@ -396,28 +395,6 @@ namespace Microsoft.VisualStudio.Repl {
             IVsToolWindowToolbarHost tbh = otbh as IVsToolWindowToolbarHost;
             Guid guidPerfMenuGroup = GuidList.guidReplWindowCmdSet;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdReplToolbar));
-        }
-
-        /// <summary>
-        /// Sets the default font size to match that of a normal editor buffer.
-        /// </summary>
-        private void SetDefaultFontSize(IComponentModel model, IWpfTextView textView) {
-            var formatMapSvc = model.GetService<IClassificationFormatMapService>();
-            var fontsAndColorsSvc = model.GetService<IVsFontsAndColorsInformationService>();
-            var fontCat = new VisualStudio.Editor.FontsAndColorsCategory(
-                    _langSvcGuid,
-                    Microsoft.VisualStudio.Editor.DefGuidList.guidTextEditorFontCategory,
-                    Microsoft.VisualStudio.Editor.DefGuidList.guidTextEditorFontCategory
-                    );
-
-            var fontInfo = fontsAndColorsSvc.GetFontAndColorInformation(fontCat);
-            var fontPrefs = fontInfo.GetFontAndColorPreferences();
-            var font = System.Drawing.Font.FromHfont(fontPrefs.hRegularViewFont);
-
-            var classMap = formatMapSvc.GetClassificationFormatMap(textView);
-            var defaultProps = classMap.DefaultTextProperties;
-            defaultProps = defaultProps.SetFontRenderingEmSize(font.Size);
-            classMap.DefaultTextProperties = defaultProps;
         }
 
         private ITextViewRoleSet/*!*/ CreateRoleSet() {
@@ -1914,7 +1891,7 @@ namespace Microsoft.VisualStudio.Repl {
             
             _isRunning = false;
             ResetCursor();
-                
+
             // we are prepared for processing any postponed submissions there might have been:
             ProcessPendingSubmissions();
         }
