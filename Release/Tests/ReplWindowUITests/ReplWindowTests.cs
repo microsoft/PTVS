@@ -2217,8 +2217,8 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgv() {
-            // project is typed to 2.6 so execute in interactive always executes there
-            if (InterpreterDescription == "Python 2.6 Interactive") {
+            // project is typed to 2.7 so execute in interactive always executes there
+            if (InterpreterDescription == "Python 2.7 Interactive") {
                 var interactive = Prepare();
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvRepl.sln");
 
@@ -2232,8 +2232,8 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgvScriptArgs() {
-            // project is typed to 2.6 so execute in interactive always executes there
-            if (InterpreterDescription == "Python 2.6 Interactive") {
+            // project is typed to 2.7 so execute in interactive always executes there
+            if (InterpreterDescription == "Python 2.7 Interactive") {
                 var interactive = Prepare();
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
@@ -2241,6 +2241,58 @@ $cls
                 Assert.AreNotEqual(null, interactive);
 
                 interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ReplPrompt);
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ExecuteInIPythonReplSysArgv() {
+            // project is typed to 2.7 so execute in interactive always executes there
+            if (InterpreterDescription == "Python 2.7 Interactive") {
+                if (!IPythonSupported) {
+                    return;
+                }
+
+                GetInteractiveOptions().ExecutionMode = "IPython";
+                InteractiveWindow interactive;
+                try {
+                    interactive = Prepare();
+                    var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvRepl.sln");
+
+                    VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    Assert.AreNotEqual(null, interactive);
+
+                    interactive.WaitForTextEnd("Program.py']", ReplPrompt);
+                } finally {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset();
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ExecuteInIPythonReplSysArgvScriptArgs() {
+            // project is typed to 2.7 so execute in interactive always executes there
+            if (InterpreterDescription == "Python 2.7 Interactive") {
+                if (!IPythonSupported) {
+                    return;
+                }
+
+                GetInteractiveOptions().ExecutionMode = "IPython";
+                InteractiveWindow interactive;
+                try {
+                    interactive = Prepare();
+                    var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
+
+                    VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    Assert.AreNotEqual(null, interactive);
+
+                    interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ReplPrompt);
+                } finally {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset();
+                }
             }
         }
 
@@ -2687,6 +2739,39 @@ def g(): pass
         protected override string InterpreterDescription {
             get {
                 return "Python 3.2 Interactive";
+            }
+        }
+
+        protected override string RawInput {
+            get {
+                return "input";
+            }
+        }
+
+        public override string IntFirstMember {
+            get {
+                return "bit_length";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return true;
+            }
+        }
+
+    }
+
+    [TestClass]
+    public class Python33ReplWindowTests : Python3kReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 3.3 Interactive";
             }
         }
 

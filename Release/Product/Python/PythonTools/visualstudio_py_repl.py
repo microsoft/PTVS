@@ -78,6 +78,37 @@ def _cmd(cmd_str):
         return bytes(cmd_str, 'ascii')
     return cmd_str
 
+def _command_line_to_args_list(cmdline):
+    """splits a string into a list using Windows command line syntax."""
+    args_list = []
+
+    if cmdline and cmdline.strip():
+        from ctypes import c_int, c_voidp, c_wchar_p
+        from ctypes import byref, POINTER, WinDLL
+
+        clta = WinDLL('shell32').CommandLineToArgvW
+        clta.argtypes = [c_wchar_p, POINTER(c_int)]
+        clta.restype = POINTER(c_wchar_p)
+
+        lf = WinDLL('kernel32').LocalFree
+        lf.argtypes = [c_voidp]
+
+        pNumArgs = c_int()
+        r = clta(cmdline, byref(pNumArgs))
+        if r:
+            for index in range(0, pNumArgs.value):
+                if sys.hexversion >= 0x030000F0:
+                    argval = r[index]
+                else:
+                    argval = r[index].encode('ascii', 'replace')
+                args_list.append(argval)
+            lf(r)
+        else:
+            sys.stderr.write('Error parsing script arguments:\n')
+            sys.stderr.write(cmdline + '\n')
+
+    return args_list
+
 
 class UnsupportedReplException(Exception):
     def __init__(self, reason):
@@ -524,36 +555,6 @@ class BasicReplBackend(ReplBackend):
             System.Console.SetOut(DotNetOutput(self, True))
             System.Console.SetError(DotNetOutput(self, False))
 
-    def _command_line_to_args_list(self, cmdline):
-        args_list = []
-
-        if cmdline is not None and len(cmdline.strip()) > 0:
-            from ctypes import c_int, c_voidp, c_wchar_p
-            from ctypes import byref, POINTER, WinDLL
-
-            clta = WinDLL('shell32').CommandLineToArgvW
-            clta.argtypes = [c_wchar_p, POINTER(c_int)]
-            clta.restype = POINTER(c_wchar_p)
-
-            lf = WinDLL('kernel32').LocalFree
-            lf.argtypes = [c_voidp]
-
-            pNumArgs = c_int()
-            r = clta(cmdline, byref(pNumArgs))
-            if r:
-                for index in range(0, pNumArgs.value):
-                    if sys.hexversion >= 0x030000F0:
-                        argval = r[index]
-                    else:
-                        argval = r[index].encode('ascii', 'ignore')
-                    args_list.append(argval)
-                lf(r)
-            else:
-                sys.stderr.write('Error parsing script arguments:\n')
-                sys.stderr.write(cmdline + '\n')
-
-        return args_list
-
     def run_file_as_main(self, filename, args):
         f = open(filename, 'rb')
         try:
@@ -561,7 +562,7 @@ class BasicReplBackend(ReplBackend):
         finally:
             f.close()
         sys.argv = [filename]
-        sys.argv.extend(self._command_line_to_args_list(args))
+        sys.argv.extend(_command_line_to_args_list(args))
         self.exec_mod.__file__ = filename
         if sys.platform == 'cli':
             code = python_context.CreateSnippet(contents, None, SourceCodeKind.File)

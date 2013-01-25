@@ -73,7 +73,11 @@ namespace Microsoft.PythonTools {
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.Operator)]
+#if DEV11
+        [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
+#else
         [BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]
+#endif
         internal static ClassificationTypeDefinition OperatorClassificationDefinition = null; // Set via MEF
 
         #endregion
@@ -167,9 +171,7 @@ namespace Microsoft.PythonTools {
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class OperatorFormat : ClassificationFormatDefinition {
-        public OperatorFormat() {
-            ForegroundColor = Color.FromRgb(0x00, 0x80, 0x80);
-        }
+        public OperatorFormat() { }
     }
 
     [Export(typeof(EditorFormatDefinition))]
@@ -179,8 +181,7 @@ namespace Microsoft.PythonTools {
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class GroupingFormat : ClassificationFormatDefinition {
-        public GroupingFormat() {
-        }
+        public GroupingFormat() { }
     }
 
     [Export(typeof(EditorFormatDefinition))]
@@ -190,8 +191,7 @@ namespace Microsoft.PythonTools {
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class CommaFormat : ClassificationFormatDefinition {
-        public CommaFormat() {
-        }
+        public CommaFormat() { }
     }
 
     [Export(typeof(EditorFormatDefinition))]
@@ -201,9 +201,7 @@ namespace Microsoft.PythonTools {
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
     internal sealed class DotFormat : ClassificationFormatDefinition {
-        public DotFormat() {
-            ForegroundColor = Colors.Blue;
-        }
+        public DotFormat() { }
     }
 
     #endregion

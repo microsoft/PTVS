@@ -3,7 +3,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?define ProductName = "WFastCGI script for Python" ?>
   <?define ProductDescription = "WFastCGI script for Python" ?>
-  <?define InstallerGuid=FAF5D5D3-1244-484A-AFC1-0480DBE688D0?>
+  <?define InstallerGuid=7EC607B4-6699-409F-9FF2-F7AC8007C1C8?>
   <?define InstallerUpgradeGuid=3A433B16-7486-48A3-86A7-A56C742A634B?>
 
   <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
@@ -27,6 +27,12 @@
 
     <Condition Message="Python 2.7 must be installed, it can be downloaded from http://www.python.org"> PYTHON_INSTALL_PATH OR Installed </Condition>
     
+    <CustomAction Id="AppCmd_RegCmd"  Property="AppCmd_Reg" Value='"[WindowsFolder]system32\inetsrv\appcmd.exe" set config /section:system.webServer/fastCGI "/+[\[]fullPath=&apos;[PYTHON_INSTALL_PATH]python.exe&apos;, arguments=&apos;[PYTHON_INSTALL_PATH]Scripts\wfastcgi.py&apos;[\]]"' Execute="immediate" />
+    <CustomAction Id="AppCmd_Reg" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
+
+    <CustomAction Id="AppCmd_UnRegCmd"  Property="AppCmd_UnReg" Value='"[WindowsFolder]system32\inetsrv\appcmd.exe" set config /section:system.webServer/fastCGI "/-[\[]fullPath=&apos;[PYTHON_INSTALL_PATH]python.exe&apos;, arguments=&apos;[PYTHON_INSTALL_PATH]Scripts\wfastcgi.py&apos;[\]]"' Execute="immediate" />
+    <CustomAction Id="AppCmd_UnReg" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
+
     <CustomAction Id="ExtensionSetDefaultPerUserFolder" Property="ExtensionPerUserFolder" Value="[PYTHON_INSTALL_PATH]\Scripts" Execute="immediate" />
     <CustomAction Id="ExtensionSetDefaultPerMachineFolder" Property="ExtensionPerMachineFolder" Value="[PYTHON_INSTALL_PATH]\Scripts" Execute="immediate" />
     <CustomAction Id="ExtensionSetPerUserFolder" Property="EXTENSION_INSTALLPATH" Value="[ExtensionPerUserFolder]" Execute="immediate" />
@@ -37,6 +43,10 @@
       <Custom Action="ExtensionSetDefaultPerMachineFolder" After="ExtensionSetDefaultPerUserFolder" />
       <Custom Action="ExtensionSetPerUserFolder" After="ExtensionSetDefaultPerMachineFolder">ACTION="INSTALL" AND (ALLUSERS="" OR (ALLUSERS=2 AND (NOT Privileged)))</Custom>
       <Custom Action="ExtensionSetPerMachineFolder" After="ExtensionSetPerUserFolder">ACTION="INSTALL" AND (ALLUSERS=1 OR (ALLUSERS=2 AND Privileged))</Custom>
+      <Custom Action="AppCmd_RegCmd" After="CostFinalize">NOT INSTALLED</Custom>
+      <Custom Action="AppCmd_Reg" Before="InstallFinalize">NOT INSTALLED</Custom>
+      <Custom Action="AppCmd_UnRegCmd" After="CostFinalize">REMOVE~="ALL"</Custom>
+      <Custom Action="AppCmd_UnReg" Before="InstallFinalize">REMOVE~="ALL"</Custom>
     </InstallExecuteSequence>
 
     <InstallUISequence>

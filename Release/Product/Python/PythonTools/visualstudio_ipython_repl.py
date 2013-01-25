@@ -1,23 +1,27 @@
 ﻿"""Implements REPL support over IPython/ZMQ for VisualStudio"""
 
-from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException
+import sys
+from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
 try:
     import IPython
+except ImportError:
+    exc_value = sys.exc_info()[1]
+    raise UnsupportedReplException('IPython mode requires IPython 0.11 or later: ' + str(exc_value))
+
+try:
+	import IPython.zmq
     from IPython.zmq import kernelmanager
     from IPython.zmq.kernelmanager import ShellSocketChannel, KernelManager, SubSocketChannel, StdInSocketChannel, HBSocketChannel
     from IPython.utils.traitlets import Type
 except ImportError:
-    import sys
     exc_value = sys.exc_info()[1]
-
-    raise UnsupportedReplException('IPython mode requires IPython 0.11 or later: ' + str(exc_value))
+    raise UnsupportedReplException(str(exc_value))
 
 try:
     import thread
 except:
     import _thread as thread    # Renamed as Py3k
 
-import sys
 import re
 from base64 import decodestring
 
@@ -194,26 +198,27 @@ class IPythonBackend(ReplBackend):
             return [unicode('--pylab=inline')]
         return ['--pylab=inline']
         
-    def execute_file_as_main(self, filename):
+    def execute_file_as_main(self, filename, arg_string):
         f = open(filename, 'rb')
         try:
             contents = f.read().replace("\r\n", "\n")
         finally:
             f.close()
+        args = [filename] + _command_line_to_args_list(arg_string)
         code = '''
 import sys
-sys.argv = [%(filename)r]
+sys.argv = %(args)r
 __file__ = %(filename)r
 del sys
 exec(compile(%(contents)r, %(filename)r, 'exec')) 
-''' % {'filename' : filename, 'contents':contents}
+''' % {'filename' : filename, 'contents':contents, 'args': args}
         
         self.run_command(code, True)
 
     def execution_loop(self):
         # launch the startup script if one has been specified
         if self.launch_file:
-            self.execute_file_as_main(self.launch_file)
+            self.execute_file_as_main(self.launch_file, None)
 
         # we've got a bunch of threads setup for communication, we just block
         # here until we're requested to exit.  
@@ -223,8 +228,8 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
     def run_command(self, command, silent = False):
         self.km.shell_channel.execute(command, silent)
         
-    def execute_file(self, filename):
-        self.execute_file_as_main(filename)
+    def execute_file(self, filename, args):
+        self.execute_file_as_main(filename, args)
 
     def exit_process(self):
         self.exit_lock.release()
