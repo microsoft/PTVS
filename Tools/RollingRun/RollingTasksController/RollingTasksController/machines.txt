@@ -1,1 +1,0 @@
-winx64rolling=Windows 7(x64), VS 2010 Ultimate
