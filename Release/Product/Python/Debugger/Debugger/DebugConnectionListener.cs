@@ -15,7 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using Microsoft.VisualStudio;
@@ -81,10 +83,11 @@ namespace Microsoft.PythonTools.Debugger {
                 try {
                     for (; ; ) {
                         var socket = _listenerSocket.Accept();
+                        var stream = new NetworkStream(socket, ownsSocket: true);
                         try {
                             socket.Blocking = true;
-                            string debugId = socket.ReadString();
-                            var result = (ConnErrorMessages)socket.ReadInt();
+                            string debugId = stream.ReadString();
+                            var result = (ConnErrorMessages)stream.ReadInt32();
 
                             lock (_targets) {
                                 Guid debugGuid;
@@ -96,7 +99,7 @@ namespace Microsoft.PythonTools.Debugger {
                                     (targetProcess = weakProcess.Target as PythonProcess) != null) {
 
                                     if (result == ConnErrorMessages.None) {
-                                        targetProcess.Connected(socket);
+                                        targetProcess.Connected(socket, stream);
                                     } else {
                                         var outWin = (IVsOutputWindow)Package.GetGlobalService(typeof(IVsOutputWindow));
 
@@ -129,9 +132,10 @@ namespace Microsoft.PythonTools.Debugger {
                                     }
                                 } else {
                                     Debug.WriteLine("Unknown debug target: {0}", debugId);
-                                    socket.Close();
+                                    stream.Close();
                                 }
                             }
+                        } catch (IOException) {
                         } catch (SocketException) {
                         }
                     }

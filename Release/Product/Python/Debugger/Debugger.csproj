@@ -71,6 +71,7 @@
     <Compile Include="Debugger\DebugEngine\AD7MemoryAddress.cs" />
     <Compile Include="Debugger\DebugEngine\AD7Module.cs" />
     <Compile Include="Debugger\DebugEngine\AD7PendingBreakpoint.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugPortSupplier.cs" />
     <Compile Include="Debugger\DebugEngine\AD7ProgramNode.cs" />
     <Compile Include="Debugger\DebugEngine\AD7ProgramProvider.cs" />
     <Compile Include="Debugger\DebugEngine\AD7Property.cs" />
@@ -85,6 +86,7 @@
     <Compile Include="Debugger\OutputEventArgs.cs" />
     <Compile Include="Debugger\PythonDebugOptions.cs" />
     <Compile Include="Debugger\PythonEvaluationResult.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteProcess.cs" />
     <Compile Include="Debugger\PythonStackFrame.cs" />
     <Compile Include="Debugger\BreakpointEventArgs.cs" />
     <Compile Include="Debugger\ExceptionRaisedEventArgs.cs" />
@@ -95,6 +97,12 @@
     <Compile Include="Debugger\PythonModule.cs" />
     <Compile Include="Debugger\PythonProcess.cs" />
     <Compile Include="Debugger\PythonThread.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugPort.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugProcess.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteDebugProgram.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebug.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebugProcesses.cs" />
+    <Compile Include="Debugger\DebugEngine\Remote\PythonRemoteEnumDebugPrograms.cs" />
     <Compile Include="Debugger\ThreadEventArgs.cs" />
     <Compile Include="Debugger\PythonBreakpoint.cs" />
     <Compile Include="Debugger\TryHandlerWalker.cs" />

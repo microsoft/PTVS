@@ -16,13 +16,13 @@ using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonThread {
-        private readonly int _identity;
+        private readonly long _identity;
         private readonly PythonProcess _process;
         private readonly bool _isWorkerThread;
         private string _name;
         private IList<PythonStackFrame> _frames;
 
-        internal PythonThread(PythonProcess process, int identity, bool isWorkerThread) {
+        internal PythonThread(PythonProcess process, long identity, bool isWorkerThread) {
             _process = process;
             _identity = identity;
             _isWorkerThread = isWorkerThread;
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        internal int Id {
+        internal long Id {
             get {
                 return _identity;
             }

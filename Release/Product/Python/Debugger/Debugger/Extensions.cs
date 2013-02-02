@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
@@ -26,47 +27,101 @@ namespace Microsoft.PythonTools.Debugger {
         ///     
         /// Which supports either UTF-8 or ASCII strings.
         /// </summary>
-        internal static string ReadString(this Socket socket) {
-            byte[] cmd_buffer = new byte[4];
-            if (socket.Receive(cmd_buffer, 1, SocketFlags.None) == 1) {
-                if (cmd_buffer[0] == 'N') {
-                    // null string
-                    return null;
-                }
-                bool isUnicode = cmd_buffer[0] == 'U';
-
-                if (socket.Receive(cmd_buffer) == 4) {
-                    int filenameLen = BitConverter.ToInt32(cmd_buffer, 0);
-                    byte[] buffer = new byte[filenameLen];
-                    int bytesRead = 0;
-                    while (bytesRead != filenameLen) {
-                        bytesRead += socket.Receive(buffer, bytesRead, filenameLen - bytesRead, SocketFlags.None);
-                    } 
-
-                    if (isUnicode) {
-                        return Encoding.UTF8.GetString(buffer);
-                    } else {
-                        char[] chars = new char[buffer.Length];
-                        for (int i = 0; i < buffer.Length; i++) {
-                            chars[i] = (char)buffer[i];
-                        }
-                        return new string(chars);
-                    }
-                } else {
-                    Debug.Assert(false, "Failed to read length");
-                }
-            } else {
-                Debug.Assert(false, "Failed to read unicode/ascii byte");
+        internal static string ReadString(this Stream stream) {
+            int type = stream.ReadByte();
+            if (type < 0) {
+                Debug.Assert(false, "Socket.ReadString failed to read string type");
+                throw new IOException();
             }
-            return null;
+
+            bool isUnicode;
+            switch ((char)type) {
+                case 'N': // null string
+                    return null;
+                case 'U':
+                    isUnicode = true;
+                    break;
+                case 'A':
+                    isUnicode = false;
+                    break;
+                default:
+                    Debug.Assert(false, "Socket.ReadString failed to parse unknown string type " + (char)type);
+                    throw new IOException();
+            }
+                
+            int len = stream.ReadInt32();
+            byte[] buffer = new byte[len];
+            int bytesRead = 0;
+            while (bytesRead != len) {
+                bytesRead += stream.Read(buffer, bytesRead, len - bytesRead);
+            } 
+
+            if (isUnicode) {
+                return Encoding.UTF8.GetString(buffer);
+            } else {
+                char[] chars = new char[buffer.Length];
+                for (int i = 0; i < buffer.Length; i++) {
+                    chars[i] = (char)buffer[i];
+                }
+                return new string(chars);
+            }
         }
 
-        internal static int ReadInt(this Socket socket) {
-            byte[] cmd_buffer = new byte[4];
-            if (socket.Receive(cmd_buffer) == 4) {
-                return BitConverter.ToInt32(cmd_buffer, 0);
+        internal static int ReadInt32(this Stream stream) {
+            return (int)stream.ReadInt64();
+        }
+
+        internal static long ReadInt64(this Stream stream) {
+            byte[] buf = new byte[8];
+            int bufLen = stream.Read(buf, 0, buf.Length);
+            if (bufLen != 8) {
+                Debug.Assert(false, "Socket.ReadInt64 failed to read 8 bytes");
+                throw new IOException();
             }
-            throw new SocketException();
+
+            // Can't use BitConverter because we need to convert big-endian to little-endian here,
+            // and BitConverter.IsLittleEndian is platform-dependent (and usually true).
+            ulong hi = (ulong)(uint)((buf[0] << 0x18) | (buf[1] << 0x10) | (buf[2] << 0x08) | (buf[3] << 0x00));
+            ulong lo = (ulong)(uint)((buf[4] << 0x18) | (buf[5] << 0x10) | (buf[6] << 0x08) | (buf[7] << 0x00));
+            return (long)((hi << 0x20) | lo);
+        }
+
+        internal static int Read(this Stream stream, byte[] b) {
+            return stream.Read(b, 0, b.Length);
+        }
+
+        internal static void WriteInt32(this Stream stream, int x) {
+            stream.WriteInt64(x);
+        }
+
+        internal static void WriteInt64(this Stream stream, long x) {
+            // Can't use BitConverter because we need to convert big-endian to little-endian here,
+            // and BitConverter.IsLittleEndian is platform-dependent (and usually true).
+            uint hi = (uint)((ulong)x >> 0x20);
+            uint lo = (uint)((ulong)x & 0xFFFFFFFFu);
+            byte[] buf = {
+                (byte)((hi >> 0x18) & 0xFFu),
+                (byte)((hi >> 0x10) & 0xFFu),
+                (byte)((hi >> 0x08) & 0xFFu),
+                (byte)((hi >> 0x00) & 0xFFu),
+                (byte)((lo >> 0x18) & 0xFFu),
+                (byte)((lo >> 0x10) & 0xFFu),
+                (byte)((lo >> 0x08) & 0xFFu),
+                (byte)((lo >> 0x00) & 0xFFu)
+            };
+            stream.Write(buf, 0, buf.Length);
+        }
+
+        internal static void WriteString(this Stream stream, string str) {
+            byte[] bytes = Encoding.UTF8.GetBytes(str);
+            stream.WriteInt32(bytes.Length);
+            if (bytes.Length > 0) {
+                stream.Write(bytes);
+            }
+        }
+
+        internal static void Write(this Stream stream, byte[] b) {
+            stream.Write(b, 0, b.Length);
         }
 
         /// <summary>

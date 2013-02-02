@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Debugger {
     public enum ConnErrorMessages {
@@ -28,27 +29,40 @@ namespace Microsoft.PythonTools.Debugger {
         SysNotFound,
         SysSetTraceNotFound,
         SysGetTraceNotFound,
-        PyDebugAttachNotFound
+        PyDebugAttachNotFound,
+        RemoteNetworkError,
+        RemoteSslError,
+        RemoteUnsupportedServer,
+        RemoteSecretMismatch,
+        RemoteAttachRejected
     };
 
     static class ConnErrorExtensions {
+        private static readonly Dictionary<ConnErrorMessages, string> errMessages = new Dictionary<ConnErrorMessages, string>() {
+            { ConnErrorMessages.CannotInjectThread, "Cannot create thread in debuggee process" },
+            { ConnErrorMessages.CannotOpenProcess, "Cannot open process for debugging" },
+            { ConnErrorMessages.InterpreterNotInitialized, "Python interpreter has not been initialized in this process" },
+            { ConnErrorMessages.LoadDebuggerBadDebugger, "Failed to load debugging script (incorrect version of script?)" },
+            { ConnErrorMessages.LoadDebuggerFailed, "Failed to compile debugging script" },
+            { ConnErrorMessages.OutOfMemory, "Out of memory" },
+            { ConnErrorMessages.PythonNotFound, "Python interpreter not found" },
+            { ConnErrorMessages.TimeOut, "Timeout while attaching" },
+            { ConnErrorMessages.UnknownVersion, "Unknown Python version loaded in process" },
+            { ConnErrorMessages.SysNotFound, "sys module not found" },
+            { ConnErrorMessages.SysSetTraceNotFound, "settrace not found in sys module" },
+            { ConnErrorMessages.SysGetTraceNotFound, "gettrace not found in sys module" },
+            { ConnErrorMessages.PyDebugAttachNotFound, "Cannot find PyDebugAttach.dll" },
+            { ConnErrorMessages.RemoteNetworkError, "Network error while connecting to remote debugging server" },
+            { ConnErrorMessages.RemoteSslError, "Could not establish a secure SSL connection to remote debugging server" },
+            { ConnErrorMessages.RemoteUnsupportedServer, "Remote server is not a supported Python Tools for Visual Studio debugging server" },
+            { ConnErrorMessages.RemoteSecretMismatch, "Secret specified in the Qualifier string did not match the remote secret" },
+            { ConnErrorMessages.RemoteAttachRejected, "Remote debugging server rejected request to attach" }
+        };
+
         internal static string GetErrorMessage(this ConnErrorMessages attachRes) {
             string msg;
-            switch (attachRes) {
-                case ConnErrorMessages.CannotInjectThread: msg = "Cannot create thread in debuggee process"; break;
-                case ConnErrorMessages.CannotOpenProcess: msg = "Cannot open process for debugging"; break;
-                case ConnErrorMessages.InterpreterNotInitialized: msg = "Python interpreter has not been initialized in this process"; break;
-                case ConnErrorMessages.LoadDebuggerBadDebugger: msg = "Failed to load debugging script (incorrect version of script?)"; break;
-                case ConnErrorMessages.LoadDebuggerFailed: msg = "Failed to compile debugging script"; break;
-                case ConnErrorMessages.OutOfMemory: msg = "Out of memory"; break;
-                case ConnErrorMessages.PythonNotFound: msg = "Python interpreter not found"; break;
-                case ConnErrorMessages.TimeOut: msg = "Timeout while attaching"; break;
-                case ConnErrorMessages.UnknownVersion: msg = "Unknown Python version loaded in process"; break;
-                case ConnErrorMessages.SysNotFound: msg = "sys module not found"; break;
-                case ConnErrorMessages.SysSetTraceNotFound: msg = "settrace not found in sys module"; break;
-                case ConnErrorMessages.SysGetTraceNotFound: msg = "gettrace not found in sys module"; break;
-                case ConnErrorMessages.PyDebugAttachNotFound: msg = "Cannot find PyDebugAttach.dll at " + attachRes; break;
-                default: msg = "Unknown error"; break;
+            if (!errMessages.TryGetValue(attachRes, out msg)) {
+                msg = "Unknown error";
             }
             return msg;
         }

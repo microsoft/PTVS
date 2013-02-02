@@ -17,6 +17,7 @@ using System.IO;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools {
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     class ProvideDebugEngineAttribute : RegistrationAttribute {
         private readonly string _id, _name;
         private readonly Type _programProvider, _debugEngine;

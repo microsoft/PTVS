@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -58,6 +59,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
+
+        // Python thread IDs can be 64-bit (e.g. when remotely debugging a 64-bit Linux system), but VS debugger APIs only work
+        // with 32-bit identifiers, so we need to set up a mapping system. If the thread ID is small enough to fit into 32 bits,
+        // it is used as is; otherwise, we generate a new one.
+        private readonly Dictionary<uint, long> _threadIdMapping = new Dictionary<uint, long>();
+        private uint _lastGeneratedVsTid;
 
         internal static event EventHandler<AD7EngineEventArgs> EngineBreakpointHit;
         internal static event EventHandler<AD7EngineEventArgs> EngineAttached;
@@ -176,6 +183,30 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
         }
 
+        /// <summary>
+        /// Map a generic 64-bit thread ID to a 32-bit thread ID usable in VS. If necessary (i.e. if the ID does not fit into 32 bits,
+        /// or if it is already used), generates a new fake ID, and establishes the mapping between the two.
+        /// </summary>
+        /// <returns>The original ID if it could be used as is, generated ID otherwise.</returns>
+        internal uint RegisterThreadId(long tid) {
+            uint vsTid;
+
+            if (tid <= uint.MaxValue && !_threadIdMapping.ContainsKey((uint)tid)) {
+               vsTid = (uint)tid;
+            } else {
+                do {
+                    vsTid = ++_lastGeneratedVsTid;
+                } while (_threadIdMapping.ContainsKey(vsTid));
+            }
+
+            _threadIdMapping[vsTid] = tid;
+            return vsTid;
+        }
+
+        internal void UnregisterThreadId(uint vsTid) {
+            _threadIdMapping.Remove(vsTid);
+        }
+
         #region IDebugEngine2 Members
 
         // Attach the debug engine to a program. 
@@ -189,25 +220,34 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 Debug.Fail("Python debugging only supports one program in a process");
                 throw new ArgumentException();
             }
-            
-            int processId = EngineUtils.GetProcessId(rgpPrograms[0]);
+
+            var program = rgpPrograms[0];
+            int processId = EngineUtils.GetProcessId(program);
             if (processId == 0) {
                 // engine only supports system processes
                 Debug.WriteLine("PythonEngine failed to get process id during attach");
                 return VSConstants.E_NOTIMPL;
             }
 
-            EngineUtils.RequireOk(rgpPrograms[0].GetProgramId(out _ad7ProgramId));
+            EngineUtils.RequireOk(program.GetProgramId(out _ad7ProgramId));
 
             // Attach can either be called to attach to a new process, or to complete an attach
             // to a launched process
             if (_process == null) {                
                 // TODO: Where do we get the language version from?
                 _events = ad7Callback;
-                
-                var attachRes = PythonProcess.TryAttach(processId, out _process);
+
+                // Check if we're attaching remotely using the Python remote debugging transport
+                var remoteProgram = program as PythonRemoteDebugProgram;
+                ConnErrorMessages attachRes;
+                if (remoteProgram != null) {
+                    var remotePort = remoteProgram.DebugProcess.DebugPort;
+                    attachRes = PythonRemoteProcess.TryAttach(remotePort.HostName, remotePort.PortNumber, remotePort.Secret, remotePort.UseSsl, SslErrorHandling.PromptUser, out _process);
+                } else {
+                    attachRes = PythonProcess.TryAttach(processId, out _process);
+                }
                 if (attachRes != ConnErrorMessages.None) {
-                    MessageBox.Show("Failed to attach debugger: " + attachRes.GetErrorMessage(), "Python Tools for Visual Studio");
+                    MessageBox.Show("Failed to attach debugger:\n" + attachRes.GetErrorMessage(), null, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return VSConstants.E_FAIL;
                 }
                     
@@ -296,6 +336,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _events = null;
                 _process = null;
                 _ad7ProgramId = Guid.Empty;
+                foreach (var thread in _threads.Values) {
+                    thread.Dispose();
+                }
                 _threads.Clear();
                 _modules.Clear();
 
@@ -949,6 +992,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             // TODO: Thread exit code
             var oldThread = _threads[e.Thread];
             _threads.Remove(e.Thread);
+            oldThread.Dispose();
 
             Send(new AD7ThreadDestroyEvent(0), AD7ThreadDestroyEvent.IID, oldThread);
         }

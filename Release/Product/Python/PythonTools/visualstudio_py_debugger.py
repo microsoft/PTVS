@@ -26,10 +26,13 @@ import traceback
 import types
 import bisect
 try:
-    import visualstudio_py_repl
+    import visualstudio_py_repl as _vspr
 except ImportError:
-    # in the attach scenario, visualstudio_py_repl should already be defined
-    visualstudio_py_repl
+    try:
+        import ptvsd.visualstudio_py_repl as _vspr
+    except ImportError:
+        # in the attach scenario, visualstudio_py_repl should already be defined
+        visualstudio_py_repl
 from os import path
 
 try:
@@ -84,15 +87,12 @@ class _SendLockContextManager(object):
 
     def __exit__(self, exc_type, exc_value, tb):        
         send_lock.release()
-        
         if exc_type is not None:
             detach_threads()
-            
             detach_process()
-
             # swallow the exception, we're no longer debugging
             return True 
-        
+       
 
 _SendLockCtx = _SendLockContextManager()
 
@@ -257,7 +257,7 @@ class ExceptionBreakInfo(object):
                 
                     with _SendLockCtx:
                         conn.send(REQH)
-                        write_string(cur_frame.f_code.co_filename)
+                        write_string(conn, cur_frame.f_code.co_filename)
 
                     # wait for the handler data to be received
                     self.handler_lock.acquire()
@@ -322,10 +322,11 @@ attach_lock = thread.allocate()
 attach_sent_break = False
 
 
-def filename_is_same(filename1, filename2):
-    if path.isabs(filename1) and path.isabs(filename2):
-        return path.normcase(filename1) == path.normcase(filename2)
-    return path.normcase(path.basename(filename1)) == path.normcase(path.basename(filename2))
+def filename_is_same(win_path, local_path):
+    import ntpath
+    if ntpath.isabs(win_path) and path.isabs(local_path):
+        return path.normcase(win_path) == path.normcase(local_path)
+    return path.normcase(ntpath.basename(win_path)) == path.normcase(path.basename(local_path))
 
 
 def update_all_thread_stacks(blocking_thread):
@@ -474,7 +475,6 @@ class Thread(object):
 
         def pop_frame(self):
             self.cur_frame = self.cur_frame.f_back
-
 
     def trace_func(self, frame, event, arg):
         try:
@@ -690,9 +690,10 @@ class Thread(object):
                 if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
                     return report_step_finished(self.id)
                 else:
-                    if stepping == STEPPING_ATTACH_BREAK:
-                        self.reported_process_loaded = True
-                    return report_process_loaded(self.id)
+                    if not DETACHED:
+                        if stepping == STEPPING_ATTACH_BREAK:
+                            self.reported_process_loaded = True
+                        return report_process_loaded(self.id)
         update_all_thread_stacks(self)
         self.block(block_cond)
     
@@ -701,12 +702,12 @@ class Thread(object):
             with _SendLockCtx:
                 sent_break_complete = False
                 global SEND_BREAK_COMPLETE
-                if SEND_BREAK_COMPLETE:
+                if SEND_BREAK_COMPLETE == True or SEND_BREAK_COMPLETE == self.id:
                     # multiple threads could be sending this...
                     SEND_BREAK_COMPLETE = False
                     sent_break_complete = True
                     conn.send(ASBR)
-                    conn.send(struct.pack('i', self.id))
+                    write_int(conn, self.id)
 
             if sent_break_complete:
                 # if we have threads which have not broken yet capture their frame list and 
@@ -1024,31 +1025,30 @@ class Thread(object):
     def send_frame_list(self, frames, thread_name = None):
         with _SendLockCtx:
             conn.send(THRF)
-            conn.send(struct.pack('i',self.id))
-            write_string(thread_name)
+            write_int(conn, self.id)
+            write_string(conn, thread_name)
         
             # send the frame count
-            conn.send(struct.pack('i', len(frames)))
+            write_int(conn, len(frames))
             for firstlineno, lineno, curlineno, name, filename, argcount, variables, frameKind, sourceFile, sourceLine in frames:
                 # send each frame    
-                conn.send(struct.pack('i', firstlineno))
-                conn.send(struct.pack('i', lineno))
-                conn.send(struct.pack('i', curlineno))
+                write_int(conn, firstlineno)
+                write_int(conn, lineno)
+                write_int(conn, curlineno)
         
-                write_string(name)
-                write_string(filename)
-                conn.send(struct.pack('i', argcount))
+                write_string(conn, name)
+                write_string(conn, filename)
+                write_int(conn, argcount)
                 
-                conn.send(struct.pack('i', frameKind))
+                write_int(conn, frameKind)
                 if frameKind == FRAME_KIND_DJANGO:
-                    write_string(sourceFile)
-                    conn.send(struct.pack('i', sourceLine))
+                    write_string(conn, sourceFile)
+                    write_int(conn, sourceLine)
                 
-                conn.send(struct.pack('i', len(variables)))
+                write_int(conn, len(variables))
                 for name, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len in variables:
-                    write_string(name)
-                    
-                    write_object(type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
+                    write_string(conn, name)
+                    write_object(conn, type_obj, safe_repr_obj, hex_repr_obj, type_name, obj_len)
 
     def enum_thread_frames_locally(self):
         global threading
@@ -1114,14 +1114,18 @@ class PendingBreakPoint(object):
 
 PENDING_BREAKPOINTS = set()
 
-def mark_all_threads_for_break():
+def mark_all_threads_for_break(stepping = STEPPING_BREAK):
     THREADS_LOCK.acquire()
     for thread in THREADS.values():
-        thread.stepping = STEPPING_BREAK
+        thread.stepping = stepping
     THREADS_LOCK.release()
 
-class DebuggerLoop(object):    
+class DebuggerLoop(object):
+
+    instance = None
+
     def __init__(self, conn):
+        DebuggerLoop.instance = self
         self.conn = conn
         self.repl_backend = None
         self.command_table = {
@@ -1257,14 +1261,21 @@ class DebuggerLoop(object):
         _start_new_thread(self.connect_to_repl_backend, (port_num,))
 
     def connect_to_repl_backend(self, port_num):
-        DONT_DEBUG.append(visualstudio_py_repl.__file__)
-        self.repl_backend = visualstudio_py_repl.DebugReplBackend(self)
+        DONT_DEBUG.append(_vspr.__file__)
+        self.repl_backend = _vspr.DebugReplBackend(self)
         self.repl_backend.connect_from_debugger(port_num)
         self.repl_backend.execution_loop()
 
+    def connect_to_repl_backend_using_socket(self, sock):
+        DONT_DEBUG.append(_vspr.__file__)
+        self.repl_backend = _vspr.DebugReplBackend(self)
+        self.repl_backend.connect_from_debugger_using_socket(sock)
+        self.repl_backend.execution_loop()
+
     def command_disconnect_repl(self):
-        self.repl_backend.disconnect_from_debugger()
-        self.repl_backend = None
+        if self.repl_backend is not None:
+            self.repl_backend.disconnect_from_debugger()
+            self.repl_backend = None
 
     def command_break_all(self):
         global SEND_BREAK_COMPLETE
@@ -1348,15 +1359,15 @@ class DebuggerLoop(object):
             THREADS_LOCK.release()
             with _SendLockCtx:
                 self.conn.send(SETL)
-                self.conn.send(struct.pack('i', 1))
-                self.conn.send(struct.pack('i', tid))
-                self.conn.send(struct.pack('i', newline))
+                write_int(self.conn, 1)
+                write_int(self.conn, tid)
+                write_int(self.conn, newline)
         except:
             with _SendLockCtx:
                 self.conn.send(SETL)
-                self.conn.send(struct.pack('i', 0))
-                self.conn.send(struct.pack('i', tid))
-                self.conn.send(struct.pack('i', 0))
+                write_int(self.conn, 0)
+                write_int(self.conn, tid)
+                write_int(self.conn, 0)
 
     def command_execute_code(self):
         # execute given text in specified frame
@@ -1438,18 +1449,22 @@ def new_thread_wrapper(func, *posargs, **kwargs):
         if not DETACHED:
             report_thread_exit(cur_thread)
 
-def write_string(string):
+def write_string(conn, string):
     if string is None:
         conn.send(NONE_PREFIX)
     elif isinstance(string, unicode):
         bytes = string.encode('utf8')
+        bytes_len = len(bytes)
         conn.send(UNICODE_PREFIX)
-        conn.send(struct.pack('i', len(bytes)))
-        conn.send(bytes)
+        write_int(conn, len(bytes))
+        if bytes_len > 0:
+            conn.send(bytes)
     else:
+        string_len = len(string)
         conn.send(ASCII_PREFIX)
-        conn.send(struct.pack('i', len(string)))
-        conn.send(string)
+        write_int(conn, string_len)
+        if string_len > 0:
+            conn.send(string)
 
 def read_string(conn):
     str_len = read_int(conn)
@@ -1461,20 +1476,28 @@ def read_string(conn):
     return res.decode('utf8')
 
 def read_int(conn):
-    return struct.unpack('i', conn.recv(4))[0]
+    return struct.unpack('!q', conn.recv(8))[0]
 
+def write_int(conn, i):
+    conn.send(struct.pack('!q', i))
 
 def report_new_thread(new_thread):
     ident = new_thread.id
     with _SendLockCtx:
         conn.send(NEWT)
-        conn.send(struct.pack('i', ident))
+        write_int(conn, ident)
+
+def report_all_threads():
+    THREADS_LOCK.acquire()
+    for cur_thread in THREADS.values():
+        report_new_thread(cur_thread)
+    THREADS_LOCK.release()
 
 def report_thread_exit(old_thread):
     ident = old_thread.id
     with _SendLockCtx:
         conn.send(EXTT)
-        conn.send(struct.pack('i', ident))
+        write_int(conn, ident)
 
 def report_exception(frame, exc_info, tid, break_type):
     exc_type = exc_info[0]
@@ -1491,10 +1514,10 @@ def report_exception(frame, exc_info, tid, break_type):
 
     with _SendLockCtx:
         conn.send(EXCP)
-        write_string(exc_name)
-        conn.send(struct.pack('i', tid))
-        conn.send(struct.pack('i', break_type))
-        write_string(excp_text)
+        write_string(conn, exc_name)
+        write_int(conn, tid)
+        write_int(conn, break_type)
+        write_string(conn, excp_text)
 
 def new_module(frame):
     mod = Module(get_code_filename(frame.f_code))
@@ -1505,40 +1528,40 @@ def new_module(frame):
 def report_module_load(mod):
     with _SendLockCtx:
         conn.send(MODL)
-        conn.send(struct.pack('i', mod.module_id))
-        write_string(mod.filename)
+        write_int(conn, mod.module_id)
+        write_string(conn, mod.filename)
 
 def report_step_finished(tid):
     with _SendLockCtx:
         conn.send(STPD)
-        conn.send(struct.pack('i', tid))
+        write_int(conn, tid)
 
 def report_breakpoint_bound(id):
     with _SendLockCtx:
         conn.send(BRKS)
-        conn.send(struct.pack('i', id))
+        write_int(conn, id)
 
 def report_breakpoint_failed(id):
     with _SendLockCtx:
         conn.send(BRKF)
-        conn.send(struct.pack('i', id))
+        write_int(conn, id)
 
 def report_breakpoint_hit(id, tid):    
     with _SendLockCtx:
         conn.send(BRKH)
-        conn.send(struct.pack('i', id))
-        conn.send(struct.pack('i', tid))
+        write_int(conn, id)
+        write_int(conn, tid)
 
 def report_process_loaded(tid):
     with _SendLockCtx:
         conn.send(LOAD)
-        conn.send(struct.pack('i', tid))
+        write_int(conn, tid)
 
 def report_execution_error(exc_text, execution_id):
     with _SendLockCtx:
         conn.send(EXCE)
-        conn.send(struct.pack('i', execution_id))
-        write_string(exc_text)
+        write_int(conn, execution_id)
+        write_string(conn, exc_text)
 
 def report_execution_exception(execution_id, exc_info):
     try:
@@ -1575,8 +1598,8 @@ def report_execution_result(execution_id, result):
 
     with _SendLockCtx:
         conn.send(EXCR)
-        conn.send(struct.pack('i', execution_id))
-        write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
+        write_int(conn, execution_id)
+        write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
 
 def report_children(execution_id, attributes, indices, indices_are_index, indices_are_enumerate):
     attributes = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in attributes]
@@ -1584,17 +1607,17 @@ def report_children(execution_id, attributes, indices, indices_are_index, indice
 
     with _SendLockCtx:
         conn.send(CHLD)
-        conn.send(struct.pack('i', execution_id))
-        conn.send(struct.pack('i', len(attributes)))
-        conn.send(struct.pack('i', len(indices)))
-        conn.send(struct.pack('i', indices_are_index))
-        conn.send(struct.pack('i', indices_are_enumerate))
+        write_int(conn, execution_id)
+        write_int(conn, len(attributes))
+        write_int(conn, len(indices))
+        write_int(conn, indices_are_index)
+        write_int(conn, indices_are_enumerate)
         for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in attributes:
-            write_string(child_name)
-            write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
+            write_string(conn, child_name)
+            write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
         for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in indices:
-            write_string(child_name)
-            write_object(res_type, obj_repr, hex_repr, type_name, obj_len)
+            write_string(conn, child_name)
+            write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
 
 def get_code_filename(code):
     return path.abspath(code.co_filename)
@@ -1604,14 +1627,14 @@ try:
     NONEXPANDABLE_TYPES.append(long)
 except NameError: pass
 
-def write_object(obj_type, obj_repr, hex_repr, type_name, obj_len):
-    write_string(obj_repr)
-    write_string(hex_repr)
-    write_string(type_name)
+def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len):
+    write_string(conn, obj_repr)
+    write_string(conn, hex_repr)
+    write_string(conn, type_name)
     if obj_type in NONEXPANDABLE_TYPES or obj_len == 0:
-        conn.send(struct.pack('i', 0))
+        write_int(conn, 0)
     else:
-        conn.send(struct.pack('i', 1))
+        write_int(conn, 1)
 
 
 try:
@@ -1647,35 +1670,40 @@ def attach_process(port_num, debug_id, report_and_block = False):
         try:
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             conn.connect(('127.0.0.1', port_num))
-            write_string(debug_id)
-            conn.send(struct.pack('i', 0))  # success
+            write_string(conn, debug_id)
+            write_int(conn, 0)  # success
             break
         except:
             import time
             time.sleep(50./1000)
     else:
         raise Exception('failed to attach')
+    attach_process_from_socket(conn, report_and_block, report_and_block)
 
+def attach_process_from_socket(sock, report = False, block = False):
+    global conn
     global DETACHED
     global attach_sent_break
-    DETACHED = False
+    conn = sock
     attach_sent_break = False
 
     # start the debugging loop
     global debugger_thread_id
     debugger_thread_id = _start_new_thread(DebuggerLoop(conn).loop, ())
 
-    if report_and_block:
+    if report:
         THREADS_LOCK.acquire()
-        main_thread = THREADS[thread.get_ident()]
+        if block:
+            main_thread = THREADS[thread.get_ident()]
         for cur_thread in THREADS.values():
             report_new_thread(cur_thread)
-
         THREADS_LOCK.release()
 
         for filename, module in MODULES:
-            report_module_load(module)            
+            report_module_load(module)
+    DETACHED = False
 
+    if block:
         main_thread.block(lambda: report_process_loaded(thread.get_ident()))
 
     for mod_name, mod_value in sys.modules.items():
@@ -1759,6 +1787,13 @@ def do_wait():
     sys.__stdout__.flush()
     msvcrt.getch()
 
+def enable_output_redirection():
+    sys.stdout = _DebuggerOutput(sys.stdout, is_stdout = True)
+    sys.stderr = _DebuggerOutput(sys.stderr, is_stdout = False)
+
+def connect_repl_using_socket(sock):
+    _start_new_thread(DebuggerLoop.instance.connect_to_repl_backend_using_socket, (sock,))
+
 class _DebuggerOutput(object):
     """file like object which redirects output to the repl window."""
     errors = 'strict'
@@ -1786,8 +1821,8 @@ class _DebuggerOutput(object):
             probe_stack(3)
             with _SendLockCtx:
                 conn.send(OUTP)
-                conn.send(struct.pack('i', thread.get_ident()))
-                write_string(value)
+                write_int(conn, thread.get_ident())
+                write_string(conn, value)
         if self.old_out:
             self.old_out.write(value)
     
@@ -1814,8 +1849,8 @@ class DebuggerBuffer(object):
             str_data = data.decode('utf8')
             with _SendLockCtx:
                 conn.send(OUTP)
-                conn.send(struct.pack('i', thread.get_ident()))
-                write_string(str_data)
+                write_int(conn, thread.get_ident())
+                write_string(conn, str_data)
         self.buffer.write(data)
 
     def flush(self): 
@@ -1890,8 +1925,7 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     attach_process(port_num, debug_id)
 
     if redirect_output:
-        sys.stdout = _DebuggerOutput(sys.stdout, is_stdout = True)
-        sys.stderr = _DebuggerOutput(sys.stderr, is_stdout = False)
+        enable_output_redirection()
 
     # setup the current thread
     cur_thread = new_thread()

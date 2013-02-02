@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            CreateListener(conn, processInfo.RedirectStandardOutput, process);
+            CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
         }
     }
 }

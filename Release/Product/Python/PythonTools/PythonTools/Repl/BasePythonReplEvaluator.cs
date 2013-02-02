@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Repl {
 #endif
 
     internal abstract class BasePythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
-        private ListenerThread _curListener;
+        private CommandProcessorThread _curListener;
         private IReplWindow _window;
         private bool _multipleScopes = true, _attached;
         private PythonInteractiveCommonOptions _options;
@@ -151,23 +151,26 @@ namespace Microsoft.PythonTools.Repl {
 
         protected abstract void Connect();
 
-        protected static void CreateConnection(out Socket conn, out int portNum) {
-            conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
-            conn.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-            conn.Listen(0);
-            portNum = ((IPEndPoint)conn.LocalEndPoint).Port;
+        protected static void CreateConnection(out Socket socket, out int portNum) {
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            socket.Listen(0);
+            portNum = ((IPEndPoint)socket.LocalEndPoint).Port;
         }
 
-        protected void CreateListener(Socket conn, bool redirectStdOutput, Process process) {
-            _curListener = new ListenerThread(this, conn, redirectStdOutput, process);
+        // If stream is null, creates a command processor that will listen for incoming connections on the socket (used for regular REPL and for local debugging REPL).
+        // If stream is not null, creates a command processor that will use that stream as the REPL connection (used for remote debugging REPL).
+        protected void CreateCommandProcessor(Socket socket, Stream stream, bool redirectStdOutput, Process process) {
+            _curListener = new CommandProcessorThread(this, socket, stream, redirectStdOutput, process);
         }
 
-        class ListenerThread {
+        class CommandProcessorThread {
             private readonly BasePythonReplEvaluator _eval;
             private readonly object _socketLock = new object();
             private readonly Process _process;
             internal bool _connected;
             private Socket _socket;
+            private Stream _stream;
             private TaskCompletionSource<ExecutionResult> _completion;
             private string _executionText, _executionFile, _executionExtraArgs;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
@@ -182,9 +185,10 @@ namespace Microsoft.PythonTools.Repl {
             private Thread _socketLockedThread;
 #endif
 
-            public ListenerThread(BasePythonReplEvaluator evaluator, Socket socket, bool redirectOutput, Process process) {
+            public CommandProcessorThread(BasePythonReplEvaluator evaluator, Socket socket, Stream stream, bool redirectOutput, Process process) {
                 _eval = evaluator;
                 _socket = socket;
+                _stream = stream;
                 _process = process;
 
                 var outputThread = new Thread(OutputThread);
@@ -192,6 +196,7 @@ namespace Microsoft.PythonTools.Repl {
                 outputThread.Start();
 
                 if (redirectOutput) {
+                    Debug.Assert(process != null);
                     _process.OutputDataReceived += new DataReceivedEventHandler(StdOutReceived);
                     _process.ErrorDataReceived += new DataReceivedEventHandler(StdErrReceived);
                     _process.EnableRaisingEvents = true;
@@ -244,7 +249,10 @@ namespace Microsoft.PythonTools.Repl {
             public void OutputThread() {
                 byte[] cmd_buffer = new byte[4];
                 try {
-                    _socket = _socket.Accept();
+                    if (_stream == null) {
+                        _socket = _socket.Accept();
+                        _stream = new NetworkStream(_socket, ownsSocket: true);
+                    }
                     using (new SocketLock(this)) {
                         _connected = true;
                     }
@@ -265,8 +273,8 @@ namespace Microsoft.PythonTools.Repl {
                         }
                     }
 
-                    Socket socket;
-                    while ((socket = _socket) != null && socket.Receive(cmd_buffer) == 4) {
+                    Stream stream;
+                    while ((stream = _stream) != null && stream.Read(cmd_buffer) == 4) {
                         using (new SocketLock(this)) {
                             string cmd = CommandtoString(cmd_buffer);
                             Debug.WriteLine("Repl {0} received command: {1}", _eval.DisplayName, cmd);
@@ -288,15 +296,21 @@ namespace Microsoft.PythonTools.Repl {
                                 case "DPNG": DisplayPng(); break;
                                 case "EXIT":
                                     // REPL has exited
-                                    socket.Send(ExitCommandBytes);
+                                    stream.Write(ExitCommandBytes);
                                     return;
                             }
                         }
                     }
+                } catch (IOException) {
+                    _stream = null;
                 } catch (SocketException) {
-                    _socket = null;
+                    _stream = null;
                 } catch (DisconnectedException) {
                 }
+            }
+
+            private Stream Stream {
+                get { return _stream; }
             }
 
             private Socket Socket {
@@ -332,9 +346,10 @@ namespace Microsoft.PythonTools.Repl {
                     input = input != null ? UnfixNewLines(input) : "\n";
                     try {
                         using (new SocketLock(this)) {
-                            Socket.Send(InputLineCommandBytes);
+                            Stream.Write(InputLineCommandBytes);
                             SendString(input);
                         }
+                    } catch (IOException) {
                     } catch (SocketException) {
                     } catch (DisconnectedException) {
                     }
@@ -346,12 +361,12 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void DisplayPng() {
-                int len = _socket.ReadInt();
+                int len = _stream.ReadInt32();
                 byte[] buffer = new byte[len];
                 if (len != 0) {
                     int bytesRead = 0;
                     do {
-                        bytesRead += _socket.Receive(buffer, bytesRead, len - bytesRead, SocketFlags.None);
+                        bytesRead += _stream.Read(buffer, bytesRead, len - bytesRead);
                     } while (bytesRead != len);
                 }
 
@@ -365,9 +380,9 @@ namespace Microsoft.PythonTools.Repl {
 
                 PythonProcess debugProcess;
                 using (new SocketLock(this)) {
-                    Socket.Send(DebugAttachCommandBytes);
+                    Stream.Write(DebugAttachCommandBytes);
 
-                    debugProcess = PythonProcess.AttachRepl(_socket, _process.Id, _eval.AnalyzerProjectLanguageVersion);
+                    debugProcess = PythonProcess.AttachRepl(_stream, _process.Id, _eval.AnalyzerProjectLanguageVersion);
                 }
 
                 // TODO: Surround in SocketUnlock
@@ -423,9 +438,9 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandlePromptChanged() {
                 // prompt change
-                _prompt1 = Socket.ReadString();
-                _prompt2 = Socket.ReadString();
-                bool updateAll = Socket.ReadInt() == 1;
+                _prompt1 = Stream.ReadString();
+                _prompt2 = Stream.ReadString();
+                bool updateAll = Stream.ReadInt32() == 1;
                 if (Window != null) {
                     using (new SocketUnlock(this)) {
                         _eval.UpdatePrompts(updateAll);
@@ -444,7 +459,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleImageDisplay() {
-                string filename = Socket.ReadString();
+                string filename = Stream.ReadString();
                 try {
                     DisplayImage(File.ReadAllBytes(filename));
                 } catch (IOException) {
@@ -471,12 +486,12 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleModuleList() {
-                int moduleCount = Socket.ReadInt();
+                int moduleCount = Stream.ReadInt32();
                 Dictionary<string, string> moduleNames = new Dictionary<string, string>();
                 Dictionary<string, bool> allModules = new Dictionary<string, bool>();
                 for (int i = 0; i < moduleCount; i++) {
-                    string name = Socket.ReadString();
-                    string filename = Socket.ReadString();
+                    string name = Stream.ReadString();
+                    string filename = Stream.ReadString();
                     if (!String.IsNullOrWhiteSpace(filename)) {
                         moduleNames[filename] = name;
                         allModules[name] = true;
@@ -495,15 +510,15 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleSigResult() {
-                int overloadCount = Socket.ReadInt();
+                int overloadCount = Stream.ReadInt32();
                 OverloadDoc[] docs = new OverloadDoc[overloadCount];
                 for (int i = 0; i < overloadCount; i++) {
-                    string doc = Socket.ReadString();
-                    int paramCount = Socket.ReadInt();
+                    string doc = Stream.ReadString();
+                    int paramCount = Stream.ReadInt32();
 
                     ParameterResult[] parameters = new ParameterResult[paramCount];
                     for (int curParam = 0; curParam < paramCount; curParam++) {
-                        string name = Socket.ReadString();
+                        string name = Stream.ReadString();
                         parameters[curParam] = new ParameterResult(name);
                     }
                     docs[i] = new OverloadDoc(doc, parameters);
@@ -513,7 +528,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleMemberResult() {
-                string typeName = Socket.ReadString();
+                string typeName = Stream.ReadString();
 
                 var instDict = ReadMemberDict();
                 var typeDict = ReadMemberDict();
@@ -528,7 +543,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleOutput() {
-                string data = Socket.ReadString();
+                string data = Stream.ReadString();
                 if (data != null) {
                     using (new SocketUnlock(this)) {
                         Window.WriteOutput(FixNewLines(data));
@@ -537,7 +552,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleError() {
-                string data = Socket.ReadString();
+                string data = Stream.ReadString();
                 using (new SocketUnlock(this)) {
                     Window.WriteError(FixNewLines(data));
                 }
@@ -592,6 +607,9 @@ namespace Microsoft.PythonTools.Repl {
                     } catch (DisconnectedException) {
                         _eval._window.WriteError(_noReplProcess);
                         return ExecutionResult.Failed;
+                    } catch (IOException) {
+                        _eval._window.WriteError(_noReplProcess);
+                        return ExecutionResult.Failed;
                     } catch (SocketException) {
                         _eval._window.WriteError(_noReplProcess);
                         return ExecutionResult.Failed;
@@ -605,9 +623,11 @@ namespace Microsoft.PythonTools.Repl {
             static extern bool AllowSetForegroundWindow(int dwProcessId);
 
             private void SendExecuteText(string text) {
-                AllowSetForegroundWindow(_process.Id);
+                if (_process != null) {
+                    AllowSetForegroundWindow(_process.Id);
+                }
 
-                Socket.Send(RunCommandBytes);
+                Stream.Write(RunCommandBytes);
 
                 // normalize line endings to \n which is all older versions of CPython can handle.
                 text = text.Replace("\r\n", "\n");
@@ -633,25 +653,27 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void SendExecuteFile(string filename, string extraArgs) {
-                AllowSetForegroundWindow(_process.Id);
+                if (_process != null) {
+                    AllowSetForegroundWindow(_process.Id);
+                }
 
-                Socket.Send(ExecuteFileCommandBytes);
+                Stream.Write(ExecuteFileCommandBytes);
                 SendString(filename);
                 SendString(extraArgs ?? String.Empty);
             }
 
             public void AbortCommand() {
                 using (new SocketLock(this)) {
-                    Socket.Send(AbortCommandBytes);
+                    Stream.Write(AbortCommandBytes);
                 }
             }
 
-            public void SetThreadAndFrameCommand(int thread, int frame, FrameKind frameKind) {
+            public void SetThreadAndFrameCommand(long thread, int frame, FrameKind frameKind) {
                 using (new SocketLock(this)) {
-                    Socket.Send(SetThreadAndFrameCommandBytes);
-                    Socket.Send(BitConverter.GetBytes(thread));
-                    Socket.Send(BitConverter.GetBytes(frame));
-                    Socket.Send(BitConverter.GetBytes((int)frameKind));
+                    Stream.Write(SetThreadAndFrameCommandBytes);
+                    Stream.WriteInt64(thread);
+                    Stream.WriteInt32(frame);
+                    Stream.WriteInt32((int)frameKind);
                     _currentScope = "<CurrentFrame>";
                 }
             }
@@ -662,8 +684,10 @@ namespace Microsoft.PythonTools.Repl {
                         return new OverloadDoc[0];
                     }
                     try {
-                        Socket.Send(GetSignaturesCommandBytes);
+                        Stream.Write(GetSignaturesCommandBytes);
                         SendString(text);
+                    } catch (IOException) {
+                        return new OverloadDoc[0];
                     } catch (SocketException) {
                         return new OverloadDoc[0];
                     }
@@ -686,8 +710,10 @@ namespace Microsoft.PythonTools.Repl {
                         return new MemberResult[0];
                     }
                     try {
-                        Socket.Send(GetMembersCommandBytes);
+                        Stream.Write(GetMembersCommandBytes);
                         SendString(text);
+                    } catch (IOException) {
+                        return new MemberResult[0];
                     } catch (SocketException) {
                         return new MemberResult[0];
                     }
@@ -723,7 +749,7 @@ namespace Microsoft.PythonTools.Repl {
                 try {
                     using (new SocketLock(this)) {
                         if (!String.IsNullOrWhiteSpace(scopeName)) {
-                            Socket.Send(SetModuleCommandBytes);
+                            Stream.Write(SetModuleCommandBytes);
                             SendString(scopeName);
                             _currentScope = scopeName;
 
@@ -732,6 +758,8 @@ namespace Microsoft.PythonTools.Repl {
                             _eval._window.WriteLine(_currentScope);
                         }
                     }
+                } catch (IOException) {
+                    _eval._window.WriteError("Cannot change module, interactive window is disconnected.");
                 } catch (SocketException) {
                     _eval._window.WriteError("Cannot change module, interactive window is disconnected.");
                 }
@@ -740,7 +768,7 @@ namespace Microsoft.PythonTools.Repl {
             public IEnumerable<string> GetAvailableUserScopes() {
                 if (_connected) {   // if startup's taking a long time we won't be connected yet
                     using (new SocketLock(this)) {
-                        Socket.Send(GetModulesListCommandBytes);
+                        Stream.Write(GetModulesListCommandBytes);
                     }
 
                     _completionResultEvent.WaitOne(1000);
@@ -755,7 +783,7 @@ namespace Microsoft.PythonTools.Repl {
             public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
                 if (_connected) {   // if startup's taking a long time we won't be connected yet
                     using (new SocketLock(this)) {
-                        Socket.Send(GetModulesListCommandBytes);
+                        Stream.Write(GetModulesListCommandBytes);
                     }
 
                     _completionResultEvent.WaitOne(1000);
@@ -772,13 +800,14 @@ namespace Microsoft.PythonTools.Repl {
                 if (Monitor.TryEnter(_socketLock, 200)) {
                     try {
                         using (new SocketLock(this)) {
-                            if (_socket != null && _socket.Connected) {
-                                var socket = Socket;
-                                _socket = null;
+                            if (_stream != null && _socket.Connected) {
+                                var stream = Stream;
+                                _stream = null;
 
                                 try {
-                                    socket.Send(ExitCommandBytes);
-                                    socket.Close();
+                                    stream.Write(ExitCommandBytes);
+                                    stream.Close();
+                                } catch (IOException) {
                                 } catch (SocketException) {
                                 }
                             }
@@ -788,7 +817,7 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
-                if (!_process.HasExited) {
+                if (_process != null && !_process.HasExited) {
                     try {
                         _process.Kill();
                     } catch (InvalidOperationException) {
@@ -803,16 +832,16 @@ namespace Microsoft.PythonTools.Repl {
 
             private void SendString(string text) {
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(text);
-                Socket.Send(BitConverter.GetBytes(bytes.Length));
-                Socket.Send(bytes);
+                Stream.WriteInt32(bytes.Length);
+                Stream.Write(bytes);
             }
 
             private Dictionary<string, string> ReadMemberDict() {
-                int memCount = Socket.ReadInt();
+                int memCount = Stream.ReadInt32();
                 var dict = new Dictionary<string, string>(memCount);
                 for (int i = 0; i < memCount; i++) {
-                    string memName = Socket.ReadString();
-                    string typeName = Socket.ReadString();
+                    string memName = Stream.ReadString();
+                    string typeName = Stream.ReadString();
                     dict[memName] = typeName;
                 }
 
@@ -833,9 +862,9 @@ namespace Microsoft.PythonTools.Repl {
             /// (output, execution completing, etc...).
             /// </summary>
             struct SocketLock : IDisposable {
-                private readonly ListenerThread _evaluator;
+                private readonly CommandProcessorThread _evaluator;
 
-                public SocketLock(ListenerThread evaluator) {
+                public SocketLock(CommandProcessorThread evaluator) {
                     Monitor.Enter(evaluator._socketLock);
 #if DEBUG
                     Debug.Assert(evaluator._socketLockedThread == null);
@@ -858,9 +887,9 @@ namespace Microsoft.PythonTools.Repl {
             /// work w/ the evaluator that we don't want to deadlock.
             /// </summary>
             struct SocketUnlock : IDisposable {
-                private readonly ListenerThread _evaluator;
+                private readonly CommandProcessorThread _evaluator;
 
-                public SocketUnlock(ListenerThread evaluator) {
+                public SocketUnlock(CommandProcessorThread evaluator) {
 #if DEBUG
                     Debug.Assert(evaluator._socketLockedThread == Thread.CurrentThread);
                     evaluator._socketLockedThread = null;
@@ -1026,7 +1055,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public void SetThreadAndFrameCommand(int thread, int frame, FrameKind frameKind) {
+        public void SetThreadAndFrameCommand(long thread, int frame, FrameKind frameKind) {
             if (_curListener != null) {
                 _curListener.SetThreadAndFrameCommand(thread, frame, frameKind);
             }

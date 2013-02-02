@@ -15,11 +15,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -42,6 +45,7 @@ namespace Microsoft.PythonTools.Repl {
 
         private const string currentPrefix = "=> ";
         private const string notCurrentPrefix = "   ";
+
 
         public PythonDebugReplEvaluator() {
             AD7Engine.EngineAttached += new EventHandler<AD7EngineEventArgs>(OnEngineAttached);
@@ -531,7 +535,8 @@ namespace Microsoft.PythonTools.Repl {
 
     internal class PythonDebugProcessReplEvaluator : BasePythonReplEvaluator {
         private PythonProcess _process;
-        private int _threadId, _frameId;
+        private long _threadId;
+        private int _frameId;
         private PythonLanguageVersion _languageVersion;
 
         public PythonDebugProcessReplEvaluator(PythonProcess process) {
@@ -550,7 +555,7 @@ namespace Microsoft.PythonTools.Repl {
             get { return _process.Id; }
         }
 
-        public int ThreadId {
+        public long ThreadId {
             get { return _threadId; }
         }
 
@@ -597,14 +602,46 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         protected override void Connect() {
-            Socket conn;
-            int portNum;
-            CreateConnection(out conn, out portNum);
+            Socket socket;
+            var remoteProcess = _process as PythonRemoteProcess;
+            if (remoteProcess == null) {
+                int portNum;
+                CreateConnection(out socket, out portNum);
+                Process proc = System.Diagnostics.Process.GetProcessById(_process.Id);
+                CreateCommandProcessor(socket, null, false, proc);
+                _process.ConnectRepl(portNum);
+            } else {
+                Stream stream;
+                // Ignore SSL errors, since user was already prompted about them and chose to ignore them when he attached to this process.
+                if (remoteProcess.TryConnect(SslErrorHandling.Ignore, out socket, out stream) != ConnErrorMessages.None) {
+                    throw new InvalidOperationException();
+                }
 
-            Process proc = System.Diagnostics.Process.GetProcessById(_process.Id);
-            CreateListener(conn, false, proc);
+                bool connected = false;
+                try {
+                    stream.Write(PythonRemoteProcess.ReplCommandBytes);
 
-            _process.ConnectRepl(portNum);
+                    var buf = new byte[8];
+                    int bufLen = stream.Read(buf, 0, PythonRemoteProcess.Accepted.Length);
+                    string attachResp = Encoding.ASCII.GetString(buf, 0, bufLen);
+                    if (attachResp != PythonRemoteProcess.Accepted) {
+                        throw new InvalidOperationException();
+                    }
+
+                    connected = true;
+                } finally {
+                    if (!connected) {
+                        if (stream != null) {
+                            stream.Close();
+                        }
+                        socket.Close();
+                        socket = null;
+                        stream = null;
+                    }
+                }
+
+                CreateCommandProcessor(socket, stream, false, null);
+            }
         }
 
         protected override void OnConnected() {
