@@ -33,6 +33,19 @@ except ImportError:
 from os import path
 
 try:
+    import stackless
+except ImportError:
+    stackless = None    
+
+if stackless:
+    try:
+        # For stackless you will need to turn on tracing
+        # for every tasklet created. Unless you set this 
+        # global tracing flag. 
+        stackless.globaltrace = True
+    except AttributeError:
+        pass
+try:
     xrange
 except:
     xrange = range
@@ -455,6 +468,11 @@ class Thread(object):
         self.trace_func_stack = []
         self.reported_process_loaded = False
         self.django_stepping = None
+
+        # stackless changes        
+        if stackless is not None:            
+            stackless.set_schedule_callback( self.context_dispatcher )
+
         if sys.platform == 'cli':
             self.frames = []
     
@@ -475,15 +493,21 @@ class Thread(object):
         def pop_frame(self):
             self.cur_frame = self.cur_frame.f_back
 
+    def context_dispatcher(self, old, new):
+        self.stepping = STEPPING_NONE
 
     def trace_func(self, frame, event, arg):
         try:
+            # if should_debug_code(frame.f_code) is not true during attach
+            # the current frame is None and a pop_frame will cause an exception and 
+            # break the debugger
+            if self.cur_frame is None:
+                # happens during attach, we need frame for blocking
+                self.push_frame(frame)
             if self.stepping == STEPPING_BREAK and should_debug_code(frame.f_code):
-                if self.cur_frame is None:
-                    # happens during attach, we need frame for blocking
-                    self.push_frame(frame)
-
                 if self.detach:
+                    if stackless is not None:
+                        stackless.set_schedule_callback( None )
                     sys.settrace(None)
                     return None
 

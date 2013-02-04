@@ -5,6 +5,13 @@ the second argument.
 """
 
 import sys
+
+try:
+    import stackless
+    stackless.globaltrace = True
+except:
+    pass
+    
 import vspyprof
 import os
 
