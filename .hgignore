@@ -6,4 +6,4 @@ bin/*
 *.sdf
 *.opensdf
 Binaries/*
-TestResults/* 
+TestResults/*
