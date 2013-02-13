@@ -626,7 +626,9 @@
   </ItemGroup>
   <ItemGroup>
     <!-- VSIX -->
-    <Content Include="ptvsd\attach_server.py" />
+    <Content Include="ptvsd\attach_server.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="BuiltinScraper.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -638,7 +640,9 @@
       <SubType>Designer</SubType>
       <OutputSubPath>FromExistingCode</OutputSubPath>
     </None>
-    <Content Include="ptvsd\__init__.py" />
+    <Content Include="ptvsd\__init__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Templates\Projects\FromExistingCode\FromExistingCode.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
