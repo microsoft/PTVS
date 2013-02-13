@@ -15,7 +15,7 @@
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class ComboBox : AutomationWrapper {
+    public class ComboBox : AutomationWrapper {
         public ComboBox(AutomationElement element)
             : base(element) {            
         }

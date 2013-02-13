@@ -16,7 +16,7 @@ using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class CheckBox : AutomationWrapper {
+    public class CheckBox : AutomationWrapper {
         public string Name { get; set; }
 
         public CheckBox(AutomationElement element, CheckListView parent)

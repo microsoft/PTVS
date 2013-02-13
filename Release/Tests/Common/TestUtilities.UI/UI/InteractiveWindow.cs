@@ -33,7 +33,7 @@ namespace TestUtilities.UI {
     using IReplWindowProvider = IInteractiveWindowProvider;
 #endif
 
-    class InteractiveWindow : EditorWindow {
+    public class InteractiveWindow : EditorWindow {
         private sealed class ReplWindowInfo {
             public readonly ManualResetEvent Idle = new ManualResetEvent(false);
             public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
@@ -263,7 +263,7 @@ namespace TestUtilities.UI {
             WaitForReadyState(10000);
         }
 
-        public ReplWindow ReplWindow {
+        internal ReplWindow ReplWindow {
             get {
                 return _replWindow;
             }

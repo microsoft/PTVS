@@ -19,7 +19,7 @@ namespace TestUtilities.UI {
     /// <summary>
     /// Wrapps VS's File->New Project dialog.
     /// </summary>
-    class NewProjectDialog  : AutomationWrapper {
+    public class NewProjectDialog  : AutomationWrapper {
         private TreeView _installedTemplates;
         private ListView _projectTypesTable;
 

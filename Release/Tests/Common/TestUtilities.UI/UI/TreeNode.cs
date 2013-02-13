@@ -16,7 +16,7 @@ using System.Windows.Automation;
 
 namespace TestUtilities.UI
 {
-    class TreeNode : AutomationWrapper
+    public class TreeNode : AutomationWrapper
     {
         public TreeNode(AutomationElement element)
             : base(element) {

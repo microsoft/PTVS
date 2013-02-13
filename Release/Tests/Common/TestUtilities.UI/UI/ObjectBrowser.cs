@@ -16,7 +16,7 @@ using System.Windows.Automation;
 
 namespace TestUtilities.UI
 {
-    class ObjectBrowser : AutomationWrapper
+    public class ObjectBrowser : AutomationWrapper
     {        
         private TypeBrowserPane _typeBrowserPane;
         private TypeNavigatorPane _typeNavigatorPane;

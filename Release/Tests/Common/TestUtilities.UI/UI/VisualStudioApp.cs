@@ -29,7 +29,7 @@ namespace TestUtilities.UI {
     /// <summary>
     /// Provides wrappers for automating the VisualStudio UI.
     /// </summary>
-    class VisualStudioApp : AutomationWrapper {
+    public class VisualStudioApp : AutomationWrapper {
         private SolutionExplorerTree _solutionExplorerTreeView;
         private ObjectBrowser _objectBrowser;
         private readonly DTE _dte;

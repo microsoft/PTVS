@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         /// It is exposed solely to enable querying it for endpoint information and connectivity status.</remarks>
         public static ConnErrorMessages TryConnect(string hostName, ushort portNumber, string secret, bool useSsl, SslErrorHandling sslErrorHandling, out Socket socket, out Stream stream) {
             stream = null;
-            socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             bool connected = false;
             try {
                 socket.Connect(hostName, portNumber);

@@ -15,7 +15,7 @@
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class SolutionExplorerTree : TreeView {
+    public class SolutionExplorerTree : TreeView {
         public SolutionExplorerTree(AutomationElement element)
             : base(element) {
         }

@@ -29,7 +29,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 
 namespace TestUtilities.UI {
-    class EditorWindow : AutomationWrapper {
+    public class EditorWindow : AutomationWrapper {
         private readonly string _filename;
 
         public EditorWindow(string filename, AutomationElement element)

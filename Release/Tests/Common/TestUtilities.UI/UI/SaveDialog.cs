@@ -17,7 +17,7 @@ using System.Windows.Automation;
 using System.Windows.Input;
 
 namespace TestUtilities.UI {
-    class SaveDialog : AutomationWrapper {
+    public class SaveDialog : AutomationWrapper {
         public SaveDialog(IntPtr hwnd)
             : base(AutomationElement.FromHandle(hwnd)) {
         }

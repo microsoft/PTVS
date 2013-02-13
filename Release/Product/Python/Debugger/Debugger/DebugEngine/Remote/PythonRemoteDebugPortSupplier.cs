@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
 
             Match m = _portNameRegex.Match(name);
             if (!m.Success) {
-                return new FormatException().HResult;
+                return Marshal.GetHRForException(new FormatException());
             }
 
             string secret = m.Groups["secret"].Value;
@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             ushort portNum = _defaultPort;
             if (m.Groups["portNum"].Success) {
                 if (!ushort.TryParse(m.Groups["portNum"].Value, out portNum)) {
-                    return new FormatException().HResult;
+                    return Marshal.GetHRForException(new FormatException());
                 }
             }
 

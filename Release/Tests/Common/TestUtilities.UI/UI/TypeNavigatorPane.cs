@@ -16,7 +16,7 @@ using System.Windows.Automation;
 
 namespace TestUtilities.UI
 {
-    class TypeNavigatorPane : TreeView
+    public class TypeNavigatorPane : TreeView
     {
         public TypeNavigatorPane(AutomationElement element)
             : base(element) { 

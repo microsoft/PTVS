@@ -16,7 +16,7 @@ using System.Windows.Automation;
 
 namespace TestUtilities.UI
 {
-    class Button : AutomationWrapper
+    public class Button : AutomationWrapper
     {
         public Button(AutomationElement element)
             : base(element) { 

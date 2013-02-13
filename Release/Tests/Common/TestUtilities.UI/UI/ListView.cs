@@ -18,7 +18,7 @@ using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class ListView : AutomationWrapper {
+    public class ListView : AutomationWrapper {
         private List<ListItem> _items;
         private Header _header;
 

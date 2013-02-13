@@ -17,7 +17,7 @@ using System.Diagnostics;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class AutomationWrapper {
+    public class AutomationWrapper {
         private readonly AutomationElement _element;
         
         public AutomationWrapper(AutomationElement element) {
@@ -81,7 +81,7 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        internal AutomationElement FindButton(string text) {
+        public AutomationElement FindButton(string text) {
             return Element.FindFirst(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -108,7 +108,7 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        internal AutomationElement FindFirstByControlType(ControlType ctlType) {
+        public AutomationElement FindFirstByControlType(ControlType ctlType) {
             return Element.FindFirst(
                 TreeScope.Descendants,
                 new PropertyCondition(
@@ -123,7 +123,7 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        internal AutomationElement FindFirstByNameAndAutomationId(string name, string automationId) {
+        public AutomationElement FindFirstByNameAndAutomationId(string name, string automationId) {
             return Element.FindFirst(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -144,7 +144,7 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        internal AutomationElement FindFirstByControlType(string name, ControlType ctlType) {
+        public AutomationElement FindFirstByControlType(string name, ControlType ctlType) {
             return Element.FindFirst(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -165,7 +165,7 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        internal AutomationElementCollection FindAllByControlType(ControlType ctlType) {
+        public AutomationElementCollection FindAllByControlType(ControlType ctlType) {
             return Element.FindAll(
                 TreeScope.Descendants,
                 new PropertyCondition(
@@ -180,7 +180,7 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Invokes the specified invokable item.  The item must support the invoke pattern.
         /// </summary>
-        internal static void Invoke(AutomationElement button) {
+        public static void Invoke(AutomationElement button) {
             var invokePattern = (InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern);
 
             invokePattern.Invoke();
@@ -190,7 +190,7 @@ namespace TestUtilities.UI {
         /// Selects the selectable item.  The item must support the Selection item pattern.
         /// </summary>
         /// <param name="selectionItem"></param>
-        internal static void Select(AutomationElement selectionItem) {
+        public static void Select(AutomationElement selectionItem) {
             var selectPattern = (SelectionItemPattern)selectionItem.GetCurrentPattern(SelectionItemPattern.Pattern);
 
             selectPattern.Select();
@@ -200,7 +200,7 @@ namespace TestUtilities.UI {
         /// Expands the selected item.  The item must support the expand/collapse pattern.
         /// </summary>
         /// <param name="node"></param>
-        internal static void EnsureExpanded(AutomationElement node) {
+        public static void EnsureExpanded(AutomationElement node) {
             ExpandCollapsePattern pat = (ExpandCollapsePattern)node.GetCurrentPattern(ExpandCollapsePattern.Pattern);
             if (pat.Current.ExpandCollapseState == ExpandCollapseState.Collapsed) {
                 pat.Expand();

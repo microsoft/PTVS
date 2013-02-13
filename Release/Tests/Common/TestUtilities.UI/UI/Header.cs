@@ -17,7 +17,7 @@ using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class Header : AutomationWrapper {
+    public class Header : AutomationWrapper {
         private Dictionary<string, int> _columns = new Dictionary<string, int>();
         public Dictionary<string, int> Columns {
             get {

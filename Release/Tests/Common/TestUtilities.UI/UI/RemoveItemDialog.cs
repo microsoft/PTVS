@@ -19,7 +19,7 @@ namespace TestUtilities.UI {
     /// <summary>
     /// Wraps the Delete/Remove/Cancel dialog displayed when removing something from a hierarchy window (such as the solution explorer).
     /// </summary>
-    class RemoveItemDialog : AutomationWrapper {
+    public class RemoveItemDialog : AutomationWrapper {
         public RemoveItemDialog(IntPtr hwnd)
             : base(AutomationElement.FromHandle(hwnd)) {
         }

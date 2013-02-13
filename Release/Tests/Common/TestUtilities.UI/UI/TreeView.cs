@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class TreeView : AutomationWrapper {
+    public class TreeView : AutomationWrapper {
 
         public TreeView(AutomationElement element)
             : base(element) {

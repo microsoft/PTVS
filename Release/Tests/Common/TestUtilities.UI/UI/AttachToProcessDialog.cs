@@ -18,7 +18,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class AttachToProcessDialog : AutomationWrapper {
+    public class AttachToProcessDialog : AutomationWrapper {
         private ListView _processList;
         private int _hwnd;
 

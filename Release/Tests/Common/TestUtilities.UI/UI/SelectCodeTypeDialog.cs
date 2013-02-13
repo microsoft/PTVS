@@ -16,7 +16,7 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class SelectCodeTypeDialog : AutomationWrapper {
+    public class SelectCodeTypeDialog : AutomationWrapper {
         private CheckListView _availableCodeTypes;
 
         public SelectCodeTypeDialog(AutomationElement element) : base(element) {

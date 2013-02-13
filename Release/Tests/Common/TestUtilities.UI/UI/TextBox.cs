@@ -16,7 +16,7 @@ using System.Windows.Automation;
 
 namespace TestUtilities.UI
 {
-    class TextBox : AutomationWrapper
+    public class TextBox : AutomationWrapper
     {
         public TextBox(AutomationElement element)
             : base(element) { 
