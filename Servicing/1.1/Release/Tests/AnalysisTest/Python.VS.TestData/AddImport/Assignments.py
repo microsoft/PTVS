@@ -1,1 +1,0 @@
-[i for i in None]

@@ -1,275 +1,0 @@
-(dp0
-Vmembers
-p1
-(dp2
-Vset_wakeup_fd
-p3
-(dp4
-Vkind
-p5
-Vfunction
-p6
-sVvalue
-p7
-(dp8
-Voverloads
-p9
-(tsVdoc
-p10
-VNOT YET IMPLEMENTED\u000a\u000aset_wakeup_fd(fd) -> fd\u000a\u000aSets the fd to be written to (with '\u005c0') when a signal\u000acomes in.  A library can use this to wakeup select or poll.\u000aThe previous fd is returned.\u000a\u000aThe fd must be non-blocking.
-p11
-sssVSIGTERM
-p12
-(dp13
-g5
-Vdata
-p14
-sg7
-(dp15
-Vtype
-p16
-(V__builtin__
-p17
-Vint
-p18
-tp19
-sssVdefault_int_handler
-p20
-(dp21
-g5
-g6
-sg7
-(dp22
-g9
-((dp23
-Vret_type
-p24
-(g17
-Vobject
-p25
-tp26
-sVargs
-p27
-(lp28
-(dp29
-g16
-(g17
-g18
-tp30
-sVname
-p31
-Vsignalnum
-p32
-sa(dp33
-g16
-(g17
-Vframe
-p34
-tp35
-sg31
-Vframe
-p36
-sastp37
-sg10
-Vdefault_int_handler(...)\u000a\u000aThe default handler for SIGINT installed by Python.\u000aIt raises KeyboardInterrupt.
-p38
-sssVSIGFPE
-p39
-(dp40
-g5
-g14
-sg7
-(dp41
-g16
-(g17
-g18
-tp42
-sssV__doc__
-p43
-(dp44
-g5
-g14
-sg7
-(dp45
-g16
-(g17
-Vstr
-p46
-tp47
-sssVSIG_IGN
-p48
-(dp49
-g5
-g14
-sg7
-(dp50
-g16
-(g17
-g18
-tp51
-sssV__package__
-p52
-(dp53
-g5
-g14
-sg7
-(dp54
-g16
-(g17
-VNoneType
-p55
-tp56
-sssVSIGILL
-p57
-(dp58
-g5
-g14
-sg7
-(dp59
-g16
-(g17
-g18
-tp60
-sssVsignal
-p61
-(dp62
-g5
-g6
-sg7
-(dp63
-g9
-((dp64
-g24
-(g17
-g25
-tp65
-sg27
-(lp66
-(dp67
-g16
-(g17
-g18
-tp68
-sg31
-Vsig
-p69
-sa(dp70
-g16
-(g17
-g25
-tp71
-sg31
-Vaction
-p72
-sastp73
-sg10
-Vsignal(sig, action) -> action\u000a\u000aSet the action for the given signal.  The action can be SIG_DFL,\u000aSIG_IGN, or a callable Python object.  The previous action is\u000areturned.  See getsignal() for possible return values.\u000a\u000a*** IMPORTANT NOTICE ***\u000aA signal handler function is called with two arguments:\u000athe first is the signal number, the second is the interrupted stack frame.
-p74
-sssVSIGABRT
-p75
-(dp76
-g5
-g14
-sg7
-(dp77
-g16
-(g17
-g18
-tp78
-sssV__name__
-p79
-(dp80
-g5
-g14
-sg7
-(dp81
-g16
-(g17
-g46
-tp82
-sssVSIG_DFL
-p83
-(dp84
-g5
-g14
-sg7
-(dp85
-g16
-(g17
-g18
-tp86
-sssVgetsignal
-p87
-(dp88
-g5
-g6
-sg7
-(dp89
-g9
-((dp90
-g24
-(g17
-g25
-tp91
-sg27
-(lp92
-(dp93
-g16
-(g17
-g18
-tp94
-sg31
-Vsignalnum
-p95
-sastp96
-sg10
-Vgetsignal(sig) -> action\u000a\u000aReturn the current action for the given signal.  The return value can be:\u000aSIG_IGN -- if the signal is being ignored\u000aSIG_DFL -- if the default action for the signal is in effect\u000aNone -- if an unknown handler is in effect\u000aanything else -- the callable Python object used as a handler
-p97
-sssVSIGINT
-p98
-(dp99
-g5
-g14
-sg7
-(dp100
-g16
-(g17
-g18
-tp101
-sssVNSIG
-p102
-(dp103
-g5
-g14
-sg7
-(dp104
-g16
-(g17
-g18
-tp105
-sssVSIGSEGV
-p106
-(dp107
-g5
-g14
-sg7
-(dp108
-g16
-(g17
-g18
-tp109
-sssVSIGBREAK
-p110
-(dp111
-g5
-g14
-sg7
-(dp112
-g16
-(g17
-g18
-tp113
-ssssg10
-VThis module provides mechanisms to use signal handlers in Python.\u000a\u000aFunctions:\u000a\u000asignal() -- set the action for a given signal\u000agetsignal() -- get the signal action for a given signal\u000adefault_int_handler() -- default SIGINT handler\u000a\u000asignal constants:\u000aSIG_DFL -- used to refer to the system default handler\u000aSIG_IGN -- used to ignore the signal\u000aNSIG -- number of defined signals\u000aSIGINT, SIGTERM, etc. -- signal numbers\u000a\u000a*** IMPORTANT NOTICE ***\u000aA signal handler function is called with two arguments:\u000athe first is the signal number, the second is the interrupted stack frame.
-p114
-s.

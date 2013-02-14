@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Include>
-  <!-- This value to be updated only by the IncrementVersion task -->
-  <?define ProductVersion = "1.0.4057.000" ?>
-</Include>
