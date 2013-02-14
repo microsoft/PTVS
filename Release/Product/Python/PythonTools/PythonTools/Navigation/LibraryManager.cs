@@ -59,6 +59,10 @@ namespace Microsoft.PythonTools.Navigation {
             RegisterLibrary();
         }
 
+        public Library Library {
+            get { return _library; }
+        }
+
         protected abstract LibraryNode CreateLibraryNode(IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid);
         public virtual LibraryNode CreateFileLibraryNode(HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
             return new LibraryNode(name, filename, libraryNodeType);

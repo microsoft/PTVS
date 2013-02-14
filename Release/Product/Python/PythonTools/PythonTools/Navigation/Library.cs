@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
@@ -140,6 +142,12 @@ namespace Microsoft.PythonTools.Navigation {
                 SearchNodes(srch, list, child);
             }
             return list;
+        }
+
+        public void VisitNodes(ILibraryNodeVisitor visitor, CancellationToken ct = default(CancellationToken)) {
+            lock (this) {
+                _root.Visit(visitor, ct);
+            }
         }
         
         public int GetSeparatorStringWithOwnership(out string pbstrSeparator) {

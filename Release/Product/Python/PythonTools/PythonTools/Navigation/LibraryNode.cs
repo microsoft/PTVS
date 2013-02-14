@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Threading;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -298,6 +299,31 @@ namespace Microsoft.PythonTools.Navigation {
             return null;
         }
 
+        /// <summary>
+        /// Visit this node and its children.
+        /// </summary>
+        /// <param name="visitor">Visitor to invoke methods on when visiting the nodes.</param>
+        public void Visit(ILibraryNodeVisitor visitor, CancellationToken ct = default(CancellationToken)) {
+            if (ct.IsCancellationRequested) {
+                visitor.LeaveNode(this, ct);
+                return;
+            }
+
+            if (visitor.EnterNode(this, ct)) {
+                lock (Children) {
+                    foreach (var child in Children) {
+                        if (ct.IsCancellationRequested) {
+                            visitor.LeaveNode(this, ct);
+                            return;
+                        }
+                        child.Visit(visitor, ct);
+                    }
+                }
+            }
+
+            visitor.LeaveNode(this, ct);
+        }
+
         #region IVsNavInfoNode Members
 
         int IVsNavInfoNode.get_Name(out string pbstrName) {
@@ -358,5 +384,23 @@ namespace Microsoft.PythonTools.Navigation {
         Definitions = _LIB_LISTTYPE.LLT_DEFINITIONS,
         References = _LIB_LISTTYPE.LLT_REFERENCES,
         DeferExpansion = _LIB_LISTTYPE.LLT_DEFEREXPANSION,
+    }
+
+    /// <summary>
+    /// Visitor interface used to enumerate all <see cref="LibraryNode"/>s in the library.
+    /// </summary>
+    public interface ILibraryNodeVisitor {
+        /// <summary>
+        /// Called on each node before any of its child nodes are visited.
+        /// </summary>
+        /// <param name="node">The node that is being visited.</param>
+        /// <returns><c>true</c> if children of this node should be visited, otherwise <c>false</c>.</returns>
+        bool EnterNode(LibraryNode node, CancellationToken ct);
+
+        /// <summary>
+        /// Called on each node after all its child nodes were visited.
+        /// </summary>
+        /// <param name="node">The node that was being visited.</param>
+        void LeaveNode(LibraryNode node, CancellationToken ct);
     }
 }

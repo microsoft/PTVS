@@ -193,6 +193,10 @@
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileExtensionMapping.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
+    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplay.cs" />
+    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplayFactory.cs" />
+    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProviderFactory.cs" />
+    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProvider.cs" />
     <Compile Include="PythonTools\ProvideDebugPortSupplierAttribute.cs" />
     <Compile Include="PythonTools\DialogWindowVersioningWorkaround.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />

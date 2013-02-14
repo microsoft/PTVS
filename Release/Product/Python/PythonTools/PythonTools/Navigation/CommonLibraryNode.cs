@@ -65,6 +65,12 @@ namespace Microsoft.PythonTools.Navigation {
             }
         }
 
+        public TextSpan SourceSpan {
+            get {
+                return _sourceSpan;
+            }
+        }
+
         private static string GetLibraryNodeName(IScopeNode node, string namePrefix) {
             namePrefix = namePrefix.Substring(namePrefix.LastIndexOf(':') + 1); // remove filename prefix
             return node.NodeType == LibraryNodeType.Members ? node.Name : string.Format(CultureInfo.InvariantCulture, "{0}{1}", namePrefix, node.Name);
