@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -25,8 +24,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _generator = generator;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
-            return _generator.Yields;
-        }        
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            return _generator.GetEnumeratorTypes(node, unit);
+        }
     }
 }

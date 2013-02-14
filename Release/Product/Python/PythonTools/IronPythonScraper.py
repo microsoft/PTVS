@@ -1,11 +1,11 @@
  # ############################################################################
  #
- # Copyright (c) Microsoft Corporation. 
+ # Copyright (c) Microsoft Corporation.
  #
- # This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- # copy of the license can be found in the License.html file at the root of this distribution. If 
- # you cannot locate the Apache License, Version 2.0, please send an email to 
- # vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ # This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+ # copy of the license can be found in the License.html file at the root of this distribution. If
+ # you cannot locate the Apache License, Version 2.0, please send an email to
+ # vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
  # by the terms of the Apache License, Version 2.0.
  #
  # You must not remove this notice, or any other, from this software.
@@ -29,7 +29,7 @@ from Microsoft.Scripting import ParamDictionaryAttribute
 from Microsoft.Scripting.Generation import CompilerHelpers
 
 class NonPythonTypeException(Exception):
-	pass
+    pass
 
 def type_to_name(type_obj):
     if type_obj.IsArray:
@@ -43,13 +43,13 @@ def type_to_name(type_obj):
 
 
 def get_default_value(param):
-	if param.DefaultValue != DBNull.Value and not isinstance(param.DefaultValue, Missing):
-		return repr(param.DefaultValue)
-	elif param.IsOptional:
-		missing = CompilerHelpers.GetMissingValue(param.ParameterType)
-		if missing != Missing.Value:
-			return repr(missing)
-		return ""	
+    if param.DefaultValue != DBNull.Value and not isinstance(param.DefaultValue, Missing):
+        return repr(param.DefaultValue)
+    elif param.IsOptional:
+        missing = CompilerHelpers.GetMissingValue(param.ParameterType)
+        if missing != Missing.Value:
+            return repr(missing)
+        return ""
 
 
 def get_arg_format(param):
@@ -73,20 +73,20 @@ def sanitize_name(param):
     return ''.join(letters)
 
 def get_parameter_info(param):
-	parameter_table = {
-		'type':type_to_name(param.ParameterType),
-		'name': sanitize_name(param),		
-	}
-	
-	default_value = get_default_value(param)
-	if default_value is not None:
-		parameter_table['default_value'] = default_value
+    parameter_table = {
+        'type':type_to_name(param.ParameterType),
+        'name': sanitize_name(param),
+    }
 
-	arg_format = get_arg_format(param)
-	if arg_format is not None:
-		parameter_table['arg_format'] = arg_format
-	
-	return parameter_table
+    default_value = get_default_value(param)
+    if default_value is not None:
+        parameter_table['default_value'] = default_value
+
+    arg_format = get_arg_format(param)
+    if arg_format is not None:
+        parameter_table['arg_format'] = arg_format
+
+    return parameter_table
 
 def get_return_type(target):
     if hasattr(target, 'ReturnType'):
@@ -106,20 +106,20 @@ def get_function_overloads(targets):
             del args[0]
         if args and args[0].ParameterType.IsSubclassOf(SiteLocalStorage):
             del args[0]
-    
+
         try:
             arg_info = [get_parameter_info(arg) for arg in args]
             if not target.IsStatic and not target.IsConstructor:
                 arg_info = [{'type' : type_to_name(target.DeclaringType), 'name': 'self'}] + arg_info
-    
+
             res.append(
              {'args' :  arg_info,
               'ret_type' : type_to_name(get_return_type(target)), }
             )
         except NonPythonTypeException:
             pass
-    
-    
+
+
     return tuple(res)
 
 def get_overloads(func, is_method = False):
@@ -127,23 +127,23 @@ def get_overloads(func, is_method = False):
         func = PythonOps.GetBuiltinMethodDescriptorTemplate(func)
 
     targets = func.Targets
-    
+
     res = get_function_overloads(targets)
 
     return tuple(res)
 
 
 def get_descriptor_type(descriptor):
-	if hasattr(descriptor, 'PropertyType'):
-		return clr.GetPythonType(descriptor.PropertyType)
-	elif hasattr(descriptor, 'FieldType'):
-		return clr.GetPythonType(descriptor.FieldType)
-	return object
+    if hasattr(descriptor, 'PropertyType'):
+        return clr.GetPythonType(descriptor.PropertyType)
+    elif hasattr(descriptor, 'FieldType'):
+        return clr.GetPythonType(descriptor.FieldType)
+    return object
 
 
 def get_new_overloads(type_obj, func):
     if func.Targets and func.Targets[0].DeclaringType == clr.GetClrType(InstanceOps):
-        print 'has instance ops', type_obj
+        print('has instance ops ' + str(type_obj))
         clrType = clr.GetClrType(type_obj)
 
         return get_function_overloads(clrType.GetConstructors())

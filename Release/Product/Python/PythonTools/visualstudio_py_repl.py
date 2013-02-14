@@ -17,11 +17,14 @@ try:
 except ImportError:
     # Renamed in Python3k
     import _thread as thread
+try:
+    from ssl import SSLError
+except:
+    SSLError = None
 
 import threading
 import sys
 import socket
-import ssl
 import select
 import time
 import struct
@@ -174,9 +177,14 @@ actual inspection and introspection."""
                 self.flush()                
                 self.conn.settimeout(10)
                 
+                # 2.x raises SSLError in case of timeout (http://bugs.python.org/issue10272)
+                if SSLError:
+                    timeout_exc_types = (socket.timeout, SSLError)
+                else:
+                    timeout_exc_types = socket.timeout
                 try:
                     inp = self.conn.recv(4)
-                except (socket.timeout, ssl.SSLError): # 2.x raises SSLError in case of timeout (http://bugs.python.org/issue10272)
+                except timeout_exc_types: 
                     r, w, x = select.select([], [], [self.conn], 0)
                     if x:
                         # an exception event has occured on the socket...

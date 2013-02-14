@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 19;
+        public static readonly int CurrentVersion = 20;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
@@ -662,15 +662,17 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        internal static void GetLocation(Dictionary<string, object> table, ref int line, ref int column) {
+        internal static bool TryGetLocation(Dictionary<string, object> table, ref int line, ref int column) {
             object value;
             if (table.TryGetValue("location", out value)) {
                 object[] locationInfo = value as object[];
                 if (locationInfo != null && locationInfo.Length == 2 && locationInfo[0] is int && locationInfo[1] is int) {
                     line = (int)locationInfo[0];
                     column = (int)locationInfo[1];
+                    return true;
                 }
             }
+            return false;
         }
 
         internal IPythonModule GetInstancedModule(string name) {

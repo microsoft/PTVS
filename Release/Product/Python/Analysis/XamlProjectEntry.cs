@@ -14,8 +14,6 @@
 
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Analysis {
     sealed class XamlProjectEntry : IXamlProjectEntry {

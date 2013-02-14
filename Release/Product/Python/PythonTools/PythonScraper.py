@@ -108,6 +108,16 @@ import os
 import datetime
 from os.path import join
 
+# The version number should match the value of PythonTypeDatabase.CurrentVersion in
+#  \Main\Open_Source\Release\Product\Python\Analysis\Interpreter\PythonTypeDatabase.cs
+#
+# To update the baseline DB:
+#  1. Check out all files in Product\Python\PythonTools\CompletionDB
+#  2. Run ipy.exe PythonScraper.py ...\CompletionDB
+#  3. Undo unnecessary edits (tfpt uu) and delete new files
+#
+CURRENT_DATABASE_VERSION = '20'
+
 TYPE_NAMES = {}
 
 def type_to_name(type):
@@ -364,6 +374,7 @@ def generate_builtin_module():
         members_table['bytes_iterator'] = generate_member(type(iter("")), is_hidden=True)
     else:
         members_table['bytes_iterator'] = generate_member(type(iter(bytes())), is_hidden=True)
+    members_table['callable_iterator'] = generate_member(type(iter(lambda: None, None)), is_hidden=True)
 
     return res
 
@@ -601,7 +612,7 @@ def builtin_fixer(mod):
                                'BytesWarning', 'next', 'BufferError'], '2.6')
     mark_minimum_version(mod, ['memoryview'], '2.7')
 
-    for iter_type in ['generator', 'list_iterator', 'tuple_iterator', 'set_iterator', 'str_iterator', 'bytes_iterator']:
+    for iter_type in ['generator', 'list_iterator', 'tuple_iterator', 'set_iterator', 'str_iterator', 'bytes_iterator', 'callable_iterator']:
         next2x = mod['members'][iter_type]['value']['members']['next']
         next3x = dict(next2x)
         next2x['version'] = '<=2.7'
@@ -1929,7 +1940,7 @@ if __name__ == "__main__":
                 pass
 
     f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write('19')
+    f.write(CURRENT_DATABASE_VERSION)
     f.close()
 
     # inspect extension modules installed into site-packages

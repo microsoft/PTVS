@@ -2264,26 +2264,14 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod,  Priority(0)]
+        [TestMethod,  Priority(0), Timeout(5 * 60 * 1000)]
         public void StdLib() {
-            var versions = new[] { 
-                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 },
-                new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
-                new { Path = "C:\\Python26\\Lib", Version = PythonLanguageVersion.V26 },
-                new { Path = "C:\\Python27\\Lib", Version = PythonLanguageVersion.V27 },
-                
-                new { Path = "C:\\Python30\\Lib", Version = PythonLanguageVersion.V30 },
-                new { Path = "C:\\Python31\\Lib", Version = PythonLanguageVersion.V31 }
-                
-            };
-
-            foreach (var curVersion in versions) {
+            foreach (var curVersion in PythonPaths.Versions) {
                 Debug.WriteLine("Running: {0}", curVersion.Version);
 
-                string dir = Path.Combine(curVersion.Path);
-                List<string> files = new List<string>();
+                var files = new List<string>();
                 try {
-                    CollectFiles(dir, files);
+                    CollectFiles(curVersion.LibPath, files, new[] { "site-packages"});
                 } catch (DirectoryNotFoundException) {
                     continue;
                 }
@@ -3338,14 +3326,16 @@ namespace AnalysisTests {
 
         private static Action<Parameter>[] NoParameters = new Action<Parameter>[0];
 
-        private static void CollectFiles(string dir, List<string> files) {
+        private static void CollectFiles(string dir, List<string> files, IEnumerable<string> exceptions = null) {
             foreach (string file in Directory.GetFiles(dir)) {
                 if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
                     files.Add(file);
                 }
             }
             foreach (string nestedDir in Directory.GetDirectories(dir)) {
-                CollectFiles(nestedDir, files);
+                if (exceptions == null || !exceptions.Contains(Path.GetFileName(nestedDir))) {
+                    CollectFiles(nestedDir, files, exceptions);
+                }
             }
         }
 

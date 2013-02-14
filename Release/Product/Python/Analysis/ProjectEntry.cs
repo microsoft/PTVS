@@ -34,10 +34,9 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly ModuleInfo _myScope;
         private IAnalysisCookie _cookie;
         private PythonAst _tree;
-        private Stack<InterpreterScope> _scopeTree;
         private ModuleAnalysis _currentAnalysis;
         private AnalysisUnit _unit;
-        private int _analysisVersion;        
+        private int _analysisVersion;
         private Dictionary<object, object> _properties = new Dictionary<object, object>();
         private ManualResetEventSlim _curWaiter;
         private int _updatesPending, _waiters;
@@ -51,13 +50,14 @@ namespace Microsoft.PythonTools.Analysis {
             _filePath = filePath;
             _cookie = cookie;
             _myScope = new ModuleInfo(_moduleName, this, state.Interpreter.CreateModuleContext());
-            _unit = new AnalysisUnit(_tree, new InterpreterScope[] { _myScope.Scope });
+            _unit = new AnalysisUnit(_tree, _myScope.Scope);
+            AnalysisLog.NewUnit(_unit);
         }
 
         public event EventHandler<EventArgs> OnNewParseTree;
         public event EventHandler<EventArgs> OnNewAnalysis;
 
-        public void UpdateTree(PythonAst newAst, IAnalysisCookie newCookie) {            
+        public void UpdateTree(PythonAst newAst, IAnalysisCookie newCookie) {
             lock (this) {
                 if (_updatesPending > 0) {
                     _updatesPending--;
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 _tree = newAst;
                 _cookie = newCookie;
-                
+
                 if (_curWaiter != null) {
                     _curWaiter.Set();
                 }
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             lock (this) {
                 _waiters--;
-                if (_waiters == 0 && 
+                if (_waiters == 0 &&
                     Interlocked.CompareExchange(ref _sharedWaitEvent, _curWaiter, null) != null) {
                     _curWaiter.Dispose();
                 }
@@ -189,19 +189,18 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            var unit = _unit = new AnalysisUnit(_tree, new InterpreterScope[] { _myScope.Scope });
+            _unit = new AnalysisUnit(_tree, _myScope.Scope);
+            AnalysisLog.NewUnit(_unit);
 
-            _scopeTree = new Stack<InterpreterScope>();
-            _scopeTree.Push(MyScope.Scope);
             MyScope.Scope.Children.Clear();
-            MyScope.NodeScopes.Clear();
-            MyScope.NodeVariables.Clear();
+            MyScope.Scope.ClearNodeScopes();
+            MyScope.Scope.ClearNodeValues();
 
             // create new analysis object and add to the queue to be analyzed
-            var newAnalysis = new ModuleAnalysis(_unit, _scopeTree);
-            
+            //var newAnalysis = new ModuleAnalysis(_unit);
+
             // collect top-level definitions first
-            var walker = new OverviewWalker(this, unit);
+            var walker = new OverviewWalker(this, _unit);
             _tree.Walk(walker);
             _myScope.Specialize();
 
@@ -214,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // publish the analysis now that it's complete
-            _currentAnalysis = newAnalysis;
+            _currentAnalysis = new ModuleAnalysis(_unit, _unit.Scope);
         }
 
         public IGroupableAnalysisProject AnalysisGroup {
@@ -313,7 +312,7 @@ namespace Microsoft.PythonTools.Analysis {
     public interface IAnalyzable {
         void Analyze();
     }
-    
+
     /// <summary>
     /// Represents a file which is capable of being analyzed.  Can be cast to other project entry types
     /// for more functionality.  See also IPythonProjectEntry and IXamlProjectEntry.

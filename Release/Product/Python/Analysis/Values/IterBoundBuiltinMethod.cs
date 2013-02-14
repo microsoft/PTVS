@@ -19,28 +19,32 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class IterBoundBuiltinMethodInfo : BoundBuiltinMethodInfo {
-        private readonly ISet<Namespace> _iterator;
+        private readonly INamespaceSet _iterator;
+        private readonly BuiltinClassInfo _iterClass;
+        private readonly VariableDef[] _indexTypes;
 
         public IterBoundBuiltinMethodInfo(VariableDef[] indexTypes, BuiltinClassInfo iterableClass)
             : base(new IterBuiltinMethodInfo(iterableClass.PythonType, iterableClass.ProjectState)) {
-            _iterator = new IteratorInfo(indexTypes, IteratorInfo.GetIteratorTypeFromType(iterableClass, iterableClass.ProjectState._evalUnit));
+            _indexTypes = indexTypes;
+            _iterClass = IteratorInfo.GetIteratorTypeFromType(iterableClass, iterableClass.ProjectState._evalUnit);
         }
 
         public IterBoundBuiltinMethodInfo(IterableInfo iterable, BuiltinMethodInfo method)
             : base(method) {
-            _iterator = new IteratorInfo(iterable.IndexTypes, IteratorInfo.GetIteratorTypeFromType(iterable.ClassInfo, iterable.ProjectState._evalUnit));
+            _indexTypes = iterable.IndexTypes;
+            _iterClass = IteratorInfo.GetIteratorTypeFromType(iterable.ClassInfo, iterable.ClassInfo.ProjectState._evalUnit);
         }
 
-        public IterBoundBuiltinMethodInfo(BuiltinMethodInfo method, ISet<Namespace> iterator)
+        public IterBoundBuiltinMethodInfo(BuiltinMethodInfo method, INamespaceSet iterator)
             : base(method) {
             _iterator = iterator;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 0) {
-                return _iterator;
+                return unit.Scope.GetOrMakeNodeValue(node, n => new IteratorInfo(_indexTypes, _iterClass, n));
             }
-            return EmptySet<Namespace>.Instance;
+            return NamespaceSet.Empty;
         }
     }
 

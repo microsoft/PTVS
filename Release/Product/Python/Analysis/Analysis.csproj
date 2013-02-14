@@ -46,12 +46,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnalysisExtensions.cs" />
+    <Compile Include="AnalysisLimits.cs" />
+    <Compile Include="AnalysisLog.cs" />
     <Compile Include="AnalysisVariable.cs" />
     <Compile Include="Analyzer\ComprehensionScope.cs" />
     <Compile Include="Analyzer\DependentKeyValue.cs" />
+    <Compile Include="Analyzer\FunctionAnalysisUnit.cs" />
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="IdDispenser.cs" />
+    <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
     <Compile Include="Interpreter\IPythonInterpreter2.cs" />
@@ -60,8 +65,10 @@
     <Compile Include="Interpreter\ProjectReferenceKind.cs" />
     <Compile Include="Interpreter\SharedDatabaseState.cs" />
     <Compile Include="ModuleTable.cs" />
+    <Compile Include="NamespaceSet.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
+    <Compile Include="ReadOnlyWrapper.cs" />
     <Compile Include="SourceLocationResolver.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />
@@ -103,7 +110,6 @@
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="Analyzer\SingleDict.cs" />
-    <Compile Include="Analyzer\TypeUnion.cs" />
     <Compile Include="Analyzer\VariableDef.cs" />
     <Compile Include="Interpreter\Default\InterpreterFactoryOptions.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
@@ -245,6 +251,7 @@
     <Compile Include="Parsing\SourceLocation.cs" />
     <Compile Include="Unpickler.cs" />
     <Compile Include="AnalysisValue.cs" />
+    <Compile Include="Values\ArgumentSet.cs" />
     <Compile Include="Values\BoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\BuiltinClassInfo.cs" />
     <Compile Include="Values\BuiltinEventInfo.cs" />
@@ -253,13 +260,14 @@
     <Compile Include="Values\BuiltinMethodInfo.cs" />
     <Compile Include="Values\BuiltinModule.cs" />
     <Compile Include="Values\BuiltinNamespace.cs" />
+    <Compile Include="Values\CallChain.cs" />
+    <Compile Include="Values\ObjectBuiltinClassInfo.cs" />
     <Compile Include="Values\BuiltinPropertyInfo.cs" />
     <Compile Include="CallInfo.cs" />
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
     <Compile Include="Values\IterBoundBuiltinMethod.cs" />
     <Compile Include="Values\SpecializedCallableNoAnalyze.cs" />
-    <Compile Include="Values\GeneratorFunctionInfo.cs" />
     <Compile Include="Values\IteratorInfo.cs" />
     <Compile Include="Values\IterableInfo.cs" />
     <Compile Include="Values\DependencyInfo.cs" />
@@ -295,7 +303,6 @@
     <Compile Include="Values\SpecializedNamespace.cs" />
     <Compile Include="Values\SuperInfo.cs" />
     <Compile Include="Values\TupleBuiltinClassInfo.cs" />
-    <Compile Include="Values\UserDefinedInfo.cs" />
     <Compile Include="Values\Utils.cs" />
     <Compile Include="Parsing\Ellipsis.cs" />
     <Compile Include="Parsing\Ast\AndExpression.cs" />

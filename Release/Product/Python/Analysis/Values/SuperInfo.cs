@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
@@ -22,14 +23,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Represents an instance of super() bound to a certain specific class and, optionally, to an object instance.
     /// </summary>
-    internal class SuperInfo : UserDefinedInfo {
+    internal class SuperInfo : Namespace {
+        private AnalysisUnit _analysisUnit;
         private readonly ClassInfo _classInfo;
-        private readonly ISet<Namespace> _instances;
+        private readonly INamespaceSet _instances;
 
-        public SuperInfo(AnalysisUnit unit, ClassInfo classInfo, ISet<Namespace> instances = null)
-            : base(unit) {
+        public SuperInfo(ClassInfo classInfo, INamespaceSet instances = null) {
             _classInfo = classInfo;
-            _instances = instances;
+            _instances = instances ?? NamespaceSet.Empty;
+        }
+
+        public override AnalysisUnit AnalysisUnit {
+            get {
+                return _analysisUnit;
+            }
+        }
+
+        internal void SetAnalysisUnit(AnalysisUnit unit) {
+            Debug.Assert(_analysisUnit == null);
+            _analysisUnit = unit;
         }
 
         public ClassInfo ClassInfo {
@@ -48,37 +60,36 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
             var mro = ClassInfo.Mro;
             if (!mro.IsValid) {
-                return new Dictionary<string, ISet<Namespace>>();
+                return new Dictionary<string, INamespaceSet>();
             }
             // First item in MRO list is always the class itself.
             return Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext);
         }
 
         private Namespace GetObjectMember(IModuleContext moduleContext, string name) {
-            return _analysisUnit.ProjectState.GetNamespaceFromObjects(_analysisUnit.ProjectState.Types.Object.GetMember(moduleContext, name));
+            return AnalysisUnit.ProjectState.GetNamespaceFromObjects(AnalysisUnit.ProjectState.Types.Object.GetMember(moduleContext, name));
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             var mro = ClassInfo.Mro;
             if (!mro.IsValid) {
-                return EmptySet<Namespace>.Instance;
+                return NamespaceSet.Empty;
             }
 
             // First item in MRO list is always the class itself.
             var member = Mro.GetMemberFromMroNoReferences(mro.Skip(1), node, unit, name, addRef: true);
             if (member == null) {
-                return EmptySet<Namespace>.Instance;
+                return NamespaceSet.Empty;
             }
 
-            var instances = _instances ?? unit.ProjectState._noneInst.SelfSet;
-            bool ownInstances = false;
-            ISet<Namespace> result = null;
+            var instances = _instances.Any() ? _instances : unit.ProjectState._noneInst.SelfSet;
+            INamespaceSet result = NamespaceSet.Empty;
             foreach (var instance in instances) {
                 var desc = member.GetDescriptor(node, instance, this, unit);
-                result = result.Union(desc, ref ownInstances);
+                result = result.Union(desc);
             }
 
             return result;

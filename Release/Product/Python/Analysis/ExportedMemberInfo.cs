@@ -12,10 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>

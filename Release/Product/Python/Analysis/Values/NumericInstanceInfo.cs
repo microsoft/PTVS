@@ -12,11 +12,9 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class NumericInstanceInfo : BuiltinInstanceInfo {
@@ -24,7 +22,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(klass) {
         }
 
-        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
             switch (operation) {
                 case PythonOperator.GreaterThan:
                 case PythonOperator.LessThan:

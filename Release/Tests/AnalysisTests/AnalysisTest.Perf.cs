@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
@@ -195,34 +196,17 @@ import System
             Console.WriteLine("{0} ms", sw.ElapsedMilliseconds);
         }
 
-        [PerfMethod]
-        public void TestAnalyzeDjango() {
-            AnalyzeDir(@"C:\Python27\Lib\site-packages\django");
-        }
-
-        [PerfMethod]
-        public void TestAnalyzeStdLib26() {
-            string dir = Path.Combine("C:\\python26_x64\\Lib");
-            AnalyzeDir(dir);
-        }
-
-
-        [PerfMethod]
-        public void TestAnalyzeStdLib() {
-            //string dir = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), "IronPython 2.6 for .NET 4.0 RC\\Lib");
-            AnalyzeStdLib();
-            Console.ReadLine();
-        }
-
-        [PerfMethod]
-        public PythonAnalyzer AnalyzeStdLib() {
-            string dir = Path.Combine("C:\\Python27_x64\\Lib");
-            return AnalyzeDir(dir);
-        }
-
-        private PythonAnalyzer AnalyzeDir(string dir) {
+        internal PythonAnalyzer AnalyzeDir(string dir, PythonLanguageVersion version = PythonLanguageVersion.V27, IEnumerable<string> excludeDirectories = null) {
             List<string> files = new List<string>();
-            CollectFiles(dir, files);
+            try {
+                ISet<string> excluded = null;
+                if (excludeDirectories != null) {
+                    excluded = new HashSet<string>(excludeDirectories, StringComparer.InvariantCultureIgnoreCase);
+                }
+                CollectFiles(dir, files, excluded);
+            } catch (DirectoryNotFoundException) {
+                return null;
+            }
 
             List<FileStreamReader> sourceUnits = new List<FileStreamReader>();
             foreach (string file in files) {
@@ -235,13 +219,16 @@ import System
 
             sw.Start();
             long start0 = sw.ElapsedMilliseconds;
-            var projectState = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+            var projectState = new PythonAnalyzer(Interpreter, version);
+
+            projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
+
             var modules = new List<IPythonProjectEntry>();
             foreach (var sourceUnit in sourceUnits) {
                 modules.Add(projectState.AddModule(PythonAnalyzer.PathToModuleName(sourceUnit.Path), sourceUnit.Path, null));
             }
             long start1 = sw.ElapsedMilliseconds;
-            Console.WriteLine("AddSourceUnit: {0} ms", start1 - start0);
+            Trace.TraceInformation("AddSourceUnit: {0} ms", start1 - start0);
 
             var nodes = new List<Microsoft.PythonTools.Parsing.Ast.PythonAst>();
             for (int i = 0; i < modules.Count; i++) {
@@ -249,13 +236,13 @@ import System
                 try {
                     var sourceUnit = sourceUnits[i];
 
-                    ast = Parser.CreateParser(sourceUnit, PythonLanguageVersion.V27).ParseFile();
+                    ast = Parser.CreateParser(sourceUnit, version).ParseFile();
                 } catch (Exception) {
                 }
                 nodes.Add(ast);
             }
             long start2 = sw.ElapsedMilliseconds;
-            Console.WriteLine("Parse: {0} ms", start2 - start1);
+            Trace.TraceInformation("Parse: {0} ms", start2 - start1);
 
             for (int i = 0; i < modules.Count; i++) {
                 var ast = nodes[i];
@@ -267,19 +254,19 @@ import System
 
             long start3 = sw.ElapsedMilliseconds;
             for (int i = 0; i < modules.Count; i++) {
-                Console.WriteLine("Analyzing {1}: {0} ms", sw.ElapsedMilliseconds - start3, sourceUnits[i].Path);
+                Trace.TraceInformation("Analyzing {1}: {0} ms", sw.ElapsedMilliseconds - start3, sourceUnits[i].Path);
                 var ast = nodes[i];
                 if (ast != null) {
                     modules[i].Analyze(true);
                 }
             }
             if (modules.Count > 0) {
-                Console.WriteLine("Analyzing queue");
+                Trace.TraceInformation("Analyzing queue");
                 modules[0].AnalysisGroup.AnalyzeQueuedEntries();
             }
 
             long start4 = sw.ElapsedMilliseconds;
-            Console.WriteLine("Analyze: {0} ms", start4 - start3);
+            Trace.TraceInformation("Analyze: {0} ms", start4 - start3);
             return projectState;
         }
 
@@ -316,14 +303,20 @@ import System
         }
 
 
-        private static void CollectFiles(string dir, List<string> files) {
+        private static void CollectFiles(string dir, List<string> files, ISet<string> excludeDirectories = null) {
             foreach (string file in Directory.GetFiles(dir)) {
                 if (file.EndsWith(".py", StringComparison.OrdinalIgnoreCase)) {
                     files.Add(file);
                 }
             }
             foreach (string nestedDir in Directory.GetDirectories(dir)) {
-                CollectFiles(nestedDir, files);
+                if (excludeDirectories != null) {
+                    var dirName = Path.GetFileName(nestedDir);
+                    if (excludeDirectories.Contains(dirName)) {
+                        continue;
+                    }
+                }
+                CollectFiles(nestedDir, files, excludeDirectories);
             }
         }
     }

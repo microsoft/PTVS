@@ -14,8 +14,8 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>

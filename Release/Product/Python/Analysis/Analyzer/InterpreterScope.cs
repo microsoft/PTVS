@@ -12,7 +12,9 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -20,17 +22,56 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     abstract class InterpreterScope {
         private readonly Namespace _ns;
         private readonly Node _node;
+        public readonly InterpreterScope OuterScope;
         public readonly List<InterpreterScope> Children = new List<InterpreterScope>();
-        private Dictionary<string, VariableDef> _variables = new Dictionary<string, VariableDef>();
         private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
 
-        public InterpreterScope(Namespace ns, Node ast) {
+        private readonly Dictionary<Node, InterpreterScope> _nodeScopes;
+        private readonly Dictionary<Node, INamespaceSet> _nodeValues;
+        private readonly Dictionary<string, VariableDef> _variables;
+
+        public InterpreterScope(Namespace ns, Node ast, InterpreterScope outerScope) {
             _ns = ns;
             _node = ast;
+            OuterScope = outerScope;
+
+            _nodeScopes = new Dictionary<Node, InterpreterScope>();
+            _nodeValues = new Dictionary<Node, INamespaceSet>();
+            _variables = new Dictionary<string, VariableDef>();
+
+#if DEBUG
+            NodeScopes = new ReadOnlyDictionary<Node, InterpreterScope>(_nodeScopes);
+            NodeValues = new ReadOnlyDictionary<Node, INamespaceSet>(_nodeValues);
+            Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
+#endif
         }
 
-        public InterpreterScope(Namespace ns) {
-            _ns = ns;
+        public InterpreterScope(Namespace ns, InterpreterScope outerScope)
+            : this(ns, null, outerScope) { }
+
+        public InterpreterScope GlobalScope {
+            get {
+                for (var scope = this; scope != null; scope = scope.OuterScope) {
+                    if (scope.OuterScope == null) {
+                        return scope;
+                    }
+                }
+                return null;
+            }
+        }
+
+        public IEnumerable<InterpreterScope> EnumerateTowardsGlobal {
+            get {
+                for (var scope = this; scope != null; scope = scope.OuterScope) {
+                    yield return scope;
+                }
+            }
+        }
+
+        public IEnumerable<InterpreterScope> EnumerateFromGlobal {
+            get {
+                return EnumerateTowardsGlobal.Reverse();
+            }
         }
 
         /// <summary>
@@ -72,10 +113,45 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
+#if DEBUG
+        public ReadOnlyDictionary<string, VariableDef> Variables {
+            get;
+            private set;
+        }
+
+        public ReadOnlyDictionary<Node, InterpreterScope> NodeScopes {
+            get;
+            private set;
+        }
+
+        public ReadOnlyDictionary<Node, INamespaceSet> NodeValues {
+            get;
+            private set;
+        }
+#else
+        public IDictionary<string, VariableDef> Variables {
+            get { return _variables; }
+        }
+
+        public IDictionary<Node, InterpreterScope> NodeScopes {
+            get { return _nodeScopes; }
+        }
+
+        public IDictionary<Node, INamespaceSet> NodeValues {
+            get { return _nodeValues; }
+        }
+#endif
+
         public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit, ParameterKind paramKind = ParameterKind.Normal) {
             VariableDef value;
             if (!Variables.TryGetValue(name, out value)) {
-                return Variables[name] = MakeParameterDef(location, unit, paramKind);
+                VariableDef def;
+                switch (paramKind) {
+                    case ParameterKind.List: def = new ListParameterVariableDef(unit, location); break;
+                    case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location); break;
+                    default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location); break;
+                }
+                return AddVariable(name, def);
             } else if (!(value is LocatedVariableDef)) {
                 VariableDef def;
                 switch (paramKind) {
@@ -83,7 +159,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location, value); break;
                     default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location, value); break;
                 }
-                return Variables[name] = def;
+                return AddVariable(name, def);
             } else {
                 ((LocatedVariableDef)value).Node = location;
                 ((LocatedVariableDef)value).DeclaringVersion = unit.ProjectEntry.AnalysisVersion;
@@ -91,17 +167,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return value;
         }
 
-        internal static VariableDef MakeParameterDef(Node location, AnalysisUnit unit, ParameterKind paramKind, bool addType = true) {
-            VariableDef def;
-            switch (paramKind) {
-                case ParameterKind.List: def = new ListParameterVariableDef(unit, location, addType); break;
-                case ParameterKind.Dictionary: def = new DictParameterVariableDef(unit, location); break;
-                default: def = new LocatedVariableDef(unit.DeclaringModule.ProjectEntry, location); break;
-            }
-            return def;
-        }
-
-        public void SetVariable(Node node, AnalysisUnit unit, string name, ISet<Namespace> value, bool addRef = true) {
+        public void SetVariable(Node node, AnalysisUnit unit, string name, INamespaceSet value, bool addRef = true) {
             var variable = CreateVariable(node, unit, name, false);
 
             variable.AddTypes(unit, value);
@@ -110,7 +176,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+        public virtual VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             VariableDef res;
             if (_variables.TryGetValue(name, out res)) {
                 if (addRef) {
@@ -121,10 +187,34 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return null;
         }
 
+        public virtual IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
+            return _variables;
+        }
+
+        public virtual IEnumerable<VariableDef> GetMergedVariables(string name) {
+            VariableDef res;
+            if (_variables.TryGetValue(name, out res)) {
+                yield return res;
+            }
+        }
+
+        public virtual INamespaceSet GetMergedVariableTypes(string name) {
+            var res = NamespaceSet.Empty;
+            foreach (var val in GetMergedVariables(name)) {
+                res = res.Union(val.TypesNoCopy);
+            }
+
+            return res;
+        }
+
+        public virtual IEnumerable<Namespace> GetMergedNamespaces() {
+            yield return Namespace;
+        }
+
         public virtual VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             var res = GetVariable(node, unit, name, addRef);
             if (res == null) {
-                _variables[name] = res = new VariableDef();
+                res = AddVariable(name);
                 if (addRef) {
                     res.AddReference(node, unit);
                 }
@@ -135,7 +225,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public VariableDef CreateEphemeralVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             var res = GetVariable(node, unit, name, addRef);
             if (res == null) {
-                _variables[name] = res = new EphemeralVariableDef();
+                res = AddVariable(name, new EphemeralVariableDef());
                 if (addRef) {
                     res.AddReference(node, unit);
                 }
@@ -143,10 +233,48 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return res;
         }
 
-        public IDictionary<string, VariableDef> Variables {
-            get {
-                return _variables;
+        public virtual VariableDef AddVariable(string name, VariableDef variable = null) {
+            return _variables[name] = (variable ?? new VariableDef());
+        }
+
+        internal virtual bool RemoveVariable(string name) {
+            return _variables.Remove(name);
+        }
+
+        internal bool RemoveVariable(string name, out VariableDef value) {
+            if (_variables.TryGetValue(name, out value)) {
+                return _variables.Remove(name);
             }
+            value = null;
+            return false;
+        }
+
+        internal virtual void ClearVariables() {
+            _variables.Clear();
+        }
+
+        public virtual InterpreterScope AddNodeScope(Node node, InterpreterScope scope) {
+            return _nodeScopes[node] = scope;
+        }
+
+        internal virtual bool RemoveNodeScope(Node node) {
+            return _nodeScopes.Remove(node);
+        }
+
+        internal virtual void ClearNodeScopes() {
+            _nodeScopes.Clear();
+        }
+
+        public virtual INamespaceSet AddNodeValue(Node node, INamespaceSet variable) {
+            return _nodeValues[node] = variable;
+        }
+
+        internal virtual bool RemoveNodeValue(Node node) {
+            return _nodeValues.Remove(node);
+        }
+
+        internal virtual void ClearNodeValues() {
+            _nodeValues.Clear();
         }
 
         public virtual bool VisibleToChildren {
@@ -178,10 +306,43 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         internal HashSet<VariableDef> GetLinkedVariablesNoCreate(string saveName) {
             HashSet<VariableDef> linkedVars;
-            if (_linkedVariables == null || ! _linkedVariables.TryGetValue(saveName, out linkedVars)) {
+            if (_linkedVariables == null || !_linkedVariables.TryGetValue(saveName, out linkedVars)) {
                 return null;
             }
             return linkedVars;
+        }
+
+        internal bool TryGetNodeValue(Node node, out INamespaceSet variable) {
+            foreach (var s in EnumerateTowardsGlobal) {
+                if (s._nodeValues.TryGetValue(node, out variable)) {
+                    return true;
+                }
+            }
+            variable = null;
+            return false;
+        }
+
+        internal bool TryGetNodeScope(Node node, out InterpreterScope scope) {
+            foreach (var s in EnumerateTowardsGlobal) {
+                if (s._nodeScopes.TryGetValue(node, out scope)) {
+                    return true;
+                }
+            }
+            scope = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Cached node variables so that we don't continually create new entries for basic nodes such
+        /// as sequences, lambdas, etc...
+        /// </summary>
+        public INamespaceSet GetOrMakeNodeValue(Node node, Func<Node, INamespaceSet> maker) {
+            INamespaceSet result;
+            if (!TryGetNodeValue(node, out result)) {
+                result = maker(node);
+                AddNodeValue(node, result);
+            }
+            return result;
         }
     }
 }

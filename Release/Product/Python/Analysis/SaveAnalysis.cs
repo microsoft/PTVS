@@ -286,16 +286,8 @@ namespace Microsoft.PythonTools.Analysis {
             };
         }
 
-        private static ISet<Namespace> GetFunctionReturnTypes(FunctionInfo func) {
-            if (func._allCalls == null) {
-                return func.ReturnValue.Types;
-            }
-
-            HashSet<Namespace> res = new HashSet<Namespace>(func.ReturnValue.Types);
-            foreach (var callInfo in func._allCalls.Values) {
-                res.UnionWith(callInfo.ReturnValue.Types);
-            }
-            return res;
+        private static INamespaceSet GetFunctionReturnTypes(FunctionInfo func) {
+            return func.GetReturnValue();
         }
 
         private Dictionary<string, object> GenerateConstant(ConstantInfo constantInfo) {
@@ -377,7 +369,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        private object[] GenerateTypeName(ISet<Namespace> name) {
+        private object[] GenerateTypeName(INamespaceSet name) {
             if (name.Count == 0) {
                 return null;
             }
@@ -451,8 +443,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         private List<object> GenerateArgInfo(FunctionInfo fi) {
             var res = new List<object>(fi.FunctionDefinition.Parameters.Count);
-            for (int i = 0; i < fi.FunctionDefinition.Parameters.Count; i++) {
-                res.Add(GenerateParameter(fi.FunctionDefinition.Parameters[i], fi.ParameterTypes[i]));
+            var parameters = fi.GetParameterTypes();
+            for (int i = 0; i < fi.FunctionDefinition.Parameters.Count && i < parameters.Length; i++) {
+                res.Add(GenerateParameter(fi.FunctionDefinition.Parameters[i], parameters[i]));
             }
             return res;
         }
@@ -468,21 +461,16 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        private object GenerateParameter(Parameter param, VariableDef typeInfo) {
+        private object GenerateParameter(Parameter param, INamespaceSet typeInfo) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             // TODO: Serialize default values and type name
-            if(param.Kind == ParameterKind.Dictionary) {
-                res["name"] = MemoizeString(param.Name);
+            if (param.Kind == ParameterKind.Dictionary) {
                 res["arg_format"] = "**";
-                res["type"] = GenerateTypeName(typeInfo.Types);
             } else if (param.Kind == ParameterKind.List) {
-                res["name"] = MemoizeString(param.Name);
                 res["arg_format"] = "*";
-                res["type"] = GenerateTypeName(typeInfo.Types);
-            } else {
-                res["name"] = MemoizeString(param.Name);
-                res["type"] = GenerateTypeName(typeInfo.Types);
             }
+            res["name"] = MemoizeString(param.Name);
+            res["type"] = GenerateTypeName(typeInfo);
             return res;
         }
 

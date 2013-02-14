@@ -12,9 +12,7 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -23,13 +21,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class IterableInfo : BuiltinInstanceInfo {
-        private ISet<Namespace> _unionType;        // all types that have been seen
+        internal readonly Node _node;
+        private INamespaceSet _unionType;        // all types that have been seen
         private VariableDef[] _indexTypes;     // types for known indices
         private IterBoundBuiltinMethodInfo _iterMethod;
 
-        public IterableInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
+        public IterableInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
             : base(seqType) {
             _indexTypes = indexTypes;
+            _node = node;
         }
 
         public VariableDef[] IndexTypes {
@@ -37,19 +37,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             set { _indexTypes = value; }
         }
 
-        public ISet<Namespace> UnionType {
+        public INamespaceSet UnionType {
             get {
                 EnsureUnionType();
-                return _unionType; 
+                return _unionType;
             }
             set { _unionType = value; }
         }
 
-        public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             if (_indexTypes.Length == 0) {
                 _indexTypes = new[] { new VariableDef() };
                 _indexTypes[0].AddDependency(unit);
-                return EmptySet<Namespace>.Instance;
+                return NamespaceSet.Empty;
             } else {
                 _indexTypes[0].AddDependency(unit);
             }
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _unionType;
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (name == "__iter__") {
                 if (_iterMethod == null) {
                     var iterImpl = (base.GetMember(node, unit, name).FirstOrDefault() as BuiltinMethodInfo) ?? new IterBuiltinMethodInfo(PythonType, ProjectState);
@@ -66,11 +66,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 return _iterMethod;
             }
-            
+
             return base.GetMember(node, unit, name);
         }
 
-        internal bool AddTypes(AnalysisUnit unit, ISet<Namespace>[] types) {
+        internal bool AddTypes(AnalysisUnit unit, INamespaceSet[] types) {
             if (_indexTypes.Length < types.Length) {
                 VariableDef[] newTypes = new VariableDef[types.Length];
                 for (int i = 0; i < _indexTypes.Length; i++) {
@@ -84,9 +84,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             bool added = false;
             for (int i = 0; i < types.Length; i++) {
-                added = _indexTypes[i].AddTypes(unit, types[i]) || added;
+                added |= _indexTypes[i].AddTypes(unit, types[i]);
             }
-            
+
             if (added) {
                 _unionType = null;
             }
@@ -94,27 +94,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return added;
         }
 
+        protected string MakeDescription(string typeName) {
+            EnsureUnionType();
+            if (UnionType == null || UnionType.Count == 0) {
+                return typeName;
+            } else if (UnionType.Count == 1) {
+                return typeName + " of " + UnionType.First().ShortDescription;
+            } else if (UnionType.Count < 4) {
+                return typeName + " of {" + string.Join(", ", UnionType.Select(ns => ns.ShortDescription)) + "}";
+            } else {
+                return typeName + " of multiple types";
+            }
+        }
+
         public override string Description {
             get {
-                EnsureUnionType();
-                StringBuilder result = new StringBuilder("iterable");
-                var unionType = _unionType.GetUnionType();
-                if (unionType != null) {
-                    result.Append(" of " + unionType.ShortDescription);
-                } else {
-                    result.Append("()");
-                }
-
-                return result.ToString();
+                return MakeDescription("iterable");
             }
         }
 
         protected void EnsureUnionType() {
             if (_unionType == null) {
-                ISet<Namespace> unionType = EmptySet<Namespace>.Instance;
-                bool setMade = false;
+                INamespaceSet unionType = NamespaceSet.EmptyUnion;
                 foreach (var set in _indexTypes) {
-                    unionType = unionType.Union(set.Types, ref setMade);
+                    unionType = unionType.Union(set.TypesNoCopy);
                 }
                 _unionType = unionType;
             }
@@ -126,17 +129,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override bool UnionEquals(Namespace ns) {
-            IterableInfo si = ns as IterableInfo;
-            if (si == null) {
-                return false;
-            }
+        private const int IGNORE_NODE_STRENGTH = 1;
 
-            return si._indexTypes.Length == _indexTypes.Length;
+        public override bool UnionEquals(Namespace ns, int strength) {
+            var si = ns as IterableInfo;
+            if (si != null && strength < IGNORE_NODE_STRENGTH) {
+                return si.ClassInfo == ClassInfo && si._node.Equals(_node);
+            }
+            var bii = ns as BuiltinInstanceInfo;
+            if (bii != null) {
+                return bii.ClassInfo == ClassInfo;
+            }
+            return false;
         }
 
-        public override int UnionHashCode() {
-            return _indexTypes.Length;
+        public override int UnionHashCode(int strength) {
+            return ClassInfo.GetHashCode();
+        }
+
+        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+            if (object.ReferenceEquals(this, ns)) {
+                return this;
+            }
+            return ClassInfo.Instance;
         }
     }
 }

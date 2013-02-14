@@ -12,11 +12,8 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
-using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
@@ -33,8 +30,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Currently that includes strings, types, small integers, etc...
     /// </summary>
     class DependentKeyValue : DependentData<KeyValueDependencyInfo> {
-        private static Dictionary<Namespace, HashSet<Namespace>> EmptyDict = new Dictionary<Namespace, HashSet<Namespace>>();
-        private ISet<Namespace> _allValues;
+        private static Dictionary<Namespace, INamespaceSet> EmptyDict = new Dictionary<Namespace, INamespaceSet>();
+        private INamespaceSet _allValues;
 
         protected override KeyValueDependencyInfo NewDefinition(int version) {
             return new KeyValueDependencyInfo(version);
@@ -47,89 +44,87 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool AddTypes(IProjectEntry projectEntry, IEnumerable<Namespace> keyTypes, IEnumerable<Namespace> valueTypes, bool enqueue = true) {
             var dependencies = GetDependentItems(projectEntry);
 
-            bool added = false;
-            foreach (var key in keyTypes) {
-                TypeUnion values;
-                if (!dependencies.KeyValues.TryGetValue(key, out values)) {
-                    dependencies.KeyValues[key] = values = new TypeUnion();
-                    added = true;
-                }
+            // TODO: Get actual limit from current PythonAnalyzer
+            if (dependencies.KeyValues.Count > 50) {
+                dependencies.MakeUnionStronger();
+            }
 
-                foreach (var value in valueTypes) {
-                    if (values.Add(value)) {
-                        added = true;
-                        _allValues = null;
-                    }
+            bool anyAdded = false;
+            foreach (var key in keyTypes) {
+                INamespaceSet values;
+                if (!dependencies.KeyValues.TryGetValue(key, out values)) {
+                    dependencies.KeyValues[key] = values = NamespaceSet.Create(valueTypes);
+                    anyAdded = true;
+                } else {
+                    bool added;
+                    dependencies.KeyValues[key] = values.Union(valueTypes, out added);
+                    anyAdded |= added;
                 }
             }
 
-            if (added && enqueue) {
+            if (anyAdded) {
+                _allValues = null;
+            }
+            if (anyAdded && enqueue) {
                 EnqueueDependents();
             }
 
-            return added;
+            return anyAdded;
         }
 
-        public ISet<Namespace> KeyTypes {
+        public INamespaceSet KeyTypes {
             get {
                 if (_dependencies.Count == 0) {
-                    return EmptySet<Namespace>.Instance;
+                    return NamespaceSet.Empty;
                 }
 
-                HashSet<Namespace> res = null;
+                var res = NamespaceSet.Empty; ;
                 foreach (var keyValue in _dependencies.Values) {
-                    if (res == null) {
-                        res = new HashSet<Namespace>(keyValue.KeyValues.Keys);
-                    } else {
-                        res.UnionWith(keyValue.KeyValues.Keys);
-                    }
+                    res = res.Union(keyValue.KeyValues.Keys);
                 }
 
-                return (ISet<Namespace>)res ?? EmptySet<Namespace>.Instance;
+                return res;
             }
         }
 
-        public ISet<Namespace> AllValueTypes {
+        public INamespaceSet AllValueTypes {
             get {
                 if (_allValues != null) {
                     return _allValues;
                 }
                 if (_dependencies.Count == 0) {
-                    return EmptySet<Namespace>.Instance;
+                    return NamespaceSet.Empty;
                 }
 
-                HashSet<Namespace> res = null;
+                var res = NamespaceSet.Empty;
                 foreach (var dependency in _dependencies.Values) {
                     foreach (var keyValue in dependency.KeyValues) {
-                        if (res == null) {
-                            res = new HashSet<Namespace>(keyValue.Value.ToSetNoCopy());
-                        } else {
-                            res.UnionWith(keyValue.Value.ToSetNoCopy());
-                        }
+                        res = res.Union(keyValue.Value);
                     }
                 }
 
-                return (_allValues = (ISet<Namespace>)res ?? EmptySet<Namespace>.Instance);
+                _allValues = res;
+                return res;
             }
         }
 
-        public ISet<Namespace> GetValueType(ISet<Namespace> keyTypes) {
-            ISet<Namespace> res = null;
+        public INamespaceSet GetValueType(INamespaceSet keyTypes) {
+            var res = NamespaceSet.Empty;
             if (_dependencies.Count != 0) {
                 Namespace ns = keyTypes as Namespace;
                 foreach (var keyValue in _dependencies.Values) {
-                    TypeUnion union;
+                    INamespaceSet union;
                     if (ns != null) {
                         // optimize for the case where we're just looking up
                         // a single Namespace object which hasn't been copied into
                         // a set
                         if (keyValue.KeyValues.TryGetValue(ns, out union)) {
-                            res = UpdateSet(res, union);
+                            res = res.Union(union);
                         }
                     } else {
                         foreach (var keyType in keyTypes) {
                             if (keyValue.KeyValues.TryGetValue(keyType, out union)) {
-                                res = UpdateSet(res, union);
+                                res = res.Union(union);
                             }
                         }
                     }
@@ -149,40 +144,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            return res ?? EmptySet<Namespace>.Instance;
+            return res ?? NamespaceSet.Empty;
         }
 
-        private static ISet<Namespace> UpdateSet(ISet<Namespace> res, TypeUnion union) {
-            if (res == null) {
-                res = union.ToSet();
-            } else {
-                if (!(res is HashSet<Namespace>)) {
-                    res = new HashSet<Namespace>(res);
-                }
-                res.UnionWith(union);
-            }
-            return res;
-        }
-
-        public Dictionary<Namespace, HashSet<Namespace>> KeyValueTypes {
+        public Dictionary<Namespace, INamespaceSet> KeyValueTypes {
             get {
                 if (_dependencies.Count != 0) {
-                    Dictionary<Namespace, HashSet<Namespace>> res = null;
+                    Dictionary<Namespace, INamespaceSet> res = null;
                     foreach (var mod in _dependencies.Values) {
                         if (res == null) {
-                            res = new Dictionary<Namespace, HashSet<Namespace>>();
+                            res = new Dictionary<Namespace, INamespaceSet>();
                             foreach (var keyValue in mod.KeyValues) {
-                                res[keyValue.Key] = new HashSet<Namespace>(keyValue.Value);
+                                res[keyValue.Key] = keyValue.Value;
                             }
                         } else {
                             foreach (var keyValue in mod.KeyValues) {
-                                HashSet<Namespace> existing;
+                                INamespaceSet existing;
                                 if (!res.TryGetValue(keyValue.Key, out existing)) {
-                                    res[keyValue.Key] = new HashSet<Namespace>(keyValue.Value);
+                                    res[keyValue.Key] = keyValue.Value;
                                 } else {
-                                    foreach (var value in keyValue.Value) {
-                                        existing.Add(value);
-                                    }
+                                    res[keyValue.Key] = existing.Union(keyValue.Value, canMutate: false);
                                 }
                             }
                         }
@@ -198,28 +179,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// Copies the key/value types from the provided DependentKeyValue into this
         /// DependentKeyValue.
         /// </summary>
-        internal void CopyFrom(DependentKeyValue dependentKeyValue) {
-            bool added = false;
+        internal bool CopyFrom(DependentKeyValue dependentKeyValue, bool enqueue = true) {
+            bool anyAdded = false;
             foreach (var otherDependency in dependentKeyValue._dependencies) {
                 var deps = GetDependentItems(otherDependency.Key);
 
-                foreach (var keyValue in otherDependency.Value.KeyValues) {
-                    TypeUnion union;
-                    if (!deps.KeyValues.TryGetValue(keyValue.Key, out union)) {
-                        deps.KeyValues[keyValue.Key] = union = new TypeUnion();
-                    }
+                // TODO: Is this correct?
+                if (deps == otherDependency.Value) {
+                    continue;
+                }
 
-                    foreach (var type in keyValue.Value) {
-                        if (union.Add(type)) {
-                            added = true;
-                        }
+                foreach (var keyValue in otherDependency.Value.KeyValues) {
+                    INamespaceSet union;
+                    if (!deps.KeyValues.TryGetValue(keyValue.Key, out union)) {
+                        deps.KeyValues[keyValue.Key] = union = keyValue.Value;
+                        anyAdded = true;
+                    } else {
+                        bool added;
+                        deps.KeyValues[keyValue.Key] = union.Union(keyValue.Value, out added, canMutate: false);
+                        anyAdded |= added;
                     }
                 }
             }
 
-            if (added) {
+            if (anyAdded && enqueue) {
                 EnqueueDependents();
             }
+            return anyAdded;
         }
 
         /// <summary>

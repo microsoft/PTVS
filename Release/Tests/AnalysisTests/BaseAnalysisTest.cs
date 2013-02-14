@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.IO;
 using System.Linq;
 using IronPython.Runtime.Types;
@@ -20,6 +21,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace AnalysisTests {
@@ -28,28 +30,34 @@ namespace AnalysisTests {
     /// </summary>
     public class BaseAnalysisTest {
         public IPythonInterpreter Interpreter;
-        public IPythonType PyObjectType, IntType, StringType, UnicodeType, FloatType, TypeType, ListType, TupleType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
+        public IPythonType PyObjectType, IntType, BytesType, UnicodeType, FloatType, TypeType, ListType, TupleType, SetType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
         public string[] _objectMembers, _functionMembers;
         public string[] _strMembers;
         public string[] _listMembers, _intMembers;
+
+        static BaseAnalysisTest() {
+            AnalysisLog.Reset();
+            AnalysisLog.ResetTime();
+            TestData.Deploy(includeTestData: false);
+        }
 
         public BaseAnalysisTest()
             : this(new CPythonInterpreter(new CPythonInterpreterFactory(), PythonTypeDatabase.CreateDefaultTypeDatabase())) {
         }
 
         public BaseAnalysisTest(IPythonInterpreter interpreter) {
-            TestData.Deploy();
-
             Interpreter = interpreter;
             PyObjectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
+            Assert.IsNotNull(PyObjectType);
             IntType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);
             ComplexType = Interpreter.GetBuiltinType(BuiltinTypeId.Complex);
-            StringType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
+            BytesType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
             UnicodeType = Interpreter.GetBuiltinType(BuiltinTypeId.Str);
             FloatType = Interpreter.GetBuiltinType(BuiltinTypeId.Float);
             TypeType = Interpreter.GetBuiltinType(BuiltinTypeId.Type);
             ListType = Interpreter.GetBuiltinType(BuiltinTypeId.List);
             TupleType = Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
+            SetType = Interpreter.GetBuiltinType(BuiltinTypeId.Set);
             BoolType = Interpreter.GetBuiltinType(BuiltinTypeId.Bool);
             FunctionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
             GeneratorType = Interpreter.GetBuiltinType(BuiltinTypeId.Generator);
@@ -57,7 +65,7 @@ namespace AnalysisTests {
             ModuleType = Interpreter.GetBuiltinType(BuiltinTypeId.Module);
 
             _objectMembers = PyObjectType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _strMembers = StringType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+            _strMembers = BytesType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
             _listMembers = ListType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
             _intMembers = IntType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
             _functionMembers = FunctionType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
@@ -71,9 +79,14 @@ namespace AnalysisTests {
             return GetSourceUnit(text, "foo");
         }
 
-        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
+        protected virtual AnalysisLimits GetLimits() {
+            return AnalysisLimits.GetDefaultLimits();
+        }
+
+        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null, bool useAnalysisLog = false) {
             var sourceUnit = GetSourceUnit(text, "foo");
             var state = new PythonAnalyzer(Interpreter, version);
+            state.Limits = GetLimits();
             if (analysisDirs != null) {
                 foreach (var dir in analysisDirs) {
                     state.AddAnalysisDirectory(dir);

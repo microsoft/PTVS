@@ -33,14 +33,12 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public sealed class ModuleAnalysis {
         private readonly AnalysisUnit _unit;
-        private readonly InterpreterScope[] _scopes;
-        private readonly Stack<InterpreterScope> _scopeTree;
+        private readonly InterpreterScope _scope;
         private static Regex _otherPrivateRegex = new Regex("^_[a-zA-Z_]\\w*__[a-zA-Z_]\\w*$");
 
-        internal ModuleAnalysis(AnalysisUnit unit, Stack<InterpreterScope> tree) {
+        internal ModuleAnalysis(AnalysisUnit unit, InterpreterScope scope) {
             _unit = unit;
-            _scopes = unit.Scopes;
-            _scopeTree = tree;
+            _scope = scope;
         }
 
         #region Public API
@@ -50,39 +48,30 @@ namespace Microsoft.PythonTools.Analysis {
         /// that the expression can evaluate to.
         /// </summary>
         /// <param name="exprText">The expression to determine the result of.</param>
-        /// <param name="lineNumber">The 1-based line number to evaluate at within the module.</param>
-        [Obsolete("Use GetValuesByIndex instead")]
-        public IEnumerable<IAnalysisValue> GetValues(string exprText, int lineNumber) {
-            return GetValuesByIndex(exprText, LineToIndex(lineNumber));
-        }
-
-        /// <summary>
-        /// Evaluates the given expression in at the provided line number and returns the values
-        /// that the expression can evaluate to.
-        /// </summary>
-        /// <param name="exprText">The expression to determine the result of.</param>
         /// <param name="index">The 0-based absolute index into the file where the expression should be evaluated within the module.</param>
         public IEnumerable<IAnalysisValue> GetValuesByIndex(string exprText, int index) {
-            var scopes = FindScopes(index);
-            var privatePrefix = GetPrivatePrefixClassName(scopes);
+            var scope = FindScope(index);
+            var privatePrefix = GetPrivatePrefixClassName(scope);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
-            var unit = GetNearestEnclosingAnalysisUnit(scopes);
-            var eval = new ExpressionEvaluator(unit.CopyForEval(), scopes.ToArray());
+            var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
 
-            var res = eval.Evaluate(expr);
-            foreach (var v in res) {
+            var values = eval.Evaluate(expr);
+            var res = NamespaceSet.EmptyUnion;
+            foreach (var v in values) {
                 MultipleMemberInfo multipleMembers = v as MultipleMemberInfo;
                 if (multipleMembers != null) {
                     foreach (var member in multipleMembers.Members) {
-                        if (v.IsCurrent) {
-                            yield return member;
+                        if (member.IsCurrent) {
+                            res = res.Add(member);
                         }
                     }
                 } else if (v.IsCurrent) {
-                    yield return v;
+                    res = res.Add(v);
                 }
             }
+            return res;
         }
 
         internal IEnumerable<AnalysisVariable> ReferencablesToVariables(IEnumerable<IReferenceable> defs) {
@@ -105,10 +94,8 @@ namespace Microsoft.PythonTools.Analysis {
 
             VariableDef def = referenceable as VariableDef;
             if (def != null) {
-                foreach (var type in def.TypesNoCopy) {
-                    foreach (var location in type.Locations) {
-                        yield return new AnalysisVariable(VariableType.Value, location);
-                    }
+                foreach (var location in def.TypesNoCopy.SelectMany(type => type.Locations)) {
+                    yield return new AnalysisVariable(VariableType.Value, location);
                 }
             }
 
@@ -121,20 +108,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-
-        /// <summary>
-        /// Gets the variables the given expression evaluates to.  Variables include parameters, locals, and fields assigned on classes, modules and instances.
-        /// 
-        /// Variables are classified as either definitions or references.  Only parameters have unique definition points - all other types of variables
-        /// have only one or more references.
-        /// 
-        /// lineNumber is a 1-based line number.
-        /// </summary>
-        [Obsolete("Use GetVariablesByIndex instead")]
-        public IEnumerable<IAnalysisVariable> GetVariables(string exprText, int lineNumber) {
-            return GetVariablesByIndex(exprText, LineToIndex(lineNumber));
-        }
-
         /// <summary>
         /// Gets the variables the given expression evaluates to.  Variables include parameters, locals, and fields assigned on classes, modules and instances.
         /// 
@@ -144,94 +117,78 @@ namespace Microsoft.PythonTools.Analysis {
         /// index is a 0-based absolute index into the file.
         /// </summary>
         public IEnumerable<IAnalysisVariable> GetVariablesByIndex(string exprText, int index) {
-            var scopes = FindScopes(index);
-            string privatePrefix = GetPrivatePrefixClassName(scopes);
+            var scope = FindScope(index);
+            string privatePrefix = GetPrivatePrefixClassName(scope);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
 
-            var unit = GetNearestEnclosingAnalysisUnit(scopes);
-            var eval = new ExpressionEvaluator(unit.CopyForEval(), scopes.ToArray());
+            var unit = GetNearestEnclosingAnalysisUnit(scope);
             NameExpression name = expr as NameExpression;
             if (name != null) {
-                for (int i = scopes.Count - 1; i >= 0; i--) {
-                    VariableDef def;
-                    if (IncludeScope(scopes, i, index)) {
-                        if (scopes[i].Variables.TryGetValue(name.Name, out def)) {
-                            foreach (var res in ToVariables(def)) {
-                                yield return res;
-                            }
+                var defScope = scope.EnumerateTowardsGlobal.FirstOrDefault(s =>
+                    s.Variables.ContainsKey(name.Name) && (s == scope || s.VisibleToChildren || IsFirstLineOfFunction(scope, s, index)));
 
-                            // if a variable is imported from another module then also yield the defs/refs for the 
-                            // value in the defining module.
-                            var linked = scopes[i].GetLinkedVariablesNoCreate(name.Name);
-                            if (linked != null) {
-                                foreach (var linkedVar in linked) {
-                                    foreach (var res in ToVariables(linkedVar)) {
-                                        yield return res;
-                                    }
-                                }
-                            }
-
-                            IsInstanceScope isInstScope = scopes[i] as IsInstanceScope;
-                            if (isInstScope != null) {
-                                VariableDef outerVar;
-                                if (isInstScope.OuterVariables.TryGetValue(name.Name, out outerVar)) {
-                                    foreach (var res in ToVariables(outerVar)) {
-                                        yield return res;
-                                    }
-                                }
-                            }
-
-                            // if the member is defined in a base class as well include the base class member and references
-                            if (scopes[i] is ClassScope) {
-                                var klass = scopes[i].Namespace as ClassInfo;
-                                if (klass.Push()) {
-                                    try {
-                                        foreach (var baseClass in klass.Bases) {
-                                            foreach (var baseNs in baseClass) {
-                                                if (baseNs.Push()) {
-                                                    try {
-                                                        ClassInfo baseClassNs = baseNs as ClassInfo;
-                                                        if (baseClassNs != null) {
-                                                            if (baseClassNs.Scope.Variables.TryGetValue(name.Name, out def)) {
-                                                                foreach (var res in ToVariables(def)) {
-                                                                    yield return res;
-                                                                }
-                                                            }
-                                                        }
-                                                    } finally {
-                                                        baseNs.Pop();
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } finally {
-                                        klass.Pop();
-                                    }
-                                }
-                            }
-                            yield break;
-                        }
-                    }
+                if (defScope == null) {
+                    var variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name);
+                    return variables.SelectMany(ToVariables);
                 }
 
-                var variables = _unit.ProjectState.BuiltinModule.GetDefinitions(name.Name);
-                foreach (var referenceable in variables) {
-                    foreach (var res in ToVariables(referenceable)) {
-                        yield return res;
-                    }
-                }
+                return GetVariablesInScope(name, defScope).Distinct();
             }
 
             MemberExpression member = expr as MemberExpression;
             if (member != null) {
+                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 var objects = eval.Evaluate(member.Target);
 
                 foreach (var v in objects) {
                     var container = v as IReferenceableContainer;
                     if (container != null) {
-                        foreach (var variable in ReferencablesToVariables(container.GetDefinitions(member.Name))) {
-                            yield return variable;
+                        return ReferencablesToVariables(container.GetDefinitions(member.Name));
+                    }
+                }
+            }
+
+            return Enumerable.Empty<IAnalysisVariable>();
+        }
+
+        private IEnumerable<IAnalysisVariable> GetVariablesInScope(NameExpression name, InterpreterScope scope) {
+            foreach (var res in scope.GetMergedVariables(name.Name).SelectMany(ToVariables)) {
+                yield return res;
+            }
+
+            // if a variable is imported from another module then also yield the defs/refs for the 
+            // value in the defining module.
+            var linked = scope.GetLinkedVariablesNoCreate(name.Name);
+            if (linked != null) {
+                foreach (var linkedVar in linked) {
+                    foreach (var res in ToVariables(linkedVar)) {
+                        yield return res;
+                    }
+                }
+            }
+
+            var classScope = scope as ClassScope;
+            if (classScope != null) {
+                // if the member is defined in a base class as well include the base class member and references
+                var cls = classScope.Class;
+                if (cls.Push()) {
+                    try {
+                        foreach (var baseNs in cls.Bases.SelectMany(c => c)) {
+                            if (baseNs.Push()) {
+                                try {
+                                    ClassInfo baseClassNs = baseNs as ClassInfo;
+                                    if (baseClassNs != null) {
+                                        foreach (var res in baseClassNs.Scope.GetMergedVariables(name.Name).SelectMany(ToVariables)) {
+                                            yield return res;
+                                        }
+                                    }
+                                } finally {
+                                    baseNs.Pop();
+                                }
+                            }
                         }
+                    } finally {
+                        cls.Pop();
                     }
                 }
             }
@@ -266,35 +223,18 @@ namespace Microsoft.PythonTools.Analysis {
             return res.ToArray();
         }
 
-        private static bool IncludeScope(List<InterpreterScope> scopes, int i, int index) {
-            if (scopes[i].VisibleToChildren || i == scopes.Count - 1) {
-                return true;
-            }
-
-            // if we're on the 1st line of a function include our class def as well
-            if (i == scopes.Count - 2 && scopes[scopes.Count - 1] is FunctionScope) {
-                var funcScope = (FunctionScope)scopes[scopes.Count - 1];
+        private static bool IsFirstLineOfFunction(InterpreterScope innerScope, InterpreterScope outerScope, int index) {
+            if (innerScope.OuterScope == outerScope && innerScope is FunctionScope) {
+                var funcScope = (FunctionScope)innerScope;
                 var def = funcScope.Function.FunctionDefinition;
 
-                // TODO: Fix me to use indexes
+                // TODO: Use indexes rather than lines to check location
                 int lineNo = def.GlobalParent.IndexToLocation(index).Line;
                 if (lineNo == def.GetStart(def.GlobalParent).Line) {
                     return true;
                 }
             }
             return false;
-        }
-
-        /// <summary>
-        /// Evaluates a given expression and returns a list of members which exist in the expression.
-        /// 
-        /// If the expression is an empty string returns all available members at that location.
-        /// 
-        /// lineNumber is a 1-based line number.
-        /// </summary>
-        [Obsolete("Use GetMembersByIndex instead")]
-        public IEnumerable<MemberResult> GetMembers(string exprText, int lineNumber, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
-            return GetMembersByIndex(exprText, LineToIndex(lineNumber), options);
         }
 
         /// <summary>
@@ -309,8 +249,8 @@ namespace Microsoft.PythonTools.Analysis {
                 return GetAllAvailableMembersByIndex(index, options);
             }
 
-            var scopes = FindScopes(index).ToArray();
-            var privatePrefix = GetPrivatePrefixClassName(scopes);
+            var scope = FindScope(index);
+            var privatePrefix = GetPrivatePrefixClassName(scope);
 
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
             if (expr is ConstantExpression && ((ConstantExpression)expr).Value is int) {
@@ -318,19 +258,9 @@ namespace Microsoft.PythonTools.Analysis {
                 return new MemberResult[0];
             }
 
-            var unit = GetNearestEnclosingAnalysisUnit(scopes);
-            var lookup = new ExpressionEvaluator(unit.CopyForEval(), scopes).Evaluate(expr);
-            return GetMemberResults(lookup, scopes, options);
-        }
-
-        /// <summary>
-        /// Gets information about the available signatures for the given expression.
-        /// </summary>
-        /// <param name="exprText">The expression to get signatures for.</param>
-        /// <param name="lineNumber">The 1-based line number to use for the context of looking up members.</param>
-        [Obsolete("Use GetSignaturesByIndex instead")]
-        public IEnumerable<IOverloadResult> GetSignatures(string exprText, int lineNumber) {
-            return GetSignaturesByIndex(exprText, LineToIndex(lineNumber));
+            var unit = GetNearestEnclosingAnalysisUnit(scope);
+            var lookup = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true).Evaluate(expr);
+            return GetMemberResults(lookup, scope, options);
         }
 
         /// <summary>
@@ -340,9 +270,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// <param name="index">The 0-based absolute index into the file.</param>
         public IEnumerable<IOverloadResult> GetSignaturesByIndex(string exprText, int index) {
             try {
-                var scopes = FindScopes(index).ToArray();
-                var unit = GetNearestEnclosingAnalysisUnit(scopes);
-                var eval = new ExpressionEvaluator(unit.CopyForEval(), scopes);
+                var scope = FindScope(index);
+                var unit = GetNearestEnclosingAnalysisUnit(scope);
+                var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
                 using (var parser = Parser.CreateParser(new StringReader(exprText), _unit.ProjectState.LanguageVersion)) {
                     var expr = GetExpression(parser.ParseTopExpression().Body);
                     if (expr is ListExpression ||
@@ -375,8 +305,8 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 var result = new List<MemberResult>();
 
-                foreach (var scope in FindScopes(index)) {
-                    result.Add(new MemberResult(scope.Name, scope.Namespace.SelfSet));
+                foreach (var scope in FindScope(index).EnumerateTowardsGlobal) {
+                    result.Add(new MemberResult(scope.Name, scope.GetMergedNamespaces()));
                 }
 
                 return result;
@@ -394,19 +324,20 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 var result = new List<IOverloadResult>();
 
-                var scopes = FindScopes(index, useIndent: true);
-                var cls = scopes.LastOrDefault() as ClassScope;
+                var scope = FindScope(index, useIndent: true);
+                var cls = scope as ClassScope;
                 if (cls == null) {
                     return result;
                 }
                 var handled = new HashSet<string>(cls.Children.Select(child => child.Name));
 
-                var mro = cls.Class.Mro;
+                var cls2 = scope as ClassScope;
+                var mro = (cls2 ?? cls).Class.Mro;
                 if (mro == null) {
                     return result;
                 }
 
-                foreach (var baseClass in mro.Skip(1).SelectMany(x => x)) {
+                foreach (var baseClass in mro.Skip(1).SelectMany()) {
                     ClassInfo klass;
                     BuiltinClassInfo builtinClass;
                     IEnumerable<Namespace> source;
@@ -461,15 +392,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the available names at the given location.  This includes built-in variables, global variables, and locals.
         /// </summary>
-        /// <param name="lineNumber">The 1-based line number where the available mebmers should be looked up.</param>
-        [Obsolete("Use GetAllAvailableMembersByIndex instead")]
-        public IEnumerable<MemberResult> GetAllAvailableMembers(int lineNumber, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
-            return GetAllAvailableMembers(LineToIndex(lineNumber), options);
-        }
-
-        /// <summary>
-        /// Gets the available names at the given location.  This includes built-in variables, global variables, and locals.
-        /// </summary>
         /// <param name="index">The 0-based absolute index into the file where the available mebmers should be looked up.</param>
         public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             var result = new Dictionary<string, List<Namespace>>();
@@ -480,22 +402,22 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // collect variables from user defined scopes
-            var scopes = FindScopes(index);
-            foreach (var scope in scopes) {
-                foreach (var kvp in scope.Variables) {
+            var scope = FindScope(index);
+            foreach (var s in scope.EnumerateTowardsGlobal) {
+                foreach (var kvp in s.GetAllMergedVariables()) {
                     result[kvp.Key] = new List<Namespace>(kvp.Value.TypesNoCopy);
                 }
             }
 
-            var res = MemberDictToResultList(GetPrivatePrefix(scopes), options, result);
+            var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
             if (options.Keywords()) {
-                res = Enumerable.Concat(res, GetKeywordMembers(options, scopes));
+                res = Enumerable.Concat(res, GetKeywordMembers(options, scope));
             }
 
             return res;
         }
 
-        private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, List<InterpreterScope> scopes) {
+        private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, InterpreterScope scope) {
             if (options.ExpressionKeywords()) {
                 // keywords available in any context
                 yield return new MemberResult("and", PythonMemberType.Keyword);
@@ -513,7 +435,7 @@ namespace Microsoft.PythonTools.Analysis {
             bool isStmtContext = options.StatementKeywords();
 
             // and now the keywords...
-            if (scopes[scopes.Count - 1] is FunctionScope) {
+            if (scope is FunctionScope) {
                 if (isStmtContext) {
                     yield return new MemberResult("return", PythonMemberType.Keyword);
                 }
@@ -564,44 +486,20 @@ namespace Microsoft.PythonTools.Analysis {
         #endregion
 
         /// <summary>
-        /// TODO: This should go away, it's only used for tests.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="lineNumber"></param>
-        /// <returns></returns>
-        internal IEnumerable<IPythonType> GetTypesFromNameByIndex(string name, int index) {
-            var chain = FindScopes(index);
-            var result = new HashSet<IPythonType>();
-            foreach (var scope in chain) {
-                if (scope.VisibleToChildren || scope == chain[chain.Count - 1]) {
-                    VariableDef v;
-                    if (scope.Variables.TryGetValue(name, out v)) {
-                        foreach (var ns in v.TypesNoCopy) {
-                            if (ns != null && ns.PythonType != null) {
-                                result.Add(ns.PythonType);
-                            }
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-
-        /// <summary>
         /// Returns a list of valid names available at the given position in the analyzed source code minus the builtin variables.
         /// 
         /// TODO: This should go away, it's only used for tests.
         /// </summary>
-        /// <param name="lineNumber">The line number where the available mebmers should be looked up.</param>
+        /// <param name="index">The index where the available mebmers should be looked up.</param>
         internal IEnumerable<string> GetVariablesNoBuiltinsByIndex(int index) {
-            var chain = FindScopes(index);
-            foreach (var scope in chain) {
-                if (scope.VisibleToChildren || scope == chain[chain.Count - 1]) {
-                    foreach (var varName in scope.Variables) {
-                        yield return varName.Key;
-                    }
+            var result = Enumerable.Empty<string>();
+            var chain = FindScope(index);
+            foreach (var scope in chain.EnumerateFromGlobal) {
+                if (scope.VisibleToChildren || scope == chain) {
+                    result = result.Concat(scope.GetAllMergedVariables().Select(val => val.Key));
                 }
             }
+            return result.Distinct();
         }
 
         /// <summary>
@@ -609,7 +507,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         internal ModuleInfo GlobalScope {
             get {
-                var result = (Scopes[0] as ModuleScope);
+                var result = (Scope as ModuleScope);
                 Debug.Assert(result != null);
                 return result.Module;
             }
@@ -621,22 +519,15 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        /// <summary>
-        /// Gets the tree of all scopes for the module.
-        /// </summary>
-        internal Stack<InterpreterScope> ScopeTree {
-            get { return _scopeTree; }
-        }
-
         public PythonAnalyzer ProjectState {
             get { return GlobalScope.ProjectEntry.ProjectState; }
         }
 
-        internal InterpreterScope[] Scopes {
-            get { return _scopes; }
+        internal InterpreterScope Scope {
+            get { return _scope; }
         }
 
-        internal IEnumerable<MemberResult> GetMemberResults(IEnumerable<Namespace> vars, InterpreterScope[] scopes, GetMemberOptions options) {
+        internal IEnumerable<MemberResult> GetMemberResults(IEnumerable<Namespace> vars, InterpreterScope scope, GetMemberOptions options) {
             IList<Namespace> namespaces = new List<Namespace>();
             foreach (var ns in vars) {
                 if (ns != null) {
@@ -651,7 +542,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return new MemberResult[0];
                 }
 
-                return SingleMemberResult(GetPrivatePrefix(scopes), options, newMembers);
+                return SingleMemberResult(GetPrivatePrefix(scope), options, newMembers);
             }
 
             Dictionary<string, List<Namespace>> memberDict = null;
@@ -735,7 +626,7 @@ namespace Microsoft.PythonTools.Analysis {
                 // intersection. Setting it to null saves lookups later.
                 ownerDict = null;
             }
-            return MemberDictToResultList(GetPrivatePrefix(scopes), options, memberDict, ownerDict, namespacesCount);
+            return MemberDictToResultList(GetPrivatePrefix(scope), options, memberDict, ownerDict, namespacesCount);
         }
 
         /// <summary>
@@ -762,7 +653,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// New in 1.1.
         /// </summary>
         public PythonAst GetAstFromTextByIndex(string exprText, int index) {
-            var scopes = FindScopes(index);
+            var scopes = FindScope(index);
             var privatePrefix = GetPrivatePrefixClassName(scopes);
 
             return GetAstFromText(exprText, privatePrefix);
@@ -770,7 +661,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public string ModuleName {
             get {
-                return _scopes[0].Name;
+                return _scope.GlobalScope.Name;
             }
         }
 
@@ -793,10 +684,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the chain of scopes which are associated with the given position in the code.
         /// </summary>
-        private List<InterpreterScope> FindScopes(int index, bool useIndent = false) {
-            InterpreterScope curScope = ScopeTree.First();
+        private InterpreterScope FindScope(int index, bool useIndent = false) {
+            InterpreterScope curScope = Scope;
             InterpreterScope prevScope = null;
-            var chain = new List<InterpreterScope> { Scopes[0] };
             var parent = _unit.Tree;
 
             while (curScope != prevScope) {
@@ -847,7 +737,6 @@ namespace Microsoft.PythonTools.Analysis {
                         if (inScope) {
                             if (!(scope is StatementScope)) {
                                 curScope = scope;
-                                chain.Add(curScope);
                             }
                             break;
                         }
@@ -868,7 +757,6 @@ namespace Microsoft.PythonTools.Analysis {
 
                                     if (index >= nameStart && index <= (nameStart + paramName.Length)) {
                                         curScope = scope;
-                                        chain.Add(curScope);
                                         isParam = true;
                                         break;
                                     }
@@ -886,7 +774,7 @@ namespace Microsoft.PythonTools.Analysis {
                     lastStart = scope.GetStart(parent);
                 }
             }
-            return chain;
+            return curScope;
         }
 
         private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<Namespace>> memberDict,
@@ -933,7 +821,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private static IEnumerable<MemberResult> SingleMemberResult(string privatePrefix, GetMemberOptions options, IDictionary<string, ISet<Namespace>> memberDict) {
+        private static IEnumerable<MemberResult> SingleMemberResult(string privatePrefix, GetMemberOptions options, IDictionary<string, INamespaceSet> memberDict) {
             foreach (var kvp in memberDict) {
                 string name = GetMemberName(privatePrefix, options, kvp.Key);
                 if (name != null) {
@@ -952,17 +840,13 @@ namespace Microsoft.PythonTools.Analysis {
             return null;
         }
 
-        private static string GetPrivatePrefixClassName(IList<InterpreterScope> scopes) {
-            for (int scope = scopes.Count - 1; scope >= 0; scope--) {
-                if (scopes[scope] is ClassScope) {
-                    return scopes[scope].Name;
-                }
-            }
-            return null;
+        private static string GetPrivatePrefixClassName(InterpreterScope scope) {
+            var klass = scope.EnumerateTowardsGlobal.OfType<ClassScope>().FirstOrDefault();
+            return klass == null ? null : klass.Name;
         }
 
-        private static string GetPrivatePrefix(IList<InterpreterScope> scopes) {
-            string classScopePrefix = GetPrivatePrefixClassName(scopes);
+        private static string GetPrivatePrefix(InterpreterScope scope) {
+            string classScopePrefix = GetPrivatePrefixClassName(scope);
             if (classScopePrefix != null) {
                 return "_" + classScopePrefix + "__";
             }
@@ -983,8 +867,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// Finds the best available analysis unit for lookup. This will be the one that is provided
         /// by the nearest enclosing scope that is capable of providing one.
         /// </summary>
-        private AnalysisUnit GetNearestEnclosingAnalysisUnit(IEnumerable<InterpreterScope> scopes) {
-            var units = from scope in scopes.Reverse()
+        private AnalysisUnit GetNearestEnclosingAnalysisUnit(InterpreterScope scopes) {
+            var units = from scope in scopes.EnumerateTowardsGlobal
                         let ns = scope.Namespace
                         where ns != null
                         let unit = ns.AnalysisUnit

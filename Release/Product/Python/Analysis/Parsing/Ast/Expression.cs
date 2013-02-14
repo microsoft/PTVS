@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Diagnostics;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public abstract class Expression : Node {

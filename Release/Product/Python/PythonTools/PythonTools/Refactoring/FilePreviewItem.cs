@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Refactoring {
             if (buffer.Properties.ContainsProperty(typeof(VsProjectAnalyzer))) {
                 buffer.Properties.RemoveProperty(typeof(VsProjectAnalyzer));
             }
-            buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), this.Engine._analayzer);
+            buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), this.Engine._analyzer);
 
             view.SetBuffer(_buffer);
         }

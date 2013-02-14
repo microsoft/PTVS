@@ -96,7 +96,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
             if (PythonToolsPackage.Instance != null) {
-                _pyAnalyzer.CrossModuleAnalysisLimit = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
+                _pyAnalyzer.Limits.CrossModule = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
+                // TODO: Load other limits from options
             }
         }
 

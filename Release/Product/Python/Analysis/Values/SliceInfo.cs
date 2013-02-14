@@ -12,18 +12,17 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class SliceInfo : Namespace {
-        /*private ISet<Namespace> _start;
-        private ISet<Namespace> _stop;
-        private ISet<Namespace> _step;*/
+        /*private INamespaceSet _start;
+        private INamespaceSet _stop;
+        private INamespaceSet _step;*/
         public static SliceInfo Instance = new SliceInfo();
 
         public SliceInfo() { }
         /*
-        public SliceInfo(ISet<Namespace> start, ISet<Namespace> stop, ISet<Namespace> step) {
+        public SliceInfo(INamespaceSet start, INamespaceSet stop, INamespaceSet step) {
             _start = start;
             _stop = stop;
             _step = step;

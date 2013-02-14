@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -38,8 +39,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void AddDependentUnit(AnalysisUnit unit) {
-            AddValue(ref _dependentUnits, unit);
+        public bool AddDependentUnit(AnalysisUnit unit) {
+            return AddValue(ref _dependentUnits, unit);
         }
 
         public int Version {
@@ -73,50 +74,84 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     internal class KeyValueDependencyInfo : DependencyInfo {
-        internal Dictionary<Namespace, TypeUnion> KeyValues = new Dictionary<Namespace,TypeUnion>();
+        internal Dictionary<Namespace, INamespaceSet> KeyValues = new Dictionary<Namespace, INamespaceSet>();
 
         public KeyValueDependencyInfo(int version)
             : base(version) {
         }
 
+        internal void MakeUnionStronger() {
+            var cmp = KeyValues.Comparer as UnionComparer;
+            if (cmp != null && cmp.Strength == UnionComparer.MAX_STRENGTH) {
+                return;
+            }
+            if (cmp == null) {
+                cmp = UnionComparer.Instances[0];
+            } else {
+                cmp = UnionComparer.Instances[cmp.Strength + 1];
+            }
+
+            var matches = new Dictionary<Namespace, List<KeyValuePair<Namespace, INamespaceSet>>>(cmp);
+            foreach (var keyValue in KeyValues) {
+                List<KeyValuePair<Namespace, INamespaceSet>> values;
+                if (!matches.TryGetValue(keyValue.Key, out values)) {
+                    values = matches[keyValue.Key] = new List<KeyValuePair<Namespace, INamespaceSet>>();
+                }
+                values.Add(keyValue);
+            }
+
+            KeyValues = new Dictionary<Namespace, INamespaceSet>(cmp);
+            foreach (var list in matches.Values) {
+                bool dummy;
+                var key = list[0].Key;
+                var value = list[0].Value.AsUnion(cmp, out dummy);
+
+                foreach (var item in list.Skip(1)) {
+                    key = cmp.MergeTypes(key, item.Key, out dummy);
+                    value = value.Union(item.Value);
+                }
+
+                KeyValues[key] = value;
+            }
+        }
     }
 
     internal class TypedDependencyInfo<T> : DependencyInfo where T : Namespace {
-        private ISet<Namespace> _types;
+        private INamespaceSet _types;
         public ISet<EncodedLocation> _references, _assignments;
 
         public TypedDependencyInfo(int version)
+            : this(version, NamespaceSet.Empty) { }
+
+        public TypedDependencyInfo(int version, INamespaceSet emptySet)
             : base(version) {
+            _types = emptySet;
         }
 
         public bool AddType(Namespace ns) {
-            return TypeUnion.Add(ref _types, ns);
+            bool wasChanged;
+            _types = _types.Add(ns, out wasChanged);
+            return wasChanged;
         }
 
-        public ISet<Namespace> ToImmutableTypeSet() {
-            if (_types == null) {
-                return EmptySet<Namespace>.Instance;
-            } else if (_types is Namespace || _types is SetOfTwo<Namespace>) {
-                return _types;
-            }
-
-            return new HashSet<Namespace>(_types);
+        internal bool MakeUnion(int strength) {
+            bool wasChanged;
+            _types = _types.AsUnion(strength, out wasChanged);
+            return wasChanged;
         }
 
-        public ISet<Namespace> Types {
+        public INamespaceSet ToImmutableTypeSet() {
+            return _types.Clone();
+        }
+
+        public INamespaceSet Types {
             get {
                 return _types;
             }
         }
 
-        public bool HasTypes {
-            get {
-                return _types != null;
-            }
-        }
-
-        public void AddReference(EncodedLocation location) {
-            HashSetExtensions.AddValue(ref _references, location);
+        public bool AddReference(EncodedLocation location) {
+            return HashSetExtensions.AddValue(ref _references, location);
         }
 
         public IEnumerable<EncodedLocation> References {
@@ -125,8 +160,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void AddAssignment(EncodedLocation location) {
-            HashSetExtensions.AddValue(ref _assignments, location);
+        public bool AddAssignment(EncodedLocation location) {
+            return HashSetExtensions.AddValue(ref _assignments, location);
         }
 
         public IEnumerable<EncodedLocation> Assignments {

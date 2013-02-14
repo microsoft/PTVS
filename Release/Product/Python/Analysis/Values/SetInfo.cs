@@ -12,61 +12,16 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class SetInfo : BuiltinInstanceInfo {
-        private VariableDef _valueTypes;
+    internal class SetInfo : SequenceInfo {
+        public SetInfo(PythonAnalyzer projectState, Node node)
+            : base(VariableDef.EmptyArray, projectState._setType, node) { }
 
-        public SetInfo(PythonAnalyzer projectState)
-            : base(projectState._setType) {
-            _valueTypes = new VariableDef();
-        }
-
-        public void AddTypes(AnalysisUnit unit, ISet<Namespace> types) {
-            _valueTypes.AddTypes(unit, types);
-        }
-
-        public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            _valueTypes.AddDependency(unit);
-            return _valueTypes.Types;
-        }
-
-        public override string ShortDescription {
-            get {
-                return "set";
-            }
-        }
-
-        public override string Description {
-            get {
-                // set({k})
-                Namespace valueType = _valueTypes.TypesNoCopy.GetUnionType();
-                string valueName = valueType == null ? null : valueType.ShortDescription;
-
-                if (valueName != null) {
-                    return "set({" + valueName + "})";
-                }
-
-                return "set";
-            }
-        }
-
-        public override bool UnionEquals(Namespace ns) {
-            return ns is SetInfo;
-        }
-
-        public override int UnionHashCode() {
-            return 2;
-        }
-
-        public override PythonMemberType MemberType {
-            get {
-                return PythonMemberType.Field;
-            }
+        public void AddTypes(AnalysisUnit unit, INamespaceSet types) {
+            base.AddTypes(unit, new[] { types });
         }
     }
 }

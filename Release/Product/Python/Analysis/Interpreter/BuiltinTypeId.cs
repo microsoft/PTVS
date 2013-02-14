@@ -75,6 +75,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// StrIterator is the same as for Unicode on both 2.x and 3.x.
         /// </summary>
         StrIterator,
-        BytesIterator
+        BytesIterator,
+
+        CallableIterator
     }
 }

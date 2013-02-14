@@ -1016,6 +1016,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 case BuiltinTypeId.SetIterator: return MakeHandle(GetTypeFromType(typeof(SetIterator)));
                 case BuiltinTypeId.StrIterator: return MakeHandle(GetTypeFromType(typeof(IEnumeratorOfTWrapper<string>)));
                 case BuiltinTypeId.BytesIterator: return MakeHandle(GetTypeFromType(typeof(IEnumeratorOfTWrapper<string>)));
+                case BuiltinTypeId.CallableIterator: return MakeHandle(GetTypeFromType(typeof(SentinelIterator)));
                 default:
                     return new ObjectIdentityHandle();
             }

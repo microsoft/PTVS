@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using DebuggerTests;
@@ -278,7 +279,16 @@ NameError: name 'does_not_exist' is not defined
                 brkHit.Set();
             };
 
-            process.Start();
+            try {
+                process.Start();
+            } catch (Win32Exception ex) {
+                _processes.Remove(process);
+                if (ex.HResult == -2147467259 /*0x80004005*/) {
+                    Assert.Inconclusive("Required Python interpreter is not installed");
+                } else {
+                    Assert.Fail("Process start failed:\r\n" + ex.ToString());
+                }
+            }
 
             if (!brkHit.WaitOne(25000)) {
                 Assert.Fail("Failed to wait on event");

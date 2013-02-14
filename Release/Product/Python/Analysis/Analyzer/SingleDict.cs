@@ -16,41 +16,96 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     /// <summary>
     /// A simple dictionary like object which has efficient storage when there's only a single item in the dictionary.
     /// </summary>
+    [DebuggerDisplay("Count = {Count}")]
     struct SingleDict<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> {
-        private object _data; // Dictionary<TKey, TValue> or SingleEntry<TKey, TValue>
+        [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
+        private object _data; // Dictionary<TKey, TValue>, SingleEntry<TKey, TValue> or IEqualityComparer<TKey>
+
+        public SingleDict(IEqualityComparer<TKey> comparer) {
+            _data = comparer;
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        private KeyValuePair<TKey, TValue>[] AllItems {
+            get {
+                var single = _data as SingleDependency;
+                if (single != null) {
+                    return new[] { new KeyValuePair<TKey, TValue>(single.Key, single.Value) };
+                }
+
+                var dict = _data as Dictionary<TKey, TValue>;
+                if (dict != null) {
+                    return dict.ToArray();
+                }
+
+                return new KeyValuePair<TKey, TValue>[0];
+            }
+        }
+
+        public IEqualityComparer<TKey> Comparer {
+            get {
+                var single = _data as SingleDependency;
+                if (single != null) {
+                    return single.Comparer;
+                }
+
+                var dict = _data as Dictionary<TKey, TValue>;
+                if (dict != null) {
+                    return dict.Comparer;
+                }
+
+                return (_data as IEqualityComparer<TKey>) ?? EqualityComparer<TKey>.Default;
+            }
+        }
 
         sealed class SingleDependency {
             public readonly TKey Key;
             public TValue Value;
+            public readonly IEqualityComparer<TKey> Comparer;
 
-            public SingleDependency(TKey key, TValue value) {
+            public SingleDependency(TKey key, TValue value, IEqualityComparer<TKey> comparer) {
                 Key = key;
                 Value = value;
+                Comparer = comparer;
             }
         }
 
-        internal bool TryGetValue(TKey fromModule, out TValue deps) {
+
+        public bool ContainsKey(TKey key) {
+            var single = _data as SingleDependency;
+            if (single != null) {
+                return single.Comparer.Equals(single.Key, key);
+            }
+            var dict = _data as Dictionary<TKey, TValue>;
+            if (dict != null) {
+                return dict.ContainsKey(key);
+            }
+            return false;
+        }
+
+        public bool TryGetValue(TKey key, out TValue value) {
             SingleDependency single = _data as SingleDependency;
             if (single != null) {
-                if (single.Key.Equals(fromModule)) {
-                    deps = single.Value;
+                if (single.Comparer.Equals(single.Key, key)) {
+                    value = single.Value;
                     return true;
                 }
-                deps = default(TValue);
+                value = default(TValue);
                 return false;
             }
 
-            Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
-            if (_data != null) {
-                return dict.TryGetValue(fromModule, out deps);
+            var dict = _data as Dictionary<TKey, TValue>;
+            if (dict != null) {
+                return dict.TryGetValue(key, out value);
             }
 
-            deps = default(TValue);
+            value = default(TValue);
             return false;
         }
 
@@ -64,48 +119,51 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 throw new KeyNotFoundException();
             }
             set {
-                if (_data == null) {
-                    _data = new SingleDependency(key, value);
+                IEqualityComparer<TKey> comparer = null;
+                if (_data == null || (comparer = _data as IEqualityComparer<TKey>) != null) {
+                    _data = new SingleDependency(key, value, comparer ?? EqualityComparer<TKey>.Default);
                     return;
                 }
 
-                SingleDependency single = _data as SingleDependency;
+                var single = _data as SingleDependency;
                 if (single != null) {
-                    if (single.Key.Equals(key)) {
+                    if (single.Comparer.Equals(single.Key, key)) {
                         single.Value = value;
                         return;
                     }
 
-                    var data = new Dictionary<TKey, TValue>();
+                    var data = new Dictionary<TKey, TValue>(single.Comparer);
                     data[single.Key] = single.Value;
+                    data[key] = value;
                     _data = data;
+                    return;
                 }
 
-                Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as Dictionary<TKey, TValue>;
                 if (dict == null) {
-                    _data = dict = new Dictionary<TKey, TValue>();
+                    _data = dict = new Dictionary<TKey, TValue>(comparer ?? EqualityComparer<TKey>.Default);
                 }
                 dict[key] = value;
             }
         }
 
         internal void Remove(TKey fromModule) {
-            SingleDependency single = _data as SingleDependency;
+            var single = _data as SingleDependency;
             if (single != null) {
-                if (single.Key.Equals(fromModule)) {
-                    _data = null;
+                if (single.Comparer.Equals(single.Key, fromModule)) {
+                    _data = single.Comparer;
                 }
                 return;
             }
 
-            Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
-            if (_data != null) {
+            var dict = _data as Dictionary<TKey, TValue>;
+            if (dict != null) {
                 dict.Remove(fromModule);
             }
         }
 
         public bool TryGetSingleValue(out TValue value) {
-            SingleDependency single = _data as SingleDependency;
+            var single = _data as SingleDependency;
             if (single != null) {
                 value = single.Value;
                 return true;
@@ -115,6 +173,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public Dictionary<TKey, TValue>.ValueCollection DictValues {
             get {
                 Debug.Assert(_data is Dictionary<TKey, TValue>);
@@ -123,29 +182,46 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        internal Dictionary<TKey, TValue> InternalDict {
+            get {
+                return _data as Dictionary<TKey, TValue>;
+            }
+            set {
+                if (value.Count == 1) {
+                    using (var e = value.GetEnumerator()) {
+                        e.MoveNext();
+                        _data = new SingleDependency(e.Current.Key, e.Current.Value, value.Comparer);
+                    }
+                } else {
+                    _data = value;
+                }
+            }
+        }
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public IEnumerable<TValue> Values {
             get {
-                Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
+                SingleDependency single;
+                var dict = _data as Dictionary<TKey, TValue>;
                 if (dict != null) {
                     return dict.Values;
-                } else {
-                    SingleDependency single = _data as SingleDependency;
-                    if (single != null) {
-                        return new[] { single.Value };
-                    }
+                } else if ((single = _data as SingleDependency) != null) {
+                    return new[] { single.Value };
                 }
                 return new TValue[0];
             }
         }
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public IEnumerable<TKey> Keys {
             get {
-                SingleDependency single = _data as SingleDependency;
+                var single = _data as SingleDependency;
                 if (single != null) {
                     yield return single.Key;
                 }
 
-                Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as Dictionary<TKey, TValue>;
                 if (dict != null) {
                     foreach (var value in dict.Keys) {
                         yield return value;
@@ -156,18 +232,22 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public int Count {
             get {
-                SingleDependency single = _data as SingleDependency;
+                var single = _data as SingleDependency;
                 if (single != null) {
                     return 1;
                 }
 
-                Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as Dictionary<TKey, TValue>;
                 if (dict != null) {
                     return dict.Count;
                 }
 
                 return 0;
             }
+        }
+
+        public void Clear() {
+            _data = Comparer;
         }
 
         #region IEnumerable<KeyValuePair<TKey,TValue>> Members
@@ -195,6 +275,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         #endregion
+
     }
 
 }

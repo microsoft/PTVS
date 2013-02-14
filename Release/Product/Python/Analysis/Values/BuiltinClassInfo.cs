@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -38,13 +39,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             // TODO: More Type propagation
             IAdvancedPythonType advType = _type as IAdvancedPythonType;
             if (advType != null) {
                 var types = advType.GetTypesPropagatedOnCall();
                 if (types != null) {
-                    ISet<Namespace>[] propagating = new ISet<Namespace>[types.Count];
+                    INamespaceSet[] propagating = new INamespaceSet[types.Count];
                     for (int i = 0; i < propagating.Length; i++) {
                         propagating[i] = unit.ProjectState.GetInstance(types[i]).SelfSet;
                     }
@@ -63,7 +64,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<ISet<Namespace>> Mro {
+        public IEnumerable<INamespaceSet> Mro {
             get { return new[] { SelfSet }; }
         }
 
@@ -106,7 +107,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Documentation;
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
@@ -115,27 +116,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
             }
         }
 
-        public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
+        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
             // TODO: Needs to actually do indexing on type
             var clrType = _type as IAdvancedPythonType;
             if (clrType == null || !clrType.IsGenericTypeDefinition) {
-                return EmptySet<Namespace>.Instance;
+                return NamespaceSet.Empty;
             }
             
-            var result = new HashSet<Namespace>();
+            var result = NamespaceSet.Create();
             foreach (var indexType in index) {
                 if (indexType is BuiltinClassInfo) {
                     var clrIndexType = indexType.PythonType;
                     try {
                         var klass = ProjectState.MakeGenericType(clrType, clrIndexType);
-                        result.Add(klass);
+                        result = result.Add(klass);
                     } catch {
                         // wrong number of type args, violated constraint, etc...
                     }
@@ -146,7 +147,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         foreach (IPythonType[] indexTypes in GetTypeCombinations(types)) {                            
                             try {
                                 var klass = ProjectState.MakeGenericType(clrType, indexTypes);
-                                result.Add(klass);
+                                result = result.Add(klass);
                             } catch {
                                 // wrong number of type args, violated constraint, etc...
                             }
@@ -244,6 +245,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string ToString() {
             // return 'Class#' + hex(id(self)) + ' ' + self.clrType.__name__
             return "Class " + _type.Name;
+        }
+
+        private const int MERGE_TO_BASE_STRENGTH = 1;
+        private const int MERGE_TO_TYPE_STRENGTH = 3;
+
+        public override bool UnionEquals(Namespace ns, int strength) {
+            if (object.ReferenceEquals(this, ns)) {
+                return true;
+            }
+            if (strength < MERGE_TO_BASE_STRENGTH) {
+                return base.UnionEquals(ns, strength);
+            } else if (strength < MERGE_TO_TYPE_STRENGTH) {
+                var ci = ns as ClassInfo;
+                if (this != ProjectState._objectType && 
+                    ci != null && ci.Mro.AnyContains(this)) {
+                    return true;
+                }
+            } else if (this == ProjectState._typeObj) {
+                return ns is ClassInfo;
+            }
+            return base.UnionEquals(ns, strength);
         }
 
         #region IReferenceableContainer Members

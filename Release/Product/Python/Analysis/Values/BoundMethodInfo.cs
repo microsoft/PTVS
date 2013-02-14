@@ -15,22 +15,28 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BoundMethodInfo : UserDefinedInfo {
+    internal class BoundMethodInfo : Namespace {
         private readonly FunctionInfo _function;
         private readonly Namespace _instanceInfo;
 
-        public BoundMethodInfo(FunctionInfo function, Namespace instance)
-            : base(function._analysisUnit) {
+        public BoundMethodInfo(FunctionInfo function, Namespace instance) {
             _function = function;
             _instanceInfo = instance;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override AnalysisUnit AnalysisUnit {
+            get {
+                return _function.AnalysisUnit;
+            }
+        }
+
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             return _function.Call(node, unit, Utils.Concat(_instanceInfo.SelfSet, args), keywordArgNames);
         }
 
@@ -60,29 +66,36 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Description {
             get {
-                var res = "method " + _function.FunctionDefinition.Name;
+                var result = new StringBuilder();
+                result.Append("method ");
+                result.Append(_function.FunctionDefinition.Name);
+                
                 if (_instanceInfo is InstanceInfo) {
-                    res += " of " + ((InstanceInfo)_instanceInfo).ClassInfo.ClassDefinition.Name + " objects ";
-                }
-                if (!String.IsNullOrEmpty(_function.FunctionDescription)) {
-                    res += _function.FunctionDescription + Environment.NewLine;
+                    result.Append(" of ");
+                    result.Append(((InstanceInfo)_instanceInfo).ClassInfo.ClassDefinition.Name);
+                    result.Append(" objects ");
                 }
 
-                if (!String.IsNullOrEmpty(_function.Documentation)) {
-                    res += Environment.NewLine + _function.Documentation;
-                }
-                return res;
+                _function.AddReturnTypeString(result);
+                _function.AddDocumentationString(result);
+
+                return result.ToString();
             }
         }
 
         public override string ShortDescription {
             get {
-                return Description;/*
-                var res = "method " + _function.FunctionDefinition.Name;
+                var result = new StringBuilder();
+                result.Append("method ");
+                result.Append(_function.FunctionDefinition.Name);
+
                 if (_instanceInfo is InstanceInfo) {
-                    res += " of " + ((InstanceInfo)_instanceInfo).ClassInfo.ClassDefinition.Name + " objects" + Environment.NewLine;
+                    result.Append(" of ");
+                    result.Append(((InstanceInfo)_instanceInfo).ClassInfo.ClassDefinition.Name);
+                    result.Append(" objects ");
                 }
-                return res;*/
+
+                return result.ToString();
             }
         }
 
@@ -119,6 +132,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string ToString() {
             var name = _function.FunctionDefinition.Name;
             return "Method" /* + hex(id(self)) */ + " " + name;
+        }
+
+        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+            var bmi = ns as BoundMethodInfo;
+            if (bmi == null || (Function.Equals(bmi.Function) && _instanceInfo.Equals(bmi._instanceInfo))) {
+                return this;
+            } else {
+                var newFunc = Function.UnionMergeTypes(bmi.Function, strength) as FunctionInfo;
+                var newInst = _instanceInfo.UnionMergeTypes(bmi._instanceInfo, strength);
+                if (newFunc != null && newInst != null &&
+                    (!Object.ReferenceEquals(newFunc, Function) || !Object.ReferenceEquals(newInst, _instanceInfo))) {
+                    return new BoundMethodInfo(newFunc, newInst);
+                }
+            }
+            return this;
+        }
+
+        public override bool UnionEquals(Namespace ns, int strength) {
+            var bmi = ns as BoundMethodInfo;
+            return bmi != null && _instanceInfo.UnionEquals(bmi._instanceInfo, strength) && Function.UnionEquals(bmi.Function, strength);
+        }
+
+        public override int UnionHashCode(int strength) {
+            return _instanceInfo.UnionHashCode(strength) ^ Function.UnionHashCode(strength);
         }
     }
 }

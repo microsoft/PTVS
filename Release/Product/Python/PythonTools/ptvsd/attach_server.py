@@ -14,7 +14,6 @@
 
 import getpass
 import os
-import ssl
 import socket
 import struct
 import sys
@@ -23,6 +22,10 @@ try:
     import thread
 except ImportError:
     import _thread as thread
+try:
+    import ssl
+except ImportError:
+    ssl = None
 
 import ptvsd.visualstudio_py_debugger as _vspd
 import ptvsd.visualstudio_py_repl as _vspr
@@ -101,6 +104,9 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
     will be visible in the debugger once it is attached. Any threads that are already running before
     this function is called will not be visible.
     """
+
+    if not ssl and (certfile or keyfile):
+        raise ValueError('could not import the ssl module - SSL is not supported on this version of Python')
 
     if redirect_output:
         _vspd.enable_output_redirection()

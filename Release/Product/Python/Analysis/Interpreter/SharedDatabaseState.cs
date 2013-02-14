@@ -201,6 +201,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.SetIterator: name = "set_iterator"; break;
                 case BuiltinTypeId.StrIterator: name = "str_iterator"; break;
                 case BuiltinTypeId.BytesIterator: name = "bytes_iterator"; break;
+                case BuiltinTypeId.CallableIterator: name = "callable_iterator"; break;
 
                 default: return null;
             }
@@ -489,6 +490,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 case "set_iterator": return BuiltinTypeId.SetIterator;
                 case "str_iterator": return BuiltinTypeId.StrIterator;
                 case "bytes_iterator": return BuiltinTypeId.BytesIterator;
+                case "callable_iterator": return BuiltinTypeId.CallableIterator;
             }
             return BuiltinTypeId.Unknown;
         }

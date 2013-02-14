@@ -21,9 +21,9 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     class BuiltinInstanceInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer {
         private readonly BuiltinClassInfo _klass;
-        private ISet<Namespace> _iterMethod;
+        private INamespaceSet _iterMethod;
 
-        private bool IsIterable {
+        private bool IsStringType {
             get { return _klass.PythonType.TypeId == BuiltinTypeId.Str || _klass.PythonType.TypeId == BuiltinTypeId.Bytes; }
         }
 
@@ -72,8 +72,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            if (IsIterable) {
+        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+            if (IsStringType) {
                 // indexing/slicing strings should return the string type.
                 return _klass.Instance;
             }
@@ -81,17 +81,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetIndex(node, unit, index);
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
-            if (IsIterable && name == "__iter__") {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+            if (IsStringType && name == "__iter__") {
                 if (_iterMethod == null) {
-                    var indexTypes = new VariableDef[1];
-                    indexTypes[0] = new VariableDef();
+                    var indexTypes = new[] { new VariableDef() };
                     indexTypes[0].AddTypes(unit, _klass.SelfSet);
                     _iterMethod = new IterBoundBuiltinMethodInfo(indexTypes, _klass);
                 }
                 return _iterMethod;
             }
-            
+
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _klass.AddMemberReference(node, unit, name);
@@ -100,36 +99,46 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _klass.AddMemberReference(node, unit, name);
             }
         }
 
-        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
-            switch (operation) {
-                case PythonOperator.Mod:
-                case PythonOperator.Multiply:
-                    ISet<Namespace> res = EmptySet<Namespace>.Instance;
-                    bool madeSet = false;
-                    foreach (var type in rhs) {
-                        if (type.IsOfType(ProjectState._intType) || type.IsOfType(ProjectState._longType) || operation == PythonOperator.Mod) {
-                            if (_klass == ProjectState._unicodeType) {
-                                res = res.Union(ProjectState._unicodeType.Instance.SelfSet, ref madeSet);
-                            } else if (_klass == ProjectState._bytesType) {
-                                res = res.Union(ProjectState._bytesType.Instance.SelfSet, ref madeSet);
+        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
+            if (IsStringType) {
+                var res = NamespaceSet.Empty;
+                switch (operation) {
+                    case PythonOperator.Add:
+                        foreach (var type in rhs) {
+                            if (type.IsOfType(_klass)) {
+                                res = res.Union(_klass.Instance.SelfSet);
                             } else {
-                                res = res.Union(type.ReverseBinaryOperation(node, unit, operation, SelfSet), ref madeSet);
+                                res = res.Union(type.ReverseBinaryOperation(node, unit, operation, SelfSet));
                             }
-                        } else {
-                            res = res.Union(type.ReverseBinaryOperation(node, unit, operation, SelfSet), ref madeSet);
                         }
-                    }
-                    return res;
-                default:
-                    return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? base.BinaryOperation(node, unit, operation, rhs);
+                        break;
+                    case PythonOperator.Mod:
+                        res = _klass.Instance.SelfSet;
+                        break;
+                    case PythonOperator.Multiply:
+                        foreach (var type in rhs) {
+                            if (type.IsOfType(ProjectState._intType) || type.IsOfType(ProjectState._longType)) {
+                                res = res.Union(_klass.Instance.SelfSet);
+                            } else {
+                                var partialRes = ConstantInfo.NumericOp(node, this, unit, operation, rhs);
+                                if (partialRes != null) {
+                                    res = res.Union(partialRes);
+                                }
+                            }
+                        }
+                        break;
+                }
+                return res;
             }
+
+            return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? base.BinaryOperation(node, unit, operation, rhs) ?? NamespaceSet.Empty;
         }
 
         public override bool IsOfType(BuiltinClassInfo klass) {
@@ -142,18 +151,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override bool UnionEquals(Namespace ns) {
-            BuiltinInstanceInfo bi = ns as BuiltinInstanceInfo;
-            if (bi != null) {
-                if (bi.ClassInfo == ClassInfo) {
+        private const int MERGE_TO_OBJECT_STRENGTH = 3;
+
+        public override bool UnionEquals(Namespace ns, int strength) {
+            if (strength >= MERGE_TO_OBJECT_STRENGTH) {
+                if (this == ProjectState._objectType.Instance && ns is InstanceInfo) {
+                    return true;
+                } else if (this == ProjectState._typeObj && ns is ClassInfo) {
+                    return true;
+                } else if (this == ProjectState._functionType.Instance && ns is FunctionInfo) {
                     return true;
                 }
             }
-            return false;
+            var bi = ns as BuiltinInstanceInfo;
+            return bi != null && ClassInfo.UnionEquals(bi.ClassInfo, strength);
         }
 
-        public override int UnionHashCode() {
+        public override int UnionHashCode(int strength) {
+            if (strength >= MERGE_TO_OBJECT_STRENGTH) {
+                if (this == ProjectState._typeObj) {
+                    return ProjectState._typeObj.GetHashCode();
+                } else if (this == ProjectState._functionType.Instance) {
+                    return ProjectState._functionType.Instance.GetHashCode();
+                }
+            }
+            // For merging to object, this.ClassInfo.GetHashCode() ==
+            // ProjectState._objectType.Instance.ClassInfo.GetHashCode()
             return ClassInfo.GetHashCode();
+        }
+
+        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+            return this;
         }
 
         #region IReferenceableContainer Members

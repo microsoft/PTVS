@@ -29,13 +29,13 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly RenameVariableRequest _renameReq;
         private readonly PreviewList _list;
         internal readonly IRenameVariableInput _input;
-        internal readonly VsProjectAnalyzer _analayzer;
+        internal readonly VsProjectAnalyzer _analyzer;
         private readonly string _originalName, _privatePrefix;
         private readonly IEnumerable<IAnalysisVariable> _variables;
 
         public PreviewChangesEngine(IRenameVariableInput input, ExpressionAnalysis analysis, RenameVariableRequest request, string originalName, string privatePrefix, VsProjectAnalyzer analyzer, IEnumerable<IAnalysisVariable> variables) {
             _analysis = analysis;
-            _analayzer = analyzer;
+            _analyzer = analyzer;
             _renameReq = request;
             _originalName = originalName;
             _privatePrefix = privatePrefix;

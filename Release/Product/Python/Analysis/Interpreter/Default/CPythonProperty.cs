@@ -21,6 +21,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly string _doc;
         private IPythonType _type;
         private readonly CPythonModule _declaringModule;
+        private readonly bool _hasLocation;
         private readonly int _line, _column;
         
         public CPythonProperty(ITypeDatabaseReader typeDb, Dictionary<string, object> valueDict, IMemberContainer container) {
@@ -34,7 +35,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             object type;
             valueDict.TryGetValue("type", out type);
 
-            PythonTypeDatabase.GetLocation(valueDict, ref _line, ref _column);
+            _hasLocation = PythonTypeDatabase.TryGetLocation(valueDict, ref _line, ref _column);
 
             typeDb.LookupType(type, (typeValue, fromInstanceDb) => _type = typeValue);
         }
@@ -72,7 +73,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region ILocatedMember Members
 
         public IEnumerable<LocationInfo> Locations {
-            get { yield return new LocationInfo(_declaringModule, _line, _column); }
+            get {
+                if (_hasLocation) {
+                    yield return new LocationInfo(_declaringModule, _line, _column);
+                }
+            }
         }
 
         #endregion

@@ -20,6 +20,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonFunction : IPythonFunction, ILocatedMember {
         private readonly string _name;
         private readonly string _doc;
+        private readonly bool _hasLocation;
         private readonly int _line, _column;
         private readonly IPythonType _declaringType;
         private readonly CPythonModule _declaringModule;
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _isStatic = true;
             }
 
-            PythonTypeDatabase.GetLocation(functionTable, ref _line, ref _column);
+            _hasLocation = PythonTypeDatabase.TryGetLocation(functionTable, ref _line, ref _column);
 
             _declaringModule = CPythonModule.GetDeclaringModuleFromContainer(declaringType);
             object overloads;
@@ -122,7 +123,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public IEnumerable<LocationInfo> Locations {
             get {
-                yield return new LocationInfo(_declaringModule, _line, _column);
+                if (_hasLocation) {
+                    yield return new LocationInfo(_declaringModule, _line, _column);
+                }
             }
         }
 

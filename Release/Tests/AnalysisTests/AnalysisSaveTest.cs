@@ -129,12 +129,12 @@ WithInstanceMembers = test.WithInstanceMembers
                 Assert.AreEqual("type int", newMod.Analysis.GetValuesByIndex("foo", pos).First().ShortDescription);
 
                 var result = newMod.Analysis.GetSignaturesByIndex("f1", pos).ToArray();
-                Assert.AreEqual(result.Length, 1);
-                Assert.AreEqual(result[0].Parameters.Length, 1);
-                Assert.AreEqual(result[0].Parameters[0].Type, "int");
+                Assert.AreEqual(1, result.Length);
+                Assert.AreEqual(1, result[0].Parameters.Length);
+                Assert.AreEqual("int", result[0].Parameters[0].Type);
 
                 result = newMod.Analysis.GetSignaturesByIndex("m", pos).ToArray();
-                Assert.AreEqual(result.Length, 6);
+                Assert.AreEqual(6, result.Length);
                 
                 var members = newMod.Analysis.GetMembersByIndex("Aliased", pos, GetMemberOptions.None);
                 AssertUtil.Contains(members.Select(x => x.Name), "f");

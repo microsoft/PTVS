@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -31,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
+        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
             if (instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             }
@@ -39,9 +38,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return ((BuiltinClassInfo)ProjectState.GetNamespaceFromObjects(_value.Type)).Instance.SelfSet;
         }
 
-        public override ISet<Namespace> GetStaticDescriptor(Interpreter.AnalysisUnit unit) {
+        public override INamespaceSet GetStaticDescriptor(Interpreter.AnalysisUnit unit) {
             if (_value.IsStatic) {
-                BuiltinClassInfo klass = (BuiltinClassInfo)ProjectState.GetNamespaceFromObjects(_value.Type);
+                var klass = (BuiltinClassInfo)ProjectState.GetNamespaceFromObjects(_value.Type);
                 return klass.Instance.SelfSet;
             }
 

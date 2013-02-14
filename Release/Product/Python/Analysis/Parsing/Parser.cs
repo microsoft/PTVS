@@ -3503,7 +3503,7 @@ namespace Microsoft.PythonTools.Parsing {
                     ReportSyntaxError("invalid syntax");
                 }
                 var start = GetStart();
-                var expr = ParseExpression();
+                var expr = ParseExpr();
                 var res = new StarredExpression(expr);
                 if (_verbatim) {
                     AddPreceedingWhiteSpace(res, whitespace);

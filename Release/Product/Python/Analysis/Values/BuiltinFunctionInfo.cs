@@ -22,25 +22,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private IPythonFunction _function;
         private string _doc;
         private ReadOnlyCollection<OverloadResult> _overloads;
-        private readonly ISet<Namespace> _returnTypes;
+        private readonly INamespaceSet _returnTypes;
         private BuiltinMethodInfo _method;
 
         public BuiltinFunctionInfo(IPythonFunction function, PythonAnalyzer projectState)
             : base(projectState.Types.BuiltinFunction, projectState) {
-            
+
             _function = function;
-            _returnTypes = Utils.GetReturnTypes(function, projectState);                        
+            _returnTypes = Utils.GetReturnTypes(function, projectState);
         }
 
         public override IPythonType PythonType {
             get { return _type; }
         }
 
-        public override ISet<Namespace> Call(Node node, Interpreter.AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, Interpreter.AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             return _returnTypes;
         }
 
-        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
+        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
             if (_function.IsStatic || instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             } else if (_method == null) {

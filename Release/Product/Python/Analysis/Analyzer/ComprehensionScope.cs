@@ -12,18 +12,41 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     sealed class ComprehensionScope : InterpreterScope {
-        public ComprehensionScope(Namespace comprehensionResult, Comprehension comprehension)
-            : base(comprehensionResult, comprehension) {
+        public ComprehensionScope(Namespace comprehensionResult, Comprehension comprehension, InterpreterScope outerScope)
+            : base(comprehensionResult, comprehension, outerScope) {
         }
 
         public override string Name {
             get { return "<comprehension scope>";  }
+        }
+
+        public override InterpreterScope AddNodeScope(Node node, InterpreterScope scope) {
+            return OuterScope.AddNodeScope(node, scope);
+        }
+
+        internal override bool RemoveNodeScope(Node node) {
+            return OuterScope.RemoveNodeScope(node);
+        }
+
+        internal override void ClearNodeScopes() {
+            OuterScope.ClearNodeScopes();
+        }
+
+        public override INamespaceSet AddNodeValue(Node node, INamespaceSet variable) {
+            return OuterScope.AddNodeValue(node, variable);
+        }
+
+        internal override bool RemoveNodeValue(Node node) {
+            return OuterScope.RemoveNodeValue(node);
+        }
+
+        internal override void ClearNodeValues() {
+            OuterScope.ClearNodeValues();
         }
     }
 }

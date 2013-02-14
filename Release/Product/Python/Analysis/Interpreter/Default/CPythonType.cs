@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly CPythonModule _module;
         private readonly bool _isBuiltin;
         private readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
+        private readonly bool _hasLocation;
         private readonly int _line, _column;
 
         public CPythonType(IMemberContainer parent, ITypeDatabaseReader typeDb, string typeName, Dictionary<string, object> typeTable, BuiltinTypeId typeId) {
@@ -59,7 +60,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
             }
 
-            PythonTypeDatabase.GetLocation(typeTable, ref _line, ref _column);
+            _hasLocation = PythonTypeDatabase.TryGetLocation(typeTable, ref _line, ref _column);
         }
 
         private CPythonModule GetDeclaringModule(IMemberContainer parent) {
@@ -166,7 +167,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region ILocatedMember Members
 
         public IEnumerable<LocationInfo> Locations {
-            get { yield return new LocationInfo(_module, _line, _column); }
+            get {
+                if (_hasLocation) {
+                    yield return new LocationInfo(_module, _line, _column);
+                }
+            }
         }
 
         #endregion

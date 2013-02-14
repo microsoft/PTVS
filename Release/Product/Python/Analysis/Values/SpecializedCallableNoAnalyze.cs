@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -26,28 +25,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// ways.
     /// </summary>
     class SpecializedCallableNoAnalyze : SpecializedNamespace {
-        private readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> _call;
+        private readonly Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> _call;
 
-        public SpecializedCallableNoAnalyze(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
+        public SpecializedCallableNoAnalyze(Namespace original, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> call)
             : base(original) {
             _call = call;
         }
 
-        public SpecializedCallableNoAnalyze(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
+        public SpecializedCallableNoAnalyze(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> call)
             : base(original, inst) {
             _call = call;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             var realArgs = args;
             if (_inst != null) {
                 realArgs = Utils.Concat(_inst.SelfSet, args);
             }
 
             if (node is CallExpression) {
-                return _call((CallExpression)node, unit, realArgs, keywordArgNames) ?? EmptySet<Namespace>.Instance;
+                return _call((CallExpression)node, unit, realArgs, keywordArgNames) ?? NamespaceSet.Empty;
             }
-            return EmptySet<Namespace>.Instance;
+            return NamespaceSet.Empty;
         }
 
         protected override SpecializedNamespace Clone(Namespace original, Namespace instance) {

@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 
-using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>

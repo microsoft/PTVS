@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -47,21 +46,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case BuiltinTypeId.SetIterator:
                 case BuiltinTypeId.StrIterator:
                 case BuiltinTypeId.BytesIterator:
+                case BuiltinTypeId.CallableIterator:
                     return klass;
                 default:
                     return null;
             }
         }
 
-        public IteratorInfo(VariableDef[] indexTypes, BuiltinClassInfo iterType)
-            : base(indexTypes, iterType) {
+        public IteratorInfo(VariableDef[] indexTypes, BuiltinClassInfo iterType, Node node)
+            : base(indexTypes, iterType, node) {
         }
 
-        public override ISet<Namespace> GetIterator(Node node, AnalysisUnit unit) {
+        public override INamespaceSet GetIterator(Node node, AnalysisUnit unit) {
             return SelfSet;
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (unit.ProjectState.LanguageVersion.Is2x() && name == "next" ||
                 unit.ProjectState.LanguageVersion.Is3x() && name == "__next__") {
                 if (_next == null) {
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _myIter = myDict;
             }
 
-            public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
                 return _myIter.UnionType;
             }
         }

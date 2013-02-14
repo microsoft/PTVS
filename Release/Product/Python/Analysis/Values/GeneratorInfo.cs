@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -24,48 +23,62 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// by calling a function definition which contains yield expressions.
     /// </summary>
     internal class GeneratorInfo : BuiltinInstanceInfo {
-        private readonly AnalysisUnit _unit;
-        private readonly GeneratorNextBoundBuiltinMethodInfo _nextMethod;
-        private readonly GeneratorSendBoundBuiltinMethodInfo _sendMethod;
-        private ISet<Namespace> _yields = EmptySet<Namespace>.Instance;
-        private ISet<Namespace> _yieldsFrom = EmptySet<Namespace>.Instance;
-        private VariableDef _sends, _callers, _returns;
+        private GeneratorNextBoundBuiltinMethodInfo _nextMethod;
+        private GeneratorSendBoundBuiltinMethodInfo _sendMethod;
+        private readonly Node _node;
+        public readonly VariableDef Yields;
+        public readonly VariableDef Sends;
+        public readonly VariableDef Returns;
 
-        public GeneratorInfo(AnalysisUnit unit)
-            : base(unit.ProjectState._generatorType) {
-            _unit = unit;
-
-            ISet<Namespace> nextMeth, sendMeth;
-            string nextName = (unit.ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
-
-            if (TryGetMember(nextName, out nextMeth)) {
-                _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
-            }
-
-            if (TryGetMember("send", out sendMeth)) {
-                _sendMethod = new GeneratorSendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)sendMeth.First());
-            }
-
-            _sends = new VariableDef();
-            _callers = new VariableDef();
-            _returns = new VariableDef();
+        public GeneratorInfo(PythonAnalyzer projectState, Node node)
+            : base(projectState._generatorType) {
+            _node = node;
+            Yields = new VariableDef();
+            Sends = new VariableDef();
+            Returns = new VariableDef();
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        private GeneratorNextBoundBuiltinMethodInfo NextMethod {
+            get {
+                if (_nextMethod == null) {
+                    INamespaceSet nextMeth;
+                    string nextName = (ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
+                    if (TryGetMember(nextName, out nextMeth)) {
+                        _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
+                    }
+                }
+                return _nextMethod;
+            }
+        }
+
+        private GeneratorSendBoundBuiltinMethodInfo SendMethod {
+            get {
+                if (_sendMethod == null) {
+                    INamespaceSet sendMeth;
+                    if (TryGetMember("send", out sendMeth)) {
+                        _sendMethod = new GeneratorSendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)sendMeth.First());
+                    }
+                }
+                return _sendMethod;
+            }
+        }
+
+
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             switch(name) {
                 case "next":
-                    if (_nextMethod != null && unit.ProjectState.LanguageVersion.Is2x()) {
-                        return _nextMethod.SelfSet;
+                    if (NextMethod != null && unit.ProjectState.LanguageVersion.Is2x()) {
+                        return NextMethod.SelfSet;
                     }
                     break;
                 case "__next__":
-                    if (_nextMethod != null && unit.ProjectState.LanguageVersion.Is3x()) {
-                        return _nextMethod.SelfSet;
+                    if (NextMethod != null && unit.ProjectState.LanguageVersion.Is3x()) {
+                        return NextMethod.SelfSet;
                     }
                     break;
                 case "send":
-                    if (_sendMethod != null) {
-                        return _sendMethod.SelfSet;
+                    if (SendMethod != null) {
+                        return SendMethod.SelfSet;
                     }
                     break;
             }
@@ -73,87 +86,100 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetMember(node, unit, name);
         }
 
-        public override ISet<Namespace> GetIterator(Node node, AnalysisUnit unit) {
+        public override INamespaceSet GetIterator(Node node, AnalysisUnit unit) {
             return SelfSet;
         }
 
-        public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            return _yields;
+        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            Yields.AddDependency(unit);
+
+            return Yields.Types;
         }
 
-        public void AddYield(ISet<Namespace> yieldValue) {
-            int count = _yields.Count;
-            _yields = _yields.Union(yieldValue);
-            if (_yields.Count != count) {
-                _callers.EnqueueDependents();
-            }
+        internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
+            base.AddReference(node, analysisUnit);
         }
 
-        public void AddReturn(Node node, AnalysisUnit unit, ISet<Namespace> returnValue) {
-            if (_returns.AddTypes(unit, returnValue)) {
-                _unit.Enqueue();
-            }
+        public void AddYield(Node node, AnalysisUnit unit, INamespaceSet yieldValue, bool enqueue = true) {
+            Yields.MakeUnionStrongerIfMoreThan(ProjectState.Limits.YieldTypes, yieldValue);
+            Yields.AddTypes(unit, yieldValue, enqueue);
         }
 
-        public void AddSend(Node node, AnalysisUnit unit, ISet<Namespace> sendValue) {
-            if (_sends.AddTypes(unit, sendValue)) {
-                _unit.Enqueue();
-            }
+        public void AddReturn(Node node, AnalysisUnit unit, INamespaceSet returnValue, bool enqueue = true) {
+            Returns.MakeUnionStrongerIfMoreThan(ProjectState.Limits.ReturnTypes, returnValue);
+            Returns.AddTypes(unit, returnValue, enqueue);
         }
 
-        public void AddYieldFrom(Node node, AnalysisUnit unit, ISet<Namespace> yieldsFrom) {
-            int count = _yieldsFrom.Count;
-            _yieldsFrom = _yieldsFrom.Union(yieldsFrom);
-            if (_yieldsFrom.Count != count) {
-                _callers.EnqueueDependents();
-            }
+        public void AddSend(Node node, AnalysisUnit unit, INamespaceSet sendValue, bool enqueue = true) {
+            Sends.AddTypes(unit, sendValue, enqueue);
+        }
 
+        public void AddYieldFrom(Node node, AnalysisUnit unit, INamespaceSet yieldsFrom, bool enqueue = true) {
             foreach (var ns in yieldsFrom) {
-                AddYield(ns.GetEnumeratorTypes(node, unit));
+                AddYield(node, unit, ns.GetEnumeratorTypes(node, unit), enqueue);
                 var gen = ns as GeneratorInfo;
                 if (gen != null) {
-                    gen.AddSend(node, unit, Sends.Types);
-                    AddReturn(node, unit, gen.Returns.Types);
+                    gen.AddSend(node, unit, Sends.Types, enqueue);
+                    AddReturn(node, unit, gen.Returns.Types, enqueue);
                 }
             }
         }
 
-        public ISet<Namespace> Yields {
-            get {
-                return _yields;
-            }
-        }
+        private const int REQUIRED_STRENGTH = 1;
 
-        public VariableDef Returns {
-            get {
-                return _returns;
-            }
-        }
+        //public override bool UnionEquals(Namespace ns, int strength) {
+        //    if (strength < REQUIRED_STRENGTH) {
+        //        return Equals(ns);
+        //    }
 
-        public VariableDef Sends {
-            get {
-                return _sends;
-            }
-        }
+        //    var sgi = ns as SimpleGeneratorInfo;
+        //    if (sgi != null) {
+        //        return true;
+        //    }
 
-        /// <summary>
-        /// Used to track dependencies for who calls us.  This is effectively the return type of the function and
-        /// logically would have us as the only value in here (but we don't actually need to add ourselves here
-        /// as we never read the Types from this variable def).
-        /// </summary>
-        public VariableDef Callers {
-            get {
-                return _callers;
-            }
-        }
+        //    var gi = ns as GeneratorInfo;
+        //    if (gi == null) {
+        //        return false;
+        //    }
 
-        /// <summary>
-        /// Tracks generators that we 'yield from' on.
-        /// </summary>
-        public ISet<Namespace> YieldsFrom {
-            get {
-                return _yieldsFrom;
-            }
-        }
+        //    return _node == gi._node;
+        //}
+
+        //public override int UnionHashCode(int strength) {
+        //    if (strength < REQUIRED_STRENGTH) {
+        //        return GetHashCode();
+        //    }
+        //    return ClassInfo.GetHashCode();
+        //}
+
+        //internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+        //    if (strength < REQUIRED_STRENGTH) {
+        //        return this;
+        //    }
+
+        //    var sgi = ns as SimpleGeneratorInfo;
+        //    if (sgi != null) {
+        //        Yields.CopyTo(sgi.Yields);
+        //        return sgi;
+        //    }
+
+        //    var gi = ns as GeneratorInfo;
+        //    if (gi == null || Equals(ns)) {
+        //        return this;
+        //    }
+
+        //    bool anyAdded = false;
+        //    var newGi = new SimpleGeneratorInfo(ProjectState);
+
+        //    Yields.CopyTo(newGi.Yields);
+        //    anyAdded |= gi.Yields.CopyTo(newGi.Yields);
+
+        //    if (!anyAdded) {
+        //        return this;
+        //    }
+
+        //    newGi.Yields.EnqueueDependents();
+        //    return newGi;
+        //}
     }
 }

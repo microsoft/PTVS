@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _container = member;
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _references.AddReference(node, unit, name);
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
             return ProjectState.GetAllMembers(_container, moduleContext);
         }
 

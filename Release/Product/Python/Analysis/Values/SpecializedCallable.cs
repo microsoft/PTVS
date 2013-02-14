@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -26,19 +25,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// ways.
     /// </summary>
     class SpecializedCallable : SpecializedNamespace {
-        private readonly Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> _call;
+        private readonly Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> _call;
 
-        public SpecializedCallable(Namespace original, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
+        public SpecializedCallable(Namespace original, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> call)
             : base(original) {
             _call = call;
         }
 
-        public SpecializedCallable(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> call)
+        public SpecializedCallable(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> call)
             : base(original, inst) {
             _call = call;
         }
 
-        internal static SpecializedNamespace MakeSpecializedCallable(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze, Namespace v) {
+        internal static SpecializedNamespace MakeSpecializedCallable(Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze, Namespace v) {
             SpecializedNamespace special;
             if (analyze) {
                 special = new SpecializedCallable(v, dlg);
@@ -48,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return special;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             var realArgs = args;
             if (_inst != null) {
                 realArgs = Utils.Concat(_inst.SelfSet, args);

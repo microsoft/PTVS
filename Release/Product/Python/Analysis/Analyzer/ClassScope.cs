@@ -12,19 +12,19 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     sealed class ClassScope : InterpreterScope {
-        public ClassScope(ClassInfo classInfo, ClassDefinition ast)
-            : base(classInfo, ast) {
+        public ClassScope(ClassInfo classInfo, ClassDefinition ast, InterpreterScope outerScope)
+            : base(classInfo, ast, outerScope) {
+            classInfo.Scope = this;
         }
 
         public ClassInfo Class {
             get {
-                return Namespace as ClassInfo;
+                return (ClassInfo)Namespace;
             }
         }
 

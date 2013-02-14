@@ -14,8 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
@@ -25,20 +23,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class ModuleInfo : Namespace, IReferenceableContainer, IModule {
         private readonly string _name;
         private readonly ProjectEntry _projectEntry;
-        private readonly Dictionary<Node, ISet<Namespace>> _sequences;  // sequences defined in the module
+        private Dictionary<Node, INamespaceSet> _sequences;  // sequences defined in the module
         private readonly ModuleScope _scope;
         private readonly Dictionary<Node, InterpreterScope> _scopes;    // scopes from Ast node to InterpreterScope
         private readonly WeakReference _weakModule;
         private readonly IModuleContext _context;
         private Dictionary<string, WeakReference> _packageModules;
-        private Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>>, bool>> _specialized;
+        private Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet>, bool>> _specialized;
         private ModuleInfo _parentPackage;
         private DependentData _definition = new DependentData();
 
         public ModuleInfo(string moduleName, ProjectEntry projectEntry, IModuleContext moduleContext) {
             _name = moduleName;
             _projectEntry = projectEntry;
-            _sequences = new Dictionary<Node, ISet<Namespace>>();
+            _sequences = new Dictionary<Node, INamespaceSet>();
             _scope = new ModuleScope(this);
             _weakModule = new WeakReference(this);
             _context = moduleContext;
@@ -48,12 +46,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal void Clear() {
             _sequences.Clear();
             _scope.ClearLinkedVariables();
-            _scope.Variables.Clear();
-            NodeScopes.Clear();
+            _scope.ClearVariables();
+            _scope.ClearNodeScopes();
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
-            var res = new Dictionary<string, ISet<Namespace>>();
+        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+            var res = new Dictionary<string, INamespaceSet>();
             foreach (var kvp in _scope.Variables) {
                 kvp.Value.ClearOldValues();
                 if (kvp.Value._dependencies.Count > 0) {
@@ -117,12 +115,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze) {
+        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
             lock (this) {
                 if (_specialized == null) {
-                    _specialized = new Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>>, bool>>();
+                    _specialized = new Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet>, bool>>();
                 }
-                _specialized[name] = new Tuple<Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>>, bool>(dlg, analyze);
+                _specialized[name] = new Tuple<Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet>, bool>(dlg, analyze);
             }
         }
 
@@ -136,7 +134,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private void SpecializeOneFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze) {
+        private void SpecializeOneFunction(string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
             int lastIndex;
             VariableDef def;
             if (Scope.Variables.TryGetValue(name, out def)) {
@@ -156,7 +154,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private static void SpecializeVariableDef(Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, VariableDef def, bool analyze) {
+        private static void SpecializeVariableDef(Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, VariableDef def, bool analyze) {
             List<Namespace> items = new List<Namespace>();
             foreach (var v in def.TypesNoCopy) {
                 if (!(v is SpecializedNamespace) && v.DeclaringModule != null) {
@@ -170,13 +168,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             ModuleDefinition.AddDependency(unit);
 
             return Scope.CreateEphemeralVariable(node, unit, name).Types;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
             var variable = Scope.CreateVariable(node, unit, name, false);
             if (variable.AddTypes(unit, value)) {
                 ModuleDefinition.EnqueueDependents();
@@ -256,29 +254,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 return new[] { new LocationInfo(ProjectEntry, 1, 1) };
             }
-        }
-
-        public Dictionary<Node, ISet<Namespace>> NodeVariables {
-            get { return _sequences; }
-        }
-
-        /// <summary>
-        /// Provides a mapping from functions/classes declared in this module to their interpreter scope.
-        /// </summary>
-        public Dictionary<Node, InterpreterScope> NodeScopes {
-            get { return _scopes; }
-        }
-
-        /// <summary>
-        /// Cached node variables so that we don't continually create new entries for basic nodes such
-        /// as sequences, lambdas, etc...
-        /// </summary>
-        public ISet<Namespace> GetOrMakeNodeVariable(Node node, Func<Node, ISet<Namespace>> maker) {
-            ISet<Namespace> result;
-            if (!NodeVariables.TryGetValue(node, out result)) {
-                result = NodeVariables[node] = maker(node);
-            }
-            return result;
         }
 
         public override IPythonType PythonType {

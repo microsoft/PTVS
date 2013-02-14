@@ -25,15 +25,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class BuiltinNamespace<MemberContainerType> : Namespace where MemberContainerType : IMemberContainer {
         private readonly PythonAnalyzer _projectState;
         internal readonly MemberContainerType _type;
-        internal Dictionary<string, ISet<Namespace>> _specializedValues;
+        internal Dictionary<string, INamespaceSet> _specializedValues;
 
         public BuiltinNamespace(MemberContainerType pythonType, PythonAnalyzer projectState) {
             _projectState = projectState;
             _type = pythonType;
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
-            ISet<Namespace> specializedRes;
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+            INamespaceSet specializedRes;
             if (_specializedValues != null && _specializedValues.TryGetValue(name, out specializedRes)) {
                 return specializedRes;
             }
@@ -42,16 +42,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (res != null) {
                 return ProjectState.GetNamespaceFromObjects(res).SelfSet;
             }
-            return EmptySet<Namespace>.Instance;
+            return NamespaceSet.Empty;
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
             return ProjectState.GetAllMembers(_type, moduleContext);
         }
 
-        public ISet<Namespace> this[string name] {
+        public INamespaceSet this[string name] {
             get {
-                ISet<Namespace> value;
+                INamespaceSet value;
                 if (TryGetMember(name, out value)) {
                     return value;
                 }
@@ -59,14 +59,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             set {
                 if (_specializedValues == null) {
-                    _specializedValues = new Dictionary<string, ISet<Namespace>>();
+                    _specializedValues = new Dictionary<string, INamespaceSet>();
                 }
                 _specializedValues[name] = value;
             }
         }
 
-        public bool TryGetMember(string name, out ISet<Namespace> value) {
-            ISet<Namespace> res;
+        public bool TryGetMember(string name, out INamespaceSet value) {
+            INamespaceSet res;
             if (_specializedValues != null && _specializedValues.TryGetValue(name, out res)) {
                 value = res;
                 return true;

@@ -84,35 +84,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.GetMember(node, unit, name), ref madeSet);
+                res = res.Union(member.GetMember(node, unit, name));
             }
             return res;
         }
 
-        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, ISet<Namespace> value) {
+        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, INamespaceSet value) {
             foreach (var member in _members) {
                 member.AugmentAssign(node, unit, value);
-            } 
+            }
         }
 
-        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.BinaryOperation(node, unit, operation, rhs), ref madeSet);
+                res = res.Union(member.BinaryOperation(node, unit, operation, rhs));
             }
             return res;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.Call(node, unit, args, keywordArgNames), ref madeSet);
+                res = res.Union(member.Call(node, unit, args, keywordArgNames));
             }
             return res;
         }
@@ -120,14 +117,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override void DeleteMember(Node node, AnalysisUnit unit, string name) {
             foreach (var member in _members) {
                 member.DeleteMember(node, unit, name);
-            } 
+            }
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(PythonTools.Interpreter.IModuleContext moduleContext) {
-            Dictionary<string, ISet<Namespace>> res = new Dictionary<string, ISet<Namespace>>();
-            foreach(var mem in _members) {
+        public override IDictionary<string, INamespaceSet> GetAllMembers(PythonTools.Interpreter.IModuleContext moduleContext) {
+            Dictionary<string, INamespaceSet> res = new Dictionary<string, INamespaceSet>();
+            foreach (var mem in _members) {
                 foreach (var keyValue in mem.GetAllMembers(moduleContext)) {
-                    ISet<Namespace> existing;
+                    INamespaceSet existing;
                     if (res.TryGetValue(keyValue.Key, out existing)) {
                         MultipleMemberInfo existingMultiMember = existing as MultipleMemberInfo;
                         if (existingMultiMember != null) {
@@ -144,35 +141,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.GetDescriptor(node, instance, context, unit), ref madeSet);
+                res = res.Union(member.GetDescriptor(node, instance, context, unit));
             }
             return res;
         }
 
-        public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.GetIndex(node, unit, index), ref madeSet);
+                res = res.Union(member.GetIndex(node, unit, index));
             }
             return res;
         }
-        
-        public override void SetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index, ISet<Namespace> value) {
+
+        public override void SetIndex(Node node, AnalysisUnit unit, INamespaceSet index, INamespaceSet value) {
             foreach (var member in _members) {
                 member.SetIndex(node, unit, index, value);
-            }            
+            }
         }
 
-        public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.GetEnumeratorTypes(node, unit), ref madeSet);
+                res = res.Union(member.GetEnumeratorTypes(node, unit));
             }
             return res;
         }
@@ -187,11 +181,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetConstantValue();
         }
 
-        public override ISet<Namespace> GetStaticDescriptor(AnalysisUnit unit) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet GetStaticDescriptor(AnalysisUnit unit) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.GetStaticDescriptor(unit), ref madeSet);
+                res = res.Union(member.GetStaticDescriptor(unit));
             }
             return res;
         }
@@ -206,17 +199,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
             foreach (var member in _members) {
                 member.SetMember(node, unit, name, value);
-            } 
+            }
         }
 
-        public override ISet<Namespace> UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
-            ISet<Namespace> res = EmptySet<Namespace>.Instance;
-            bool madeSet = false;
+        public override INamespaceSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
+            var res = NamespaceSet.Empty;
             foreach (var member in _members) {
-                res = res.Union(member.UnaryOperation(node, unit, operation), ref madeSet);
+                res = res.Union(member.UnaryOperation(node, unit, operation));
             }
             return res;
         }

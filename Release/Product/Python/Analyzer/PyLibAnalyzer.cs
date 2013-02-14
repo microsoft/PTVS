@@ -152,6 +152,10 @@ namespace Microsoft.PythonTools.Analysis {
                     Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
                     var fact = new CPythonInterpreterFactory();
                     var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
+
+                    // TODO: Load limits from storage
+                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
+
                     var modules = new List<IPythonProjectEntry>();
                     for (int i = 0; i < files.Count; i++) {
                         string modName = PythonAnalyzer.PathToModuleName(files[i]);

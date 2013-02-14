@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.PyAnalysis {
     class KnownTypes {
-        public readonly IPythonType Set, Function, Generator, Dict, Bool, List, Tuple, BuiltinFunction, BuiltinMethodDescriptor, Object, Float, Int, Str, None, Complex, Long, Ellipsis, Bytes, Module, Type, DictItems, ListIterator, TupleIterator, SetIterator, StrIterator, BytesIterator;
+        public readonly IPythonType Set, Function, Generator, Dict, Bool, List, Tuple, BuiltinFunction, BuiltinMethodDescriptor, Object, Float, Int, Str, None, Complex, Long, Ellipsis, Bytes, Module, Type, DictItems, ListIterator, TupleIterator, SetIterator, StrIterator, BytesIterator, CallableIterator;
 
         public KnownTypes(PythonAnalyzer state) {
             var interpreter = state.Interpreter;
@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.PyAnalysis {
             if (state.LanguageVersion.Is3x()) {
                 BytesIterator = interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator);
             }
+            CallableIterator = interpreter.GetBuiltinType(BuiltinTypeId.CallableIterator);
         }
     }
 }

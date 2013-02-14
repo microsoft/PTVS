@@ -12,10 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonBuiltinModule : CPythonModule, IBuiltinPythonModule {

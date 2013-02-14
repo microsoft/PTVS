@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>

@@ -12,9 +12,7 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonMethodDescriptor : IPythonMethodDescriptor {

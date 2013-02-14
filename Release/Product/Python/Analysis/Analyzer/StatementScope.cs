@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -21,8 +19,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     class StatementScope : InterpreterScope {
         public int _startIndex, _endIndex;
 
-        public StatementScope(int index)
-            : base(null) {
+        public StatementScope(int index, InterpreterScope outerScope)
+            : base(null, outerScope) {
             _startIndex = _endIndex = index;
         }
 
@@ -42,6 +40,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             set {
                 _endIndex = value;
             }
+        }
+
+        // Forward variable handling to the outer scope.
+
+        public override VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
+            return OuterScope.CreateVariable(node, unit, name, addRef);
+        }
+
+        public override VariableDef AddVariable(string name, VariableDef variable = null) {
+            return OuterScope.AddVariable(name, variable);
+        }
+
+        internal override bool RemoveVariable(string name) {
+            return OuterScope.RemoveVariable(name);
+        }
+
+        internal override void ClearVariables() {
+            OuterScope.ClearVariables();
         }
     }
 }

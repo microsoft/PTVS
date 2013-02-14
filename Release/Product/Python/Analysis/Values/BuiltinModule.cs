@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _references.AddReference(node, unit, name);
@@ -42,16 +42,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
             var res = ProjectState.GetAllMembers(_interpreterModule, moduleContext);
             if (_specializedValues != null) {
                 foreach (var value in _specializedValues) {
-                    ISet<Namespace> existing;
+                    INamespaceSet existing;
                     if(!res.TryGetValue(value.Key, out existing)) {
                         res[value.Key] = value.Value;
                     } else {
-                        HashSet<Namespace> newSet = new HashSet<Namespace>(existing);
-                        newSet.UnionWith(value.Value);
+                        var newSet = existing.Union(value.Value, canMutate: false);
                         res[value.Key] = newSet;
                     }
                 }
@@ -118,7 +117,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, ISet<Namespace>[], NameExpression[], ISet<Namespace>> dlg, bool analyze) {
+        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
             try {
                 foreach (var v in this[name]) {
                     if (!(v is SpecializedNamespace)) {

@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             return ToNamespaceSet(_value.GetMember(name));
         }
 
@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             ISet<AnalysisValue>[] extArgs = new ISet<AnalysisValue>[args.Length];
             for (int i = 0; i < args.Length; i++) {
                 HashSet<AnalysisValue> set;
@@ -210,8 +210,8 @@ namespace Microsoft.PythonTools.Analysis {
             return ToNamespaceSet(_value.Call(extArgs, keywordArgNames));
         }
 
-        private ISet<Namespace> ToNamespaceSet(IEnumerable<AnalysisValue> iEnumerable) {
-            HashSet<Namespace> res = new HashSet<Namespace>();
+        private INamespaceSet ToNamespaceSet(IEnumerable<AnalysisValue> iEnumerable) {
+            var res = NamespaceSet.Empty;
             foreach (var value in iEnumerable) {
                 res.Add(value.AsNamespace());
             }

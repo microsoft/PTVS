@@ -62,13 +62,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return result.ToString().Trim();
         }
 
-        internal static ISet<Namespace> GetReturnTypes(IPythonFunction func, PythonAnalyzer projectState) {
-            var result = new HashSet<Namespace>();
+        internal static INamespaceSet GetReturnTypes(IPythonFunction func, PythonAnalyzer projectState) {
+            var result = NamespaceSet.EmptyUnion;
             var found = new HashSet<IPythonType>();
             foreach (var target in func.Overloads) {
                 var pyType = target.ReturnType;
                 if (pyType != null && !found.Contains(pyType)) {
-                    result.Add(((BuiltinClassInfo)projectState.GetNamespaceFromObjects(pyType)).Instance);
+                    result = result.Add(((BuiltinClassInfo)projectState.GetNamespaceFromObjects(pyType)).Instance);
                     found.Add(pyType);
                 }
             }
@@ -95,6 +95,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal static T[] Concat<T>(T firstArg, T[] args) {
+            if (args == null) {
+                return new[] { firstArg };
+            }
             var newArgs = new T[args.Length + 1];
             args.CopyTo(newArgs, 1);
             newArgs[0] = firstArg;

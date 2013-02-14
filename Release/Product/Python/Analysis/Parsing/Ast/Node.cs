@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Diagnostics;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {

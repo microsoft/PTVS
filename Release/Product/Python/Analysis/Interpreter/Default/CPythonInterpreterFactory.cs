@@ -14,12 +14,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase2 {

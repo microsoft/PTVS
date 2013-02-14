@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -28,7 +27,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _doc = null;
         }
 
-        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, ISet<Namespace> value) {
+        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, INamespaceSet value) {
             base.AugmentAssign(node, unit, value);
             var args = GetEventInvokeArgs(ProjectState);
             foreach (var r in value) {
@@ -36,10 +35,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal ISet<Namespace>[] GetEventInvokeArgs(PythonAnalyzer state) {
+        internal INamespaceSet[] GetEventInvokeArgs(PythonAnalyzer state) {
             var p = _value.GetEventParameterTypes();
 
-            var args = new ISet<Namespace>[p.Count];
+            var args = new INamespaceSet[p.Count];
             for (int i = 0; i < p.Count; i++) {
                 args[i] = state.GetInstance(p[i]).SelfSet;
             }

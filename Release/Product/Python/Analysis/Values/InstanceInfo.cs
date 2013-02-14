@@ -31,8 +31,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo = classInfo;
         }
 
-        public override IDictionary<string, ISet<Namespace>> GetAllMembers(IModuleContext moduleContext) {
-            var res = new Dictionary<string, ISet<Namespace>>();
+        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+            var res = new Dictionary<string, INamespaceSet>();
             if (_instanceAttrs != null) {
                 foreach (var kvp in _instanceAttrs) {
                     var types = kvp.Value.TypesNoCopy;
@@ -72,13 +72,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        private static void MergeTypes(Dictionary<string, ISet<Namespace>> res, string key, IEnumerable<Namespace> types) {
-            ISet<Namespace> set;
+        private static void MergeTypes(Dictionary<string, INamespaceSet> res, string key, IEnumerable<Namespace> types) {
+            INamespaceSet set;
             if (!res.TryGetValue(key, out set)) {
-                res[key] = set = new HashSet<Namespace>();
+                res[key] = set = NamespaceSet.Create(types);
+            } else {
+                res[key] = set.Union(types);
             }
-
-            set.UnionWith(types);
         }
 
         public Dictionary<string, VariableDef> InstanceAttributes {
@@ -89,13 +89,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public PythonAnalyzer ProjectState {
             get {
-                return _classInfo._analysisUnit.ProjectState;
+                return _classInfo.AnalysisUnit.ProjectState;
             }
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             // __getattribute__ takes precedence over everything.
-            ISet<Namespace> getattrRes = EmptySet<Namespace>.Instance;
+            INamespaceSet getattrRes = NamespaceSet.Empty;
             var getAttribute = _classInfo.GetMemberNoReferences(node, unit.CopyForEval(), "__getattribute__");
             if (getAttribute.Count > 0) {
                 foreach (var getAttrFunc in getAttribute) {
@@ -137,7 +137,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             // check and see if it's defined in a base class instance as well...
             var res = def.Types;
-            bool madeSet = false;
             foreach (var b in _classInfo.Bases) {
                 foreach (var ns in b) {
                     if (ns.Push()) {
@@ -146,7 +145,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             if (baseClass != null &&
                                 baseClass.Instance._instanceAttrs != null &&
                                 baseClass.Instance._instanceAttrs.TryGetValue(name, out def)) {
-                                res = res.Union(def.TypesNoCopy, ref madeSet);
+                                res = res.Union(def.TypesNoCopy);
                             }
                         } finally {
                             ns.Pop();
@@ -162,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     foreach (var getAttrFunc in getAttr) {
                         // TODO: We should really do a get descriptor / call here
                         //FIXME: new string[0]
-                        getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, _classInfo._analysisUnit.ProjectState._stringType.Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
+                        getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, _classInfo.AnalysisUnit.ProjectState._stringType.Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                     }
                 }
                 return getattrRes;
@@ -170,7 +169,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
             var getter = _classInfo.GetMemberNoReferences(node, unit, "__get__");
             if (getter.Count > 0) {
                 var get = getter.GetDescriptor(node, this, _classInfo, unit);
@@ -179,7 +178,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return SelfSet;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, ISet<Namespace> value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
             if (_instanceAttrs == null) {
                 _instanceAttrs = new Dictionary<string, VariableDef>();
             }
@@ -189,6 +188,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _instanceAttrs[name] = instMember = new VariableDef();
             }
             instMember.AddAssignment(node, unit);
+            instMember.MakeUnionStrongerIfMoreThan(ProjectState.Limits.InstanceMembers, value);
             instMember.AddTypes(unit, value);
         }
 
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo.GetMember(node, unit, name);
         }
 
-        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, ISet<Namespace> rhs) {
+        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, INamespaceSet rhs) {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__mul__"; break;
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.BinaryOperation(node, unit, operation, rhs);
         }
 
-        public override ISet<Namespace> ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+        public override INamespaceSet ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__rmul__"; break;
@@ -300,24 +300,58 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override string ToString() {
-            return ClassInfo._analysisUnit.FullName + " instance";
+            return ClassInfo.AnalysisUnit.FullName + " instance";
         }
 
-        public override bool UnionEquals(Namespace ns) {
-            if (Object.ReferenceEquals(this, ns)) {
-                return true;
-            }
+        private const int MERGE_TO_BASE_STRENGTH = 1;
+        private const int MERGE_TO_OBJECT_STRENGTH = 3;
 
-            InstanceInfo inst = ns as InstanceInfo;
-            if (inst == null) {
-                return false;
-            }
+        public override bool UnionEquals(Namespace ns, int strength) {
+            if (strength < MERGE_TO_BASE_STRENGTH) {
+                return base.UnionEquals(ns, strength);
+            } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
+                if (Object.ReferenceEquals(this, ns)) {
+                    return true;
+                }
 
-            return inst.ClassInfo.UnionEquals(ClassInfo);
+                InstanceInfo inst = ns as InstanceInfo;
+                if (inst == null) {
+                    return false;
+                }
+
+                return inst.ClassInfo.UnionEquals(ClassInfo, strength);
+            } else {
+                return ns is InstanceInfo;
+            }
         }
 
-        public override int UnionHashCode() {
-            return ClassInfo.UnionHashCode();
+        public override int UnionHashCode(int strength) {
+            if (strength < MERGE_TO_BASE_STRENGTH) {
+                return base.UnionHashCode(strength);
+            } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
+                return ClassInfo.UnionHashCode(strength);
+            } else {
+                return ProjectState._objectType.UnionHashCode(strength);
+            }
+        }
+
+        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+            if (strength < MERGE_TO_BASE_STRENGTH) {
+                return base.UnionMergeTypes(ns, strength);
+            } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
+                var inst = ns as InstanceInfo;
+                if (inst == null) {
+                    return this;
+                }
+
+                var classInfo = inst.ClassInfo.UnionMergeTypes(ClassInfo, strength) as ClassInfo;
+                if (classInfo == null) {
+                    return this;
+                }
+                return classInfo.Instance;
+            } else {
+                return ProjectState._objectType.Instance;
+            }
         }
 
         #region IVariableDefContainer Members

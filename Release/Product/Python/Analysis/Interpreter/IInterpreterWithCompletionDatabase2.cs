@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>

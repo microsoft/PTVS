@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -81,10 +82,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void AddDependency(AnalysisUnit unit) {
+        public bool AddDependency(AnalysisUnit unit) {
             if (!unit.ForEval) {
-                GetDependentItems(unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
+                return GetDependentItems(unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
             }
+            return false;
         }
     }
 
@@ -98,28 +100,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// A VariableDef represents a collection of type information and dependencies
     /// upon that type information.  
     /// 
-    /// The collection of type information is represented by a HashSet of Namespace
+    /// The collection of type information is represented by a set of Namespace
     /// objects.  This set includes all of the types that are known to have been
     /// seen for this variable.
     /// 
     /// Dependency data is added when an one value is assigned to a variable.  
-    /// For example for the statement:
+    /// For example, for the statement:
     /// 
-    /// foo = value
+    ///     foo = value
     /// 
     /// There will be a variable def for the name "foo", and "value" will evaluate
     /// to a collection of namespaces.  When value is assigned to
     /// foo the types in value will be propagated to foo's VariableDef by a call
     /// to AddDependentTypes.  If value adds any new type information to foo
-    /// then the caller needs to re-analyze anyone who is dependent upon foo'
-    /// s values.  If "value" was a VariableDef as well, rather than some arbitrary 
+    /// then the caller needs to re-analyze anyone who is dependent upon foo's
+    /// values.  If "value" was a VariableDef as well, rather than some arbitrary 
     /// expression, then reading "value" would have made the code being analyzed dependent 
     /// upon "value".  After a call to AddTypes the caller needs to check the 
     /// return value and if new types were added (returns true) needs to re-enque it's scope.
     /// 
-    /// Dependecies are stored in a dictionary keyed off of the IProjectEntry object.
+    /// Dependencies are stored in a dictionary keyed off of the IProjectEntry object.
     /// This is a consistent object which always represents the same module even
-    /// across multiple analysis.  The object is versioned so that when we encounter
+    /// across multiple analyses.  The object is versioned so that when we encounter
     /// a new version all the old dependencies will be thrown away when a variable ref 
     /// is updated with new dependencies.
     /// 
@@ -127,8 +129,58 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     class VariableDef : DependentData<TypedDependencyInfo<Namespace>>, IReferenceable {
         internal static VariableDef[] EmptyArray = new VariableDef[0];
+        
+        /// <summary>
+        /// This limit is used to prevent analysis from continuing forever due
+        /// to bugs or unanalyzable code. It is tested in Types and
+        /// TypesNoCopy, where an accurate type count is available without
+        /// requiring extra computation, and variables exceeding the limit are
+        /// added to LockedVariableDefs. AddTypes is a no-op for instances in
+        /// this set.
+        /// </summary>
+        internal const int HARD_TYPE_LIMIT = 1000;
 
-        public VariableDef() { }
+        static readonly ConditionalWeakTable<VariableDef, object> LockedVariableDefs = new ConditionalWeakTable<VariableDef, object>();
+        static readonly object LockedVariableDefsValue = new object();
+
+        private INamespaceSet _emptySet = NamespaceSet.Empty;
+
+        /// <summary>
+        /// Marks the current VariableDef as exceeding the limit and not to be
+        /// added to in future. It is virtual to allow subclasses to try and
+        /// 'rescue' the VariableDef, for example, by combining types.
+        /// </summary>
+        protected virtual void ExceedsTypeLimit() {
+            object dummy;
+            var uc = _emptySet.Comparer as UnionComparer;
+            if (uc == null) {
+                MakeUnion(0);
+            } else if (uc.Strength < UnionComparer.MAX_STRENGTH) {
+                MakeUnion(uc.Strength + 1);
+            } else if (!LockedVariableDefs.TryGetValue(this, out dummy)) {
+                LockedVariableDefs.Add(this, LockedVariableDefsValue);
+                // The remainder of this block logs diagnostic information to
+                // allow the VariableDef to be identified.
+                int total = 0;
+                var typeCounts = new Dictionary<string, int>();
+                foreach (var type in TypesNoCopy) {
+                    var str = type.ToString();
+                    int count;
+                    if (!typeCounts.TryGetValue(str, out count)) {
+                        count = 0;
+                    }
+                    typeCounts[str] = count + 1;
+                    total += 1;
+                }
+                var typeCountList = typeCounts.OrderByDescending(kv => kv.Value).Select(kv => string.Format("{0}x {1}", kv.Value, kv.Key)).ToList();
+                Debug.Write(string.Format("{0} exceeded type limit.\nStack trace:\n{1}\nContents:\n    Count = {2}\n    {3}\n",
+                    GetType().Name,
+                    new StackTrace(true),
+                    total,
+                    string.Join("\n    ", typeCountList)));
+                AnalysisLog.ExceedsTypeLimit(GetType().Name, total, string.Join(", ", typeCountList));
+            }
+        }
 
 #if VARDEF_STATS
         internal static Dictionary<string, int> _variableDefStats = new Dictionary<string, int>();
@@ -180,14 +232,40 @@ namespace Microsoft.PythonTools.Analysis.Values {
 #endif
 
         protected override TypedDependencyInfo<Namespace> NewDefinition(int version) {
-            return new TypedDependencyInfo<Namespace>(version);
+            return new TypedDependencyInfo<Namespace>(version, _emptySet);
+        }
+
+        protected int EstimateTypeCount(INamespaceSet extraTypes = null) {
+            // Use a fast estimate of the number of types we have, since this
+            // function will be called very often.
+            var roughSet = new HashSet<Namespace>();
+            foreach (var info in _dependencies.Values) {
+                roughSet.UnionWith(info.Types);
+            }
+            if (extraTypes != null) {
+                roughSet.UnionWith(extraTypes);
+            }
+            return roughSet.Count;
         }
 
         public bool AddTypes(AnalysisUnit unit, IEnumerable<Namespace> newTypes, bool enqueue = true) {
             return AddTypes(unit.ProjectEntry, newTypes, enqueue);
         }
 
+#if DEBUG
+        // Set checks ensure that the wasChanged result is correct. The checks
+        // are memory intensive, since they perform the add an extra time. The
+        // flag is static but non-const to allow it to be enabled while
+        // debugging.
+        private static bool ENABLE_SET_CHECK = false;
+#endif
+
         public bool AddTypes(IProjectEntry projectEntry, IEnumerable<Namespace> newTypes, bool enqueue = true) {
+            object dummy;
+            if (LockedVariableDefs.TryGetValue(this, out dummy)) {
+                return false;
+            }
+            
             bool added = false;
             foreach (var value in newTypes) {
                 var declaringModule = value.DeclaringModule;
@@ -195,6 +273,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var newTypesEntry = value.DeclaringModule ?? projectEntry;
 
                     var dependencies = GetDependentItems(newTypesEntry);
+
+#if DEBUG
+                    if (ENABLE_SET_CHECK) {
+                        bool testAdded;
+                        var original = dependencies.ToImmutableTypeSet();
+                        var afterAdded = original.Add(value, out testAdded, false);
+                        if (afterAdded.Comparer == original.Comparer) {
+                            if (testAdded) {
+                                Debug.Assert(!ObjectComparer.Instance.Equals(afterAdded, original));
+                            } else {
+                                Debug.Assert(ObjectComparer.Instance.Equals(afterAdded, original));
+                            }
+                        }
+                    }
+#endif
 
                     if (dependencies.AddType(value)) {
                         added = true;
@@ -215,30 +308,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// that this VariableDef will not be mutated while you would be enumerating over
         /// the resulting set.
         /// </summary>
-        public ISet<Namespace> TypesNoCopy {
+        public INamespaceSet TypesNoCopy {
             get {
+                var res = _emptySet;
                 if (_dependencies.Count != 0) {
                     TypedDependencyInfo<Namespace> oneDependency;
                     if (_dependencies.TryGetSingleValue(out oneDependency)) {
-                        return oneDependency.Types ?? EmptySet<Namespace>.Instance;
-                    }
+                        res = oneDependency.Types ?? NamespaceSet.Empty;
+                    } else {
 
-                    ISet<Namespace> res = null;
-                    bool madeSet = false;
-                    foreach (var mod in _dependencies.DictValues) {
-                        if (mod.HasTypes) {
-                            if (res == null) {
-                                res = mod.Types;
-                            } else {
-                                res = res.Union(mod.Types, ref madeSet);
-                            }
+                        foreach (var mod in _dependencies.DictValues) {
+                            res = res.Union(mod.Types);
                         }
                     }
-
-                    return res ?? EmptySet<Namespace>.Instance;
                 }
 
-                return EmptySet<Namespace>.Instance;
+                if (res.Count > HARD_TYPE_LIMIT) {
+                    ExceedsTypeLimit();
+                }
+
+                return res;
             }
         }
 
@@ -247,64 +336,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// resulting set will not mutate in the future even if the types in the VariableDef
         /// change in the future.
         /// </summary>
-        public ISet<Namespace> Types {
+        public INamespaceSet Types {
             get {
-                if (_dependencies.Count != 0) {
-                    TypedDependencyInfo<Namespace> oneDependency;
-                    if (_dependencies.TryGetSingleValue(out oneDependency)) {
-                        return oneDependency.ToImmutableTypeSet();
-                    }
-
-                    ISet<Namespace> res = null;
-                    bool ownsTypes = false;
-                    foreach (var mod in _dependencies.DictValues) {
-                        var types = mod.Types;
-                        if (types != null) {
-                            if (res == null) {
-                                res = types;
-                            } else {
-                                if (!ownsTypes) {
-                                    res = new HashSet<Namespace>(res);
-                                    ownsTypes = true;
-                                }
-
-                                res.UnionWith(types);
-                            }
-                        }
-                    }
-
-                    if (!ownsTypes && res is HashSet<Namespace>) {
-                        return new HashSet<Namespace>(res);
-                    }
-
-                    return res ?? EmptySet<Namespace>.Instance;
-                }
-
-                return EmptySet<Namespace>.Instance;
+                return TypesNoCopy.Clone();
             }
         }
 
-        public void AddReference(Node node, AnalysisUnit unit) {
+        public bool AddReference(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                AddReference(new EncodedLocation(unit.Tree, node), unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
+                var deps = GetDependentItems(unit.DeclaringModule.ProjectEntry);
+                return deps.AddReference(new EncodedLocation(unit.Tree, node)) && deps.AddDependentUnit(unit);
             }
+            return false;
         }
 
-        public TypedDependencyInfo<Namespace> AddReference(EncodedLocation location, IProjectEntry module) {
-            var depUnits = GetDependentItems(module);
-            depUnits.AddReference(location);
-            return depUnits;
+        public bool AddReference(EncodedLocation location, IProjectEntry module) {
+            return GetDependentItems(module).AddReference(location);
         }
 
-        public void AddAssignment(EncodedLocation location, IProjectEntry entry) {
-            var depUnits = GetDependentItems(entry);
-            depUnits.AddAssignment(location);
+        public bool AddAssignment(EncodedLocation location, IProjectEntry entry) {
+            return GetDependentItems(entry).AddAssignment(location);
         }
 
-        public void AddAssignment(Node node, AnalysisUnit unit) {
+        public bool AddAssignment(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                AddAssignment(new EncodedLocation(unit.Tree, node), unit.DeclaringModule.ProjectEntry);
+                return AddAssignment(new EncodedLocation(unit.Tree, node), unit.DeclaringModule.ProjectEntry);
             }
+            return false;
         }
 
         public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> References {
@@ -341,26 +399,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal void CopyTo(VariableDef to) {
+        internal bool CopyTo(VariableDef to) {
+            bool anyChange = false;
             Debug.Assert(this != to);
             foreach (var keyValue in _dependencies) {
                 var projEntry = keyValue.Key;
                 var dependencies = keyValue.Value;
 
-                if (dependencies.HasTypes) {
-                    to.AddTypes(projEntry, dependencies.Types);
+                anyChange |= to.AddTypes(projEntry, dependencies.Types, false);
+                if (dependencies.DependentUnits != null) {
+                    foreach (var unit in dependencies.DependentUnits) {
+                        anyChange |= to.AddDependency(unit);
+                    }
                 }
                 if (dependencies._references != null) {
                     foreach (var encodedLoc in dependencies._references) {
-                        to.AddReference(encodedLoc, projEntry);
+                        anyChange |= to.AddReference(encodedLoc, projEntry);
                     }
                 }
                 if (dependencies._assignments != null) {
                     foreach (var assignment in dependencies._assignments) {
-                        to.AddAssignment(assignment, projEntry);
+                        anyChange |= to.AddAssignment(assignment, projEntry);
                     }
                 }
             }
+            return anyChange;
         }
 
 
@@ -371,6 +434,40 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool VariableStillExists {
             get {
                 return !IsEphemeral && (_dependencies.Count > 0 || TypesNoCopy.Count > 0);
+            }
+        }
+
+        internal void MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
+            if (EstimateTypeCount(extraTypes) >= typeCount) {
+                MakeUnionStronger();
+            }
+        }
+
+        internal void MakeUnionStronger() {
+            var uc = _emptySet.Comparer as UnionComparer;
+            int strength = uc != null ? uc.Strength + 1 : 0;
+            MakeUnion(strength);
+        }
+
+        internal void MakeUnion(int strength) {
+            if (strength > UnionStrength) {
+                bool anyChanged = false;
+
+                _emptySet = NamespaceSet.CreateUnion(strength);
+                foreach (var value in _dependencies.Values) {
+                    anyChanged |= value.MakeUnion(strength);
+                }
+
+                if (anyChanged) {
+                    EnqueueDependents();
+                }
+            }
+        }
+
+        internal int UnionStrength {
+            get {
+                var uc = _emptySet.Comparer as UnionComparer;
+                return uc != null ? uc.Strength : -1;
             }
         }
     }
@@ -440,22 +537,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// includes all of the types passed in via splatting or extra position arguments.
     /// </summary>
     sealed class ListParameterVariableDef : LocatedVariableDef {
-        public SequenceInfo List;
+        public readonly StarArgsSequenceInfo List;
 
-        public ListParameterVariableDef(AnalysisUnit unit, Node location, bool addType = true)
+        public ListParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {
-            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType);
-            if (addType) {
-                AddTypes(unit, List.SelfSet);
-            }
+            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType, location);
+            base.AddTypes(unit, List);
         }
 
-        public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy, bool addType = true)
+        public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            List = new SequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType);
-            if (addType) {
-                AddTypes(unit, List.SelfSet);
-            }
+            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType, location);
+            base.AddTypes(unit, List);
         }
     }
 
@@ -464,18 +557,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// which includes all of the types passed in via splatting or unused keyword arguments.
     /// </summary>
     sealed class DictParameterVariableDef : LocatedVariableDef {
-        public readonly DictionaryInfo Dict;
+        public readonly StarArgsDictionaryInfo Dict;
 
         public DictParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {
-            Dict = new DictionaryInfo(unit.ProjectEntry);
-            AddTypes(unit, Dict.SelfSet);
+            Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
+            AddTypes(unit, Dict);
         }
 
         public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            Dict = new DictionaryInfo(unit.ProjectEntry);
-            AddTypes(unit, Dict.SelfSet);
+            Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
+            AddTypes(unit, Dict);
         }
     }
 }

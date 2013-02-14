@@ -26,14 +26,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(classObj, projectState) {
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
-                var res = unit.DeclaringModule.GetOrMakeNodeVariable(
+                var res = unit.Scope.GetOrMakeNodeValue(
                     node,
-                    (node_) => MakeFromIndexes()
+                    (node_) => MakeFromIndexes(node_)
                 ) as SequenceInfo;
 
-                List<ISet<Namespace>> seqTypes = new List<ISet<Namespace>>();
+                List<INamespaceSet> seqTypes = new List<INamespaceSet>();
                 foreach (var type in args[0]) {
                     SequenceInfo seqInfo = type as SequenceInfo;
                     if (seqInfo != null) {
@@ -62,6 +62,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.Call(node, unit, args, keywordArgNames);
         }
 
-        public abstract SequenceInfo MakeFromIndexes();
+        public abstract SequenceInfo MakeFromIndexes(Node node);
     }
 }

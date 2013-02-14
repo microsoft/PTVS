@@ -13,9 +13,8 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics.Contracts;
-using System.Text;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
 

@@ -12,14 +12,13 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     sealed class ModuleScope : InterpreterScope {
 
         public ModuleScope(ModuleInfo moduleInfo)
-            : base(moduleInfo) {
+            : base(moduleInfo, null) {
         }
 
         public ModuleInfo Module { get { return Namespace as ModuleInfo; } }

@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Analysis {
                             curModName = name.Substring(dotStart + 1, dotEnd - dotStart - 1);
                         }
 
-                        ISet<Namespace> existing;
+                        INamespaceSet existing;
                         if (parentModule.TryGetMember(curModName, out existing)) {
                             if (existing == newMod) {
                                 // we hit somewhere within the hierarchy where we're already
@@ -123,9 +123,7 @@ namespace Microsoft.PythonTools.Analysis {
                                 return res;
                             } else if (ShouldMergeModules(newMod, existing)) {
                                 // module is aliased w/ a member, merge it in...
-                                var newSet = new HashSet<Namespace>(existing);
-                                newSet.Add(newMod);
-                                parentModule[curModName] = newSet;
+                                parentModule[curModName] = existing.Add(newMod, canMutate: false);
                             }
                         } else {
                             parentModule[curModName] = newMod;
@@ -192,7 +190,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private bool ShouldMergeModules(BuiltinModule module, ISet<Namespace> existing) {
+        private bool ShouldMergeModules(BuiltinModule module, INamespaceSet existing) {
             if (existing.Count == 1) {
                 var existingValue = existing.First();
                 if (existingValue is ConstantInfo && existingValue.PythonType == _analyzer._objectType) {

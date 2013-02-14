@@ -13,7 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -26,40 +26,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class SequenceInfo : IterableInfo {
-        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
-            : base(indexTypes, seqType) {
+        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
+            : base(indexTypes, seqType, node) {
         }
 
         public override int? GetLength() {
             return IndexTypes.Length;
         }
 
-        public override ISet<Namespace> BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
+        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
             switch (operation) {
                 case PythonOperator.Multiply:
-                    ISet<Namespace> res = EmptySet<Namespace>.Instance;
-                    bool madeSet = false;
+                    INamespaceSet res = NamespaceSet.Empty;
                     foreach (var type in rhs) {
                         var typeId = type.TypeId;
 
-                        if (typeId == BuiltinTypeId.Int ||
-                            typeId == BuiltinTypeId.Long) {
-                            res = res.Union(this, ref madeSet);
+                        if (typeId == BuiltinTypeId.Int || typeId == BuiltinTypeId.Long) {
+                            res = res.Union(this);
                         } else {
-                            res = res.Union(type.ReverseBinaryOperation(node, unit, operation, this), ref madeSet);
+                            var partialRes = type.ReverseBinaryOperation(node, unit, operation, SelfSet);
+                            if (partialRes != null) {
+                                res = res.Union(partialRes);
+                            }
                         }
-                    
+
                     }
                     return res;
             }
             return base.BinaryOperation(node, unit, operation, rhs);
         }
 
-        public override ISet<Namespace> ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, ISet<Namespace> rhs) {
-            return SelfSet;
-        }
-
-        public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
+        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
             int? constIndex = GetConstantIndex(index);
 
             if (constIndex != null && constIndex.Value < IndexTypes.Length) {
@@ -83,7 +80,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return UnionType;
         }
 
-        private SliceInfo GetSliceIndex(ISet<Namespace> index) {
+        private SliceInfo GetSliceIndex(INamespaceSet index) {
             foreach (var type in index) {
                 if (type is SliceInfo) {
                     return type as SliceInfo;
@@ -92,7 +89,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        internal static int? GetConstantIndex(ISet<Namespace> index) {
+        internal static int? GetConstantIndex(INamespaceSet index) {
             int? constIndex = null;
             int typeCount = 0;
             foreach (var type in index) {
@@ -121,32 +118,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Description {
             get {
-                EnsureUnionType();
-                StringBuilder result = new StringBuilder(_type.Name);
-                var unionType = UnionType.GetUnionType();
-                if (unionType != null) {
-                    result.Append(" of " + unionType.ShortDescription);
-                } else if (UnionType.Count > 0) {
-                    result.Append(" of multiple types");
-                } else {
-                    result.Append("()");
-                }
-
-                return result.ToString();
+                return MakeDescription(_type.Name);
             }
-        }
-
-        public override bool UnionEquals(Namespace ns) {
-            SequenceInfo si = ns as SequenceInfo;
-            if (si == null) {
-                return false;
-            }
-
-            return si.IndexTypes.Length == IndexTypes.Length;
-        }
-
-        public override int UnionHashCode() {
-            return IndexTypes.Length;
         }
 
         public override IEnumerable<AnalysisKeyValuePair> GetItems() {
@@ -162,9 +135,38 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     internal class StarArgsSequenceInfo : SequenceInfo {
-        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo)
-            : base(variableDef, builtinClassInfo) {
+        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo, Node node)
+            : base(variableDef, builtinClassInfo, node) {
         }
+
+        internal void SetIndex(AnalysisUnit unit, int index, INamespaceSet value) {
+            if (index >= IndexTypes.Length) {
+                var newTypes = new VariableDef[index + 1];
+                for (int i = 0; i < newTypes.Length; ++i) {
+                    if (i < IndexTypes.Length) {
+                        newTypes[i] = IndexTypes[i];
+                    } else {
+                        newTypes[i] = new VariableDef();
+                    }
+                }
+                IndexTypes = newTypes;
+            }
+            IndexTypes[index].AddTypes(unit, value);
+        }
+
+        public override void SetIndex(Node node, AnalysisUnit unit, INamespaceSet index, INamespaceSet value) {
+            int? constIndex = GetConstantIndex(index);
+
+            if (constIndex != null) {
+                SetIndex(unit, constIndex.Value, value);
+            } else {
+                if (IndexTypes.Length == 0) {
+                    IndexTypes = new[] { new VariableDef() };
+                }
+                IndexTypes[0].AddTypes(unit, value);
+            }
+        }
+
 
         public override string ShortDescription {
             get {
@@ -172,8 +174,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+            return this;
+        }
+
         public override string ToString() {
             return "*" + base.ToString();
+        }
+
+        internal int TypesCount {
+            get {
+                if (IndexTypes == null) {
+                    return 0;
+                }
+                return IndexTypes.Aggregate(0, (total, it) => total + it.TypesNoCopy.Count);
+            }
+        }
+
+        internal void MakeUnionStronger() {
+            if (IndexTypes != null) {
+                foreach (var it in IndexTypes) {
+                    it.MakeUnionStronger();
+                }
+            }
+        }
+
+        internal void MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
+            if (IndexTypes != null) {
+                foreach (var it in IndexTypes) {
+                    it.MakeUnionStrongerIfMoreThan(typeCount, extraTypes);
+                }
+            }
         }
     }
 }

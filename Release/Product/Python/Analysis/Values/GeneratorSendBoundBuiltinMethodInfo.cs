@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -25,12 +24,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _generator = generator;
         }
 
-        public override ISet<Namespace> Call(Node node, AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
                 _generator.AddSend(node, unit, args[0]);
             }
 
-            return _generator.Yields;
+            _generator.Yields.AddDependency(unit);
+
+            return _generator.Yields.Types;
         }
     }
 }

@@ -12,8 +12,8 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class TupleBuiltinClassInfo : SequenceBuiltinClassInfo {
@@ -21,8 +21,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(classObj, projectState) {
         }
 
-        public override SequenceInfo MakeFromIndexes() {
-            return new SequenceInfo(VariableDef.EmptyArray, this);
+        public override SequenceInfo MakeFromIndexes(Node node) {
+            return new SequenceInfo(VariableDef.EmptyArray, this, node);
         }
     }
 }

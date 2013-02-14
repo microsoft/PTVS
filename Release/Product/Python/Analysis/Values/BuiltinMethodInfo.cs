@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly PythonMemberType _memberType;
         internal readonly bool _fromFunction;
         private string _doc;
-        private readonly ISet<Namespace> _returnTypes;
+        private readonly INamespaceSet _returnTypes;
         private BoundBuiltinMethodInfo _boundMethod;
         private OverloadResult[] _overloads;
 
@@ -47,11 +47,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override ISet<Namespace> Call(Node node, Interpreter.AnalysisUnit unit, ISet<Namespace>[] args, NameExpression[] keywordArgNames) {
+        public override INamespaceSet Call(Node node, Interpreter.AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             return _returnTypes;
         }
 
-        public override ISet<Namespace> GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
+        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
             if (instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             }
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public ISet<Namespace> ReturnTypes {
+        public INamespaceSet ReturnTypes {
             get {
                 return _returnTypes;
             }

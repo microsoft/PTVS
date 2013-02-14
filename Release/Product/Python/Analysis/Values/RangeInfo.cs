@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -23,11 +22,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(state._listType) {
         }
 
-        public override ISet<Namespace> GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             return ProjectState._intType.SelfSet;
         }
 
-        public override ISet<Namespace> GetIndex(Node node, AnalysisUnit unit, ISet<Namespace> index) {
+        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
             // TODO: Return correct index value if we have a constant
             /*int? constIndex = SequenceInfo.GetConstantIndex(index);
 

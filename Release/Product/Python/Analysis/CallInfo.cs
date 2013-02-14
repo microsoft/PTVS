@@ -24,10 +24,10 @@ namespace Microsoft.PythonTools.Analysis {
     /// New in 1.5.
     /// </summary>
     public struct CallInfo {
-        private readonly ISet<Namespace>[] _args;
+        private readonly INamespaceSet[] _args;
         private readonly NameExpression[] _names;
 
-        internal CallInfo(ISet<Namespace>[] args, NameExpression[] names) {
+        internal CallInfo(INamespaceSet[] args, NameExpression[] names) {
             _args = args;
             _names = names;
         }

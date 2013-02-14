@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -27,12 +26,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private ListInsertBoundBuiltinMethodInfo _insertMethod;
         private ListExtendBoundBuiltinMethodInfo _extendMethod;
 
-        public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType)
-            : base(indexTypes, seqType) {
+        public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
+            : base(indexTypes, seqType, node) {
                 EnsureAppend();
         }
 
-        public override ISet<Namespace> GetMember(Node node, AnalysisUnit unit, string name) {
+        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
             switch (name) {
                 case "append":
                     EnsureAppend();
@@ -63,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetMember(node, unit, name);
         }
 
-        internal void AppendItem(Node node, AnalysisUnit unit, ISet<Namespace> set) {
+        internal void AppendItem(Node node, AnalysisUnit unit, INamespaceSet set) {
             if (IndexTypes.Length == 0) {
                 IndexTypes = new[] { new VariableDef() };
             } 
@@ -75,7 +74,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private void EnsureAppend() {
             if (_appendMethod == null) {
-                ISet<Namespace> value;
+                INamespaceSet value;
                 if (TryGetMember("append", out value)) {                    
                     _appendMethod = new ListAppendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
                 }
@@ -84,7 +83,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private void EnsurePop() {
             if (_popMethod == null) {
-                ISet<Namespace> value;
+                INamespaceSet value;
                 if (TryGetMember("pop", out value)) {
                     _popMethod = new ListPopBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
                 }
@@ -93,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private void EnsureInsert() {
             if (_insertMethod == null) {
-                ISet<Namespace> value;
+                INamespaceSet value;
                 if (TryGetMember("insert", out value)) {
                     _insertMethod = new ListInsertBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
                 }
@@ -102,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         private void EnsureExtend() {
             if (_extendMethod == null) {
-                ISet<Namespace> value;
+                INamespaceSet value;
                 if (TryGetMember("extend", out value)) {
                     _extendMethod = new ListExtendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
                 }
