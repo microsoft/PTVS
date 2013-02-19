@@ -307,11 +307,11 @@ namespace DebuggerUITests {
             p.BeginErrorReadLine();
             p.BeginOutputReadLine();
             p.Exited += (sender, args) => {
-                SD.Debug.WriteLine("Process has exited: {0} {1}", p.Id, p.ExitCode);
+                SD.Debug.WriteLine("Process Id ({0}) exited with ExitCode: {1}", p.Id, p.ExitCode);
                 SD.Debug.WriteLine(String.Format("Output: {0}", output));
             };
 
-            Assert.IsNotNull(p, "Failure to start process {0} {1} {2} {3}", projectInterpreter, interpreterArgs, fullFilename, programArgs);
+            Assert.IsNotNull(p, "Failure to start process, {0} {1} ", projectInterpreter, cmdlineArgs);
             return p;
         }
 
