@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools {
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = false, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
-    [ProvideDebugEngine("Python", typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId)]
+    [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId)]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]
     [ProvideDebugPortSupplier("Python remote debugging (unsecured)", typeof(PythonRemoteDebugPortSupplierUnsecured), PythonRemoteDebugPortSupplierUnsecured.PortSupplierId)]
     [ProvideDebugPortSupplier("Python remote debugging (SSL)", typeof(PythonRemoteDebugPortSupplierSsl), PythonRemoteDebugPortSupplierSsl.PortSupplierId)]
