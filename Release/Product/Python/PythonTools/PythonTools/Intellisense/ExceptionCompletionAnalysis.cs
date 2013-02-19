@@ -15,17 +15,17 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
-using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ExceptionCompletionAnalysis : CompletionAnalysis {
-        internal ExceptionCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(text, pos, span, textBuffer, options) {
+        internal ExceptionCompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(span, textBuffer, options) {
         }
 
         private static readonly string[] KnownExceptions = new[] { "GeneratorExit", "KeyboardInterrupt", 
@@ -52,13 +52,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             var analysis = GetAnalysisEntry();
-            var completions = analysis.GetAllAvailableMembersByIndex(_pos)
+            var completions = analysis.GetAllAvailableMembersByIndex(Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position, GetMemberOptions.None)
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);
 
 
-            var res = new PythonCompletionSet(Text, Text, Span, completions, new Completion[0]);
+            var res = new FuzzyCompletionSet("PythonExceptions", "Python", Span, completions, _options, CompletionComparer.UnderscoresLast);
 
             var end = _stopwatch.ElapsedMilliseconds;
 

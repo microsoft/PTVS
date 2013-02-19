@@ -20,6 +20,7 @@ using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -54,42 +55,63 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         #region ICompletionSource Members
 
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
-            DjangoProject project;
             string filename = _buffer.GetFilePath();
+            if (filename == null) {
+                return;
+            }
+            var project = DjangoPackage.GetProject(filename);
+            if (project == null) {
+                return;
+            }
+            var nullableTriggerPoint = session.GetTriggerPoint(_buffer.CurrentSnapshot);
+            if (!nullableTriggerPoint.HasValue) {
+                return;
+            }
+            var triggerPoint = nullableTriggerPoint.Value;
 
-            if (filename != null) {
-                project = DjangoPackage.GetProject(filename);
-                TemplateProjectionBuffer projBuffer;
-                TemplateTokenKind kind;
-                string templateText;
-                var triggerPoint = session.GetTriggerPoint(_buffer.CurrentSnapshot);
-                int templateStart;
-                if (project != null &&
-                    triggerPoint != null &&
-                    _buffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer) &&
-                    (templateText = projBuffer.GetTemplateText(triggerPoint.Value, out kind, out templateStart)) != null) {
+            TemplateProjectionBuffer projBuffer;
+            if (!_buffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
+                return;
+            }
 
-                    if (kind == TemplateTokenKind.Block || kind == TemplateTokenKind.Variable) {
-                        var compSet = new CompletionSet();
+            int templateStart;
+            TemplateTokenKind kind;
+            var templateText = projBuffer.GetTemplateText(triggerPoint, out kind, out templateStart);
+            if (templateText == null) {
+                return;
+            }
 
-                        List<Completion> completions = GetCompletions(
-                            project,
-                            kind,
-                            templateText,
-                            templateStart,
-                            session.GetTriggerPoint(_buffer.CurrentSnapshot));
-
-                        completionSets.Add(
-                            new CompletionSet(
-                                "Django Tags",
-                                "Django Tags",
-                                session.CreateTrackingSpan(_buffer),
-                                completions.ToArray(),
-                                new Completion[0]
-                            )
-                        );
+            if (kind == TemplateTokenKind.Block || kind == TemplateTokenKind.Variable) {
+                int spanStart = triggerPoint.Position;
+                for (int i = triggerPoint.Position - templateStart - 1; i >= 0 && i < templateText.Length; --i, --spanStart) {
+                    char c = templateText[i];
+                    if (!char.IsLetterOrDigit(c) && c != '_') {
+                        break;
                     }
                 }
+
+                var applicableSpan = _buffer.CurrentSnapshot.CreateTrackingSpan(
+                    spanStart,
+                    triggerPoint.Position - spanStart,
+                    SpanTrackingMode.EdgeInclusive);
+
+                var completions = GetCompletions(
+                    project,
+                    kind,
+                    templateText,
+                    templateStart,
+                    triggerPoint);
+
+                completionSets.Add(
+                    new FuzzyCompletionSet(
+                        "PythonDjangoTags",
+                        "Django Tags",
+                        applicableSpan,
+                        completions,
+                        session.GetOptions(),
+                        CompletionComparer.UnderscoresLast
+                    )
+                );
             }
         }
 
@@ -150,65 +172,40 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         /// <param name="project"></param>
         /// <param name="kind">The type of template tag we are processing</param>
         /// <param name="templateText">The text of the template tag which we are offering a completion in</param>
-        /// <param name="templateStart">the offset in the buffer where teh template starts</param>
+        /// <param name="templateStart">The offset in the buffer where the template starts</param>
         /// <param name="triggerPoint">The point in the buffer where the completion was triggered</param>
         /// <returns></returns>
-        private List<Completion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint? triggerPoint) {
-            List<Completion> completions = new List<Completion>();
+        private IEnumerable<DynamicallyVisibleCompletion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint) {
+            int position = triggerPoint.Position - templateStart;
             IEnumerable<CompletionInfo> tags;
+            IDjangoCompletionContext context;
 
             switch (kind) {
                 case TemplateTokenKind.Block:
                     var block = DjangoBlock.Parse(templateText);
-                    if (block != null && triggerPoint != null) {
-                        int position = triggerPoint.Value.Position - templateStart;
-                        if (position <= block.ParseInfo.Start) {
+                    if (block != null) {
+                        if (position <= block.ParseInfo.Start + block.ParseInfo.Command.Length) {
                             // we are completing before the command
                             // TODO: Return a new set of tags?  Do nothing?  Do this based upon ctrl-space?
-                            tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags.Keys, StandardGlyphGroup.GlyphKeyword), triggerPoint.Value);
-                        } else if (position <= block.ParseInfo.Start + block.ParseInfo.Command.Length) {
-                            // we are completing in the middle of the command, we should filter based upon
-                            // the command text up to the current position
-                            tags = FilterBlocks(
-                                DjangoVariable.FilterTags(
-                                    project._tags.Keys,
-                                    block.ParseInfo.Command.Substring(0, position - block.ParseInfo.Start)
-                                ),
-                                triggerPoint.Value
-                            );
+                            tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags, StandardGlyphGroup.GlyphKeyword), triggerPoint);
                         } else {
                             // we are in the arguments, let the block handle the completions
-                            tags = block.GetCompletions(
-                                new ProjectBlockCompletionContext(project, _buffer),
-                                position
-                            );
+                            context = new ProjectBlockCompletionContext(project, _buffer);
+                            tags = block.GetCompletions(context, position);
                         }
                     } else {
                         // no tag entered yet, provide the known list of tags.
-                        tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags.Keys, StandardGlyphGroup.GlyphKeyword), triggerPoint.Value);
+                        tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags, StandardGlyphGroup.GlyphKeyword), triggerPoint);
                     }
                     break;
                 case TemplateTokenKind.Variable:
-                    tags = CompletionInfo.ToCompletionInfo(project._filters.Keys, StandardGlyphGroup.GlyphKeyword);
-                    var filePath = _buffer.GetFilePath();
-
-                    var dirName = Path.GetDirectoryName(filePath);
-
                     var variable = DjangoVariable.Parse(templateText);
-                    if (variable != null && triggerPoint != null) {
-                        int position = triggerPoint.Value.Position - templateStart;
-                        tags = variable.GetCompletions(
-                            new ProjectBlockCompletionContext(project, _buffer),
-                            position
-                        );
+                    context = new ProjectBlockCompletionContext(project, _buffer);
+                    if (variable != null) {
+                        tags = variable.GetCompletions(context, position);
                     } else {
                         // show variable names
-                        var tempTags = GetVariablesForTemplateFile(project, filePath);
-                        if (tempTags != null) {
-                            tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphKeyword);
-                        } else {
-                            tags = new CompletionInfo[0];
-                        }
+                        tags = CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupVariable);
                     }
 
                     break;
@@ -216,21 +213,14 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                     throw new InvalidOperationException();
             }
 
-            foreach (var tag in tags.OrderBy(x => x.DisplayText, StringComparer.OrdinalIgnoreCase)) {
-                completions.Add(
-                    new Completion(
-                        tag.DisplayText,
-                        tag.InsertionText,
-                        StripDocumentation(tag.Documentation),
-                        _provider._glyphService.GetGlyph(
-                            tag.Glyph,
-                            StandardGlyphItem.GlyphItemPublic
-                        ),
-                        "tag"
-                    )
-                );
-            }
-            return completions;
+            return tags
+                .OrderBy(tag => tag.DisplayText, StringComparer.OrdinalIgnoreCase)
+                .Select(tag => new DynamicallyVisibleCompletion(
+                                    tag.DisplayText,
+                                    tag.InsertionText,
+                                    StripDocumentation(tag.Documentation),
+                                    _provider._glyphService.GetGlyph(tag.Glyph, StandardGlyphItem.GlyphItemPublic),
+                                    "tag"));
         }
 
         internal static string StripDocumentation(string doc) {
@@ -250,7 +240,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         private IEnumerable<CompletionInfo> FilterBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint) {
             var projBuffer = _buffer.Properties.GetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer));
             var regions = projBuffer.GetTemplateRegions(
-                new SnapshotSpan(new SnapshotPoint(triggerPoint.Snapshot, 0), triggerPoint), 
+                new SnapshotSpan(new SnapshotPoint(triggerPoint.Snapshot, 0), triggerPoint),
                 reversed: true
             );
 

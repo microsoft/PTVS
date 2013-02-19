@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void AugmentSignatureHelpSession(ISignatureHelpSession session, System.Collections.Generic.IList<ISignature> signatures) {
-            var span = session.CreateTrackingSpan(_textBuffer);
+            var span = session.GetApplicableSpan(_textBuffer);
             
             var sigs = _textBuffer.CurrentSnapshot.GetSignatures(span);
 

@@ -356,6 +356,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _activeSession = CompletionBroker.TriggerCompletion(_textView);
 
             if (_activeSession != null) {
+                _activeSession.Filter();
                 if (completeWord &&
                     _activeSession.CompletionSets.Count == 1 &&
                     _activeSession.CompletionSets[0].Completions.Count == 1) {
@@ -470,7 +471,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
                 
                 HandleChar((char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn));
-                
+
+                if (_activeSession != null && !_activeSession.IsDismissed) {
+                    _activeSession.Filter();
+                }
+
                 return res;
             }
 
@@ -505,6 +510,15 @@ namespace Microsoft.PythonTools.Intellisense {
                                 return VSConstants.S_OK;
                             }
                             break;
+                        case VSConstants.VSStd2KCmdID.BACKSPACE:
+                        case VSConstants.VSStd2KCmdID.DELETE:
+                        case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
+                        case VSConstants.VSStd2KCmdID.DELETEWORDRIGHT:
+                            int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                            if (_activeSession != null && !_activeSession.IsDismissed) {
+                                _activeSession.Filter();
+                            }
+                            return res;
                     }
                 }
             } else if (_sigHelpSession != null) {

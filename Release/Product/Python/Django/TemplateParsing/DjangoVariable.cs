@@ -188,79 +188,51 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {            
-            IEnumerable<CompletionInfo> tags = new CompletionInfo[0];
-            
-            if (Expression == null) {
-                var tempTags = context.Variables;
-                if (tempTags != null) {
-                    tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
-                }
-            } else if (position == Expression.Value.Length + ExpressionStart) {
-                var tempTags = context.Variables;
+            if (Expression != null && position == Expression.Value.Length + ExpressionStart && Expression.Value.EndsWith(".")) {
                 // TODO: Handle multiple dots
-                if (Expression.Value.EndsWith(".")) {
-                    string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
-                    // get the members of this variable
-                    if (tempTags != null) {
-                        Dictionary<string, PythonMemberType> newTags = new Dictionary<string, PythonMemberType>();
-                        HashSet<AnalysisValue> values;
-                        if (tempTags.TryGetValue(varName, out values)) {
-                            foreach (var item in values) {
-                                foreach (var members in item.GetAllMembers()) {
-                                    string name = members.Key;
-                                    PythonMemberType type, newType = GetMemberType(members.Value);
+                string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
+                
+                // get the members of this variable
+                HashSet<AnalysisValue> values;
+                if (context.Variables != null && context.Variables.TryGetValue(varName, out values)) {
+                    var newTags = new Dictionary<string, PythonMemberType>();
+                    foreach (var member in values.SelectMany(item => item.GetAllMembers())) {
+                        string name = member.Key;
+                        PythonMemberType type, newType = GetMemberType(member.Value);
                                     
-                                    if (!newTags.TryGetValue(name, out type)) {
-                                        newTags[name] = newType;
-                                    } else if (type != newType && 
-                                        type != PythonMemberType.Unknown && 
-                                        newType != PythonMemberType.Unknown) {
-                                        newTags[name] = PythonMemberType.Multiple;
-                                    }
-                                }
-                            }
+                        if (!newTags.TryGetValue(name, out type)) {
+                            newTags[name] = newType;
+                        } else if (type != newType && type != PythonMemberType.Unknown && newType != PythonMemberType.Unknown) {
+                            newTags[name] = PythonMemberType.Multiple;
                         }
-                        tags = CompletionInfo.ToCompletionInfo(newTags);
                     }
-                } else {
-                    tags = FilterTags(tempTags.Keys, Expression.Value, StandardGlyphGroup.GlyphGroupField);
+                    return CompletionInfo.ToCompletionInfo(newTags);
                 }
-            } else if (position < Expression.Value.Length + ExpressionStart) {
-                // we are triggering in the variable name area, we need to return variables
-                // but we need to filter them.
-                var tempTags = context.Variables;
-                if (tempTags != null) {
-                    tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
-                }
-            } else {
+
+                return Enumerable.Empty<CompletionInfo>();
+
+            } else if (Filters.Length > 0) {
                 // we are triggering in the filter or arg area
-                for (int i = 0; i < Filters.Length; i++) {
-                    var curFilter = Filters[i];
-                    if (position >= curFilter.FilterStart &&
-                        position <= curFilter.FilterStart + curFilter.Filter.Length) {
+                foreach (var curFilter in Filters) {
+                    if (position >= curFilter.FilterStart && position <= curFilter.FilterStart + curFilter.Filter.Length) {
                         // it's in this filter area
-                        tags = FilterFilters(context, curFilter.Filter);
-                        break;
-                    } else if (curFilter.Arg != null) {
-                        if (position >= curFilter.ArgStart &&
-                            position < curFilter.ArgStart + curFilter.Arg.Value.Length) {
-                            // it's in this argument
-                            var tempTags = context.Variables;
-                            if (tempTags != null) {
-                                tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
-                            }
-                            break;
-                        }
-                    } else if (i == Filters.Length - 1 && !String.IsNullOrWhiteSpace(curFilter.Filter)) {
-                        // last filter, nothing after us, so this has to be an argument...
-                        var tempTags = context.Variables;
-                        if (tempTags != null) {
-                            tags = CompletionInfo.ToCompletionInfo(tempTags.Keys, StandardGlyphGroup.GlyphGroupField);
-                        }
+                        return CompletionInfo.ToCompletionInfo(context.Filters, StandardGlyphGroup.GlyphKeyword);
+                    } else if (curFilter.Arg != null && position >= curFilter.ArgStart && position < curFilter.ArgStart + curFilter.Arg.Value.Length) {
+                        // it's in this argument
+                        return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
                     }
+                }
+
+                if (String.IsNullOrWhiteSpace(Filters.Last().Filter)) {
+                    // last filter was blank, so provide filters
+                    return CompletionInfo.ToCompletionInfo(context.Filters, StandardGlyphGroup.GlyphKeyword);
+                } else {
+                    // ... else, provide variables
+                    return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
                 }
             }
-            return tags;
+
+            return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
         }
 
         private static PythonMemberType GetMemberType(ISet<AnalysisValue> values) {
@@ -291,16 +263,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 }
             }
         }
-
-        internal static IEnumerable<CompletionInfo> FilterTags(IEnumerable<string> keys, string filter, StandardGlyphGroup glyph = StandardGlyphGroup.GlyphKeyword) {
-            return from tag in keys where tag.StartsWith(filter) select new CompletionInfo(tag, glyph, tag.Substring(filter.Length));
-        }
-
-        private static IEnumerable<CompletionInfo> FilterFilters(IDjangoCompletionContext context, string filter) {
-            return from tag in context.Filters where tag.Key.StartsWith(filter) select new 
-                CompletionInfo(tag.Key, StandardGlyphGroup.GlyphKeyword, tag.Key.Substring(filter.Length), tag.Value.Documentation);
-        }
-
     }
 
     class CompletionInfo {
@@ -317,15 +279,18 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         internal static IEnumerable<CompletionInfo> ToCompletionInfo(IEnumerable<string> keys, StandardGlyphGroup glyph) {
-            foreach (var key in keys) {
-                yield return new CompletionInfo(key, glyph, key);
-            }
+            return keys.Select(key => new CompletionInfo(key, glyph, key));
         }
 
         internal static IEnumerable<CompletionInfo> ToCompletionInfo(Dictionary<string, PythonMemberType> keys) {
-            foreach (var key in keys) {
-                yield return new CompletionInfo(key.Key, key.Value.ToGlyphGroup(), key.Key);
+            return keys.Select(kv => new CompletionInfo(kv.Key, kv.Value.ToGlyphGroup(), kv.Key));
+        }
+
+        internal static IEnumerable<CompletionInfo> ToCompletionInfo<T>(Dictionary<string, T> dictionary, StandardGlyphGroup glyph) {
+            if (dictionary == null) {
+                return Enumerable.Empty<CompletionInfo>();
             }
+            return ToCompletionInfo(dictionary.Keys, glyph);
         }
     }
 }

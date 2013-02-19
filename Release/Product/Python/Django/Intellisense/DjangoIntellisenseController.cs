@@ -89,10 +89,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         internal void TriggerCompletionSession(bool completeWord) {
             Dismiss();
-            
+
             _activeSession = CompletionBroker.TriggerCompletion(_textView);
 
             if (_activeSession != null) {
+                _activeSession.Filter();
                 if (completeWord &&
                     _activeSession.CompletionSets.Count == 1 &&
                     _activeSession.CompletionSets[0].Completions.Count == 1) {
@@ -105,7 +106,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
         }
 
-        private void OnCompletionSessionDismissedOrCommitted(object sender, System.EventArgs e) {
+        private void OnCompletionSessionDismissedOrCommitted(object sender, EventArgs e) {
             // We've just been told that our active session was dismissed.  We should remove all references to it.
             _activeSession.Committed -= OnCompletionSessionDismissedOrCommitted;
             _activeSession.Dismissed -= OnCompletionSessionDismissedOrCommitted;
@@ -114,18 +115,29 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         #region IOleCommandTarget Members
 
-        public int Exec(ref System.Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, System.IntPtr pvaIn, System.IntPtr pvaOut) {
+        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
+                int res;
+
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
-                    //case VSConstants.VSStd2KCmdID.PARAMINFO:
+                        //case VSConstants.VSStd2KCmdID.PARAMINFO:
                         DjangoIntellisenseController controller;
                         if (_textView.Properties.TryGetProperty<DjangoIntellisenseController>(typeof(DjangoIntellisenseController), out controller)) {
                             controller.TriggerCompletionSession((VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD);
                             return VSConstants.S_OK;
                         }
                         return VSConstants.S_OK;
+                    case VSConstants.VSStd2KCmdID.BACKSPACE:
+                    case VSConstants.VSStd2KCmdID.DELETE:
+                    case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
+                    case VSConstants.VSStd2KCmdID.DELETEWORDRIGHT:
+                        res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                        if (_activeSession != null && !_activeSession.IsDismissed) {
+                            _activeSession.Filter();
+                        }
+                        return res;
                     case VSConstants.VSStd2KCmdID.TAB:
                         if (_activeSession != null && !_activeSession.IsDismissed) {
                             _activeSession.Commit();
@@ -158,7 +170,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                         break;
                     case VSConstants.VSStd2KCmdID.TYPECHAR:
                         var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
-                
+
                         if (_activeSession != null && !_activeSession.IsDismissed) {
                             if (_activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
                                 PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(ch) != -1) {
@@ -168,38 +180,39 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                             }
                         }
 
-                        if (PythonToolsPackage.Instance.AutoListMembers &&
+                        res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+                        if (PythonToolsPackage.Instance.AutoListMembers && ErrorHandler.Succeeded(res) &&
                             (ch == '.' || ch == ' ' || ch == '|')) {
-                            // insert the ., then trigger...
-                            int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                            TemplateProjectionBuffer projBuffer;
+                            if (_textView.TextBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
+                                var templateLoc = _textView.BufferGraph.MapDownToBuffer(
+                                    _textView.Caret.Position.BufferPosition,
+                                    PointTrackingMode.Positive,
+                                    projBuffer.TemplateBuffer,
+                                    PositionAffinity.Successor
+                                );
 
-                            if (ErrorHandler.Succeeded(res)) {
-                                TemplateProjectionBuffer projBuffer;
-                                if (_textView.TextBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
-                                    var templateLoc = _textView.BufferGraph.MapDownToBuffer(
-                                        _textView.Caret.Position.BufferPosition,
-                                        PointTrackingMode.Positive,
-                                        projBuffer.TemplateBuffer,
-                                        PositionAffinity.Successor
-                                    );
-                                
-                                    TemplateTokenKind kind;
-                                    int start;
-                                    if (templateLoc != null &&
-                                        projBuffer.GetTemplateText(templateLoc.Value, out kind, out start) != null) {
-                                        if (_activeSession != null && !_activeSession.IsDismissed) {
-                                            _activeSession.Dismiss();
-                                        }
-
-                                        TriggerCompletionSession(false);
+                                TemplateTokenKind kind;
+                                int start;
+                                if (templateLoc != null &&
+                                    projBuffer.GetTemplateText(templateLoc.Value, out kind, out start) != null) {
+                                    if (_activeSession != null && !_activeSession.IsDismissed) {
+                                        _activeSession.Dismiss();
                                     }
+
+                                    TriggerCompletionSession(false);
                                 }
-
-                                return VSConstants.S_OK;
                             }
-                        }
-                        break;
 
+                            return VSConstants.S_OK;
+                        }
+
+                        if (_activeSession != null && !_activeSession.IsDismissed) {
+                            _activeSession.Filter();
+                        }
+
+                        return res;
                 }
             }
             return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
@@ -225,13 +238,13 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
         }
 
-        public int QueryStatus(ref System.Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, System.IntPtr pCmdText) {
+        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
             if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                         case VSConstants.VSStd2KCmdID.COMPLETEWORD:
-                        //case VSConstants.VSStd2KCmdID.PARAMINFO:
+                            //case VSConstants.VSStd2KCmdID.PARAMINFO:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
 

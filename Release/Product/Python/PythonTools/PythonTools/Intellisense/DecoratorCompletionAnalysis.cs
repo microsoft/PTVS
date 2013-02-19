@@ -12,17 +12,13 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
     class DecoratorCompletionAnalysis : CompletionAnalysis {
-        internal DecoratorCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(text, pos, span, textBuffer, options) {
+        internal DecoratorCompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(span, textBuffer, options) {
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
@@ -32,16 +28,17 @@ namespace Microsoft.PythonTools.Intellisense {
             // @f.setter
             //
             // which was added in 2.6.  Ideally we would display all callable objects in this list.
-            return new CompletionSet(
-                Text,
-                Text,
+            return new FuzzyCompletionSet(
+                "PythonDecorators",
+                "Python",
                 Span,
                 new[] { 
                     PythonCompletion(glyphService, "classmethod", "Marks a function as a class method (first argument is the type object of the instance).", StandardGlyphGroup.GlyphGroupClass),
                     PythonCompletion(glyphService, "property", "Marks a function as a property whose value is returned without requiring paranthesis for a call.", StandardGlyphGroup.GlyphGroupClass),
                     PythonCompletion(glyphService, "staticmethod", "Marks a function as a static method which does not receive self.", StandardGlyphGroup.GlyphGroupClass),
                 },
-                new Completion[0]
+                _options,
+                CompletionComparer.UnderscoresLast
             );
         }
     }

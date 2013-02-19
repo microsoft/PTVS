@@ -19,6 +19,24 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Intellisense {
+    public static class CompletionSessionExtensions {
+        public static CompletionOptions GetOptions(this ICompletionSession session) {
+            var options = new CompletionOptions {
+                ConvertTabsToSpaces = session.TextView.Options.IsConvertTabsToSpacesEnabled(),
+                IndentSize = session.TextView.Options.GetIndentSize(),
+                TabSize = session.TextView.Options.GetTabSize()
+            };
+
+            if (PythonToolsPackage.Instance != null) {
+                options.IntersectMembers = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
+                options.HideAdvancedMembers = PythonToolsPackage.Instance.LangPrefs.HideAdvancedMembers;
+                options.FilterCompletions = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FilterCompletions;
+                options.SearchMode = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SearchMode;
+            }
+            return options;
+        }
+    }
+
     class CompletionSource : ICompletionSource {
         private readonly ITextBuffer _textBuffer;
         private readonly CompletionSourceProvider _provider;
@@ -30,21 +48,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
             var textBuffer = _textBuffer;
-            var span = session.CreateTrackingSpan(textBuffer);
-            var options = new CompletionOptions {
-                IntersectMembers = true,
-                HideAdvancedMembers = false,
-                IncludeStatementKeywords = true,
-                IncludeExpressionKeywords = true,
-                ConvertTabsToSpaces = session.TextView.Options.IsConvertTabsToSpacesEnabled(),
-                IndentSize = session.TextView.Options.GetIndentSize(),
-                TabSize = session.TextView.Options.GetTabSize()
-            };
-            if (PythonToolsPackage.Instance != null) {
-                options.IntersectMembers = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
-                options.HideAdvancedMembers = PythonToolsPackage.Instance.LangPrefs.HideAdvancedMembers;
-            }
-            var provider = textBuffer.CurrentSnapshot.GetCompletions(span, options);
+            var span = session.GetApplicableSpan(textBuffer);
+            var triggerPoint = session.GetTriggerPoint(textBuffer);
+            var options = session.GetOptions();
+            var provider = textBuffer.CurrentSnapshot.GetCompletions(span, triggerPoint, options);
 
             var completions = provider.GetCompletions(_provider._glyphService);
            

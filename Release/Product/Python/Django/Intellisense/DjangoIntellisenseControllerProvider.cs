@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                    select export.Value
                 ).First();
                 controller = new DjangoIntellisenseController((DjangoIntellisenseControllerProvider)intellisenseControllerProvider, textView);
+                textView.Properties.AddProperty(typeof(DjangoIntellisenseController), controller);
             }
             return controller;
         }

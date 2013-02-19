@@ -13,8 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
+using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
@@ -23,38 +29,51 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ImportCompletionAnalysis : CompletionAnalysis {
-        internal ImportCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(text, pos, span, textBuffer, options) {
-        }
+        private readonly string[] _namespace;
+        
+        internal ImportCompletionAnalysis(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(span, textBuffer, options) {
 
-        public static CompletionAnalysis Make(ClassificationSpan start, ClassificationSpan end, Span loc,
-                ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer buffer, bool isSpace, CompletionOptions options) {
-            if (start == end) {
-                return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer, options);
-            } else {
-                int nsLen = end.Span.End - start.Span.End - 1;
-                var nsSpan = new SnapshotSpan(snapshot, start.Span.End + 1, nsLen);
-                var text = nsSpan.GetText().TrimEnd();
-                for (int i = text.Length - 1; i >= 0; i--) {
-                    if (Char.IsWhiteSpace(text[i]) || text[i] == ',') {
-                        text = text.Substring(i + 1);
+            Debug.Assert(tokens[0].Span.GetText() == "import");
+
+            int beforeLastComma = tokens
+                .Reverse()
+                .SkipWhile(tok => !tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma))
+                .Count();
+
+            if (tokens.Count >= 2 && beforeLastComma < tokens.Count) {
+                int spanEnd = Span.GetEndPoint(textBuffer.CurrentSnapshot).Position;
+                var nameParts = new List<string>();
+                bool removeLastPart = false, lastWasError = false;
+                foreach(var tok in tokens.Skip(beforeLastComma > 0 ? beforeLastComma : 1)) {
+                    if (tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                        nameParts.Add(tok.Span.GetText());
+                        // Only remove the last part if the trigger point is
+                        // not right at the end of it.
+                        removeLastPart = (tok.Span.End.Position != spanEnd);
+                    } else if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Dot)) {
+                        removeLastPart = false;
+                    } else {
+                        lastWasError = true;
                         break;
                     }
                 }
-                if (text.Length == 0) {
-                    return new ImportCompletionAnalysis(String.Empty, loc.Start, span, buffer, options);
-                } else if (!isSpace) {
-                    return new ImportCompletionAnalysis(text, loc.Start, span, buffer, options);
+
+                if (!lastWasError) {
+                    if (removeLastPart && nameParts.Count > 0) {
+                        nameParts.RemoveAt(nameParts.Count - 1);
+                    }
+                    _namespace = nameParts.ToArray();
                 }
             }
-            return EmptyCompletionContext;
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start = _stopwatch.ElapsedMilliseconds;
 
-            var completions = GetModules(glyphService, Text);
-            var res = new PythonCompletionSet(Text, Text, Span, completions, new Completion[0]);
+            var completions = GetModules(_namespace, false).Select(m => PythonCompletion(glyphService, m));
+
+            var res = new FuzzyCompletionSet("PythonImports", "Python", Span, completions, _options, CompletionComparer.UnderscoresLast);
 
             var end = _stopwatch.ElapsedMilliseconds;
 

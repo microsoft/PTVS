@@ -18,8 +18,8 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -34,19 +34,15 @@ namespace Microsoft.PythonTools.Intellisense {
     /// processed. The completion services are specific to the current context
     /// </summary>
     public class CompletionAnalysis {
-        private readonly string _text;
-        protected readonly int _pos;
         private readonly ITrackingSpan _span;
         private readonly ITextBuffer _textBuffer;
         internal readonly CompletionOptions _options;
         internal const Int64 TooMuchTime = 50;
         protected static Stopwatch _stopwatch = MakeStopWatch();
 
-        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(String.Empty, 0, null, null, null);
+        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null);
 
-        internal CompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
-            _text = text ?? String.Empty;
-            _pos = pos;
+        internal CompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             _span = span;
             _textBuffer = textBuffer;
             _options = (options == null) ? new CompletionOptions() : options.Clone();
@@ -55,12 +51,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public ITextBuffer TextBuffer {
             get {
                 return _textBuffer;
-            }
-        }
-
-        public string Text {
-            get {
-                return _text;
             }
         }
 
@@ -75,29 +65,38 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal static bool IsKeyword(ClassificationSpan token, string keyword) {
-            return token.ClassificationType.Classification == "keyword" && token.Span.GetText() == keyword;
+            return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && token.Span.GetText() == keyword;
         }
 
-        internal static Completion PythonCompletion(IGlyphService service, MemberResult memberResult) {
-            return new LazyCompletion(memberResult.Name, 
-                () => memberResult.Completion, 
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, MemberResult memberResult) {
+            return new DynamicallyVisibleCompletion(memberResult.Name, 
+                memberResult.Completion, 
                 () => memberResult.Documentation, 
-                () => service.GetGlyph(memberResult.MemberType.ToGlyphGroup(), StandardGlyphItem.GlyphItemPublic)
+                () => service.GetGlyph(memberResult.MemberType.ToGlyphGroup(), StandardGlyphItem.GlyphItemPublic),
+                Enum.GetName(typeof(PythonMemberType), memberResult.MemberType)
             );
         }
 
-        internal static Completion PythonCompletion(IGlyphService service, string name, string tooltip, StandardGlyphGroup group) {
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string tooltip, StandardGlyphGroup group) {
             var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
 
-            var result = new LazyCompletion(name, () => name, () => tooltip, service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic));
+            var result = new DynamicallyVisibleCompletion(name, 
+                name, 
+                tooltip, 
+                service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic),
+                Enum.GetName(typeof(StandardGlyphGroup), group));
             result.Properties.AddProperty(typeof(IconDescription), icon);
             return result;
         }
 
-        internal static Completion PythonCompletion(IGlyphService service, string name, string completion, string tooltip, StandardGlyphGroup group) {
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string completion, string tooltip, StandardGlyphGroup group) {
             var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
 
-            var result = new LazyCompletion(name, () => completion, () => tooltip, service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic));
+            var result = new DynamicallyVisibleCompletion(name, 
+                completion, 
+                tooltip, 
+                service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic),
+                Enum.GetName(typeof(StandardGlyphGroup), group));
             result.Properties.AddProperty(typeof(IconDescription), icon);
             return result;
         }
@@ -112,7 +111,39 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        public Completion[] GetModules(IGlyphService glyphService, string text, bool includeMembers = false) {
+        protected IEnumerable<MemberResult> GetModules(string[] package, bool modulesOnly = true) {
+            var analysis = GetAnalysisEntry();
+
+            IPythonReplIntellisense pyReplEval = null;
+            IReplEvaluator eval;
+            if (TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
+                pyReplEval = eval as IPythonReplIntellisense;
+            }
+            IEnumerable<KeyValuePair<string, bool>> replScopes = null;
+            if (pyReplEval != null) {
+                replScopes = pyReplEval.GetAvailableScopesAndKind();
+            }
+
+            if (package == null) {
+                package = new string[0];
+            }
+
+            var modules = Enumerable.Empty<MemberResult>();
+            if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
+                modules = modules.Concat((package != null && package.Length > 0) ? 
+                    analysis.GetModuleMembers(package, !modulesOnly) : 
+                    analysis.GetModules(true));
+            }
+            if (replScopes != null) {
+                modules = replScopes
+                    .Select(scope => new MemberResult(scope.Key, scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace))
+                    .Union(modules);
+            }
+
+            return modules;
+        }
+
+        public DynamicallyVisibleCompletion[] GetModules(IGlyphService glyphService, string text, bool includeMembers = false) {
             var analysis = GetAnalysisEntry();
             var path = text.Split('.');
             if (path.Length > 0) {
@@ -138,7 +169,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     modules = analysis.GetModules(true);
                 }
                 if (replScopes != null) {
-                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(MemberResultComparer.Instance);
+                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(CompletionComparer.UnderscoresLast);
                     allModules.UnionWith(modules);
                     foreach (var scope in replScopes) {
                         // remove an existing scope, add the new one (we take precedence)
@@ -154,7 +185,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (replScopes != null) {
-                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(MemberResultComparer.Instance);
+                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(CompletionComparer.UnderscoresLast);
                     allModules.UnionWith(modules);
                     foreach (var scopeAndKind in replScopes) {
                         var scope = scopeAndKind.Key;
@@ -177,37 +208,13 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            var sortedAndFiltered = NormalCompletionAnalysis.FilterCompletions(modules, text, CompletionFilter);
-            Array.Sort(sortedAndFiltered, NormalCompletionAnalysis.ModuleSort);
-
-            var result = new Completion[sortedAndFiltered.Length];
-            for (int i = 0; i < sortedAndFiltered.Length; i++) {
-                result[i] = PythonCompletion(glyphService, sortedAndFiltered[i]);
-            }
-            return result;
-        }
-
-        private static bool CompletionFilter(string x, string y) {
-            return x.StartsWith(y, StringComparison.OrdinalIgnoreCase);
-        }
-
-        class MemberResultComparer : IEqualityComparer<MemberResult> {
-            public static readonly MemberResultComparer Instance = new MemberResultComparer();
-            #region IEqualityComparer<MemberResult> Members
-
-            public bool Equals(MemberResult x, MemberResult y) {
-                return x.Name.Equals(y.Name);
-            }
-
-            public int GetHashCode(MemberResult obj) {
-                return obj.Name.GetHashCode();
-            }
-
-            #endregion
+            Array.Sort(modules, CompletionComparer.UnderscoresLast);
+            return modules.Select(m => PythonCompletion(glyphService, m)).ToArray();
         }
 
         public override string ToString() {
-            return String.Format("CompletionContext({0}): {1} @{2}", GetType().Name, Text, _pos);
+            var snapSpan = Span.GetSpan(TextBuffer.CurrentSnapshot);
+            return String.Format("CompletionContext({0}): {1} @{2}", GetType().Name, snapSpan.GetText(), snapSpan.Span);
         }
     }
 }

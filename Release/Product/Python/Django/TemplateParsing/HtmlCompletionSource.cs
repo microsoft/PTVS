@@ -14,6 +14,7 @@
 
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -41,9 +42,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
             TemplateProjectionBuffer projBuffer;
             if (_textBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
-                List<Completion> completions = new List<Completion>();
+                var completions = new List<DynamicallyVisibleCompletion>();
                 foreach (var tag in _htmlTags) {
-                    completions.Add(new Completion(
+                    completions.Add(new DynamicallyVisibleCompletion(
                         tag,
                         tag,
                         "",
@@ -52,7 +53,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     );
                 }
                 foreach (var tag in _htmlTags) {
-                    completions.Add(new Completion(
+                    completions.Add(new DynamicallyVisibleCompletion(
                         "/" + tag,
                         "/" + tag + ">",
                         "",
@@ -63,13 +64,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
                 //
                 var triggerPoint = session.GetTriggerPoint(_textBuffer);
-
-                var position = triggerPoint.GetPosition(_textBuffer.CurrentSnapshot);
-
-                var span = _textBuffer.CurrentSnapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
+                var point = triggerPoint.GetPoint(_textBuffer.CurrentSnapshot);
 
                 var match = projBuffer.BufferGraph.MapUpToFirstMatch(
-                    new SnapshotPoint(_textBuffer.CurrentSnapshot, position),
+                    point,
                     PointTrackingMode.Positive,
                     x => x.TextBuffer != _textBuffer,
                     PositionAffinity.Predecessor
@@ -77,20 +75,20 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 
                 if (match == null ||
                     !match.Value.Snapshot.TextBuffer.ContentType.IsOfType(TemplateContentType.ContentTypeName)) {
-                    completionSets.Add(new HtmlCompletionSet("", "", span, completions, new Completion[0]));
-                }
-            }
-        }
 
-        class HtmlCompletionSet : CompletionSet {
-            public HtmlCompletionSet(string moniker, string displayName, ITrackingSpan applicableTo, IEnumerable<Completion> completions, IEnumerable<Completion> completionBuilders) :
-                base(moniker, displayName, applicableTo, completions, completionBuilders) {
-            }
+                    var line = point.GetContainingLine();
+                    var text = line.GetText();
+                    int position = point.Position;
+                    for (int i = position - line.Start.Position - 1; i >= 0 && i < text.Length; --i, --position) {
+                        char c = text[i];
+                        if (!char.IsLetterOrDigit(c) && c != '!') {
+                            break;
+                        }
+                    }
 
-            public override void SelectBestMatch() {
-                SelectBestMatch(CompletionMatchType.MatchInsertionText, true);
-                if (!SelectionStatus.IsSelected) {
-                    SelectBestMatch(CompletionMatchType.MatchInsertionText, false);
+                    var span = _textBuffer.CurrentSnapshot.CreateTrackingSpan(position, point.Position - position, SpanTrackingMode.EdgeInclusive);
+
+                    completionSets.Add(new FuzzyCompletionSet("PythonDjangoTemplateHtml", "HTML", span, completions, session.GetOptions(), CompletionComparer.UnderscoresLast));
                 }
             }
         }

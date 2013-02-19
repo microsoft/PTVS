@@ -35,16 +35,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionAnalysis providing a list of possible members the user can dot through.
         /// </summary>
-        public static CompletionAnalysis GetCompletions(this ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(snapshot, span, options);
-        }
-
-        /// <summary>
-        /// Gets a CompletionAnalysis providing a list of possible members the user can dot through.
-        /// </summary>
-        [Obsolete("Use GetCompletions with a CompletionOptions instance")]
-        public static CompletionAnalysis GetCompletions(this ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
-            return VsProjectAnalyzer.GetCompletions(snapshot, span, intersectMembers, hideAdvancedMembers);
+        public static CompletionAnalysis GetCompletions(this ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+            return VsProjectAnalyzer.GetCompletions(snapshot, span, point, options);
         }
 
         /// <summary>

@@ -96,14 +96,27 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public int IndentSize { get; set; }
 
+        /// <summary>
+        /// True to filter completions to those similar to the search string.
+        /// </summary>
+        public bool FilterCompletions { get; set; }
+
+        /// <summary>
+        /// The search mode to use for completions.
+        /// </summary>
+        public FuzzyMatchMode SearchMode { get; set; }
+
         public CompletionOptions() {
-            MemberOptions = GetMemberOptions.IntersectMultipleResults |
-                GetMemberOptions.IncludeStatementKeywords |
+            MemberOptions = GetMemberOptions.IncludeStatementKeywords |
                 GetMemberOptions.IncludeExpressionKeywords;
+            FilterCompletions = true;
+            SearchMode = FuzzyMatchMode.Default;
         }
 
         public CompletionOptions(GetMemberOptions options) {
             MemberOptions = options;
+            FilterCompletions = true;
+            SearchMode = FuzzyMatchMode.Default;
         }
 
         /// <summary>
@@ -114,8 +127,11 @@ namespace Microsoft.PythonTools.Intellisense {
             return new CompletionOptions(MemberOptions) {
                 ConvertTabsToSpaces = ConvertTabsToSpaces,
                 TabSize = TabSize,
-                IndentSize = IndentSize
+                IndentSize = IndentSize,
+                FilterCompletions = FilterCompletions,
+                SearchMode = SearchMode
             };
         }
+
     }
 }

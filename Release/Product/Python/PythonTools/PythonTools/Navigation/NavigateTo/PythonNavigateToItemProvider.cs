@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -45,12 +46,15 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             private readonly INavigateToCallback _navCallback;
             private readonly string _searchValue;
             private readonly Stack<LibraryNode> _path = new Stack<LibraryNode>();
+            private readonly FuzzyStringMatcher _comparer, _regexComparer;
 
             public LibraryNodeVisitor(PythonNavigateToItemProvider itemProvider, INavigateToCallback navCallback, string searchValue) {
                 _itemProvider = itemProvider;
                 _navCallback = navCallback;
                 _searchValue = searchValue;
                 _path.Push(null);
+                _comparer = new FuzzyStringMatcher(PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SearchMode);
+                _regexComparer = new FuzzyStringMatcher(FuzzyMatchMode.RegexIgnoreCase);
             }
 
             public bool EnterNode(LibraryNode node, CancellationToken ct) {
@@ -70,13 +74,15 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 // Match name against search string.
                 string name = node.Name ?? "";
                 MatchKind matchKind;
-                if (name.Equals(_searchValue, StringComparison.OrdinalIgnoreCase)) {
+                if (_searchValue.Length > 2 && _searchValue.StartsWith("/") && _searchValue.EndsWith("/")) {
+                    if (!_regexComparer.IsCandidateMatch(name, _searchValue.Substring(1, _searchValue.Length - 2))) {
+                        return true;
+                    }
+                    matchKind = MatchKind.Regular;
+                } else if (name.Equals(_searchValue, StringComparison.Ordinal)) {
                     matchKind = MatchKind.Exact;
-                } else if (name.StartsWith(_searchValue, StringComparison.OrdinalIgnoreCase)) {
-                    matchKind = MatchKind.Prefix;
-                } else if (node.Name.IndexOf(_searchValue, StringComparison.OrdinalIgnoreCase) >= 0) {
-                    matchKind = MatchKind.Substring;
-                // TODO: add MatchKind.Regular by using the new algorithm from code completion that does camel case matching etc.
+                } else if (_comparer.IsCandidateMatch(name, _searchValue)) {
+                    matchKind = MatchKind.Regular;
                 } else {
                     return true;
                 }

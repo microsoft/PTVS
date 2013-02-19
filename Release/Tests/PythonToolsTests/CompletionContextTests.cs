@@ -42,20 +42,65 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
+        public void GetApplicableSpanTest() {
+            var text = "if foo.bar(eggs, spam<=ham) :";
+            var buffer = new MockTextBuffer(text);
+            var analyzer = AnalyzeTextBuffer(buffer);
+            var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
+
+            // We check the applicable span at every index in the string.
+            var expected = new[] {
+                "if", "if", "if",
+                "foo", "foo", "foo", "foo",
+                "bar", "bar", "bar", "bar",
+                "eggs", "eggs", "eggs", "eggs", "eggs",
+                "", // between ',' and ' '
+                "spam", "spam", "spam", "spam", "spam",
+                "", // between '<' and '='
+                "ham", "ham", "ham", "ham",
+                "", // between ')' and ' '
+                "", // between ' ' and ':'
+                "", // between ':' and EOL
+            };
+
+            for (int i = 0; i < text.Length; ++i) {
+                var span = snapshot.GetApplicableSpan(i);
+                if (span == null) {
+                    Assert.AreEqual(expected[i], "", text.Substring(0, i) + "|" + text.Substring(i));
+                } else {
+                    Assert.AreEqual(expected[i], span.GetText(snapshot), text.Substring(0, i) + "|" + text.Substring(i));
+                }
+            }
+        }
+
+        private static VsProjectAnalyzer AnalyzeTextBuffer(MockTextBuffer buffer) {
+            var fact = new CPythonInterpreterFactory();
+            var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
+            buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+            var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
+            analyzer.WaitForCompleteAnalysis(x => true);
+            while (((IPythonProjectEntry)buffer.GetAnalysis()).Analysis == null) {
+                System.Threading.Thread.Sleep(500);
+            }
+            analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
+            return analyzer;
+        }
+
+        [TestMethod, Priority(0)]
         public void Scenario_CtrlSpace() {
             string code = @"def f(param1, param2):
     g()";
 
             var completionList = GetCompletionSetCtrlSpace(code.IndexOf("g(") + 2, code).Completions.Select(x => x.DisplayText).ToArray();
-            Assert.IsTrue(completionList.Contains("param1"));
-            Assert.IsTrue(completionList.Contains("param2"));
+            AssertUtil.Contains(completionList, "param1");
+            AssertUtil.Contains(completionList, "param2");
 
             code = @"def f(param1, param2):
     g(param1, )";
 
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("g(param1, ") + "g(param1, ".Length, code).Completions.Select(x => x.DisplayText).ToArray();
-            Assert.IsTrue(completionList.Contains("param1"));
-            Assert.IsTrue(completionList.Contains("param2"));
+            AssertUtil.Contains(completionList, "param1");
+            AssertUtil.Contains(completionList, "param2");
 
             // verify Ctrl-Space inside of a function gives proper completions
             foreach (var codeSnippet in new[] { @"def f():
@@ -72,8 +117,8 @@ namespace PythonToolsTests {
                 Debug.WriteLine(String.Format("Testing {0}", codeSnippet));
 
                 completionList = GetCompletionSetCtrlSpace(codeSnippet.IndexOf("pass") - 6, codeSnippet).Completions.Select(x => x.DisplayText).ToArray();
-                Assert.IsTrue(completionList.Contains("min"));
-                Assert.IsTrue(completionList.Contains("assert"));
+                AssertUtil.Contains(completionList, "min");
+                AssertUtil.Contains(completionList, "assert");
             }
         }
 
@@ -84,28 +129,28 @@ namespace PythonToolsTests {
             var completionList = GetCompletionSetCtrlSpace(0, code).Completions.Select(x => x.DisplayText).ToArray();
 
             // not in a function
-            Assert.IsFalse(completionList.Contains("yield"));
-            Assert.IsFalse(completionList.Contains("return"));
+            AssertUtil.DoesntContain(completionList, "yield");
+            AssertUtil.DoesntContain(completionList, "return");
 
-            Assert.IsTrue(completionList.Contains("assert"));
-            Assert.IsTrue(completionList.Contains("and"));
+            AssertUtil.Contains(completionList, "assert");
+            AssertUtil.Contains(completionList, "and");
 
             code = @"def f():
-    
+    |
     pass";
 
-            completionList = GetCompletionSetCtrlSpace(code.IndexOf("pass"), code).Completions.Select(x => x.DisplayText).ToArray();
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("|"), code.Replace("|", "")).Completions.Select(x => x.DisplayText).ToArray();
 
-            Assert.IsTrue(completionList.Contains("yield"));
-            Assert.IsTrue(completionList.Contains("return"));
+            AssertUtil.Contains(completionList, "yield");
+            AssertUtil.Contains(completionList, "return");
 
 
-            code = @"x = (abc, bar, baz)";
+            code = @"x = (abc, bar, )";
 
-            completionList = GetCompletionSetCtrlSpace(code.IndexOf("bar"), code).Completions.Select(x => x.DisplayText).ToArray();
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("bar,") + 5, code).Completions.Select(x => x.DisplayText).ToArray();
 
-            Assert.IsTrue(completionList.Contains("and"));
-            Assert.IsFalse(completionList.Contains("def"));
+            AssertUtil.Contains(completionList, "and");
+            AssertUtil.DoesntContain(completionList, "def");
         }
 
         [TestMethod, Priority(0)]
@@ -128,22 +173,22 @@ yield_expression = 42
                 code.IndexOf("yield_") + 6, 
                 code).Completions.Select(x => x.DisplayText).ToArray();
 
-            Assert.IsFalse(completionList.Contains("yield"));
-            Assert.IsTrue(completionList.Contains("yield_expression"));
+            AssertUtil.DoesntContain(completionList, "yield");
+            AssertUtil.Contains(completionList, "yield_expression");
 
             completionList  = GetCompletionSetCtrlSpace(
                 code.IndexOf("yield") + 5,
                 code).Completions.Select(x => x.DisplayText).ToArray();
 
-            Assert.IsTrue(completionList.Contains("yield"));
-            Assert.IsTrue(completionList.Contains("yield_expression"));
+            AssertUtil.Contains(completionList, "yield");
+            AssertUtil.Contains(completionList, "yield_expression");
 
             completionList = GetCompletionSetCtrlSpace(
                 code.IndexOf("yiel") + 4,
                 code).Completions.Select(x => x.DisplayText).ToArray();
 
-            Assert.IsTrue(completionList.Contains("yield"));
-            Assert.IsTrue(completionList.Contains("yield_expression"));
+            AssertUtil.Contains(completionList, "yield");
+            AssertUtil.Contains(completionList, "yield_expression");
         }
 
         [TestMethod, Priority(0)]
@@ -161,13 +206,13 @@ print
                 code.IndexOf("return") + 7,
                 code).Completions.Select(x => x.DisplayText).ToArray();
 
-            Assert.IsTrue(completionList.Contains("any"));
+            AssertUtil.Contains(completionList, "any");
 
             completionList = GetCompletionSetCtrlSpace(
                 code.IndexOf("print") + 6,
                 code).Completions.Select(x => x.DisplayText).ToArray();
 
-            Assert.IsTrue(completionList.Contains("any"));
+            AssertUtil.Contains(completionList, "any");
         }
 
 
@@ -180,15 +225,15 @@ print
 except None"}) {
                 var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.DisplayText).ToArray();
 
-                Assert.IsTrue(completionList.Contains("Exception"));
-                Assert.IsTrue(completionList.Contains("KeyboardInterrupt"));
-                Assert.IsTrue(completionList.Contains("GeneratorExit"));
-                Assert.IsTrue(completionList.Contains("StopIteration"));
-                Assert.IsTrue(completionList.Contains("SystemExit"));
+                AssertUtil.Contains(completionList, "Exception");
+                AssertUtil.Contains(completionList, "KeyboardInterrupt");
+                AssertUtil.Contains(completionList, "GeneratorExit");
+                AssertUtil.Contains(completionList, "StopIteration");
+                AssertUtil.Contains(completionList, "SystemExit");
 
-                Assert.IsFalse(completionList.Contains("Warning"));
-                Assert.IsFalse(completionList.Contains("str"));
-                Assert.IsFalse(completionList.Contains("int"));
+                AssertUtil.DoesntContain(completionList, "Warning");
+                AssertUtil.DoesntContain(completionList, "str");
+                AssertUtil.DoesntContain(completionList, "int");
             }
 
             foreach (string code in new[] { 
@@ -198,15 +243,15 @@ except None"}) {
 except (None)"}) {
                 var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.DisplayText).ToArray();
 
-                Assert.IsTrue(completionList.Contains("Exception"));
-                Assert.IsTrue(completionList.Contains("KeyboardInterrupt"));
-                Assert.IsTrue(completionList.Contains("GeneratorExit"));
-                Assert.IsTrue(completionList.Contains("StopIteration"));
-                Assert.IsTrue(completionList.Contains("SystemExit"));
+                AssertUtil.Contains(completionList, "Exception");
+                AssertUtil.Contains(completionList, "KeyboardInterrupt");
+                AssertUtil.Contains(completionList, "GeneratorExit");
+                AssertUtil.Contains(completionList, "StopIteration");
+                AssertUtil.Contains(completionList, "SystemExit");
 
-                Assert.IsTrue(completionList.Contains("Warning"));
-                Assert.IsTrue(completionList.Contains("str"));
-                Assert.IsTrue(completionList.Contains("int"));
+                AssertUtil.Contains(completionList, "Warning");
+                AssertUtil.Contains(completionList, "str");
+                AssertUtil.Contains(completionList, "int");
             }
         }
 
@@ -218,11 +263,11 @@ except (None)"}) {
 
             // combining various partial expressions with previous expressions
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
-            var exprs = new[] { "x[0].", "x(0).", "x", "x.y.", "f(x[2]).", "f(x, y).", "f({2:3}).", "f(a + b).", "f(a or b).", "{2:3}.", "f(x if False else y).", /*"(\r\nx\r\n)."*/ };
+            var exprs = new[] { "x[0].", "x(0).", "x.", "x.y.", "f(x[2]).", "f(x, y).", "f({2:3}).", "f(a + b).", "f(a or b).", "{2:3}.", "f(x if False else y).", /*"(\r\nx\r\n)."*/ };
             foreach (var prefix in prefixes) {
                 foreach (var expr in exprs) {
                     string test = prefix + expr;
-                    //Console.WriteLine("   -- {0}", test);
+                    Console.WriteLine("   -- {0}", test);
                     MemberCompletionTest(-1, test, expr);
                 }
             }
@@ -280,7 +325,7 @@ except (None)"}) {
 
             var code2 = "import sys, ex";
             var completionList = GetCompletionSetCtrlSpace(code2.Length - 1, code2);
-            AssertUtil.Contains(GetCompletionNames(completionList), "ceptions");
+            AssertUtil.Contains(GetCompletionNames(completionList), "exceptions");
         }
 
         private static IEnumerable<string> GetCompletionNames(CompletionSet completions) {            
@@ -314,7 +359,7 @@ baz
                     buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                     var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 #pragma warning disable 618
-                    var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0));
+                    var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0), new MockTrackingPoint(snapshot, i), new CompletionOptions());
 #pragma warning restore 618
                     Assert.AreEqual(context, NormalCompletionAnalysis.EmptyCompletionContext);
                 }
@@ -448,11 +493,12 @@ class Baz(Foo, Bar):
     def None
 "}) {
                 var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
-
-                Assert.IsTrue(completionList.Contains(@"func_a(self, a = 100):
-        return super(Baz, self).func_a(a)"), code);
-                Assert.IsTrue(completionList.Contains(@"func_b(self, b, *p, **kw):
-        return super(Baz, self).func_b(b, *p, **kw)"), code);
+                
+                Console.WriteLine(code);
+                AssertUtil.Contains(completionList, @"func_a(self, a = 100):
+        return super(Baz, self).func_a(a)");
+                AssertUtil.Contains(completionList, @"func_b(self, b, *p, **kw):
+        return super(Baz, self).func_b(b, *p, **kw)");
             }
         }
 
@@ -463,24 +509,24 @@ class Baz(Foo, Bar):
 ";
             var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
 
-            Assert.IsTrue(completionList.Contains(@"capitalize(self):
-        return super(Foo, self).capitalize()"));
-            Assert.IsTrue(completionList.Contains(@"index(self, sub, start, end):
-        return super(Foo, self).index(sub, start, end)"));
+            AssertUtil.Contains(completionList, @"capitalize(self):
+        return super(Foo, self).capitalize()");
+            AssertUtil.Contains(completionList, @"index(self, sub, start, end):
+        return super(Foo, self).index(sub, start, end)");
 
             code = @"class Foo(str, list):
     def None
 ";
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
-            Assert.IsTrue(completionList.Contains(@"index(self, sub, start, end):
-        return super(Foo, self).index(sub, start, end)"));
+            AssertUtil.Contains(completionList, @"index(self, sub, start, end):
+        return super(Foo, self).index(sub, start, end)");
 
             code = @"class Foo(list, str):
     def None
 ";
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
-            Assert.IsTrue(completionList.Contains(@"index(self, item, start, stop):
-        return super(Foo, self).index(item, start, stop)"));
+            AssertUtil.Contains(completionList, @"index(self, item, start, stop):
+        return super(Foo, self).index(item, start, stop)");
         }
 
         [TestMethod, Priority(0)]
@@ -540,7 +586,9 @@ class B(dict):
                 Assert.AreNotSame(snapshot, newSnapshot);
                 int location = newSnapshot.GetText().IndexOf(completeAfter) + completeAfter.Length;
 
-                context = newSnapshot.GetCompletions(new MockTrackingSpan(newSnapshot, location, 0),
+                context = newSnapshot.GetCompletions(
+                    new MockTrackingSpan(newSnapshot, location, 0),
+                    new MockTrackingPoint(newSnapshot, location),
                     new CompletionOptions {
                         ConvertTabsToSpaces = true,
                         IndentSize = 4
@@ -610,7 +658,9 @@ class B(dict):
 
         private static void MemberCompletionTest(int location, string sourceCode, string expectedExpression) {
             var context = GetCompletions(location, sourceCode);
-            Assert.AreEqual(expectedExpression, context.Text);
+            Assert.IsInstanceOfType(context, typeof(NormalCompletionAnalysis));
+            var normalContext = (NormalCompletionAnalysis)context;
+            Assert.AreEqual(expectedExpression, normalContext.PrecedingExpression);
         }
 
         private static CompletionAnalysis GetCompletions(int location, string sourceCode, bool intersectMembers = true) {
@@ -639,7 +689,9 @@ class B(dict):
         private static CompletionSet GetCompletionSetCtrlSpace(int location, string sourceCode, bool intersectMembers = true) {
             IntellisenseController.ForceCompletions = true;
             try {
-                return GetCompletionSet(location, sourceCode, intersectMembers);
+                var completionSet = GetCompletionSet(location, sourceCode, intersectMembers);
+                completionSet.Filter();
+                return completionSet;
             } finally {
                 IntellisenseController.ForceCompletions = false;
             }
@@ -656,8 +708,13 @@ class B(dict):
                 System.Threading.Thread.Sleep(500);
             }
             analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
+            var span = snapshot.GetApplicableSpan(new SnapshotPoint(snapshot, location)) ??
+                snapshot.CreateTrackingSpan(location, 0, SpanTrackingMode.EdgeInclusive);
+
 #pragma warning disable 618
-            var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, location, 0), 
+            var context = snapshot.GetCompletions(
+                span, 
+                new MockTrackingPoint(snapshot, location),
                 new CompletionOptions {
                     IntersectMembers = intersectMembers,
                     ConvertTabsToSpaces = true,

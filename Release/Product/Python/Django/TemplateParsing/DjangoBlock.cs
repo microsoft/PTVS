@@ -129,11 +129,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public virtual IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
-            var vars = context.Variables;
-            if (vars != null) {
-                return CompletionInfo.ToCompletionInfo(vars.Keys, StandardGlyphGroup.GlyphGroupField);
-            }
-            return new CompletionInfo[0];
+            return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
         }
 
         public virtual IEnumerable<string> GetVariables() {
@@ -520,8 +516,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         public override IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
             // no argument yet, or the last argument was a keyword, then we are completing an identifier
-            if (Args.Length == 0 ||
-                (Args.Length > 0 && Args[Args.Length - 1].Classification == Classification.Keyword)) {
+            if (Args.Length == 0 || Args.Last().Classification == Classification.Keyword || position <= Args.Last().Span.End) {
                 // get the variables
                 return Enumerable.Concat(
                     base.GetCompletions(context, position),

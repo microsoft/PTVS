@@ -13,16 +13,12 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio;
-using Microsoft.PythonTools.Project.Automation;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Project.Automation;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Django {
     static class Extensions {
@@ -65,14 +61,6 @@ namespace Microsoft.PythonTools.Django {
             } else {
                 return null;
             }
-        }
-
-        internal static ITrackingSpan CreateTrackingSpan(this IIntellisenseSession session, ITextBuffer buffer) {
-            var triggerPoint = session.GetTriggerPoint(buffer);
-
-            var position = triggerPoint.GetPosition(buffer.CurrentSnapshot);
-
-            return buffer.CurrentSnapshot.CreateTrackingSpan(position, 0, SpanTrackingMode.EdgeInclusive);
         }
 
         internal static Guid GetItemType(this VSITEMSELECTION vsItemSelection) {

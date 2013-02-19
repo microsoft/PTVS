@@ -14,7 +14,6 @@
 
 using System;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonAdvancedEditorOptionsControl : UserControl {        
@@ -22,10 +21,10 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
             _enterCommits.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense;
             _intersectMembers.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers;
+            _filterCompletions.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FilterCompletions;
             _completionCommitedBy.Text = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy;
             _newLineAfterCompleteCompletion.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord;
             _outliningOnOpen.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
-            _fillParagraphText.Text = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FillParagraphColumns.ToString();
             _pasteRemovesReplPrompts.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts;
         }
 
@@ -35,6 +34,10 @@ namespace Microsoft.PythonTools.Options {
 
         private void _intersectMembers_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.IntersectMembers = _intersectMembers.Checked;
+        }
+
+        private void _filterCompletions_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FilterCompletions = _filterCompletions.Checked;
         }
 
         private void _completionCommitedBy_TextChanged(object sender, EventArgs e) {
@@ -47,18 +50,6 @@ namespace Microsoft.PythonTools.Options {
 
         private void _outliningOnOpen_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = _outliningOnOpen.Checked;
-        }
-
-        private void _fillParagraphText_TextChanged(object sender, EventArgs e) {
-            for (int i = 0; i < _fillParagraphText.Text.Length; i++) {
-                if (!Char.IsDigit(_fillParagraphText.Text[i])) {
-                    _fillParagraphText.Text = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FillParagraphColumns.ToString();
-                    return;
-                }
-            }
-            if (_fillParagraphText.Text.Length != 0) {
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FillParagraphColumns = Convert.ToInt32(_fillParagraphText.Text);
-            }
         }
 
         private void _pasteRemovesReplPrompts_CheckedChanged(object sender, EventArgs e) {

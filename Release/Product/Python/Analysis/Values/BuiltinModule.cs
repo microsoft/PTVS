@@ -106,6 +106,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IModule GetChildPackage(IModuleContext context, string name) {
             var mem = _type.GetMember(context, name);
             if (mem != null) {
+                // TODO: Support MultipleMemberInfo (e.g. os.path)
                 return ProjectState.GetNamespaceFromObjects(mem) as IModule;
             }
             return null;

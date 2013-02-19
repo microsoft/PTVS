@@ -19,20 +19,18 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Projection;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides the completion context for when the user is overriding a function.
     /// </summary>
     internal class OverrideCompletionAnalysis : CompletionAnalysis {
-        internal OverrideCompletionAnalysis(string text, int pos, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(text, pos, span, textBuffer, options) {
-        }
-
-        internal static int OverrideSort(IOverloadResult x, IOverloadResult y) {
-            return NormalCompletionAnalysis.MemberSortComparison(x.Name, y.Name);
+        internal OverrideCompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(span, textBuffer, options) {
         }
 
         internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);
@@ -55,12 +53,12 @@ namespace Microsoft.PythonTools.Intellisense {
             sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select(GetSafeParameterName)) + "):");
 
             var span = Span.GetSpan(TextBuffer.CurrentSnapshot);
-            int indentCount = span.Start - span.Start.GetContainingLine().Start - 4; // "def ".Length
+            int defIndent = span.Start.GetContainingLine().GetText().IndexOf("def");
             
             if (_options.ConvertTabsToSpaces) {
-                sb.Append(' ', indentCount + _options.IndentSize);
+                sb.Append(' ', defIndent + _options.IndentSize);
             } else {
-                sb.Append('\t', indentCount + 1);
+                sb.Append('\t', defIndent / 8 + 1);
             }
 
             if (result.Parameters.Length > 0) {
@@ -89,30 +87,39 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start = _stopwatch.ElapsedMilliseconds;
 
-            var pos = _pos;
-
+            var line = Span.GetStartPoint(TextBuffer.CurrentSnapshot).GetContainingLine();
+            int lineStart = line.Start.Position;
+            int defIndent = line.GetText().IndexOf("def");
+            
             var pyAnalysis = TextBuffer.GetPythonAnalysis();
-            Microsoft.PythonTools.Parsing.Ast.PythonAst ast;
+            PythonAst ast;
             IAnalysisCookie cookie;
             pyAnalysis.GetTreeAndCookie(out ast, out cookie);
-            SnapshotCookie sCookie = cookie as SnapshotCookie;
+            var sCookie = cookie as SnapshotCookie;
             if (sCookie != null) {
                 // Map the analysis position to its location in the analyzed
                 // snapshot, but keep the indent level unchanged. This ensures
                 // that if the user has typed 'def' before the analysis is
                 // updated they will get completions for the correct class.
-                var currentLine = Span.GetStartPoint(TextBuffer.CurrentSnapshot).GetContainingLine();
-                var oldLine = Span.GetStartPoint(sCookie.Snapshot).GetContainingLine();
-                if (currentLine.LineNumber != oldLine.LineNumber) {
-                    var indent = _pos - currentLine.Start.Position;
-                    pos = oldLine.Start.Position + indent;
+                if (sCookie.Snapshot.TextBuffer != TextBuffer) {
+                    IBufferGraph graph;
+                    if (sCookie.Snapshot.TextBuffer.Properties.TryGetProperty(typeof(IBufferGraph), out graph)) {
+                        var newLine = graph.MapDownToInsertionPoint(line.Start, PointTrackingMode.Positive, PythonCoreConstants.IsPythonContent);
+                        if (newLine != null) {
+                            lineStart = newLine.Value.Position;
+                        }
+                    }
+                } else if (sCookie.Snapshot != line.Snapshot) {
+                    var newLine = Span.GetStartPoint(sCookie.Snapshot).GetContainingLine();
+                    lineStart = newLine.Start.Position;
                 }
             }
+
+            int pos = lineStart + defIndent;
 
             var analysis = GetAnalysisEntry();
             var cls = analysis.GetDefinitionTreeByIndex(pos).LastOrDefault(member => member.MemberType == Interpreter.PythonMemberType.Class);
             var members = analysis.GetOverrideableByIndex(pos).ToArray();
-            Array.Sort(members, OverrideSort);
             var completions = members
                 .Select(member => PythonCompletion(glyphService,
                     member.Name,
@@ -120,7 +127,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     member.Documentation,
                     StandardGlyphGroup.GlyphGroupOverload));
 
-            var res = new PythonCompletionSet(Text, Text, Span, completions, new Completion[0]);
+            var res = new FuzzyCompletionSet("PythonOverrides", "Python", Span, completions, _options, CompletionComparer.UnderscoresLast);
 
             var end = _stopwatch.ElapsedMilliseconds;
 

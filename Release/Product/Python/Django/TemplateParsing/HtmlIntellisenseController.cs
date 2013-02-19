@@ -70,6 +70,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         public int Exec(ref System.Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, System.IntPtr pvaIn, System.IntPtr pvaOut) {
             if (pguidCmdGroup == VSConstants.VSStd2K) {
+                int res;
+
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.TYPECHAR:
                         var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
@@ -79,12 +81,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 _curSession.Commit();
                             }
                         }
+                        
+                        res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
                         switch (ch) {
                             case '<':
                                 if (_curSession != null) {
                                     _curSession.Dismiss();
                                 }
-                                int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
                                 if(ErrorHandler.Succeeded(res)) {
                                     _curSession = CompletionBroker.TriggerCompletion(_textView);
                                     if (_curSession != null) {
@@ -94,7 +97,18 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                                 }
                                 return res;
                         }
-                        break;
+
+                        if (_curSession != null && !_curSession.IsDismissed) {
+                            _curSession.Filter();
+                        }
+
+                        return res;
+                    case VSConstants.VSStd2KCmdID.BACKSPACE:
+                        res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                        if (_curSession != null && !_curSession.IsDismissed) {
+                            _curSession.Filter();
+                        }
+                        return res;
                     case VSConstants.VSStd2KCmdID.RETURN:
                     case VSConstants.VSStd2KCmdID.TAB:
                         if (_curSession != null && !_curSession.IsDismissed) {

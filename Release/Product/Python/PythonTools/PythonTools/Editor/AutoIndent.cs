@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Editor {
 #endif
 
     internal static class AutoIndent {
-        private static int GetIndentation(string line, int tabSize) {
+        internal static int GetIndentation(string line, int tabSize) {
             int res = 0;
             for (int i = 0; i < line.Length; i++) {
                 if (line[i] == ' ') {

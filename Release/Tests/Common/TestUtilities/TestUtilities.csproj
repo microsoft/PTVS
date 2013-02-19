@@ -98,6 +98,7 @@
     <Compile Include="Mocks\MockTextSnapshotLine.cs" />
     <Compile Include="Mocks\MockTextVersion.cs" />
     <Compile Include="Mocks\MockTextView.cs" />
+    <Compile Include="Mocks\MockTrackingPoint.cs" />
     <Compile Include="Mocks\MockTrackingSpan.cs" />
     <Compile Include="NativeMethods.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>

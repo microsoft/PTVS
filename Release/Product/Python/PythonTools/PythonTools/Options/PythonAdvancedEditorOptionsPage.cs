@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
@@ -22,6 +23,8 @@ namespace Microsoft.PythonTools.Options {
         private PythonAdvancedEditorOptionsControl _window;
         private string _completionCommittedBy;
         private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
+        private bool _filterCompletions;
+        private FuzzyMatchMode _searchMode;
 
         public PythonAdvancedEditorOptionsPage()
             : base("Advanced") {
@@ -37,8 +40,6 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        #region Intellisense Options
-
         public bool EnterCommitsIntellisense {
             get { return _enterCommitsIntellisense; }
             set { _enterCommitsIntellisense = value; }
@@ -46,9 +47,17 @@ namespace Microsoft.PythonTools.Options {
 
         public bool IntersectMembers {
             get { return _intersectMembers; }
-            set {
-                _intersectMembers = value;
-            }
+            set { _intersectMembers = value; }
+        }
+
+        public bool FilterCompletions {
+            get { return _filterCompletions; }
+            set { _filterCompletions = value; }
+        }
+
+        public FuzzyMatchMode SearchMode {
+            get { return _searchMode; }
+            set { _searchMode = value; }
         }
 
         public bool AddNewLineAtEndOfFullyTypedWord {
@@ -68,17 +77,13 @@ namespace Microsoft.PythonTools.Options {
 
         public bool PasteRemovesReplPrompts {
             get { return _pasteRemovesReplPrompts; }
-            set {
-                _pasteRemovesReplPrompts = value;
-            }
+            set { _pasteRemovesReplPrompts = value; }
         }
 
         public string CompletionCommittedBy { 
             get { return _completionCommittedBy; } 
             set { _completionCommittedBy = value; } 
         }
-
-        #endregion
 
         public override void ResetSettings() {
             _enterCommitsIntellisense = true;
@@ -88,6 +93,8 @@ namespace Microsoft.PythonTools.Options {
             _enterOutliningMode = true;
             _fillParagraphColumns = 80;
             _pasteRemovesReplPrompts = true;
+            _filterCompletions = true;
+            _searchMode = FuzzyMatchMode.Default;
         }
 
         private const string EnterCommitsSetting = "EnterCommits";
@@ -97,6 +104,8 @@ namespace Microsoft.PythonTools.Options {
         private const string EnterOutlingModeOnOpenSetting = "EnterOutlingModeOnOpen";
         private const string FillParagraphColumnsSetting = "FillParagraphColumns";
         private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
+        private const string FilterCompletionsSetting = "FilterCompletions";
+        private const string SearchModeSetting = "SearchMode";
 
         public override void LoadSettingsFromStorage() {
             _enterCommitsIntellisense = LoadBool(EnterCommitsSetting) ?? true;
@@ -106,6 +115,8 @@ namespace Microsoft.PythonTools.Options {
             _enterOutliningMode = LoadBool(EnterOutlingModeOnOpenSetting) ?? true;
             _fillParagraphColumns = LoadInt(FillParagraphColumnsSetting) ?? 80;
             _pasteRemovesReplPrompts = LoadBool(PasteRemovesReplPromptsSetting) ?? true;
+            _filterCompletions = LoadBool(FilterCompletionsSetting) ?? true;
+            _searchMode = LoadEnum<FuzzyMatchMode>(SearchModeSetting) ?? FuzzyMatchMode.Default;
         }
 
         public override void SaveSettingsToStorage() {
@@ -116,6 +127,8 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(EnterOutlingModeOnOpenSetting, _enterOutliningMode);
             SaveInt(FillParagraphColumnsSetting, _fillParagraphColumns);
             SaveBool(PasteRemovesReplPromptsSetting, _pasteRemovesReplPrompts);
+            SaveBool(FilterCompletionsSetting, _filterCompletions);
+            SaveEnum(SearchModeSetting, _searchMode);
         }
     }
 }

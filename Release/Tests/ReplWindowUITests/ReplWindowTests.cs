@@ -50,6 +50,13 @@ namespace ReplWindowUITests {
             TestData.Deploy();
         }
 
+        [TestInitialize]
+        public void DisplayVersion() {
+            // Writes the interpreter version to the console so it can be
+            // viewed in the output for the test.
+            Console.WriteLine(InterpreterDescription);
+        }
+
         /// <summary>
         /// “def f(): pass” + 2 ENTERS
         /// f( should bring signature help up
@@ -214,14 +221,13 @@ namespace ReplWindowUITests {
 
             interactive.WaitForText(ReplPrompt + code, ReplPrompt);
 
-            // x<space> should not bring up a completion session
             Keyboard.Type("x.");
             interactive.WaitForSession<ICompletionSession>();
             Keyboard.Type("car");
             Keyboard.Type(Key.Enter);
 
             interactive.WaitForSessionDismissed();
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.car", "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "AttributeError: 'int' object has no attribute 'car'", ReplPrompt);
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.car", "Traceback (most recent call last):", "  File \"<string>\", line 1, in <module>", "AttributeError: 'int' object has no attribute 'car'", ReplPrompt);
         }
 
         /// <summary>
@@ -2065,6 +2071,7 @@ $cls
                 return;
             }
 
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = false;
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             try {
@@ -2576,7 +2583,7 @@ def g(): pass
 
         public virtual string IntFirstMember {
             get {
-                return "conjugate";
+                return "bit_length";
             }
         }
 

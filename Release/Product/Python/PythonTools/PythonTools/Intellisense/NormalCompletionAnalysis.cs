@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
@@ -31,19 +30,11 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITextSnapshot _snapshot;
         private readonly VsProjectAnalyzer _analyzer;
 
-        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(text, pos, span, textBuffer, options) {
+        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
         }
-
-        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, string text, int pos, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, bool intersectMembers = true, bool hideAdvancedMembers = false, bool includeStatmentKeywords = false, bool includeExpressionKeywords = false)
-            : this(analyzer, text, pos, snapshot, span, textBuffer, new CompletionOptions {
-            IntersectMembers = intersectMembers,
-            HideAdvancedMembers = hideAdvancedMembers,
-            IncludeExpressionKeywords = includeExpressionKeywords,
-            IncludeStatementKeywords = includeStatmentKeywords
-        }) { }
 
         private string FixupCompletionText(string exprText) {
             if (exprText.EndsWith(".")) {
@@ -63,10 +54,22 @@ namespace Microsoft.PythonTools.Intellisense {
             return exprText;
         }
 
+        internal string PrecedingExpression {
+            get {
+            var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
+            var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
+            var sourceSpan = parser.GetExpressionRange();
+            if (sourceSpan.HasValue && sourceSpan.Value.Length > 0) {
+                return sourceSpan.Value.GetText();
+            }
+                return string.Empty;
+            }
+        }
+
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
-            MemberResult[] members;
+            var members = Enumerable.Empty<MemberResult>();
 
             IReplEvaluator eval;
             IPythonReplIntellisense pyReplEval = null;
@@ -76,62 +79,48 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var analysis = GetAnalysisEntry();
-            string fixedText = FixupCompletionText(Text);
-            if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                lock (_analyzer) {
-                    members = analysis.GetMembersByIndex(
-                        fixedText,
-                        _pos,
-                        _options.MemberOptions
-                    ).ToArray();
-                }
-            } else {
-                members = new MemberResult[0];
-            }
-
-            if (pyReplEval != null && fixedText != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(Text)) {
-                var replStart = _stopwatch.ElapsedMilliseconds;
-                if (members.Length == 0) {
-                    members = pyReplEval.GetMemberNames(fixedText);
-                    if (members == null) {
-                        members = new MemberResult[0];
+            var text = PrecedingExpression;
+            if (!string.IsNullOrEmpty(text)) {
+                string fixedText = FixupCompletionText(text);
+                if (analysis != null && fixedText != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
+                    lock (_analyzer) {
+                        members = members.Concat(analysis.GetMembersByIndex(
+                            fixedText,
+                            Span.GetEndPoint(_snapshot).Position,
+                            _options.MemberOptions
+                        ).ToArray());
                     }
-                } else {
-                    // prefer analysis members over live members but merge the two together.
-                    Dictionary<string, MemberResult> memberDict = new Dictionary<string, MemberResult>();
+                }
+
+                if (pyReplEval != null && fixedText != null && _snapshot.TextBuffer.GetAnalyzer().ShouldEvaluateForCompletion(fixedText)) {
+                    var replStart = _stopwatch.ElapsedMilliseconds;
+
                     var replMembers = pyReplEval.GetMemberNames(fixedText);
                     if (replMembers != null) {
-                        foreach (var member in replMembers) {
-                            memberDict[member.Completion] = member;
-                        }
-
-                        foreach (var member in members) {
-                            memberDict[member.Completion] = member;
-                        }
-
-                        members = memberDict.Values.ToArray();
+                        members = members.Union(replMembers, CompletionComparer.MemberEquality);
                     }
                 }
-                Trace.WriteLine(String.Format("Repl {0} lookup time {1} for {2} members", this, _stopwatch.ElapsedMilliseconds - replStart, members.Length));
+            } else {
+                members = analysis.GetAllAvailableMembersByIndex(Span.GetStartPoint(_snapshot).Position, _options.MemberOptions);
             }
-            
-            members = DoFilterCompletions(members);
-            Array.Sort(members, ModuleSort);
 
             var end = _stopwatch.ElapsedMilliseconds;
 
             if (/*Logging &&*/ (end - start1) > TooMuchTime) {
-                Trace.WriteLine(String.Format("{0} lookup time {1} for {2} members", this, end - start1, members.Length));
+                var memberArray = members.ToArray();
+                members = memberArray;
+                Trace.WriteLine(String.Format("{0} lookup time {1} for {2} members", this, end - start1, members.Count()));
             }
 
             var start = _stopwatch.ElapsedMilliseconds;
             
-            var result = new PythonCompletionSet(
-                Text,
-                Text,
-                _snapshot.CreateTrackingSpan(_pos, 0, SpanTrackingMode.EdgeInclusive),
-                TransformMembers(glyphService, members),
-                new Completion[0]);
+            var result = new FuzzyCompletionSet(
+                "Python",
+                "Python",
+                Span,
+                members.Select(m => PythonCompletion(glyphService, m)),
+                _options,
+                CompletionComparer.UnderscoresLast);
 
             end = _stopwatch.ElapsedMilliseconds;
 
@@ -140,61 +129,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return result;
-        }
-
-        private IEnumerable<Completion> TransformMembers(IGlyphService glyphService, MemberResult[] members) {
-            return members.Select(m => PythonCompletion(glyphService, m));
-        }
-
-        private MemberResult[] DoFilterCompletions(MemberResult[] members) {
-            if (_options.HideAdvancedMembers) {
-                members = FilterCompletions(members, Text, (completion, filter) => completion.StartsWith(filter) && (!completion.StartsWith("__") || ! completion.EndsWith("__")));
-            } else {
-                members = FilterCompletions(members, Text, (x, y) => x.StartsWith(y));
-            }
-            return members;
-        }
-
-        internal static MemberResult[] FilterCompletions(MemberResult[] completions, string text, Func<string, string, bool> filterFunc) {
-            var cut = text.LastIndexOfAny(new[] { '.', ']', ')' });
-            var filter = (cut == -1) ? text : text.Substring(cut + 1);
-
-            var result = new List<MemberResult>(completions.Length);
-            foreach (var comp in completions) {
-                if (filterFunc(comp.Completion, filter)) {
-                    result.Add(comp.FilterCompletion(comp.Completion.Substring(filter.Length)));
-                }
-            }
-            return result.ToArray();
-        }
-
-        internal static int ModuleSort(MemberResult x, MemberResult y) {
-            return MemberSortComparison(x.Name, y.Name);
-        }
-
-        /// <summary>
-        /// Sorts members for displaying in completion list.  The member sort
-        /// moves all __x__ functions to the end of the list.  Members which
-        /// start with a single underscore (private members) are sorted as if 
-        /// they did not start with an underscore.
-        /// </summary> 
-        internal static int MemberSortComparison(string xName, string yName) {
-            bool xUnder = xName.StartsWith("__") && xName.EndsWith("__");
-            bool yUnder = yName.StartsWith("__") && yName.EndsWith("__");
-
-            if (xUnder != yUnder) {
-                // The one that starts with an underscore comes later
-                return xUnder ? 1 : -1;
-            }
-            
-            bool xSingleUnder = xName.StartsWith("_");
-            bool ySingleUnder = yName.StartsWith("_");
-            if (xSingleUnder != ySingleUnder) {
-                // The one that starts with an underscore comes later
-                return xSingleUnder ? 1 : -1;
-            }
-
-            return String.Compare(xName, yName, StringComparison.OrdinalIgnoreCase); 
         }
 
     }

@@ -586,9 +586,7 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         private static int ComparisonFunction(DropDownEntryInfo x, DropDownEntryInfo y) {
-            string xName = x.Name ?? String.Empty, yName = y.Name ?? String.Empty;
-
-            return NormalCompletionAnalysis.MemberSortComparison(xName, yName);
+            return CompletionComparer.UnderscoresLast.Compare(x.Name, y.Name);
         }
 
         /// <summary>

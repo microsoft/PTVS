@@ -200,6 +200,9 @@
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplayFactory.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProviderFactory.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProvider.cs" />
+    <Compile Include="PythonTools\Intellisense\CompletionComparer.cs" />
+    <Compile Include="PythonTools\Intellisense\FuzzyStringMatcher.cs" />
+    <Compile Include="PythonTools\Intellisense\FuzzyCompletionSet.cs" />
     <Compile Include="PythonTools\ProvideDebugPortSupplierAttribute.cs" />
     <Compile Include="PythonTools\DialogWindowVersioningWorkaround.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
@@ -536,7 +539,6 @@
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\FromImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ImportCompletionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\LazyCompletion.cs" />
     <Compile Include="PythonTools\Intellisense\NormalCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\PythonAnalysisExtensions.cs" />
     <Compile Include="PythonTools\Intellisense\ProjectAnalyzer.cs" />

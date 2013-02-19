@@ -20,13 +20,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Refactoring;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -351,16 +349,13 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
-        internal static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
+        internal static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
             var buffer = snapshot.TextBuffer;
-            ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
-            var loc = span.GetSpan(snapshot.Version);
-            var line = snapshot.GetLineFromPosition(loc.Start);
-            var lineStart = line.Start;
+            var loc = point.GetPoint(snapshot);
+            var line = loc.GetContainingLine();
 
-            var textLen = loc.End - lineStart.Position;
-            if (textLen <= 0) {
+            if (loc <= line.Start) {
                 // Ctrl-Space on an empty line, we just want to get global vars
 
                 var classifier = buffer.GetPythonClassifier();
@@ -375,28 +370,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 return new NormalCompletionAnalysis(
                     snapshot.TextBuffer.GetAnalyzer(),
-                    String.Empty,
-                    loc.Start,
-                    parser.Snapshot,
-                    parser.Span,
-                    parser.Buffer,
+                    snapshot,
+                    span,
+                    buffer,
                     options
                 );
             }
 
-            return TrySpecialCompletions(snapshot, span, options) ??
-                   GetNormalCompletionContext(parser, loc, options);
-        }
-
-        /// <summary>
-        /// Gets a CompletionList providing a list of possible members the user can dot through.
-        /// </summary>
-        [Obsolete("Use GetCompletions with a CompletionOptions instance.")]
-        internal static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, bool intersectMembers = true, bool hideAdvancedMembers = false) {
-            return GetCompletions(snapshot, span, new CompletionOptions {
-                IntersectMembers = intersectMembers,
-                HideAdvancedMembers = hideAdvancedMembers
-            });
+            return TrySpecialCompletions(snapshot, span, point, options) ??
+                   GetNormalCompletionContext(snapshot, span, point, options);
         }
 
         /// <summary>
@@ -930,11 +912,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static CompletionAnalysis TrySpecialCompletions(ITextSnapshot snapshot, ITrackingSpan span, CompletionOptions options) {
+        private static CompletionAnalysis TrySpecialCompletions(ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
             var snapSpan = span.GetSpan(snapshot);
             var buffer = snapshot.TextBuffer;
             var classifier = (PythonClassifier)buffer.Properties.GetProperty(typeof(PythonClassifier));
-            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(snapSpan.Start.GetContainingLine().Start, snapSpan.End));
+            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(snapSpan.Start.GetContainingLine().Start, snapSpan.Start));
             if (tokens.Count > 0) {
                 // Check for context-sensitive intellisense
                 var lastClass = tokens[tokens.Count - 1];
@@ -945,7 +927,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (lastClass.ClassificationType == classifier.Provider.StringLiteral) {
                     // String completion
                     if (lastClass.Span.Start.GetContainingLine().LineNumber == lastClass.Span.End.GetContainingLine().LineNumber) {
-                        return new StringLiteralCompletionList(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
+                        return new StringLiteralCompletionList(span, buffer, options);
                     } else {
                         // multi-line string, no string completions.
                         return CompletionAnalysis.EmptyCompletionContext;
@@ -953,19 +935,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
                     lastClass.Span.GetText() == "@") {
 
-                    return new DecoratorCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
+                    return new DecoratorCompletionAnalysis(span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(lastClass, "raise") || CompletionAnalysis.IsKeyword(lastClass, "except")) {
-                    return new ExceptionCompletionAnalysis(lastClass.Span.GetText(), snapSpan.Start, span, buffer, options);
+                    return new ExceptionCompletionAnalysis(span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(lastClass, "def")) {
-                    return new OverrideCompletionAnalysis(lastClass.Span.GetText(), lastClass.Span.Start, span, buffer, options);
+                    return new OverrideCompletionAnalysis(span, buffer, options);
                 }
 
                 // Import completions
                 var first = tokens[0];
                 if (CompletionAnalysis.IsKeyword(first, "import")) {
-                    return ImportCompletionAnalysis.Make(first, lastClass, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan), options);
+                    return new ImportCompletionAnalysis(tokens, span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(first, "from")) {
-                    return FromImportCompletionAnalysis.Make(tokens, first, snapSpan, snapshot, span, buffer, IsSpaceCompletion(snapshot, snapSpan), options);
+                    return new FromImportCompletionAnalysis(tokens, span, buffer, options);
                 }
                 return null;
             }
@@ -973,78 +955,34 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private static CompletionAnalysis GetNormalCompletionContext(ReverseExpressionParser parser, Span loc, CompletionOptions options) {
-            var exprRange = parser.GetExpressionRange();
-            if (exprRange == null) {
+        private static CompletionAnalysis GetNormalCompletionContext(ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options) {
+            var span = applicableSpan.GetSpan(snapshot);
+
+            if (IsSpaceCompletion(snapshot, point) && !IntellisenseController.ForceCompletions) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
-            if (IsSpaceCompletion(parser.Snapshot, loc) && !IntellisenseController.ForceCompletions) {
-                return CompletionAnalysis.EmptyCompletionContext;
-            }
 
-            var text = exprRange.Value.GetText();
-
-            var applicableSpan = parser.Snapshot.CreateTrackingSpan(
-                exprRange.Value.Span,
-                SpanTrackingMode.EdgeExclusive
-            );
-
-            // check if we're at the beginning of a line, this includes having a single
-            // name expression which we're hitting Ctrl-Space after.
-            var enumerator = ReverseExpressionParser.ReverseClassificationSpanEnumerator(parser.Classifier, exprRange.Value.End);
-            bool hitName = false, firstToken = true, hitOther = false;
-            while (enumerator.MoveNext()) {
-                if (enumerator.Current == null) {
-                    break;
-                } else if (enumerator.Current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
-                    !hitName) {
-                    hitName = true;
-                } else {
-                    hitOther = true;
-                    break;
-                }
-
-                firstToken = false;
-            }
-
-            options = options.Clone();
-            options.IncludeStatementKeywords = false;
-
-            if (!hitOther && (hitName || firstToken)) {
-                // make sure we're not in a grouping
-                var groupingParser = new ReverseExpressionParser(parser.Snapshot, parser.Buffer, applicableSpan);
-                int paramIndex;
-                SnapshotPoint? sigStart;
-                string lastKeyword;
-                bool isParamName;
-                var groupingExprRange = groupingParser.GetExpressionRange(
-                    1,
-                    out paramIndex,
-                    out sigStart,
-                    out lastKeyword,
-                    out isParamName,
-                    false
-                );
-
-                if (groupingExprRange == null || groupingExprRange == exprRange) {
-                    options.IncludeStatementKeywords = true;
-                }
+            var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
+            if (parser.IsInGrouping()) {
+                options = options.Clone();
+                options.IncludeStatementKeywords = false;
             }
 
             return new NormalCompletionAnalysis(
-                parser.Snapshot.TextBuffer.GetAnalyzer(),
-                text,
-                loc.Start,
-                parser.Snapshot,
+                snapshot.TextBuffer.GetAnalyzer(),
+                snapshot,
                 applicableSpan,
-                parser.Buffer,
+                snapshot.TextBuffer,
                 options
             );
         }
 
-        private static bool IsSpaceCompletion(ITextSnapshot snapshot, Span loc) {
-            var keySpan = new SnapshotSpan(snapshot, loc.Start - 1, 1);
-            return (keySpan.GetText() == " ");
+        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
+            var pos = loc.GetPosition(snapshot);
+            if (pos > 0) {
+                return snapshot.GetText(pos - 1, 1) == " ";
+            }
+            return false;
         }
 
         private static Stopwatch MakeStopWatch() {

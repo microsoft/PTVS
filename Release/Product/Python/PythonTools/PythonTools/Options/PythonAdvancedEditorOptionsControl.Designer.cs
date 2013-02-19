@@ -32,12 +32,11 @@
             this._newLineAfterCompleteCompletion = new System.Windows.Forms.CheckBox();
             this._completionResultsGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
+            this._filterCompletions = new System.Windows.Forms.CheckBox();
             this._miscOptionsGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this._outliningOnOpen = new System.Windows.Forms.CheckBox();
-            this._fillParagraphText = new System.Windows.Forms.TextBox();
             this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
-            this._fillParaColumnLabel = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this._selectionInCompletionGroupBox.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
@@ -103,7 +102,7 @@
             this._selectionInCompletionGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._selectionInCompletionGroupBox.Controls.Add(this.tableLayoutPanel3);
             this._selectionInCompletionGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._selectionInCompletionGroupBox.Location = new System.Drawing.Point(6, 51);
+            this._selectionInCompletionGroupBox.Location = new System.Drawing.Point(6, 74);
             this._selectionInCompletionGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._selectionInCompletionGroupBox.Name = "_selectionInCompletionGroupBox";
             this._selectionInCompletionGroupBox.Size = new System.Drawing.Size(476, 104);
@@ -154,7 +153,7 @@
             this._completionResultsGroupBox.Location = new System.Drawing.Point(6, 3);
             this._completionResultsGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._completionResultsGroupBox.Name = "_completionResultsGroupBox";
-            this._completionResultsGroupBox.Size = new System.Drawing.Size(476, 42);
+            this._completionResultsGroupBox.Size = new System.Drawing.Size(476, 65);
             this._completionResultsGroupBox.TabIndex = 0;
             this._completionResultsGroupBox.TabStop = false;
             this._completionResultsGroupBox.Text = "Completion Results";
@@ -166,14 +165,29 @@
             this.tableLayoutPanel2.ColumnCount = 1;
             this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel2.Controls.Add(this._intersectMembers, 0, 0);
+            this.tableLayoutPanel2.Controls.Add(this._filterCompletions, 0, 1);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 1;
+            this.tableLayoutPanel2.RowCount = 2;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(470, 23);
+            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(470, 46);
             this.tableLayoutPanel2.TabIndex = 0;
+            // 
+            // _filterCompletions
+            // 
+            this._filterCompletions.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._filterCompletions.AutoSize = true;
+            this._filterCompletions.Location = new System.Drawing.Point(6, 26);
+            this._filterCompletions.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._filterCompletions.Name = "_filterCompletions";
+            this._filterCompletions.Size = new System.Drawing.Size(173, 17);
+            this._filterCompletions.TabIndex = 1;
+            this._filterCompletions.Text = "&Filter list based on search string";
+            this._filterCompletions.UseVisualStyleBackColor = true;
+            this._filterCompletions.CheckedChanged += new System.EventHandler(this._filterCompletions_CheckedChanged);
             // 
             // _miscOptionsGroupBox
             // 
@@ -181,10 +195,10 @@
             this._miscOptionsGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._miscOptionsGroupBox.Controls.Add(this.tableLayoutPanel4);
             this._miscOptionsGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._miscOptionsGroupBox.Location = new System.Drawing.Point(6, 161);
+            this._miscOptionsGroupBox.Location = new System.Drawing.Point(6, 184);
             this._miscOptionsGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._miscOptionsGroupBox.Name = "_miscOptionsGroupBox";
-            this._miscOptionsGroupBox.Size = new System.Drawing.Size(476, 91);
+            this._miscOptionsGroupBox.Size = new System.Drawing.Size(476, 65);
             this._miscOptionsGroupBox.TabIndex = 2;
             this._miscOptionsGroupBox.TabStop = false;
             this._miscOptionsGroupBox.Text = "Miscellaneous Options";
@@ -193,28 +207,25 @@
             // 
             this.tableLayoutPanel4.AutoSize = true;
             this.tableLayoutPanel4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel4.ColumnCount = 2;
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.ColumnCount = 1;
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel4.Controls.Add(this._outliningOnOpen, 0, 0);
-            this.tableLayoutPanel4.Controls.Add(this._fillParaColumnLabel, 0, 1);
-            this.tableLayoutPanel4.Controls.Add(this._fillParagraphText, 1, 1);
-            this.tableLayoutPanel4.Controls.Add(this._pasteRemovesReplPrompts, 0, 2);
+            this.tableLayoutPanel4.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
             this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
-            this.tableLayoutPanel4.RowCount = 3;
+            this.tableLayoutPanel4.RowCount = 2;
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(470, 72);
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(470, 46);
             this.tableLayoutPanel4.TabIndex = 0;
             // 
             // _outliningOnOpen
             // 
             this._outliningOnOpen.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this._outliningOnOpen.AutoSize = true;
-            this.tableLayoutPanel4.SetColumnSpan(this._outliningOnOpen, 2);
             this._outliningOnOpen.Location = new System.Drawing.Point(6, 3);
             this._outliningOnOpen.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._outliningOnOpen.Name = "_outliningOnOpen";
@@ -224,42 +235,18 @@
             this._outliningOnOpen.UseVisualStyleBackColor = true;
             this._outliningOnOpen.CheckedChanged += new System.EventHandler(this._outliningOnOpen_CheckedChanged);
             // 
-            // _fillParagraphText
-            // 
-            this._fillParagraphText.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._fillParagraphText.Location = new System.Drawing.Point(135, 26);
-            this._fillParagraphText.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._fillParagraphText.MinimumSize = new System.Drawing.Size(100, 0);
-            this._fillParagraphText.Name = "_fillParagraphText";
-            this._fillParagraphText.Size = new System.Drawing.Size(100, 20);
-            this._fillParagraphText.TabIndex = 2;
-            this._fillParagraphText.TextChanged += new System.EventHandler(this._fillParagraphText_TextChanged);
-            // 
             // _pasteRemovesReplPrompts
             // 
             this._pasteRemovesReplPrompts.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this._pasteRemovesReplPrompts.AutoSize = true;
-            this.tableLayoutPanel4.SetColumnSpan(this._pasteRemovesReplPrompts, 2);
-            this._pasteRemovesReplPrompts.Location = new System.Drawing.Point(6, 52);
+            this._pasteRemovesReplPrompts.Location = new System.Drawing.Point(6, 26);
             this._pasteRemovesReplPrompts.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._pasteRemovesReplPrompts.Name = "_pasteRemovesReplPrompts";
             this._pasteRemovesReplPrompts.Size = new System.Drawing.Size(167, 17);
-            this._pasteRemovesReplPrompts.TabIndex = 3;
+            this._pasteRemovesReplPrompts.TabIndex = 1;
             this._pasteRemovesReplPrompts.Text = "&Paste removes REPL prompts";
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
             this._pasteRemovesReplPrompts.CheckedChanged += new System.EventHandler(this._pasteRemovesReplPrompts_CheckedChanged);
-            // 
-            // _fillParaColumnLabel
-            // 
-            this._fillParaColumnLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._fillParaColumnLabel.AutoSize = true;
-            this._fillParaColumnLabel.Location = new System.Drawing.Point(6, 29);
-            this._fillParaColumnLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this._fillParaColumnLabel.Name = "_fillParaColumnLabel";
-            this._fillParaColumnLabel.Size = new System.Drawing.Size(117, 13);
-            this._fillParaColumnLabel.TabIndex = 1;
-            this._fillParaColumnLabel.Text = "&Fill Paragraph Columns:";
-            this._fillParaColumnLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // tableLayoutPanel1
             // 
@@ -317,12 +304,11 @@
         private System.Windows.Forms.CheckBox _newLineAfterCompleteCompletion;
         private System.Windows.Forms.GroupBox _miscOptionsGroupBox;
         private System.Windows.Forms.CheckBox _outliningOnOpen;
-        private System.Windows.Forms.TextBox _fillParagraphText;
-        private System.Windows.Forms.Label _fillParaColumnLabel;
         private System.Windows.Forms.CheckBox _pasteRemovesReplPrompts;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.CheckBox _filterCompletions;
     }
 }
