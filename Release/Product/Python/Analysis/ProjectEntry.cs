@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
@@ -204,7 +205,27 @@ namespace Microsoft.PythonTools.Analysis {
             _tree.Walk(walker);
             _myScope.Specialize();
 
-            PublishPackageChildrenInPackage();
+            // It may be that we have analyzed some child packages of this package already, but because it wasn't analyzed,
+            // the children were not registered. To handle this possibility, scan analyzed packages for children of this
+            // package (checked by module name first, then sanity-checked by path), and register any that match.
+            if (_filePath != null && _filePath.EndsWith("__init__.py")) {
+                string pathPrefix = Path.GetDirectoryName(_filePath) + "\\";
+                var children =
+                    from pair in _projectState.ModulesByFilename
+                    // Is the candidate child package in a subdirectory of our package?
+                    let fileName = pair.Key
+                    where fileName.StartsWith(pathPrefix) 
+                    let moduleName = pair.Value.Name
+                    // Is the full name of the candidate child package qualified with the name of our package?
+                    let lastDot = moduleName.LastIndexOf('.')
+                    where lastDot > 0
+                    let parentModuleName = moduleName.Substring(0, lastDot)
+                    where parentModuleName == _myScope.Name
+                    select pair.Value;
+                foreach (var child in children) {
+                    _myScope.AddChildPackage(child, _unit);
+                }
+            }
 
             _unit.Enqueue();
 
@@ -220,33 +241,6 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 return _projectState;
             }
-        }
-
-        private void PublishPackageChildrenInPackage() {
-            if (_filePath != null && _filePath.EndsWith("__init__.py")) {
-                string dir = Path.GetDirectoryName(_filePath);
-                if (Directory.Exists(dir)) {
-                    foreach (var file in Directory.GetFiles(dir)) {
-                        if (file.EndsWith("__init__.py")) {
-                            continue;
-                        }
-
-                        ModuleInfo childModule;
-                        if (_projectState.ModulesByFilename.TryGetValue(file, out childModule)) {
-                            _myScope.AddChildPackage(childModule, _unit);
-                        }
-                    }
-
-                    foreach (var packageDir in Directory.GetDirectories(dir)) {
-                        string package = Path.Combine(packageDir, "__init__.py");
-                        ModuleInfo childPackage;
-                        if (File.Exists(package) && _projectState.ModulesByFilename.TryGetValue(package, out childPackage)) {
-                            _myScope.AddChildPackage(childPackage, _unit);
-                        }
-                    }
-                }
-            }
-
         }
 
         public string GetLine(int lineNo) {
@@ -403,6 +397,8 @@ namespace Microsoft.PythonTools.Analysis {
         PythonAst Tree {
             get;
         }
+
+        string ModuleName { get; }
 
         ModuleAnalysis Analysis {
             get;

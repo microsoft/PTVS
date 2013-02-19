@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Project {
 #if DEV11
                 (int)CommonImageName.SearchPath
 #else
-                (Directory.Exists(Url) ? (int)CommonImageName.SearchPath : (int)CommonImageName.MissingSearchPath)
+                (Directory.Exists(Url) || File.Exists(Url) ? (int)CommonImageName.SearchPath : (int)CommonImageName.MissingSearchPath)
 #endif
             );
         }
@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Project {
 #if DEV11
         protected override VSOVERLAYICON OverlayIconIndex {
             get {
-                return Directory.Exists(Url) ? base.OverlayIconIndex : (VSOVERLAYICON)__VSOVERLAYICON2.OVERLAYICON_NOTONDISK;
+                return Directory.Exists(Url) || File.Exists(Url) ? base.OverlayIconIndex : (VSOVERLAYICON)__VSOVERLAYICON2.OVERLAYICON_NOTONDISK;
             }
         }
 #endif
@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
-                return CommonUtils.GetAbsoluteDirectoryPath(this.ProjectMgr.ProjectHome, this.VirtualNodeName);
+                return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, this.VirtualNodeName);
             }
         }
 

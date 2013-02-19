@@ -4598,8 +4598,6 @@ namespace Microsoft.PythonTools.Parsing {
             // we'll automatically get it as unicode.
             Encoding encoding = PythonAsciiEncoding.SourceEncoding;
 
-            long startPosition = stream.Position;
-
             byte[] bomBuffer = new byte[3];
             int bomRead = stream.Read(bomBuffer, 0, 3);
             int bytesRead = 0;

@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Project {
         public const string StartupFile = "StartupFile";
         public const string StartupFileDescription = "StartupFileDescription";
         public const string SelectFolderForSearchPath = "SelectFolderForSearchPath";
+        public const string SelectZipFileForSearchPath = "SelectZipFileForSearchPath";
         public const string SearchPathRemoveConfirmation = "SearchPathRemoveConfirmation";
         public const string WorkingDirectory = "WorkingDirectory";
         public const string WorkingDirectoryDescription = "WorkingDirectoryDescription";

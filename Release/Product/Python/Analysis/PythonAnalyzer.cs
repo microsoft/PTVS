@@ -16,6 +16,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -220,13 +221,22 @@ namespace Microsoft.PythonTools.Analysis {
         /// This method is thread safe.
         /// </summary>
         public void RemoveModule(IProjectEntry entry) {
+            if (entry == null) {
+                throw new ArgumentNullException("entry");
+            }
+            Contract.EndContractBlock();
+
             ModuleInfo removed;
             _modulesByFilename.TryRemove(entry.FilePath, out removed);
-            ModuleReference modRef;
-            Modules.TryRemove(PathToModuleName(entry.FilePath), out modRef);
-            var projEntry2 = entry as IProjectEntry2;
-            if (projEntry2 != null) {
-                projEntry2.RemovedFromProject();
+
+            var pyEntry = entry as IPythonProjectEntry;
+            if (pyEntry != null) {
+                ModuleReference modRef;
+                Modules.TryRemove(pyEntry.ModuleName, out modRef);
+                var projEntry2 = entry as IProjectEntry2;
+                if (projEntry2 != null) {
+                    projEntry2.RemovedFromProject();
+                }
             }
         }
 
@@ -500,6 +510,17 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public static string PathToModuleName(string path) {
+            return PathToModuleName(path, fileName => File.Exists(fileName));
+        }
+
+        /// <summary>
+        /// Converts a given absolute path name to a fully qualified Python module name by walking the directory tree.
+        /// </summary>
+        /// <param name="path">Path to convert.</param>
+        /// <param name="fileExists">A function that is used to verify the existence of files (in particular, __init__.py)
+        /// in the tree. Its signature and semantics should match that of <see cref="File.Exists"/>.</param>
+        /// <returns>A fully qualified module name.</returns>
+        public static string PathToModuleName(string path, Func<string, bool> fileExists) {
             string moduleName;
             string dirName;
 
@@ -514,7 +535,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             while (dirName.Length != 0 && (dirName = Path.GetDirectoryName(dirName)).Length != 0 &&
-                File.Exists(Path.Combine(dirName, "__init__.py"))) {
+                fileExists(Path.Combine(dirName, "__init__.py"))) {
                 moduleName = Path.GetFileName(dirName) + "." + moduleName;
             }
 

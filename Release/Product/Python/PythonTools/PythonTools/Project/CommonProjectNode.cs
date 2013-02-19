@@ -728,7 +728,7 @@ namespace Microsoft.PythonTools.Project {
             List<string> parsedPaths = new List<string>();
             if (!string.IsNullOrEmpty(searchPath)) {
                 foreach (string path in searchPath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    string resolvedPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
+                    string resolvedPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
                     if (!parsedPaths.Contains(resolvedPath)) {
                         parsedPaths.Add(resolvedPath);
                     }
@@ -755,7 +755,7 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNull("newpath", newpath);
 
             IList<string> searchPath = ParseSearchPath();
-            var relativePath = CommonUtils.GetRelativeDirectoryPath(ProjectHome, CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, newpath));
+            var relativePath = CommonUtils.GetRelativeFilePath(ProjectHome, CommonUtils.GetAbsoluteFilePath(ProjectHome, newpath));
             if (searchPath.Contains(newpath, StringComparer.OrdinalIgnoreCase) ||
                 searchPath.Contains(relativePath, StringComparer.OrdinalIgnoreCase)) {
                 return;
@@ -841,6 +841,37 @@ namespace Microsoft.PythonTools.Project {
             }
             return VSConstants.S_OK;
         }
+
+        internal unsafe int AddSearchPathZip() {
+            var uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (uiShell == null) {
+                return VSConstants.S_FALSE;
+            }
+
+            var fileNameBuf = stackalloc char[NativeMethods.MAX_PATH];
+            var ofn = new[] {
+                new VSOPENFILENAMEW {
+                    lStructSize = (uint)Marshal.SizeOf(typeof(VSOPENFILENAMEW)),
+                    pwzDlgTitle = DynamicProjectSR.GetString(DynamicProjectSR.SelectZipFileForSearchPath),
+                    nMaxFileName = NativeMethods.MAX_PATH,
+                    pwzFileName = (IntPtr)fileNameBuf,
+                    pwzInitialDir = ProjectHome,
+                    pwzFilter = "Zip Archives\0*.zip\0All Files\0*.*\0"
+                }
+            };
+            uiShell.GetDialogOwnerHwnd(out ofn[0].hwndOwner);
+
+            var hr = uiShell.GetOpenFileNameViaDlg(ofn);
+            if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                return VSConstants.S_OK;
+            }
+            ErrorHandler.ThrowOnFailure(hr);
+
+            string fileName = new string(fileNameBuf);
+            AddSearchPathEntry(fileName);
+            return VSConstants.S_OK;
+        }
+
         #endregion
 
         #region IVsProjectSpecificEditorMap2 Members

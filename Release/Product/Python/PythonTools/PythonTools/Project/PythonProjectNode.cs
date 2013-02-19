@@ -35,6 +35,11 @@ using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
     public class PythonProjectNode : CommonProjectNode, IPythonProject, IPythonProject2 {
+        // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
+        // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
+        // they can be located and removed when that directory is removed from the path.
+        private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
+
         private DesignerContext _designerContext;
         private IPythonInterpreter _interpreter;
         private VsProjectAnalyzer _analyzer;
@@ -48,6 +53,16 @@ namespace Microsoft.PythonTools.Project {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
+        }
+
+        private static string GetSearchPathEntry(IProjectEntry entry) {
+            object result;
+            entry.Properties.TryGetValue(_searchPathEntryKey, out result);
+            return (string)result;
+        }
+
+        private static void SetSearchPathEntry(IProjectEntry entry, string value) {
+            entry.Properties[_searchPathEntryKey] = value;
         }
 
         public override CommonFileNode CreateCodeFileNode(MsBuildProjectElement item) {
@@ -278,24 +293,15 @@ namespace Microsoft.PythonTools.Project {
                     // we need to remove old files from the analyzer and add the new files
                     HashSet<string> oldDirs = new HashSet<string>(ParseSearchPath(e.OldValue), StringComparer.OrdinalIgnoreCase);
                     HashSet<string> newDirs = new HashSet<string>(ParseSearchPath(e.NewValue), StringComparer.OrdinalIgnoreCase);
+
                     // figure out all the possible directory names we could be removing...
                     foreach (var fileProject in _analyzer.LoadedFiles) {
-                        var file = fileProject.Key;
-                        var projectEntry = fileProject.Value;
-
-                        // remove the file if directly included, or if included via a package or series of packages.
-                        string dirName = Path.GetDirectoryName(file);
-                        do {
-                            string tmpDir = CommonUtils.NormalizeDirectoryPath(dirName);
-                            if (oldDirs.Contains(tmpDir)) {
-                                if (!newDirs.Contains(tmpDir)) {
-                                    // path removed
-                                    _analyzer.UnloadFile(projectEntry);
-                                    break;
-                                }
-                            }
-                            dirName = Path.GetDirectoryName(dirName);
-                        } while (dirName != null && File.Exists(Path.Combine(dirName, "__init__.py")));
+                        string file = fileProject.Key;
+                        IProjectEntry projectEntry = fileProject.Value;
+                        string searchPathEntry = GetSearchPathEntry(fileProject.Value);
+                        if (searchPathEntry != null && !newDirs.Contains(searchPathEntry)) {
+                            _analyzer.UnloadFile(projectEntry);
+                        }
                     }
 
                     // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
@@ -317,7 +323,14 @@ namespace Microsoft.PythonTools.Project {
         private void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
             // now add all of the missing files, any dups will automatically not be re-analyzed
             foreach (var dir in newDirs) {
-                _analyzer.AnalyzeDirectory(dir);
+#if DEV11
+                // If it's a file and not a directory, parse it as a .zip file in accordance with PEP 273.
+                if (File.Exists(dir)) {
+                    _analyzer.AnalyzeZipArchive(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
+                    continue;
+                }
+#endif
+                _analyzer.AnalyzeDirectory(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
             }
         }
 
@@ -590,6 +603,7 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch ((int)cmd) {
                     case CommonConstants.AddSearchPathCommandId:
+                    case CommonConstants.AddSearchPathZipCommandId:
                     case CommonConstants.StartWithoutDebuggingCmdId:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;

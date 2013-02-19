@@ -31,9 +31,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
         private TaskScheduler _scheduler;
-        internal bool _unload;
         private bool _isAnalyzing;
         private int _analysisPending;
+        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
@@ -62,6 +62,11 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 return _scheduler;
             }
+        }
+
+        // TODO: remove once the token is explicitly propagated from here to ProjectAnalyzer.
+        internal CancellationToken CancellationToken {
+            get { return _cts.Token; }
         }
 
         public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
@@ -104,7 +109,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void Stop() {
             if (_workThread != null) {
-                _unload = true;
+                _cts.Cancel();
                 _workEvent.Set();
                 _workThread.Join();
             }
@@ -152,7 +157,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 ((AutoResetEvent)threadStarted).Set();
             }
 
-            while (!_unload) {
+            while (!_cts.IsCancellationRequested) {
                 IAnalyzable workItem;
 
                 AnalysisPriority pri;

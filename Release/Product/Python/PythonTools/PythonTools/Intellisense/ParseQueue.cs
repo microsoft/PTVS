@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -24,6 +25,10 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+
+#if DEV11
+using System.IO.Compression;
+#endif
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -108,6 +113,34 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             });
         }
+
+#if DEV11
+        public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
+            var pathInArchive = entry.FullName.Replace('/', '\\');
+            var fileName = Path.Combine(zipFileName, pathInArchive);
+            var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+            EnqueWorker(() => {
+                try {
+                    using (var stream = entry.Open()) {
+                        _parser.ParseFile(projEntry, fileName, stream, severity);
+                        return;
+                    }
+                } catch (IOException ex) {
+                    Debug.Fail(ex.Message);
+                } catch (InvalidDataException ex) {
+                    Debug.Fail(ex.Message);
+                } finally {
+                    onComplete();
+                }
+
+                IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
+                if (pyEntry != null) {
+                    // failed to parse, keep the UpdateTree calls balanced
+                    pyEntry.UpdateTree(null, null);
+                }
+            });
+        }
+#endif
 
         private void EnqueWorker(Action parser) {
             Interlocked.Increment(ref _analysisPending);

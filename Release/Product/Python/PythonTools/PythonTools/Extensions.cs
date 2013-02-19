@@ -127,11 +127,14 @@ namespace Microsoft.PythonTools {
         }
         
         internal static void GotoSource(this LocationInfo location) {
-            PythonToolsPackage.NavigateTo(
-                location.FilePath,
-                Guid.Empty,
-                location.Line - 1,
-                location.Column - 1);
+            string zipFileName = VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
+            if (zipFileName == null) {
+                PythonToolsPackage.NavigateTo(
+                    location.FilePath,
+                    Guid.Empty,
+                    location.Line - 1,
+                    location.Column - 1);
+            }
         }
 
         internal static bool TryGetAnalysis(this ITextBuffer buffer, out IProjectEntry analysis) {

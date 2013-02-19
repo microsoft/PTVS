@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools {
 
         //Search Paths container node context menu
         public const int AddSearchPathCommandId = 0x4002;
+        public const int AddSearchPathZipCommandId = 0x4003;
 
         //Start Without Debugging command
         public const int StartWithoutDebuggingCmdId = 0x4004;
