@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Remoting;
+using System.Threading;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
@@ -419,7 +420,7 @@ from System.Windows.Media import Colors
                 pyEntry.UpdateTree(parser.ParseFile(), null);
             }
 
-            pyEntry.Analyze();
+            pyEntry.Analyze(CancellationToken.None);
         }
     }
 }

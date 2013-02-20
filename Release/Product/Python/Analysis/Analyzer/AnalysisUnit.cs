@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -118,13 +119,16 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public readonly PythonAst Tree;
 
-        public void Analyze(DDG ddg) {
+        public void Analyze(DDG ddg, CancellationToken cancel) {
 #if DEBUG
             long startTime = _sw.ElapsedMilliseconds;
             try {
                 _analysisCount += 1;
 #endif
-                AnalyzeWorker(ddg);
+                if (cancel.IsCancellationRequested) {
+                    return;
+                }
+                AnalyzeWorker(ddg, cancel);
 #if DEBUG
             } finally {
                 long endTime = _sw.ElapsedMilliseconds;
@@ -137,7 +141,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 #endif
         }
 
-        protected virtual void AnalyzeWorker(DDG ddg) {
+        protected virtual void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             DeclaringModule.Scope.ClearLinkedVariables();
 
             ddg.SetCurrentUnit(this);
@@ -311,7 +315,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             _baseClassNode = baseClassNode;
         }
 
-        protected override void AnalyzeWorker(DDG ddg) {
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             ddg.SetCurrentUnit(this);
 
             InterpreterScope scope;
@@ -356,7 +360,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        protected override void AnalyzeWorker(DDG ddg) {
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             InterpreterScope scope;
             if (!ddg.Scope.TryGetNodeScope(Ast, out scope)) {
                 return;
@@ -434,7 +438,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             AnalysisLog.NewUnit(this);
         }
 
-        protected override void AnalyzeWorker(DDG ddg) {
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             // evaluate the 1st iterator in the outer scope
             ddg.Scope = _outerUnit.Scope;
 
@@ -464,8 +468,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 new ComprehensionScope(new GeneratorInfo(outerUnit.ProjectState, node), node, outerScope),
                 outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg) {
-            base.AnalyzeWorker(ddg);
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+            base.AnalyzeWorker(ddg, cancel);
 
             var generator = (GeneratorInfo)Scope.Namespace;
             var node = (GeneratorExpression)Ast;
@@ -480,8 +484,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             new ComprehensionScope(new SetInfo(outerUnit.ProjectState, node), node, outerScope),
             outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg) {
-            base.AnalyzeWorker(ddg);
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+            base.AnalyzeWorker(ddg, cancel);
 
             var set = (SetInfo)Scope.Namespace;
             var node = (SetComprehension)Ast;
@@ -497,8 +501,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             new ComprehensionScope(new DictionaryInfo(outerUnit.ProjectEntry, node), node, outerScope),
             outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg) {
-            base.AnalyzeWorker(ddg);
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+            base.AnalyzeWorker(ddg, cancel);
 
             var dict = (DictionaryInfo)Scope.Namespace;
             var node = (DictionaryComprehension)Ast;
@@ -513,8 +517,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             new ComprehensionScope(new ListInfo(VariableDef.EmptyArray, outerUnit.ProjectState._listType, node), node, outerScope),
             outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg) {
-            base.AnalyzeWorker(ddg);
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+            base.AnalyzeWorker(ddg, cancel);
 
             var list = (ListInfo)Scope.Namespace;
             var node = (ListComprehension)Ast;

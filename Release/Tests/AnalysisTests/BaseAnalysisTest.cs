@@ -15,6 +15,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using IronPython.Runtime.Types;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
@@ -94,7 +95,7 @@ namespace AnalysisTests {
             }
             var entry = state.AddModule("foo", "foo", null);
             Prepare(entry, sourceUnit, version);
-            entry.Analyze();
+            entry.Analyze(CancellationToken.None);
 
             return entry.Analysis;
         }

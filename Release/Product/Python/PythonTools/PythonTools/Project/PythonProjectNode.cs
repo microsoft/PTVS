@@ -378,27 +378,23 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void BeforeClose() {
-            if (this.ErrorFiles.Count > 0) {
-                var analyzer = GetAnalyzer();
-                analyzer.BeginUnload();
-                try {
+            if (_analyzer != null) {
+                _analyzer.Cancel();
+
+                if (this.ErrorFiles.Count > 0) {
                     foreach (var node in EnumNodesOfType<PythonFileNode>()) {
-                        analyzer.UnloadFile(node.GetAnalysis());
+                        _analyzer.UnloadFile(node.GetAnalysis(), suppressUpdate: true);
                     }
-                } finally {
-                    analyzer.EndUnload();
                 }
+
+                _analyzer.Dispose();
+                _analyzer = null;
             }
 
             DisposeInterpreter();
 
             if (_defaultInterpreter) {
                 PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;
-            }
-
-            if (_analyzer != null) {
-                _analyzer.Dispose();
-                _analyzer = null;
             }
         }
 

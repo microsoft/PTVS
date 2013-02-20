@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -26,7 +26,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         internal ExpressionEvaluator _eval;
         private SuiteStatement _curSuite;
 
-        public void Analyze(Deque<AnalysisUnit> queue) {
+        public void Analyze(Deque<AnalysisUnit> queue, CancellationToken cancel) {
+            if (cancel.IsCancellationRequested) {
+                return;
+            }
+            
             // Including a marker at the end of the queue allows us to see in
             // the log how frequently the queue empties.
             var endOfQueueMarker = new AnalysisUnit(null, null);
@@ -36,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 queue.Append(endOfQueueMarker);
             }
 
-            while (queue.Count > 0) {
+            while (queue.Count > 0 && !cancel.IsCancellationRequested) {
                 _unit = queue.PopLeft();
 
                 if (_unit == endOfQueueMarker) {
@@ -52,7 +56,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 _unit.IsInQueue = false;
                 SetCurrentUnit(_unit);
-                _unit.Analyze(this);
+                _unit.Analyze(this, cancel);
+            }
+
+            if (cancel.IsCancellationRequested) {
+                AnalysisLog.Cancelled(queue);
             }
         }
 

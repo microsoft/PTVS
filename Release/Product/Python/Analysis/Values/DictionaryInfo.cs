@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -251,7 +252,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _dictInfo = dictInfo;
             }
 
-            protected override void AnalyzeWorker(DDG ddg) {
+            protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
                 _dictInfo._keysAndValues.CopyKeysTo(_dictInfo._keyValueTuple.IndexTypes[0]);
                 _dictInfo._keysAndValues.CopyValuesTo(_dictInfo._keyValueTuple.IndexTypes[1]);
             }

@@ -95,7 +95,8 @@ namespace Microsoft.PythonTools.Analysis {
             try {
                 using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.Read))) {
                     try {
-                        new PyLibAnalyzer(dirs, indir, version).AnalyzeStdLib(writer, outdir);
+                        // TODO: Add trigger to cancel analysis
+                        new PyLibAnalyzer(dirs, indir, version).AnalyzeStdLib(writer, outdir, CancellationToken.None);
                     } catch (Exception e) {
                         Console.WriteLine("Error while saving analysis: {0}", e.ToString());
                         Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
@@ -130,7 +131,7 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /indir   [input dir]        - specify input directory for baseline analysis");
         }
 
-        private void AnalyzeStdLib(StreamWriter writer, string outdir) {
+        private void AnalyzeStdLib(StreamWriter writer, string outdir, CancellationToken cancel) {
             var fileGroups = new List<List<string>>();
             HashSet<string> pthDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             HashSet<string> allFileSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -190,13 +191,13 @@ namespace Microsoft.PythonTools.Analysis {
                         var ast = nodes[i];
                         if (ast != null) {
                             Log(writer, "ANALYSIS START: \"" + modules[i].FilePath + "\"");
-                            modules[i].Analyze(true);
+                            modules[i].Analyze(cancel, true);
                             Log(writer, "ANALYSIS END: \"" + modules[i].FilePath + "\"");
                         }
                     }
 
                     if (modules.Count > 0) {
-                        modules[0].AnalysisGroup.AnalyzeQueuedEntries();
+                        modules[0].AnalysisGroup.AnalyzeQueuedEntries(cancel);
                     }
 
                     Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0]) + "\"");

@@ -131,8 +131,12 @@ namespace Microsoft.PythonTools.Analysis {
             Add("Q", beforeLength, afterLength, afterLength - beforeLength);
         }
 
-        internal static void ExceedsTypeLimit(string variableDefType, int total, string contents) {
+        public static void ExceedsTypeLimit(string variableDefType, int total, string contents) {
             Add("X", variableDefType, total, contents);
+        }
+
+        public static void Cancelled(Deque<AnalysisUnit> queue) {
+            Add("Cancel", queue.Count);
         }
     }
 }

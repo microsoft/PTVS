@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -65,12 +66,12 @@ import System
             Stopwatch sw = new Stopwatch();
             var entry = projectState.AddModule("decimal", "decimal", null);
             Prepare(entry, sourceUnit);
-            entry.Analyze();
+            entry.Analyze(CancellationToken.None);
 
             sw.Start();
             for (int i = 0; i < 5; i++) {
                 Prepare(entry, sourceUnit);
-                entry.Analyze();
+                entry.Analyze(CancellationToken.None);
             }
 
             sw.Stop();
@@ -196,7 +197,7 @@ import System
             Console.WriteLine("{0} ms", sw.ElapsedMilliseconds);
         }
 
-        internal PythonAnalyzer AnalyzeDir(string dir, PythonLanguageVersion version = PythonLanguageVersion.V27, IEnumerable<string> excludeDirectories = null) {
+        internal PythonAnalyzer AnalyzeDir(string dir, PythonLanguageVersion version = PythonLanguageVersion.V27, IEnumerable<string> excludeDirectories = null, CancellationToken? cancel = null) {
             List<string> files = new List<string>();
             try {
                 ISet<string> excluded = null;
@@ -257,12 +258,12 @@ import System
                 Trace.TraceInformation("Analyzing {1}: {0} ms", sw.ElapsedMilliseconds - start3, sourceUnits[i].Path);
                 var ast = nodes[i];
                 if (ast != null) {
-                    modules[i].Analyze(true);
+                    modules[i].Analyze(cancel ?? CancellationToken.None, true);
                 }
             }
             if (modules.Count > 0) {
                 Trace.TraceInformation("Analyzing queue");
-                modules[0].AnalysisGroup.AnalyzeQueuedEntries();
+                modules[0].AnalysisGroup.AnalyzeQueuedEntries(cancel ?? CancellationToken.None);
             }
 
             long start4 = sw.ElapsedMilliseconds;

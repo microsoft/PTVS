@@ -245,7 +245,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         #region IAnalyzable Members
 
-        public void Analyze() {
+        public void Analyze(CancellationToken cancel) {
         }
 
         #endregion

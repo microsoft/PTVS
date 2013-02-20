@@ -83,8 +83,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static char[] _invalidPathChars = Path.GetInvalidPathChars();
 
-        private bool _unloading;
-
         internal VsProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
         }
@@ -964,9 +962,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
             if (parser.IsInGrouping()) {
-                options = options.Clone();
-                options.IncludeStatementKeywords = false;
-            }
+            options = options.Clone();
+            options.IncludeStatementKeywords = false;
+                }
 
             return new NormalCompletionAnalysis(
                 snapshot.TextBuffer.GetAnalyzer(),
@@ -1015,8 +1013,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
             #region IAnalyzable Members
 
-            public void Analyze() {
-                _analyzer.AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed,  _analyzer._analysisQueue.CancellationToken);
+            public void Analyze(CancellationToken cancel) {
+                if (cancel.IsCancellationRequested) {
+                    return;
+                }
+
+                _analyzer.AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
             }
 
             #endregion
@@ -1099,8 +1101,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
             #region IAnalyzable Members
 
-            public void Analyze() {
-                _analyzer.AnalyzeZipArchiveWorker(_zipFileName, _onFileAnalyzed, _analyzer._analysisQueue.CancellationToken);
+            public void Analyze(CancellationToken cancel) {
+                if (cancel.IsCancellationRequested) {
+                    return;
+                }
+
+                _analyzer.AnalyzeZipArchiveWorker(_zipFileName, _onFileAnalyzed, cancel);
             }
 
             #endregion
@@ -1220,23 +1226,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal void BeginUnload() {
-            _unloading = true;
+        internal void Cancel() {
+            _analysisQueue.Stop();
         }
 
-        internal void EndUnload() {
-            if (_unloading && _taskProvider.IsValueCreated) {
-                _unloading = false;
-                _taskProvider.Value.UpdateTasks();
-            }
-        }
-
-        internal void UnloadFile(IProjectEntry entry) {
+        internal void UnloadFile(IProjectEntry entry, bool suppressUpdate = false) {
             if (entry != null && entry.FilePath != null) {
                 if (_taskProvider.IsValueCreated) {
                     // _taskProvider may not be created if we've never opened a Python file and
                     // none of the project files have errors
-                    _taskProvider.Value.Clear(entry.FilePath, !_unloading);
+                    _taskProvider.Value.Clear(entry.FilePath, !suppressUpdate);
                 }
                 if (_project != null) {
                     _project.ErrorFiles.Remove(entry.FilePath);
@@ -1613,6 +1612,9 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IDisposable Members
 
         public void Dispose() {
+            if (_taskProvider.IsValueCreated) {
+                _taskProvider.Value.UpdateTasks();
+            }
             _analysisQueue.Stop();
             lock (this) {
                 ((IDisposable)_pyAnalyzer).Dispose();

@@ -20,6 +20,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -613,7 +614,7 @@ namespace Microsoft.PythonTools.Analysis {
                             var analysis = xamlProject.Analysis;
 
                             if (analysis == null) {
-                                xamlProject.Analyze();
+                                xamlProject.Analyze(CancellationToken.None);
                                 analysis = xamlProject.Analysis;
                             }
 
@@ -993,8 +994,11 @@ namespace Microsoft.PythonTools.Analysis {
 
         #region IGroupableAnalysisProject Members
 
-        void IGroupableAnalysisProject.AnalyzeQueuedEntries() {
-            new DDG().Analyze(Queue);
+        void IGroupableAnalysisProject.AnalyzeQueuedEntries(CancellationToken cancel) {
+            if (cancel.IsCancellationRequested) {
+                return;
+            }
+            new DDG().Analyze(Queue, cancel);
         }
 
         #endregion

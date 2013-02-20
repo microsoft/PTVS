@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -78,7 +79,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return base.GetDeclaringModule() ?? _declUnit.DeclaringModule;
         }
 
-        protected override void AnalyzeWorker(DDG ddg) {
+        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             // Resolve default parameters and decorators in the outer scope but
             // continue to associate changes with this unit.
             ddg.Scope = _declUnit.Scope;

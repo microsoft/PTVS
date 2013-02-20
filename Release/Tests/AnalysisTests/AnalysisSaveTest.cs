@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -196,7 +197,7 @@ abc = foo.x
             }
 
             for (int i = 0; i < modules.Length; i++) {
-                entries[i].Analyze();
+                entries[i].Analyze(CancellationToken.None);
             }
 
             string tmpFolder = Path.Combine(Path.GetTempPath(), "6666d700-a6d8-4e11-8b73-3ba99a61e27b" /*Guid.NewGuid().ToString()*/);
@@ -236,7 +237,7 @@ abc = foo.x
             public IPythonProjectEntry NewModule(string name, string code) {
                 var entry = Analyzer.AddModule(name, name + ".py");
                 Prepare(entry, new StringReader(code), PythonLanguageVersion.V27);
-                entry.Analyze();
+                entry.Analyze(CancellationToken.None);
                 return entry;
             }
 

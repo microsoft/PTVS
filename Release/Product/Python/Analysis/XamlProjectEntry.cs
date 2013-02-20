@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace Microsoft.PythonTools.Analysis {
     sealed class XamlProjectEntry : IXamlProjectEntry {
@@ -44,7 +45,11 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _analysis != null; }
         }
 
-        public void Analyze() {
+        public void Analyze(CancellationToken cancel) {
+            if (cancel.IsCancellationRequested) {
+                return;
+            }
+
             lock (this) {
                 if (_analysis == null) {
                     _analysis = new XamlAnalysis(_filename);
@@ -56,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 // update any .py files which depend upon us.
                 foreach (var dep in _dependencies) {
-                    dep.Analyze();
+                    dep.Analyze(cancel);
                 }
             }
         }

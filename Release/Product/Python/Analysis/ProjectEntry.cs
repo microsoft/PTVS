@@ -130,15 +130,18 @@ namespace Microsoft.PythonTools.Analysis {
             return gotNewTree ? _tree : null;
         }
 
-        public void Analyze() {
-            Analyze(false);
+        public void Analyze(CancellationToken cancel) {
+            Analyze(cancel, false);
         }
 
-        public void Analyze(bool enqueueOnly) {
+        public void Analyze(CancellationToken cancel, bool enqueueOnly) {
+            if (cancel.IsCancellationRequested) {
+                return;
+            }
             lock (this) {
                 _analysisVersion++;
 
-                Parse(enqueueOnly);
+                Parse(enqueueOnly, cancel);
             }
 
             var newAnalysis = OnNewAnalysis;
@@ -159,7 +162,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private void Parse(bool enqueOnly) {
+        private void Parse(bool enqueOnly, CancellationToken cancel) {
             if (_tree == null) {
                 return;
             }
@@ -230,7 +233,7 @@ namespace Microsoft.PythonTools.Analysis {
             _unit.Enqueue();
 
             if (!enqueOnly) {
-                ((IGroupableAnalysisProject)_projectState).AnalyzeQueuedEntries();
+                ((IGroupableAnalysisProject)_projectState).AnalyzeQueuedEntries(cancel);
             }
 
             // publish the analysis now that it's complete
@@ -304,7 +307,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// Represents a unit of work which can be analyzed.
     /// </summary>
     public interface IAnalyzable {
-        void Analyze();
+        void Analyze(CancellationToken cancel);
     }
 
     /// <summary>
@@ -374,8 +377,8 @@ namespace Microsoft.PythonTools.Analysis {
     public interface IGroupableAnalysisProjectEntry {
         /// <summary>
         /// Analyzes this project entry optionally just adding it to the queue shared by the project.
-        /// </summary>        
-        void Analyze(bool enqueueOnly);
+        /// </summary>
+        void Analyze(CancellationToken cancel, bool enqueueOnly);
 
         IGroupableAnalysisProject AnalysisGroup {
             get;
@@ -387,7 +390,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// analyzing them together.
     /// </summary>
     public interface IGroupableAnalysisProject {
-        void AnalyzeQueuedEntries();
+        void AnalyzeQueuedEntries(CancellationToken cancel);
     }
 
     public interface IPythonProjectEntry : IGroupableAnalysisProjectEntry, IProjectEntry {
@@ -408,7 +411,7 @@ namespace Microsoft.PythonTools.Analysis {
         event EventHandler<EventArgs> OnNewAnalysis;
 
         /// <summary>
-        /// Informs thhe project entry that a new tree will soon be available and will be provided by
+        /// Informs the project entry that a new tree will soon be available and will be provided by
         /// a call to UpdateTree.  Calling this method will cause WaitForCurrentTree to block until
         /// UpdateTree has been called.
         /// 

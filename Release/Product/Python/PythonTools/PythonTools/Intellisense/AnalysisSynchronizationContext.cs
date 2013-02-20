@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             #region IAnalyzable Members
 
-            public virtual void Analyze() {
+            public virtual void Analyze(CancellationToken cancel) {
                 _delegate(_state);
             }
 
@@ -67,8 +67,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 : base(callback, state) {
             }
 
-            public override void Analyze() {
-                base.Analyze();
+            public override void Analyze(CancellationToken cancel) {
+                base.Analyze(cancel);
                 AnalysisSynchronizationContext._waitEvent.Set();
             }
         }

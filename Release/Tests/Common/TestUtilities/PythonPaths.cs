@@ -55,7 +55,11 @@ namespace TestUtilities {
                 }
             }
 
-            return new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\ipy.exe", PythonLanguageVersion.V27, IronPythonGuid);
+            var ver = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\ipy.exe", PythonLanguageVersion.V27, IronPythonGuid);
+            if (File.Exists(ver.Path)) {
+                return ver;
+            }
+            return null;
         }
 
         private static PythonVersion GetCPythonVersion(PythonLanguageVersion version) {

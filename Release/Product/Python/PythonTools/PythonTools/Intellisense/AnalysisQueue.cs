@@ -31,14 +31,15 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly List<IAnalyzable>[] _queue;
         private readonly HashSet<IGroupableAnalysisProject> _enqueuedGroups = new HashSet<IGroupableAnalysisProject>();
         private TaskScheduler _scheduler;
+        private CancellationTokenSource _cancel;
         private bool _isAnalyzing;
         private int _analysisPending;
-        private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
         private const int PriorityCount = (int)AnalysisPriority.High + 1;
 
         internal AnalysisQueue(VsProjectAnalyzer analyzer) {
             _workEvent = new AutoResetEvent(false);
+            _cancel = new CancellationTokenSource();
             _analyzer = analyzer;
 
             _queue = new List<IAnalyzable>[PriorityCount];
@@ -62,11 +63,6 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 return _scheduler;
             }
-        }
-
-        // TODO: remove once the token is explicitly propagated from here to ProjectAnalyzer.
-        internal CancellationToken CancellationToken {
-            get { return _cts.Token; }
         }
 
         public void Enqueue(IAnalyzable item, AnalysisPriority priority) {
@@ -108,8 +104,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void Stop() {
-            if (_workThread != null) {
-                _cts.Cancel();
+            _cancel.Cancel();
+            if (_workThread.IsAlive) {
                 _workEvent.Set();
                 _workThread.Join();
             }
@@ -157,7 +153,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 ((AutoResetEvent)threadStarted).Set();
             }
 
-            while (!_cts.IsCancellationRequested) {
+            while (!_cancel.IsCancellationRequested) {
                 IAnalyzable workItem;
 
                 AnalysisPriority pri;
@@ -173,9 +169,9 @@ namespace Microsoft.PythonTools.Intellisense {
                             Enqueue(new GroupAnalysis(groupable.AnalysisGroup, this), pri);
                         }
 
-                        groupable.Analyze(true);
+                        groupable.Analyze(_cancel.Token, true);
                     } else {
-                        workItem.Analyze();
+                        workItem.Analyze(_cancel.Token);
                     }
                     _isAnalyzing = false;
                 } else {
@@ -199,9 +195,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             #region IAnalyzable Members
 
-            public void Analyze() {
+            public void Analyze(CancellationToken cancel) {
                 _queue._enqueuedGroups.Remove(_project);
-                _project.AnalyzeQueuedEntries();
+                _project.AnalyzeQueuedEntries(cancel);
             }
 
             #endregion

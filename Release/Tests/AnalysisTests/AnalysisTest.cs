@@ -503,9 +503,9 @@ class D(object):
             var mod2 = state.AddModule("mod2", "mod2", null);
             Prepare(mod2, GetSourceUnit(text2, "mod2"));
 
-            mod1.Analyze(true);
-            mod2.Analyze(true);
-            mod1.AnalysisGroup.AnalyzeQueuedEntries();
+            mod1.Analyze(CancellationToken.None, true);
+            mod2.Analyze(CancellationToken.None, true);
+            mod1.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
             VerifyReferences(
                 UniqifyVariables(mod2.Analysis.GetVariablesByIndex("D", text2.IndexOf("class D"))),
@@ -541,8 +541,8 @@ class D(object):
             var mod2 = state.AddModule("mod2", "mod2", null);
             Prepare(mod2, GetSourceUnit(text2, "mod2"));
 
-            mod1.Analyze();
-            mod2.Analyze();
+            mod1.Analyze(CancellationToken.None);
+            mod2.Analyze(CancellationToken.None);
 
 
             VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
@@ -551,7 +551,7 @@ class D(object):
             // mutate 1st file
             text1 = text1.Substring(0, text1.IndexOf("    def")) + Environment.NewLine + text1.Substring(text1.IndexOf("    def"));
             Prepare(mod1, GetSourceUnit(text1, "mod1"));
-            mod1.Analyze();
+            mod1.Analyze(CancellationToken.None);
 
             VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
                 new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(5, 20, VariableType.Reference));
@@ -559,7 +559,7 @@ class D(object):
             // mutate 2nd file
             text2 = Environment.NewLine + text2;
             Prepare(mod2, GetSourceUnit(text2, "mod1"));
-            mod2.Analyze();
+            mod2.Analyze(CancellationToken.None);
 
             VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
                 new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(6, 20, VariableType.Reference));
@@ -2325,8 +2325,8 @@ abc()
             var barMod = state.AddModule("bar", "bar", null);
             Prepare(barMod, GetSourceUnit(barText, "mod2"));
 
-            fooMod.Analyze();
-            barMod.Analyze();
+            fooMod.Analyze(CancellationToken.None);
+            barMod.Analyze(CancellationToken.None);
 
             VerifyReferences(UniqifyVariables(barMod.Analysis.GetVariablesByIndex("abc", barText.IndexOf("abc"))),
                 new VariableLocation(1, 7, VariableType.Definition),     // definition 
@@ -2480,17 +2480,17 @@ mod1.l.append(a)
                 var mod2 = state.AddModule("mod2", "mod2", null);
                 Prepare(mod2, GetSourceUnit(code2, "mod2"));
 
-                mod1.Analyze(true);
-                mod2.Analyze(true);
+                mod1.Analyze(CancellationToken.None, true);
+                mod2.Analyze(CancellationToken.None, true);
 
-                mod1.AnalysisGroup.AnalyzeQueuedEntries();
+                mod1.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
                 if (i == 0) {
                     // re-preparing shouldn't be necessary
                     Prepare(mod2, GetSourceUnit(code2, "mod2"));
                 }
 
-                mod2.Analyze(true);
-                mod2.AnalysisGroup.AnalyzeQueuedEntries();
+                mod2.Analyze(CancellationToken.None, true);
+                mod2.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
                 var listValue = mod1.Analysis.GetValuesByIndex("l", 0).ToArray();
                 Assert.AreEqual(1, listValue.Length);
@@ -3673,8 +3673,8 @@ min(a, D())
                 Prepare(bar, barSrc);
                 Prepare(baz, bazSrc);
 
-                bar.Analyze();
-                baz.Analyze();
+                bar.Analyze(CancellationToken.None);
+                baz.Analyze(CancellationToken.None);
             });
         }
 
@@ -3749,12 +3749,12 @@ min(a, D())
                 Trace.TraceInformation("Analyzing {1}: {0} ms", sw.ElapsedMilliseconds - start3, sourceUnits[i].Path);
                 var ast = nodes[i];
                 if (ast != null) {
-                    modules[i].Analyze(true);
+                    modules[i].Analyze(CancellationToken.None, true);
                 }
             }
             if (modules.Count > 0) {
                 Trace.TraceInformation("Analyzing queue");
-                modules[0].AnalysisGroup.AnalyzeQueuedEntries();
+                modules[0].AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
             }
 
             int index = -1;
@@ -3771,9 +3771,37 @@ min(a, D())
                     modules[index].UpdateTree(ast, null);
                 }
 
-                modules[index].Analyze(true);
-                modules[index].AnalysisGroup.AnalyzeQueuedEntries();
+                modules[index].Analyze(CancellationToken.None, true);
+                modules[index].AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
             });
+        }
+
+        [TestMethod, Priority(1)]
+        public void CancelAnalysis() {
+            var ver = PythonPaths.Versions.LastOrDefault(v => v != null);
+            if (ver == null) {
+                Assert.Inconclusive("Test requires Python installation");
+            }
+
+            var cancelSource = new CancellationTokenSource();
+            var analysisStopped = new ManualResetEvent(false);
+            var thread = new Thread(_ => {
+                try {
+                    new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, cancel: cancelSource.Token);
+                    analysisStopped.Set();
+                } catch (ThreadAbortException) {
+                    Console.WriteLine("Thread was aborted");
+                }
+            });
+
+            thread.Start();
+            // Allow 10 seconds for parsing to complete and analysis to start
+            cancelSource.CancelAfter(10000);
+
+            if (!analysisStopped.WaitOne(15000)) {
+                thread.Abort();
+                Assert.Fail("Analysis did not abort within 5 seconds");
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -3800,9 +3828,9 @@ class C(object):
             Prepare(bar, barSrc);
             Prepare(baz, bazSrc);
 
-            foo.Analyze();
-            bar.Analyze();
-            baz.Analyze();
+            foo.Analyze(CancellationToken.None);
+            bar.Analyze(CancellationToken.None);
+            baz.Analyze(CancellationToken.None);
 
             Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
             Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Location.FilePath.EndsWith("bar.py"));
@@ -3812,15 +3840,15 @@ class C(object):
 
             // delete the class..
             Prepare(bar, barSrc);
-            bar.Analyze();
-            bar.AnalysisGroup.AnalyzeQueuedEntries();
+            bar.Analyze(CancellationToken.None);
+            bar.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
             Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).ToArray().Length, 0);
 
             fooSrc = GetSourceUnit("from baz import C", @"foo.py");
             Prepare(foo, fooSrc);
 
-            foo.Analyze();
+            foo.Analyze(CancellationToken.None);
 
             Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
             Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Location.FilePath.EndsWith("baz.py"));
@@ -3849,9 +3877,9 @@ abc = 42
             Prepare(x, src2);
             Prepare(y, src3);
 
-            package.Analyze();
-            x.Analyze();
-            y.Analyze();
+            package.Analyze(CancellationToken.None);
+            x.Analyze(CancellationToken.None);
+            y.Analyze(CancellationToken.None);
 
             Assert.AreEqual(x.Analysis.GetValuesByIndex("y", 1).First().Description, "Python module foo.y");
             AssertUtil.ContainsExactly(x.Analysis.GetTypesByIndex("abc", 1), IntType);
@@ -3888,9 +3916,9 @@ abc = 42
             Prepare(x, src2);
             Prepare(y, src3);
 
-            package.Analyze();
-            x.Analyze();
-            y.Analyze();
+            package.Analyze(CancellationToken.None);
+            x.Analyze(CancellationToken.None);
+            y.Analyze(CancellationToken.None);
 
             AssertUtil.ContainsExactly(x.Analysis.GetTypesByIndex("abc", 1), IntType);
             AssertUtil.ContainsExactly(package.Analysis.GetTypesByIndex("abc", 1), IntType);
@@ -3925,8 +3953,8 @@ abc = 42
             Prepare(package, src1);
             Prepare(y, src2);
 
-            package.Analyze();
-            y.Analyze();
+            package.Analyze(CancellationToken.None);
+            y.Analyze(CancellationToken.None);
 
             AssertUtil.ContainsExactly(package.Analysis.GetTypesByIndex("y", 1), FunctionType, ModuleType);
         }
@@ -4880,15 +4908,15 @@ mod1.f(42)
 
             // analyze both files
             Prepare(entry1, GetSourceUnit(text1, "mod1"), PythonLanguageVersion.V26);
-            entry1.Analyze();
+            entry1.Analyze(CancellationToken.None);
             Prepare(entry2, GetSourceUnit(text2, "mod2"), PythonLanguageVersion.V26);
-            entry2.Analyze();
+            entry2.Analyze(CancellationToken.None);
 
             AssertUtil.ContainsExactly(entry1.Analysis.GetTypesByIndex("abc", text1.IndexOf("pass")), IntType);
 
             // re-analyze project1, we should still know about the type info provided by module2
             Prepare(entry1, GetSourceUnit(text1, "mod1"), PythonLanguageVersion.V26);
-            entry1.Analyze();
+            entry1.Analyze(CancellationToken.None);
 
             AssertUtil.ContainsExactly(entry1.Analysis.GetTypesByIndex("abc", text1.IndexOf("pass")), IntType);
         }
@@ -5169,7 +5197,7 @@ class Derived3(object):
                     Prepare(result[p[i]], GetSourceUnit(code[p[i]]));
                 }
                 for (int i = 0; i < code.Length; i++) {
-                    result[p[i]].Analyze();
+                    result[p[i]].Analyze(CancellationToken.None);
                 }
                 yield return result;
             }
