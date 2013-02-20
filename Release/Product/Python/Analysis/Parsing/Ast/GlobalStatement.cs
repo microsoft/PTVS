@@ -33,16 +33,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var namesWhiteSpace = this.GetNamesWhiteSpace(ast);            
 
             if (namesWhiteSpace != null) {
-                ListExpression.AppendItems(res, ast, "global", "", this, Names.Count, (i, sb) => { 
+                ListExpression.AppendItems(res, ast, format, "global", "", this, Names.Count, (i, sb) => { 
                     sb.Append(namesWhiteSpace[i]);
-                    Names[i].AppendCodeString(res, ast);
+                    Names[i].AppendCodeString(res, ast, format);
                 });
             } else {
-                ListExpression.AppendItems(res, ast, "global", "", this, Names.Count, (i, sb) => Names[i].AppendCodeString(sb, ast));
+                ListExpression.AppendItems(res, ast, format, "global", "", this, Names.Count, (i, sb) => Names[i].AppendCodeString(sb, ast, format));
             }
         }
     }

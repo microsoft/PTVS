@@ -59,19 +59,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            _trueExpr.AppendCodeString(res, ast);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            _trueExpr.AppendCodeString(res, ast, format);
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("if");
-            _testExpr.AppendCodeString(res, ast);
+            _testExpr.AppendCodeString(res, ast, format);
             res.Append(this.GetSecondWhiteSpace(ast));
             if (!this.IsIncompleteNode(ast)) {
                 res.Append("else");
-                _falseExpr.AppendCodeString(res, ast);
+                _falseExpr.AppendCodeString(res, ast, format);
             }
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             return _trueExpr.GetLeadingWhiteSpace(ast);
         }
     }

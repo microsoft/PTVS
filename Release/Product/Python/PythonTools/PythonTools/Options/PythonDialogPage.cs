@@ -43,9 +43,13 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal void SaveString(string name, string value) {
+            SaveString(name, value, _category);
+        }
+
+        internal static void SaveString(string name, string value, string cat) {
             using (var pythonKey = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, true).CreateSubKey(PythonCoreConstants.BaseRegistryKey)) {
                 using (var optionsKey = pythonKey.CreateSubKey(_optionsKey)) {
-                    using (var categoryKey = optionsKey.CreateSubKey(_category)) {
+                    using (var categoryKey = optionsKey.CreateSubKey(cat)) {
                         categoryKey.SetValue(name, value, Win32.RegistryValueKind.String);
                     }
                 }
@@ -83,9 +87,13 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal string LoadString(string name) {
+            return LoadString(name, _category);
+        }
+
+        internal static string LoadString(string name, string cat) {
             using (var pythonKey = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, true).CreateSubKey(PythonCoreConstants.BaseRegistryKey)) {
                 using (var optionsKey = pythonKey.CreateSubKey(_optionsKey)) {
-                    using (var categoryKey = optionsKey.CreateSubKey(_category)) {
+                    using (var categoryKey = optionsKey.CreateSubKey(cat)) {
                         return categoryKey.GetValue(name) as string;
                     }
                 }

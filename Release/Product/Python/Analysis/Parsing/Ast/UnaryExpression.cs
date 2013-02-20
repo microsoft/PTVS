@@ -40,10 +40,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append(_op.ToCodeString());
-            _expression.AppendCodeString(res, ast);
+            _expression.AppendCodeString(res, ast, format);
         }
 
         public override void Walk(PythonWalker walker) {

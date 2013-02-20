@@ -1,0 +1,288 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BreakMultipleStatementsPerLineLong" xml:space="preserve">
+    <value>If checked, statements separated by semicolons are moved onto individual lines. If unchecked, lines with multiple statements are not modified.</value>
+  </data>
+  <data name="BreakMultipleStatementsPerLineShort" xml:space="preserve">
+    <value>Place multiple statements on new lines</value>
+  </data>
+  <data name="RemoveTrailingSemicolonsLong" xml:space="preserve">
+    <value>If checked, semicolons at the end of lines will be removed. If unchecked, unnecessary semicolons are not modified.</value>
+  </data>
+  <data name="RemoveTrailingSemicolonsShort" xml:space="preserve">
+    <value>Remove unnecessary semicolons</value>
+  </data>
+  <data name="ReplaceMultipleImportsWithMultipleStatementsLong" xml:space="preserve">
+    <value>If checked, import statements with multiple modules are separated onto individual lines. If unchecked, import statements with multiple modules are not modified.</value>
+  </data>
+  <data name="ReplaceMultipleImportsWithMultipleStatementsShort" xml:space="preserve">
+    <value>Place imported modules on new line</value>
+  </data>
+  <data name="SpaceAroundAnnotationArrowLong" xml:space="preserve">
+    <value>If checked, a space is added before and after '->' operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceAroundAnnotationArrowShort" xml:space="preserve">
+    <value>Insert space before and after return annotation operators</value>
+  </data>
+  <data name="SpaceAroundDefaultValueEqualsLong" xml:space="preserve">
+    <value>If checked, a space is added before and after '=' operators in function definitions. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceAroundDefaultValueEqualsShort" xml:space="preserve">
+    <value>Insert spaces around '=' in default parameter values</value>
+  </data>
+  <data name="SpaceBeforeCallParenLong" xml:space="preserve">
+    <value>If checked, a space is added between the name and opening parenthesis of the argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceBeforeCallParenShort" xml:space="preserve">
+    <value>Insert space between a function call's name and argument list</value>
+  </data>
+  <data name="SpaceBeforeClassDeclarationParenLong" xml:space="preserve">
+    <value>If checked, a space is added between the name and opening parenthesis of the bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceBeforeClassDeclarationParenShort" xml:space="preserve">
+    <value>Insert space between a class declaration's name and bases list</value>
+  </data>
+  <data name="SpaceBeforeFunctionDeclarationParenLong" xml:space="preserve">
+    <value>If checked, a space is added between the name and opening parenthesis of the parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceBeforeFunctionDeclarationParenShort" xml:space="preserve">
+    <value>Insert space between a function declaration's name and parameter list</value>
+  </data>
+  <data name="SpaceBeforeIndexBracketLong" xml:space="preserve">
+    <value>If checked, a space is added before an open square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceBeforeIndexBracketShort" xml:space="preserve">
+    <value>Insert space before open square bracket</value>
+  </data>
+  <data name="SpacesAroundAssignmentOperatorLong" xml:space="preserve">
+    <value>If checked, a space is added before and after '=' operators in assignments. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesAroundAssignmentOperatorShort" xml:space="preserve">
+    <value>Insert spaces around assignments</value>
+  </data>
+  <data name="SpacesAroundBinaryOperatorsLong" xml:space="preserve">
+    <value>If checked, a space is added before and after binary operators. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesAroundBinaryOperatorsShort" xml:space="preserve">
+    <value>Insert spaces around binary operators</value>
+  </data>
+  <data name="SpacesWithinEmptyListExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added between the open square bracket and the close square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinEmptyListExpressionShort" xml:space="preserve">
+    <value>Insert space within empty square brackets</value>
+  </data>
+  <data name="SpacesWithinListExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open square bracket and before the close square bracket of the list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinListExpressionShort" xml:space="preserve">
+    <value>Insert spaces within square brackets of lists</value>
+  </data>
+  <data name="SpacesWithinParenthesisedTupleExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of the tuple. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinParenthesisedTupleExpressionShort" xml:space="preserve">
+    <value>Insert space within tuple parentheses</value>
+  </data>
+  <data name="SpacesWithinParenthesisExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an expression. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpacesWithinParenthesisExpressionShort" xml:space="preserve">
+    <value>Insert space within parentheses of expression</value>
+  </data>
+  <data name="SpaceWithinCallParensLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinCallParensShort" xml:space="preserve">
+    <value>Insert space within argument list parentheses</value>
+  </data>
+  <data name="SpaceWithinClassDeclarationParensLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of a bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinClassDeclarationParensShort" xml:space="preserve">
+    <value>Insert space within bases list parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyBaseClassListLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty bases list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyBaseClassListShort" xml:space="preserve">
+    <value>Insert space within empty bases list parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyCallArgumentListLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty argument list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyCallArgumentListShort" xml:space="preserve">
+    <value>Insert space within empty argument list parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyParameterListLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyParameterListShort" xml:space="preserve">
+    <value>Insert space within empty parameter list parentheses</value>
+  </data>
+  <data name="SpaceWithinEmptyTupleExpressionLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of an empty tuple. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinEmptyTupleExpressionShort" xml:space="preserve">
+    <value>Insert space within empty tuple parentheses</value>
+  </data>
+  <data name="SpaceWithinFunctionDeclarationParensLong" xml:space="preserve">
+    <value>If checked, a space is added after the open parenthesis and before the close parenthesis of a parameter list. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinFunctionDeclarationParensShort" xml:space="preserve">
+    <value>Insert space within parameter list parentheses</value>
+  </data>
+  <data name="SpaceWithinIndexBracketsLong" xml:space="preserve">
+    <value>If checked, a space is added after the open square bracket and before the close square bracket. If unchecked, spaces are removed. Otherwise, spaces are not modified.</value>
+  </data>
+  <data name="SpaceWithinIndexBracketsShort" xml:space="preserve">
+    <value>Insert space within square brackets</value>
+  </data>
+  <data name="WrapCommentsLong" xml:space="preserve">
+    <value>If checked, comments are wrapped to the specified width. If unchecked, comments are not modified.</value>
+  </data>
+  <data name="WrapCommentsShort" xml:space="preserve">
+    <value>Wrap comments that are too wide</value>
+  </data>
+  <data name="WrappingWidthLong" xml:space="preserve">
+    <value>The number of the last column that should include comment text. Words after this column are moved to the following line.</value>
+  </data>
+  <data name="WrappingWidthShort" xml:space="preserve">
+    <value>Maximum comment width</value>
+  </data>
+  <data name="LinesBetweenLevelDeclarationsLong" xml:space="preserve">
+    <value>The number of empty lines to include between class or function declarations at the top level of a module.</value>
+  </data>
+  <data name="LinesBetweenLevelDeclarationsShort" xml:space="preserve">
+    <value>Lines between top-level declarations</value>
+  </data>
+  <data name="LinesBetweenMethodsInClassLong" xml:space="preserve">
+    <value>The number of empty lines to insert between method or class declarations within a class.</value>
+  </data>
+  <data name="LinesBetweenMethodsInClassShort" xml:space="preserve">
+    <value>Lines between class member declarations</value>
+  </data>
+  <data name="RemoveExtraLinesBetweenMethodsLong" xml:space="preserve">
+    <value>If checked, removes blank lines between methods and inserts the number specified below. Otherwise, lines between methods are not modified.</value>
+  </data>
+  <data name="RemoveExtraLinesBetweenMethodsShort" xml:space="preserve">
+    <value>Remove blank lines between methods</value>
+  </data>
+</root>

@@ -42,14 +42,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("for");
-            _lhs.AppendCodeString(res, ast);
+            _lhs.AppendCodeString(res, ast, format);
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append("in");
-                _list.AppendCodeString(res, ast);
+                _list.AppendCodeString(res, ast, format);
             }
         }
     }

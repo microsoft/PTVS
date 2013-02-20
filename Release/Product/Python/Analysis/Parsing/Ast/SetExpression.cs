@@ -43,8 +43,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            ListExpression.AppendItems(res, ast, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", this, Items);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            ListExpression.AppendItems(res, ast, format, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", this, Items);
         }
     }
 }

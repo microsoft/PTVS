@@ -29,21 +29,28 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            var kwOnlyText = this.GetExtraVerbatimText(ast);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string leadingWhiteSpace) {
+            string kwOnlyText = this.GetExtraVerbatimText(ast);
             if (kwOnlyText != null) {
-                res.Append(kwOnlyText);
+                if (leadingWhiteSpace != null) {
+                    res.Append(leadingWhiteSpace);
+                    res.Append(kwOnlyText.TrimStart());
+                    leadingWhiteSpace = null;
+                } else {
+                    res.Append(kwOnlyText);
+                }
             }
-            bool isAltForm  = this.IsAltForm(ast);
-            if(isAltForm) {
-                res.Append(this.GetProceedingWhiteSpace(ast));
+            bool isAltForm = this.IsAltForm(ast);
+            if (isAltForm) {
+                res.Append(leadingWhiteSpace ?? this.GetProceedingWhiteSpace(ast));
                 res.Append('(');
+                leadingWhiteSpace = null;
             }
-            _error.AppendCodeString(res, ast);
+            _error.AppendCodeString(res, ast, format, leadingWhiteSpace);
             if (this.DefaultValue != null) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append('=');
-                this.DefaultValue.AppendCodeString(res, ast);
+                this.DefaultValue.AppendCodeString(res, ast, format);
             }
             if (isAltForm && !this.IsMissingCloseGrouping(ast)) {
                 res.Append(this.GetSecondWhiteSpace(ast));

@@ -30,9 +30,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             if (_preceeding != null) {
-                _preceeding.AppendCodeString(res, ast);
+                _preceeding.AppendCodeString(res, ast, format);
             }
             res.Append(_verbatimImage ?? "<error>");
         }

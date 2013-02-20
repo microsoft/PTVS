@@ -49,11 +49,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("yield");
             if (!this.IsAltForm(ast)) {
-                _expression.AppendCodeString(res, ast);
+                _expression.AppendCodeString(res, ast, format);
                 var itemWhiteSpace = this.GetListWhiteSpace(ast);
                 if (itemWhiteSpace != null) {
                     res.Append(",");

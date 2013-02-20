@@ -57,6 +57,11 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingExampleAttribute.cs" />
+    <Compile Include="Parsing\CodeFormattingOptions.cs" />
     <Compile Include="IdDispenser.cs" />
     <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
@@ -70,6 +75,11 @@
     <Compile Include="NamespaceSet.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="ReadOnlyWrapper.cs" />
     <Compile Include="SourceLocationResolver.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
@@ -313,6 +323,12 @@
     <Compile Include="VariableType.cs" />
     <Compile Include="XamlAnalysis.cs" />
     <Compile Include="XamlProjectEntry.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -40,6 +40,7 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public abstract Statement GetBody(PythonAst root);
+        public abstract Node GetNode(PythonAst root);
 
         public virtual IEnumerable<Statement> GetStatementsAfter(PythonAst root) {
             return new Statement[0];
@@ -66,6 +67,9 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
+        public abstract string IndentationLevel {
+            get;
+        }
 
         public abstract void Walk(PythonWalker walker);
     }
@@ -80,6 +84,10 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public override bool IsExpression {
             get { return _node is Expression; }
+        }
+
+        public override Node GetNode(PythonAst root) {
+            return _node;
         }
 
         public override Statement GetBody(PythonAst root) {
@@ -103,11 +111,20 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public override int Start {
-            get { return _node.StartIndex; }
+            get { return _node.GetStartIncludingWhiteSpace(Parents[0] as PythonAst); }
         }
 
         public override int End {
             get { return _node.EndIndex; }
+        }
+
+        public override string IndentationLevel {
+            get {
+                if (_node is Expression) {
+                    return _node.GetLeadingWhiteSpace(Parents[0] as PythonAst);
+                }
+                return _node.GetIndentationLevel(Parents[0] as PythonAst);
+            }
         }
 
         public override void Walk(PythonWalker walker) {
@@ -134,7 +151,17 @@ namespace Microsoft.PythonTools.Refactoring {
             get { return false; }
         }
 
+        public override Node GetNode(PythonAst root) {
+            if (_suite.Statements.Count == 0) {
+                return _suite;
+            }
+            return _suite.CloneSubset(Parents[0] as PythonAst, _start, _end);
+        }
+
         public override Statement GetBody(PythonAst root) {
+            if (_suite.Statements.Count == 0) {
+                return _suite;
+            }
             var ast = _suite.CloneSubset(Parents[0] as PythonAst, _start, _end);
             if (!_suite.IsFunctionOrClassSuite(root)) {
                 ast = new SuiteStatement(new[] { ast });
@@ -158,11 +185,30 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public override int Start {
-            get { return _suite.Statements[_start].StartIndex; }
+            get {
+                if (_suite.Statements.Count == 0) {
+                    return _suite.GetStartIncludingWhiteSpace(Parents[0] as PythonAst);
+                }
+                return _suite.Statements[_start].GetStartIncludingWhiteSpace(Parents[0] as PythonAst); 
+            }
         }
 
         public override int End {
-            get { return _suite.Statements[_end].EndIndex; }
+            get {
+                if (_suite.Statements.Count == 0) {
+                    return _suite.EndIndex;
+                }
+                return _suite.Statements[_end].EndIndex; 
+            }
+        }
+
+        public override string IndentationLevel {
+            get {
+                if (_suite.Statements.Count == 0) {
+                    return "";
+                }
+                return _suite.Statements[_start].GetIndentationLevel(Parents[0] as PythonAst);
+            }
         }
 
         public override void Walk(PythonWalker walker) {

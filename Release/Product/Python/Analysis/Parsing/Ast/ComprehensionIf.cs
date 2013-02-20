@@ -36,10 +36,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("if");
-            _test.AppendCodeString(res,ast);
+            _test.AppendCodeString(res, ast, format);
         }
 
         public int HeaderIndex { get { return _headerIndex; } set { _headerIndex = value; } }

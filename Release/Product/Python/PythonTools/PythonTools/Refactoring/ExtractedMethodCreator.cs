@@ -149,8 +149,8 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var res = new FunctionDefinition(new NameExpression(info.Name), parameters.ToArray(), body, decorators);
 
-            StringBuilder newCall = new StringBuilder();
-
+            StringBuilder newCall = new StringBuilder();            
+            newCall.Append(_target.IndentationLevel);
             var method = res.ToCodeString(_ast);
             
             // fix up indentation...
@@ -172,6 +172,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     }
 
                     StringBuilder newLines = new StringBuilder();
+                    newLines.Append(indentationLevel);
                     newLines.Append(lines[0]);
                     if (decorators != null) {
                         newLines.Append("\r\n");
@@ -201,7 +202,6 @@ namespace Microsoft.PythonTools.Refactoring {
                         newLines.Append("\r\n");
                     }
                     newLines.Append("\r\n");
-                    newLines.Append(indentationLevel);
                     method = newLines.ToString();
                     break;
                 }

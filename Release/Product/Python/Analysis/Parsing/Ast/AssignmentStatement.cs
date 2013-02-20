@@ -45,26 +45,51 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var lhs = this.GetListWhiteSpace(ast);
             for (int i = 0; i < Left.Count; i++) {
                 if (lhs != null && i != 0) {
-                    res.Append(lhs[i - 1]);
+                    CodeFormattingOptions.Append(
+                        res,
+                        format.SpacesAroundAssignmentOperator,
+                        " ",
+                        "",
+                        lhs[i - 1]
+                    );
                     res.Append("=");
                 }
-                Left[i].AppendCodeString(res, ast);
+                Left[i].AppendCodeString(
+                    res, 
+                    ast, 
+                    format,
+                    i != 0 && format.SpacesAroundAssignmentOperator != null ?
+                        format.SpacesAroundAssignmentOperator.Value ? " " : "" :
+                        null
+                );
             }
             if (lhs != null) {
-                res.Append(lhs[lhs.Length - 1]);
+                CodeFormattingOptions.Append(
+                    res,
+                    format.SpacesAroundAssignmentOperator, 
+                    " ", 
+                    "",
+                    lhs[lhs.Length - 1]
+                );
             }
             res.Append("=");
 
-            Right.AppendCodeString(res, ast);
-
+            Right.AppendCodeString(
+                res, 
+                ast, 
+                format, 
+                format.SpacesAroundAssignmentOperator != null ? 
+                    format.SpacesAroundAssignmentOperator.Value ? " " : "" : 
+                    null
+            );
         }
 
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             if (_left.Length > 0 && _left[0] != null) {
                 return _left[0].GetLeadingWhiteSpace(ast);
             }

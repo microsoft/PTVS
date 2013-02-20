@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Text;
 
@@ -77,7 +78,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             Expression left = _left;
             Expression right = _right;
             string op1, op2;
@@ -100,25 +101,43 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 op1 = Operator.ToCodeString();
                 op2 = null;
             }
-            BinaryToCodeString(res, ast, this, _left, _right, op1, op2);
+            BinaryToCodeString(res, ast, format, this, _left, _right, op1, op2);
         }
 
-        internal static void BinaryToCodeString(StringBuilder res, PythonAst ast, Expression node, Expression left, Expression right, string op1, string op2 = null) {
-            left.AppendCodeString(res, ast);
-            res.Append(node.GetProceedingWhiteSpace(ast));
+        internal static void BinaryToCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, Expression node, Expression left, Expression right, string op1, string op2 = null) {
+            left.AppendCodeString(res, ast, format);
+
+            CodeFormattingOptions.Append(
+                res,
+                format.SpacesAroundBinaryOperators,
+                " ",
+                Char.IsLetter(op1[0]) ? " " : "",   // spaces required for is not, not in, etc...
+                node.GetProceedingWhiteSpace(ast)
+            );
 
             if (op2 == null) {
                 res.Append(op1);
-                right.AppendCodeString(res, ast);
+                right.AppendCodeString(
+                    res,
+                    ast,
+                    format,
+                    format.SpacesAroundBinaryOperators != null ?
+                        format.SpacesAroundBinaryOperators.Value ?
+                            " " :
+                            (Char.IsLetter(op1[0]) ? " " : "") :
+                        null
+                );
             } else {
+                Debug.Assert(Char.IsLetter(op1[0]));
+
                 res.Append(op1);
                 res.Append(node.GetSecondWhiteSpace(ast));
                 res.Append(op2);
-                right.AppendCodeString(res, ast);
+                right.AppendCodeString(res, ast, format, format.SpacesAroundBinaryOperators != null ? " " : null); // force single space if setting is on or off
             }
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             return _left.GetLeadingWhiteSpace(ast);
         }
     }

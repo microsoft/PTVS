@@ -55,9 +55,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return ast.IndexToLocation(_headerIndex);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            _test.AppendCodeString(res, ast);
-            _body.AppendCodeString(res, ast);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            _test.AppendCodeString(res, ast, format);
+            _body.AppendCodeString(res, ast, format);
         }
     }
 }

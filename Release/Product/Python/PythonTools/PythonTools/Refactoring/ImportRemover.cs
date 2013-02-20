@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     } else {
                         var newCode = updatedStatement.ToCodeString(_ast);
 
-                        int proceedingLength = (removed.Node.GetProceedingWhitespace(_ast) ?? "").Length;
+                        int proceedingLength = (removed.Node.GetLeadingWhiteSpace(_ast) ?? "").Length;
                         int start = span.Start.Index - proceedingLength;
                         int length = span.Length + removed.Node.GetTrailingWhitespace(_ast).Length + proceedingLength;
 

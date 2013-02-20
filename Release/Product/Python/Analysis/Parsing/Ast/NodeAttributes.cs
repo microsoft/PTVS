@@ -226,6 +226,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(trailingNewLine);
             }
         }
+
+        public static void AppendTrailingNewLine(this Statement node, StringBuilder res, PythonAst ast, CodeFormattingOptions options) {
+            if (options == null) {
+                AppendTrailingNewLine(node, res, ast);
+            } else {
+                var trailingNewLine = node.GetTrailingNewLine(ast);
+                if (trailingNewLine != null) {
+                    options.ReflowComment(res, trailingNewLine);
+                }
+            }
+        }
     }
 
 }

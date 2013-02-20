@@ -86,6 +86,27 @@ def f():
 
     g(g, h)
 ");
+
+            SuccessTest("@ .. pass",
+@"@property
+def f(): pass",
+@"def g():
+    @property
+    def f(): pass
+
+g()");
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestLeadingComment() {
+            SuccessTest("x = 41",
+@"# foo
+x = 41",
+@"def g():
+    # foo
+    x = 41
+
+g()");
         }
 
         [TestMethod, Priority(0)]

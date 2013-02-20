@@ -47,11 +47,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
             for (int i = 0; i < _tests.Length; i++) {
                 if (itemWhiteSpace != null) {
-                    res.Append(itemWhiteSpace[i]);
+                    format.ReflowComment(res, itemWhiteSpace[i]);
                 }
 
                 if (i == 0) {
@@ -59,18 +59,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 } else {
                     res.Append("elif");
                 }
-                _tests[i].AppendCodeString(res, ast);
+                _tests[i].AppendCodeString(res, ast, format);
             }
 
             if (_else != null) {
-                res.Append(this.GetProceedingWhiteSpace(ast));
+                format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
                 res.Append("else");
-                _else.AppendCodeString(res, ast);
+                _else.AppendCodeString(res, ast, format);
             }
         }
 
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
             if (itemWhiteSpace != null && itemWhiteSpace.Length > 0) {
                 return itemWhiteSpace[0];

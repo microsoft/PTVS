@@ -64,6 +64,7 @@
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
+    <Compile Include="MutateStdLibTest.cs" />
     <Compile Include="TestRunner.cs" />
     <Compile Include="NamespaceSetTest.cs" />
     <Compile Include="ParserRoundTripTest.cs" />

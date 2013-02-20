@@ -54,11 +54,29 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             ast.SetAttribute(this, NodeAttributes.IsAltFormValue, NodeAttributes.IsAltFormValue);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             if (this.IsAltForm(ast)) {
-                ListExpression.AppendItems(res, ast, "", "", this, Items);
+                return Items[0].GetLeadingWhiteSpace(ast);
+            }
+            return base.GetLeadingWhiteSpace(ast);
+        }
+
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            if (this.IsAltForm(ast)) {
+                ListExpression.AppendItems(res, ast, format, "", "", this, Items);
             } else {
-                ListExpression.AppendItems(res, ast, "(", this.IsMissingCloseGrouping(ast) ? "" : ")", this, Items);
+                if (Items.Count == 0 && format.SpaceWithinEmptyTupleExpression != null) {
+                    format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+                    res.Append('(');
+                    res.Append(format.SpaceWithinEmptyTupleExpression.Value ? " " : "");
+                    res.Append(')');
+                } else {
+                    string delimWs =
+                     format.SpacesWithinParenthesisedTupleExpression != null ?
+                     format.SpacesWithinParenthesisedTupleExpression.Value ? " " : "" : null;
+
+                    ListExpression.AppendItems(res, ast, format, "(", this.IsMissingCloseGrouping(ast) ? "" : ")", this, Items, delimWs);
+                } 
             }
         }
     }

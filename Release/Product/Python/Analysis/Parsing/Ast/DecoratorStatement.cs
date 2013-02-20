@@ -40,24 +40,32 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
             if (Decorators != null) {
                 for (int i = 0, curWhiteSpace = 0; i < Decorators.Count; i++) {
                     if (decorateWhiteSpace != null) {
-                        res.Append(decorateWhiteSpace[curWhiteSpace++]);
+                        format.ReflowComment(res, decorateWhiteSpace[curWhiteSpace++]);
                     }
                     res.Append('@');
                     if (Decorators[i] != null) {
-                        Decorators[i].AppendCodeString(res, ast);
+                        Decorators[i].AppendCodeString(res, ast, format);
                         if (decorateWhiteSpace != null) {
-                            res.Append(decorateWhiteSpace[curWhiteSpace++]);
+                            format.ReflowComment(res, decorateWhiteSpace[curWhiteSpace++]);
                         } else {
                             res.Append(Environment.NewLine);
                         }
                     }
                 }
             }
+        }
+
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
+            var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
+            if (decorateWhiteSpace != null && decorateWhiteSpace.Length > 0) {
+                return decorateWhiteSpace[0];
+            }
+            return "";
         }
     }
 }

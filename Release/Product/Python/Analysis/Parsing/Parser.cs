@@ -1631,6 +1631,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (PeekToken() == Tokens.KeywordDefToken) {
                 FunctionDefinition fnc = ParseFuncDef();
                 fnc.Decorators = decorators;
+                fnc.SetLoc(decorators.StartIndex, fnc.EndIndex);
                 res = fnc;
             } else if (PeekToken() == Tokens.KeywordClassToken) {
                 if (_langVersion < PythonLanguageVersion.V26) {
@@ -1639,6 +1640,7 @@ namespace Microsoft.PythonTools.Parsing {
                 var cls = ParseClassDef();
                 if (cls is ClassDefinition) {
                     ((ClassDefinition)cls).Decorators = decorators;
+                    cls.SetLoc(decorators.StartIndex, cls.EndIndex);
                     res = cls;
                 } else {
                     // Class was an error...
@@ -2954,18 +2956,25 @@ namespace Microsoft.PythonTools.Parsing {
                     object cv = t.Value;
                     string cvs = cv as string;
                     AsciiString bytes;
-                    string verbatimImage = null;
-                    if (cvs != null) {  // TODO: FinishStringPlus needs to handle comments and other white space
-                        cv = FinishStringPlus(cvs, t, out verbatimImage);
-                    } else if ((bytes = cv as AsciiString) != null) {
-                        cv = FinishBytesPlus(bytes, t, out verbatimImage);
-                    } else if (_verbatim) {
-                        verbatimImage = _tokenWhiteSpace + t.VerbatimImage;
-                    }
-                    
-                    ret = new ConstantExpression(cv);
-                    if (verbatimImage != null) {
-                        AddExtraVerbatimText(ret, verbatimImage);
+                    if (PeekToken() is ConstantValueToken && (cv is string || cv is AsciiString)) {
+                        // string plus
+                        string[] verbatimImages = null, verbatimWhiteSpace = null;
+                        if (cvs != null) {
+                            cv = FinishStringPlus(cvs, t, out verbatimImages, out verbatimWhiteSpace);
+                        } else if ((bytes = cv as AsciiString) != null) {
+                            cv = FinishBytesPlus(bytes, t, out verbatimImages, out verbatimWhiteSpace);
+                        }
+                        ret = new ConstantExpression(cv);
+                        if (_verbatim) {
+                            AddListWhiteSpace(ret, verbatimWhiteSpace);
+                            AddVerbatimNames(ret, verbatimImages);
+                        }
+                    } else {
+                        ret = new ConstantExpression(cv);
+                        if (_verbatim) {
+                            AddExtraVerbatimText(ret, t.VerbatimImage);
+                            AddPreceedingWhiteSpace(ret, _tokenWhiteSpace);
+                        }
                     }
 
                     ret.SetLoc(start, GetEnd());
@@ -2987,13 +2996,27 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private string FinishStringPlus(string s, Token initialToken, out string verbatimImage) {
-            verbatimImage = _verbatim ? (_tokenWhiteSpace + initialToken.VerbatimImage) : null;
+        private string FinishStringPlus(string s, Token initialToken, out string[] verbatimImages, out string[] verbatimWhiteSpace) {
+            List<string> verbatimImagesList = null;
+            List<string> verbatimWhiteSpaceList = null;
+            if (_verbatim) {
+                verbatimWhiteSpaceList = new List<string>();
+                verbatimImagesList = new List<string>();
+                verbatimWhiteSpaceList.Add(_tokenWhiteSpace);
+                verbatimImagesList.Add(initialToken.VerbatimImage);
+            }
 
-            return FinishStringPlus(s, ref verbatimImage);
+            var res = FinishStringPlus(s, verbatimImagesList, verbatimWhiteSpaceList);
+            if (_verbatim) {
+                verbatimWhiteSpace = verbatimWhiteSpaceList.ToArray();
+                verbatimImages = verbatimImagesList.ToArray();
+            } else {
+                verbatimWhiteSpace = verbatimImages = null;
+            }
+            return res;
         }
 
-        private string FinishStringPlus(string s, ref string verbatimImage) {
+        private string FinishStringPlus(string s, List<string> verbatimImages, List<string> verbatimWhiteSpace) {
             Token t = PeekToken();
             while (true) {
                 if (t is ConstantValueToken) {
@@ -3003,7 +3026,8 @@ namespace Microsoft.PythonTools.Parsing {
                         s += cvs;
                         NextToken();
                         if (_verbatim) {
-                            verbatimImage += _tokenWhiteSpace + t.VerbatimImage;
+                            verbatimWhiteSpace.Add(_tokenWhiteSpace);
+                            verbatimImages.Add(t.VerbatimImage);
                         }
                         t = PeekToken();
                         continue;
@@ -3015,7 +3039,8 @@ namespace Microsoft.PythonTools.Parsing {
                         s += bytes.String;
                         NextToken();
                         if (_verbatim) {
-                            verbatimImage += _tokenWhiteSpace + t.VerbatimImage;
+                            verbatimWhiteSpace.Add(_tokenWhiteSpace);
+                            verbatimImages.Add(t.VerbatimImage);
                         }
                         t = PeekToken();
                         continue;
@@ -3036,9 +3061,28 @@ namespace Microsoft.PythonTools.Parsing {
             return res.ToString();
         }
 
-        private object FinishBytesPlus(AsciiString s, Token initialToken, out string verbatimImage) {
-            verbatimImage = _verbatim ? (_tokenWhiteSpace + initialToken.VerbatimImage) : null;
+        private object FinishBytesPlus(AsciiString s, Token initialToken, out string[] verbatimImages, out string[] verbatimWhiteSpace) {
+            List<string> verbatimImagesList = null;
+            List<string> verbatimWhiteSpaceList = null;
+            if (_verbatim) {
+                verbatimWhiteSpaceList = new List<string>();
+                verbatimImagesList = new List<string>();
+                verbatimWhiteSpaceList.Add(_tokenWhiteSpace);
+                verbatimImagesList.Add(initialToken.VerbatimImage);
+            }
 
+            var res = FinishBytesPlus(s, verbatimImagesList, verbatimWhiteSpaceList);
+            
+            if (_verbatim) {
+                verbatimWhiteSpace = verbatimWhiteSpaceList.ToArray();
+                verbatimImages = verbatimImagesList.ToArray();
+            } else {
+                verbatimWhiteSpace = verbatimImages = null;
+            }
+            return res;
+        }
+
+        private object FinishBytesPlus(AsciiString s, List<string> verbatimImages, List<string> verbatimWhiteSpace) {
             Token t = PeekToken();
             while (true) {
                 if (t is ConstantValueToken) {
@@ -3050,7 +3094,8 @@ namespace Microsoft.PythonTools.Parsing {
                         s = new AsciiString(res.ToArray(), s.String + cvs.String);
                         NextToken();
                         if (_verbatim) {
-                            verbatimImage += _tokenWhiteSpace + t.VerbatimImage;
+                            verbatimWhiteSpace.Add(_tokenWhiteSpace);
+                            verbatimImages.Add(t.VerbatimImage);
                         }
                         t = PeekToken();
                         continue;
@@ -3062,10 +3107,11 @@ namespace Microsoft.PythonTools.Parsing {
                         string final = s.String + str;
                         NextToken();
                         if (_verbatim) {
-                            verbatimImage += _tokenWhiteSpace + t.VerbatimImage;
+                            verbatimWhiteSpace.Add(_tokenWhiteSpace);
+                            verbatimImages.Add(t.VerbatimImage);
                         }
 
-                        return FinishStringPlus(final, ref verbatimImage);
+                        return FinishStringPlus(final, verbatimImages, verbatimWhiteSpace);
                     } else {
                         ReportSyntaxError("invalid syntax");
                     }

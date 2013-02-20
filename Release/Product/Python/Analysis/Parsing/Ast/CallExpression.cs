@@ -82,35 +82,60 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            _target.AppendCodeString(res, ast);
-            res.Append(this.GetProceedingWhiteSpaceDefaultNull(ast));
-            var listWhiteSpace = this.GetListWhiteSpace(ast);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            _target.AppendCodeString(res, ast, format);
+            CodeFormattingOptions.Append(
+                res,
+                format.SpaceBeforeCallParen,
+                " ",
+                "",
+                this.GetProceedingWhiteSpaceDefaultNull(ast)
+            ); 
+
             res.Append('(');
-            for (int i = 0; i < _args.Length; i++) {
-                if (i > 0) {
-                    if (listWhiteSpace != null) {
-                        res.Append(listWhiteSpace[i - 1]);
+
+            if (_args.Length == 0) {
+                if (format.SpaceWithinEmptyCallArgumentList != null && format.SpaceWithinEmptyCallArgumentList.Value) {
+                    res.Append(' ');
+                }
+            } else {
+                var listWhiteSpace = this.GetListWhiteSpace(ast);
+                for (int i = 0; i < _args.Length; i++) {
+                    if (i > 0) {
+                        if (listWhiteSpace != null) {
+                            res.Append(listWhiteSpace[i - 1]);
+                        }
+                        res.Append(',');
+                    } else if (format.SpaceWithinCallParens != null) {
+                        _args[i].AppendCodeString(res, ast, format, format.SpaceWithinCallParens.Value ? " " : "");
+                        continue;
                     }
-                    res.Append(',');
+
+                    _args[i].AppendCodeString(res, ast, format);
                 }
 
-                _args[i].AppendCodeString(res, ast);
+                if (listWhiteSpace != null && listWhiteSpace.Length == _args.Length) {
+                    // trailing comma
+                    res.Append(listWhiteSpace[listWhiteSpace.Length - 1]);
+                    res.Append(",");
+                }
             }
             
-            if (listWhiteSpace != null && listWhiteSpace.Length == _args.Length && _args.Length != 0) {
-                // trailing comma
-                res.Append(listWhiteSpace[listWhiteSpace.Length - 1]);
-                res.Append(",");
-            }
-
             if (!this.IsMissingCloseGrouping(ast)) {
-                res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
+                if (Args.Count != 0 || format.SpaceWithinEmptyCallArgumentList == null) {
+                    CodeFormattingOptions.Append(
+                        res,
+                        format.SpaceWithinCallParens,
+                        " ",
+                        "",
+                        this.GetSecondWhiteSpaceDefaultNull(ast)
+                    );
+                }
                 res.Append(')');
             }
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             return _target.GetLeadingWhiteSpace(ast);
         }
     }

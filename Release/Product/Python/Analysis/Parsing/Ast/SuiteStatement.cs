@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return !this.IsAltForm(ast) && this.GetListWhiteSpace(ast) == null;
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             // SuiteStatement comes in 3 forms:
             //  1. The body of a if/else/while/for/etc... where there's an opening colon
             //  2. A set of semi-colon separated items
@@ -103,23 +103,48 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (this.IsAltForm(ast)) {
                 // suite statement in top-level PythonAst, we have no colons or other delimiters
                 foreach (var statement in _statements) {
-                    statement.AppendCodeString(res, ast);
+                    statement.AppendCodeString(res, ast, format);
                 }
             } else if (itemWhiteSpace != null) {
-                // form 2, semi-colon seperated list.
-                for (int i = 0; i < _statements.Length; i++) {
-                    if (i > 0) {
-                        if (i - 1 < itemWhiteSpace.Length) {
-                            res.Append(itemWhiteSpace[i - 1]);
+                if (format.BreakMultipleStatementsPerLine) {
+                    string leadingWhiteSpace = "";
+                    for (int i = 0; i < _statements.Length; i++) {
+                        if (i == 0) {
+                            StringBuilder tmp = new StringBuilder();
+                            _statements[i].AppendCodeString(tmp, ast, format);  
+                            var stmt = tmp.ToString();
+                            res.Append(stmt);
+
+                            // figure out the whitespace needed for the next statement based upon the current statement
+                            for (int curChar = 0; curChar < stmt.Length; curChar++) {
+                                if (!char.IsWhiteSpace(stmt[curChar])) {
+                                    leadingWhiteSpace = format.GetNextLineProceedingText(stmt.Substring(0, curChar));
+                                    break;
+                                }
+                            }
+                        } else {
+                            _statements[i].AppendCodeString(res, ast, format, leadingWhiteSpace);
                         }
-                        res.Append(';');
                     }
-                    _statements[i].AppendCodeString(res, ast);
+                } else {
+                    // form 2, semi-colon seperated list.
+                    for (int i = 0; i < _statements.Length; i++) {
+                        if (i > 0) {
+                            if (i - 1 < itemWhiteSpace.Length) {
+                                res.Append(itemWhiteSpace[i - 1]);
+                            }
+                            res.Append(';');
+                        }
+                        _statements[i].AppendCodeString(res, ast, format);
+                    }
                 }
+
                 if (itemWhiteSpace != null && itemWhiteSpace.Length == _statements.Length && _statements.Length != 0) {
                     // trailing semi-colon
-                    res.Append(itemWhiteSpace[itemWhiteSpace.Length - 1]);
-                    res.Append(";");
+                    if (!format.RemoveTrailingSemicolons) {
+                        res.Append(itemWhiteSpace[itemWhiteSpace.Length - 1]);
+                        res.Append(";");
+                    }
                 }
             } else {
                 // 3rd form, suite statement as the body of a class/function, we include the colon.
@@ -136,12 +161,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
 
                 foreach (var statement in _statements) {
-                    statement.AppendCodeString(res, ast);
+                    statement.AppendCodeString(res, ast, format);
                 }
             }
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
+            if (_statements.Length == 0) {
+                return "";
+            }
             return _statements[0].GetLeadingWhiteSpace(ast);
         }
     }

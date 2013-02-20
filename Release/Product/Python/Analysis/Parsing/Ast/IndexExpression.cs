@@ -58,19 +58,37 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            Target.AppendCodeString(res, ast);
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            Target.AppendCodeString(res, ast, format);
+            CodeFormattingOptions.Append(
+                res,
+                format.SpaceBeforeIndexBracket,
+                " ",
+                "",
+                this.GetProceedingWhiteSpace(ast)
+            );
+
             res.Append('[');
-            _index.AppendCodeString(res, ast);
+            _index.AppendCodeString(
+                res, 
+                ast, 
+                format, 
+                format.SpaceWithinIndexBrackets != null ? format.SpaceWithinIndexBrackets.Value ? " " : "" : null
+            );
 
             if (!this.IsMissingCloseGrouping(ast)) {
-                res.Append(this.GetSecondWhiteSpace(ast));
+                CodeFormattingOptions.Append(
+                    res,
+                    format.SpaceWithinIndexBrackets,
+                    " ",
+                    "",
+                    this.GetSecondWhiteSpace(ast)
+                );
                 res.Append(']');
             }
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             return Target.GetLeadingWhiteSpace(ast);
         }
     }

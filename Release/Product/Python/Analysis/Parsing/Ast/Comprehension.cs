@@ -26,16 +26,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public abstract override void Walk(PythonWalker walker);
 
-        internal void AppendCodeString(StringBuilder res, PythonAst ast, string start, string end, Expression item) {
+        internal void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string start, string end, Expression item) {
             if (!String.IsNullOrEmpty(start)) {
-                res.Append(this.GetProceedingWhiteSpace(ast));
+                format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
                 res.Append(start);
             }
 
-            item.AppendCodeString(res, ast);
+            item.AppendCodeString(res, ast, format);
 
             for (int i = 0; i < Iterators.Count; i++) {
-                Iterators[i].AppendCodeString(res, ast);
+                Iterators[i].AppendCodeString(res, ast, format);
             }
 
             if (!String.IsNullOrEmpty(end)) {
@@ -82,8 +82,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendCodeString(res, ast, "[", this.IsMissingCloseGrouping(ast) ? "" : "]", _item);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            AppendCodeString(res, ast, format, "[", this.IsMissingCloseGrouping(ast) ? "" : "]", _item);
         }
     }
 
@@ -124,8 +124,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendCodeString(res, ast, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", _item);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            AppendCodeString(res, ast, format, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", _item);
         }
     }
 
@@ -171,8 +171,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendCodeString(res, ast, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", _value);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            AppendCodeString(res, ast, format, "{", this.IsMissingCloseGrouping(ast) ? "" : "}", _value);
         }
     }
 }

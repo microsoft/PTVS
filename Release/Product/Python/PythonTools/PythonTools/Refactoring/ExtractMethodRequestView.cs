@@ -255,13 +255,7 @@ namespace Microsoft.PythonTools.Refactoring {
         private void UpdatePreview() {
             var info = GetRequest();
             if (info != null) {
-                var text = _previewer.GetExtractionResult(info).Method;
-                var curScope = TargetScope.Parent;
-                while (curScope != null) {
-                    text = _previewer.Indentation + text;
-                    curScope = curScope.Parent;
-                }
-                PreviewText = text;
+                PreviewText = _previewer.GetExtractionResult(info).Method;
             } else {
                 PreviewText = "The method name is not valid.";
             }

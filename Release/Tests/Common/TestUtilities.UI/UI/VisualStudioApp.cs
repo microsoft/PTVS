@@ -21,6 +21,7 @@ using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -41,6 +42,12 @@ namespace TestUtilities.UI {
 
         private VisualStudioApp(IntPtr windowHandle)
             : base(AutomationElement.FromHandle(windowHandle)) {
+        }
+
+        public IComponentModel ComponentModel {
+            get {
+                return (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            }
         }
 
         /// <summary>

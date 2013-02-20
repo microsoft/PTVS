@@ -49,26 +49,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetExtraVerbatimText(ast) ?? (this.GetProceedingWhiteSpaceDefaultNull(ast) + (_value == null ? "None" : _value.ToString())));
-        }
-
-        /// <summary>
-        /// Gets the leading white space for the node.  Usually this is just the leading mark space marked for this node,
-        /// but some nodes will have their leading white space captures in a child node and those nodes will extract
-        /// the white space appropriately.
-        /// </summary>
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
-            string verbatim = this.GetExtraVerbatimText(ast);
-            if (verbatim != null) {
-                for (int i = 0; i < verbatim.Length; i++) {
-                    if (!Char.IsWhiteSpace(verbatim[i])) {
-                        return verbatim.Substring(0, i);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            var verbatimPieces = this.GetVerbatimNames(ast);
+            var verbatimComments = this.GetListWhiteSpace(ast);
+            if (verbatimPieces != null) {
+                // string+ / bytes+, such as "abc" "abc", which can spawn multiple lines, and 
+                // have comments in between the peices.
+                for (int i = 0; i < verbatimPieces.Length; i++) {
+                    if (verbatimComments != null && i < verbatimComments.Length) {
+                        format.ReflowComment(res, verbatimComments[i]);
                     }
+                    res.Append(verbatimPieces[i]);
                 }
-                return verbatim;
+            } else {
+                format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
+                res.Append(this.GetExtraVerbatimText(ast) ?? (_value == null ? "None" : _value.ToString()));
             }
-            return base.GetLeadingWhiteSpace(ast);
         }
     }
 }

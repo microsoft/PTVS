@@ -125,32 +125,54 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return res;
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
-            res.Append("import");
-
-            var itemWhiteSpace = this.GetListWhiteSpace(ast);
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var asNameWhiteSpace = this.GetNamesWhiteSpace(ast);
-            for (int i = 0, asIndex = 0; i < _names.Length; i++) {
-                if (i > 0 && itemWhiteSpace != null) {
-                    res.Append(itemWhiteSpace[i - 1]);
-                    res.Append(',');
-                }
+            if (format.ReplaceMultipleImportsWithMultipleStatements) {
+                var proceeding = this.GetProceedingWhiteSpace(ast);
+                var additionalProceeding = format.GetNextLineProceedingText(proceeding);
+                
+                for (int i = 0, asIndex = 0; i < _names.Length; i++) {
+                    if (i == 0) {
+                        format.ReflowComment(res, proceeding) ;
+                    } else {
+                        res.Append(additionalProceeding);
+                    }
+                    res.Append("import");
 
-                _names[i].AppendCodeString(res, ast);
-                if (AsNames[i] != null) {
+                    _names[i].AppendCodeString(res, ast, format);
+                    AppendAs(res, ast, format, asNameWhiteSpace, i, ref asIndex);
+                }
+                return;
+            } else {
+                format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
+                res.Append("import");
+
+                var itemWhiteSpace = this.GetListWhiteSpace(ast);
+                for (int i = 0, asIndex = 0; i < _names.Length; i++) {
+                    if (i > 0 && itemWhiteSpace != null) {
+                        res.Append(itemWhiteSpace[i - 1]);
+                        res.Append(',');
+                    }
+
+                    _names[i].AppendCodeString(res, ast, format);
+                    AppendAs(res, ast, format, asNameWhiteSpace, i, ref asIndex);
+                }
+            }
+        }
+
+        private void AppendAs(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string[] asNameWhiteSpace, int i, ref int asIndex) {
+            if (AsNames[i] != null) {
+                if (asNameWhiteSpace != null) {
+                    res.Append(asNameWhiteSpace[asIndex++]);
+                }
+                res.Append("as");
+
+                if (_asNames[i].Name.Length != 0) {
                     if (asNameWhiteSpace != null) {
                         res.Append(asNameWhiteSpace[asIndex++]);
                     }
-                    res.Append("as");
 
-                    if (_asNames[i].Name.Length != 0) {
-                        if (asNameWhiteSpace != null) {
-                            res.Append(asNameWhiteSpace[asIndex++]);
-                        }
-
-                        _asNames[i].AppendCodeString(res, ast);
-                    }
+                    _asNames[i].AppendCodeString(res, ast, format);
                 }
             }
         }

@@ -50,11 +50,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            _expression.AppendCodeString(res, ast);
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            _expression.AppendCodeString(res, ast, format);
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             return _expression.GetLeadingWhiteSpace(ast);
         }
     }

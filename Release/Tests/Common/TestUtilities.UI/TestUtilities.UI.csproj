@@ -104,6 +104,7 @@
     <Compile Include="UI\Python\ComparePerfReports.cs" />
     <Compile Include="UI\Python\Django\NewAppDialog.cs" />
     <Compile Include="UI\Python\Django\PythonProjectDebugProperties.cs" />
+    <Compile Include="UI\Python\FormattingOptionsTreeView.cs" />
     <Compile Include="UI\Python\PythonLaunchWithErrorsDialog.cs" />
     <Compile Include="UI\Python\PythonPerfExplorer.cs" />
     <Compile Include="UI\Python\PythonPerfTarget.cs" />

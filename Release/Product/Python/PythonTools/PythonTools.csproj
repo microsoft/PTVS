@@ -190,6 +190,7 @@
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="System.Xaml" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
@@ -247,6 +248,39 @@
     <Compile Include="PythonTools\Intellisense\SmartTagController.cs" />
     <Compile Include="PythonTools\Intellisense\SmartTagControllerProvider.cs" />
     <Compile Include="PythonTools\Navigation\TextViewFilter.cs" />
+    <Compile Include="PythonTools\Options\PythonFormattingWrappingOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\OptionCategory.cs" />
+    <Compile Include="PythonTools\Options\OptionInfo.cs" />
+    <Compile Include="PythonTools\Options\OptionsTreeView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingGeneralOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingGeneralOptionsControl.Designer.cs">
+      <DependentUpon>PythonFormattingGeneralOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingGeneralOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingOptionsControl.Designer.cs">
+      <DependentUpon>PythonFormattingOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingNewLinesOptionsPage.cs" />
+    <Compile Include="PythonTools\Options\PythonFormattingOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingSpacingOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonFormattingStatementsOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="PythonTools\Options\PythonInteractiveCommonOptions.cs" />
     <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -297,9 +331,11 @@
     </Compile>
     <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
     <Compile Include="PythonTools\ProvideX64DebuggerFixForIntegratedShellAttribute.cs" />
+    <Compile Include="PythonTools\Refactoring\CodeFormatter.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
     <Compile Include="PythonTools\Refactoring\ImportRemover.cs" />
+    <Compile Include="PythonTools\Refactoring\LinePreservingCodeReplacer.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
     <Compile Include="PythonTools\Repl\BasePythonReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFrameCommand.cs" />
@@ -642,6 +678,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="ClassDiagram1.cd" />
     <None Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj">
       <OutputSubPath>FromExistingCode</OutputSubPath>
     </None>
@@ -966,6 +1003,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonDebugInteractiveOptionsControl.resx">
       <DependentUpon>PythonDebugInteractiveOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\PythonFormattingGeneralOptionsControl.resx">
+      <DependentUpon>PythonFormattingGeneralOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\PythonFormattingOptionsControl.resx">
+      <DependentUpon>PythonFormattingOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonInteractiveOptionsControl.resx">
       <DependentUpon>PythonInteractiveOptionsControl.cs</DependentUpon>

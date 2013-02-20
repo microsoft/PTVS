@@ -402,11 +402,5 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 AccessedInScope = accessedInScope;
             }
         }
-
-        internal virtual bool PrintExpressions {
-            get {
-                return false;
-            }
-        }
     }
 }

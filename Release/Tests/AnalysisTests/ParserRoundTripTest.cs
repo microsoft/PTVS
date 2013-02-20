@@ -14,9 +14,12 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities.Mocks;
 
 namespace AnalysisTests {
     /// <summary>
@@ -24,6 +27,426 @@ namespace AnalysisTests {
     /// </summary>
     [TestClass]
     public class ParserRoundTripTest {
+        [TestMethod, Priority(0)]
+        public void TestCodeFormattingOptions() {
+            /* Function Definitions */
+            // SpaceAroundDefaultValueEquals
+            TestOneString(PythonLanguageVersion.V27, "def f(a=2): pass", new CodeFormattingOptions() { SpaceAroundDefaultValueEquals = true }, "def f(a = 2): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a = 2): pass", new CodeFormattingOptions() { SpaceAroundDefaultValueEquals = false }, "def f(a=2): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a=2): pass", new CodeFormattingOptions() { SpaceAroundDefaultValueEquals = false }, "def f(a=2): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a = 2): pass", new CodeFormattingOptions() { SpaceAroundDefaultValueEquals = true }, "def f(a = 2): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a=2): pass", new CodeFormattingOptions() { SpaceAroundDefaultValueEquals = null }, "def f(a=2): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a = 2): pass", new CodeFormattingOptions() { SpaceAroundDefaultValueEquals = null }, "def f(a = 2): pass");
+
+            // SpaceBeforeMethodDeclarationParen
+            TestOneString(PythonLanguageVersion.V27, "def f(): pass", new CodeFormattingOptions() { SpaceBeforeFunctionDeclarationParen = true }, "def f (): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f (): pass", new CodeFormattingOptions() { SpaceBeforeFunctionDeclarationParen = true }, "def f (): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(): pass", new CodeFormattingOptions() { SpaceBeforeFunctionDeclarationParen = false }, "def f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f (): pass", new CodeFormattingOptions() { SpaceBeforeFunctionDeclarationParen = false }, "def f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(): pass", new CodeFormattingOptions() { SpaceBeforeFunctionDeclarationParen = null }, "def f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f (): pass", new CodeFormattingOptions() { SpaceBeforeFunctionDeclarationParen = null }, "def f (): pass");
+
+            // SpaceWithinEmptyArgumentList
+            TestOneString(PythonLanguageVersion.V27, "def f(): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = true }, "def f( ): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = true }, "def f(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = false }, "def f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = false }, "def f( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = null }, "def f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = null }, "def f(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = null }, "def f( ): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyParameterList = null }, "def f( a ): pass");
+
+            // SpaceWithinMethodDeclarationParens
+            TestOneString(PythonLanguageVersion.V27, "def f(a): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = true }, "def f( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a, b): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = true }, "def f( a, b ): pass");
+            TestOneString(PythonLanguageVersion.V33, "def f(*, a): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = true }, "def f( *, a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( a ): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = false }, "def f(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( a, b ): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = false }, "def f(a, b): pass");
+            TestOneString(PythonLanguageVersion.V33, "def f( *, a ): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = false }, "def f(*, a): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = null }, "def f(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f(a, b): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = null }, "def f(a, b): pass");
+            TestOneString(PythonLanguageVersion.V33, "def f(*, a): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = null }, "def f(*, a): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( a ): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = null }, "def f( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "def f( a, b ): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = null }, "def f( a, b ): pass");
+            TestOneString(PythonLanguageVersion.V33, "def f( *, a ): pass", new CodeFormattingOptions() { SpaceWithinFunctionDeclarationParens = null }, "def f( *, a ): pass");
+
+            // SpaceAroundAnnotationArrow
+            TestOneString(PythonLanguageVersion.V33, "def f() -> 42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = true }, "def f() -> 42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f()->42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = true }, "def f() -> 42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f()  ->  42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = true }, "def f() -> 42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f() -> 42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = false }, "def f()->42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f()->42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = false }, "def f()->42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f()  ->  42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = false }, "def f()->42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f() -> 42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = null }, "def f() -> 42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f()->42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = null }, "def f()->42: pass");
+            TestOneString(PythonLanguageVersion.V33, "def f()  ->  42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = null }, "def f()  ->  42: pass");
+
+            // SpaceBeforeClassDeclarationParen
+            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = true }, "class foo (): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = true }, "class foo (): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = false }, "class foo(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = false }, "class foo(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = null }, "class foo(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = null }, "class foo (): pass");
+
+            // SpaceWithinEmptyBaseClassListList
+            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = true }, "class foo( ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = true }, "class foo(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = false }, "class foo(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = false }, "class foo( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo( ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo( a ): pass");
+
+            // SpaceWithinClassDeclarationParens
+            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = true }, "class foo( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(a, b): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = true }, "class foo( a, b ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = false }, "class foo(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( a, b ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = false }, "class foo(a, b): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo(a, b): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo(a, b): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class foo( a, b ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo( a, b ): pass");
+
+            /* Calls */
+            // SpaceBeforeCallParen
+            TestOneString(PythonLanguageVersion.V27, "f(a)", new CodeFormattingOptions() { SpaceBeforeCallParen = true }, "f (a)");
+            TestOneString(PythonLanguageVersion.V27, "f (a)", new CodeFormattingOptions() { SpaceBeforeCallParen = false }, "f(a)");
+            TestOneString(PythonLanguageVersion.V27, "f(a)", new CodeFormattingOptions() { SpaceBeforeCallParen = false }, "f(a)");
+            TestOneString(PythonLanguageVersion.V27, "f (a)", new CodeFormattingOptions() { SpaceBeforeCallParen = true }, "f (a)");
+            TestOneString(PythonLanguageVersion.V27, "f  (a)", new CodeFormattingOptions() { SpaceBeforeCallParen = true }, "f (a)");
+            TestOneString(PythonLanguageVersion.V27, "f(a)", new CodeFormattingOptions() { SpaceBeforeCallParen = null }, "f(a)");
+            TestOneString(PythonLanguageVersion.V27, "f (a)", new CodeFormattingOptions() { SpaceBeforeCallParen = null }, "f (a)");
+
+            // SpaceWithinEmptyCallArgumentList
+            TestOneString(PythonLanguageVersion.V27, "foo()", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = true }, "foo( )");
+            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = true }, "foo(a)");
+            TestOneString(PythonLanguageVersion.V27, "foo( )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = false }, "foo()");
+            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = false }, "foo( a )");
+            TestOneString(PythonLanguageVersion.V27, "foo()", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo()");
+            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo(a)");
+            TestOneString(PythonLanguageVersion.V27, "foo( )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo( )");
+            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo( a )");
+
+            // SpaceWithinCallParens
+            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinCallParens = true }, "foo( a )");
+            TestOneString(PythonLanguageVersion.V27, "foo(a, b)", new CodeFormattingOptions() { SpaceWithinCallParens = true }, "foo( a, b )");
+            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinCallParens = false }, "foo(a)");
+            TestOneString(PythonLanguageVersion.V27, "foo( a, b )", new CodeFormattingOptions() { SpaceWithinCallParens = false }, "foo(a, b)");
+            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo(a)");
+            TestOneString(PythonLanguageVersion.V27, "foo(a, b)", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo(a, b)");
+            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo( a )");
+            TestOneString(PythonLanguageVersion.V27, "foo( a, b )", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo( a, b )");
+
+            /* Index Expressions */
+            // SpaceWithinIndexBrackets
+            TestOneString(PythonLanguageVersion.V27, "foo[a]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = true }, "foo[ a ]");
+            TestOneString(PythonLanguageVersion.V27, "foo[a, b]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = true }, "foo[ a, b ]");
+            TestOneString(PythonLanguageVersion.V27, "foo[ a ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = false }, "foo[a]");
+            TestOneString(PythonLanguageVersion.V27, "foo[ a, b ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = false }, "foo[a, b]");
+            TestOneString(PythonLanguageVersion.V27, "foo[a]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[a]");
+            TestOneString(PythonLanguageVersion.V27, "foo[a, b]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[a, b]");
+            TestOneString(PythonLanguageVersion.V27, "foo[ a ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[ a ]");
+            TestOneString(PythonLanguageVersion.V27, "foo[ a, b ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[ a, b ]");
+
+            // SpaceBeforeIndexBracket
+            TestOneString(PythonLanguageVersion.V27, "f[a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = true }, "f [a]");
+            TestOneString(PythonLanguageVersion.V27, "f [a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = false }, "f[a]");
+            TestOneString(PythonLanguageVersion.V27, "f[a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = false }, "f[a]");
+            TestOneString(PythonLanguageVersion.V27, "f [a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = true }, "f [a]");
+            TestOneString(PythonLanguageVersion.V27, "f  [a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = true }, "f [a]");
+            TestOneString(PythonLanguageVersion.V27, "f[a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = null }, "f[a]");
+            TestOneString(PythonLanguageVersion.V27, "f [a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = null }, "f [a]");
+
+            /* Other */
+            // SpacesWithinParenthesisExpression
+            TestOneString(PythonLanguageVersion.V27, "(a)", new CodeFormattingOptions() { SpacesWithinParenthesisExpression = true }, "( a )");
+            TestOneString(PythonLanguageVersion.V27, "( a )", new CodeFormattingOptions() { SpacesWithinParenthesisExpression = false }, "(a)");
+            TestOneString(PythonLanguageVersion.V27, "(a)", new CodeFormattingOptions() { SpacesWithinParenthesisExpression = null }, "(a)");
+            TestOneString(PythonLanguageVersion.V27, "( a )", new CodeFormattingOptions() { SpacesWithinParenthesisExpression = null }, "( a )");
+
+            // WithinEmptyTupleExpression
+            TestOneString(PythonLanguageVersion.V27, "()", new CodeFormattingOptions() { SpaceWithinEmptyTupleExpression = true }, "( )");
+            TestOneString(PythonLanguageVersion.V27, "( )", new CodeFormattingOptions() { SpaceWithinEmptyTupleExpression = true }, "( )");
+            TestOneString(PythonLanguageVersion.V27, "()", new CodeFormattingOptions() { SpaceWithinEmptyTupleExpression = false }, "()");
+            TestOneString(PythonLanguageVersion.V27, "( )", new CodeFormattingOptions() { SpaceWithinEmptyTupleExpression = false }, "()");
+            TestOneString(PythonLanguageVersion.V27, "()", new CodeFormattingOptions() { SpaceWithinEmptyTupleExpression = null }, "()");
+            TestOneString(PythonLanguageVersion.V27, "( )", new CodeFormattingOptions() { SpaceWithinEmptyTupleExpression = null }, "( )");
+
+            // WithinParenthesisedTupleExpression
+            TestOneString(PythonLanguageVersion.V27, "(a,)", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = true }, "( a, )");
+            TestOneString(PythonLanguageVersion.V27, "(a,b)", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = true }, "( a,b )");
+            TestOneString(PythonLanguageVersion.V27, "( a, )", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = true }, "( a, )");
+            TestOneString(PythonLanguageVersion.V27, "( a,b )", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = true }, "( a,b )");
+            TestOneString(PythonLanguageVersion.V27, "(a,)", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = false }, "(a,)");
+            TestOneString(PythonLanguageVersion.V27, "(a,b)", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = false }, "(a,b)");
+            TestOneString(PythonLanguageVersion.V27, "( a, )", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = false }, "(a,)");
+            TestOneString(PythonLanguageVersion.V27, "( a,b )", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = false }, "(a,b)");
+            TestOneString(PythonLanguageVersion.V27, "(a,)", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = null }, "(a,)");
+            TestOneString(PythonLanguageVersion.V27, "(a,b)", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = null }, "(a,b)");
+            TestOneString(PythonLanguageVersion.V27, "( a, )", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = null }, "( a, )");
+            TestOneString(PythonLanguageVersion.V27, "( a,b )", new CodeFormattingOptions() { SpacesWithinParenthesisedTupleExpression = null }, "( a,b )");
+
+            // WithinEmptyListExpression
+            TestOneString(PythonLanguageVersion.V27, "[]", new CodeFormattingOptions() { SpacesWithinEmptyListExpression = true }, "[ ]");
+            TestOneString(PythonLanguageVersion.V27, "[ ]", new CodeFormattingOptions() { SpacesWithinEmptyListExpression = true }, "[ ]");
+            TestOneString(PythonLanguageVersion.V27, "[]", new CodeFormattingOptions() { SpacesWithinEmptyListExpression = false }, "[]");
+            TestOneString(PythonLanguageVersion.V27, "[ ]", new CodeFormattingOptions() { SpacesWithinEmptyListExpression = false }, "[]");
+            TestOneString(PythonLanguageVersion.V27, "[]", new CodeFormattingOptions() { SpacesWithinEmptyListExpression = null }, "[]");
+            TestOneString(PythonLanguageVersion.V27, "[ ]", new CodeFormattingOptions() { SpacesWithinEmptyListExpression = null }, "[ ]");
+
+            // WithinListExpression
+            TestOneString(PythonLanguageVersion.V27, "[a,]", new CodeFormattingOptions() { SpacesWithinListExpression = true }, "[ a, ]");
+            TestOneString(PythonLanguageVersion.V27, "[a,b]", new CodeFormattingOptions() { SpacesWithinListExpression = true }, "[ a,b ]");
+            TestOneString(PythonLanguageVersion.V27, "[ a, ]", new CodeFormattingOptions() { SpacesWithinListExpression = true }, "[ a, ]");
+            TestOneString(PythonLanguageVersion.V27, "[ a,b ]", new CodeFormattingOptions() { SpacesWithinListExpression = true }, "[ a,b ]");
+            TestOneString(PythonLanguageVersion.V27, "[a,]", new CodeFormattingOptions() { SpacesWithinListExpression = false }, "[a,]");
+            TestOneString(PythonLanguageVersion.V27, "[a,b]", new CodeFormattingOptions() { SpacesWithinListExpression = false }, "[a,b]");
+            TestOneString(PythonLanguageVersion.V27, "[ a, ]", new CodeFormattingOptions() { SpacesWithinListExpression = false }, "[a,]");
+            TestOneString(PythonLanguageVersion.V27, "[ a,b ]", new CodeFormattingOptions() { SpacesWithinListExpression = false }, "[a,b]");
+            TestOneString(PythonLanguageVersion.V27, "[a,]", new CodeFormattingOptions() { SpacesWithinListExpression = null }, "[a,]");
+            TestOneString(PythonLanguageVersion.V27, "[a,b]", new CodeFormattingOptions() { SpacesWithinListExpression = null }, "[a,b]");
+            TestOneString(PythonLanguageVersion.V27, "[ a, ]", new CodeFormattingOptions() { SpacesWithinListExpression = null }, "[ a, ]");
+            TestOneString(PythonLanguageVersion.V27, "[ a,b ]", new CodeFormattingOptions() { SpacesWithinListExpression = null }, "[ a,b ]");
+
+            // SpacesAroundBinaryOperators
+            foreach (var op in new[] { "+", "-", "/", "//", "*", "%", "**", "<<", ">>", "&", "|", "^", "<", ">", "<=", ">=", "!=", "<>" }) {
+                TestOneString(PythonLanguageVersion.V27, "aa " + op + " bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = true }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa" + op + "bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = true }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa  " + op + "  bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = true }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa " + op + " bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = false }, "aa" + op + "bb");
+                TestOneString(PythonLanguageVersion.V27, "aa" + op + "bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = false }, "aa" + op + "bb");
+                TestOneString(PythonLanguageVersion.V27, "aa  " + op + "  bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = false }, "aa" + op + "bb");
+                TestOneString(PythonLanguageVersion.V27, "aa " + op + " bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = null }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa" + op + "bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = null }, "aa" + op + "bb");
+                TestOneString(PythonLanguageVersion.V27, "aa  " + op + "  bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = null }, "aa  " + op + "  bb");
+            }
+
+            foreach (var op in new[] { "is", "in", "is not", "not in" }) {
+                TestOneString(PythonLanguageVersion.V27, "aa " + op + " bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = true }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa  " + op + "  bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = true }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa " + op + " bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = false }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa  " + op + "  bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = false }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa " + op + " bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = null }, "aa " + op + " bb");
+                TestOneString(PythonLanguageVersion.V27, "aa  " + op + "  bb", new CodeFormattingOptions() { SpacesAroundBinaryOperators = null }, "aa  " + op + "  bb");
+            }
+
+            // SpacesAroundAssignmentOperator
+            TestOneString(PythonLanguageVersion.V27, "x = 2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = true }, "x = 2");
+            TestOneString(PythonLanguageVersion.V27, "x=2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = true }, "x = 2");
+            TestOneString(PythonLanguageVersion.V27, "x  =  2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = true }, "x = 2");
+            TestOneString(PythonLanguageVersion.V27, "x = y = 2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = true }, "x = y = 2");
+            TestOneString(PythonLanguageVersion.V27, "x=y=2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = true }, "x = y = 2");
+            TestOneString(PythonLanguageVersion.V27, "x  =  y  =  2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = true }, "x = y = 2");
+
+            TestOneString(PythonLanguageVersion.V27, "x = 2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = false }, "x=2");
+            TestOneString(PythonLanguageVersion.V27, "x=2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = false }, "x=2");
+            TestOneString(PythonLanguageVersion.V27, "x  =  2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = false }, "x=2");
+            TestOneString(PythonLanguageVersion.V27, "x = y = 2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = false }, "x=y=2");
+            TestOneString(PythonLanguageVersion.V27, "x=y=2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = false }, "x=y=2");
+            TestOneString(PythonLanguageVersion.V27, "x  =  y  =  2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = false }, "x=y=2");
+
+            TestOneString(PythonLanguageVersion.V27, "x = 2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = null }, "x = 2");
+            TestOneString(PythonLanguageVersion.V27, "x=2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = null }, "x=2");
+            TestOneString(PythonLanguageVersion.V27, "x  =  2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = null }, "x  =  2");
+            TestOneString(PythonLanguageVersion.V27, "x = y = 2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = null }, "x = y = 2");
+            TestOneString(PythonLanguageVersion.V27, "x=y=2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = null }, "x=y=2");
+            TestOneString(PythonLanguageVersion.V27, "x  =  y  =  2", new CodeFormattingOptions() { SpacesAroundAssignmentOperator = null }, "x  =  y  =  2");
+
+            /* Statements */
+            // ReplaceMultipleImportsWithMultipleStatements
+            TestOneString(PythonLanguageVersion.V27, "import foo", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo");
+            TestOneString(PythonLanguageVersion.V27, "import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo\r\nimport bar");
+            TestOneString(PythonLanguageVersion.V27, "\r\n\r\n\r\nimport foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "\r\n\r\n\r\nimport foo\r\nimport bar");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "def f():\r\n    import foo\r\n    import bar");
+            TestOneString(PythonLanguageVersion.V27, "import foo as quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo as quox\r\nimport bar");
+            TestOneString(PythonLanguageVersion.V27, "import   foo,  bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import   foo\r\nimport  bar");
+            TestOneString(PythonLanguageVersion.V27, "import foo  as  quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo  as  quox\r\nimport bar");
+
+            TestOneString(PythonLanguageVersion.V27, "import foo", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo");
+            TestOneString(PythonLanguageVersion.V27, "import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo, bar");
+            TestOneString(PythonLanguageVersion.V27, "\r\n\r\n\r\nimport foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "\r\n\r\n\r\nimport foo, bar");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "def f():\r\n    import foo, bar");
+            TestOneString(PythonLanguageVersion.V27, "import foo as quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo as quox, bar");
+            TestOneString(PythonLanguageVersion.V27, "import   foo,  bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import   foo,  bar");
+            TestOneString(PythonLanguageVersion.V27, "import foo  as  quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo  as  quox, bar");
+
+            // RemoveTrailingSemicolons
+            TestOneString(PythonLanguageVersion.V27, "x = 42;", new CodeFormattingOptions() { RemoveTrailingSemicolons = true }, "x = 42");
+            TestOneString(PythonLanguageVersion.V27, "x = 42  ;", new CodeFormattingOptions() { RemoveTrailingSemicolons = true }, "x = 42");
+            TestOneString(PythonLanguageVersion.V27, "x = 42;  y = 100;", new CodeFormattingOptions() { RemoveTrailingSemicolons = true }, "x = 42;  y = 100");
+            TestOneString(PythonLanguageVersion.V27, "x = 42;", new CodeFormattingOptions() { RemoveTrailingSemicolons = false }, "x = 42;");
+            TestOneString(PythonLanguageVersion.V27, "x = 42  ;", new CodeFormattingOptions() { RemoveTrailingSemicolons = false }, "x = 42  ;");
+            TestOneString(PythonLanguageVersion.V27, "x = 42;  y = 100;", new CodeFormattingOptions() { RemoveTrailingSemicolons = false }, "x = 42;  y = 100;");
+
+            // BreakMultipleStatementsPerLine
+            TestOneString(PythonLanguageVersion.V27, "x = 42; y = 100", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true }, "x = 42\r\ny = 100");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    x = 42; y = 100", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true }, "def f():\r\n    x = 42\r\n    y = 100");
+            TestOneString(PythonLanguageVersion.V27, "x = 42; y = 100;", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true }, "x = 42\r\ny = 100;");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    x = 42; y = 100;", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true }, "def f():\r\n    x = 42\r\n    y = 100;");
+            TestOneString(PythonLanguageVersion.V27, "x = 42; y = 100", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true, RemoveTrailingSemicolons = true }, "x = 42\r\ny = 100");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    x = 42; y = 100", new CodeFormattingOptions() { BreakMultipleStatementsPerLine = true, RemoveTrailingSemicolons = true }, "def f():\r\n    x = 42\r\n    y = 100");
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestReflowComment() {
+            var commentTestCases = new[] { 
+                new {
+                    Before = "  # Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
+                    After =  "  # Beautiful is better than ugly.  Explicit is better than implicit.  Simple\r\n  # is better than complex.  Complex is better than complicated.\r\n"
+                },
+                new { 
+                    Before = "## Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
+                    After =  "## Beautiful is better than ugly.  Explicit is better than implicit.  Simple is\r\n## better than complex.  Complex is better than complicated.\r\n"
+                },
+                new {
+                    Before = "############# Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
+                    After =  "############# Beautiful is better than ugly.  Explicit is better than implicit.\r\n############# Simple is better than complex.  Complex is better than\r\n############# complicated.\r\n"
+                },
+            };
+
+            foreach (var preceedingText in commentTestCases) {
+                Console.WriteLine("----");
+                Console.WriteLine(preceedingText.Before);
+
+                var allSnippets =
+                    _snippets2x.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 }).Concat(
+                    _snippets3x.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
+
+                foreach (var testCase in allSnippets) {
+                    Console.WriteLine(testCase);
+
+                    TestOneString(
+                        testCase.Version,
+                        preceedingText.Before + testCase.Text,
+                        new CodeFormattingOptions() { WrapComments = true, WrappingWidth = 80 },
+                        preceedingText.After + testCase.Text
+                    );
+                }
+            }
+
+            // TODO: Comments inside of various groupings (base classes, etc...)
+            foreach (var preceedingText in commentTestCases) {
+                Console.WriteLine("----");
+                Console.WriteLine(preceedingText.Before);
+
+                foreach (var testCase in _insertionSnippets) {
+                    Console.WriteLine(testCase);
+
+                    var input = testCase.Replace("[INSERT]", preceedingText.Before);
+                    var output = testCase.Replace("[INSERT]", preceedingText.After);
+
+                    TestOneString(
+                        PythonLanguageVersion.V27,
+                        input,
+                        new CodeFormattingOptions() { WrapComments = true, WrappingWidth = 80 },
+                        output
+                    );
+                }
+            }
+        }
+
+        static readonly string[] _insertionSnippets = new[] {
+            "if True:\r\n    pass\r\n[INSERT]else:\r\n    pass",
+            "if True:\r\n    pass\r\n[INSERT]elif True:\r\n    pass",
+            "try:\r\n    pass\r\n[INSERT]finally:\r\n    pass",
+            "try:\r\n    pass\r\n[INSERT]except:\r\n    pass",
+            "try:\r\n    pass\r\n[INSERT]except Exception:\r\n    pass",
+            "try:\r\n    pass\r\nexcept Exception:\r\n    pass\r\n[INSERT]else:\r\n    pass",
+            "while True:\r\n    pass\r\n[INSERT]else:\r\n    pass",
+            "for x in [1,2,3]:\r\n    pass\r\n[INSERT]else:\r\n    pass",
+            /*@"(1, [INSERT]
+               2,
+               3)"*/
+        };
+
+        static readonly string[] _snippets2x = new[] { 
+                // expressions
+                "a",
+                "a()",
+                "a[42]",
+                "a + b",
+                "+a",
+                "-a",
+                "a and b",
+                "a or b",
+                "`foo`",
+                "42",
+                "'abc'",
+                "42 if True else False",
+                "{}",
+                "[]",
+                "[x for x in abc]",
+                "(x for x in abc)",
+                "lambda x: 2",
+                "a.b",
+                "(a)",
+                "()",
+                "(1, 2, 3)",
+                "1, 2, 3",
+                "yield 42",
+
+                // statements
+                "assert True",
+                "x = 42",
+                "x += 42",
+                "break",
+                "continue",
+                "def f(): pass",
+                "class C: pass",
+                "del x",
+                "pass",
+                "exec 'hello'",
+                "for i in xrange(42): pass",
+                "import foo",
+                "from foo import bar",
+                "global x",
+                "if True: pass",
+                "print abc",
+                "raise Exception()",
+                "return abc",
+                "try:\r\n    pass\r\nexcept:\r\n    pass",
+                "while True:\r\n    pass",
+                "with abc: pass",
+                "@property\r\ndef f(): pass",
+            };
+
+        static readonly string[] _snippets3x = new[] { "nonlocal foo" };
+
+        /// <summary>
+        /// Verifies that the proceeding white space is consistent across all nodes.
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void TestStartWhiteSpace() {
+            foreach (var preceedingText in new[] { "#foo\r\n" }) {
+                var allSnippets = 
+                    _snippets2x.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 }).Concat(
+                    _snippets3x.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
+                
+                foreach (var testCase in allSnippets) {
+                    var exprText = testCase.Text;
+                    string code = preceedingText + exprText;
+                    Console.WriteLine(code);
+
+                    var parser = Parser.CreateParser(new StringReader(code), testCase.Version, new ParserOptions() { Verbatim = true });
+                    var ast = parser.ParseFile();
+                    Statement stmt = ((SuiteStatement)ast.Body).Statements[0];
+                    if (stmt is ExpressionStatement) {
+                        var expr = ((ExpressionStatement)stmt).Expression;
+
+                        Assert.AreEqual(preceedingText.Length, expr.StartIndex);
+                        Assert.AreEqual(preceedingText.Length + exprText.Length, expr.EndIndex);
+                        Assert.AreEqual(preceedingText, expr.GetLeadingWhiteSpace(ast));
+                    } else {
+                        Assert.AreEqual(preceedingText.Length, stmt.StartIndex);
+                        Assert.AreEqual(preceedingText.Length + exprText.Length, stmt.EndIndex);
+                        Assert.AreEqual(preceedingText, stmt.GetLeadingWhiteSpace(ast));
+                    }
+                }
+            }
+        }
+
         [TestMethod, Priority(0)]
         public void TestExpressions() {            
             // TODO: Trailing white space tests
@@ -301,66 +724,6 @@ this is some documentation
 '''
 
 import foo");
-        }
-
-        [TestMethod, Priority(0)]
-        public void TestMutateStdLib() {
-            var versions = new[] { 
-                new { Path = "C:\\Python25\\Lib", Version = PythonLanguageVersion.V25 },
-                new { Path = "C:\\Python26\\Lib", Version = PythonLanguageVersion.V26 },
-                new { Path = "C:\\Python27\\Lib", Version = PythonLanguageVersion.V27 },
-                
-                new { Path = "C:\\Python30\\Lib", Version = PythonLanguageVersion.V30 },
-                new { Path = "C:\\Python31\\Lib", Version = PythonLanguageVersion.V31 },
-                new { Path = "C:\\Python32\\Lib", Version = PythonLanguageVersion.V32 }, 
-                new { Path = "C:\\Python33\\Lib", Version = PythonLanguageVersion.V33 } 
-            };
-
-            for (int i = 0; i < 100; i++) {
-                int seed = (int)DateTime.Now.Ticks;
-                var random = new Random(seed);
-                Console.WriteLine("Seed == " + seed);
-
-                foreach (var version in versions) {
-                    Console.WriteLine("Testing version {0} {1}", version.Version, version.Path);
-                    int ran = 0, succeeded = 0;
-                    string[] files;
-                    try {
-                        files = Directory.GetFiles(version.Path);
-                    } catch (DirectoryNotFoundException) {
-                        continue;
-                    }
-
-                    foreach (var file in files) {
-                        try {
-                            if (file.EndsWith(".py")) {
-                                ran++;
-                                TestOneFileMutated(file, version.Version, random);
-                                succeeded++;
-                            }
-                        } catch (Exception e) {
-                            Console.WriteLine(e);
-                            Console.WriteLine("Failed: {0}", file);
-                            break;
-                        }
-                    }
-
-                    Assert.AreEqual(ran, succeeded);
-                }
-            }
-        }
-
-        private static void TestOneFileMutated(string filename, PythonLanguageVersion version, Random random) {
-            var originalText = File.ReadAllText(filename);
-            int start = random.Next(originalText.Length);
-            int end = random.Next(originalText.Length);
-
-            int realStart = Math.Min(start, end);
-            int length = Math.Max(start, end) - Math.Min(start, end);
-            //Console.WriteLine("Removing {1} chars at {0}", realStart, length);
-            originalText = originalText.Substring(realStart, length);
-
-            TestOneString(version, originalText);
         }
 
         [TestMethod, Priority(0)]
@@ -1048,29 +1411,38 @@ def f(): pass");
             TestOneString(version, originalText);
         }
 
-        private static void TestOneString(PythonLanguageVersion version, string originalText, bool recurse = true) {
+        internal static void TestOneString(PythonLanguageVersion version, string originalText, CodeFormattingOptions format = null, string expected = null, bool recurse = true) {
+            bool hadExpected = true;
+            if (expected == null) {
+                expected = originalText;
+                hadExpected = false;
+            }
             var parser = Parser.CreateParser(new StringReader(originalText), version, new ParserOptions() { Verbatim = true });
             var ast = parser.ParseFile();
 
             string output;
             try {
-                output = ast.ToCodeString(ast);
-            } catch {
-                Console.WriteLine("Failed to convert to code: {0}", originalText);
+                if (format == null) {
+                    output = ast.ToCodeString(ast);
+                } else {
+                    output = ast.ToCodeString(ast, format);
+                }
+            } catch(Exception e) {
+                Console.WriteLine("Failed to convert to code: {0}\r\n{1}", originalText, e);
                 Assert.Fail();
                 return;
             }
 
             const int contextSize = 50;
-            for (int i = 0; i < originalText.Length && i < output.Length; i++) {
-                if (originalText[i] != output[i]) {
+            for (int i = 0; i < expected.Length && i < output.Length; i++) {
+                if (expected[i] != output[i]) {
                     // output some context
                     StringBuilder x = new StringBuilder();
                     StringBuilder y = new StringBuilder();
                     StringBuilder z = new StringBuilder();
-                    for (int j = Math.Max(0, i - contextSize); j < Math.Min(Math.Max(originalText.Length, output.Length), i + contextSize); j++) {
-                        if (j < originalText.Length) {
-                            x.AppendRepr(originalText[j]);
+                    for (int j = Math.Max(0, i - contextSize); j < Math.Min(Math.Max(expected.Length, output.Length), i + contextSize); j++) {
+                        if (j < expected.Length) {
+                            x.AppendRepr(expected[j]);
                         }
                         if (j < output.Length) {
                             y.AppendRepr(output[j]);
@@ -1083,33 +1455,35 @@ def f(): pass");
                     }
 
                     Console.WriteLine("Mismatch context at {0}:", i);
-                    Console.WriteLine("Original: {0}", x.ToString());
-                    Console.WriteLine("New     : {0}", y.ToString());
+                    Console.WriteLine("Expected: {0}", x.ToString());
+                    Console.WriteLine("Got     : {0}", y.ToString());
                     Console.WriteLine("Differs : {0}", z.ToString());
 
                     if (recurse) {
-                        // Try and automatically get a minimal repro...
-                        try {
-                            for (int j = i; j >= 0; j--) {
-                                TestOneString(version, originalText.Substring(j), false);
+                        // Try and automatically get a minimal repro if we can...
+                        if (!hadExpected) {
+                            try {
+                                for (int j = i; j >= 0; j--) {
+                                    TestOneString(version, originalText.Substring(j), format, null, false);
+                                }
+                            } catch {
                             }
-                        } catch {
                         }
                     } else {
                         Console.WriteLine("-----");
-                        Console.WriteLine(originalText);
+                        Console.WriteLine(expected);
                         Console.WriteLine("-----");
                     }
 
-                    Assert.AreEqual(originalText[i], output[i], String.Format("Characters differ at {0}, got {1}, expected {2}", i, output[i], originalText[i]));
+                    Assert.AreEqual(expected[i], output[i], String.Format("Characters differ at {0}, got {1}, expected {2}", i, output[i], expected[i]));
                 }
             }
 
-            if (originalText.Length != output.Length) {
-                Console.WriteLine("Original: {0}", originalText.ToString());
+            if (expected.Length != output.Length) {
+                Console.WriteLine("Original: {0}", expected.ToString());
                 Console.WriteLine("New     : {0}", output.ToString());
             }
-            Assert.AreEqual(originalText.Length, output.Length);
+            Assert.AreEqual(expected.Length, output.Length);
         }        
     }
 }

@@ -51,9 +51,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            BinaryExpression.BinaryToCodeString(res, ast, this, _left, _right, "and");
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            BinaryExpression.BinaryToCodeString(res, ast, format, this, _left, _right, "and");
         }
 
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
+            return _left.GetLeadingWhiteSpace(ast);
+        }
     }
 }

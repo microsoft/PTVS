@@ -180,8 +180,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         #endregion
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            _body.AppendCodeString(res, ast);
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            _body.AppendCodeString(res, ast, format);
             res.Append(this.GetExtraVerbatimText(ast));
         }
 

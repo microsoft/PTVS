@@ -59,20 +59,21 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format)
+        {
             if (_name != null) {
                 if (Name == "*" || Name == "**") {
-                    _name.AppendCodeString(res, ast);
-                    _expression.AppendCodeString(res, ast);
+                    _name.AppendCodeString(res, ast, format);
+                    _expression.AppendCodeString(res, ast, format);
                 } else {
                     // keyword arg
-                    _name.AppendCodeString(res, ast);
+                    _name.AppendCodeString(res, ast, format);
                     res.Append(this.GetProceedingWhiteSpace(ast));
                     res.Append('=');
-                    _expression.AppendCodeString(res, ast);
+                    _expression.AppendCodeString(res, ast, format);
                 }
             } else {
-                _expression.AppendCodeString(res, ast);
+                _expression.AppendCodeString(res, ast, format);
             }
         }
     }

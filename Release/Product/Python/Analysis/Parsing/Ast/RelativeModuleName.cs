@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var whitespace = this.GetListWhiteSpace(ast);
             for (int i = 0; i < _dotCount; i++) {
                 if (whitespace != null) {
@@ -41,10 +41,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
                 res.Append('.');
             }
-            base.AppendCodeString(res, ast);
+            base.AppendCodeString(res, ast, format);
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             var whitespace = this.GetListWhiteSpace(ast);
             if (whitespace != null && whitespace.Length > 0) {
                 return whitespace[0];

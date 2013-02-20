@@ -202,20 +202,26 @@ namespace Microsoft.PythonTools {
             }
 
             private static TagSpan GetIfSpan(PythonAst ast, ITextSnapshot snapshot, IfStatement ifStmt) {
-                return GetTagSpan(snapshot, ifStmt.StartIndex, ifStmt.EndIndex, ifStmt.Tests[0].HeaderIndex - ifStmt.StartIndex + 1);
+                return GetTagSpan(snapshot, ifStmt.StartIndex, ifStmt.EndIndex, ifStmt.Tests[0].HeaderIndex);
             }
 
             private static TagSpan GetFunctionSpan(PythonAst ast, ITextSnapshot snapshot, FunctionDefinition funcDef) {
-                return GetTagSpan(snapshot, funcDef.StartIndex, funcDef.EndIndex, funcDef.HeaderIndex - funcDef.StartIndex + 1);
+                return GetTagSpan(snapshot, funcDef.StartIndex, funcDef.EndIndex, funcDef.HeaderIndex, funcDef.Decorators);
             }
 
             private static TagSpan GetClassSpan(PythonAst ast, ITextSnapshot snapshot, ClassDefinition classDef) {
-                return GetTagSpan(snapshot, classDef.StartIndex, classDef.EndIndex, classDef.HeaderIndex - classDef.StartIndex + 1);
+                return GetTagSpan(snapshot, classDef.StartIndex, classDef.EndIndex, classDef.HeaderIndex, classDef.Decorators);
             }
 
-            private static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int testLen) {
+            private static TagSpan GetTagSpan(ITextSnapshot snapshot, int start, int end, int headerIndex, DecoratorStatement decorators = null) {
                 TagSpan tagSpan = null;
                 try {
+                    if (decorators != null) {
+                        // we don't want to collapse the decorators, we like them visible, so
+                        // we base our starting position on where the decorators end.
+                        start = decorators.EndIndex + 1;
+                    }
+                    int testLen = headerIndex - start + 1;
                     if (start != -1 && end != -1) {
                         int length = end - start - testLen;
                         if (length > 0) {
@@ -231,7 +237,7 @@ namespace Microsoft.PythonTools {
                         }
                     }
                 } catch (ArgumentException) {
-                    // sometimes Python's parser gives usbad spans, ignore those and fix the parser
+                    // sometimes Python's parser gives us bad spans, ignore those and fix the parser
                     Debug.Assert(false, "bad argument when making span/tag");
                 }
 

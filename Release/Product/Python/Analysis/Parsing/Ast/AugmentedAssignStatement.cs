@@ -50,15 +50,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            _left.AppendCodeString(res, ast);
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            _left.AppendCodeString(res, ast, format);
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append(_op.ToCodeString());
-            res.Append('=');            
-            _right.AppendCodeString(res, ast);
+            res.Append('=');
+            _right.AppendCodeString(res, ast, format);
         }
 
-        internal override string GetLeadingWhiteSpace(PythonAst ast) {
+        public override string GetLeadingWhiteSpace(PythonAst ast) {
             return _left.GetLeadingWhiteSpace(ast);
         }
     }

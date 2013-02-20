@@ -86,27 +86,27 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("try");
-            _body.AppendCodeString(res, ast);
+            _body.AppendCodeString(res, ast, format);
 
             if (_handlers != null) {
                 for (int i = 0; i < _handlers.Length; i++) {
-                    _handlers[i].AppendCodeString(res, ast);
+                    _handlers[i].AppendCodeString(res, ast, format);
                 }
             }
 
             if (_else != null) {
-                res.Append(this.GetSecondWhiteSpace(ast));
+                format.ReflowComment(res, this.GetSecondWhiteSpace(ast));
                 res.Append("else");
-                _else.AppendCodeString(res, ast);
+                _else.AppendCodeString(res, ast, format);
             }
 
             if (_finally != null) {
-                res.Append(this.GetThirdWhiteSpace(ast));
+                format.ReflowComment(res, this.GetThirdWhiteSpace(ast));
                 res.Append("finally");
-                _finally.AppendCodeString(res, ast);
+                _finally.AppendCodeString(res, ast, format);
             }
         }
     }
@@ -155,11 +155,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("except");
             if (_test != null) {
-                _test.AppendCodeString(res, ast);
+                _test.AppendCodeString(res, ast, format);
                 if (_target != null) {
                     res.Append(this.GetSecondWhiteSpace(ast));
                     if (this.IsAltForm(ast)) {
@@ -168,11 +168,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(",");
                     }
 
-                    _target.AppendCodeString(res, ast);
+                    _target.AppendCodeString(res, ast, format);
                 }
             }
 
-            _body.AppendCodeString(res, ast);
+            _body.AppendCodeString(res, ast, format);
         }
     }
 }

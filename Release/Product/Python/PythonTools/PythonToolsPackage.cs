@@ -33,6 +33,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -69,7 +70,12 @@ namespace Microsoft.PythonTools {
     [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
-    [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "114")]
+    [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "113")]
+    [ProvideLanguageEditorOptionPage(typeof(PythonFormattingGeneralOptionsPage), PythonConstants.LanguageName, "Formatting", "General", "120")]
+    //[ProvideLanguageEditorOptionPage(typeof(PythonFormattingNewLinesOptionsPage), PythonConstants.LanguageName, "Formatting", "New Lines", "121")]
+    [ProvideLanguageEditorOptionPage(typeof(PythonFormattingSpacingOptionsPage), PythonConstants.LanguageName, "Formatting", "Spacing", "122")]
+    [ProvideLanguageEditorOptionPage(typeof(PythonFormattingStatementsOptionsPage), PythonConstants.LanguageName, "Formatting", "Statements", "123")]
+    [ProvideLanguageEditorOptionPage(typeof(PythonFormattingWrappingOptionsPage), PythonConstants.LanguageName, "Formatting", "Wrapping", "124")]
     [ProvideOptionPage(typeof(PythonInterpreterOptionsPage), "Python Tools", "Interpreters", 115, 116, true)]
     [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
     [ProvideOptionPage(typeof(PythonDebugInteractiveOptionsPage), "Python Tools", "Debug Interactive Window", 115, 119, true)]
@@ -352,6 +358,30 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             get {
                 return (PythonDebugInteractiveOptionsPage)GetDialogPage(typeof(PythonDebugInteractiveOptionsPage));
             }
+        }
+
+        /// <summary>
+        /// Gets a CodeFormattingOptions object configured to match the current settings.
+        /// </summary>
+        /// <returns></returns>
+        public CodeFormattingOptions GetCodeFormattingOptions() {
+            return ((PythonFormattingSpacingOptionsPage)GetDialogPage(typeof(PythonFormattingSpacingOptionsPage))).GetCodeFormattingOptions();
+        }
+
+        /// <summary>
+        /// Sets an individual code formatting option for the user's profile.
+        /// <param name="name">a name of one of the properties on the CodeFormattingOptions class.</param>
+        /// </summary>
+        public void SetFormattingOption(string name, object value) {
+            PythonFormattingOptionsPage.SetOption(name, value);
+        }
+
+        /// <summary>
+        /// Gets an individual code formatting option as configured by the user.
+        /// <param name="name">a name of one of the properties on the CodeFormattingOptions class.</param>
+        /// <returns></returns>
+        public object GetFormattingOption(string name) {
+            return PythonFormattingOptionsPage.GetOption(name);
         }
 
         /// <summary>

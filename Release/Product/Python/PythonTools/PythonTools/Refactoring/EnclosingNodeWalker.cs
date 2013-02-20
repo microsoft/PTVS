@@ -50,22 +50,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 _suites.Add(null);  // marker for a function/class boundary
                 _parents.Add((ScopeStatement)node);
             }
-            return _selectedSpan.IntersectsWith(Span.FromBounds(GetStartIndex(node), node.EndIndex));
-        }
-
-        private static int GetStartIndex(Node node) {
-            FunctionDefinition funcDef;
-            ClassDefinition classDef;
-            if ((funcDef = node as FunctionDefinition) != null) {
-                if (funcDef.Decorators != null) {
-                    return funcDef.Decorators.StartIndex;
-                }
-            } else if ((classDef = node as ClassDefinition) != null) {
-                if (classDef.Decorators != null) {
-                    return classDef.Decorators.StartIndex;
-                }
-            }
-            return node.StartIndex;
+            return _selectedSpan.IntersectsWith(Span.FromBounds(node.StartIndex, node.EndIndex));
         }
 
         private bool ShouldWalkWorker(SuiteStatement node) {
@@ -76,7 +61,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     if (_targetNode != null) {
                         // we have found our extracted code below this,
                         // we should insert before this statement.
-                        _insertLocations[_parents[_parents.Count - 1]] = GetStartIndex(stmt);
+                        _insertLocations[_parents[_parents.Count - 1]] = stmt.GetStartIncludingWhiteSpace(_root);
                         break;
                     }
                 }
@@ -123,7 +108,9 @@ namespace Microsoft.PythonTools.Refactoring {
                     startIndex, 
                     endIndex
                 );
-                _insertLocations[_parents[_parents.Count - 1]] = GetStartIndex(node.Statements[startIndex]);
+                _insertLocations[_parents[_parents.Count - 1]] = node.Statements.Count == 0 ?
+                    node.GetStartIncludingWhiteSpace(_root) :
+                    node.Statements[startIndex].GetStartIncludingWhiteSpace(_root);
             }
         }
 

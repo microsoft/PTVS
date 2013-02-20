@@ -40,12 +40,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             ast.SetAttribute(this, NodeAttributes.IsAltFormValue, NodeAttributes.IsAltFormValue);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("return");
             if (_expression != null) {
                 int len = res.Length;
-                _expression.AppendCodeString(res, ast);
+                _expression.AppendCodeString(res, ast, format);
                 if (this.IsAltForm(ast)) {
                     for (int i = len; i < res.Length; i++) {
                         if (!Char.IsWhiteSpace(res[i])) {

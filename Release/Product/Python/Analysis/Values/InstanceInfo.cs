@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo.GetMember(node, unit, name);
         }
 
-        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, INamespaceSet rhs) {
+        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__mul__"; break;

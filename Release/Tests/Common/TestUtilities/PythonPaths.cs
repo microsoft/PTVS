@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 
 namespace TestUtilities {
@@ -148,6 +149,14 @@ namespace TestUtilities {
         public string LibPath {
             get {
                 return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), "Lib");
+            }
+        }
+    }
+
+    public static class PythonVersionExtensions {
+        public static void AssertInstalled(this PythonVersion self) {
+            if(self == null || !File.Exists(self.Path)) {
+                Assert.Inconclusive("Python interpreter not installed");
             }
         }
     }

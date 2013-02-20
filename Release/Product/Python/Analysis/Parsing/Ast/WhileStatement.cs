@@ -60,15 +60,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("while");
-            _test.AppendCodeString(res, ast);
-            _body.AppendCodeString(res, ast);
+            _test.AppendCodeString(res, ast, format);
+            _body.AppendCodeString(res, ast, format);
             if (_else != null) {
-                res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
+                format.ReflowComment(res, this.GetSecondWhiteSpaceDefaultNull(ast));
                 res.Append("else");
-                _else.AppendCodeString(res, ast);
+                _else.AppendCodeString(res, ast, format);
             }
         }
     }

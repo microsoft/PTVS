@@ -36,12 +36,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("lambda");
             var commaWhiteSpace = this.GetListWhiteSpace(ast);
 
-            _function.ParamsToString(res, ast, commaWhiteSpace);
+            _function.ParamsToString(res, ast, commaWhiteSpace, format);
             string namedOnlyText = this.GetExtraVerbatimText(ast);
             if (namedOnlyText != null) {
                 res.Append(namedOnlyText);
@@ -50,10 +50,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append(":");
                 if (_function.Body is ReturnStatement) {
-                    ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast);
+                    ((ReturnStatement)_function.Body).Expression.AppendCodeString(res, ast, format);
                 } else {
                     Debug.Assert(_function.Body is ExpressionStatement);
-                    ((ExpressionStatement)_function.Body).Expression.AppendCodeString(res, ast);
+                    ((ExpressionStatement)_function.Body).Expression.AppendCodeString(res, ast, format);
                 }
             }
         }

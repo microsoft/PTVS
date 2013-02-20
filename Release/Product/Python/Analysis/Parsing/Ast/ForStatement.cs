@@ -69,19 +69,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("for");
-            _left.AppendCodeString(res, ast);
+            _left.AppendCodeString(res, ast, format);
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append("in");
-                _list.AppendCodeString(res, ast);
-                _body.AppendCodeString(res, ast);   // colon is handled by suite statements...
+                _list.AppendCodeString(res, ast, format);
+                _body.AppendCodeString(res, ast, format);   // colon is handled by suite statements...
                 if (_else != null) {
-                    res.Append(this.GetThirdWhiteSpace(ast));
+                    format.ReflowComment(res, this.GetThirdWhiteSpace(ast));
                     res.Append("else");
-                    _else.AppendCodeString(res, ast);
+                    _else.AppendCodeString(res, ast, format);
                 }
             }
         }

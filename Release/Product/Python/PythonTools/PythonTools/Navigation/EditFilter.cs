@@ -568,6 +568,12 @@ namespace Microsoft.PythonTools.Language {
                         // then we want to update them before VS pops them up.
                         UpdateSmartTags();
                         break;
+                    case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
+                        FormatCode(new SnapshotSpan(_textView.TextBuffer.CurrentSnapshot, 0, _textView.TextBuffer.CurrentSnapshot.Length), false);
+                        return VSConstants.S_OK;
+                    case VSConstants.VSStd2KCmdID.FORMATSELECTION:
+                        FormatCode(_textView.Selection.StreamSelectionSpan.SnapshotSpan, true);
+                        return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
                         var controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
@@ -651,6 +657,12 @@ namespace Microsoft.PythonTools.Language {
 
         private bool ExtractMethod() {
             return new MethodExtractor(_textView).ExtractMethod(ExtractMethodUserInput.Instance);
+        }
+
+        private void FormatCode(SnapshotSpan span, bool selectResult) {
+            var options = PythonToolsPackage.Instance.GetCodeFormattingOptions();
+            options.NewLineFormat = _textView.Options.GetNewLineCharacter();
+            new CodeFormatter(_textView, options).FormatCode(span, selectResult);
         }
 
         internal void RefactorRename() {
@@ -826,6 +838,9 @@ namespace Microsoft.PythonTools.Language {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
+                        case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
+                        case VSConstants.VSStd2KCmdID.FORMATSELECTION:
+
                         case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                         case VSConstants.VSStd2KCmdID.COMPLETEWORD:
                         case VSConstants.VSStd2KCmdID.PARAMINFO:

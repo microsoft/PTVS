@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools {
             engineKey.SetValue("AddressBP", 0);
             engineKey.SetValue("AutoSelectPriority", 6);
             engineKey.SetValue("CallstackBP", 1);
+            engineKey.SetValue("ConditionalBP", 1);
             engineKey.SetValue("Exceptions", 1);
             engineKey.SetValue("SetNextStatement", 1);
             engineKey.SetValue("RemoteDebugging", 1);

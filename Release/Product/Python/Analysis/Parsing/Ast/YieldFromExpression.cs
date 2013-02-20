@@ -44,13 +44,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return CheckAssign();
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             res.Append(this.GetProceedingWhiteSpace(ast));
             res.Append("yield");
             res.Append(this.GetSecondWhiteSpace(ast));
             res.Append("from");
             if (!this.IsAltForm(ast)) {
-                Expression.AppendCodeString(res, ast);
+                Expression.AppendCodeString(res, ast, format);
                 var itemWhiteSpace = this.GetListWhiteSpace(ast);
                 if (itemWhiteSpace != null) {
                     res.Append(",");

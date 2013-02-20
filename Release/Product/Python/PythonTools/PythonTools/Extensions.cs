@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -509,5 +510,10 @@ namespace Microsoft.PythonTools {
         internal static Task StartNew(this TaskScheduler scheduler, Action func) {
             return Task.Factory.StartNew(func, default(CancellationToken), TaskCreationOptions.None, scheduler);
         }
+
+        internal static int GetStartIncludingWhiteSpace(this Node self, PythonAst ast) {
+            return self.StartIndex - (self.GetLeadingWhiteSpace(ast) ?? "").Length;
+        }
+
     }
 }

@@ -39,8 +39,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            ListExpression.AppendItems(res, ast, "del", "", this, Expressions);
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            ListExpression.AppendItems(res, ast, format, "del", "", this, Expressions);
         }
     }
 }

@@ -163,37 +163,68 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             get { return GlobalParent.IndexToLocation(_headerIndex); }
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             if (Decorators != null) {
-                Decorators.AppendCodeString(res, ast);
+                Decorators.AppendCodeString(res, ast, format);
             }
 
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("class");
             res.Append(this.GetSecondWhiteSpace(ast));
             res.Append(this.GetVerbatimImage(ast) ?? Name);
 
             if (!this.IsAltForm(ast)) {
-                res.Append(this.GetThirdWhiteSpace(ast));
+                CodeFormattingOptions.Append(
+                    res,
+                    format.SpaceBeforeClassDeclarationParen,
+                    " ",
+                    "",
+                    this.GetThirdWhiteSpace(ast)
+                );
+
                 res.Append('(');
             }
 
-            ListExpression.AppendItems(
-                res,
-                ast,
-                "",
-                "",
-                this,
-                this.Bases.Count,
-                (i, sb) => this.Bases[i].AppendCodeString(sb, ast)
-            );
+            if (Bases.Count != 0) {
+                ListExpression.AppendItems(
+                    res,
+                    ast,
+                    format,
+                    "",
+                    "",
+                    this,
+                    this.Bases.Count,
+                    (i, sb) => {
+                        if(format.SpaceWithinClassDeclarationParens != null && i == 0) {
+                            // need to remove any leading whitespace which was preserved for
+                            // the 1st param, and then force the correct whitespace.
+                            Bases[i].AppendCodeString(sb, ast, format, format.SpaceWithinClassDeclarationParens.Value ? " " : "");
+                        } else {
+                            Bases[i].AppendCodeString(sb, ast, format);
+                        }
+                    }
+                );
+            } else if (!this.IsAltForm(ast)) {
+                if (format.SpaceWithinEmptyBaseClassList != null && format.SpaceWithinEmptyBaseClassList.Value) {
+                    res.Append(' ');
+                }
+            }
             
             if (!this.IsAltForm(ast) && !this.IsMissingCloseGrouping(ast)) {
-                res.Append(this.GetFourthWhiteSpace(ast));
+                if (Bases.Count != 0 || format.SpaceWithinEmptyBaseClassList == null) {
+                    CodeFormattingOptions.Append(
+                        res,
+                        format.SpaceWithinClassDeclarationParens,
+                        " ",
+                        "",
+                        this.GetFourthWhiteSpace(ast)
+                    );
+                }
+
                 res.Append(')');
             }
 
-            _body.AppendCodeString(res, ast);
+            _body.AppendCodeString(res, ast, format);
         }
     }
 }

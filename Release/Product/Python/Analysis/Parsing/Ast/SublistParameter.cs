@@ -39,14 +39,20 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            var kwOnlyText = this.GetExtraVerbatimText(ast);
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string leadingWhiteSpace) {
+            string kwOnlyText = this.GetExtraVerbatimText(ast);
             if (kwOnlyText != null) {
-                res.Append(kwOnlyText);
+                if (leadingWhiteSpace != null) {
+                    res.Append(leadingWhiteSpace);
+                    res.Append(kwOnlyText.TrimStart());
+                    leadingWhiteSpace = null;
+                } else {
+                    res.Append(kwOnlyText);
+                }
             }
-            res.Append(this.GetProceedingWhiteSpace(ast));
+            res.Append(leadingWhiteSpace ?? this.GetProceedingWhiteSpace(ast));
             res.Append('(');
-            Tuple.AppendCodeString(res, ast);
+            Tuple.AppendCodeString(res, ast, format);
             if (!this.IsMissingCloseGrouping(ast)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append(')');

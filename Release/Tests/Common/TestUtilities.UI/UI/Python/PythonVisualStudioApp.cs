@@ -17,6 +17,7 @@ using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI.Python {
     class PythonVisualStudioApp : VisualStudioApp {
@@ -97,6 +98,44 @@ namespace TestUtilities.UI.Python {
                 }
             }
             throw new InvalidOperationException("Document not opened: " + docName);
+        }
+
+        public FormattingOptionsTreeView GetFormattingOptions(string page) {
+            Element.SetFocus();
+
+            // bring up Tools->Options
+            ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Tools.Options"));
+
+            // wait for it...
+            IntPtr dialog = WaitForDialog();
+
+            // go to the tree view which lets us select a set of options...
+            var treeView = new TreeView(AutomationElement.FromHandle(dialog).FindFirst(TreeScope.Descendants,
+                new PropertyCondition(
+                    AutomationElement.ClassNameProperty,
+                    "SysTreeView32")
+                ));
+
+            treeView.FindItem("Text Editor", "Python", "Formatting", page).SetFocus();
+
+            for (int i = 0; i < 10; i++) {
+                var optionsTree = AutomationElement.FromHandle(dialog).FindFirst(
+                    TreeScope.Descendants,
+                    new PropertyCondition(
+                        AutomationElement.AutomationIdProperty,
+                        "_optionsTree"
+                    )
+                );
+
+                if (optionsTree != null) {
+                    return new FormattingOptionsTreeView(optionsTree);
+                }
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            AutomationWrapper.DumpElement(AutomationElement.FromHandle(dialog));
+            Assert.Fail("failed to find _optionsTree page");
+            return null;
         }
 
         /// <summary>

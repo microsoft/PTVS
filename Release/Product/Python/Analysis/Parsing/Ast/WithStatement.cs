@@ -54,8 +54,8 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("with");
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
             int whiteSpaceIndex = 0;
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     res.Append(',');
                 }
 
-                item.ContextManager.AppendCodeString(res, ast);
+                item.ContextManager.AppendCodeString(res, ast, format);
                 if (item.Variable != null) {
                     if (itemWhiteSpace != null) {
                         res.Append(itemWhiteSpace[whiteSpaceIndex++]);
@@ -76,11 +76,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(' ');
                     }
                     res.Append("as");
-                    item.Variable.AppendCodeString(res, ast);
+                    item.Variable.AppendCodeString(res, ast, format);
                 }
             }
-            
-            _body.AppendCodeString(res, ast);
+
+            _body.AppendCodeString(res, ast, format);
         }
     }
 
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             // WithStatement expands us 
             throw new InvalidOperationException();
         }

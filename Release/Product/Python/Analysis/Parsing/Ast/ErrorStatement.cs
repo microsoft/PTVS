@@ -22,9 +22,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _preceeding = preceeding;
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             foreach(var preceeding in _preceeding) {
-                preceeding.AppendCodeString(res, ast);
+                preceeding.AppendCodeString(res, ast, format);
             }
             res.Append(this.GetVerbatimImage(ast) ?? "<error stmt>");
         }

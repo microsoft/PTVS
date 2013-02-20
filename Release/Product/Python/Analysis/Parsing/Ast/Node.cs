@@ -50,8 +50,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public string ToCodeString(PythonAst ast) {
+            return ToCodeString(ast, CodeFormattingOptions.Default);
+        }
+
+        public string ToCodeString(PythonAst ast, CodeFormattingOptions format) {
             StringBuilder res = new StringBuilder();
-            AppendCodeString(res, ast);
+            AppendCodeString(res, ast, format);
             return res.ToString();
         }
 
@@ -59,7 +63,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return parent.IndexToLocation(StartIndex);            
         }
 
-        public SourceLocation GetEnd(PythonAst parent)  {            
+        public SourceLocation GetEnd(PythonAst parent) {            
             return parent.IndexToLocation(EndIndex);
         }
 
@@ -68,7 +72,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public static void CopyLeadingWhiteSpace(PythonAst parentNode, Node fromNode, Node toNode) {
-            parentNode.SetAttribute(toNode, NodeAttributes.PreceedingWhiteSpace, fromNode.GetIndentationLevel(parentNode));
+            parentNode.SetAttribute(toNode, NodeAttributes.PreceedingWhiteSpace, fromNode.GetLeadingWhiteSpace(parentNode));
         }
 
         public static void CopyTrailingNewLine(PythonAst parentNode, Node fromNode, Node toNode) {
@@ -81,10 +85,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// 
         /// New in 1.1.
         /// </summary>
-        public string GetProceedingWhitespace(PythonAst ast) {
-            return NodeAttributes.GetProceedingWhiteSpaceDefaultNull(this, ast);
+        public virtual string GetLeadingWhiteSpace(PythonAst ast) {
+            return this.GetProceedingWhiteSpaceDefaultNull(ast) ?? "";
         }
 
+        /// <summary>
+        /// Gets the indentation level for the current statement.  Requires verbose
+        /// mode when parsing the trees.
+        /// </summary>
         public string GetIndentationLevel(PythonAst parentNode) {
             var leading = GetLeadingWhiteSpace(parentNode);
             // we only want the trailing leading space for the current line...
@@ -102,18 +110,30 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         #region Internal APIs
 
         /// <summary>
-        /// Gets the leading white space for the node.  Usually this is just the leading mark space marked for this node,
-        /// but some nodes will have their leading white space captures in a child node and those nodes will extract
-        /// the white space appropriately.
-        /// </summary>
-        internal virtual string GetLeadingWhiteSpace(PythonAst ast) {
-            return this.GetProceedingWhiteSpaceDefaultNull(ast) ?? "";
-        }
-
-        /// <summary>
         /// Appends the code representation of the node to the string builder.
         /// </summary>
-        internal abstract void AppendCodeString(StringBuilder res, PythonAst ast);
+        internal abstract void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format);
+
+        /// <summary>
+        /// Appends the code representation of the node to the string builder, replacing the initial whitespace.
+        /// 
+        /// If initialWhiteSpace is null then the default whitespace is used.
+        /// </summary>
+        internal virtual void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, string leadingWhiteSpace) {
+            if (leadingWhiteSpace == null) {
+                AppendCodeString(res, ast, format);
+                return;
+            }
+            res.Append(leadingWhiteSpace);
+            StringBuilder tmp = new StringBuilder();
+            AppendCodeString(tmp, ast, format);
+            for (int curChar = 0; curChar < tmp.Length; curChar++) {
+                if (!char.IsWhiteSpace(tmp[curChar])) {
+                    res.Append(tmp.ToString(curChar, tmp.Length - curChar));
+                    break;
+                }
+            }
+        }
 
         internal void SetLoc(int start, int end) {
             _span = new IndexSpan(start, end >= start ? end - start : start);

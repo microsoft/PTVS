@@ -35,10 +35,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             walker.PostWalk(this);
         }
 
-        internal override void AppendCodeString(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append('`');
-            _expression.AppendCodeString(res, ast);
+            _expression.AppendCodeString(res, ast, format);
             if (!this.IsMissingCloseGrouping(ast)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append('`');

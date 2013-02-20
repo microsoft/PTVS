@@ -220,4 +220,19 @@
   <data name="4000" xml:space="preserve">
     <value>Web Platform Installer</value>
   </data>
+  <data name="120" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="121" xml:space="preserve">
+    <value>New Lines</value>
+  </data>
+  <data name="122" xml:space="preserve">
+    <value>Spacing</value>
+  </data>
+  <data name="123" xml:space="preserve">
+    <value>Statements</value>
+  </data>
+  <data name="124" xml:space="preserve">
+    <value>Wrapping</value>
+  </data>
 </root>

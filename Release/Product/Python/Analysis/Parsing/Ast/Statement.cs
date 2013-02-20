@@ -25,12 +25,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        internal override sealed void AppendCodeString(StringBuilder res, PythonAst ast) {
-            AppendCodeStringStmt(res, ast);
-            this.AppendTrailingNewLine(res, ast);
+        internal override sealed void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            AppendCodeStringStmt(res, ast, format);
+            this.AppendTrailingNewLine(res, ast, format);
         }
 
-        internal abstract void AppendCodeStringStmt(StringBuilder res, PythonAst ast);
+        internal abstract void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format);
 
         /// <summary>
         /// Returns the expression contained by the statement.

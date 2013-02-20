@@ -175,10 +175,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return res;
         }
 
-        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast) {
-            res.Append(this.GetProceedingWhiteSpace(ast));
+        internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
+            format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
             res.Append("from");
-            Root.AppendCodeString(res, ast);
+            Root.AppendCodeString(res, ast, format);
 
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(this.GetSecondWhiteSpace(ast));
@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(' ');
                     }
 
-                    _names[i].AppendCodeString(res, ast);
+                    _names[i].AppendCodeString(res, ast, format);
                     if (AsNames != null && AsNames[i] != null) {
                         if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                             res.Append(asNameWhiteSpace[asIndex++]);
@@ -214,7 +214,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                             if (asNameWhiteSpace != null && asIndex < asNameWhiteSpace.Length) {
                                 res.Append(asNameWhiteSpace[asIndex++]);
                             }
-                            _asNames[i].AppendCodeString(res, ast);
+                            _asNames[i].AppendCodeString(res, ast, format);
                         } else {
                             asIndex++;
                         }
