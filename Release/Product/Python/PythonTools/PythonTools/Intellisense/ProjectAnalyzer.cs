@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IPythonInterpreterFactory[] _allFactories;
 
         private static readonly Lazy<TaskProvider> _taskProvider = new Lazy<TaskProvider>(() => {
-            var _errorList = (IVsTaskList)PythonToolsPackage.GetGlobalService(typeof(SVsErrorList));
+            var _errorList = PythonToolsPackage.GetGlobalService(typeof(SVsErrorList)) as IVsTaskList;
             return new TaskProvider(_errorList);
         }, LazyThreadSafetyMode.ExecutionAndPublication);
 
@@ -1278,9 +1278,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 bool changed = false;
                 WorkerMessage msg;
                 List<ErrorResult> existing;
+                var lastUpdateTime = DateTime.Now;
 
                 for (; ; ) {
-                    while (_workerQueue.TryTake(out msg, 5000)) {
+                    // Give queue up to 1 second to have a message in it before exiting loop
+                    while (_workerQueue.TryTake(out msg, 1000)) {
                         switch (msg.Type) {
                             case WorkerMessage.MessageType.Clear:
                                 lock (this) {
@@ -1312,6 +1314,16 @@ namespace Microsoft.PythonTools.Intellisense {
                                 changed = true;
                                 break;
                         }
+
+                        // Batch refreshes over 1 second
+                        if (changed && _errorList != null) {
+                            var currentTime = DateTime.Now;
+                            if ((currentTime - lastUpdateTime).TotalMilliseconds > 1000) {
+                                _errorList.RefreshTasks(_cookie);
+                                lastUpdateTime = currentTime;
+                                changed = false;
+                            }
+                        }
                     }
 
                     lock (_workerQueue) {
@@ -1320,6 +1332,11 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         }
                     }
+                }
+
+                // Handle refresh not handled in loop
+                if (changed && _errorList != null) {
+                    _errorList.RefreshTasks(_cookie);
                 }
             }
 
