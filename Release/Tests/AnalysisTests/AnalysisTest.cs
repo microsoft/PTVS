@@ -3796,7 +3796,8 @@ min(a, D())
 
             thread.Start();
             // Allow 10 seconds for parsing to complete and analysis to start
-            cancelSource.CancelAfter(10000);
+            Thread.Sleep(10000);
+            cancelSource.Cancel();
 
             if (!analysisStopped.WaitOne(15000)) {
                 thread.Abort();
