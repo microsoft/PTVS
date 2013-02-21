@@ -344,14 +344,17 @@ namespace Microsoft.PythonTools.Repl {
                 ThreadPool.QueueUserWorkItem(x => {
                     string input = Window.ReadStandardInput();
                     input = input != null ? UnfixNewLines(input) : "\n";
-                    try {
-                        using (new SocketLock(this)) {
-                            Stream.Write(InputLineCommandBytes);
-                            SendString(input);
+                    if (Stream != null) {
+                        try {
+                            using (new SocketLock(this)) {
+                                Stream.Write(InputLineCommandBytes);
+                                SendString(input);
+                            }
+                        } catch (IOException) {
+                        } catch (SocketException) {
+                        } catch (DisconnectedException) {
+                        } catch (NullReferenceException) {
                         }
-                    } catch (IOException) {
-                    } catch (SocketException) {
-                    } catch (DisconnectedException) {
                     }
                 });
             }

@@ -948,6 +948,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     return new FromImportCompletionAnalysis(tokens, span, buffer, options);
                 }
                 return null;
+            } else if (snapshot.IsReplBufferWithCommand()) {
+                return CompletionAnalysis.EmptyCompletionContext;
             }
 
             return null;
