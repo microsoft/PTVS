@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private static Action<CodeFormattingOptions, object> MakeFastSetter<T>(PropertyInfo propInfo) {
-            var fastSet = (Action<CodeFormattingOptions, T>)propInfo.GetSetMethod().CreateDelegate(typeof(Action<CodeFormattingOptions, T>));
+            var fastSet = (Action<CodeFormattingOptions, T>)Delegate.CreateDelegate(typeof(Action<CodeFormattingOptions, T>), propInfo.GetSetMethod());
             return (options, value) => fastSet(options, (T)value);
         }
 
