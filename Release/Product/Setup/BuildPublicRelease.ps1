@@ -46,36 +46,58 @@ foreach ($version in $versions) {
     } else {
         & $buildroot\Release\Product\Setup\BuildRelease.ps1 $prevOutdir -vsTarget $version.number -noclean -nocopy > $outDir\release_output.txt
     }
-    
+
+    ###################################################################
+    #  Symbol and Binary Indexing
+
+    #Create directory to store the request logs
+    mkdir -force SymSrvRequestLogs
+
     ###################################################################
     # Index symbols
     
-    $buildid = $prevOutDir.Substring($prevOutDir.LastIndexOf('\') + 1)
+    $buildid = $prevOutDir.Substring($prevOutDir.LastIndexOf('\') + 1)    
+    $contacts = "$env:username;dinov;smortaz;stevdo;gilbertw"
     
     $request = `
-    "BuildId=$buildid $($version.name)
+    "BuildId=$buildid $($version.name) symbols
     BuildLabPhone=7058786
-    BuildRemark=beta
-    ContactPeople=$env:username;dinov;smortaz
+    BuildRemark=$build_name
+    ContactPeople=$contacts
     Directory=$outDir\Release\Symbols
     Project=TechnicalComputing
     Recursive=yes
-    StatusMail=$env:username;dinov;smortaz
-    UserName=$env:username
-    SubmitToArchive=ALL
-    SubmitToInternet=Yes"
+    StatusMail=$contacts
+    UserName=$env:username"
+
+    $request | Out-File -Encoding ascii -FilePath request_symbols.txt
+    \\symbols\tools\createrequest.cmd -i request_symbols.txt -d .\SymSrvRequestLogs -c -s
     
-    mkdir -force requests
-    $request | Out-File -Encoding ascii -FilePath request.txt
-    \\symbols\tools\createrequest.cmd -i request.txt -d .\requests -c -s
+    ###################################################################
+    # Index binaries
+        
+    $request = `
+    "BuildId=$buildid $($version.name) binaries
+    BuildLabPhone=7058786
+    BuildRemark=$build_name
+    ContactPeople=$contacts
+    Directory=$outDir\Release\SignedBinaries
+    Project=TechnicalComputing
+    Recursive=yes
+    StatusMail=$contacts
+    UserName=$env:username"
     
+    $request | Out-File -Encoding ascii -FilePath request_binaries.txt
+    \\symbols\tools\createrequest.cmd -i request_binaries.txt -d .\SymSrvRequestLogs -c -s
+
+
     [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.6, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
     [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
     
     #################################################################
     # Submit managed binaries
     
-    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "zacha"
+    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "zacha", "gilbertw", "huvalo"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     
     while($True) {
