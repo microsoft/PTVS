@@ -211,7 +211,7 @@ namespace DebuggerTests {
         }
 
         private bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
-            return curReceived.ChildText == curChild.ChildText && 
+            return curReceived.ChildText == curChild.ChildText &&
                 (curReceived.StringRepr == curChild.Repr || curChild.Repr == null) &&
                 (Version.Version.Is3x() || (curChild.HexRepr == null || curChild.HexRepr == curReceived.HexRepr));// __hex__ no longer used in 3.x, http://mail.python.org/pipermail/python-list/2009-September/1218287.html
         }
@@ -308,7 +308,7 @@ namespace DebuggerTests {
 
         #region BreakAll Tests
 
-        
+
         [TestMethod, Priority(0)]
         public void TestBreakAll() {
             var debugger = new PythonDebugger();
@@ -484,7 +484,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void CloseToDictExpansionBug484() {
             PythonThread thread = RunAndBreak("LocalsTestBug484.py", 7);
-            
+
             var frames = thread.Frames;
 
             var obj = frames[0].Locals.First(x => x.Expression == "x");
@@ -558,7 +558,7 @@ namespace DebuggerTests {
 
             // Bug 503: http://pytools.codeplex.com/workitem/503
             StepTest(DebuggerTestPath + @"SteppingTestBug503.py",
-                new []  { 6, 12 },
+                new[] { 6, 12 },
                 new Action<PythonProcess>[] { 
                     (x) => {},
                     (x) => {},
@@ -578,7 +578,7 @@ namespace DebuggerTests {
                 new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
                 new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
                 new ExpectedStep(StepKind.Out, 10),     // step out return z + 3
-                
+
                 new ExpectedStep(StepKind.Resume, 15)     // let the program exit
             );
 
@@ -672,7 +672,7 @@ namespace DebuggerTests {
 
             string fullPath = Path.GetFullPath(DebuggerTestPath + "StepStdLib.py");
             string dir = Path.GetDirectoryName(DebuggerTestPath + "StepStdLib.py");
-            foreach (var steppingStdLib in new[] { false, true}) {
+            foreach (var steppingStdLib in new[] { false, true }) {
                 var process = debugger.CreateProcess(
                     Version.Version,
                     Version.Path,
@@ -816,8 +816,8 @@ namespace DebuggerTests {
             string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             BreakpointTest(
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "BreakpointFilenames.py"),
-                new [] { 4 },
-                new int [0],
+                new[] { 4 },
+                new int[0],
                 cwd: cwd,
                 breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "B", "module1.py"),
                 checkBound: false);
@@ -829,10 +829,10 @@ namespace DebuggerTests {
 
             string cwd = Path.GetFullPath(Path.Combine(Path.GetDirectoryName("SimpleFilenameBreakpoint.py"), ".."));
             BreakpointTest(
-                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "SimpleFilenameBreakpoint.py"), 
-                new [] { 4, 10 }, 
-                new[] { 4, 10 }, 
-                cwd: cwd, 
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "SimpleFilenameBreakpoint.py"),
+                new[] { 4, 10 },
+                new[] { 4, 10 },
+                cwd: cwd,
                 breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "CompiledCodeFile.py"),
                 checkBound: false);
         }
@@ -845,15 +845,15 @@ namespace DebuggerTests {
             string filename = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "ThreadJoin.py");
             PythonThread thread = null;
             var process = DebugProcess(debugger, filename, (newproc, newthread) => {
-                    thread = newthread;
-                    var bp = newproc.AddBreakPoint(filename, 5);
-                    bp.Add();
-                },
+                thread = newthread;
+                var bp = newproc.AddBreakPoint(filename, 5);
+                bp.Add();
+            },
                 debugOptions: PythonDebugOptions.WaitOnAbnormalExit | PythonDebugOptions.WaitOnNormalExit
             );
 
             AutoResetEvent bpHit = new AutoResetEvent(false);
-            
+
             process.BreakpointHit += (sender, args) => {
                 Assert.AreNotEqual(args.Thread, thread, "breakpoint shouldn't be on main thread");
 
@@ -1021,7 +1021,7 @@ namespace DebuggerTests {
                     TestException(debugger, DebuggerTestPath + @"UnhandledException1_v25.py", i == 0, 32, new KeyValuePair<string, int>[0],
                         new ExceptionInfo(ExceptionModule + ".Exception", 57)
                     );
-                } else if(Version.Version.Is3x()) {
+                } else if (Version.Version.Is3x()) {
                     TestException(debugger, DebuggerTestPath + @"UnhandledException1_v3x.py", i == 0, 32, new KeyValuePair<string, int>[0],
                         new ExceptionInfo(ExceptionModule + ".Exception", 56)
                     );
@@ -1051,10 +1051,10 @@ namespace DebuggerTests {
 
         private void TestException(PythonDebugger debugger, string filename, bool resumeProcess,
             int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, params ExceptionInfo[] exceptions) {
-                TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.None, exceptions);
+            TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.None, exceptions);
         }
 
-        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess, 
+        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess,
             int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, PythonDebugOptions debugOptions, params ExceptionInfo[] exceptions) {
             bool loaded = false;
             var process = DebugProcess(debugger, filename, (processObj, threadObj) => {
@@ -1096,9 +1096,9 @@ namespace DebuggerTests {
         public void TestExceptionsSysExitZero() {
             var debugger = new PythonDebugger();
 
-            TestException(debugger, 
-                DebuggerTestPath + @"SysExitZeroRaise.py", 
-                true, 32, 
+            TestException(debugger,
+                DebuggerTestPath + @"SysExitZeroRaise.py",
+                true, 32,
                 new KeyValuePair<string, int>[0],
                 PythonDebugOptions.BreakOnSystemExitZero,
                 new ExceptionInfo(ExceptionModule + ".SystemExit", 1)
@@ -1135,14 +1135,14 @@ namespace DebuggerTests {
                 new ExceptionHandlerInfo(1, 3, "*"),
                 new ExceptionHandlerInfo(6, 7, "*"),
                 new ExceptionHandlerInfo(9, 13, "*"),
-                
+
                 new ExceptionHandlerInfo(18, 19, "ArithmeticError", "AssertionError", "AttributeError", "BaseException", "BufferError", "BytesWarning", "DeprecationWarning", "EOFError", "EnvironmentError", "Exception", "FloatingPointError", "FutureWarning", "GeneratorExit", "IOError", "ImportError", "ImportWarning", "IndentationError", "IndexError", "KeyError", "KeyboardInterrupt", "LookupError", "MemoryError", "NameError", "NotImplementedError", "OSError", "OverflowError", "PendingDeprecationWarning", "ReferenceError", "RuntimeError", "RuntimeWarning", "StandardError", "StopIteration", "SyntaxError", "SyntaxWarning", "SystemError", "SystemExit", "TabError", "TypeError", "UnboundLocalError", "UnicodeDecodeError", "UnicodeEncodeError", "UnicodeError", "UnicodeTranslateError", "UnicodeWarning", "UserWarning", "ValueError", "Warning", "WindowsError", "ZeroDivisionError"),
                 new ExceptionHandlerInfo(69, 70, "ArithmeticError", "AssertionError", "AttributeError", "BaseException", "BufferError", "BytesWarning", "DeprecationWarning", "EOFError", "EnvironmentError", "Exception", "FloatingPointError", "FutureWarning", "GeneratorExit", "IOError", "ImportError", "ImportWarning", "IndentationError", "IndexError", "KeyError", "KeyboardInterrupt", "LookupError", "MemoryError", "NameError", "NotImplementedError", "OSError", "OverflowError", "PendingDeprecationWarning", "ReferenceError", "RuntimeError", "RuntimeWarning", "StandardError", "StopIteration", "SyntaxError", "SyntaxWarning", "SystemError", "SystemExit", "TabError", "TypeError", "UnboundLocalError", "UnicodeDecodeError", "UnicodeEncodeError", "UnicodeError", "UnicodeTranslateError", "UnicodeWarning", "UserWarning", "ValueError", "Warning", "WindowsError", "ZeroDivisionError"),
                 new ExceptionHandlerInfo(72, 73, "*"),
-                
+
                 new ExceptionHandlerInfo(125, 126, "struct.error", "socket.error", "os.error"),
                 new ExceptionHandlerInfo(130, 131, "struct.error", "socket.error", "os.error"),
-                
+
                 new ExceptionHandlerInfo(133, 143, "ValueError"),
                 new ExceptionHandlerInfo(135, 141, "TypeError"),
                 new ExceptionHandlerInfo(137, 139, "ValueError"),
@@ -1166,7 +1166,7 @@ namespace DebuggerTests {
             var actual = process.GetHandledExceptionRanges(filename);
             Assert.AreEqual(expected.Length, actual.Count);
 
-            Assert.IsTrue(actual.All(a => 
+            Assert.IsTrue(actual.All(a =>
                 expected.SingleOrDefault(e => e.FirstLine == a.Item1 && e.LastLine == a.Item2 && e.Expressions.ContainsExactly(a.Item3)) != null
             ));
         }
@@ -1294,7 +1294,7 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
 
             // test which verifies we have no doc string when running w/ -OO
-            TestExitCode(debugger, DebuggerTestPath + @"DocString.py", 0, interpreterOptions:"-OO");
+            TestExitCode(debugger, DebuggerTestPath + @"DocString.py", 0, interpreterOptions: "-OO");
         }
 
         #endregion
@@ -1313,6 +1313,8 @@ namespace DebuggerTests {
                 // http://pytools.codeplex.com/discussions/285741#post724014
                 var psi = new ProcessStartInfo(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
                 psi.WorkingDirectory = TestData.GetPath(@"TestData\DebuggerProject");
+                psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
+                psi.UseShellExecute = false;
                 Process p = Process.Start(psi);
                 System.Threading.Thread.Sleep(1000);
 
@@ -1342,7 +1344,7 @@ namespace DebuggerTests {
                     if (args.Breakpoint.LineNo == 9) {
                         // stop running the infinite loop
                         Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
-                        args.Thread.Frames[0].ExecuteText("x = False", (x) => {});
+                        args.Thread.Frames[0].ExecuteText("x = False", (x) => { });
                         mainThread = args.Thread;
                     } else if (args.Breakpoint.LineNo == 5) {
                         // we hit the breakpoint on the new thread
@@ -1692,7 +1694,7 @@ void main()
                 CompileCode(hostCode);
 
                 // start the test process w/ our handle
-                Process p = Process.Start("test.exe");
+                Process p = RunHost("test.exe");
 
                 System.Threading.Thread.Sleep(1500);
 
@@ -1823,7 +1825,7 @@ void main()
                 CompileCode(hostCode);
 
                 // start the test process w/ our handle
-                Process p = Process.Start("test.exe");
+                Process p = RunHost("test.exe");
 
                 System.Threading.Thread.Sleep(1500);
 
@@ -1913,6 +1915,8 @@ int main(int argc, char* argv[]) {
             psi.UseShellExecute = false;
             psi.RedirectStandardError = psi.RedirectStandardOutput = true;
             psi.CreateNoWindow = true;
+            // Add Python to PATH so that the host can locate the DLL in case it's not in \Windows\System32 (e.g. for EPD)
+            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Path.GetDirectoryName(Version.Path);
 
             Process p = Process.Start(psi);
             var outRecv = new OutputReceiver();
@@ -1957,7 +1961,7 @@ int main(int argc, char* argv[]) {
                 Path.Combine(GetVCInstallDir(), "bin", "cl.exe"),
                 String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.Path))
             );
-            
+
             startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
             startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(GetVCInstallDir(), "INCLUDE") + ";" + Path.Combine(GetWindowsSDKDir(), "Include");
             startInfo.EnvironmentVariables["LIB"] = Path.Combine(GetVCInstallDir(), "LIB") + ";" + Path.Combine(GetWindowsSDKDir(), "Lib");
@@ -1976,10 +1980,17 @@ int main(int argc, char* argv[]) {
             compileProcess.BeginOutputReadLine();
             compileProcess.WaitForExit();
 
-            Assert.AreEqual(0, compileProcess.ExitCode, 
+            Assert.AreEqual(0, compileProcess.ExitCode,
                 "Incorrect exit code: " + compileProcess.ExitCode + Environment.NewLine +
                 outputReceiver.Output.ToString()
             );
+        }
+
+        private Process RunHost(string hostExe) {
+            var psi = new ProcessStartInfo(hostExe) { UseShellExecute = false };
+            // Add Python to PATH so that the host can locate the DLL in case it's not in \Windows\System32 (e.g. for EPD)
+            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Path.GetDirectoryName(Version.Path);
+            return Process.Start(psi);
         }
 
         private static string GetVCInstallDir() {
@@ -2001,7 +2012,7 @@ int main(int argc, char* argv[]) {
                     break;
                 }
             }
-            
+
             if (regValue == null) {
                 Assert.IsTrue(Directory.Exists("C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0\\Include"), "Windows SDK is not installed");
                 return "C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0";
@@ -2086,7 +2097,7 @@ int main(int argc, char* argv[]) {
                 return "ComplexExceptionsV3.py";
             }
         }
-        
+
         public override string CreateString {
             get {
                 return "PyUnicodeUCS2_FromString";
