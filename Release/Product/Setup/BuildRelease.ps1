@@ -32,6 +32,9 @@ if (-not $noclean)
     }
 }
 
+$version = "2.0." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
+"Product to be stamped with Version: $version"
+
 # Add new products here:
 
 $products = @{name="PythonTools"; wxi=".\PythonToolsInstaller\PythonToolsInstallerVars.wxi"; msi="PythonToolsInstaller.msi"}, `
@@ -89,8 +92,7 @@ try {
     if ($skipdebug) { $targetConfigs = ("Release") }
     
     foreach ($targetVs in $targetVersions) {
-        $version = "1.5." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
-        
+
         $asmverfileBackedUp = 0
         tf edit $asmverfile
         if ($LASTEXITCODE -gt 0) {
