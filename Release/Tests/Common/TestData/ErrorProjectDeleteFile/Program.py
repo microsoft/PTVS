@@ -1,4 +1,4 @@
 def f():
-    print 'abc'
-        print 'bad formatting'
+    print('abc')
+        print('bad formatting')
 

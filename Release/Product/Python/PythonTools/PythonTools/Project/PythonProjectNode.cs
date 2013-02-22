@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.Project {
         private DesignerContext _designerContext;
         private IPythonInterpreter _interpreter;
         private VsProjectAnalyzer _analyzer;
+        private readonly HashSet<string> _warningFiles = new HashSet<string>();
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
         private bool _defaultInterpreter;
         private PythonDebugPropertyPage _debugPropPage;
@@ -381,7 +382,7 @@ namespace Microsoft.PythonTools.Project {
             if (_analyzer != null) {
                 _analyzer.Cancel();
 
-                if (this.ErrorFiles.Count > 0) {
+                if (this.WarningFiles.Count > 0 || this.ErrorFiles.Count > 0) {
                     foreach (var node in EnumNodesOfType<PythonFileNode>()) {
                         _analyzer.UnloadFile(node.GetAnalysis(), suppressUpdate: true);
                     }
@@ -458,6 +459,15 @@ namespace Microsoft.PythonTools.Project {
         public HashSet<string> ErrorFiles {
             get {
                 return _errorFiles;
+            }
+        }
+
+        /// <summary>
+        /// File names within the project which contain warnings.
+        /// </summary>
+        public HashSet<string> WarningFiles {
+            get {
+                return _warningFiles;
             }
         }
 

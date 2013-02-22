@@ -39,6 +39,8 @@
     <None Include="Program.py" />
     <None Include="SetNextLine.py" />
     <None Include="SimpleException.py" />
+    <None Include="SimpleException2.py" />
+    <None Include="SimpleExceptionUnhandled.py" />
     <None Include="SteppingTest.py" />
     <None Include="SteppingTest2.py" />
     <None Include="SteppingTest3.py" />

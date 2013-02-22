@@ -1,3 +1,3 @@
 def f():
-        print 'hello'
-	print 'goodbye'
+        print('hello')
+	print('goodbye')

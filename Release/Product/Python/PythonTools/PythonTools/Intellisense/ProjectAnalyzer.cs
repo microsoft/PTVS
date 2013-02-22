@@ -755,6 +755,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void UpdateErrorList(CollectingErrorSink errorSink, string filepath, TaskProvider provider) {
             if (_project != null && provider != null) {
+                if (errorSink.Warnings.Count > 0) {
+                    _project.WarningFiles.Add(filepath);
+                } else {
+                    _project.WarningFiles.Remove(filepath);
+                }
                 if (errorSink.Errors.Count > 0) {
                     _project.ErrorFiles.Add(filepath);
                 } else {
@@ -1240,6 +1245,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     _taskProvider.Value.Clear(entry.FilePath, !suppressUpdate);
                 }
                 if (_project != null) {
+                    _project.WarningFiles.Remove(entry.FilePath);
                     _project.ErrorFiles.Remove(entry.FilePath);
                 }
                 _pyAnalyzer.RemoveModule(entry);

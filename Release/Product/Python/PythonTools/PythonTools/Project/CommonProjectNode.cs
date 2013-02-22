@@ -672,23 +672,25 @@ namespace Microsoft.PythonTools.Project {
 
             for (HierarchyNode n = parent.FirstChild; n != null; n = n.NextSibling) {
                 // TODO: Distinguish between real Urls and fake ones (eg. "References")
-                var absUrl = CommonUtils.GetAbsoluteFilePath(parent.ProjectMgr.ProjectHome, n.Url);
-                if (CommonUtils.IsSamePath(oldFile, absUrl)) {
-                    windows.SetItemAttribute(
-                        this,
-                        n.ID,
-                        (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
-                        false
-                    );
-                    n.ReDraw(UIHierarchyElement.Icon);
-                } else if (CommonUtils.IsSamePath(newFile, absUrl)) {
-                    windows.SetItemAttribute(
-                        this,
-                        n.ID,
-                        (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
-                        true
-                    );
-                    n.ReDraw(UIHierarchyElement.Icon);
+                if (windows != null) {
+                    var absUrl = CommonUtils.GetAbsoluteFilePath(parent.ProjectMgr.ProjectHome, n.Url);
+                    if (CommonUtils.IsSamePath(oldFile, absUrl)) {
+                        windows.SetItemAttribute(
+                            this,
+                            n.ID,
+                            (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
+                            false
+                        );
+                        n.ReDraw(UIHierarchyElement.Icon);
+                    } else if (CommonUtils.IsSamePath(newFile, absUrl)) {
+                        windows.SetItemAttribute(
+                            this,
+                            n.ID,
+                            (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
+                            true
+                        );
+                        n.ReDraw(UIHierarchyElement.Icon);
+                    }
                 }
 
                 RefreshStartupFile(n, oldFile, newFile);

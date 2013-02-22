@@ -533,7 +533,7 @@ namespace DebuggerUITests {
             
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 5;
+            const int expectedItems = 6;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
         }
@@ -549,11 +549,11 @@ namespace DebuggerUITests {
 
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 5;
+            const int expectedItems = 6;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
 
-            project.Delete();
+            VsIdeTestHostContext.Dte.Solution.Remove(project);
 
             allItems = GetErrorListItems(errorList, 0);
             Assert.AreEqual(0, allItems.Count);
@@ -570,7 +570,7 @@ namespace DebuggerUITests {
 
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 5;
+            const int expectedItems = 6;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
 
@@ -598,7 +598,7 @@ namespace DebuggerUITests {
 
             var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 5;
+            const int expectedItems = 6;
             List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
             Assert.AreEqual(expectedItems, allItems.Count);
 

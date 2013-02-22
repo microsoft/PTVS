@@ -1,4 +1,4 @@
-print 'hello world'
+print('hello world')
 
 class C(object):
 	abc = 42
@@ -11,6 +11,6 @@ def f(a, b, c):
 	l = [2,3,4]
 	d = {'abc':'foo'}
 	o = C()
-	print 'in f'
+	print('in f')
 
 f(2, [3,4,5], {'x':42})
