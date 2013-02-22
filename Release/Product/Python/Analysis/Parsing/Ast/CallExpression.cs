@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -84,7 +85,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             _target.AppendCodeString(res, ast, format);
-            CodeFormattingOptions.Append(
+            format.Append(
                 res,
                 format.SpaceBeforeCallParen,
                 " ",
@@ -122,8 +123,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             
             if (!this.IsMissingCloseGrouping(ast)) {
-                if (Args.Count != 0 || format.SpaceWithinEmptyCallArgumentList == null) {
-                    CodeFormattingOptions.Append(
+                if (Args.Count != 0 || 
+                    format.SpaceWithinEmptyCallArgumentList == null ||
+                    !String.IsNullOrWhiteSpace(this.GetSecondWhiteSpaceDefaultNull(ast))) {
+                    format.Append(
                         res,
                         format.SpaceWithinCallParens,
                         " ",

@@ -43,7 +43,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (Items.Count == 0 && format.SpacesWithinEmptyListExpression != null) {
                 res.Append(this.GetProceedingWhiteSpace(ast));
                 res.Append('[');
-                res.Append(format.SpacesWithinEmptyListExpression.Value ? " " : "");
+                if (String.IsNullOrWhiteSpace(this.GetSecondWhiteSpace(ast))) {
+                    res.Append(format.SpacesWithinEmptyListExpression.Value ? " " : "");
+                } else {
+                    format.ReflowComment(res, this.GetSecondWhiteSpace(ast));
+                }
                 res.Append(']');
             } else {
                 string delimWs =
@@ -88,7 +92,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             if (!String.IsNullOrEmpty(end)) {
-                res.Append(trailingWhiteSpace ?? node.GetSecondWhiteSpace(ast));
+                res.Append(
+                    String.IsNullOrWhiteSpace(node.GetSecondWhiteSpace(ast)) ?
+                        trailingWhiteSpace ?? node.GetSecondWhiteSpace(ast) :
+                        node.GetSecondWhiteSpace(ast)
+                );
                 res.Append(end);
             }
         }

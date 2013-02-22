@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             var lhs = this.GetListWhiteSpace(ast);
             for (int i = 0; i < Left.Count; i++) {
                 if (lhs != null && i != 0) {
-                    CodeFormattingOptions.Append(
+                    format.Append(
                         res,
                         format.SpacesAroundAssignmentOperator,
                         " ",
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 );
             }
             if (lhs != null) {
-                CodeFormattingOptions.Append(
+                format.Append(
                     res,
                     format.SpacesAroundAssignmentOperator, 
                     " ", 

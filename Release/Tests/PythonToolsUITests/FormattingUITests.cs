@@ -93,6 +93,14 @@ def g():
     pass", new [] { new Span(0, 104) });
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void FormatReduceLines() {
+            PythonToolsPackage.Instance.SetFormattingOption("SpacesAroundBinaryOperators", true);
+
+            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n\r\n", new[] { new Span(0, 41) });
+        }
+
         /// <summary>
         /// Runs a single formatting test
         /// </summary>

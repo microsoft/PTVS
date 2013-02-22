@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
@@ -65,10 +66,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             if (this.IsAltForm(ast)) {
                 ListExpression.AppendItems(res, ast, format, "", "", this, Items);
             } else {
-                if (Items.Count == 0 && format.SpaceWithinEmptyTupleExpression != null) {
+                if (Items.Count == 0 && 
+                    format.SpaceWithinEmptyTupleExpression != null) {
                     format.ReflowComment(res, this.GetProceedingWhiteSpace(ast));
                     res.Append('(');
-                    res.Append(format.SpaceWithinEmptyTupleExpression.Value ? " " : "");
+                    if (String.IsNullOrWhiteSpace(this.GetSecondWhiteSpace(ast))) {
+                        res.Append(format.SpaceWithinEmptyTupleExpression.Value ? " " : "");
+                    } else {
+                        format.ReflowComment(res, this.GetSecondWhiteSpace(ast));
+                    }
                     res.Append(')');
                 } else {
                     string delimWs =

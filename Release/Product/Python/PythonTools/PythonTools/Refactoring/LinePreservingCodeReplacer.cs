@@ -56,8 +56,8 @@ namespace Microsoft.PythonTools.Refactoring {
                     lineInfo.Add(i);
                 }
 
-
-                for (int curOldLine = 0, curNewLine = 0; curOldLine < oldLines.Length; curOldLine++) {
+                int curOldLine = 0;
+                for (int curNewLine = 0; curOldLine < oldLines.Length && curNewLine < _newLines.Length; curOldLine++) {
                     if (oldLines[curOldLine] == _newLines[curNewLine]) {
                         curNewLine++;
                         continue;
@@ -90,6 +90,16 @@ namespace Microsoft.PythonTools.Refactoring {
                         ReplaceLines(edit, curOldLine, _snapshot.LineCount - _startingReplacementLine, startNewLine, _newLines.Length);
                         break;
                     }
+                }
+
+                if (curOldLine < oldLines.Length) {
+                    // remove the remaining new lines
+                    edit.Delete(
+                        Span.FromBounds(
+                            _snapshot.GetLineFromLineNumber(curOldLine).Start,
+                            new SnapshotPoint(_snapshot, _snapshot.Length)
+                        )
+                    );
                 }
 
                 edit.Apply();

@@ -279,11 +279,12 @@ namespace Microsoft.PythonTools.Parsing {
         /// Appends one of 3 strings depending upon a code formatting setting.  The 3 settings are the on and off
         /// settings as well as the original formatting if the setting is not set.
         /// </summary>
-        internal static void Append(StringBuilder res, bool? setting, string ifOn, string ifOff, string originalFormatting) {
-            if (setting != null) {
-                res.Append(setting.Value ? ifOn : ifOff);
+        internal void Append(StringBuilder res, bool? setting, string ifOn, string ifOff, string originalFormatting) {
+            if (!String.IsNullOrWhiteSpace(originalFormatting) || setting == null) {
+                // there's a comment in the formatting, so we need to preserve it.
+                ReflowComment(res, originalFormatting);
             } else {
-                res.Append(originalFormatting);
+                res.Append(setting.Value ? ifOn : ifOff);
             }
         }
 
@@ -322,6 +323,11 @@ namespace Microsoft.PythonTools.Parsing {
             int charsOnCurrentLine = GetCharsOnLastLine(res);
 
             var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            int lineCount = lines.Length;
+            if (text.EndsWith("\r") || text.EndsWith("\n")) {
+                // split will give us an extra entry, but there's not really an extra line
+                lineCount = lines.Length - 1;
+            }
             int reflowStartingLine = 0, curLine = 0;
             do {
                 string commentPrefix = GetCommentPrefix(lines[curLine]);
@@ -331,7 +337,7 @@ namespace Microsoft.PythonTools.Parsing {
                     res.Append(lines[curLine] + (NewLineFormat ?? Environment.NewLine));
                     charsOnCurrentLine = GetCharsOnLastLine(res);
                     reflowStartingLine = curLine + 1;
-                } else if (curLine == lines.Length - 1 || !lines[curLine + 1].StartsWith(commentPrefix)) {
+                } else if (curLine == lineCount - 1 || !lines[curLine + 1].StartsWith(commentPrefix)) {
                     // last line, or next line mismatches with our comment prefix.  So reflow the text now
                     res.Append(
                         ReflowText(
@@ -344,7 +350,7 @@ namespace Microsoft.PythonTools.Parsing {
                     );
                     reflowStartingLine = curLine + 1;
                 }
-            } while (++curLine < lines.Length);
+            } while (++curLine < lineCount);
         }
 
         private static int GetCharsOnLastLine(StringBuilder res) {
@@ -421,12 +427,25 @@ namespace Microsoft.PythonTools.Parsing {
 
                 if (curOffset >= lines[curLine].Length) {
                     // we're not reading from the next line
+                    if (lastSpace - curOffset < columnCutoff) {
+                        // preserve existing new lines if they are shorter
+                        // than the maximum length
+
+                        // and remove any trailing whitespace from the line 
+                        // before appending the new line
+                        while (newText.Length > 0 && newText[newText.Length - 1] == ' ') {
+                            newText.Length = newText.Length - 1;
+                        }
+
+                        linesWritten++;
+                        columnCutoff = defaultColumnCutoff;
+                        newText.Append(newLine);
+                    }
+
                     curLine++;
                     curOffset = prefix.Length;
+
                 }
-            }
-            while (newText.Length > 0 && newText[newText.Length - 1] == ' ') {
-                newText.Length = newText.Length - 1;
             }
             return newText.ToString();
         }

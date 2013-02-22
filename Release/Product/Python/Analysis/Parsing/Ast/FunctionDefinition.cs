@@ -257,7 +257,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(this.GetSecondWhiteSpace(ast));
                 res.Append(name);
                 if (!this.IsIncompleteNode(ast)) {
-                    CodeFormattingOptions.Append(
+                    format.Append(
                         res, 
                         format.SpaceBeforeFunctionDeclarationParen, 
                         " ", 
@@ -284,7 +284,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     }
 
                     if (!this.IsMissingCloseGrouping(ast)) {                        
-                        CodeFormattingOptions.Append(
+                        format.Append(
                             res,
                             Parameters.Count != 0 ? 
                                 format.SpaceWithinFunctionDeclarationParens :
@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         res.Append(')');
                     }
                     if (ReturnAnnotation != null) {
-                        CodeFormattingOptions.Append(
+                        format.Append(
                             res,
                             format.SpaceAroundAnnotationArrow,
                             " ",

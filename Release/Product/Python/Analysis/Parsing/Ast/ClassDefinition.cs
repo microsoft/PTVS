@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -174,7 +175,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append(this.GetVerbatimImage(ast) ?? Name);
 
             if (!this.IsAltForm(ast)) {
-                CodeFormattingOptions.Append(
+                format.Append(
                     res,
                     format.SpaceBeforeClassDeclarationParen,
                     " ",
@@ -211,8 +212,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
             
             if (!this.IsAltForm(ast) && !this.IsMissingCloseGrouping(ast)) {
-                if (Bases.Count != 0 || format.SpaceWithinEmptyBaseClassList == null) {
-                    CodeFormattingOptions.Append(
+                if (Bases.Count != 0 || 
+                    format.SpaceWithinEmptyBaseClassList == null ||
+                    !String.IsNullOrWhiteSpace(this.GetFourthWhiteSpace(ast))) {
+                    format.Append(
                         res,
                         format.SpaceWithinClassDeclarationParens,
                         " ",

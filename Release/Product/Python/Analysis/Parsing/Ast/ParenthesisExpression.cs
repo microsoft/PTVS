@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 format.SpacesWithinParenthesisExpression != null ? format.SpacesWithinParenthesisExpression.Value ? " " : "" : null
             );
             if (!this.IsMissingCloseGrouping(ast)) {
-                CodeFormattingOptions.Append(
+                format.Append(
                     res,
                     format.SpacesWithinParenthesisExpression,
                     " ",

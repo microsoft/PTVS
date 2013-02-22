@@ -304,6 +304,10 @@ namespace AnalysisTests {
                     Before = "############# Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
                     After =  "############# Beautiful is better than ugly.  Explicit is better than implicit.\r\n############# Simple is better than complex.  Complex is better than\r\n############# complicated.\r\n"
                 },
+                new {
+                    Before = "  # Beautiful is better than ugly.\r\n  # import foo\r\n  # Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
+                    After =  "  # Beautiful is better than ugly.\r\n  # import foo\r\n  # Explicit is better than implicit.  Simple is better than complex.  Complex\r\n  # is better than complicated.\r\n"
+                },
             };
 
             foreach (var preceedingText in commentTestCases) {
@@ -346,6 +350,70 @@ namespace AnalysisTests {
                 }
             }
         }
+
+        [TestMethod, Priority(0)]
+        public void TestReflowComment2() {
+            foreach (var optionValue in new bool?[] { true, false, null }) {
+                var options = new CodeFormattingOptions() {
+                    SpaceWithinClassDeclarationParens = optionValue,
+                    SpaceWithinEmptyBaseClassList = optionValue,
+                    SpaceWithinFunctionDeclarationParens = optionValue,
+                    SpaceWithinEmptyParameterList = optionValue,
+                    SpaceAroundDefaultValueEquals = optionValue,
+                    SpaceBeforeCallParen = optionValue,
+                    SpaceWithinEmptyCallArgumentList = optionValue,
+                    SpaceWithinCallParens = optionValue,
+                    SpacesWithinParenthesisExpression = optionValue,
+                    SpaceWithinEmptyTupleExpression = optionValue,
+                    SpacesWithinParenthesisedTupleExpression = optionValue,
+                    SpacesWithinEmptyListExpression = optionValue,
+                    SpacesWithinListExpression = optionValue,
+                    SpaceBeforeIndexBracket = optionValue,
+                    SpaceWithinIndexBrackets = optionValue,
+                    SpacesAroundBinaryOperators = optionValue,
+                    SpacesAroundAssignmentOperator = optionValue,
+                };
+
+                foreach (var testCase in _commentInsertionSnippets) {
+                    Console.WriteLine(testCase);
+
+                    var parser = Parser.CreateParser(
+                        new StringReader(testCase.Replace("[INSERT]", "# comment here")), 
+                        PythonLanguageVersion.V27, 
+                        new ParserOptions() { Verbatim = true }
+                    );
+                    var ast = parser.ParseFile();
+                    var newCode = ast.ToCodeString(ast, options);
+                    Console.WriteLine(newCode);
+                    Assert.IsTrue(newCode.IndexOf("# comment here") != -1);
+                }
+            }
+        }
+
+        static readonly string[] _commentInsertionSnippets = new[] {
+            "class C(a, [INSERT]\r\n    b): pass",
+            "class C( [INSERT]\r\n    ): pass", 
+            "def f(a, [INSERT]\r\n    b): pass",
+            "def f( [INSERT]\r\n    ): pass", 
+            "def f(a = [INSERT]\r\n    42): pass",
+            "g( f [INSERT]\r\n    (42))",
+            "f( [INSERT]\r\n    )",
+            "f( a, [INSERT]\r\n     )",
+            "f([INSERT]\r\n   a)",
+            "([INSERT]\r\n    a)",
+            "(a [INSERT]\r\n    )",
+            "(\r\n    [INSERT]\r\n)",
+            "([INSERT]\r\n 1, 2, 3)",
+            "(1,2,3[INSERT]\r\n)",
+            "[[INSERT]\r\n]",
+            "[[INSERT]\r\n1,2,3]",
+            "[1,2,3\r\n[INSERT]\r\n]",
+            "(x [INSERT]\r\n[42])",
+            "x[[INSERT]\r\n42]",
+            "x[42\r\n[INSERT]\r\n]",
+            "(a +[INSERT]\r\nb)",
+            "(a[INSERT]\r\n+b)",
+        };
 
         static readonly string[] _insertionSnippets = new[] {
             "if True:\r\n    pass\r\n[INSERT]else:\r\n    pass",

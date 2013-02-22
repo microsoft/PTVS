@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal static void BinaryToCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format, Expression node, Expression left, Expression right, string op1, string op2 = null) {
             left.AppendCodeString(res, ast, format);
 
-            CodeFormattingOptions.Append(
+            format.Append(
                 res,
                 format.SpacesAroundBinaryOperators,
                 " ",

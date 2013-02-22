@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             Target.AppendCodeString(res, ast, format);
-            CodeFormattingOptions.Append(
+            format.Append(
                 res,
                 format.SpaceBeforeIndexBracket,
                 " ",
@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             );
 
             if (!this.IsMissingCloseGrouping(ast)) {
-                CodeFormattingOptions.Append(
+                format.Append(
                     res,
                     format.SpaceWithinIndexBrackets,
                     " ",

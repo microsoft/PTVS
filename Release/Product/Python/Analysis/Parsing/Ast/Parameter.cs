@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
 
             if (_defaultValue != null) {
-                CodeFormattingOptions.Append(
+                format.Append(
                     res,
                     format.SpaceAroundDefaultValueEquals,
                     " ",
