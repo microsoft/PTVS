@@ -55,15 +55,29 @@ namespace DjangoTests {
                         Assert.AreEqual(0, proc.ExitCode);
 
                         psi = new ProcessStartInfo();
-                        psi.Arguments = "manage.py loaddata data.yaml";
+                        psi.Arguments = "manage.py loaddata data.json";
                         psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
                         psi.FileName = Version.Path;
+                        psi.UseShellExecute = false;
+                        psi.CreateNoWindow = true;
+                        psi.RedirectStandardOutput = true;
+                        psi.RedirectStandardError = true;
                         proc = Process.Start(psi);
+                        proc.OutputDataReceived += OutputDataReceived;
+                        proc.ErrorDataReceived += OutputDataReceived;
+                        proc.BeginErrorReadLine();
+                        proc.BeginOutputReadLine();
                         proc.WaitForExit();
                         Assert.AreEqual(0, proc.ExitCode);
                         break;
                 }
                 _dbstate = requiredState;
+            }
+        }
+
+        private void OutputDataReceived(object sender, DataReceivedEventArgs e) {
+            if (e != null) {
+                Console.WriteLine("Output: {0}", e.Data);
             }
         }
 
@@ -178,7 +192,10 @@ namespace DjangoTests {
                 Console.WriteLine("Requesting {0}", _url);
                 HttpWebRequest myReq = (HttpWebRequest)WebRequest.Create(_url);
                 try {
-                    myReq.GetResponse();
+                    var response = myReq.GetResponse();
+                    using (var stream = response.GetResponseStream()) {
+                        Console.WriteLine("Response: {0}", new StreamReader(stream).ReadToEnd());
+                    }
                 } catch (WebException) {
                     // the process can be killed and the connection with it
                 }
