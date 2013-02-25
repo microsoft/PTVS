@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -1576,13 +1577,28 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     public int NavigateTo() {
-                        if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
-                            // we have just an absolute index, use that to naviagte
-                            PythonToolsPackage.NavigateTo(_path, Guid.Empty, Span.Start.Index);
-                        } else {
-                            PythonToolsPackage.NavigateTo(_path, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
+                        try {
+                            if (Span.Start.Line == 1 && Span.Start.Column == 1 && Span.Start.Index != 0) {
+                                // we have just an absolute index, use that to naviagte
+                                PythonToolsPackage.NavigateTo(_path, Guid.Empty, Span.Start.Index);
+                            } else {
+                                PythonToolsPackage.NavigateTo(_path, Guid.Empty, Span.Start.Line - 1, Span.Start.Column - 1);
+                            }
+                            return VSConstants.S_OK;
+                        } catch (DirectoryNotFoundException) {
+                            // This may happen when the error was in a file that's located inside a .zip archive.
+                            // Let's walk the path and see if it is indeed the case.
+                            string path = _path;
+                            while (path != null) {
+                                if (File.Exists(path) && Path.GetExtension(path) == ".zip") {
+                                    MessageBox.Show("Opening source files contained in .zip archives is not supported", "Cannot open file", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    return VSConstants.S_FALSE;
+                                }
+                                path = Path.GetDirectoryName(path);
+                            }
+                            // If it failed for some other reason, let caller handle it.
+                            throw;
                         }
-                        return VSConstants.S_OK;
                     }
 
                     public int NavigateToHelp() {
