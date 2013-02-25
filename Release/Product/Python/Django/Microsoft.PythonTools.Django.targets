@@ -16,7 +16,7 @@
   <!-- Dev environment for PTVS, use the current version -->
   <PropertyGroup Condition="$(PTVS_DEV) == 'true' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <DjangoSupportVersion>1.5</DjangoSupportVersion>
+    <DjangoSupportVersion>2.0</DjangoSupportVersion>
     <AzureDjangoSupportPath
       Condition="Exists('$(LOCALAPPDATA)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\wfastcgi.py')">$(LOCALAPPDATA)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\</AzureDjangoSupportPath>
 

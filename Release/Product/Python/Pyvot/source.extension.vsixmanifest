@@ -3,7 +3,7 @@
   <Identifier Id="5034726D-E9C8-4E93-83D6-B61F1B515C12">
     <Name>Python Tools Pyvot Sample</Name>
     <Author>Microsoft</Author>
-    <Version>1.5</Version>
+    <Version>2.0</Version>
     <Description xml:space="preserve">Adds samples for working with Excel from Python.</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
@@ -29,7 +29,7 @@
     <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
       <Name>Visual Studio MPF</Name>
     </Reference>
-    <Reference Id="Python Tools for Visual Studio" MinVersion="1.5">
+    <Reference Id="Python Tools for Visual Studio" MinVersion="2.0">
       <Name>Python Tools for Visual Studio</Name>
       <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
     </Reference>

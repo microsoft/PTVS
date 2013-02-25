@@ -635,7 +635,7 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var configKey = OpenVisualStudioKey()) {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\1.5");
+                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\2.0");
                     if (File.Exists(Path.Combine(toolsPath, "Microsoft.PythonTools.dll"))) {
                         return toolsPath;
                     }

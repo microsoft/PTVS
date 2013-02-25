@@ -3,7 +3,7 @@
   <Identifier Id="81da0100-e6db-4783-91ea-c38c3fa1b81e">
     <Name>Python Tools for Visual Studio, Profiling Support</Name>
     <Author>Microsoft</Author>
-    <Version>1.5</Version>
+    <Version>2.0</Version>
     <Description xml:space="preserve">Provides support for profiling Python projects</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
