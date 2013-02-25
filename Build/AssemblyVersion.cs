@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 #if DEV11
 [assembly: AssemblyVersion("0.7.4100.000")] // Assembly version not set in stone for Dev11 builds
 #else
-[assembly: AssemblyVersion("1.8.40818.0")]  // 1.0 shipped w/ this version, keep it for compat
+[assembly: AssemblyVersion("2.0.50201.0")]  // We need Dev10 and Dev11 to be different versions because of installations to the GAC.  This to be fixed later
 #endif
 [assembly: AssemblyFileVersion("0.7.4100.000")]
 
