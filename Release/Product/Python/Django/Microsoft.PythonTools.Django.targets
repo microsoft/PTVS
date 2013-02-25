@@ -254,6 +254,10 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   <Target Name="WatGetTargetFrameworkMoniker" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
   <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'" />
 
+  <PropertyGroup>
+    <CleanWPPAllFilesInSingleFolder Condition="'$(CleanWPPAllFilesInSingleFolder)' == ''">false</CleanWPPAllFilesInSingleFolder>
+  </PropertyGroup>
+  
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
 
   <Target
@@ -266,8 +270,8 @@ interpreter_path_emulated=$(PythonInterpreterPath)
       <PythonRuntimeDir>$([System.IO.Path]::GetDirectoryName($(PythonInterpreterPath)))</PythonRuntimeDir>
     </PropertyGroup>
     <ItemGroup>
+      <Content Include="@(Compile)"></Content> <!-- Python compile files are actually content -->
       <ContentFiles Include="@(Content)"></ContentFiles>
-      <ContentFiles Include="@(Compile)"></ContentFiles>
       <ContentFiles Include="@(Include)"></ContentFiles>
 
       <GeneratedFiles Include="bin\AzureSetup.cfg"/>
@@ -361,6 +365,57 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     </CreateItem>
     <!-- Create the directories for intermediate and final build products. -->
     <MakeDir Directories="$(OutDir);$(IntermediateOutputPath);@(DocFileItem->'%(RelativeDir)')" />
+  </Target>
+
+  <!-- ##################################################################################### -->
+  <!-- Web Publishing support -->
+  <!-- Web applications use this for publishing, but we don't have an intermediate assembly. -->
+  <Target Name="CollectFilesFromIntermediateAssembly"
+      DependsOnTargets="$(CollectFilesFromIntermediateAssemblyDependsOn)"
+      Condition="'@(IntermediateAssembly)'!=''">
+  </Target>
+
+  <ItemGroup>
+    <!-- Python compile files are actually content -->
+    <Content Include="@(Compile)" />
+  </ItemGroup>
+
+  <!-- Transforms a VirtualEnv entry into a directory of content which we include -->
+  <Target Name="TransformVirtualEnvToContent" BeforeTargets="CollectFilesFromContent">
+    <PropertyGroup>
+      <_TempPrefixFile>$([System.IO.Path]::GetTempFileName())</_TempPrefixFile>
+      <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python27</TargetPythonPrefix>
+    </PropertyGroup>
+    <WriteLinesToFile Lines="$(TargetPythonPrefix)" File="$(_TempPrefixFile)" />
+    
+    <ItemGroup>
+      <!-- We take the virtual env as is, but we transform the orig-prefix.txt to 
+      match the location of Python on the server -->
+
+      <!-- Expand the virtual env, capturing the filename, this 2 step process ensures we handle fully qualified
+           paths for virtual environments so that we don't overwrite files in the env directory when deploying -->
+      <VirtualEnvXForm Include="%(VirtualEnv.Identity)\**\*"
+               Condition="'%(VirtualEnv.Identity)' == '$(VirtualEnvEnabled)'"
+               Exclude="%(VirtualEnv.Identity)\Lib\orig-prefix.txt" >
+        <BasePath>%(VirtualEnv.Filename)</BasePath>
+      </VirtualEnvXForm>
+
+      <!-- And then turn that into the files for packaging with correct relative paths -->
+      <FilesForPackagingFromProject
+        Include="%(VirtualEnvXForm.Identity)">
+        <DestinationRelativePath>%(VirtualEnvXForm.BasePath)\%(VirtualEnvXForm.RecursiveDir)%(VirtualEnvXForm.Filename)%(VirtualEnvXForm.Extension)</DestinationRelativePath>
+        <FromTarget>CollectFilesFromContent</FromTarget>
+        <Category>Run</Category>
+        <Exclude>$(ExcludeLinkFilesInProject)</Exclude>
+        <ProjectFileType>Link</ProjectFileType>
+      </FilesForPackagingFromProject>
+
+      <!-- include the patched orig-prefix.txt file -->
+      <Content Include="$(_TempPrefixFile)" 
+               Condition="'%(VirtualEnv.Identity)' == '$(VirtualEnvEnabled)'">
+        <Link>%(VirtualEnv.Filename)\Lib\orig-prefix.txt</Link>
+      </Content>      
+    </ItemGroup>
   </Target>
 
   <Import Project="$(AzureDjangoSupportPath)Microsoft.PythonTools.Django.Developer.targets" Condition="$(PTVS_DEV) == 'true' and $(MSBuildThisFile)=='Microsoft.PythonTools.Django.targets'"/>

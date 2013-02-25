@@ -24,6 +24,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using VSLangProj;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.Project
@@ -246,13 +247,6 @@ namespace Microsoft.PythonTools.Project
 
         object EnvDTE80.IInternalExtenderProvider.GetExtenderNames(string extenderCATID, object extendeeObject)
         {
-            EnvDTE80.IInternalExtenderProvider outerHierarchy = HierarchyNode.GetOuterHierarchy(this.Node) as EnvDTE80.IInternalExtenderProvider;
-
-            if (outerHierarchy != null)
-            {
-                return outerHierarchy.GetExtenderNames(extenderCATID, extendeeObject);
-            }
-
             return null;
         }
 
@@ -331,15 +325,15 @@ namespace Microsoft.PythonTools.Project
         [LocDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [TypeConverter(typeof(BuildActionTypeConverter))]
-        public BuildType BuildAction
+        public prjBuildAction BuildAction
         {
             get
             {
-                return BuildType.FromString(this.Node.ItemNode.ItemTypeName);
+                return (prjBuildAction)BuildActionTypeConverter.Instance.ConvertFromString(Node.ItemNode.ItemTypeName);
             }
             set
             {
-                this.Node.ItemNode.ItemTypeName = value.ToString();
+                this.Node.ItemNode.ItemTypeName = BuildActionTypeConverter.Instance.ConvertToString(value);
             }
         }
 
@@ -486,6 +480,8 @@ namespace Microsoft.PythonTools.Project
 
     class BuildActionTypeConverter : StringConverter
     {
+        internal static readonly BuildActionTypeConverter Instance = new BuildActionTypeConverter();
+
         public BuildActionTypeConverter()
         {
         }
@@ -513,7 +509,16 @@ namespace Microsoft.PythonTools.Project
         {
             if (destinationType == typeof(string))
             {
-                return ((BuildType)value).ToString();
+                switch((prjBuildAction)value)  {
+                    case prjBuildAction.prjBuildActionCompile:
+                        return "Compile";
+                    case prjBuildAction.prjBuildActionContent:
+                        return "Content";
+                    case prjBuildAction.prjBuildActionEmbeddedResource:
+                        return "Embedded Resource";
+                    case prjBuildAction.prjBuildActionNone:
+                        return "None";
+                }
             }
             return base.ConvertTo(context, culture, value, destinationType);
         }
@@ -522,76 +527,26 @@ namespace Microsoft.PythonTools.Project
         {
             if (value is string)
             {
-                return BuildType.FromString((string)value);
+                string strVal = (string)value;
+                if (strVal.Equals("Compile", StringComparison.OrdinalIgnoreCase)) {
+                    return prjBuildAction.prjBuildActionCompile;
+                } else if (strVal.Equals("Content", StringComparison.OrdinalIgnoreCase)) {
+                    return prjBuildAction.prjBuildActionContent;
+                } else if (strVal.Equals("Embedded Resource", StringComparison.OrdinalIgnoreCase)) {
+                    return prjBuildAction.prjBuildActionEmbeddedResource;
+                } else if (strVal.Equals("None", StringComparison.OrdinalIgnoreCase)) {
+                    return prjBuildAction.prjBuildActionNone;
+                }
             }
             return base.ConvertFrom(context, culture, value);
         }
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            return new StandardValuesCollection(new[] { BuildType.None, BuildType.Compile, BuildType.Content });
+            return new StandardValuesCollection(new[] { prjBuildAction.prjBuildActionNone, prjBuildAction.prjBuildActionCompile, prjBuildAction.prjBuildActionContent, prjBuildAction.prjBuildActionEmbeddedResource });
         }
     }
-
-    [TypeConverter(typeof(BuildActionTypeConverter))]
-    public class BuildType
-    {
-        internal readonly int BuildTypeId;
-        internal static readonly BuildType None = new BuildType(NoneId);
-        internal static readonly BuildType Compile = new BuildType(CompileId);
-        internal static readonly BuildType Content = new BuildType(ContentId);
-        internal const int NoneId = 0;
-        internal const int CompileId = 1;
-        internal const int ContentId = 2;
-
-        private static List<KeyValuePair<string, BuildType>> _buildTypes = new List<KeyValuePair<string, BuildType>>(
-            new[] { 
-                MakeBuildType("None", NoneId), 
-                MakeBuildType("Compile", CompileId), 
-                MakeBuildType("Content", ContentId) 
-            }
-        );
-
-        private static Dictionary<int, BuildType> _instances = new Dictionary<int, BuildType>();
-
-        internal BuildType(int id)
-        {
-            BuildTypeId = id;
-        }
-
-        public static BuildType FromString(string value)
-        {
-            lock (_buildTypes)
-            {
-                foreach (var buildType in _buildTypes)
-                {
-                    if (String.Compare(value, buildType.Key, StringComparison.OrdinalIgnoreCase) == 0)
-                    {
-                        return buildType.Value;
-                    }
-                }
-
-                // unknown build type, go ahead and register it now.
-                var res = MakeBuildType(value, _buildTypes.Count);
-                _buildTypes.Add(res);
-                return res.Value;
-            }
-        }
-
-        private static KeyValuePair<string, BuildType> MakeBuildType(string value, int id)
-        {
-            return new KeyValuePair<string, BuildType>(value, new BuildType(id));
-        }
-
-        public override string ToString()
-        {
-            lock (_buildTypes)
-            {
-                return _buildTypes[BuildTypeId].Key;
-            }
-        }
-    }
-
+   
     [ComVisible(true)]
     public class ProjectNodeProperties : NodeProperties
     {

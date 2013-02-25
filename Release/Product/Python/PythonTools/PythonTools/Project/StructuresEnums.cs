@@ -183,7 +183,12 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// This will be translated to VSHPROPID_Caption
         /// </summary>
-        Caption = 4
+        Caption = 4,
+
+        /// <summary>
+        /// This will be translated to VSHPROPID_OverlayIconIndex
+        /// </summary>
+        OverlayIcon = 8
     }
 
     /// <summary>

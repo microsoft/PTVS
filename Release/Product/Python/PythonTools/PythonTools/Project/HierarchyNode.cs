@@ -2315,14 +2315,14 @@ namespace Microsoft.PythonTools.Project
         {
             Utilities.ArgumentNotNull("node", node);
 
-            HierarchyNode foo;
-            foo = this.projectMgr == null ? this : this.projectMgr;
-            if (foo == this.projectMgr && (this.projectMgr.EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0)
+            HierarchyNode targetNode;
+            targetNode = this.projectMgr == null ? this : this.projectMgr;
+            if (targetNode == this.projectMgr && (this.projectMgr.EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0)
             {
                 return;
             }
 
-            foreach (IVsHierarchyEvents sink in foo.hierarchyEventSinks)
+            foreach (IVsHierarchyEvents sink in targetNode.hierarchyEventSinks)
             {
                 int result = sink.OnPropertyChanged(node.hierarchyId, propid, flags);
 
@@ -2383,6 +2383,11 @@ namespace Microsoft.PythonTools.Project
                 if ((element & UIHierarchyElement.SccState) != 0)
                 {
                     result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_StateIconIndex, 0);
+                    Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
+                }
+                
+                if ((element & UIHierarchyElement.OverlayIcon) != 0) {
+                    result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_OverlayIconIndex, 0);
                     Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
                 }
             }

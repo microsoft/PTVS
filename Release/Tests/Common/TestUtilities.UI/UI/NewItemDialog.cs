@@ -99,20 +99,32 @@ namespace TestUtilities.UI {
 
         public string ProjectName {
             get {
-                var patterns = GetProjectNameBox().GetSupportedPatterns();
                 var filename = (ValuePattern)GetProjectNameBox().GetCurrentPattern(ValuePattern.Pattern);
                 return filename.Current.Value;
             }
             set {
-                var patterns = GetProjectNameBox().GetSupportedPatterns();
                 var filename = (ValuePattern)GetProjectNameBox().GetCurrentPattern(ValuePattern.Pattern);
                 filename.SetValue(value);
+            }
+        }
+
+        public string Location {
+            get {
+                var location = (ValuePattern)GetLocationBox().GetCurrentPattern(ValuePattern.Pattern);
+                return location.Current.Value;
+            }
+            set {
+                var location = (ValuePattern)GetLocationBox().GetCurrentPattern(ValuePattern.Pattern);
+                location.SetValue(value);
             }
         }
 
         public void FocusLanguageNode(string name = "Python") {
 #if DEV11
             var item = InstalledTemplates.FindItem("Templates", name);
+            if (item == null) {
+                item = InstalledTemplates.FindItem("Templates", "Other Languages", name);
+            }
 #else
             var item = InstalledTemplates.FindItem("Other Languages", name);
             if (item == null) {
@@ -120,6 +132,9 @@ namespace TestUtilities.UI {
                 item = InstalledTemplates.FindItem(name);
             }
 #endif
+            if (item == null) {
+                DumpElement(InstalledTemplates.Element);
+            }
             item.SetFocus();
         }
 
@@ -127,6 +142,15 @@ namespace TestUtilities.UI {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.AutomationIdProperty, "txt_Name"),
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
+                )
+            );
+        }
+
+        private AutomationElement GetLocationBox() {
+            return Element.FindFirst(TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_EditableTextBox"),
                     new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
                 )
             );

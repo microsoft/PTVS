@@ -48,6 +48,8 @@ namespace Microsoft.PythonTools.Project {
     }
 
     public class DynamicProjectSR {
+        public const string VirtualEnvs = "VirtualEnvs";
+        public const string VirtualEnvRemoveConfirmation = "VirtualEnvRemoveConfirmation";
         public const string SearchPaths = "SearchPaths";
         public const string SearchPathsDescription = "SearchPathsDescription";
         public const string InterpreterPath = "InterpreterPath";

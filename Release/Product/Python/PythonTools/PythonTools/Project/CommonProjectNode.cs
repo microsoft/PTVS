@@ -39,7 +39,10 @@ namespace Microsoft.PythonTools.Project {
         SearchPathContainer,
         SearchPath,
         MissingSearchPath,
-        StartupFile
+        StartupFile,
+        VirtualEnvContainer = SearchPathContainer,
+        VirtualEnv = SearchPath,
+        VirtualEnvPackage = SearchPath
     }
 
     public abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
@@ -447,20 +450,17 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal void BoldStartupItem(HierarchyNode startupItem) {
-            if (!_boldedStartupItem) {
-                IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
-                    ProjectMgr.Site as IServiceProvider,
-                    new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
-
-                if (ErrorHandler.Succeeded(windows.SetItemAttribute(
-                    this,
-                    startupItem.ID,
-                    (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
-                    true
-                ))) {
-                    _boldedStartupItem = true;
-                }
+            if (!_boldedStartupItem && BoldItem(startupItem, true)) {
+                _boldedStartupItem = true;
             }
+        }
+
+        internal bool BoldItem(HierarchyNode item, bool bolded) {
+            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+                ProjectMgr.Site as IServiceProvider,
+                new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+
+            return ErrorHandler.Succeeded(windows.SetItemAttribute(this, item.ID, (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold, bolded));
         }
 
         /// <summary>

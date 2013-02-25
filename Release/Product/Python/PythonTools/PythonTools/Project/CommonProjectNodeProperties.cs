@@ -12,14 +12,17 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Project.Automation;
+using Microsoft.VisualStudio.Shell.Interop;
 
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     [ClassInterface(ClassInterfaceType.AutoDual)]
-    public class CommonProjectNodeProperties : ProjectNodeProperties {
+    public class CommonProjectNodeProperties : ProjectNodeProperties, IVsCfgBrowseObject, VSLangProj.ProjectProperties {
 
         public CommonProjectNodeProperties(ProjectNode node)
             : base(node) {
@@ -122,6 +125,293 @@ namespace Microsoft.PythonTools.Project {
             get {
                 return Node.ProjectMgr.ProjectHome;
             }
+        }
+
+        #endregion
+
+        #region IVsCfgBrowseObject Members
+
+        int IVsCfgBrowseObject.GetCfg(out IVsCfg ppCfg) {
+            return Node.ProjectMgr.ConfigProvider.GetCfgOfName(
+                Node.ProjectMgr.CurrentConfig.GetPropertyValue(ProjectFileConstants.Configuration),
+                Node.ProjectMgr.CurrentConfig.GetPropertyValue(ProjectFileConstants.Platform),
+                out ppCfg);
+        }
+
+        #endregion
+
+        #region ProjectProperties Members
+        
+        [Browsable(false)]
+        public string AbsoluteProjectDirectory {
+            get {
+                return Node.ProjectMgr.ProjectFolder;
+            }
+        }
+        
+        [Browsable(false)]
+        public VSLangProj.ProjectConfigurationProperties ActiveConfigurationSettings {
+            get { return new OAProjectConfigurationProperties(Node.ProjectMgr); }
+        }
+
+        [Browsable(false)]
+        public string ActiveFileSharePath {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjWebAccessMethod ActiveWebAccessMethod {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public string ApplicationIcon {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string AssemblyKeyContainerName {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string AssemblyName {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string AssemblyOriginatorKeyFile {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjOriginatorKeyMode AssemblyOriginatorKeyMode {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjScriptLanguage DefaultClientScript {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjHTMLPageLayout DefaultHTMLPageLayout {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string DefaultNamespace {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjTargetSchema DefaultTargetSchema {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public bool DelaySign {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public new object ExtenderNames {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public string FileSharePath {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public bool LinkRepair {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string LocalPath {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public string OfflineURL {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjCompare OptionCompare {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjOptionExplicit OptionExplicit {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjOptionStrict OptionStrict {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string OutputFileName {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjOutputType OutputType {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjProjectType ProjectType {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public string ReferencePath {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string ServerExtensionsVersion {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public string StartupObject {
+            get {
+                return Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile);
+            }
+            set {
+                Node.ProjectMgr.SetProjectProperty(CommonConstants.StartupFile, value);
+            }
+        }
+
+        [Browsable(false)]
+        public string URL {
+            get { return CommonUtils.MakeUri(Node.ProjectMgr.Url, false, UriKind.Absolute).AbsoluteUri;  }
+        }
+
+        [Browsable(false)]
+        public VSLangProj.prjWebAccessMethod WebAccessMethod {
+            get {
+                throw new System.NotImplementedException();
+            }
+            set {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        [Browsable(false)]
+        public string WebServer {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public string WebServerVersion {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public string __id {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public object __project {
+            get { throw new System.NotImplementedException(); }
+        }
+
+        [Browsable(false)]
+        public object get_Extender(string ExtenderName) {
+            throw new System.NotImplementedException();
         }
 
         #endregion

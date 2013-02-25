@@ -18,7 +18,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft</RootNamespace>
@@ -204,6 +204,19 @@
     <Compile Include="PythonTools\Intellisense\CompletionComparer.cs" />
     <Compile Include="PythonTools\Intellisense\FuzzyStringMatcher.cs" />
     <Compile Include="PythonTools\Intellisense\FuzzyCompletionSet.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAProjectConfigurationProperties.cs" />
+    <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
+    <Compile Include="PythonTools\Project\InstallPythonPackage.xaml.cs">
+      <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\InstallPythonPackageView.cs" />
+    <Compile Include="PythonTools\Project\PythonInterpreterView.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnvContainerNode.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnvContainerNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnvNode.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnvNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnvPackageNode.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnvPackageNodeProperties.cs" />
     <Compile Include="PythonTools\ProvideDebugPortSupplierAttribute.cs" />
     <Compile Include="PythonTools\DialogWindowVersioningWorkaround.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
@@ -232,6 +245,9 @@
     <Compile Include="PythonTools\Intellisense\AnalysisSynchronizationContext.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\CreateVirtualEnvironment.xaml.cs">
+      <DependentUpon>CreateVirtualEnvironment.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
@@ -780,6 +796,7 @@
     <Content Include="WebPiCmdLine\WebPICmdLine.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <VSCTCompile Include="PythonTools.vsct">
       <ResourceName>1000</ResourceName>
@@ -1115,11 +1132,21 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="PythonTools\Project\CreateVirtualEnvironment.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Project\InstallPythonPackage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PythonTools\Project\TaskProgressBar.xaml">
       <Generator>MSBuild:Compile</Generator>

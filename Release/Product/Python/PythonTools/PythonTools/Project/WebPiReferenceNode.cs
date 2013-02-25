@@ -85,6 +85,12 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
+        public override Guid ItemTypeGuid {
+            get {
+                return VSConstants.ItemTypeGuid.VirtualFolder_guid;
+            }
+        }
+
         /// <summary>
         /// Links a reference node to the project and hierarchy.
         /// </summary>

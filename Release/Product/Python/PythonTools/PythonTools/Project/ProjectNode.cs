@@ -59,7 +59,8 @@ namespace Microsoft.PythonTools.Project
         IProjectEventsListener,
         IProjectEventsCallback,
         IProjectEventsProvider,
-        IVsProjectSpecialFiles
+        IVsProjectSpecialFiles,
+        IVsProjectBuildSystem 
     {
         #region nested types
 
@@ -250,6 +251,8 @@ namespace Microsoft.PythonTools.Project
 
         private bool projectOpened;
 
+        private bool buildIsPrepared;
+
         private string errorString;
 
         private string warningString;
@@ -277,6 +280,8 @@ namespace Microsoft.PythonTools.Project
         private bool supportsProjectDesigner;
 
         private bool showProjectInSolutionPage = true;
+
+        private bool buildInProcess;
 
         private string sccProjectName;
 
@@ -683,6 +688,16 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// Gets whether or not the project is being built.
+        /// </summary>
+        public bool BuildInProgress {
+            get {
+                return buildInProcess;
+            }
+        }
+
+
+        /// <summary>
         /// Gets or set the relative path to the folder containing the project ouput. 
         /// </summary>
         public virtual string OutputBaseRelativePath
@@ -767,7 +782,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// Gets the configuration provider.
         /// </summary>
-        protected ConfigProvider ConfigProvider
+        protected internal ConfigProvider ConfigProvider
         {
             get
             {
@@ -1236,7 +1251,10 @@ namespace Microsoft.PythonTools.Project
 
                     case VsCommands.CancelBuild:
                         result |= QueryStatusResult.SUPPORTED;
-                        result |= QueryStatusResult.INVISIBLE;
+                        if (this.buildInProcess)
+                            result |= QueryStatusResult.ENABLED;
+                        else
+                            result |= QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
 
                     case VsCommands.NewFolder:
@@ -1339,7 +1357,9 @@ namespace Microsoft.PythonTools.Project
                 if (findChildCache.Count > 8192) {
                     findChildCache.Clear();
                 }
-                findChildCache[name] = node;
+                if (node != null) {
+                    findChildCache[name] = node;
+                }
             }
             return node;
         }
@@ -3323,6 +3343,25 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
+        /// This is called from the main thread before the background build starts.
+        ///  cleanBuild is not part of the vsopts, but passed down as the callpath is differently
+        ///  PrepareBuild mainly creates directories and cleans house if cleanBuild is true
+        /// </summary>
+        public virtual void PrepareBuild(string config, bool cleanBuild) {
+            if (this.buildIsPrepared && !cleanBuild) return;
+            
+            string outputPath = Path.GetDirectoryName(GetProjectProperty("OutputPath"));
+
+            if (cleanBuild && this.currentConfig.Targets.ContainsKey(MsBuildTarget.Clean)) {
+                this.InvokeMsBuild(MsBuildTarget.Clean);
+            }
+
+            PackageUtilities.EnsureOutputPath(outputPath);
+
+            this.buildIsPrepared = true;
+        }
+
+        /// <summary>
         /// Do the build by invoking msbuild
         /// </summary>
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "vsopts")]
@@ -3374,6 +3413,7 @@ namespace Microsoft.PythonTools.Project
             if (this.isDirty)
             {
                 this.lastModifiedTime = DateTime.Now;
+                this.buildIsPrepared = false;
             }
         }
 
@@ -3837,9 +3877,7 @@ namespace Microsoft.PythonTools.Project
                         ErrorHandler.ThrowOnFailure(((ProjectConfig)config).GetXmlFragment(flavor, _PersistStorageType.PST_PROJECT_FILE, out fragment));
                         if (!String.IsNullOrEmpty(fragment))
                         {
-                            string configName;
-                            ErrorHandler.ThrowOnFailure(config.get_DisplayName(out configName));
-                            WrapXmlFragment(doc, root, flavor, configName, fragment);
+                            WrapXmlFragment(doc, root, flavor, ((ProjectConfig)config).ConfigName, fragment);
                         }
                     }
                 }
@@ -5346,7 +5384,11 @@ If the files in the existing folder have the same names as files in the folder y
             if (node == null)
                 throw new ArgumentException("Invalid item id", "item");
 
-            attributeValue = node.ItemNode.GetMetadata(attributeName);
+            if (node.ItemNode != null) {
+                attributeValue = node.ItemNode.GetMetadata(attributeName);
+            } else if(node == node.ProjectMgr) {
+                attributeName = node.ProjectMgr.GetProjectProperty(attributeName);
+            }
             return VSConstants.S_OK;
         }
 
@@ -5369,6 +5411,11 @@ If the files in the existing folder have the same names as files in the folder y
             else
             {
                 IVsCfg configurationInterface;
+                int platformStart;
+                if ((platformStart = configName.IndexOf('|')) != -1) {
+                    // matches C# project system, GetPropertyValue handles display name, not just config name
+                    configName = configName.Substring(0, platformStart);
+                }
                 ErrorHandler.ThrowOnFailure(this.ConfigProvider.GetCfgOfName(configName, string.Empty, out configurationInterface));
                 ProjectConfig config = (ProjectConfig)configurationInterface;
                 propertyValue = config.GetConfigurationProperty(propertyName, true);
@@ -5825,7 +5872,7 @@ If the files in the existing folder have the same names as files in the folder y
                     BuildManager.DefaultBuildManager.BeginBuild(buildParameters);
                 }
 
-                //this.buildInProcess = true;
+                this.buildInProcess = true;
                 return true;
             }
             finally
@@ -5918,7 +5965,7 @@ If the files in the existing folder have the same names as files in the folder y
                 BuildManager.DefaultBuildManager.EndBuild();
             }
 
-            //this.buildInProcess = false;
+            this.buildInProcess = false;
         }
 
         #endregion
@@ -5927,6 +5974,56 @@ If the files in the existing folder have the same names as files in the folder y
 
         public virtual void BeforeClose()
         {
+        }
+
+        #endregion
+
+        #region IVsProjectBuildSystem Members
+
+        public virtual int SetHostObject(string targetName, string taskName, object hostObject) {
+            Debug.Assert(targetName != null && taskName != null && this.buildProject != null && this.buildProject.Targets != null);
+
+            if (targetName == null || taskName == null || this.buildProject == null || this.buildProject.Targets == null) {
+                return VSConstants.E_INVALIDARG;
+            }
+
+            this.buildProject.ProjectCollection.HostServices.RegisterHostObject(this.buildProject.FullPath, targetName, taskName, (Microsoft.Build.Framework.ITaskHost)hostObject);
+
+            return VSConstants.S_OK;
+        }
+
+        public int BuildTarget(string targetName, out bool success) {
+            success = false;
+
+            MSBuildResult result = this.Build(targetName);
+
+            if (result == MSBuildResult.Successful) {
+                success = true;
+            }
+
+            return VSConstants.S_OK;
+        }
+
+        public virtual int CancelBatchEdit() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public virtual int EndBatchEdit() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public virtual int StartBatchEdit() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        /// <summary>
+        /// Used to determine the kind of build system, in VS 2005 there's only one defined kind: MSBuild 
+        /// </summary>
+        /// <param name="kind"></param>
+        /// <returns></returns>
+        public virtual int GetBuildSystemKind(out uint kind) {
+            kind = (uint)_BuildSystemKindFlags2.BSK_MSBUILD_VS10;
+            return VSConstants.S_OK;
         }
 
         #endregion

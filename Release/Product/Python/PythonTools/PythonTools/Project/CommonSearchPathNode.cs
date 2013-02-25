@@ -20,7 +20,7 @@ using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
-    /// Represents seasrch path entry as a node in the Solution Explorer.
+    /// Represents search path entry as a node in the Solution Explorer.
     /// </summary>
     [ComVisible(true)]
     public class CommonSearchPathNode : BaseSearchPathNode {

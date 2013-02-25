@@ -49,6 +49,7 @@ namespace Microsoft.PythonTools.Project
         private MSBuildExecution.ProjectInstance currentConfig;
         private IVsProjectFlavorCfg flavoredCfg;
         private List<OutputGroup> outputGroups;
+        private BuildableProjectConfig buildableCfg;
 
         #region properties
         public ProjectNode ProjectMgr
@@ -108,26 +109,16 @@ namespace Microsoft.PythonTools.Project
             this.project = project;
             this.configName = configuration;
 
-            // Because the project can be aggregated by a flavor, we need to make sure
-            // we get the outer most implementation of that interface (hence: project --> IUnknown --> Interface)
-            IntPtr projectUnknown = Marshal.GetIUnknownForObject(this.ProjectMgr);
-            try
-            {
-                IVsProjectFlavorCfgProvider flavorCfgProvider = (IVsProjectFlavorCfgProvider)Marshal.GetTypedObjectForIUnknown(projectUnknown, typeof(IVsProjectFlavorCfgProvider));
-                ErrorHandler.ThrowOnFailure(flavorCfgProvider.CreateProjectFlavorCfg(this, out flavoredCfg));
-                if (flavoredCfg == null)
-                    throw new COMException();
-            }
-            finally
-            {
-                if (projectUnknown != IntPtr.Zero)
-                    Marshal.Release(projectUnknown);
-            }
+            var flavoredCfgProvider = ProjectMgr.GetOuterInterface<IVsProjectFlavorCfgProvider>();
+            Utilities.ArgumentNotNull("flavoredCfgProvider", flavoredCfgProvider);
+            ErrorHandler.ThrowOnFailure(flavoredCfgProvider.CreateProjectFlavorCfg(this, out flavoredCfg));
+            Utilities.ArgumentNotNull("flavoredCfg", flavoredCfg);
+
             // if the flavored object support XML fragment, initialize it
             IPersistXMLFragment persistXML = flavoredCfg as IPersistXMLFragment;
             if (null != persistXML)
             {
-                this.project.LoadXmlFragment(persistXML, this.DisplayName);
+                this.project.LoadXmlFragment(persistXML, configName);
             }
         }
         #endregion
@@ -138,6 +129,10 @@ namespace Microsoft.PythonTools.Project
         {
             OutputGroup outputGroup = new OutputGroup(group.Key, group.Value, project, this);
             return outputGroup;
+        }
+
+        public void PrepareBuild(bool clean) {
+            project.PrepareBuild(this.configName, clean);
         }
 
         public virtual string GetConfigurationProperty(string propertyName, bool resetCache)
@@ -327,7 +322,10 @@ namespace Microsoft.PythonTools.Project
 
         public virtual int get_BuildableProjectCfg(out IVsBuildableProjectCfg pb)
         {
-            pb = null;
+            if (buildableCfg == null) {
+                buildableCfg = new BuildableProjectConfig(this);
+            }
+            pb = buildableCfg;
             return VSConstants.E_NOTIMPL;
         }
 
@@ -631,6 +629,10 @@ namespace Microsoft.PythonTools.Project
             if (iidCfg == typeof(IVsDebuggableProjectCfg).GUID)
             {
                 ppCfg = Marshal.GetComInterfaceForObject(this, typeof(IVsDebuggableProjectCfg));
+            } else if (iidCfg == typeof(IVsBuildableProjectCfg).GUID) {
+                IVsBuildableProjectCfg buildableConfig;
+                this.get_BuildableProjectCfg(out buildableConfig);
+                ppCfg = Marshal.GetComInterfaceForObject(buildableConfig, typeof(IVsBuildableProjectCfg));
             }
 
             // If not supported
@@ -643,5 +645,176 @@ namespace Microsoft.PythonTools.Project
         #endregion
     }
 
+
+    [CLSCompliant(false)]
+    [ComVisible(true)]
+    [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Buildable")]
+    public class BuildableProjectConfig : IVsBuildableProjectCfg {
+        #region fields
+        ProjectConfig config = null;
+        EventSinkCollection callbacks = new EventSinkCollection();
+        #endregion
+
+        #region ctors
+        public BuildableProjectConfig(ProjectConfig config) {
+            this.config = config;
+        }
+        #endregion
+
+        #region IVsBuildableProjectCfg methods
+
+        public virtual int AdviseBuildStatusCallback(IVsBuildStatusCallback callback, out uint cookie) {
+            cookie = callbacks.Add(callback);
+            return VSConstants.S_OK;
+        }
+
+        public virtual int get_ProjectCfg(out IVsProjectCfg p) {
+            p = config;
+            return VSConstants.S_OK;
+        }
+
+        public virtual int QueryStartBuild(uint options, int[] supported, int[] ready) {
+            if (supported != null && supported.Length > 0)
+                supported[0] = 1;
+            if (ready != null && ready.Length > 0)
+                ready[0] = (this.config.ProjectMgr.BuildInProgress) ? 0 : 1;
+            return VSConstants.S_OK;
+        }
+
+        public virtual int QueryStartClean(uint options, int[] supported, int[] ready) {
+            config.PrepareBuild(false);
+            if (supported != null && supported.Length > 0)
+                supported[0] = 1;
+            if (ready != null && ready.Length > 0)
+                ready[0] = (this.config.ProjectMgr.BuildInProgress) ? 0 : 1;
+            return VSConstants.S_OK;
+        }
+
+        public virtual int QueryStartUpToDateCheck(uint options, int[] supported, int[] ready) {
+            config.PrepareBuild(false);
+            if (supported != null && supported.Length > 0)
+                supported[0] = 0; // TODO:
+            if (ready != null && ready.Length > 0)
+                ready[0] = (this.config.ProjectMgr.BuildInProgress) ? 0 : 1;
+            return VSConstants.S_OK;
+        }
+
+        public virtual int QueryStatus(out int done) {
+            done = (this.config.ProjectMgr.BuildInProgress) ? 0 : 1;
+            return VSConstants.S_OK;
+        }
+
+        public virtual int StartBuild(IVsOutputWindowPane pane, uint options) {
+            config.PrepareBuild(false);
+
+            // Current version of MSBuild wish to be called in an STA
+            uint flags = VSConstants.VS_BUILDABLEPROJECTCFGOPTS_REBUILD;
+
+            // If we are not asked for a rebuild, then we build the default target (by passing null)
+            this.Build(options, pane, ((options & flags) != 0) ? MsBuildTarget.Rebuild : null);
+
+            return VSConstants.S_OK;
+        }
+
+        public virtual int StartClean(IVsOutputWindowPane pane, uint options) {
+            config.PrepareBuild(true);
+            // Current version of MSBuild wish to be called in an STA
+            this.Build(options, pane, MsBuildTarget.Clean);
+            return VSConstants.S_OK;
+        }
+
+        public virtual int StartUpToDateCheck(IVsOutputWindowPane pane, uint options) {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public virtual int Stop(int fsync) {
+            return VSConstants.S_OK;
+        }
+
+        public virtual int UnadviseBuildStatusCallback(uint cookie) {
+            callbacks.RemoveAt(cookie);
+            return VSConstants.S_OK;
+        }
+
+        public virtual int Wait(uint ms, int fTickWhenMessageQNotEmpty) {
+            return VSConstants.E_NOTIMPL;
+        }
+        #endregion
+
+        #region helpers
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        private bool NotifyBuildBegin() {
+            int shouldContinue = 1;
+            foreach (IVsBuildStatusCallback cb in callbacks) {
+                try {
+                    ErrorHandler.ThrowOnFailure(cb.BuildBegin(ref shouldContinue));
+                    if (shouldContinue == 0) {
+                        return false;
+                    }
+                } catch (Exception e) {
+                    // If those who ask for status have bugs in their code it should not prevent the build/notification from happening
+                    Debug.Fail(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.BuildEventError, CultureInfo.CurrentUICulture), e.Message));
+                }
+            }
+
+            return true;
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
+        private void NotifyBuildEnd(MSBuildResult result, string buildTarget) {
+            int success = ((result == MSBuildResult.Successful) ? 1 : 0);
+
+            foreach (IVsBuildStatusCallback cb in callbacks) {
+                try {
+                    ErrorHandler.ThrowOnFailure(cb.BuildEnd(success));
+                } catch (Exception e) {
+                    // If those who ask for status have bugs in their code it should not prevent the build/notification from happening
+                    Debug.Fail(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.BuildEventError, CultureInfo.CurrentUICulture), e.Message));
+                } finally {
+                    // We want to refresh the references if we are building with the Build or Rebuild target or if the project was opened for browsing only.
+                    bool shouldRepaintReferences = (buildTarget == null || buildTarget == MsBuildTarget.Build || buildTarget == MsBuildTarget.Rebuild);
+
+                    // Now repaint references if that is needed. 
+                    // We hardly rely here on the fact the ResolveAssemblyReferences target has been run as part of the build.
+                    // One scenario to think at is when an assembly reference is renamed on disk thus becomming unresolvable, 
+                    // but msbuild can actually resolve it.
+                    // Another one if the project was opened only for browsing and now the user chooses to build or rebuild.
+                    if (shouldRepaintReferences && (result == MSBuildResult.Successful)) {
+                        this.RefreshReferences();
+                    }
+                }
+            }
+        }
+
+        private void Build(uint options, IVsOutputWindowPane output, string target) {
+            if (!this.NotifyBuildBegin()) {
+                return;
+            }
+
+            try {
+                config.ProjectMgr.BuildAsync(options, this.config.ConfigName, output, target, (result, buildTarget) => this.NotifyBuildEnd(result, buildTarget));
+            } catch (Exception e) {
+                Trace.WriteLine("Exception : " + e.Message);
+                ErrorHandler.ThrowOnFailure(output.OutputStringThreadSafe("Unhandled Exception:" + e.Message + "\n"));
+                this.NotifyBuildEnd(MSBuildResult.Failed, target);
+                throw;
+            } finally {
+                ErrorHandler.ThrowOnFailure(output.FlushToTaskList());
+            }
+        }
+
+        /// <summary>
+        /// Refreshes references and redraws them correctly.
+        /// </summary>
+        private void RefreshReferences() {
+            // Refresh the reference container node for assemblies that could be resolved.
+            IReferenceContainer referenceContainer = this.config.ProjectMgr.GetReferenceContainer();
+            foreach (ReferenceNode referenceNode in referenceContainer.EnumReferences()) {
+                referenceNode.RefreshReference();
+            }
+        }
+        #endregion
+    }
 
 }

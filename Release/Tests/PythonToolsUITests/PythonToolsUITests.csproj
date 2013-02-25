@@ -87,6 +87,7 @@
     <Compile Include="PublishTest.cs" />
     <Compile Include="RemoveImportTests.cs" />
     <Compile Include="UITests.cs" />
+    <Compile Include="VirtualEnvTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\Python\Analysis\Analysis.csproj">

@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Project
         {
             if (guids == null || guids.Length == 0)
             {
-                return null;
+                return "";
             }
 
             // Create a StringBuilder with a pre-allocated buffer big enough for the

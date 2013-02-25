@@ -79,7 +79,6 @@ namespace Microsoft.PythonTools.Project {
 
             return base.SetProperty(propid, value);
         }
-#endif
 
         internal static void BoldStartupOnExpand(int propId, HierarchyNode parent) {
             // We can't bold the startup item while we're loading the project because the
@@ -89,7 +88,8 @@ namespace Microsoft.PythonTools.Project {
             if (propId == (int)__VSHPROPID.VSHPROPID_Expanded) {
                 SetBoldStartup(parent);
             }
-        }
+        }       
+#endif
 
         internal static void BoldStartupOnIcon(int propId, HierarchyNode parent) {
             // We can't bold the startup item while we're loading the project because the

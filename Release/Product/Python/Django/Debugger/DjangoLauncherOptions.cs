@@ -77,6 +77,9 @@ namespace Microsoft.PythonTools.Django.Debugger {
                 case CommonConstants.SearchPath:
                     SearchPaths = _properties.GetProperty(CommonConstants.SearchPath);
                     break;
+                case CommonConstants.InterpreterPath:
+                    InterpreterPath = _properties.GetProperty(CommonConstants.InterpreterPath);
+                    break;
             }
         }
 

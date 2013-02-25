@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools {
         public const string DebugPropertyPageGuid = "9A46BC86-34CB-4597-83E5-498E3BDBA20A";
         public const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
         public const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
+        public const string VirtualEnvPropertiesGuid = "45D3DC23-F419-4744-B55B-B897FAC1F4A2";
 
         // Do not change below info without re-requesting PLK:
         public const string ProjectSystemPackageGuid = "15490272-3C6B-4129-8E1D-795C8B6D8E9F"; //matches PLK
@@ -43,7 +44,21 @@ namespace Microsoft.PythonTools {
         public const int IconIfForSplashScreen = 300;
         public const int IconIdForAboutBox = 400;
 
-        
+        public const int AddVirtualEnv = 0x4006;
+        public const int ActivateVirtualEnv = 0x4007;
+        public const int DeactivateVirtualEnv = 0x4008;
+        public const int InstallPythonPackage = 0x4009;
+        public const int UninstallPythonPackage = 0x400A;
+        public const int CreateVirtualEnv = 0x400B;
+
+        public const string VirtualEnvItemType = "VirtualEnv";
+        public const string VirtualEnvCurrentEnvironment = "VirtualEnvEnabled";
+        public const string VirtualEnvInterpreterId = "InterpreterId";
+        public const string VirtualEnvInterpreterVersion = "InterpreterVersion";
+
+        // Shows up before references
+        public const int VirtualEnvContainerNodeSortPriority = 200;
+
         public const string InterpreterId = "InterpreterId";
         public const string InterpreterVersion = "InterpreterVersion";
 

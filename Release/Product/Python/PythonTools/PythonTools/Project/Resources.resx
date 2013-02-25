@@ -186,7 +186,10 @@
   <data name="IsWindowsApplication" xml:space="preserve">
     <value>Is Windows Application</value>
   </data>
-  <data name="IsWindowsApplicationDescription" xml:space="preserve">
-    <value>True if the application should start w/o a console window</value>
+  <data name="VirtualEnvs" xml:space="preserve">
+    <value>Virtual Environments</value>
+  </data>
+  <data name="VirtualEnvRemoveConfirmation" xml:space="preserve">
+    <value>The virtual environment '{0}' will be removed from the project.</value>
   </data>
 </root>

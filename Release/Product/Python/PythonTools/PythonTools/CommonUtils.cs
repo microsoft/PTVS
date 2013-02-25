@@ -18,6 +18,14 @@ using System.IO;
 
 namespace Microsoft.PythonTools {
     internal static class CommonUtils {
+        internal static bool TryMakeUri(string path, bool isDirectory, UriKind kind, out Uri uri) {
+            if (isDirectory && !string.IsNullOrEmpty(path) && !HasEndSeparator(path)) {
+                path += Path.DirectorySeparatorChar;
+            }
+
+            return Uri.TryCreate(path, kind, out uri);
+        }
+
         internal static Uri MakeUri(string path, bool isDirectory, UriKind kind, string throwParameterName = "path") {
             try {
                 if (isDirectory && !string.IsNullOrEmpty(path) && !HasEndSeparator(path)) {
@@ -90,12 +98,11 @@ namespace Microsoft.PythonTools {
                 return true;
             }
 
-            try {
-                return MakeUri(path1, true, UriKind.Absolute, "path1") == 
-                    MakeUri(path2, true, UriKind.Absolute, "path2");
-            } catch (ArgumentException) {
-                return false;
-            }
+            Uri uri1, uri2;
+            return 
+                TryMakeUri(path1, true, UriKind.Absolute, out uri1) &&
+                TryMakeUri(path2, true, UriKind.Absolute, out uri2) &&
+                uri1 == uri2;            
         }
 
         /// <summary>
@@ -114,12 +121,11 @@ namespace Microsoft.PythonTools {
                 return true;
             }
 
-            try {
-                return MakeUri(file1, false, UriKind.Absolute, "file1") ==
-                    MakeUri(file2, false, UriKind.Absolute, "file2");
-            } catch (ArgumentException) {
-                return false;
-            }
+            Uri uri1, uri2;
+            return
+                TryMakeUri(file1, false, UriKind.Absolute, out uri1) &&
+                TryMakeUri(file2, false, UriKind.Absolute, out uri2) &&
+                uri1 == uri2;
         }
 
         /// <summary>
