@@ -454,6 +454,27 @@ y = x[0]
         }
 
         [TestMethod, Priority(0)]
+        public void CombinedTupleSignatures() {
+            var code = @"def a():
+    if x:
+        return (1, True)
+    elif y:
+        return (1, True)
+    else:
+        return (2, False)
+
+x = a()
+";
+            var entry = ProcessText(code);
+
+            var func = entry.GetValuesByIndex("a", 0).OfType<FunctionInfo>().FirstOrDefault();
+            Assert.IsNotNull(func);
+            var sb = new StringBuilder();
+            func.AddReturnTypeString(sb);
+            Assert.AreEqual(" -> tuple", sb.ToString());
+        }
+
+        [TestMethod, Priority(0)]
         public void ImportStar() {
             var entry = ProcessText(@"
 from nt import *

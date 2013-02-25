@@ -36,8 +36,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool IsProperty;
         private ReferenceDict _references;
         private readonly int _declVersion;
-        [ThreadStatic]
-        private static List<Namespace> _descriptionStack;
 
         static readonly CallChain _arglessCall = new CallChain(new CallExpression(null, null));
         internal Dictionary<CallChain, FunctionAnalysisUnit> _allCalls;
@@ -149,6 +147,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     break;
                 }
                 if (retTypes.Count <= 10) {
+                    var seenNames = new HashSet<string>();
                     foreach (var ns in retTypes) {
                         if (ns == null) {
                             continue;
@@ -156,17 +155,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                         if (ns.Push()) {
                             try {
-                                if (ns.ShortDescription == null) {
-                                    continue;
+                                if (!string.IsNullOrWhiteSpace(ns.ShortDescription) && seenNames.Add(ns.ShortDescription)) {
+                                    if (first) {
+                                        result.Append(" -> ");
+                                        first = false;
+                                    } else {
+                                        result.Append(", ");
+                                    }
+                                    AppendDescription(result, ns);
                                 }
-
-                                if (first) {
-                                    result.Append(" -> ");
-                                    first = false;
-                                } else {
-                                    result.Append(", ");
-                                }
-                                AppendDescription(result, ns);
                             } finally {
                                 ns.Pop();
                             }
@@ -241,25 +238,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private static void AppendDescription(StringBuilder result, Namespace key) {
-            if (DescriptionStack.Contains(key)) {
-                result.Append("...");
-            } else {
-                DescriptionStack.Add(key);
-                try {
-                    result.Append(key.ShortDescription);
-                } finally {
-                    DescriptionStack.Pop();
-                }
-            }
-        }
-
-        private static List<Namespace> DescriptionStack {
-            get {
-                if (_descriptionStack == null) {
-                    _descriptionStack = new List<Namespace>();
-                }
-                return _descriptionStack;
-            }
+            result.Append(key.ShortDescription);
         }
 
         public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {

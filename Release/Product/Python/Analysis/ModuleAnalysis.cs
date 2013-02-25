@@ -787,10 +787,11 @@ namespace Microsoft.PythonTools.Analysis {
                     if (ownerDict != null && ownerDict.TryGetValue(kvp.Key, out owners) &&
                         owners.Count >= 1 && owners.Count < maximumOwners) {
                         // This member came from less than the full set of types.
+                        var seenNames = new HashSet<string>();
                         var newName = new StringBuilder(name);
                         newName.Append(" (");
                         foreach (var v in owners) {
-                            if (!string.IsNullOrWhiteSpace(v.ShortDescription)) {
+                            if (!string.IsNullOrWhiteSpace(v.ShortDescription) && seenNames.Add(v.ShortDescription)) {
                                 // Restrict each displayed type to 25 characters
                                 if (v.ShortDescription.Length > 25) {
                                     newName.Append(v.ShortDescription.Substring(0, 22));
