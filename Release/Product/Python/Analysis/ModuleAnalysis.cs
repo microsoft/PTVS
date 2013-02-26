@@ -207,8 +207,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public MemberResult[] GetModuleMembers(string[] names, bool includeMembers = false) {
-            List<MemberResult> res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
-
+            var res = new List<MemberResult>(ProjectState.GetModuleMembers(InterpreterContext, names, includeMembers));
             var children = GlobalScope.GetChildrenPackages(InterpreterContext);
 
             foreach (var child in children) {

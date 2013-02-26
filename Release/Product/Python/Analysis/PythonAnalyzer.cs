@@ -420,13 +420,25 @@ namespace Microsoft.PythonTools.Analysis {
             if (module != null) {
                 List<MemberResult> result = new List<MemberResult>();
                 if (includeMembers) {
-                    foreach (var keyValue in ((Namespace)module).GetAllMembers(moduleContext)) {
+                    foreach (var keyValue in module.GetAllMembers(moduleContext)) {
                         result.Add(new MemberResult(keyValue.Key, keyValue.Value));
                     }
                     return result.ToArray();
                 } else {
                     foreach (var child in module.GetChildrenPackages(moduleContext)) {
                         result.Add(new MemberResult(child.Key, child.Key, new[] { child.Value }, PythonMemberType.Module));
+                    }
+                    foreach (var keyValue in module.GetAllMembers(moduleContext)) {
+                        bool anyModules = false;
+                        foreach(var ns in keyValue.Value.OfType<MultipleMemberInfo>()) {
+                            if (ns.Members.OfType<IModule>().Any(mod => !(mod is MultipleMemberInfo))) {
+                                anyModules = true;
+                                break;
+                            }
+                        }
+                        if (anyModules) {
+                            result.Add(new MemberResult(keyValue.Key, keyValue.Value));
+                        }
                     }
                     return result.ToArray();
                 }
@@ -456,7 +468,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (Modules.TryGetValue(retModule, out modRef)) {
                     if (modRef.Module != null) {
                         var res = NamespaceSet.Empty;
-                        foreach (var value in modRef.Module.GetMember(call, unit, typeName)) {
+                        foreach (var value in modRef.Namespace.GetMember(call, unit, typeName)) {
                             if (value is ClassInfo) {
                                 res = res.Union(((ClassInfo)value).Instance.SelfSet);
                             } else {
@@ -689,17 +701,70 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal BuiltinModule ImportBuiltinModule(string modName, bool bottom = true) {
+        private IModule ImportFromIMember(IMember member, string[] names, int curIndex) {
+            if (member == null) {
+                return null;
+            }
+            if (curIndex >= names.Length) {
+                return GetNamespaceFromObjects(member) as IModule;
+            }
+
+            var ipm = member as IPythonModule;
+            if (ipm != null) {
+                return ImportFromIPythonModule(ipm, names, curIndex);
+            }
+
+            var im = member as IModule;
+            if (im != null) {
+                return ImportFromIModule(im, names, curIndex);
+            }
+
+            var ipmm = member as IPythonMultipleMembers;
+            if (ipmm != null) {
+                return ImportFromIPythonMultipleMembers(ipmm, names, curIndex);
+            }
+
+            return null;
+        }
+
+        private IModule ImportFromIPythonMultipleMembers(IPythonMultipleMembers mod, string[] names, int curIndex) {
+            var modules = new List<IModule>();
+            foreach (var member in mod.Members) {
+                modules.Add(ImportFromIMember(member, names, curIndex));
+            }
+            var mods = modules.OfType<Namespace>().ToArray();
+            if (mods.Length == 0) {
+                return null;
+            } else if (mods.Length == 1) {
+                return (IModule)mods[0];
+            } else {
+                return new MultipleMemberInfo(mods);
+            }
+        }
+
+        private IModule ImportFromIModule(IModule mod, string[] names, int curIndex) {
+            for (; mod != null && curIndex < names.Length; ++curIndex) {
+                mod = mod.GetChildPackage(_defaultContext, names[curIndex]);
+            }
+            return mod;
+        }
+
+        private IModule ImportFromIPythonModule(IPythonModule mod, string[] names, int curIndex) {
+            var member = mod.GetMember(_defaultContext, names[curIndex]);
+            return ImportFromIMember(member, names, curIndex + 1);
+        }
+
+        internal IModule ImportBuiltinModule(string modName, bool bottom = true) {
             IPythonModule mod = null;
 
             if (modName.IndexOf('.') != -1) {
                 string[] names = modName.Split('.');
                 if (names[0].Length > 0) {
                     mod = _interpreter.ImportModule(names[0]);
-                    if (bottom) {
-                        int curIndex = 1;
-                        while (mod != null && curIndex < names.Length) {
-                            mod = mod.GetMember(_defaultContext, names[curIndex++]) as IPythonModule;
+                    if (bottom && names.Length > 1) {
+                        var mod2 = ImportFromIPythonModule(mod, names, 1);
+                        if (mod2 != null) {
+                            return mod2;
                         }
                     }
                 }

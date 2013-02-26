@@ -17,14 +17,20 @@ using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis {
     class ModuleReference {
-        public Namespace Module;
+        public IModule Module;
         private Dictionary<ModuleInfo, int> EphmeralReferences; 
 
         public ModuleReference() {
         }
 
-        public ModuleReference(Namespace module) {
+        public ModuleReference(IModule module) {
             Module = module;
+        }
+
+        public Namespace Namespace {
+            get {
+                return Module as Namespace;
+            }
         }
 
         /// <summary>

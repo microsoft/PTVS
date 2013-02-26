@@ -106,7 +106,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IModule GetChildPackage(IModuleContext context, string name) {
             var mem = _type.GetMember(context, name);
             if (mem != null) {
-                // TODO: Support MultipleMemberInfo (e.g. os.path)
                 return ProjectState.GetNamespaceFromObjects(mem) as IModule;
             }
             return null;
@@ -130,8 +129,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public void AddDependency(AnalysisUnit unit) {
+            InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
+        }
+
         public override ILocatedMember GetLocatedMember() {
             return _interpreterModule as ILocatedMember;
+        }
+
+
+        public INamespaceSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
+            var res = GetMember(node, unit, name);
+            InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
+            return res;
+        }
+
+
+        public IEnumerable<string> GetModuleMemberNames(IModuleContext context) {
+            return GetMemberNames(context);
+        }
+
+        public void Imported(AnalysisUnit unit) {
+            InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
         }
     }
 }

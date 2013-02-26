@@ -273,7 +273,7 @@ namespace Microsoft.PythonTools.Analysis {
                 get {
                     var res = _moduleTable.LoadModule(_name);
                     if (res != null) {
-                        return res.Module;
+                        return res.Namespace;
                     }
                     return null;
                 }
@@ -330,7 +330,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override Namespace Module {
                 get {
-                    return _reference.Module;
+                    return _reference.Namespace;
                 }
             }
 

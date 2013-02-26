@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     return xSingleUnder ? 1 : -1;
                 }
             }
-            return String.Compare(xName, yName, StringComparison.Ordinal);
+            return String.Compare(xName, yName, StringComparison.CurrentCultureIgnoreCase);
         }
 
         private CompletionComparer(bool sortUnderscoresLast) {

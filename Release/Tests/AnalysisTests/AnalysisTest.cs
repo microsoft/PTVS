@@ -2356,6 +2356,56 @@ abc()
             );
         }
 
+        [TestMethod, Priority(0)]
+        public void ReferencesCrossMultiModule() {
+            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+
+            var fooText = @"
+from barbaz import abc
+
+abc()
+";
+            var barText = "class abc1(object): pass";
+            var bazText = "class abc2(object): pass";
+            var barBazText = @"from bar import abc1 as abc
+from baz import abc2 as abc";
+
+            var fooMod = state.AddModule("foo", "foo", null);
+            Prepare(fooMod, GetSourceUnit(fooText, "mod1"));
+            var barMod = state.AddModule("bar", "bar", null);
+            Prepare(barMod, GetSourceUnit(barText, "mod2"));
+            var bazMod = state.AddModule("baz", "baz", null);
+            Prepare(bazMod, GetSourceUnit(bazText, "mod3"));
+            var barBazMod = state.AddModule("barbaz", "barbaz", null);
+            Prepare(barBazMod, GetSourceUnit(barBazText, "mod4"));
+
+            fooMod.Analyze(CancellationToken.None, true);
+            barMod.Analyze(CancellationToken.None, true);
+            bazMod.Analyze(CancellationToken.None, true);
+            barBazMod.Analyze(CancellationToken.None, true);
+            fooMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+            barMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+            bazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+            barBazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+
+            VerifyReferences(UniqifyVariables(barMod.Analysis.GetVariablesByIndex("abc1", barText.IndexOf("abc1"))),
+                new VariableLocation(1, 7, VariableType.Definition),
+                new VariableLocation(1, 25, VariableType.Reference)
+            );
+            VerifyReferences(UniqifyVariables(bazMod.Analysis.GetVariablesByIndex("abc2", bazText.IndexOf("abc2"))),
+                new VariableLocation(1, 7, VariableType.Definition),
+                new VariableLocation(2, 25, VariableType.Reference)
+            );
+            VerifyReferences(UniqifyVariables(fooMod.Analysis.GetVariablesByIndex("abc", 0)),
+                new VariableLocation(1, 7, VariableType.Value),         // possible value
+                //new VariableLocation(1, 7, VariableType.Value),       // appears twice for two modules, but cannot test that
+                new VariableLocation(2, 20, VariableType.Definition),   // import
+                new VariableLocation(4, 1, VariableType.Reference),     // call
+                new VariableLocation(1, 25, VariableType.Definition),   // import in bar
+                new VariableLocation(2, 25, VariableType.Definition)    // import in baz
+            );
+        }
+
         private static void LocationNames(List<IAnalysisVariable> vars, StringBuilder error) {
             foreach (var var in vars) { //.OrderBy(v => v.Location.Line).ThenBy(v => v.Location.Column)) {
                 error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.Line, var.Location.Column, var.Type);

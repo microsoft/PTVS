@@ -694,7 +694,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="ClassDiagram1.cd" />
     <None Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj">
       <OutputSubPath>FromExistingCode</OutputSubPath>
     </None>

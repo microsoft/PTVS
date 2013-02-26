@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    sealed class MultipleMemberInfo : Namespace {
+    sealed class MultipleMemberInfo : Namespace, IModule {
         private readonly Namespace[] _members;
 
         public MultipleMemberInfo(Namespace[] members) {
@@ -267,6 +267,60 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         yield return loc;
                     }
                 }
+            }
+        }
+
+        IModule IModule.GetChildPackage(IModuleContext context, string name) {
+            var children = new List<Namespace>();
+            foreach (var member in _members.OfType<IModule>()) {
+                var mod = member.GetChildPackage(context, name) as Namespace;
+                if (mod != null) {
+                    children.Add(mod);
+                }
+            }
+
+            if (children.Count == 0) {
+                return null;
+            } else if (children.Count == 1) {
+                return (IModule)children[0];
+            } else {
+                return (IModule)new MultipleMemberInfo(children.ToArray());
+            }
+        }
+
+        IEnumerable<KeyValuePair<string, Namespace>> IModule.GetChildrenPackages(IModuleContext context) {
+            foreach (var member in _members.OfType<IModule>()) {
+                foreach (var keyValue in member.GetChildrenPackages(context)) {
+                    yield return keyValue;
+                }
+            }
+        }
+
+        void IModule.SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
+            foreach (var member in _members.OfType<IModule>()) {
+                member.SpecializeFunction(name, dlg, analyze);
+            }
+        }
+
+        IEnumerable<string> IModule.GetModuleMemberNames(IModuleContext context) {
+            foreach (var member in _members.OfType<IModule>()) {
+                foreach (var name in member.GetModuleMemberNames(context)) {
+                    yield return name;
+                }
+            }
+        }
+
+        INamespaceSet IModule.GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef, InterpreterScope linkedScope, string linkedName) {
+            var res = NamespaceSet.Empty;
+            foreach (var member in _members.OfType<IModule>()) {
+                res = res.Union(member.GetModuleMember(node, unit, name, addRef, linkedScope, linkedName));
+            }
+            return res;
+        }
+
+        void IModule.Imported(AnalysisUnit unit) {
+            foreach (var member in _members.OfType<IModule>()) {
+                member.Imported(unit);
             }
         }
     }

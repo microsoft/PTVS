@@ -178,35 +178,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return false;
         }
 
-        private void WalkFromImportWorker(NameExpression node, Namespace userMod, string impName, string newName) {
+        private void WalkFromImportWorker(NameExpression node, IModule userMod, string impName, string newName) {
             var saveName = (newName == null) ? impName : newName;
 
             bool addRef = node.Name != "*";
 
             var variable = Scope.CreateVariable(node, _unit, saveName, addRef);
+            variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));
 
-            var newTypes = NamespaceSet.Empty;
-
-            // look for builtin / user-defined modules first
-            ModuleInfo module = userMod as ModuleInfo;
-            if (module != null) {
-                var importedValue = module.Scope.CreateVariable(node, _unit, impName, addRef);
-                Scope.GetLinkedVariables(saveName).Add(importedValue);
-
-                newTypes = newTypes.Union(importedValue.TypesNoCopy);
-                importedValue.AddDependency(_unit);
-            }
-
-            BuiltinModule builtinModule = userMod as BuiltinModule;
-            if (builtinModule != null) {
-                var importedValue = builtinModule.GetMember(node, _unit, impName);
-
-                newTypes = newTypes.Union(importedValue);
-
-                builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
-            }
-
-            variable.AddTypes(_unit, newTypes);
             if (node.Name != "*") {
                 variable.AddAssignment(node, _unit);
             }
@@ -214,7 +193,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public override bool Walk(FromImportStatement node) {
             ModuleReference moduleRef;
-            Namespace userMod = null;
+            IModule userMod = null;
             RelativeModuleName relativeName = node.Root as RelativeModuleName;
             if (relativeName != null) {
                 // attempt relative import...
@@ -247,7 +226,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 if (moduleRef != null) {
                     if (moduleRef.Module != null) {
-                        userMod = moduleRef.Module;
+                        userMod = moduleRef.Module as IModule;
                         if (userMod == null) {
                             moduleRef.AddEphemeralReference(_unit.DeclaringModule);
                         }
@@ -258,32 +237,34 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
             }
 
-            var asNames = node.AsNames ?? node.Names;
+            if (userMod != null) {
+                var asNames = node.AsNames ?? node.Names;
 
-            int len = Math.Min(node.Names.Count, asNames.Count);
-            for (int i = 0; i < len; i++) {
-                var nameNode = asNames[i] ?? node.Names[i];
-                var impName = node.Names[i].Name;
-                var newName = asNames[i] != null ? asNames[i].Name : null;
+                int len = Math.Min(node.Names.Count, asNames.Count);
+                for (int i = 0; i < len; i++) {
+                    var nameNode = asNames[i] ?? node.Names[i];
+                    var impName = node.Names[i].Name;
+                    var newName = asNames[i] != null ? asNames[i].Name : null;
 
-                if (impName == null) {
-                    // incomplete import statement
-                    continue;
-                } else if (impName == "*") {
-                    // Handle "import *"
-                    if (userMod != null) {
-                        foreach (var varName in GetModuleKeys(userMod)) {
+                    if (impName == null) {
+                        // incomplete import statement
+                        continue;
+                    } else if (impName == "*") {
+                        // Handle "import *"
+                        foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
                             if (!varName.StartsWith("_")) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }
+                    } else {
+                        WalkFromImportWorker(nameNode, userMod, impName, newName);
                     }
-                } else {
-                    WalkFromImportWorker(nameNode, userMod, impName, newName);
                 }
+
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         private bool TryGetUserModule(string modName, out ModuleReference moduleRef) {
@@ -314,21 +295,6 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return false;
         }
 
-        private ICollection<string> GetModuleKeys(Namespace userMod) {
-            ModuleInfo mi = userMod as ModuleInfo;
-            if (mi != null) {
-                return mi.Scope.Variables.Keys;
-            }
-
-            BuiltinModule bmi = userMod as BuiltinModule;
-            if (bmi != null) {
-                return bmi.GetMemberNames(GlobalScope.InterpreterContext).ToArray();
-            }
-
-            return new string[0];
-        }
-
-        
         internal List<Namespace> LookupBaseMethods(string name, IEnumerable<INamespaceSet> bases, Node node, AnalysisUnit unit) {
             var result = new List<Namespace>();
             foreach (var b in bases) {
@@ -438,11 +404,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var def = Scope.CreateVariable(nameNode, _unit, saveName);
                 if (!TryGetUserModule(importing, out modRef)) {
                     var builtinModule = ProjectState.ImportBuiltinModule(importing, bottom);
+                    var ns = builtinModule as Namespace;
 
-                    if (builtinModule != null) {
-                        builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
+                    if (builtinModule != null && ns != null) {
+                        builtinModule.Imported(_unit);
 
-                        def.AddTypes(_unit, builtinModule.SelfSet);
+                        def.AddTypes(_unit, ns);
                         def.AddAssignment(nameNode, _unit);
                         continue;
                     }
@@ -450,17 +417,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 if (modRef != null) {
                     if (modRef.Module != null) {
-                        ModuleInfo mi = modRef.Module as ModuleInfo;
-                        if (mi != null) {
-                            mi.ModuleDefinition.AddDependency(_unit);
-                        }
+                        modRef.Module.Imported(_unit);
 
-                        BuiltinModule builtinModule = modRef.Module as BuiltinModule;
-                        if (builtinModule != null) {
-                            builtinModule.InterpreterModule.Imported(_unit.DeclaringModule.InterpreterContext);
-                        }
-
-                        def.AddTypes(_unit, modRef.Module.SelfSet);
+                        def.AddTypes(_unit, modRef.Namespace);
                         def.AddAssignment(nameNode, _unit);
                         continue;
                     } else {

@@ -94,9 +94,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext moduleContext) {
             if (_packageModules != null) {
                 foreach (var keyValue in _packageModules) {
-                    var res = (ModuleInfo)keyValue.Value.Target;
+                    var res = keyValue.Value.Target as IModule;
                     if (res != null) {
-                        yield return new KeyValuePair<string, Namespace>(keyValue.Key, res);
+                        yield return new KeyValuePair<string, Namespace>(keyValue.Key, (Namespace)res);
                     }
                 }
             }
@@ -271,5 +271,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         #endregion
 
+
+
+        public INamespaceSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
+            var importedValue = Scope.CreateVariable(node, unit, name, addRef);
+            ModuleDefinition.AddDependency(unit);
+
+            if (linkedScope != null) {
+                linkedScope.GetLinkedVariables(linkedName ?? name).Add(importedValue);
+            }
+            return importedValue.TypesNoCopy;
+        }
+
+
+        public IEnumerable<string> GetModuleMemberNames(IModuleContext context) {
+            return Scope.Variables.Keys;
+        }
+
+        public void Imported(AnalysisUnit unit) {
+            ModuleDefinition.AddDependency(unit);
+        }
     }
 }

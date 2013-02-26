@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start = _stopwatch.ElapsedMilliseconds;
 
-            var completions = GetModules(_namespace, false).Select(m => PythonCompletion(glyphService, m));
+            var completions = GetModules(_namespace, true).Select(m => PythonCompletion(glyphService, m));
 
             var res = new FuzzyCompletionSet("PythonImports", "Python", Span, completions, _options, CompletionComparer.UnderscoresLast);
 
