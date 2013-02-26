@@ -52,6 +52,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var buffer = subjectBuffers[0];
 
                 foreach (var subjBuf in subjectBuffers) {
+                    // TODO: Check whether `buffer` should be `subjBuf`
                     controller.PropagateAnalyzer(buffer);
                 }
 

@@ -306,6 +306,7 @@ namespace Microsoft.PythonTools.Repl {
                 } catch (SocketException) {
                     _stream = null;
                 } catch (DisconnectedException) {
+                } catch (NullReferenceException) {
                 }
             }
 

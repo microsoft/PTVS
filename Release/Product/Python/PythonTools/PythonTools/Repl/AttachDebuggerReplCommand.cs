@@ -41,13 +41,13 @@ namespace Microsoft.VisualStudio.Repl {
                     }
                 } else {
                     window.WriteError(
-@"Attaching to an interactive window requires enabling attach 
-support in Tools->Options->Python Tools->Interactive Windows.
-
-This will cause the debugger to track necessary state to enable 
-debugging until the attach is requested.  Once enabled the 
-interactive window will need to be reset for the change to take
-effect.");
+"Attaching to an interactive window requires enabling attach " +
+"support in Tools->Options->Python Tools->Interactive Windows." +
+Environment.NewLine + Environment.NewLine +
+"This will cause the debugger to track necessary state to enable " +
+"debugging until the attach is requested.  Once enabled the " +
+"interactive window will need to be reset for the change to take " +
+"effect.");
                 }
             } else {
                 window.WriteError("attach only supports Python interactive windows");

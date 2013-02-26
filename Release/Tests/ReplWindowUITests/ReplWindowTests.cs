@@ -43,8 +43,80 @@ using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
+    /// <summary>
+    /// Unit tests that don't apply to specific interpreters and should only
+    /// be run once.
+    /// </summary>
     [TestClass]
     public class ReplWindowTests {
+        internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider();
+
+        /// <summary>
+        /// Directed unit tests for the repl evaluator's spliting code into individual statements...
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void ReplSplitCodeTest() {
+            // http://pytools.codeplex.com/workitem/606
+            var eval = new PythonReplEvaluator(
+                InterpFactory,
+                new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"),
+                new Version(2, 7),
+                null
+            );
+
+            var testCases = new[] {
+                new { 
+                    Code = @"def f():
+    pass
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"def f():
+    pass
+
+f()
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"def f():
+    pass
+
+f()
+f()
+
+def g():
+    pass
+
+f()
+g()",
+                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                }
+            };
+
+            foreach (var testCase in testCases) {
+                var got = eval.SplitCode(testCase.Code).ToArray();
+                Assert.AreEqual(testCase.Expected.Length, got.Length);
+                for (int i = 0; i < got.Length; i++) {
+                    Assert.AreEqual(testCase.Expected[i], got[i]);
+                }
+            }
+        }
+    }
+
+    [TestClass]
+    public class Python26ReplWindowTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             TestData.Deploy();
@@ -101,13 +173,14 @@ namespace ReplWindowUITests {
 
             Keyboard.Type("x.");
 
-            interactive.WaitForText(ReplPrompt + code,  ReplPrompt + "x.");
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
 
             var session = interactive.WaitForSession<ICompletionSession>();
-            
+            Assert.IsNotNull(session.SelectedCompletionSet);
+
             StringBuilder completions = new StringBuilder();
             completions.AppendLine(session.SelectedCompletionSet.DisplayName);
-            
+
             foreach (var completion in session.SelectedCompletionSet.Completions) {
                 completions.Append(completion.InsertionText);
             }
@@ -160,17 +233,30 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStdOutRedirected() {
+            if (ReplPrompt.Length == 0) {
+                // Test requires primary prompt
+                return;
+            }
+            if (!CanRedirectSubprocess) {
+                // Cannot redirect stdout from subprocess
+                return;
+            }
+
             var interactive = Prepare();
 
-            const string code = "import subprocess, sys";
+            // Spaces after the module name prevent autocomplete from changing them.
+            // In particular, 'subprocess' does not appear in the default database,
+            // but '_subprocess' does.
+            const string code = "import subprocess , sys ";
             Keyboard.Type(code + "\r");
 
             interactive.WaitForText(ReplPrompt + code, ReplPrompt);
+            interactive.WaitForReadyState();
 
             const string code2 = "x = subprocess.Popen(['C:\\\\python27\\\\python.exe', '-c', 'print 42'], stdout=sys.stdout).wait()";
             Keyboard.Type(code2 + "\r");
 
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt + code2, "42", ReplPrompt);
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt + code2, Print42Output, ReplPrompt);
         }
 
         /// <summary>
@@ -188,7 +274,7 @@ namespace ReplWindowUITests {
                 dataObject.SetData(DataFormats.CommaSeparatedValue, stream);
                 Clipboard.SetDataObject(dataObject, true);
             }));
-            
+
             Keyboard.ControlV();
 
             string line1 = "[";
@@ -197,9 +283,9 @@ namespace ReplWindowUITests {
             string line4 = "  [4, 5, 6, 5, 2, 3, 4, 3, 1, 20, 44, 33, None, None, None, None, None, None],";
             string line5 = "  [7, 8, 9, 6, 3, 4, 0, 9, 4, 33, 55, 33, None, None, None, None, None, None],";
             string line6 = "]";
-            
+
             interactive.WaitForText(
-                ReplPrompt + line1, 
+                ReplPrompt + line1,
                 SecondPrompt + line2,
                 SecondPrompt + line3,
                 SecondPrompt + line4,
@@ -227,7 +313,7 @@ namespace ReplWindowUITests {
             Keyboard.Type(Key.Enter);
 
             interactive.WaitForSessionDismissed();
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.car", "Traceback (most recent call last):", "  File \"<string>\", line 1, in <module>", "AttributeError: 'int' object has no attribute 'car'", ReplPrompt);
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.car", "Traceback (most recent call last):", "  File \"<" + SourceFileName + ">\", line 1, in <module>", "AttributeError: 'int' object has no attribute 'car'", ReplPrompt);
         }
 
         /// <summary>
@@ -237,16 +323,21 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionFullText() {
-            var interactive = Prepare();
             var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
             options.Intellisense.AddNewLineAtEndOfFullyTypedWord = false;
+
+            var interactive = Prepare();
+
+            Keyboard.Type("pass\r");
+            interactive.WaitForText(ReplPrompt + "pass", ReplPrompt);
+            interactive.ClearScreen();
+            interactive.WaitForText(ReplPrompt);
 
             const string code = "x = 42";
             Keyboard.Type(code + "\r");
 
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt);            
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt);
 
-            // x<space> should not bring up a completion session
             Keyboard.Type("x.");
             interactive.WaitForSession<ICompletionSession>();
             Keyboard.Type("real");
@@ -256,10 +347,8 @@ namespace ReplWindowUITests {
             interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.real");
 
             // try again w/ option flipped
-            interactive.ClearScreen();
-            interactive.WaitForText(ReplPrompt);
-
             options.Intellisense.AddNewLineAtEndOfFullyTypedWord = true;
+            interactive = Prepare();
 
             Keyboard.Type(code + "\r");
 
@@ -341,18 +430,19 @@ namespace ReplWindowUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EnterAtBeginningOfLine() {
             // TODO (bug): complete statement detection
-        //    var interactive = Prepare();
-        // 
-        //    const string code = "\"\"\"";
-        //    Keyboard.Type(code);
-        //    Keyboard.Type(Key.Enter);
-        //    Keyboard.Type(Key.Enter);
-        //    interactive.WaitForText(ReplPrompt + "\"\"\"", SecondPrompt, SecondPrompt);
+            Assert.Fail("TODO (bug): complete statement detection");
+            //    var interactive = Prepare();
+            // 
+            //    const string code = "\"\"\"";
+            //    Keyboard.Type(code);
+            //    Keyboard.Type(Key.Enter);
+            //    Keyboard.Type(Key.Enter);
+            //    interactive.WaitForText(ReplPrompt + "\"\"\"", SecondPrompt, SecondPrompt);
 
-        //    Keyboard.Type("a");
-        //    Keyboard.Type(Key.Left);
-        //    Keyboard.Type(Key.Enter);
-        //    interactive.WaitForText(ReplPrompt + "\"\"\"", SecondPrompt, SecondPrompt, SecondPrompt + "a");
+            //    Keyboard.Type("a");
+            //    Keyboard.Type(Key.Left);
+            //    Keyboard.Type(Key.Enter);
+            //    interactive.WaitForText(ReplPrompt + "\"\"\"", SecondPrompt, SecondPrompt, SecondPrompt + "a");
         }
 
         /// <summary>
@@ -362,7 +452,7 @@ namespace ReplWindowUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LineBreak() {
             var interactive = Prepare();
-            
+
             const string quotes = "\"\"\"";
             Keyboard.Type(quotes);
             Keyboard.Type(Key.Enter);
@@ -372,8 +462,8 @@ namespace ReplWindowUITests {
             Keyboard.Type(Key.Enter);
 
             interactive.WaitForText(
-                ReplPrompt + quotes, 
-                SecondPrompt, 
+                ReplPrompt + quotes,
+                SecondPrompt,
                 SecondPrompt + quotes,
                 SecondPrompt,
                 "'\\n\\n'",
@@ -431,7 +521,9 @@ namespace ReplWindowUITests {
 
             interactive.CancelExecution();
 
-            interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+            if (KeyboardInterruptHasTracebackHeader) {
+                interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+            }
             interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
         }
 
@@ -474,9 +566,9 @@ namespace ReplWindowUITests {
                 interactive.CancelExecution();
 
                 interactive.WaitForText(
-                    ReplPrompt     + RawInput + "()", 
-                    stdInputPrompt + "ignored", 
-                                     "''", 
+                    ReplPrompt + RawInput + "()",
+                    stdInputPrompt + "ignored",
+                                     "''",
                     ReplPrompt
                 );
 
@@ -484,30 +576,30 @@ namespace ReplWindowUITests {
                 Keyboard.Type(Key.Enter);
 
                 interactive.WaitForText(
-                    ReplPrompt     + RawInput + "()",
+                    ReplPrompt + RawInput + "()",
                     stdInputPrompt + "ignored",
                                      "''",
-                    ReplPrompt     + RawInput + "()",
+                    ReplPrompt + RawInput + "()",
                     stdInputPrompt
                 );
 
                 Keyboard.Type("ignored2");
 
                 interactive.WaitForText(
-                    ReplPrompt     + RawInput + "()",
+                    ReplPrompt + RawInput + "()",
                     stdInputPrompt + "ignored",
                                      "''",
-                    ReplPrompt     + RawInput + "()",
-                    stdInputPrompt + "ignored2"                    
+                    ReplPrompt + RawInput + "()",
+                    stdInputPrompt + "ignored2"
                 );
 
                 interactive.CancelExecution(1);
 
                 interactive.WaitForText(
-                    ReplPrompt     + RawInput + "()",
+                    ReplPrompt + RawInput + "()",
                     stdInputPrompt + "ignored",
                                      "''",
-                    ReplPrompt     + RawInput + "()",
+                    ReplPrompt + RawInput + "()",
                     stdInputPrompt + "ignored2",
                                      "''",
                     ReplPrompt
@@ -539,7 +631,9 @@ namespace ReplWindowUITests {
 
             interactive.CancelExecution();
 
-            interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+            if (KeyboardInterruptHasTracebackHeader) {
+                interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+            }
             interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
         }
 
@@ -660,10 +754,10 @@ namespace ReplWindowUITests {
 
             Keyboard.Type("def f():\r");
             Keyboard.Type("print('hi')\r\r");
-            
+
             interactive.WaitForText(
-                ReplPrompt   + "def f():", 
-                SecondPrompt + "    print('hi')", 
+                ReplPrompt + "def f():",
+                SecondPrompt + "    print('hi')",
                 SecondPrompt,
                 ReplPrompt
             );
@@ -673,10 +767,10 @@ namespace ReplWindowUITests {
             Keyboard.Type("print('hello')\r\r");
 
             interactive.WaitForText(
-                ReplPrompt   + "def f():", 
-                SecondPrompt + "    print('hi')", 
+                ReplPrompt + "def f():",
+                SecondPrompt + "    print('hi')",
                 SecondPrompt,
-                ReplPrompt   + "def f():",
+                ReplPrompt + "def f():",
                 SecondPrompt + "    print('hi')",
                 SecondPrompt + "    print('hello')",
                 SecondPrompt,
@@ -740,7 +834,7 @@ namespace ReplWindowUITests {
                 Keyboard.Type(Key.Up);
 
 
-                expected[expected.Count - 1] = expected[expected.Count - i - 2]; 
+                expected[expected.Count - 1] = expected[expected.Count - i - 2];
                 interactive.WaitForText(expected.ToArray());
             }
             // end of history, one more up shouldn't do anything
@@ -863,7 +957,7 @@ namespace ReplWindowUITests {
             interactive.WaitForText(ReplPrompt + importCode, ReplPrompt);
 
             Keyboard.Type("sys");
-            
+
             interactive.WaitForText(ReplPrompt + importCode, ReplPrompt + "sys");
 
             Keyboard.Type(Key.Back);
@@ -900,7 +994,11 @@ namespace ReplWindowUITests {
 
                 interactive.CancelExecution();
 
-                interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+                if (KeyboardInterruptHasTracebackHeader) {
+                    interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+                } else {
+                    interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt);
+                }
                 interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
 
                 interactive.ClearScreen();
@@ -921,12 +1019,12 @@ namespace ReplWindowUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SyntaxHighlightingRaiseException() {
             GetInteractiveOptions().ExecutionMode = "Standard";
-            var interactive = Prepare(true);
+            var interactive = Prepare();
             try {
                 const string code = "raise Exception()";
                 Keyboard.Type(code + "\r");
 
-                interactive.WaitForText(ReplPrompt + code, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "Exception", ReplPrompt);
+                interactive.WaitForText(ReplPrompt + code, "Traceback (most recent call last):", "  File \"<" + SourceFileName + ">\", line 1, in <module>", "Exception", ReplPrompt);
 
                 var snapshot = interactive.ReplWindow.TextView.TextBuffer.CurrentSnapshot;
                 var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
@@ -941,7 +1039,7 @@ namespace ReplWindowUITests {
                 Assert.AreEqual(classifications[2].Span.GetText(), "()");
             } finally {
                 interactive.Reset();
-            }            
+            }
         }
 
         /// <summary>
@@ -982,7 +1080,7 @@ namespace ReplWindowUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BackspacePrompt() {
             var interactive = Prepare();
-            
+
             Keyboard.Type("def f():\rpass");
 
             interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
@@ -1039,7 +1137,7 @@ namespace ReplWindowUITests {
             interactive.ReplWindow.InsertCode("1");
             interactive.ReplWindow.InsertCode("+");
             interactive.ReplWindow.InsertCode("2");
-            
+
             interactive.WaitForText(
                 ReplPrompt + "1+2"
             );
@@ -1080,11 +1178,11 @@ namespace ReplWindowUITests {
 
             interactive.CancelExecution();
 
-            interactive.WaitForTextStart(
-                ReplPrompt + "while True: pass",
-                SecondPrompt,
-                "Traceback (most recent call last):"
-            );
+            if (KeyboardInterruptHasTracebackHeader) {
+                interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+            } else {
+                interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt);
+            }
 
             interactive.WaitForTextEnd(
                 "KeyboardInterrupt",
@@ -1126,7 +1224,7 @@ namespace ReplWindowUITests {
             Keyboard.Type(command + "\r");
 
             interactive.WaitForTextStart(
-                ReplPrompt + command, 
+                ReplPrompt + command,
                 ReplPrompt + "print('hello world')",
                 "hello world"
             );
@@ -1179,10 +1277,10 @@ namespace ReplWindowUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommandsLoadScriptMultipleSubmissions() {
             var interactive = Prepare();
-            
+
             var tempFile = Path.GetTempFileName();
             try {
-                File.WriteAllText(tempFile, 
+                File.WriteAllText(tempFile,
 @"def foo():
     print('hello')
 $wait 10
@@ -1194,13 +1292,13 @@ foo()
                 Keyboard.Type(command + "\r");
 
                 interactive.WaitForTextStart(
-                    ReplPrompt   + command,
-                    ReplPrompt   + "def foo():",
+                    ReplPrompt + command,
+                    ReplPrompt + "def foo():",
                     SecondPrompt + "    print('hello')",
                     SecondPrompt,
-                    ReplPrompt   + "$wait 10",
-                    ReplPrompt   + "$wait 20",
-                    ReplPrompt   + "foo()",
+                    ReplPrompt + "$wait 10",
+                    ReplPrompt + "$wait 20",
+                    ReplPrompt + "foo()",
                     "hello"
                 );
             } finally {
@@ -1246,15 +1344,15 @@ $cls
         public void InlineImage() {
             var interactive = Prepare();
 
-            const string importSys = "import sys";
-            const string getReplModule = "repl = sys.modules['visualstudio_py_repl'].BACKEND";
+            const string importSys = "import sys ";
+            const string getReplModule = "repl = sys.modules['visualstudio_py_repl'].BACKEND ";
             Keyboard.Type(importSys + "\r");
             interactive.WaitForText(ReplPrompt + importSys, ReplPrompt);
 
             Keyboard.Type(getReplModule + "\r");
 
             interactive.WaitForText(ReplPrompt + importSys, ReplPrompt + getReplModule, ReplPrompt);
-            
+
             interactive.ClearScreen();
             interactive.WaitForText(ReplPrompt);
 
@@ -1275,7 +1373,7 @@ $cls
 
             // now add some more code to cause the image to minimize
             const string nopCode = "x = 2";
-            Keyboard.Type(nopCode);            
+            Keyboard.Type(nopCode);
             interactive.WaitForText(ReplPrompt + loadImage, "", "", ReplPrompt + nopCode);
 
             Keyboard.Type(Key.Enter);
@@ -1284,7 +1382,7 @@ $cls
             // let image minimize...
             System.Threading.Thread.Sleep(200);
             for (int i = 0; i < 10; i++) {
-                tags = WaitForTags(textview, aggregator, snapshot); 
+                tags = WaitForTags(textview, aggregator, snapshot);
                 Assert.AreEqual(1, tags.Length);
 
                 var sizeTmp = tags[0].Tag.Adornment.RenderSize;
@@ -1320,7 +1418,7 @@ $cls
                         break;
                     }
                     System.Threading.Thread.Sleep(100);
-                }                
+                }
             }));
 
             return tags;
@@ -1375,7 +1473,7 @@ $cls
 
             interactive.WaitForText(ReplPrompt);
         }
-        
+
         /// <summary>
         /// Tests using the $cls clear screen command
         /// </summary>
@@ -1442,7 +1540,7 @@ $cls
                 Keyboard.PressAndRelease(Key.End, Key.LeftShift);
                 Keyboard.Type("pass");
 
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "pass"); 
+                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "pass");
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -1492,16 +1590,16 @@ $cls
             );
 
             var text = interactive.TextView.TextBuffer.CurrentSnapshot.GetText();
-            var firstPrimaryPrompt = text.IndexOf(">>>");
+            var firstPrimaryPrompt = text.IndexOf(ReplPrompt);
             var hiLiteral = text.IndexOf("'hi'");
-            var firstSecondaryPrompt = text.IndexOf("...");
-            var fooCall = text.IndexOf("> foo()") + 2;
+            var firstSecondaryPrompt = text.IndexOf(SecondPrompt);
+            var fooCall = text.IndexOf("foo()\r");
             var hiOutput = text.IndexOf("hi", fooCall) + 1;
             var oneTwoThreeOutput = text.IndexOf("123", fooCall) + 1;
             var blahStdIn = text.IndexOf("blah") + 2;
             var blahOutput = text.IndexOf("'blah'") + 2;
 
-            var firstSubmission = "def foo():\r\n...     print('hi')\r\n...     return 123\r\n... \r\n";
+            var firstSubmission = string.Format("def foo():\r\n{0}    print('hi')\r\n{0}    return 123\r\n{0}\r\n", SecondPrompt);
             AssertContainingRegion(interactive, firstPrimaryPrompt + 0, firstSubmission);
             AssertContainingRegion(interactive, firstPrimaryPrompt + 1, firstSubmission);
             AssertContainingRegion(interactive, firstPrimaryPrompt + 2, firstSubmission);
@@ -1532,67 +1630,71 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditCutIncludingPrompt() {
-            if (SecondPrompt.Length > 0) {
-                var interactive = Prepare();
-
-                Keyboard.Type("def f():\rprint('hi')");
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
-
-                Keyboard.Type(Key.Home);
-                Keyboard.Type(Key.Home);
-                Keyboard.Type(Key.Left);
-                Keyboard.PressAndRelease(Key.End, Key.LeftShift);
-                Keyboard.PressAndRelease(Key.X, Key.LeftCtrl);
-
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt);
-
-                Keyboard.ControlV();
-
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
-
-                Keyboard.PressAndRelease(Key.Escape);
-
-                interactive.WaitForText(ReplPrompt);
+            if (string.IsNullOrEmpty(SecondPrompt)) {
+                // Test requires secondary prompt
+                return;
             }
+            var interactive = Prepare();
+
+            Keyboard.Type("def f():\rprint('hi')");
+            interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
+
+            Keyboard.Type(Key.Home);
+            Keyboard.Type(Key.Home);
+            Keyboard.Type(Key.Left);
+            Keyboard.PressAndRelease(Key.End, Key.LeftShift);
+            Keyboard.PressAndRelease(Key.X, Key.LeftCtrl);
+
+            interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt);
+
+            Keyboard.ControlV();
+
+            interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
+
+            Keyboard.PressAndRelease(Key.Escape);
+
+            interactive.WaitForText(ReplPrompt);
         }
-        
+
         /// <summary>
         /// Tests pasting when the secondary prompt is highlighted as part of the selection
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditPasteSecondaryPromptSelected() {
-            if (SecondPrompt.Length > 0) {
-                var interactive = Prepare();
-
-                var textview = interactive.ReplWindow.TextView;
-
-                ((UIElement)textview).Dispatcher.Invoke((Action)(() => {
-                    Clipboard.SetText("    pass", TextDataFormat.Text);
-                }));
-
-                Keyboard.Type("def f():\rprint('hi')");
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
-
-                Keyboard.Type(Key.Home);
-                Keyboard.Type(Key.Home);
-                Keyboard.Type(Key.Left);
-                Keyboard.PressAndRelease(Key.End, Key.LeftShift);
-                Keyboard.ControlV();
-
-                // >>> def f():
-                // ...     print('hi')
-                //    ^^^^^^^^^^^^^^^^
-                // replacing selection including the prompt replaces the current line content:
-                //
-                // >>> def f():
-                // ... pass
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
-
-                Keyboard.PressAndRelease(Key.Escape);
-
-                interactive.WaitForText(ReplPrompt);
+            if (string.IsNullOrEmpty(SecondPrompt)) {
+                // Test requires secondary prompt
+                return;
             }
+            var interactive = Prepare();
+
+            var textview = interactive.ReplWindow.TextView;
+
+            ((UIElement)textview).Dispatcher.Invoke((Action)(() => {
+                Clipboard.SetText("    pass", TextDataFormat.Text);
+            }));
+
+            Keyboard.Type("def f():\rprint('hi')");
+            interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
+
+            Keyboard.Type(Key.Home);
+            Keyboard.Type(Key.Home);
+            Keyboard.Type(Key.Left);
+            Keyboard.PressAndRelease(Key.End, Key.LeftShift);
+            Keyboard.ControlV();
+
+            // >>> def f():
+            // ...     print('hi')
+            //    ^^^^^^^^^^^^^^^^
+            // replacing selection including the prompt replaces the current line content:
+            //
+            // >>> def f():
+            // ... pass
+            interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
+
+            Keyboard.PressAndRelease(Key.Escape);
+
+            interactive.WaitForText(ReplPrompt);
         }
 
         /// <summary>
@@ -1604,38 +1706,40 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EditPasteSecondaryPromptSelectedInPromptMargin() {
-            if (SecondPrompt.Length > 0) {
-                var interactive = Prepare();
-
-                var textview = interactive.ReplWindow.TextView;
-
-                ((UIElement)textview).Dispatcher.Invoke((Action)(() => {
-                    Clipboard.SetText("    pass", TextDataFormat.Text);
-                }));
-
-                Keyboard.Type("def f():\rprint('hi')");
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
-
-                Keyboard.Press(Key.LeftShift);
-                Keyboard.PressAndRelease(Key.Home);
-                Keyboard.Type(Key.Home);
-                Keyboard.Type(Key.Left);
-                Keyboard.Release(Key.LeftShift);
-                Keyboard.ControlV();
-
-                // >>> def f():
-                // ...     print('hi')
-                //    ^^^^^^^^^^^^^^^^
-                // replacing selection including the prompt replaces the current line content:
-                //
-                // >>> def f():
-                // ... pass
-                interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
-
-                Keyboard.PressAndRelease(Key.Escape);
-
-                interactive.WaitForText(ReplPrompt);
+            if (string.IsNullOrEmpty(SecondPrompt)) {
+                // Test requires secondary prompt
+                return;
             }
+            var interactive = Prepare();
+
+            var textview = interactive.ReplWindow.TextView;
+
+            ((UIElement)textview).Dispatcher.Invoke((Action)(() => {
+                Clipboard.SetText("    pass", TextDataFormat.Text);
+            }));
+
+            Keyboard.Type("def f():\rprint('hi')");
+            interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    print('hi')");
+
+            Keyboard.Press(Key.LeftShift);
+            Keyboard.PressAndRelease(Key.Home);
+            Keyboard.Type(Key.Home);
+            Keyboard.Type(Key.Left);
+            Keyboard.Release(Key.LeftShift);
+            Keyboard.ControlV();
+
+            // >>> def f():
+            // ...     print('hi')
+            //    ^^^^^^^^^^^^^^^^
+            // replacing selection including the prompt replaces the current line content:
+            //
+            // >>> def f():
+            // ... pass
+            interactive.WaitForText(ReplPrompt + "def f():", SecondPrompt + "    pass");
+
+            Keyboard.PressAndRelease(Key.Escape);
+
+            interactive.WaitForText(ReplPrompt);
         }
 
         /// <summary>
@@ -1644,33 +1748,35 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReplWindowOptions() {
-            if (SecondPrompt.Length > 0) {
-                var interactive = Prepare();
-                var window = interactive.ReplWindow;
-
-                window.SetOptionValue(ReplOptions.CommandPrefix, "%");
-                Assert.AreEqual(window.GetOptionValue(ReplOptions.CommandPrefix), "%");
-                window.SetOptionValue(ReplOptions.CommandPrefix, "$");
-                Assert.AreEqual(window.GetOptionValue(ReplOptions.CommandPrefix), "$");
-
-                Assert.AreEqual(window.GetOptionValue(ReplOptions.PrimaryPrompt), ReplPrompt);
-                Assert.AreEqual(window.GetOptionValue(ReplOptions.SecondaryPrompt), SecondPrompt);
-
-                Assert.AreEqual(window.GetOptionValue(ReplOptions.DisplayPromptInMargin), false);
-                Assert.AreEqual(window.GetOptionValue(ReplOptions.ShowOutput), true);
-
-                Assert.AreEqual(window.GetOptionValue(ReplOptions.UseSmartUpDown), true);
-
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => window.SetOptionValue(ReplOptions.PrimaryPrompt, 42)
-                );
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => window.SetOptionValue(ReplOptions.PrimaryPrompt, null)
-                );
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => window.SetOptionValue((ReplOptions)(-1), null)
-                );
+            if (string.IsNullOrEmpty(SecondPrompt)) {
+                // Test requires secondary prompt
+                return;
             }
+            var interactive = Prepare();
+            var window = interactive.ReplWindow;
+
+            window.SetOptionValue(ReplOptions.CommandPrefix, "%");
+            Assert.AreEqual(window.GetOptionValue(ReplOptions.CommandPrefix), "%");
+            window.SetOptionValue(ReplOptions.CommandPrefix, "$");
+            Assert.AreEqual(window.GetOptionValue(ReplOptions.CommandPrefix), "$");
+
+            Assert.AreEqual(window.GetOptionValue(ReplOptions.PrimaryPrompt), ReplPrompt);
+            Assert.AreEqual(window.GetOptionValue(ReplOptions.SecondaryPrompt), SecondPrompt);
+
+            Assert.AreEqual(window.GetOptionValue(ReplOptions.DisplayPromptInMargin), false);
+            Assert.AreEqual(window.GetOptionValue(ReplOptions.ShowOutput), true);
+
+            Assert.AreEqual(window.GetOptionValue(ReplOptions.UseSmartUpDown), true);
+
+            AssertUtil.Throws<InvalidOperationException>(
+                () => window.SetOptionValue(ReplOptions.PrimaryPrompt, 42)
+            );
+            AssertUtil.Throws<InvalidOperationException>(
+                () => window.SetOptionValue(ReplOptions.PrimaryPrompt, null)
+            );
+            AssertUtil.Throws<InvalidOperationException>(
+                () => window.SetOptionValue((ReplOptions)(-1), null)
+            );
         }
 
         /// <summary>
@@ -1930,7 +2036,7 @@ $cls
         public void TestDelInOutput() {
             var interactive = Prepare();
 
-            string inputCode = "print('abc')";            
+            string inputCode = "print('abc')";
             Keyboard.Type(inputCode);
             interactive.WaitForText(ReplPrompt + inputCode);
             Keyboard.Type("\r");
@@ -1978,37 +2084,23 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonMode() {
             if (!IPythonSupported) {
+                // Requires IPython
                 return;
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             try {
-                interactive = Prepare(true);
+                interactive = Prepare();
                 string assignCode = "x = 42";
                 string inspectCode = "?x";
                 Keyboard.Type(assignCode + "\r");
-                
-                interactive.WaitForTextIPython(ReplPrompt + assignCode, ReplPrompt);
+
+                interactive.WaitForText(ReplPrompt + assignCode, ReplPrompt);
                 interactive.WaitForReadyState();
 
                 Keyboard.Type(inspectCode + "\r");
-                interactive.WaitForTextIPython(ReplPrompt + assignCode, ReplPrompt + inspectCode, 
-                    "Type:       int",
-                    "Base Class: <type 'int'>",
-                    "String Form:42",
-                    "Namespace:  Interactive",
-                    "Docstring:",
-                    "int(x[, base]) -> integer",
-                    "",
-                    "Convert a string or number to an integer, if possible.  A floating point",
-                    "argument will be truncated towards zero (this does not include a string",
-                    "representation of a floating point number!)  When converting a string, use",
-                    "the optional base.  It is an error to supply a base when converting a",
-                    "non-string.  If base is zero, the proper base is guessed based on the",
-                    "string content.  If the argument is outside the integer range a",
-                    "long object will be returned instead.",                    
-                ReplPrompt);
+                interactive.WaitForText(new[] { ReplPrompt + assignCode, ReplPrompt + inspectCode }.Concat(IntDocumentation).Concat(new[] { ReplPrompt }).ToArray());
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
                 ForceReset();
@@ -2022,13 +2114,14 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonCtrlBreakAborts() {
             if (!IPythonSupported) {
+                // Requires IPython
                 return;
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             try {
-                interactive = Prepare(true);
+                interactive = Prepare();
                 const string code = "while True: pass\r\n";
                 Keyboard.Type(code);
                 interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
@@ -2038,11 +2131,16 @@ $cls
                 interactive.CancelExecution();
 
                 // we can potentially get different output depending on where the Ctrl-C gets caught.
+                bool failedFirstCheck = false;
                 try {
-                    interactive.WaitForTextStartIPython(ReplPrompt + "while True: pass", SecondPrompt,
+                    interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt,
                         "KeyboardInterrupt caught in kernel");
                 } catch {
-                    interactive.WaitForTextStartIPython(ReplPrompt + "while True: pass", SecondPrompt,
+                    failedFirstCheck = true;
+                }
+
+                if (failedFirstCheck) {
+                    interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt,
                         "---------------------------------------------------------------------------",
                         "KeyboardInterrupt                         Traceback (most recent call last)");
                 }
@@ -2053,13 +2151,6 @@ $cls
             }
         }
 
-        private void ForceReset() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-
-            var interactive = app.GetInteractiveWindow(InterpreterDescription);
-            interactive.Reset();
-        }
-
         /// <summary>
         /// “x = 42”
         /// “x.” should bring up intellisense completion
@@ -2068,6 +2159,7 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IPythonSimpleCompletion() {
             if (!IPythonSupported) {
+                // Requires IPython
                 return;
             }
 
@@ -2075,16 +2167,16 @@ $cls
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             try {
-                interactive = Prepare(true);
+                interactive = Prepare();
                 const string code = "x = 42";
                 Keyboard.Type(code + "\r");
 
-                interactive.WaitForTextIPython(ReplPrompt + code, ReplPrompt);
+                interactive.WaitForText(ReplPrompt + code, ReplPrompt);
                 interactive.WaitForReadyState();
 
                 Keyboard.Type("x.");
 
-                interactive.WaitForTextIPython(ReplPrompt + code, ReplPrompt + "x.");
+                interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
 
                 var session = interactive.WaitForSession<ICompletionSession>();
 
@@ -2099,7 +2191,7 @@ $cls
 
                 // commit entry
                 Keyboard.PressAndRelease(Key.Tab);
-                interactive.WaitForTextIPython(ReplPrompt + code, ReplPrompt + "x.conjugate");
+                interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x." + IntFirstMember);
                 interactive.WaitForSessionDismissed();
 
                 // clear input at repl
@@ -2127,25 +2219,26 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IPythonSimpleSignatureHelp() {
             if (!IPythonSupported) {
+                // Requires IPython
                 return;
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             try {
-                interactive = Prepare(true);
+                interactive = Prepare();
                 Assert.AreNotEqual(null, interactive);
 
                 const string code = "def f(): pass";
                 Keyboard.Type(code + "\r\r");
 
-                interactive.WaitForTextIPython(ReplPrompt + code, SecondPrompt, ReplPrompt);
+                interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt);
 
                 System.Threading.Thread.Sleep(1000);
 
                 Keyboard.Type("f(");
 
-                interactive.WaitForTextIPython(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
+                interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
                 var helpSession = interactive.WaitForSession<ISignatureHelpSession>();
                 Assert.AreEqual(helpSession.SelectedSignature.Documentation, "<no docstring>");
@@ -2166,17 +2259,18 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonInlineGraph() {
             if (!IPythonSupported) {
+                // Requires IPython
                 return;
             }
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             try {
-                interactive = Prepare(true);                
+                interactive = Prepare();
 
                 var replWindow = interactive.ReplWindow;
-                replWindow.Submit(new[] { "from pylab import *", "from scipy.special import jn", "x = linspace(0, 4*pi)", "plot(x, jn(0, x))" });
-                interactive.WaitForTextIPython(new[] { ReplPrompt + "from pylab import *", ReplPrompt + "from scipy.special import jn", ReplPrompt + "x = linspace(0, 4*pi)", ReplPrompt + "plot(x, jn(0, x))", ReplPrompt });
+                replWindow.Submit(new[] { "from pylab import *", "x = linspace(0, 4*pi)", "plot(x, x)" });
+                interactive.WaitForTextStart(new[] { ReplPrompt + "from pylab import *", ReplPrompt + "x = linspace(0, 4*pi)", ReplPrompt + "plot(x, x)", "Out[" });
 
                 System.Threading.Thread.Sleep(2000);
 
@@ -2202,19 +2296,23 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestIPythonStartInInteractive() {
             if (!IPythonSupported) {
+                // Requires IPython
                 return;
             }
+
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             try {
                 interactive = Prepare();
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\InteractiveFile.sln");
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+                    var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\InteractiveFile.sln");
 
-                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
-                Assert.AreNotEqual(null, interactive);
+                    VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                    Assert.AreNotEqual(null, interactive);
 
-                interactive.WaitForTextEnd("Program.pyabcdef", ReplPrompt);
+                    interactive.WaitForTextEnd("Program.pyabcdef", ReplPrompt);
+                }
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
                 ForceReset();
@@ -2224,9 +2322,8 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgv() {
-            // project is typed to 2.7 so execute in interactive always executes there
-            if (InterpreterDescription == "Python 2.7 Interactive") {
-                var interactive = Prepare();
+            var interactive = Prepare();
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2239,9 +2336,8 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgvScriptArgs() {
-            // project is typed to 2.7 so execute in interactive always executes there
-            if (InterpreterDescription == "Python 2.7 Interactive") {
-                var interactive = Prepare();
+            var interactive = Prepare();
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2254,61 +2350,60 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInIPythonReplSysArgv() {
-            // project is typed to 2.7 so execute in interactive always executes there
-            if (InterpreterDescription == "Python 2.7 Interactive") {
-                if (!IPythonSupported) {
-                    return;
-                }
+            if (!IPythonSupported) {
+                // Requires IPython
+                return;
+            }
 
-                GetInteractiveOptions().ExecutionMode = "IPython";
-                InteractiveWindow interactive;
-                try {
-                    interactive = Prepare();
+            GetInteractiveOptions().ExecutionMode = "IPython";
+            InteractiveWindow interactive;
+            try {
+                interactive = Prepare();
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
 
                     interactive.WaitForTextEnd("Program.py']", ReplPrompt);
-                } finally {
-                    GetInteractiveOptions().ExecutionMode = "Standard";
-                    ForceReset();
                 }
+            } finally {
+                GetInteractiveOptions().ExecutionMode = "Standard";
+                ForceReset();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInIPythonReplSysArgvScriptArgs() {
-            // project is typed to 2.7 so execute in interactive always executes there
-            if (InterpreterDescription == "Python 2.7 Interactive") {
-                if (!IPythonSupported) {
-                    return;
-                }
+            if (!IPythonSupported) {
+                // Requires IPython
+                return;
+            }
 
-                GetInteractiveOptions().ExecutionMode = "IPython";
-                InteractiveWindow interactive;
-                try {
-                    interactive = Prepare();
+            GetInteractiveOptions().ExecutionMode = "IPython";
+            InteractiveWindow interactive;
+            try {
+                interactive = Prepare();
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
 
                     interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ReplPrompt);
-                } finally {
-                    GetInteractiveOptions().ExecutionMode = "Standard";
-                    ForceReset();
                 }
+            } finally {
+                GetInteractiveOptions().ExecutionMode = "Standard";
+                ForceReset();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplUnicodeFilename() {
-            // project is typed to 2.6 so execute in interactive always executes there
-            if (InterpreterDescription == "Python 2.6 Interactive") {
-                var interactive = Prepare();
+            var interactive = Prepare();
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                 var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\UnicodePathä.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2325,105 +2420,37 @@ $cls
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\DebuggerProject.sln");
             GetInteractiveOptions().EnableAttach = true;
             try {
-                var interactive = Prepare(true);
-                
-                const string attachCmd = "$attach";
-                Keyboard.Type(attachCmd + "\r");
+                var interactive = Prepare();
 
-                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
-                interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+                    const string attachCmd = "$attach";
+                    Keyboard.Type(attachCmd + "\r");
 
-                DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgRunMode);
+                    VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
+                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
 
-                GetPythonAutomation().OpenInteractive(InterpreterDescription);
-                interactive = app.GetInteractiveWindow(InterpreterDescription);
+                    DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgRunMode);
 
-                const string import = "import BreakpointTest";
-                Keyboard.Type(import + "\r");
-                interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
+                    const string import = "import BreakpointTest";
+                    Keyboard.Type(import + "\r");
+                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
 
-                DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgBreakMode);
+                    DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgBreakMode);
 
-                Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, 1);
+                    Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, 1);
 
-                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.DetachAll");
+                    VsIdeTestHostContext.Dte.ExecuteCommand("Debug.DetachAll");
 
-                DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgDesignMode);
+                    DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgDesignMode);
 
-                interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
+                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
+                }
             } finally {
+                VsIdeTestHostContext.Dte.Solution.Close(false);
                 GetInteractiveOptions().EnableAttach = false;
-            }            
-        }
-
-        internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider();
-
-        /// <summary>
-        /// Directed unit tests for the repl evaluator's spliting code into individual statements...
-        /// </summary>
-        [TestMethod, Priority(0)]
-        public void ReplSplitCodeTest() {
-            // http://pytools.codeplex.com/workitem/606
-            var eval = new PythonReplEvaluator(
-                InterpFactory,
-                new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"),
-                new Version(2, 7),
-                null
-            );
-
-            var testCases = new[] {
-                new { 
-                    Code = @"def f():
-    pass
-
-def g():
-    pass
-
-f()
-g()",
-                    Expected = new[] { "def f():\r\n    pass\r\n", "def g():\r\n    pass\r\n", "f()", "g()" }
-                },
-                new {
-                    Code = @"def f():
-    pass
-
-f()
-
-def g():
-    pass
-
-f()
-g()",
-                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
-                },
-                new {
-                    Code = @"def f():
-    pass
-
-f()
-f()
-
-def g():
-    pass
-
-f()
-g()",
-                    Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
-                }
-            };
-
-            foreach (var testCase in testCases) {
-                var got = eval.SplitCode(testCase.Code).ToArray();
-                Assert.AreEqual(testCase.Expected.Length, got.Length);
-                for (int i = 0; i < got.Length; i++) {
-                    Assert.AreEqual(testCase.Expected[i], got[i]);
-                }
             }
         }
 
-        /// <summary>
-        /// x = 42; x.car[enter] – should type “car” not complete to “conjugate”
-        /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Comments() {
@@ -2443,9 +2470,6 @@ g()",
             interactive.WaitForText(ReplPrompt + code, SecondPrompt + code2, SecondPrompt, ReplPrompt);
         }
 
-        /// <summary>
-        /// x = 42; x.car[enter] – should type “car” not complete to “conjugate”
-        /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CommentPaste() {
@@ -2465,8 +2489,8 @@ g()",
             );
 
             PasteTextTest(
-                interactive, 
-                comment + "\r\ndef f():\r\n    pass", 
+                interactive,
+                comment + "\r\ndef f():\r\n    pass",
                 ReplPrompt + comment, SecondPrompt + "def f():", SecondPrompt + "    pass"
             );
 
@@ -2510,7 +2534,7 @@ def g(): pass
                 SecondPrompt,
                 ReplPrompt + "X",
                 "Traceback (most recent call last):",
-                "  File \"<stdin>\", line 1, in <module>",
+                "  File \"<" + SourceFileName + ">\", line 1, in <module>",
                 "NameError: name 'X' is not defined",
                 ReplPrompt
             );
@@ -2543,15 +2567,15 @@ def g(): pass
         /// <summary>
         /// Opens the interactive window, clears the screen.
         /// </summary>
-        internal InteractiveWindow Prepare(bool reset = false) {
+        internal InteractiveWindow Prepare() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
             ConfigurePrompts();
-            
+
             GetPythonAutomation().OpenInteractive(InterpreterDescription);
             var interactive = app.GetInteractiveWindow(InterpreterDescription);
-            if (reset) {
-                interactive.Reset();
+            if (interactive == null) {
+                Assert.Inconclusive("Need " + InterpreterDescription);
             }
 
             interactive.WaitForIdleState();
@@ -2560,8 +2584,26 @@ def g(): pass
             interactive.ClearScreen();
             interactive.ReplWindow.ClearHistory();
             interactive.WaitForReadyState();
+
+            interactive.Reset();
+            var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
+            Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
+            Assert.AreEqual(ExecutionResult.Success, task.Result);
+            interactive.WaitForTextEnd("READY", ReplPrompt);
+
+            interactive.ClearScreen();
+            interactive.ReplWindow.ClearHistory();
+            interactive.WaitForReadyState();
             return interactive;
         }
+
+        protected void ForceReset() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+
+            var interactive = app.GetInteractiveWindow(InterpreterDescription);
+            interactive.Reset();
+        }
+
 
         protected virtual string InterpreterDescription {
             get {
@@ -2583,7 +2625,7 @@ def g(): pass
 
         public virtual string IntFirstMember {
             get {
-                return "bit_length";
+                return "conjugate";
             }
         }
 
@@ -2606,79 +2648,92 @@ def g(): pass
             options.SecondaryPrompt = SecondPrompt;
         }
 
+        protected virtual string SourceFileName {
+            get {
+                return "stdin";
+            }
+        }
+
+        protected virtual bool KeyboardInterruptHasTracebackHeader {
+            get {
+                return true;
+            }
+        }
+
+        protected virtual string Print42Output {
+            get {
+                return "42";
+            }
+        }
+
+        protected virtual bool CanRedirectSubprocess {
+            get {
+                return true;
+            }
+        }
+
         protected IPythonInteractiveOptions GetInteractiveOptions() {
             string name = InterpreterDescription;
             Debug.Assert(name.EndsWith(" Interactive"));
-            return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
+            var options = ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
+            if (options == null) {
+                Assert.Inconclusive("Need " + InterpreterDescription);
+            }
+            return options;
         }
 
         protected static IVsPython GetPythonAutomation() {
             return ((IVsPython)VsIdeTestHostContext.Dte.GetObject("VsPython"));
         }
+
+        protected virtual IEnumerable<string> IntDocumentation {
+            get {
+                yield return "Type:       int";
+                //yield return "Base Class: <type 'int'>";
+                yield return "String Form:42";
+                //yield return "Namespace:  Interactive";
+                yield return "Docstring:";
+                yield return "int(x[, base]) -> integer";
+                yield return "";
+                yield return "Convert a string or number to an integer, if possible.  A floating point";
+                yield return "argument will be truncated towards zero (this does not include a string";
+                yield return "representation of a floating point number!)  When converting a string, use";
+                yield return "the optional base.  It is an error to supply a base when converting a";
+                yield return "non-string.  If base is zero, the proper base is guessed based on the";
+                yield return "string content.  If the argument is outside the integer range a";
+                yield return "long object will be returned instead.";
+
+            }
+        }
     }
+
+
+
+
 
     [TestClass]
-    public class PrimaryPromptOnlyReplWindowTests : ReplWindowTests {
+    public class Python27ReplWindowTests : Python26ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
-        protected override string ReplPrompt {
+
+        protected override string InterpreterDescription {
             get {
-                return "> ";
+                return "Python 2.7 Interactive";
             }
         }
 
-        protected override string SecondPrompt {
+        public override string IntFirstMember {
             get {
-                return "";
+                // bit_length was added in 2.7
+                return "bit_length";
             }
-        }
-
-        protected override void ConfigurePrompts() {
-            var options = GetInteractiveOptions();
-            options.InlinePrompts = true;
-            options.UseInterpreterPrompts = false;
-            options.PrimaryPrompt = ReplPrompt;
-            options.SecondaryPrompt = SecondPrompt;
         }
     }
 
-    [TestClass]
-    public class GlyphPromptReplWindowTests : ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            TestData.Deploy();
-        }
-        
-        protected override string ReplPrompt {
-            get {
-                return "";
-            }
-        }
 
-        protected override string SecondPrompt {
-            get {
-                return "";
-            }
-        }
-
-        protected override void ConfigurePrompts() {
-            var options = GetInteractiveOptions();
-            options.InlinePrompts = false;
-            options.UseInterpreterPrompts = false;
-            options.PrimaryPrompt = ">";
-            options.SecondaryPrompt = "*";
-        }
-    }
-
-    public class Python3kReplWindowTests : ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            TestData.Deploy();
-        }
-        
+    public class Python3kReplWindowTests : Python26ReplWindowTests {
         protected override string RawInput {
             get {
                 return "input";
@@ -2688,12 +2743,6 @@ def g(): pass
         public override string IntFirstMember {
             get {
                 return "bit_length";
-            }
-        }
-
-        protected override bool IPythonSupported {
-            get {
-                return false;
             }
         }
 
@@ -2708,6 +2757,53 @@ def g(): pass
                 return "a b c";
             }
         }
+
+        protected override string Print42Output {
+            get {
+                return "42\r";
+            }
+        }
+        protected override IEnumerable<string> IntDocumentation {
+            get {
+                yield return "Type:       int";
+                //yield return "Base Class: <type 'int'>";
+                yield return "String Form:42";
+                //yield return "Namespace:  Interactive";
+                yield return "Docstring:";
+                yield return "int(x[, base]) -> integer";
+                yield return "";
+                yield return "Convert a string or number to an integer, if possible.  A floating";
+                yield return "point argument will be truncated towards zero (this does not include a";
+                yield return "string representation of a floating point number!)  When converting a";
+                yield return "string, use the optional base.  It is an error to supply a base when";
+                yield return "converting a non-string.";
+            }
+        }
+
+    }
+
+
+
+
+
+    [TestClass]
+    public class Python30ReplWindowTests : Python3kReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 3.0 Interactive";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return false;
+            }
+        }
     }
 
     [TestClass]
@@ -2716,10 +2812,16 @@ def g(): pass
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
+
         protected override string InterpreterDescription {
             get {
                 return "Python 3.1 Interactive";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return false;
             }
         }
 
@@ -2736,37 +2838,22 @@ def g(): pass
         }
     }
 
+
+
+
+
     [TestClass]
     public class Python32ReplWindowTests : Python3kReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
+
         protected override string InterpreterDescription {
             get {
                 return "Python 3.2 Interactive";
             }
         }
-
-        protected override string RawInput {
-            get {
-                return "input";
-            }
-        }
-
-        public override string IntFirstMember {
-            get {
-                return "bit_length";
-            }
-        }
-
-        protected override bool IPythonSupported {
-            get {
-                return true;
-            }
-        }
-
     }
 
     [TestClass]
@@ -2781,29 +2868,15 @@ def g(): pass
                 return "Python 3.3 Interactive";
             }
         }
-
-        protected override string RawInput {
-            get {
-                return "input";
-            }
-        }
-
-        public override string IntFirstMember {
-            get {
-                return "bit_length";
-            }
-        }
-
-        protected override bool IPythonSupported {
-            get {
-                return true;
-            }
-        }
-
     }
 
+
+
+
+
+
     [TestClass]
-    public class IronPythonReplTests : ReplWindowTests {
+    public class IronPythonReplTests : Python27ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
@@ -2816,6 +2889,24 @@ def g(): pass
         }
 
         protected override bool IPythonSupported {
+            get {
+                return false;
+            }
+        }
+
+        protected override string SourceFileName {
+            get {
+                return "string";
+            }
+        }
+
+        protected override bool KeyboardInterruptHasTracebackHeader {
+            get {
+                return false;
+            }
+        }
+
+        protected override bool CanRedirectSubprocess {
             get {
                 return false;
             }
@@ -2948,6 +3039,7 @@ def g(): pass
         }
 
 
+
         [TestMethod, Priority(0)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
@@ -2974,6 +3066,233 @@ def g(): pass
             finalExecute.Wait();
             Assert.AreEqual(finalExecute.Result, ExecutionResult.Success);
             Assert.AreEqual(replWindow.Output, "42\r\n");
+        }
+    }
+
+
+
+
+
+
+    [TestClass]
+    public class Python26x64ReplWindowTests : Python26ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 64-bit 2.6 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class Python27x64ReplWindowTests : Python27ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 64-bit 2.7 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class Python30x64ReplWindowTests : Python30ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 64-bit 3.0 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class Python31x64ReplWindowTests : Python31ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 64-bit 3.1 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class Python32x64ReplWindowTests : Python32ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 64-bit 3.2 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class Python33x64ReplWindowTests : Python33ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 64-bit 3.3 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class IronPythonx64ReplTests : IronPythonReplTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "IronPython 64-bit 2.7 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class PrimaryPromptOnlyPython27ReplWindowTests : Python27ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string ReplPrompt {
+            get {
+                return "> ";
+            }
+        }
+
+        protected override string SecondPrompt {
+            get {
+                return "";
+            }
+        }
+
+        protected override void ConfigurePrompts() {
+            var options = GetInteractiveOptions();
+            options.InlinePrompts = true;
+            options.UseInterpreterPrompts = false;
+            options.PrimaryPrompt = ReplPrompt;
+            options.SecondaryPrompt = SecondPrompt;
+        }
+    }
+
+    [TestClass]
+    public class GlyphPromptPython27ReplWindowTests : Python27ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string ReplPrompt {
+            get {
+                return "";
+            }
+        }
+
+        protected override string SecondPrompt {
+            get {
+                return "";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return false;
+            }
+        }
+
+        protected override void ConfigurePrompts() {
+            var options = GetInteractiveOptions();
+            options.InlinePrompts = false;
+            options.UseInterpreterPrompts = false;
+            options.PrimaryPrompt = ">";
+            options.SecondaryPrompt = "*";
+        }
+    }
+
+    [TestClass]
+    public class PrimaryPromptOnlyPython33ReplWindowTests : Python33ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string ReplPrompt {
+            get {
+                return "> ";
+            }
+        }
+
+        protected override string SecondPrompt {
+            get {
+                return "";
+            }
+        }
+
+        protected override void ConfigurePrompts() {
+            var options = GetInteractiveOptions();
+            options.InlinePrompts = true;
+            options.UseInterpreterPrompts = false;
+            options.PrimaryPrompt = ReplPrompt;
+            options.SecondaryPrompt = SecondPrompt;
+        }
+    }
+
+    [TestClass]
+    public class GlyphPromptPython33ReplWindowTests : Python33ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
+        protected override string ReplPrompt {
+            get {
+                return "";
+            }
+        }
+
+        protected override string SecondPrompt {
+            get {
+                return "";
+            }
+        }
+
+        protected override bool IPythonSupported {
+            get {
+                return false;
+            }
+        }
+
+        protected override void ConfigurePrompts() {
+            var options = GetInteractiveOptions();
+            options.InlinePrompts = false;
+            options.UseInterpreterPrompts = false;
+            options.PrimaryPrompt = ">";
+            options.SecondaryPrompt = "*";
         }
     }
 

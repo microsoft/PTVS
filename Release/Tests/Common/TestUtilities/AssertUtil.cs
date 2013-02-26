@@ -61,11 +61,6 @@ namespace TestUtilities
             }
         }
 
-        public static void MissingDependency(string dependency)
-        {
-            Assert.Inconclusive("Missing Dependency: {0}", dependency);
-        }
-
         public static void ArrayEquals(IList expected, IList actual)
         {
             if (expected == null)

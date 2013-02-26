@@ -966,7 +966,8 @@ d = a.__next__()";
         [TestMethod, Priority(0)]
         public void Generator3x() {
             if (this is IronPythonAnalysisTest) {
-                Assert.Inconclusive("IronPython does not yet support __next__() method");
+                // IronPython does not yet support __next__() method
+                return;
             }
 
             var entry = ProcessText(@"
@@ -1031,7 +1032,8 @@ d = a.next()";
         [TestMethod, Priority(0)]
         public void GeneratorDelegation() {
             if (this is IronPythonAnalysisTest) {
-                Assert.Inconclusive("IronPython does not yet support yield from.");
+                // IronPython does not yet support yield from.
+                return;
             }
 
             var text = @"
@@ -3698,10 +3700,6 @@ t.x, t. =
 
         //[TestMethod, Timeout(5 * 60 * 1000), Priority(2)]
         public void MemLeak() {
-            if (GetType() != typeof(AnalysisTest)) {
-                Assert.Inconclusive("Do not need to run this multiple times");
-            }
-
             var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
 
             var bar = state.AddModule("bar", @"bar.py", EmptyAnalysisCookie.Instance);
@@ -3751,10 +3749,6 @@ min(a, D())
 
         //[TestMethod, Timeout(15 * 60 * 1000), Priority(2)]
         public void MemLeak2() {
-            if (GetType() != typeof(AnalysisTest)) {
-                Assert.Inconclusive("Do not need to run this multiple times");
-            }
-
             bool anyTested = false;
 
             foreach (var ver in PythonPaths.Versions) {
