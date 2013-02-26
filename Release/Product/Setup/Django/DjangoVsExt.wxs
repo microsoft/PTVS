@@ -11,10 +11,10 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{4B9498D3-AA15-4DA7-951B-47A49883AF73}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,1.5' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools Django Support\1.5\'/>
+                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools Django Support\2.0\'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
-                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,1.5' Value='Tool'/>
+                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,2.0' Value='Tool'/>
                 </RegistryKey>
             </Component>
 

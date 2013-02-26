@@ -12,10 +12,10 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{9FD7D797-439F-4A33-9FB7-6FEB97CDF3CD}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='83f5123e-4b4a-45c0-baec-bea8964d7b25,1.5' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools PyKinect Sample\1.5\'/>
+                    <RegistryValue Type='string' Name='83f5123e-4b4a-45c0-baec-bea8964d7b25,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools PyKinect Sample\2.0\'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
-                    <RegistryValue Type='string' Name='83f5123e-4b4a-45c0-baec-bea8964d7b25,1.5' Value='Tool'/>
+                    <RegistryValue Type='string' Name='83f5123e-4b4a-45c0-baec-bea8964d7b25,2.0' Value='Tool'/>
                 </RegistryKey>
             </Component>
 
