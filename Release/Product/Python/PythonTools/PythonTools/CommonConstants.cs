@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools {
         internal const string LibraryGuid = "c0000061-2c33-4277-bf44-7e5f2677d6b8";
         internal const string FileNodePropertiesGuid = "c000008b-a973-4d60-9518-5ea1411ccd67";
         internal const string SearchPathsPropertiesGuid = "D94E2410-B416-4CB2-B892-AE83D7BF7356";
+        internal const string VirtualEnvPackagePropertiesGuid = "40B95F11-FCE4-469C-B4E7-30E723820036";
         internal const string FolderNodePropertiesGuid = "c0000081-fb55-4d5d-901b-ee624db34961";
         internal const string ProjectNodePropertiesGuid = "c0000016-9ab0-4d58-80e6-54f29e8d3144";
 

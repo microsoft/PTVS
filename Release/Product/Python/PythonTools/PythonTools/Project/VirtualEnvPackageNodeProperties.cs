@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
-    [Guid(CommonConstants.SearchPathsPropertiesGuid)]
+    [Guid(CommonConstants.VirtualEnvPackagePropertiesGuid)]
     public class VirtualEnvPackageNodeProperties : NodeProperties {
         public VirtualEnvPackageNodeProperties(HierarchyNode node)
             : base(node) { }
