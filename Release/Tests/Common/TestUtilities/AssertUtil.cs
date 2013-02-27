@@ -200,6 +200,24 @@ namespace TestUtilities
             Assert.Fail(String.Format("Expected {0}, got {1}", MakeText(values), MakeText(set)));
         }
 
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void ContainsAtLeast<T>(IEnumerable<T> source, IEnumerable<T> values) {
+            ContainsAtLeast(new HashSet<T>(source), values.ToArray());
+        }
+
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void ContainsAtLeast<T>(IEnumerable<T> source, params T[] values) {
+            ContainsAtLeast(new HashSet<T>(source), values);
+        }
+
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void ContainsAtLeast<T>(HashSet<T> set, params T[] values) {
+            if (set.IsSupersetOf(values)) {
+                return;
+            }
+            Assert.Fail(String.Format("Expected at least {0}, got {1}", MakeText(values), MakeText(set)));
+        }
+
         public static string MakeText<T>(IEnumerable<T> values) {
             var sb = new StringBuilder("{");
             foreach (var value in values) {

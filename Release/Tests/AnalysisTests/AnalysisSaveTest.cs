@@ -90,6 +90,20 @@ def Overloaded():
 class WithInstanceMembers(object):
     def __init__(self):
         self.foo = 42
+
+class WithMemberFunctions(object):
+    def bar(self):
+        pass
+
+class SingleInheritance(WithMemberFunctions):
+    def baz(self):
+        pass
+
+class DoubleInheritance(SingleInheritance):
+    pass
+
+class MultipleInheritance(WithInstanceMembers, WithMemberFunctions):
+    pass
 ";
 
             using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
@@ -113,6 +127,10 @@ Aliased = test.Aliased
 FunctionNoRetType = test.FunctionNoRetType
 Overloaded = test.Overloaded
 WithInstanceMembers = test.WithInstanceMembers
+WithMemberFunctions = test.WithMemberFunctions
+SingleInheritance = test.SingleInheritance
+DoubleInheritance = test.DoubleInheritance
+MultipleInheritance = test.MultipleInheritance
 ";
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
@@ -152,6 +170,11 @@ WithInstanceMembers = test.WithInstanceMembers
                 var instMembers = newMod.Analysis.GetMembersByIndex("WithInstanceMembers", pos);
                 var fooMembers = instMembers.Where(x => x.Name == "foo");
                 Assert.AreNotEqual(null, fooMembers.FirstOrDefault().Name);
+
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("WithMemberFunctions", pos), "bar");
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("SingleInheritance", pos), "bar", "baz");
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("DoubleInheritance", pos), "bar", "baz");
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("MultipleInheritance", pos), "foo", "bar");
             }
         }
 

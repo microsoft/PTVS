@@ -23,6 +23,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly bool _includeInModule;
         private readonly BuiltinTypeId _typeId;
         private readonly CPythonModule _module;
+        private readonly List<IPythonType> _bases;
+        private readonly List<CPythonType> _mro;
         private readonly bool _isBuiltin;
         private readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
         private readonly bool _hasLocation;
@@ -52,6 +54,26 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _isBuiltin = true;
             }
 
+            if (typeTable.TryGetValue("bases", out value)) {
+                var basesList = value as List<object>;
+                if (basesList != null) {
+                    _bases = new List<IPythonType>();
+                    foreach (var baseType in basesList) {
+                        typeDb.LookupType(baseType, StoreBase);
+                    }
+                }
+            }
+
+            if (typeTable.TryGetValue("mro", out value)) {
+                var mroList = value as List<object>;
+                if (mroList != null) {
+                    _mro = new List<CPythonType>();
+                    foreach (var mroType in mroList) {
+                        typeDb.LookupType(mroType, StoreMro);
+                    }
+                }
+            }
+
             object membersData;
             if (typeTable.TryGetValue("members", out membersData)) {
                 var membersTable = membersData as Dictionary<string, object>;
@@ -65,6 +87,19 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         private CPythonModule GetDeclaringModule(IMemberContainer parent) {
             return  parent as CPythonModule ?? (CPythonModule)((CPythonType)parent).DeclaringModule;
+        }
+
+        private void StoreBase(IPythonType type, bool isInstance) {
+            if (type != null) {
+                _bases.Add(type);
+            }
+        }
+
+        private void StoreMro(IPythonType type, bool isInstance) {
+            var cpt = type as CPythonType;
+            if (cpt != null) {
+                _mro.Add(cpt);
+            }
         }
 
         private void LoadMembers(ITypeDatabaseReader typeDb, Dictionary<string, object> membersTable) {
@@ -94,6 +129,20 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             IMember res;
             if (_members.TryGetValue(name, out res)) {
                 return res;
+            }
+            if (_mro != null) {
+                foreach (var mroType in _mro) {
+                    if (mroType._members.TryGetValue(name, out res)) {
+                        return res;
+                    }
+                }
+            } else if (_bases != null) {
+                foreach (var baseType in _bases) {
+                    res = baseType.GetMember(context, name);
+                    if (res != null) {
+                        return res;
+                    }
+                }
             }
             return null;
         }
@@ -147,7 +196,22 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region IMemberContainer Members
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return _members.Keys;
+            foreach (var key in _members.Keys) {
+                yield return key;
+            }
+            if (_mro != null) {
+                foreach (var type in _mro) {
+                    foreach (var key in type._members.Keys) {
+                        yield return key;
+                    }
+                }
+            } else if (_bases != null) {
+                foreach (var type in _bases) {
+                    foreach (var key in type.GetMemberNames(moduleContext)) {
+                        yield return key;
+                    }
+                }
+            }
         }
 
         #endregion

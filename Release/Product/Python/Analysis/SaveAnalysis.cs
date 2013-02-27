@@ -401,8 +401,16 @@ namespace Microsoft.PythonTools.Analysis {
 
         
         private object GetClassMro(ClassInfo ci) {
-            // TODO: return correct mro
-            return _EmptyMro;
+            List<object> res = new List<object>();
+            foreach (var mroClassSet in ci.Mro) {
+                foreach (var mroClass in mroClassSet) {
+                    var typeName = GenerateTypeName(mroClass);
+                    if (typeName != null) {
+                        res.Add(typeName);
+                    }
+                }
+            }
+            return res;
         }
 
         private Dictionary<string, object> GenerateFunction(FunctionInfo fi) {

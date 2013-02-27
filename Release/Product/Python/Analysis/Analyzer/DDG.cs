@@ -184,9 +184,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             bool addRef = node.Name != "*";
 
             var variable = Scope.CreateVariable(node, _unit, saveName, addRef);
-            variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));
+            if (userMod != null) {
+                variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));
+            }
 
-            if (node.Name != "*") {
+            if (addRef) {
                 variable.AddAssignment(node, _unit);
             }
         }
@@ -237,34 +239,32 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
             }
 
-            if (userMod != null) {
-                var asNames = node.AsNames ?? node.Names;
+            var asNames = node.AsNames ?? node.Names;
 
-                int len = Math.Min(node.Names.Count, asNames.Count);
-                for (int i = 0; i < len; i++) {
-                    var nameNode = asNames[i] ?? node.Names[i];
-                    var impName = node.Names[i].Name;
-                    var newName = asNames[i] != null ? asNames[i].Name : null;
+            int len = Math.Min(node.Names.Count, asNames.Count);
+            for (int i = 0; i < len; i++) {
+                var nameNode = asNames[i] ?? node.Names[i];
+                var impName = node.Names[i].Name;
+                var newName = asNames[i] != null ? asNames[i].Name : null;
 
-                    if (impName == null) {
-                        // incomplete import statement
-                        continue;
-                    } else if (impName == "*") {
-                        // Handle "import *"
+                if (impName == null) {
+                    // incomplete import statement
+                    continue;
+                } else if (impName == "*") {
+                    // Handle "import *"
+                    if (userMod != null) {
                         foreach (var varName in userMod.GetModuleMemberNames(GlobalScope.InterpreterContext)) {
                             if (!varName.StartsWith("_")) {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }
-                    } else {
-                        WalkFromImportWorker(nameNode, userMod, impName, newName);
                     }
+                } else {
+                    WalkFromImportWorker(nameNode, userMod, impName, newName);
                 }
-
-                return true;
             }
 
-            return false;
+            return true;
         }
 
         private bool TryGetUserModule(string modName, out ModuleReference moduleRef) {

@@ -728,6 +728,9 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private IModule ImportFromIPythonMultipleMembers(IPythonMultipleMembers mod, string[] names, int curIndex) {
+            if (mod == null) {
+                return null;
+            }
             var modules = new List<IModule>();
             foreach (var member in mod.Members) {
                 modules.Add(ImportFromIMember(member, names, curIndex));
@@ -750,6 +753,9 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private IModule ImportFromIPythonModule(IPythonModule mod, string[] names, int curIndex) {
+            if (mod == null) {
+                return null;
+            }
             var member = mod.GetMember(_defaultContext, names[curIndex]);
             return ImportFromIMember(member, names, curIndex + 1);
         }

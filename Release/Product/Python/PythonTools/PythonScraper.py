@@ -114,7 +114,7 @@ from os.path import join
 # To update the baseline DB:
 #  1. Check out all files in Product\Python\PythonTools\CompletionDB
 #  2. Run ipy.exe PythonScraper.py ...\CompletionDB
-#  3. Undo unnecessary edits (tfpt uu) and delete new files
+#  3. Undo unnecessary edits (tfpt uu) and delete new files (tfpt treeclean ...\CompletionDB)
 #
 CURRENT_DATABASE_VERSION = '20'
 
