@@ -36,6 +36,11 @@ namespace DjangoTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             TestData.Deploy();
+            
+            var dbFile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DjangoProjectDatabase.db");
+            if (File.Exists(dbFile)) {
+                File.Delete(dbFile);
+            }
         }
 
         /// <summary>
@@ -83,6 +88,8 @@ namespace DjangoTests {
 
         [TestMethod, Priority(0)]
         public void TemplateStepping() {
+            Init(DbState.BarApp);
+
             StepTest(
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "manage.py"),
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "Templates\\polls\\loop.html"),
