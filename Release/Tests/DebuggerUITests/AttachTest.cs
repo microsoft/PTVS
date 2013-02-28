@@ -318,9 +318,7 @@ namespace DebuggerUITests {
         public static string GetProjectInterpreterOrDefault(EnvDTE.Project project) {
             var interpreterId = (string)project.Properties.Item("InterpreterId").Value;
             var interpreterVersion = (string)project.Properties.Item("InterpreterVersion").Value;
-            var args = (string)project.Properties.Item("CommandLineArguments").Value;
             var interpreterPath = (string)project.Properties.Item("InterpreterPath").Value;
-            var searchPath = (string)project.Properties.Item("SearchPath").Value;
             string interpreter;
             Guid intGuid;
             Version intVersion;
@@ -329,19 +327,26 @@ namespace DebuggerUITests {
 
             // use the project's custom interpreter path if defined
             if (!String.IsNullOrWhiteSpace(interpreterPath)) {
-                return Path.GetFullPath(interpreterPath);
+                interpreter = Path.GetFullPath(interpreterPath);
+                SD.Debug.WriteLine("Using project specified interpreter path: {0}", interpreter, null);
+                return interpreter;
             }
             // use the project's interpreter if we can find it
             if (Guid.TryParse(interpreterId, out intGuid) &&
                 Version.TryParse(interpreterVersion, out intVersion) &&
                 TryGetInterpreter(intVersion, intGuid, out interpreter, out searchPathEnvVarName, out arch)) {
-                return Path.GetFullPath(interpreter);
+                interpreter = Path.GetFullPath(interpreter);
+                SD.Debug.WriteLine("Using project specified interpreter: {0}", interpreter, null);
+                return interpreter;
             }
             // use the VS instance's default interpreter if there is one
+            SD.Debug.WriteLine("Project specified interpreter not found: {0} - {1}", interpreterId, interpreterVersion);
             if (TryGetInterpreter(PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue,
                                     PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue,
                                     out interpreter, out searchPathEnvVarName, out arch)) {
-                return Path.GetFullPath(interpreter);
+                interpreter = Path.GetFullPath(interpreter);
+                SD.Debug.WriteLine("Using VS default interpreter: {0}", interpreter, null);
+                return interpreter;
             }
             // fail
             Assert.Fail("There were no available interpreters. Could not launch project.");

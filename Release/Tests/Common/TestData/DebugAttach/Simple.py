@@ -1,5 +1,4 @@
 from threading import Thread, current_thread, Lock
-from exceptions import Exception, KeyboardInterrupt
 from time import sleep
 
 global report_progress_now
