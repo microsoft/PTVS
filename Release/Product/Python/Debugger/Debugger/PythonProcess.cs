@@ -382,8 +382,17 @@ namespace Microsoft.PythonTools.Debugger {
                         case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
                     }
                 }
-            } catch (IOException) {
-            } catch (SocketException) {
+            } catch (IOException ioExc) {
+                var sockExc = ioExc.InnerException as SocketException;
+                if (sockExc != null) {
+                    // Treat non-recoverable socket errors as an indication that the debuggee process has been terminated.
+                    switch (sockExc.SocketErrorCode) {
+                        case SocketError.ConnectionAborted:
+                        case SocketError.ConnectionReset:
+                            _process_Exited(this, EventArgs.Empty);
+                            break;
+                    }
+                }
             }
         }
 
@@ -820,8 +829,6 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             } catch (IOException) {
                 // socket is closed after we send detach
-            } catch (SocketException) {
-                // socket is closed after we send detach
             }
         }
 
@@ -976,8 +983,6 @@ namespace Microsoft.PythonTools.Debugger {
                 try {
                     _stream.Write(DisconnectReplCommandBytes);
                 } catch (IOException) {
-                    // If the process has terminated, we expect an exception
-                } catch (SocketException) {
                     // If the process has terminated, we expect an exception
                 }
             }

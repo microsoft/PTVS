@@ -83,12 +83,12 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         /// <param name="hostName">Name of the host to connect to.</param>
         /// <param name="portNumber">Port number to connect to.</param>
         /// <param name="secret">Secret to authenticate with.</param>
-        /// <param name="ignoreSslErrors">If <c>false</c>, any SSL certificate validation errors will cause an error dialog to appear, prompting user ignore them or cancel connection.
-        /// If <c>true</c>, any SSL certificate validation errors will be silently ignored.</param>
+        /// <param name="useSsl">Whether to use SSL for this connection.</param>
+        /// <param name="sslErrorHandling">If using SSL, specifies how SSL certificate errors should be handled.</param>
         /// <param name="socket">Opened socket to the remote debugging server. The returned socket is owned by <paramref name="stream"/>.</param>
         /// <param name="stream">Opened SSL network stream to the remote debugging server. This stream owns the <paramref name="socket"/>, and will automatically close it.</param>
         /// <returns>Error code.</returns>
-        /// <remarks><paramref name="socket"/> should not be used to send or receive data, since it is wrapped in an SSL stream.
+        /// <remarks><paramref name="socket"/> should not be used to send or receive data, since it is wrapped in a stream, and is owned by that stream.
         /// It is exposed solely to enable querying it for endpoint information and connectivity status.</remarks>
         public static ConnErrorMessages TryConnect(string hostName, ushort portNumber, string secret, bool useSsl, SslErrorHandling sslErrorHandling, out Socket socket, out Stream stream) {
             stream = null;
@@ -209,8 +209,6 @@ namespace Microsoft.PythonTools.Debugger.Remote {
 
                     attached = true;
                 } catch (IOException) {
-                    return ConnErrorMessages.RemoteNetworkError;
-                } catch (SocketException) {
                     return ConnErrorMessages.RemoteNetworkError;
                 } finally {
                     if (!attached) {

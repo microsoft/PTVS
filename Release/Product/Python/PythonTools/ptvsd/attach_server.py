@@ -14,6 +14,7 @@
 
 import getpass
 import os
+import platform
 import socket
 import struct
 import sys
@@ -108,13 +109,22 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
     if not ssl and (certfile or keyfile):
         raise ValueError('could not import the ssl module - SSL is not supported on this version of Python')
 
+    if sys.platform == 'cli':
+        # Check that IronPython was launched with -X:Frames and -X:Tracing, since we can't register our trace
+        # func on the thread that calls enable_attach otherwise
+        import clr
+        x_tracing = clr.GetCurrentRuntime().GetLanguageByExtension('py').Options.Tracing
+        x_frames = clr.GetCurrentRuntime().GetLanguageByExtension('py').Options.Frames
+        if not x_tracing or not x_frames:
+            raise RuntimeError('IronPython must be started with -X:Tracing and -X:Frames options to support PTVS remote debugging.')
+
     if redirect_output:
         _vspd.enable_output_redirection()
 
     server = socket.socket()
     server.bind(address)
     server.listen(1)
-    def server_thread():
+    def server_thread_func():
         while True:
             client = None
             raw_client = None
@@ -158,11 +168,27 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
                     _vspd.write_string(client, username)
 
                     try:
-                        version = sys.implementation.name
+                        impl = platform.python_implementation()
                     except AttributeError:
-                        version = 'python'
+                        try:
+                            impl = sys.implementation.name
+                        except AttributeError:
+                            impl = 'Python'
+
                     major, minor, micro, release_level, serial = sys.version_info
-                    version += ' %s.%s.%s (%s)' % (major, minor, micro, sys.platform)
+
+                    os_and_arch = platform.system()
+                    if os_and_arch == "":
+                        os_and_arch = sys.platform
+                    try:
+                        if sys.maxsize > 2**32:
+                            os_and_arch += ' 64-bit'
+                        else:
+                            os_and_arch += ' 32-bit'
+                    except AttributeError:
+                        pass
+
+                    version = '%s %s.%s.%s (%s)' % (impl, major, minor, micro, os_and_arch)
                     _vspd.write_string(client, version)
 
                 elif response == ATCH:
@@ -195,18 +221,25 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
                 if client is not None:
                     client.close()
 
-    threading.Thread(target = server_thread).start()
+    server_thread = threading.Thread(target = server_thread_func)
+    server_thread.daemon = True
+    server_thread.start()
 
+    frames = []
+    f = sys._getframe()
+    while True:
+        f = f.f_back
+        if f is None:
+            break
+        frames.append(f)
+    frames.reverse()
     cur_thread = _vspd.new_thread()
-    def trace_func_init(frame, event, arg):
-        f = frame
-        while f is not None:
+    for f in frames:
+        cur_thread.push_frame(f)
+    def replace_trace_func():
+        for f in frames:
             f.f_trace = cur_thread.trace_func
-            f = f.f_back
-        return cur_thread.trace_func(frame, event, arg)
-    sys.settrace(trace_func_init)
-    def dummy(): pass
-    dummy()
+    replace_trace_func()
     sys.settrace(cur_thread.trace_func)
     _vspd.intercept_threads(for_attach = True)
 

@@ -52,8 +52,6 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                             break;
                         } catch (IOException) {
                             err = ConnErrorMessages.RemoteNetworkError;
-                        } catch (SocketException) {
-                            err = ConnErrorMessages.RemoteNetworkError;
                         }
                     }
 
