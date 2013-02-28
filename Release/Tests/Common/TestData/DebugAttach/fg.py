@@ -6,13 +6,13 @@ def f():
     i = 1
     while not exit_flag:
         i = (i + 1) % 100000000
-        if i % 100000 == 0: print "f making progress: {0}".format(i)
+        if i % 100000 == 0: print("f making progress: {0}".format(i))
 
 def g():
     j = 1
     while not exit_flag:
         j = (j - 1) % 100000000
-        if j % 100000 == 0: print "g making progress: {0}".format(j)
+        if j % 100000 == 0: print("g making progress: {0}".format(j))
 
 from threading import Thread
 
