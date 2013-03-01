@@ -93,6 +93,7 @@
   <ItemGroup Condition="'$(VSTarget)' == '10.0'">
     <Reference Include="Microsoft.Windows.Design.Host, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0'">

@@ -306,7 +306,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         internal void ReflowComment(StringBuilder res, string text) {
-            if (!WrapComments || String.IsNullOrWhiteSpace(text)) {
+            if (!WrapComments || String.IsNullOrWhiteSpace(text) || text.IndexOf('#') == -1) {
                 res.Append(text);
                 return;
             }
@@ -337,7 +337,7 @@ namespace Microsoft.PythonTools.Parsing {
                     res.Append(lines[curLine] + (NewLineFormat ?? Environment.NewLine));
                     charsOnCurrentLine = GetCharsOnLastLine(res);
                     reflowStartingLine = curLine + 1;
-                } else if (curLine == lineCount - 1 || !lines[curLine + 1].StartsWith(commentPrefix)) {
+                } else if (curLine == lineCount - 1 || GetCommentPrefix(lines[curLine + 1]) != commentPrefix) {
                     // last line, or next line mismatches with our comment prefix.  So reflow the text now
                     res.Append(
                         ReflowText(

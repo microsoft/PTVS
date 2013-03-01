@@ -308,6 +308,10 @@ namespace AnalysisTests {
                     Before = "  # Beautiful is better than ugly.\r\n  # import foo\r\n  # Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
                     After =  "  # Beautiful is better than ugly.\r\n  # import foo\r\n  # Explicit is better than implicit.  Simple is better than complex.  Complex\r\n  # is better than complicated.\r\n"
                 },
+                new {
+                    Before = "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import foo\r\n  #   Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
+                    After =  "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import foo\r\n  #   Explicit is better than implicit.  Simple is better than complex.\r\n  #   Complex is better than complicated.\r\n"
+                }
             };
 
             foreach (var preceedingText in commentTestCases) {
@@ -388,6 +392,27 @@ namespace AnalysisTests {
                     Assert.IsTrue(newCode.IndexOf("# comment here") != -1);
                 }
             }
+        }
+
+        /// <summary>
+        /// Verify trailing \ doesn't mess up comments
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void TestReflowComment3() {
+            var code = @"def f():
+    if a and \
+        b:
+            print('hi')";
+
+            var parser = Parser.CreateParser(
+                new StringReader(code),
+                PythonLanguageVersion.V27,
+                new ParserOptions() { Verbatim = true }
+            );
+
+            var ast = parser.ParseFile();
+            var newCode = ast.ToCodeString(ast, new CodeFormattingOptions() { WrapComments = true, WrappingWidth = 20 });
+            Assert.AreEqual(newCode, code);
         }
 
         static readonly string[] _commentInsertionSnippets = new[] {

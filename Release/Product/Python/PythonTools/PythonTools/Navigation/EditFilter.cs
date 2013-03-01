@@ -895,7 +895,9 @@ namespace Microsoft.PythonTools.Language {
             var activeView = CommonPackage.GetActiveTextView();
 
             if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                if (_textView.Selection.IsEmpty || _textView.Selection.Mode == TextSelectionMode.Box) {
+                if (_textView.Selection.IsEmpty || 
+                    _textView.Selection.Mode == TextSelectionMode.Box ||
+                    String.IsNullOrWhiteSpace(_textView.Selection.StreamSelectionSpan.GetText())) {
                     prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
                 } else {
                     prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);

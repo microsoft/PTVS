@@ -95,6 +95,16 @@ def g():
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void FormatSelectionNoSelection() {
+            FormattingTest("selection2.py", new Span(5, 0), @"x=1
+
+y=2
+
+z=3", new Span[0]);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FormatReduceLines() {
             PythonToolsPackage.Instance.SetFormattingOption("SpacesAroundBinaryOperators", true);
 
@@ -114,7 +124,7 @@ def g():
             var window = item.Open();
             window.Activate();
             try {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);                
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
                 var doc = app.GetDocument(item.Document.FullName);
 
                 var aggFact = app.ComponentModel.GetService<IViewTagAggregatorFactoryService>();
@@ -122,10 +132,10 @@ def g():
 
                 // format the selection or document
                 if (selection == null) {
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatDocument"));
+                    DoFormatDocument();
                 } else {
                     doc.Invoke(() => doc.TextView.Selection.Select(new SnapshotSpan(doc.TextView.TextBuffer.CurrentSnapshot, selection.Value), false));
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatSelection"));
+                    DoFormatSelection();
                 }
 
                 // verify the contents are correct
@@ -172,5 +182,38 @@ def g():
             }
         }
 
+        private static void DoFormatSelection() {
+            ThreadPool.QueueUserWorkItem(x => {
+                bool succeeded = false;
+                for (int i = 0; i < 3; i++) {
+                    try {
+                        // wait for the command to become available if it's not already
+                        VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatSelection");
+                        succeeded = true;
+                        break;
+                    } catch {
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+                Assert.IsTrue(succeeded);
+            });
+        }
+
+        private static void DoFormatDocument() {
+            ThreadPool.QueueUserWorkItem(x => {
+                bool succeeded = false;
+                for (int i = 0; i < 3; i++) {
+                    try {
+                        // wait for the command to become available if it's not already
+                        VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatDocument");
+                        succeeded = true;
+                        break;
+                    } catch {
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+                Assert.IsTrue(succeeded);
+            });
+        }
     }
 }

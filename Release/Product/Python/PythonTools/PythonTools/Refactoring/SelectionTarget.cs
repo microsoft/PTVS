@@ -71,6 +71,12 @@ namespace Microsoft.PythonTools.Refactoring {
             get;
         }
 
+        public virtual bool IsValidSelection {
+            get {
+                return true;
+            }
+        }
+
         public abstract void Walk(PythonWalker walker);
     }
 
@@ -208,6 +214,12 @@ namespace Microsoft.PythonTools.Refactoring {
                     return "";
                 }
                 return _suite.Statements[_start].GetIndentationLevel(Parents[0] as PythonAst);
+            }
+        }
+
+        public override bool IsValidSelection {
+            get {
+                return _start <= _end;
             }
         }
 

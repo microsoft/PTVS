@@ -34,6 +34,10 @@ namespace Microsoft.PythonTools.Refactoring {
             var walker = new EnclosingNodeWalker(ast, span.Start, span.End);
             ast.Walk(walker);
 
+            if (!walker.Target.IsValidSelection) {
+                return;
+            }
+
             var body = walker.Target.GetNode(ast);
 
             ITrackingSpan selectionSpan = null;

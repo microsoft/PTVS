@@ -52,7 +52,8 @@ namespace Microsoft.PythonTools.Refactoring {
 
             Debug.Assert(walker.Target != null);
             // expand the selection if we aren't currently covering a full expression/statement
-            if (WasSelectionExpanded(walker.Target, selectionStart, selectionEnd) && !input.ShouldExpandSelection()) {
+            if (!walker.Target.IsValidSelection ||
+                (WasSelectionExpanded(walker.Target, selectionStart, selectionEnd) && !input.ShouldExpandSelection())) {
                 return false;
             }
 
