@@ -61,7 +61,7 @@ namespace DjangoUITests {
                 }
             });
 
-            var res = app.SolutionExplorerTreeView.FindItem(
+            var res = app.SolutionExplorerTreeView.WaitForItem(
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (2 projects)",
                 app.Dte.Solution.Projects.Item(1).Name + ".Azure"
             );

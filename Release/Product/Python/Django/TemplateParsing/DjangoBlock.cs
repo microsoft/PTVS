@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         break;
                     }
                     argStart = parseInfo.Start + parseInfo.Command.Length + i;
-                    argLength = args[0].Length;
+                    argLength = args[i].Length;
                     break;
                 }
             }

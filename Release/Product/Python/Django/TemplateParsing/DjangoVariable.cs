@@ -187,11 +187,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return new DjangoFilter(filterName.Value, filterStart + start, arg, argStart + start);
         }
 
-        public IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {            
-            if (Expression != null && position == Expression.Value.Length + ExpressionStart && Expression.Value.EndsWith(".")) {
+        public IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
+            if (Expression == null) {
+                return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
+            } else if (position == Expression.Value.Length + ExpressionStart && Expression.Value.EndsWith(".")) {
                 // TODO: Handle multiple dots
                 string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
-                
+
                 // get the members of this variable
                 HashSet<AnalysisValue> values;
                 if (context.Variables != null && context.Variables.TryGetValue(varName, out values)) {
@@ -199,7 +201,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     foreach (var member in values.SelectMany(item => item.GetAllMembers())) {
                         string name = member.Key;
                         PythonMemberType type, newType = GetMemberType(member.Value);
-                                    
+
                         if (!newTags.TryGetValue(name, out type)) {
                             newTags[name] = newType;
                         } else if (type != newType && type != PythonMemberType.Unknown && newType != PythonMemberType.Unknown) {
@@ -232,7 +234,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 }
             }
 
-            return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
+            return Enumerable.Empty<CompletionInfo>();
         }
 
         private static PythonMemberType GetMemberType(ISet<AnalysisValue> values) {

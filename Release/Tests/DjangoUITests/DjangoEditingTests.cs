@@ -18,6 +18,8 @@ using System.Threading;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -59,12 +61,15 @@ namespace DjangoUITests {
                 new Classification("HTML Tag Delimiter", 46, 47, ">"),
                 new Classification("Django template tag", 50, 52, "{%"),
                 new Classification("keyword", 53, 63, "autoescape"),
+                new Classification("keyword", 64, 66, "on"),
                 new Classification("Django template tag", 67, 69, "%}"),
                 new Classification("Django template tag", 72, 74, "{%"),
                 new Classification("keyword", 75, 85, "autoescape"),
+                new Classification("keyword", 86, 89, "off"),
                 new Classification("Django template tag", 90, 92, "%}"),
                 new Classification("Django template tag", 95, 97, "{%"),
                 new Classification("keyword", 98, 108, "autoescape"),
+                new Classification("keyword", 109, 113, "blah"),
                 new Classification("Django template tag", 114, 116, "%}"),
                 new Classification("Django template tag", 122, 124, "{%"),
                 new Classification("keyword", 125, 132, "comment"),
@@ -258,7 +263,7 @@ namespace DjangoUITests {
                 new Classification("HTML Tag Delimiter", 1212, 1214, "</"),
                 new Classification("HTML Element Name", 1214, 1218, "html"),
                 new Classification("HTML Tag Delimiter", 1218, 1219, ">")
-                );
+            );
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -1082,7 +1087,7 @@ namespace DjangoUITests {
             };
             item.TextView.TextBuffer.Changed += textChangedHandler;
             Keyboard.ControlV();
-            Assert.IsTrue(are.WaitOne(5000));
+            Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
             item.TextView.TextBuffer.Changed -= textChangedHandler;
 
             IList<ClassificationSpan> spans = null;
@@ -1117,9 +1122,9 @@ namespace DjangoUITests {
                 are.Set();
             };
             item.TextView.TextBuffer.Changed += textChangedHandler;
-            
+
             Keyboard.ControlZ();
-            Assert.IsTrue(are.WaitOne(5000));
+            Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
             item.TextView.TextBuffer.Changed -= textChangedHandler;
 
             IList<ClassificationSpan> spans = null;
@@ -1151,7 +1156,7 @@ namespace DjangoUITests {
         private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, bool checkInsertionLen, string projectName, bool wait, params Classification[] expected) {
             Window window;
             var item = OpenDjangoProjectItem(filename, out window, projectName, wait);
-            
+
             item.MoveCaret(line, column);
             var pos = item.TextView.Caret.Position.BufferPosition.Position;
             if (selectionLength != -1) {
@@ -1184,7 +1189,7 @@ namespace DjangoUITests {
                 } else {
                     Keyboard.Type(insertionText);
                 }
-                Assert.IsTrue(are.WaitOne(5000));
+                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
 
                 var newPos = item.TextView.Caret.Position.BufferPosition;
                 if (checkInsertionLen) {
@@ -1199,7 +1204,7 @@ namespace DjangoUITests {
                 var classifier = item.Classifier;
                 spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
             });
-            
+
             Assert.IsNotNull(spans);
             Classification.Verify(
                 spans,
@@ -1220,7 +1225,7 @@ namespace DjangoUITests {
 
             item.TextView.TextBuffer.Changed += textChangedHandler;
             Keyboard.Type(insertionText);
-            Assert.IsTrue(are.WaitOne(5000));
+            Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
             are.Reset();
 
             var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
@@ -1238,7 +1243,7 @@ namespace DjangoUITests {
             for (int i = 0; i < insertionText.Length; i++) {
                 Keyboard.Backspace();
             }
-            Assert.IsTrue(are.WaitOne(5000));
+            Assert.IsTrue(are.WaitOne(5000), "failed to see text change after deletion");
             item.TextView.TextBuffer.Changed -= textChangedHandler;
 
             item.Invoke(() => {
@@ -1250,15 +1255,15 @@ namespace DjangoUITests {
                 spans,
                 expectedAfter
             );
-            
+
             window.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions() {
-            InsertionTest("Intellisense.html.djt", 6, 3, -1, " end\r", 
-                paste: false, 
+            InsertionTest("Intellisense.html.djt", 6, 3, -1, " end\r",
+                paste: false,
                 checkInsertionLen: false,
                 expected: new[] {
                     new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -1383,7 +1388,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions4() {
-            InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, "|c\t",
+            InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, "|cu\t",
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1485,15 +1490,15 @@ namespace DjangoUITests {
                     new Classification("identifier", 53, 60, "content"),
                     new Classification("Django template tag", 61, 63, "}}"),
                     new Classification("Django template tag", 65, 67, "{%"),
-                    new Classification("keyword", 68, 72, "auto"),
-                    new Classification("excluded code", 72, 75, "  o"),
-                    new Classification("Django template tag", 78, 80, "%}"),
-                    new Classification("HTML Tag Delimiter", 82, 84, "</"),
-                    new Classification("HTML Element Name", 84, 88, "body"),
-                    new Classification("HTML Tag Delimiter", 88, 89, ">"),
-                    new Classification("HTML Tag Delimiter", 91, 93, "</"),
-                    new Classification("HTML Element Name", 93, 97, "html"),
-                    new Classification("HTML Tag Delimiter", 97, 98, ">")
+                    new Classification("keyword", 68, 78, "autoescape"),
+                    new Classification("keyword", 79, 82, "off"),
+                    new Classification("Django template tag", 83, 85, "%}"),
+                    new Classification("HTML Tag Delimiter", 87, 89, "</"),
+                    new Classification("HTML Element Name", 89, 93, "body"),
+                    new Classification("HTML Tag Delimiter", 93, 94, ">"),
+                    new Classification("HTML Tag Delimiter", 96, 98, "</"),
+                    new Classification("HTML Element Name", 98, 102, "html"),
+                    new Classification("HTML Tag Delimiter", 102, 103, ">")
                 }
             );
         }
@@ -1545,7 +1550,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions8() {
-            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, Keyboard.CtrlSpace.ToString(),
+            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, Keyboard.CtrlSpace + "\t",
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1568,9 +1573,11 @@ namespace DjangoUITests {
                     new Classification("HTML Tag Delimiter", 45, 46, ">"),
                     new Classification("Django template tag", 50, 52, "{%"),
                     new Classification("keyword", 53, 63, "autoescape"),
+                    new Classification("keyword", 64, 66, "on"),
                     new Classification("Django template tag", 67, 69, "%}"),
                     new Classification("Django template tag", 71, 73, "{%"),
                     new Classification("keyword", 74, 84, "autoescape"),
+                    new Classification("keyword", 85, 87, "on"),
                     new Classification("Django template tag", 88, 90, "%}"),
                     new Classification("Django template tag", 92, 94, "{{"),
                     new Classification("Django template tag", 95, 97, "}}"),
@@ -1587,7 +1594,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions9() {
-            InsertionTest("TestApp\\Templates\\page2.html.djt", 8, 4, -1, Keyboard.CtrlSpace + "con\t",
+            InsertionTest("TestApp\\Templates\\page2.html.djt", 8, 4, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1610,6 +1617,7 @@ namespace DjangoUITests {
                     new Classification("HTML Tag Delimiter", 45, 46, ">"),
                     new Classification("Django template tag", 50, 52, "{%"),
                     new Classification("keyword", 53, 63, "autoescape"),
+                    new Classification("keyword", 64, 66, "on"),
                     new Classification("Django template tag", 67, 69, "%}"),
                     new Classification("Django template tag", 71, 73, "{%"),
                     new Classification("keyword", 74, 78, "auto"),
@@ -1712,7 +1720,6 @@ namespace DjangoUITests {
             );
         }
 
-
         private static EditorWindow OpenDjangoProjectItem(string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
             var project = DebuggerUITests.DebugProject.OpenProject(projectName, startItem);
             var pyProj = project.GetPythonProject();
@@ -1737,8 +1744,30 @@ namespace DjangoUITests {
             var doc = app.GetDocument(item.Document.FullName);
 
             if (wait) {
-                pyProj.GetAnalyzer().WaitForCompleteAnalysis(x => true);
-                Console.WriteLine("Waited for a complete analysis");
+                var django = doc.Invoke(() => Microsoft.PythonTools.Django.DjangoPackage.GetProject(item.Document.FullName));
+                // wait until Django is loaded, and then wait until the
+                // analysis is complete.
+                bool isLoaded = false;
+                for (int i = 0; i < 12; i++) {
+
+                    if (django._filters.Count > 0 &&
+                        django._tags.Count > 0 &&
+                        django._templateFiles.Count > 0) {
+                        foreach (var templateFile in django._templateFiles) {
+                            if (templateFile.Value.Count > 0) {
+                                isLoaded = true;
+                            }
+                        }
+                    }
+                    if (isLoaded) {
+                        break;
+                    }
+
+                    Console.WriteLine("{0} Django still not loaded, sleeping...", DateTime.Now);
+                    System.Threading.Thread.Sleep(5000);
+                }
+                Assert.IsTrue(isLoaded);
+                Console.WriteLine("{0} Waited for a complete analysis", DateTime.Now);
             }
 
             return doc;

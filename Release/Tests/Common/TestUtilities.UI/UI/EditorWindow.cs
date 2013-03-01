@@ -50,9 +50,7 @@ namespace TestUtilities.UI {
         }
 
         public void MoveCaret(SnapshotPoint newPoint) {
-            ((UIElement)TextView).Dispatcher.Invoke((Action)(() => {
-                TextView.Caret.MoveTo(newPoint);
-            }));
+            Invoke(() => TextView.Caret.MoveTo(newPoint));
         }
 
         public void Select(int line, int column, int length) {
@@ -64,12 +62,10 @@ namespace TestUtilities.UI {
                 span = new Span(textLine.Start + column - 1, length);
             }
 
-            ((UIElement)TextView).Dispatcher.Invoke((Action)(() => {
-                TextView.Selection.Select(
-                    new SnapshotSpan(TextView.TextBuffer.CurrentSnapshot, span),
-                    false
-                );
-            }));
+            Invoke(() => TextView.Selection.Select(
+                new SnapshotSpan(TextView.TextBuffer.CurrentSnapshot, span),
+                false
+            ));
         }
 
         /// <summary>
@@ -191,6 +187,26 @@ namespace TestUtilities.UI {
             if (excep != null) {
                 Assert.Fail("Exception on UI thread: " + excep.ToString());
             }
+        }
+
+        public T Invoke<T>(Func<T> action) {
+            Exception excep = null;
+            T res = default(T);
+            ((UIElement)TextView).Dispatcher.Invoke(
+                (Action)(() => {
+                    try {
+                        res = action();
+                    } catch (Exception e) {
+                        excep = e;
+
+                    }
+                })
+            );
+
+            if (excep != null) {
+                Assert.Fail("Exception on UI thread: " + excep.ToString());
+            }
+            return res;
         }
     }
 }
