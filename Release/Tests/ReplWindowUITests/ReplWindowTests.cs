@@ -145,6 +145,7 @@ g()",
             Keyboard.Type(code + "\r\r");
 
             interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt);
+            interactive.TextView.GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
             Keyboard.Type("f(");
 
@@ -2418,6 +2419,7 @@ $cls
         public void AttachReplTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\DebuggerProject.sln");
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
             GetInteractiveOptions().EnableAttach = true;
             try {
                 var interactive = Prepare();
@@ -2430,6 +2432,8 @@ $cls
                     interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
 
                     DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgRunMode);
+
+                    interactive = Prepare(reopenOnly: true);
 
                     const string import = "import BreakpointTest";
                     Keyboard.Type(import + "\r");
@@ -2446,6 +2450,7 @@ $cls
                     interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
                 }
             } finally {
+                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = false;
                 VsIdeTestHostContext.Dte.Solution.Close(false);
                 GetInteractiveOptions().EnableAttach = false;
             }
@@ -2567,10 +2572,12 @@ def g(): pass
         /// <summary>
         /// Opens the interactive window, clears the screen.
         /// </summary>
-        internal InteractiveWindow Prepare() {
+        internal InteractiveWindow Prepare(bool reopenOnly = false) {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
-            ConfigurePrompts();
+            if (!reopenOnly) {
+                ConfigurePrompts();
+            }
 
             GetPythonAutomation().OpenInteractive(InterpreterDescription);
             var interactive = app.GetInteractiveWindow(InterpreterDescription);
@@ -2581,18 +2588,21 @@ def g(): pass
             interactive.WaitForIdleState();
             app.Element.SetFocus();
             interactive.Element.SetFocus();
-            interactive.ClearScreen();
-            interactive.ReplWindow.ClearHistory();
-            interactive.WaitForReadyState();
 
-            interactive.Reset();
-            var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
-            Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
-            Assert.AreEqual(ExecutionResult.Success, task.Result);
-            interactive.WaitForTextEnd("READY", ReplPrompt);
+            if (!reopenOnly) {
+                interactive.ClearScreen();
+                interactive.ReplWindow.ClearHistory();
+                interactive.WaitForReadyState();
 
-            interactive.ClearScreen();
-            interactive.ReplWindow.ClearHistory();
+                interactive.Reset();
+                var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
+                Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
+                Assert.AreEqual(ExecutionResult.Success, task.Result);
+                interactive.WaitForTextEnd("READY", ReplPrompt);
+
+                interactive.ClearScreen();
+                interactive.ReplWindow.ClearHistory();
+            }
             interactive.WaitForReadyState();
             return interactive;
         }
