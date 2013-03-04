@@ -1748,7 +1748,7 @@ namespace DjangoUITests {
                 // wait until Django is loaded, and then wait until the
                 // analysis is complete.
                 bool isLoaded = false;
-                for (int i = 0; i < 12; i++) {
+                for (int i = 0; i < 24; i++) {
 
                     if (django._filters.Count > 0 &&
                         django._tags.Count > 0 &&
@@ -1766,7 +1766,7 @@ namespace DjangoUITests {
                     Console.WriteLine("{0} Django still not loaded, sleeping...", DateTime.Now);
                     System.Threading.Thread.Sleep(5000);
                 }
-                Assert.IsTrue(isLoaded);
+                Assert.IsTrue(isLoaded, "failed to wait for complete analysis");
                 Console.WriteLine("{0} Waited for a complete analysis", DateTime.Now);
             }
 
