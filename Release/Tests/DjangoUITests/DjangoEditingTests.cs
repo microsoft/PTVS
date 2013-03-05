@@ -1748,7 +1748,7 @@ namespace DjangoUITests {
                 // wait until Django is loaded, and then wait until the
                 // analysis is complete.
                 bool isLoaded = false;
-                for (int i = 0; i < 24; i++) {
+                for (int i = 0; i < 36; i++) {
 
                     if (django._filters.Count > 0 &&
                         django._tags.Count > 0 &&
@@ -1756,6 +1756,8 @@ namespace DjangoUITests {
                         foreach (var templateFile in django._templateFiles) {
                             if (templateFile.Value.Count > 0) {
                                 isLoaded = true;
+                            } else {
+                                Console.WriteLine("No template information: {0}", templateFile.Key);
                             }
                         }
                     }
@@ -1763,7 +1765,10 @@ namespace DjangoUITests {
                         break;
                     }
 
-                    Console.WriteLine("{0} Django still not loaded, sleeping...", DateTime.Now);
+                    Console.WriteLine("{0} Django still not loaded, sleeping... {1} {2}", 
+                        DateTime.Now,
+                        django._filters.Count,
+                        django._tags.Count);
                     System.Threading.Thread.Sleep(5000);
                 }
                 Assert.IsTrue(isLoaded, "failed to wait for complete analysis");
