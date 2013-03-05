@@ -477,6 +477,10 @@ class Thread(object):
             self.cur_frame = self.cur_frame.f_back
 
     def trace_func(self, frame, event, arg):
+        # If we're so far into process shutdown that sys is already gone, just stop tracing.
+        if sys is None:
+            return None
+
         try:
             if self.stepping == STEPPING_BREAK and should_debug_code(frame.f_code):
                 if self.cur_frame is None:
