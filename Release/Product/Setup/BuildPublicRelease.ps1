@@ -73,24 +73,6 @@ foreach ($version in $versions) {
     $request | Out-File -Encoding ascii -FilePath request_symbols.txt
     \\symbols\tools\createrequest.cmd -i request_symbols.txt -d .\SymSrvRequestLogs -c -s
     
-    ###################################################################
-    # Index binaries
-        
-    $request = `
-    "BuildId=$buildid $($version.name) binaries
-    BuildLabPhone=7058786
-    BuildRemark=$build_name
-    ContactPeople=$contacts
-    Directory=$outDir\Release\SignedBinaries
-    Project=TechnicalComputing
-    Recursive=yes
-    StatusMail=$contacts
-    UserName=$env:username"
-    
-    $request | Out-File -Encoding ascii -FilePath request_binaries.txt
-    \\symbols\tools\createrequest.cmd -i request_binaries.txt -d .\SymSrvRequestLogs -c -s
-
-
     [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.6, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
     [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL")
     
@@ -202,6 +184,25 @@ foreach ($version in $versions) {
     robocopy $firstjob.JobCompletionPath $destpath
     robocopy $secondjob.JobCompletionPath $destpath
     
+    ###################################################################
+    # Index the signed binaries
+        
+    $request = `
+    "BuildId=$buildid $($version.name) binaries
+    BuildLabPhone=7058786
+    BuildRemark=$build_name
+    ContactPeople=$contacts
+    Directory=$outDir\Release\SignedBinaries
+    Project=TechnicalComputing
+    Recursive=yes
+    StatusMail=$contacts
+    UserName=$env:username"
+    
+    $request | Out-File -Encoding ascii -FilePath request_binaries.txt
+    \\symbols\tools\createrequest.cmd -i request_binaries.txt -d .\SymSrvRequestLogs -c -s
+
+    ######################################################################
+
     # copy files back to binaries for re-building the MSI
     robocopy $firstjob.JobCompletionPath $buildroot\Binaries\Release$($version.number)\
     robocopy $secondjob.JobCompletionPath $buildroot\Binaries\Release$($version.number)\
