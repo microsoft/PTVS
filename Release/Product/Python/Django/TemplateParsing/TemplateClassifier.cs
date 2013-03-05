@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         foreach (var curSpan in blockInfo.GetSpans()) {
                             spans.Add(ToClassification(curSpan, snapshot, region));
                         }
-                    } else {
+                    } else if (region.Text.Length > 4) {    // unterminated block at end of file
                         spans.Add(
                             new ClassificationSpan(
                                 new SnapshotSpan(

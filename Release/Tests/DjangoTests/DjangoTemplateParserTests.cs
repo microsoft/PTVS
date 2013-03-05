@@ -105,6 +105,21 @@ namespace DjangoTests {
         public void BlockParserTests() {
             var testCases = new[] { 
                 new { 
+                    Got = ("for x in "), 
+                    Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in ", 0), 6, null, 9, -1, new[] { new Tuple<string, int>("x",  4) }),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new { 
+                            Position = 9,
+                            Expected = new[] { "foo", "bar" }
+                        },
+                        new { 
+                            Position = 4,
+                            Expected = new string[0]
+                        }
+                    }
+                },
+                new { 
                     Got = ("for x in bar"), 
                     Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in bar", 0), 6, DjangoVariable.Variable("bar", 9), 12, -1, new[] { new Tuple<string, int>("x",  4) }),
                     Context = TestCompletionContext.Simple,
@@ -119,6 +134,22 @@ namespace DjangoTests {
                         }
                     }
                 },
+                new { 
+                    Got = ("for x in b"), 
+                    Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in b", 0), 6, DjangoVariable.Variable("b", 9), 10, -1, new[] { new Tuple<string, int>("x",  4) }),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new { 
+                            Position = 10,
+                            Expected = new [] { "foo", "bar" }
+                        },
+                        new { 
+                            Position = 4,
+                            Expected = new string[0]
+                        }
+                    }
+                },
+
                 new { 
                     Got = ("autoescape"), 
                     Expected = (DjangoBlock)new DjangoAutoEscapeBlock(new BlockParseInfo("autoescape", "", 0), -1, -1),

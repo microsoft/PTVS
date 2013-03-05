@@ -190,29 +190,31 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
             if (Expression == null) {
                 return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
-            } else if (position == Expression.Value.Length + ExpressionStart && Expression.Value.EndsWith(".")) {
-                // TODO: Handle multiple dots
-                string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
+            } else if (position <= Expression.Value.Length + ExpressionStart) {
+                if (position - ExpressionStart - 1 >= 0 &&
+                    Expression.Value[position - ExpressionStart - 1] == '.') {
+                    // TODO: Handle multiple dots
+                    string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
 
-                // get the members of this variable
-                HashSet<AnalysisValue> values;
-                if (context.Variables != null && context.Variables.TryGetValue(varName, out values)) {
-                    var newTags = new Dictionary<string, PythonMemberType>();
-                    foreach (var member in values.SelectMany(item => item.GetAllMembers())) {
-                        string name = member.Key;
-                        PythonMemberType type, newType = GetMemberType(member.Value);
+                    // get the members of this variable
+                    HashSet<AnalysisValue> values;
+                    if (context.Variables != null && context.Variables.TryGetValue(varName, out values)) {
+                        var newTags = new Dictionary<string, PythonMemberType>();
+                        foreach (var member in values.SelectMany(item => item.GetAllMembers())) {
+                            string name = member.Key;
+                            PythonMemberType type, newType = GetMemberType(member.Value);
 
-                        if (!newTags.TryGetValue(name, out type)) {
-                            newTags[name] = newType;
-                        } else if (type != newType && type != PythonMemberType.Unknown && newType != PythonMemberType.Unknown) {
-                            newTags[name] = PythonMemberType.Multiple;
+                            if (!newTags.TryGetValue(name, out type)) {
+                                newTags[name] = newType;
+                            } else if (type != newType && type != PythonMemberType.Unknown && newType != PythonMemberType.Unknown) {
+                                newTags[name] = PythonMemberType.Multiple;
+                            }
                         }
+                        return CompletionInfo.ToCompletionInfo(newTags);
                     }
-                    return CompletionInfo.ToCompletionInfo(newTags);
+                } else {
+                    return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
                 }
-
-                return Enumerable.Empty<CompletionInfo>();
-
             } else if (Filters.Length > 0) {
                 // we are triggering in the filter or arg area
                 foreach (var curFilter in Filters) {

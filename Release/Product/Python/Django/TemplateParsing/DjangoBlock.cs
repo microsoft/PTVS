@@ -358,7 +358,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         trimmed = words[i].Substring(0, nlStart);
                     }
                     
-                    if (i != inIndex + 1) {
+                    if (i != inIndex + 1 && trimmed == words[i]) { // if we trimmed we don't have an extra space
                         filterText += " ";
                         argsEnd += 1;
                     }
@@ -414,7 +414,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 return new CompletionInfo[0];
             } else if (Variable != null && position > InStart) {
                 var res = Variable.GetCompletions(context, position);
-                if (position >= ArgsEnd && ReversedStart == -1) {
+                if (position > ArgsEnd && 
+                    ReversedStart == -1 && 
+                    Variable.Expression != null) {
                     return System.Linq.Enumerable.Concat(
                         res,
                         new[] { new CompletionInfo("reversed", StandardGlyphGroup.GlyphKeyword) }
