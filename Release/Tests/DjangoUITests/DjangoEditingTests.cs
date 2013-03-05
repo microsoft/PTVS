@@ -1756,6 +1756,7 @@ namespace DjangoUITests {
                         foreach (var templateFile in django._templateFiles) {
                             if (templateFile.Value.Count > 0) {
                                 isLoaded = true;
+                                break;
                             } else {
                                 Console.WriteLine("No template information: {0}", templateFile.Key);
                             }
