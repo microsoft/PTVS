@@ -740,9 +740,16 @@ namespace Microsoft.PythonTools.Project {
             if (_virtualEnvCreationRequests == null) {
                 _virtualEnvCreationRequests = new List<VirtualEnvRequestHandler>();
             }
+
+            // make sure we have the General pane, it's not created for us in VS 2010
+            IVsOutputWindow outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            IVsOutputWindowPane pane;
+            outputWindow.CreatePane(VSConstants.OutputWindowPaneGuid.GeneralPane_guid, "General", 1, 0);
+            outputWindow.GetPane(VSConstants.OutputWindowPaneGuid.GeneralPane_guid, out pane);
             
             var process = Process.Start(psi);
             var handler = new VirtualEnvRequestHandler(
+                pane,
                 process,
                 this,
                 onSuccess,
@@ -758,17 +765,16 @@ namespace Microsoft.PythonTools.Project {
             
             process.Exited += handler.VirtualEnvCreationExited;
             process.EnableRaisingEvents = true;
-            process.OutputDataReceived += VirtualEnvRequestHandler.CreateVirtualEnvOutputDataReceived;
-            process.ErrorDataReceived += VirtualEnvRequestHandler.CreateVirtualEnvOutputDataReceived;
+            process.OutputDataReceived += handler.CreateVirtualEnvOutputDataReceived;
+            process.ErrorDataReceived += handler.CreateVirtualEnvOutputDataReceived;
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
             var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
             statusBar.SetText(initialMsg + SeeOutputWindowForMoreDetails);
-
-            var outWin = (IVsOutputWindowPane)CommonPackage.GetGlobalService(typeof(SVsGeneralOutputWindowPane));
-            outWin.Activate();            
-            outWin.OutputString(initialMsg + Environment.NewLine);
+            
+            pane.Activate();
+            pane.OutputString(initialMsg + Environment.NewLine);
         }
 
         const string SeeOutputWindowForMoreDetails = " (See Output Window for more details)";
@@ -779,8 +785,10 @@ namespace Microsoft.PythonTools.Project {
             private readonly TaskScheduler _scheduler;
             private readonly Action _onSuccess, _onError;
             private readonly Process _process;
+            private readonly IVsOutputWindowPane _outPane;
 
-            public VirtualEnvRequestHandler(Process process, PythonProjectNode node, Action onSuccess, Action onError, TaskScheduler scheduler, string success, string error) {
+            public VirtualEnvRequestHandler(IVsOutputWindowPane outPane, Process process, PythonProjectNode node, Action onSuccess, Action onError, TaskScheduler scheduler, string success, string error) {
+                _outPane = outPane;
                 _process = process;
                 _node = node;
                 _scheduler = scheduler;
@@ -799,27 +807,29 @@ namespace Microsoft.PythonTools.Project {
 
                 var proc = (Process)sender;
 
-                var outWin = (IVsOutputWindowPane)CommonPackage.GetGlobalService(typeof(SVsGeneralOutputWindowPane));
                 var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));                
 
                 if (proc.ExitCode == 0) {
                     statusBar.SetText(_success + SeeOutputWindowForMoreDetails);
-                    outWin.OutputStringThreadSafe(_success + Environment.NewLine);
+                    if (_outPane != null) {
+                        _outPane.OutputStringThreadSafe(_success + Environment.NewLine);
+                    }
                     _scheduler.StartNew(_onSuccess).Wait();
                 } else {
                     var msg = String.Format(_error, proc.ExitCode);
                     statusBar.SetText(_error + SeeOutputWindowForMoreDetails);
-                    outWin.OutputStringThreadSafe(msg + Environment.NewLine);
+                    if (_outPane != null) {
+                        _outPane.OutputStringThreadSafe(msg + Environment.NewLine);
+                    }
                     if (_onError != null) {
                         _scheduler.StartNew(_onError).Wait();
                     }
                 }
             }
 
-            public static void CreateVirtualEnvOutputDataReceived(object sender, DataReceivedEventArgs e) {
-                var outWin = (IVsOutputWindowPane)CommonPackage.GetGlobalService(typeof(SVsGeneralOutputWindowPane));
-                if (e.Data != null) {
-                    outWin.OutputStringThreadSafe(e.Data + Environment.NewLine);
+            public void CreateVirtualEnvOutputDataReceived(object sender, DataReceivedEventArgs e) {
+                if (_outPane != null && e.Data != null) {
+                    _outPane.OutputStringThreadSafe(e.Data + Environment.NewLine);
                 }
             }
         }
