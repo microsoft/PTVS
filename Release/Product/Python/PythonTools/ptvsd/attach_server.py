@@ -12,6 +12,7 @@
  #
  # ###########################################################################
 
+import atexit
 import getpass
 import os
 import platform
@@ -121,7 +122,10 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
     if redirect_output:
         _vspd.enable_output_redirection()
 
+    atexit.register(_vspd.detach_process_and_notify_debugger)
+
     server = socket.socket()
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind(address)
     server.listen(1)
     def server_thread_func():

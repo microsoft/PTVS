@@ -1727,6 +1727,17 @@ def attach_process_from_socket(sock, report = False, block = False):
     if not _INTERCEPTING_FOR_ATTACH:
         intercept_threads()
 
+# Try to detach cooperatively, notifying the debugger as we do so.
+def detach_process_and_notify_debugger():
+    if DebuggerLoop.instance:
+        try:
+            DebuggerLoop.instance.command_detach()
+        except DebuggerExitException: # successfully detached
+            return
+        except: # swallow anything else, and forcibly detach below
+            pass
+    detach_process()
+
 def detach_process():
     global DETACHED
     DETACHED = True
