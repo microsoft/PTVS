@@ -15,6 +15,8 @@
     <RootNamespace>DebuggerProject</RootNamespace>
     <OutputPath>.</OutputPath>
     <UseIISExpress>false</UseIISExpress>
+    <InterpreterId>2af0f10d-7135-4994-9156-5d01c9c11b7e</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>    
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
