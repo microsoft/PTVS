@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Django {
                 }
                 if (textLines == null) {
                     // Unknown docData type then, so we have to force VS to close the other editor.
-                    ErrorHandler.ThrowOnFailure((int)VSConstants.VS_E_INCOMPATIBLEDOCDATA);
+                    throw Marshal.GetExceptionForHR(VSConstants.VS_E_INCOMPATIBLEDOCDATA);
                 }
 
             }
@@ -232,9 +232,7 @@ namespace Microsoft.PythonTools.Django {
 
             // We couldn't create the view
             // Return special error code so VS can try another editor factory.
-            ErrorHandler.ThrowOnFailure((int)VSConstants.VS_E_UNSUPPORTEDFORMAT);
-
-            return IntPtr.Zero;
+            throw Marshal.GetExceptionForHR(VSConstants.VS_E_UNSUPPORTEDFORMAT);
         }
 
         private IntPtr CreateCodeView(string documentMoniker, IVsTextLines textLines, bool createdDocData, ref string editorCaption, ref Guid cmdUI) {
