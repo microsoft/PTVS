@@ -94,6 +94,10 @@ namespace Microsoft.PythonTools.Project {
             var lines = new HashSet<string>(packages.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
 
             _scheduler.StartNew(() => {
+                if (ProjectMgr == null || ProjectMgr.IsClosed) {
+                    return;
+                }
+
                 Dictionary<string, HierarchyNode> existing = new Dictionary<string, HierarchyNode>();
                 for (var child = FirstChild; child != null; child = child.NextSibling) {
                     existing[child.Caption] = child;

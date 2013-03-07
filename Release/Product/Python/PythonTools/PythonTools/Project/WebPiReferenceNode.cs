@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
+using VSLangProj;
 
 namespace Microsoft.PythonTools.Project {
     [CLSCompliant(false)]
@@ -204,6 +205,16 @@ namespace Microsoft.PythonTools.Project {
         public virtual string ProductId {
             get {
                 return this.GetProperty("ProductID", "");
+            }
+        }
+
+        [SRCategoryAttribute(SR.Advanced)]
+        [LocDisplayName(SR.BuildAction)]
+        [SRDescriptionAttribute(SR.BuildActionDescription)]
+        [TypeConverter(typeof(BuildActionTypeConverter))]
+        public prjBuildAction BuildAction {
+            get {
+                return prjBuildAction.prjBuildActionNone;
             }
         }
 

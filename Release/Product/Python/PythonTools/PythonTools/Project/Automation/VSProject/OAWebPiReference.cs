@@ -25,16 +25,7 @@ namespace Microsoft.PythonTools.Project.Automation {
             base(webPiReferenceNode) {
         }
         
-        [SRCategoryAttribute(SR.Advanced)]
-        [LocDisplayName(SR.BuildAction)]
-        [SRDescriptionAttribute(SR.BuildActionDescription)]
-        [TypeConverter(typeof(BuildActionTypeConverter))]
-        public prjBuildAction BuildAction {
-            get {
-                return prjBuildAction.prjBuildActionNone;
-            }
-        }
-
+        
         #region Reference override
        
         public override string Name {
