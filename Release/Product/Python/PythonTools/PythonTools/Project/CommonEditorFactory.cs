@@ -141,13 +141,17 @@ namespace Microsoft.PythonTools.Project {
             // Initialize output parameters
             docView = IntPtr.Zero;
             docData = IntPtr.Zero;
-            commandUIGuid = this.GetType().GUID;
+            commandUIGuid = Guid.Empty;
             createDocumentWindowFlags = 0;
             editorCaption = null;
 
             // Validate inputs
             if ((createEditorFlags & (VSConstants.CEF_OPENFILE | VSConstants.CEF_SILENT)) == 0) {
                 return VSConstants.E_INVALIDARG;
+            }
+
+            if (_promptEncodingOnLoad && docDataExisting != IntPtr.Zero) {
+                return VSConstants.VS_E_INCOMPATIBLEDOCDATA;
             }
 
             // Get a text buffer

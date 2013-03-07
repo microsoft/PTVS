@@ -146,13 +146,17 @@ namespace Microsoft.PythonTools.Django {
             // Initialize output parameters
             docView = IntPtr.Zero;
             docData = IntPtr.Zero;
-            commandUIGuid = this.GetType().GUID;
+            commandUIGuid = Guid.Empty;
             createDocumentWindowFlags = 0;
             editorCaption = null;
 
             // Validate inputs
             if ((createEditorFlags & (VSConstants.CEF_OPENFILE | VSConstants.CEF_SILENT)) == 0) {
                 return VSConstants.E_INVALIDARG;
+            }
+
+            if (_promptEncodingOnLoad && docDataExisting != IntPtr.Zero) {
+                return VSConstants.VS_E_INCOMPATIBLEDOCDATA;
             }
 
             // Get a text buffer
@@ -361,17 +365,5 @@ namespace Microsoft.PythonTools.Django {
     [Guid("F4F53BA9-211A-4F1C-9CEA-5991450FE000")]
     public class DjangoEditorFactoryPromptForEncoding : DjangoEditorFactory {
         public DjangoEditorFactoryPromptForEncoding(DjangoPackage package) : base(package, true) { }
-        public override int CreateEditorInstance(uint createEditorFlags, string documentMoniker, string physicalView, VisualStudio.Shell.Interop.IVsHierarchy hierarchy, uint itemid, IntPtr docDataExisting, out IntPtr docView, out IntPtr docData, out string editorCaption, out Guid commandUIGuid, out int createDocumentWindowFlags) {
-            if (docDataExisting != IntPtr.Zero) {
-                docView = IntPtr.Zero;
-                docData = IntPtr.Zero;
-                editorCaption = null;
-                commandUIGuid = Guid.Empty;
-                createDocumentWindowFlags = 0;
-                return VSConstants.VS_E_INCOMPATIBLEDOCDATA;
-            }
-
-            return base.CreateEditorInstance(createEditorFlags, documentMoniker, physicalView, hierarchy, itemid, docDataExisting, out docView, out docData, out editorCaption, out commandUIGuid, out createDocumentWindowFlags);
-        }
     }
 }

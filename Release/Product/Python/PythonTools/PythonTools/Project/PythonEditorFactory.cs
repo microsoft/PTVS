@@ -59,17 +59,5 @@ namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.EditorFactoryPromptForEncodingGuid)]
     public class PythonEditorFactoryPromptForEncoding : PythonEditorFactory {
         public PythonEditorFactoryPromptForEncoding(CommonProjectPackage package) : base(package, true) { }
-        public override int CreateEditorInstance(uint createEditorFlags, string documentMoniker, string physicalView, VisualStudio.Shell.Interop.IVsHierarchy hierarchy, uint itemid, IntPtr docDataExisting, out IntPtr docView, out IntPtr docData, out string editorCaption, out Guid commandUIGuid, out int createDocumentWindowFlags) {
-            if (docDataExisting != IntPtr.Zero) {
-                docView = IntPtr.Zero;
-                docData = IntPtr.Zero;
-                editorCaption = null;
-                commandUIGuid = Guid.Empty;
-                createDocumentWindowFlags = 0;
-                return VSConstants.VS_E_INCOMPATIBLEDOCDATA;
-            }
-
-            return base.CreateEditorInstance(createEditorFlags, documentMoniker, physicalView, hierarchy, itemid, docDataExisting, out docView, out docData, out editorCaption, out commandUIGuid, out createDocumentWindowFlags);
-        }
     }
 }
