@@ -1,4 +1,4 @@
-param( [string] $direction, [string]$hg_repo, [string]$tfs_repo, [string]$commit_msg = "", [string]$suppress_push = "", [string]$commit_date = "")
+param( [string] $direction, [string]$hg_repo, [string]$tfs_repo, [string]$commit_msg = "", [string]$suppress_push = "", [string]$commit_date = "", [string]$user_name="")
 
 pushd
 
@@ -55,19 +55,25 @@ function commit_tfs($tfs_repo) {
 }
 
 function commit_hg($hg_repo) {
-	cd $hg_repo
+    cd $hg_repo
+    
+    $args = ""
+    if ($user_name -ne "") {
+        $args += " -u $user_name"
+    }
+    
     if ($commit_msg -ne "") {
-        if ($commit_date -ne "") {
-            hg commit -m $commit_msg -d $commit_date
-        } else{
-            hg commit -m $commit_msg
-        }
-    } else {
-        hg commit
-    }    
+        $args += " -m $commit_msg"
+    }
+    
+    if($commit_date -ne "") {
+        $args += " -d $commit_date"
+    }
+    hg commit $args
+
     if ($suppress_push -eq "") {
         hg push 
-	}
+    }
 }
 
 function test_build($target_repo) {
