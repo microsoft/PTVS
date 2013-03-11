@@ -17,21 +17,19 @@ tfs.Authenticate()
 vcs = tfs.GetService(VersionControlServer)
 assert isinstance(vcs, VersionControlServer)
 
-source_branch = r'$/TCWCS/Python/Open_Source/Feature/Python_2.0'
-merge_to = '$/TCWCS/Python/Open_Source/Main'
-mc = vcs.GetMergeCandidates(source_branch, merge_to, RecursionType.Full)
-hg_root = r'C:\Source\pytools2'
-workspace_root = r'C:\Source\TCP1\Open_Source'
+mc = vcs.GetMergeCandidates('$/TCWCS/Python/Main/Open_Source/Incubation/Django/Release', '$/TCWCS/Python/Main/Open_Source/Release', RecursionType.Full)
+hg_root = r'C:\Source\hgtest\pytools'
+workspace_root = r'F:\Product\TCP0\Open_Source'
 ws = vcs.TryGetWorkspace(workspace_root)
 
-merge_from = ItemSpec(source_branch, RecursionType.Full)
-
+merge_from = ItemSpec('$/TCWCS/Python/Main/Open_Source/Incubation/Django/Release', RecursionType.Full)
+merge_to = '$/TCWCS/Python/Main/Open_Source/Release'
 cur_version = 28501
 
 path = os.path.join(os.environ['WinDir'], r'System32\WindowsPowerShell\v1.0\powershell.exe')
 
 
-for x in reversed(list(vcs.QueryHistory(source_branch, VersionSpec.Latest, 0, RecursionType.Full, None, None, None, int.MaxValue, False, False))): 
+for x in reversed(list(vcs.QueryHistory('$/TCWCS/Python/Main/Open_Source/Incubation/Django/Release', VersionSpec.Latest, 0, RecursionType.Full, None, None, None, int.MaxValue, False, False))): 
     if cur_version >= x.ChangesetId:
         continue
 
@@ -57,7 +55,7 @@ for x in reversed(list(vcs.QueryHistory(source_branch, VersionSpec.Latest, 0, Re
         continue
     print 'Warnings', status.HaveResolvableWarnings
     print 'Conflicts', status.NumConflicts
-    for conflict in ws.QueryConflicts((merge_to, ), True):
+    for conflict in ws.QueryConflicts(('$/TCWCS/Python/Main/Open_Source/', ), True):
         assert isinstance(conflict, Conflict)
         print 'Can Merge', conflict.CanMergeContent
         conflict.Resolution = Resolution.AcceptMerge
@@ -76,15 +74,14 @@ for x in reversed(list(vcs.QueryHistory(source_branch, VersionSpec.Latest, 0, Re
 
     ws.CheckIn(ws.GetPendingChanges(), x.Comment)    
     comment = x.Comment.Replace("'", "''").Replace(unichr(8217), "''")
-    print dir(x)
-#    psi = ProcessStartInfo(path, 
-#                           r'"' + workspace_root + "\Tools\CodePlex\Sync.ps1\" push '" + 
-#                           hg_root + "' '" + workspace_root +"' '" + comment + 
-#                           "' -suppress_push True -commit_date '" + x.CreationDate.ToString() + "'")
-#    print psi.Arguments
-#    psi.UseShellExecute = False
-#    p = Process.Start(psi)
-#    p.WaitForExit()
+    psi = ProcessStartInfo(path, 
+                           r'"' + workspace_root + "\Tools\CodePlex\Sync.ps1\" push '" + 
+                           hg_root + "' '" + workspace_root +"' '" + comment + 
+                           "' -suppress_push True -commit_date '" + x.CreationDate.ToString() + "'")
+    print psi.Arguments
+    psi.UseShellExecute = False
+    p = Process.Start(psi)
+    p.WaitForExit()
     
     cur_version = x.ChangesetId
     

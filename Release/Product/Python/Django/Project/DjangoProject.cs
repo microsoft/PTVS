@@ -37,7 +37,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 
-
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
     class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject, IDjangoProject {
@@ -722,10 +721,10 @@ namespace Microsoft.PythonTools.Django.Project {
                 ProcessStartInfo psi;
                 var interpreterPath = pyProj.Configuration.InterpreterPath;
                 var pyProject = _innerVsHierarchy.GetProject().GetPythonProject() as IPythonProject;
-                if (pyProject == null) {
+                var managePyPath = (pyProject != null) ? pyProject.GetStartupFile() : null;
+                if (string.IsNullOrEmpty(managePyPath)) {
                     psi = new ProcessStartInfo(interpreterPath, "manage.py " + arguments);
                 } else {
-                    var managePyPath = pyProject.GetStartupFile();
                     psi = new ProcessStartInfo(interpreterPath, "\"" + managePyPath + "\" " + arguments);
                 }
 
