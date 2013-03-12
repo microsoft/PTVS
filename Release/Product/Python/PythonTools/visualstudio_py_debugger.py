@@ -37,14 +37,6 @@ try:
 except ImportError:
     stackless = None    
 
-if stackless:
-    try:
-        # For stackless you will need to turn on tracing
-        # for every tasklet created. Unless you set this 
-        # global tracing flag. 
-        stackless.globaltrace = True
-    except AttributeError:
-        pass
 try:
     xrange
 except:
@@ -472,7 +464,27 @@ class Thread(object):
         # stackless changes        
         if stackless is not None:            
             stackless.set_schedule_callback( self.context_dispatcher )
+            # the tasklets need to be traced on a case by case bases
+            # sys.trace needs to be called within their calling context
+            def __call__(tsk, *args, **kwargs):
+                f = tsk.tempval
+                def new_f(old_f, args, kwargs):
+                    sys.settrace(self.trace_func)
+                    if old_f is not None:
+                        old_f(*args, **kwargs)
+                    sys.settrace(None)
+                tsk.tempval = new_f
+                stackless.tasklet.setup(tsk, f, args, kwargs)
+                return tsk
+    
+            def settrace( tsk, tb ):
+                if hasattr( tsk.frame, "f_trace"):
+                    tsk.frame.f_trace = tb
+                sys.settrace( tb )
 
+            self.__oldstacklesscall__ = stackless.tasklet.__call__
+            stackless.tasklet.settrace = settrace
+            stackless.tasklet.__call__ = __call__
         if sys.platform == 'cli':
             self.frames = []
     
@@ -495,6 +507,16 @@ class Thread(object):
 
     def context_dispatcher(self, old, new):
         self.stepping = STEPPING_NONE
+        # for those tasklets that started before we started tracing
+        # we need to make sure that the trace is set by patching
+        # it in the context switch
+        if not old:
+            pass # starting new
+        elif not new:
+            pass # killing prev
+        else:
+            if hasattr(new.frame, "f_trace") and not new.frame.f_trace:                
+                sys.call_tracing(new.settrace,(self.trace_func,))
 
     def trace_func(self, frame, event, arg):
         try:
@@ -508,6 +530,7 @@ class Thread(object):
                 if self.detach:
                     if stackless is not None:
                         stackless.set_schedule_callback( None )
+                        stackless.tasklet.__call__ = self.__oldstacklesscall__
                     sys.settrace(None)
                     return None
 
