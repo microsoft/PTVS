@@ -115,7 +115,9 @@ namespace TestUtilities.Mocks {
         }
 
         public Microsoft.VisualStudio.Text.VirtualSnapshotSpan StreamSelectionSpan {
-            get { throw new NotImplementedException(); }
+            get {
+                return new VirtualSnapshotSpan(_start, _end);
+            }
         }
 
         public ITextView TextView {

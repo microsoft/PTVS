@@ -14,8 +14,10 @@
 
 using System;
 using System.Linq;
+using AnalysisTests;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -102,8 +104,8 @@ g()");
             SuccessTest("x = 41",
 @"# foo
 x = 41",
-@"def g():
-    # foo
+@"# foo
+def g():
     x = 41
 
 g()");
@@ -111,6 +113,26 @@ g()");
 
         [TestMethod, Priority(0)]
         public void AssignInIfStatementReadAfter() {
+            ExtractMethodTest(@"class C:
+    def foo(self):
+        if False: # foo
+            bar = player = Player()
+        else:                
+            player.update()
+", "bar = player = Player()", TestResult.Success(
+ @"class C:
+    def g(self):
+        bar = player = Player()
+
+    def foo(self):
+        if False: # foo
+            self.g()
+        else:                
+            player.update()
+"
+ ), scopeName: "C");
+
+
             ExtractMethodTest(@"class C:
     def foo(self):
         if False: 
@@ -140,7 +162,6 @@ g()");
 @"class C:
     def g(self):
         bar = player = Player()
-            
         return player
 
     def foo(self):
@@ -294,7 +315,48 @@ def f():
         print (x, y)");
         }
 
+        [TestMethod, Priority(0)]
+        public void TestAllNodes() {
+            var prefixes = new string[] { " # foo\r\n", "" };
+            var suffixes = new string[] { " # bar", "" };
+            foreach (var suffix in suffixes) {
+                foreach (var prefix in prefixes) {
+                    foreach (var testCase in TestExpressions.Expressions) {
+                        if (testCase.StartsWith("yield")) {
+                            // not currently supported
+                            continue;
+                        }
 
+                        var text = prefix + testCase + suffix;
+                        string expected = String.Format("{1}def g():\r\n    return {0}\r\n\r\ng(){2}", testCase, prefix, suffix);
+                        SuccessTest(new Span(prefix.Length, testCase.Length), text, expected);
+                    }
+                }
+            }
+
+            var bannedStmts = new[] { "break", "continue", "return abc" };
+            var allStmts = TestExpressions.Statements2x
+                    .Except(bannedStmts)
+                    .Select(text => new { Text = text, Version = PythonLanguageVersion.V27 })
+                    .Concat(
+                        TestExpressions.Statements3x
+                            .Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
+
+            foreach (var suffix in suffixes) {
+                foreach (var prefix in prefixes) {
+                    foreach (var stmtTest in allStmts) {
+                        var text = prefix + stmtTest.Text + suffix;
+                        string expected = String.Format(
+                            "{1}def g():\r\n{0}\r\n\r\ng(){2}",
+                            TestExpressions.IndentCode(stmtTest.Text, "    "),
+                            prefix,
+                            suffix
+                        );
+                        SuccessTest(new Span(prefix.Length, stmtTest.Text.Length), text, expected, null, stmtTest.Version.ToVersion());
+                    }
+                }
+            }
+        }
 
 
         [TestMethod, Priority(0)]
@@ -1396,6 +1458,10 @@ def f(x):
     return (g())");
         }
 
+        private void SuccessTest(Span extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null) {
+            ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
+        }
+
         private void SuccessTest(string extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null) {
             ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
         }
@@ -1439,21 +1505,29 @@ def f(x):
             ExtractMethodTest(input, extract, TestResult.Error(ErrorBreak));
         }
 
-        private void ExtractMethodTest(string input, string extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
+        private void ExtractMethodTest(string input, object extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             Func<Span> textRange = () => {
-                if (extract.IndexOf(" .. ") != -1) {
-                    var pieces = extract.Split(new[] { " .. " }, 2, StringSplitOptions.None);
-                    int start = input.IndexOf(pieces[0]);
-                    int end = input.IndexOf(pieces[1]) + pieces[1].Length - 1;
-                    return Span.FromBounds(start, end);
-                } else {
-                    int start = input.IndexOf(extract);
-                    int length = extract.Length;
-                    return new Span(start, length);
-                }
+                return GetSelectionSpan(input, extract);
             };
 
             ExtractMethodTest(input, textRange, expected, scopeName, targetName, version, parameters);
+        }
+
+        internal static Span GetSelectionSpan(string input, object extract) {
+            string exStr = extract as string;
+            if (exStr != null) {
+                if (exStr.IndexOf(" .. ") != -1) {
+                    var pieces = exStr.Split(new[] { " .. " }, 2, StringSplitOptions.None);
+                    int start = input.IndexOf(pieces[0]);
+                    int end = input.IndexOf(pieces[1]) + pieces[1].Length;
+                    return Span.FromBounds(start, end);
+                } else {
+                    int start = input.IndexOf(exStr);
+                    int length = exStr.Length;
+                    return new Span(start, length);
+                }
+            }
+            return (Span)extract;
         }
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {

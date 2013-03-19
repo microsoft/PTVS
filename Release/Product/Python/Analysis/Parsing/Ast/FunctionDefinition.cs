@@ -245,6 +245,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return base.GetLeadingWhiteSpace(ast);
         }
 
+        public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            if (Decorators != null) {
+                Decorators.SetLeadingWhiteSpace(ast, whiteSpace);
+                return;
+            }
+            base.SetLeadingWhiteSpace(ast, whiteSpace);
+        }
+
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             var decorateWhiteSpace = this.GetNamesWhiteSpace(ast);
             if (Decorators != null) {

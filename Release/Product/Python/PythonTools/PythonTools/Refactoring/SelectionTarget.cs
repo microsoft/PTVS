@@ -46,7 +46,11 @@ namespace Microsoft.PythonTools.Refactoring {
             return new Statement[0];
         }
 
-        public abstract int Start {
+        /// <summary>
+        /// Returns the start of the selection including any indentation on the current line, but
+        /// excluding any previous lines of pure white space or comments.
+        /// </summary>
+        public abstract int StartIncludingIndentation {
             get;
         }
 
@@ -104,7 +108,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 body = retStmt;
             }
 
-            return new SuiteStatement(new[] { body });
+            return body;
         }
 
         public override string InvalidExtractionMessage {
@@ -116,8 +120,8 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        public override int Start {
-            get { return _node.GetStartIncludingWhiteSpace(Parents[0] as PythonAst); }
+        public override int StartIncludingIndentation {
+            get { return _node.GetStartIncludingIndentation(Parents[0] as PythonAst); }
         }
 
         public override int End {
@@ -126,9 +130,6 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public override string IndentationLevel {
             get {
-                if (_node is Expression) {
-                    return _node.GetLeadingWhiteSpace(Parents[0] as PythonAst);
-                }
                 return _node.GetIndentationLevel(Parents[0] as PythonAst);
             }
         }
@@ -168,19 +169,12 @@ namespace Microsoft.PythonTools.Refactoring {
             if (_suite.Statements.Count == 0) {
                 return _suite;
             }
-            var ast = _suite.CloneSubset(Parents[0] as PythonAst, _start, _end);
-            if (!_suite.IsFunctionOrClassSuite(root)) {
-                ast = new SuiteStatement(new[] { ast });
-            }
-            return ast;
+            return _suite.CloneSubset(Parents[0] as PythonAst, _start, _end);
         }
 
         public override IEnumerable<Statement> GetStatementsAfter(PythonAst root) {
-            var ast = _suite.CloneSubset(Parents[0] as PythonAst, _end + 1, _suite.Statements.Count - 1);
-            if (!_suite.IsFunctionOrClassSuite(root)) {
-                ast = new SuiteStatement(new[] { ast });
-            }
-            yield return ast;
+            yield return _suite.CloneSubset(Parents[0] as PythonAst, _end + 1, _suite.Statements.Count - 1);
+
             foreach (var suite in _followingSuites) {
                 foreach (var stmt in suite.Statements) {
                     if (stmt.StartIndex > _selectedSpan.End) {
@@ -190,12 +184,12 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        public override int Start {
+        public override int StartIncludingIndentation {
             get {
                 if (_suite.Statements.Count == 0) {
-                    return _suite.GetStartIncludingWhiteSpace(Parents[0] as PythonAst);
+                    return _suite.GetStartIncludingIndentation(Parents[0] as PythonAst);
                 }
-                return _suite.Statements[_start].GetStartIncludingWhiteSpace(Parents[0] as PythonAst); 
+                return _suite.Statements[_start].GetStartIncludingIndentation(Parents[0] as PythonAst); 
             }
         }
 

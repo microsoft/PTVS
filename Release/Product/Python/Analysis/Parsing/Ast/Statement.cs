@@ -27,7 +27,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override sealed void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             AppendCodeStringStmt(res, ast, format);
-            this.AppendTrailingNewLine(res, ast, format);
         }
 
         internal abstract void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format);
@@ -47,16 +46,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             } else {
                 return null;
             }
-        }
-
-        /// <summary>
-        /// Returns the trailing whitespace (newlines and comments) that
-        /// follow this node but have been persisted for round tripping.
-        /// 
-        /// New in 1.1.
-        /// </summary>
-        public string GetTrailingWhitespace(PythonAst ast) {
-            return NodeAttributes.GetTrailingNewLine(this, ast);
         }
     }
 }

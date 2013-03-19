@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 new SnapshotSpan(
                     _view.TextBuffer.CurrentSnapshot,
                     Span.FromBounds(
-                        walker.Target.Start,
+                        walker.Target.StartIncludingIndentation,
                         walker.Target.End
                     )
                 ),
@@ -130,7 +130,8 @@ namespace Microsoft.PythonTools.Refactoring {
                 outputCollector._outputVars,
                 walker.Target,
                 _view.Options.GetIndentSize(),
-                !_view.Options.IsConvertTabsToSpacesEnabled()
+                !_view.Options.IsConvertTabsToSpacesEnabled(),
+                _view.Options.GetNewLineCharacter()
             );
 
             var info = input.GetExtractionInfo(creator);
@@ -161,8 +162,8 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         private static bool WasSelectionExpanded(SelectionTarget target, SnapshotPoint selectionStart, SnapshotPoint selectionEnd) {
-            if (target.Start != selectionStart.Position) {
-                for (var curChar = selectionStart - 1; curChar.Position >= target.Start; curChar -= 1) {
+            if (target.StartIncludingIndentation != selectionStart.Position) {
+                for (var curChar = selectionStart - 1; curChar.Position >= target.StartIncludingIndentation; curChar -= 1) {
                     if (!Char.IsWhiteSpace(curChar.GetChar())) {
                         return true;
                     }
@@ -497,7 +498,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 var reference = node.GetVariableReference(_root);
                 if (!_inputCollector._allReads.Contains(reference) && !_inputCollector._allWrites.Contains(reference)) {
                     // this variable is referenced outside of the refactored code
-                    if (node.StartIndex < _target.Start) {
+                    if (node.StartIndex < _target.StartIncludingIndentation) {
                         // it's read before the extracted code, we don't care...
                     } else {
                         Debug.Assert(node.EndIndex > _target.End, "didn't reference variable in extracted range");
@@ -548,7 +549,7 @@ namespace Microsoft.PythonTools.Refactoring {
                             !_collector._inputCollector._allWrites.Contains(reference))) {
 
                             // the variable is assigned outside the refactored code
-                            if (node.StartIndex < _collector._target.Start) {
+                            if (node.StartIndex < _collector._target.StartIncludingIndentation) {
                                 // it's assigned before the extracted code
                                 _collector._inputVars.Add(reference.Variable);
                             } else {

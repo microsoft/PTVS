@@ -62,6 +62,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return base.GetLeadingWhiteSpace(ast);
         }
 
+        public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            if (this.IsAltForm(ast)) {
+                Items[0].SetLeadingWhiteSpace(ast, whiteSpace);
+            } else {
+                base.SetLeadingWhiteSpace(ast, whiteSpace);
+            }
+        }
+
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             if (this.IsAltForm(ast)) {
                 ListExpression.AppendItems(res, ast, format, "", "", this, Items);

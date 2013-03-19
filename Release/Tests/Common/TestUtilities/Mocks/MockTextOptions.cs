@@ -43,6 +43,8 @@ namespace TestUtilities.Mocks {
                 return (T)(object)true;
             } else if (key.Equals(DefaultOptions.IndentSizeOptionId)) {
                 return (T)(object)4;
+            } else if (key.Equals(DefaultOptions.NewLineCharacterOptionId)) {
+                return (T)(object)"\r\n";
             }
             throw new InvalidOperationException();
         }

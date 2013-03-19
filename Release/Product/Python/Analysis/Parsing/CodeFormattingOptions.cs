@@ -329,12 +329,12 @@ namespace Microsoft.PythonTools.Parsing {
                 lineCount = lines.Length - 1;
             }
             int reflowStartingLine = 0, curLine = 0;
-            do {
+            do { 
                 string commentPrefix = GetCommentPrefix(lines[curLine]);
                 if (commentPrefix == null) {
                     // non-commented line (empty?), just append it and continue
                     // to the next comment prefix if we have one
-                    res.Append(lines[curLine] + (NewLineFormat ?? Environment.NewLine));
+                    res.Append(lines[curLine] + (curLine == lineCount - 1 ? "" : (NewLineFormat ?? Environment.NewLine)));
                     charsOnCurrentLine = GetCharsOnLastLine(res);
                     reflowStartingLine = curLine + 1;
                 } else if (curLine == lineCount - 1 || GetCommentPrefix(lines[curLine + 1]) != commentPrefix) {

@@ -446,19 +446,19 @@ namespace Microsoft.PythonTools.Parsing {
                     AddListWhiteSpace(ret, itemWhiteSpace.ToArray());
                 }
                 if (newline != null) {
-                    AddTrailingNewLine(ret, newline);
+                    _lookaheadWhiteSpace = newline + _lookaheadWhiteSpace;
                 }
                 return ret;
             } else if (MaybeEatEof()) {
             } else if (EatNewLine(out newline)) {
                 if (_verbatim) {
-                    AddTrailingNewLine(s, newline);
+                    _lookaheadWhiteSpace = newline + _lookaheadWhiteSpace;
                 }
             } else {
                 // error handling, make sure we're making forward progress
                 NextToken();
                 if (_verbatim) {
-                    AddTrailingNewLine(s, _tokenWhiteSpace + _token.Token.VerbatimImage);
+                    _lookaheadWhiteSpace = _tokenWhiteSpace + _token.Token.VerbatimImage + _lookaheadWhiteSpace;
                 }
             }
             return s;
@@ -2574,10 +2574,9 @@ namespace Microsoft.PythonTools.Parsing {
                     return ErrorStmt(_verbatim ? (colonWhiteSpace + ':' + suiteStartWhiteSpace) : null);
                 } else if (_verbatim) {
                     // indent white space belongs to the statement we're about to parse
-                    _lookaheadWhiteSpace = _tokenWhiteSpace + _token.Token.VerbatimImage +_lookaheadWhiteSpace;
+                    _lookaheadWhiteSpace = suiteStartWhiteSpace + _tokenWhiteSpace + _token.Token.VerbatimImage +_lookaheadWhiteSpace;
                 }
 
-                string trailingWhiteSpace = null;
                 while (true) {
                     Statement s = ParseStmt();
 
@@ -2595,12 +2594,6 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 }
                 ret = new SuiteStatement(l.ToArray());
-                if (_verbatim) {
-                    AddSecondPreceedingWhiteSpace(ret, suiteStartWhiteSpace);
-                    if (trailingWhiteSpace != null) {
-                        AddTrailingNewLine(ret, trailingWhiteSpace);
-                    }
-                }
             } else {
                 //  simple_stmt NEWLINE
                 //  ParseSimpleStmt takes care of the NEWLINE
@@ -5170,11 +5163,6 @@ namespace Microsoft.PythonTools.Parsing {
         private void AddExtraVerbatimText(Node ret, string text) {
             Debug.Assert(_verbatim);
             GetNodeAttributes(ret)[NodeAttributes.ExtraVerbatimText] = text;
-        }
-
-        private void AddTrailingNewLine(Node ret, string text) {
-            Debug.Assert(_verbatim);
-            GetNodeAttributes(ret)[NodeAttributes.TrailingNewLine] = text;
         }
 
         private void AddListWhiteSpace(Node ret, string[] whiteSpace) {

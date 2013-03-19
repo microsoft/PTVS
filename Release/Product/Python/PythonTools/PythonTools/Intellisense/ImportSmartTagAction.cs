@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var span = fromImport.GetSpan(curAst);
             using (var edit = _buffer.CreateEdit()) {
-                edit.Delete(span.Start.Index, span.Length + fromImport.GetTrailingWhitespace(curAst).Length);
+                edit.Delete(span.Start.Index, span.Length);
                 edit.Insert(span.Start.Index, newCode);
                 edit.Apply();
             }

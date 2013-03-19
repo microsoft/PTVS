@@ -93,5 +93,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return this.GetProceedingWhiteSpace(ast);
         }
 
+        public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            if (_sliceStart != null) {
+                _sliceStart.SetLeadingWhiteSpace(ast, whiteSpace);
+            } else {
+                base.SetLeadingWhiteSpace(ast, whiteSpace);
+            }
+        }
+
     }
 }

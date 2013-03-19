@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -60,37 +61,21 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 statements[i - start] = Statements[i];
             }
 
-
             var res = new SuiteStatement(statements);
 
             // propagate white space so we stay mostly the same...
             var itemWhiteSpace = this.GetListWhiteSpace(ast);
             var colonWhiteSpace = this.GetProceedingWhiteSpaceDefaultNull(ast);
-            if (colonWhiteSpace != null) {
-                ast.SetAttribute(res, NodeAttributes.PreceedingWhiteSpace, "");
-            } else if (itemWhiteSpace != null) {
+
+            if (itemWhiteSpace != null) {
                 // semi-colon list of statements, must end in a new line, but the original new line
                 // could be multiple lines.
                 ast.SetAttribute(res, NodeAttributes.ListWhiteSpace, new string[0]);
-                var trailingNewLine = this.GetTrailingNewLine(ast);
-                if (trailingNewLine != null) {
-                    ast.SetAttribute(res, NodeAttributes.TrailingNewLine, "\r\n");
-                }
-            }
-
-            if (this.IsAltForm(ast)) {
+            } else {
                 ast.SetAttribute(res, NodeAttributes.IsAltFormValue, NodeAttributes.IsAltFormValue);
             }
 
             return res;
-        }
-
-        /// <summary>
-        /// True if this is a suite statement which is used as the top-level suite for
-        /// a class / function definition
-        /// </summary>
-        public bool IsFunctionOrClassSuite(PythonAst ast) {
-            return !this.IsAltForm(ast) && this.GetListWhiteSpace(ast) == null;
         }
 
         internal override void AppendCodeStringStmt(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
@@ -152,14 +137,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     res.Append(colonWhiteSpace);
                 }
                 res.Append(':');
-
-                var secondWhiteSpace = this.GetSecondWhiteSpaceDefaultNull(ast);
-                if (secondWhiteSpace != null) {
-                    res.Append(secondWhiteSpace);
-                } else {
-                    res.Append("\r\n");
-                }
-
+                
                 foreach (var statement in _statements) {
                     statement.AppendCodeString(res, ast, format);
                 }
@@ -171,6 +149,12 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 return "";
             }
             return _statements[0].GetLeadingWhiteSpace(ast);
+        }
+
+        public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            if (_statements.Length != 0) {
+                _statements[0].SetLeadingWhiteSpace(ast, whiteSpace);
+            }
         }
     }
 }

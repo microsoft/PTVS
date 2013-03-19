@@ -34,20 +34,29 @@ namespace Microsoft.PythonTools.Refactoring {
             var walker = new EnclosingNodeWalker(ast, span.Start, span.End);
             ast.Walk(walker);
 
-            if (!walker.Target.IsValidSelection) {
+            if (!walker.Target.IsValidSelection || 
+                (walker.Target is SuiteTarget && _view.Selection.IsEmpty && selectResult)) {
                 return;
             }
 
             var body = walker.Target.GetNode(ast);
 
+            // remove any leading comments before round tripping, not selecting them
+            // gives a nicer overall experience, otherwise we have a selection to the
+            // previous line which only covers white space.
+            body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
+
             ITrackingSpan selectionSpan = null;
             if (selectResult) {
-                selectionSpan = _view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(span.Span, SpanTrackingMode.EdgeInclusive);
+                selectionSpan = _view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
+                    Span.FromBounds(walker.Target.StartIncludingIndentation, walker.Target.End), 
+                    SpanTrackingMode.EdgeInclusive
+                );
             }
 
             _view.ReplaceByLines(
                 body.ToCodeString(ast, _format),
-                Span.FromBounds(walker.Target.Start, walker.Target.End)
+                Span.FromBounds(walker.Target.StartIncludingIndentation, walker.Target.End)
             );
 
             if (selectResult) {

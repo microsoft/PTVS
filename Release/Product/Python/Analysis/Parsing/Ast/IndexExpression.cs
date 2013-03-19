@@ -91,5 +91,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override string GetLeadingWhiteSpace(PythonAst ast) {
             return Target.GetLeadingWhiteSpace(ast);
         }
+
+        public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            Target.SetLeadingWhiteSpace(ast, whiteSpace);
+        }
     }
 }

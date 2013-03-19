@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public void ReplaceCode() {
             using (var edit = _view.TextBuffer.CreateEdit()) {
-                var oldLineMapping = new Dictionary<string, List<int>>();   // line to line #                
+                var oldLineMapping = new Dictionary<string, List<int>>();   // line to line #
                 var oldLines = _oldCode.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 for (int i = 0; i < oldLines.Length; i++) {
                     List<int> lineInfo;
@@ -87,7 +87,8 @@ namespace Microsoft.PythonTools.Refactoring {
                     }
 
                     if (!replaced) {
-                        ReplaceLines(edit, curOldLine, _snapshot.LineCount - _startingReplacementLine, startNewLine, _newLines.Length);
+                        ReplaceLines(edit, curOldLine, oldLines.Length, startNewLine, _newLines.Length);
+                        curOldLine = oldLines.Length;
                         break;
                     }
                 }
@@ -96,8 +97,8 @@ namespace Microsoft.PythonTools.Refactoring {
                     // remove the remaining new lines
                     edit.Delete(
                         Span.FromBounds(
-                            _snapshot.GetLineFromLineNumber(curOldLine).Start,
-                            new SnapshotPoint(_snapshot, _snapshot.Length)
+                            _snapshot.GetLineFromLineNumber(curOldLine + _startingReplacementLine + 1).Start,
+                            _snapshot.GetLineFromLineNumber(oldLines.Length + _startingReplacementLine).End
                         )
                     );
                 }

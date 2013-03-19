@@ -82,6 +82,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return _target.GetLeadingWhiteSpace(ast);
         }
 
+        public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            _target.SetLeadingWhiteSpace(ast, whiteSpace);
+        }
+
         /// <summary>
         /// Returns the span of the name component of the expression
         /// </summary>

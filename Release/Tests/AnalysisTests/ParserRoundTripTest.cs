@@ -319,8 +319,8 @@ namespace AnalysisTests {
                 Console.WriteLine(preceedingText.Before);
 
                 var allSnippets =
-                    _snippets2x.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 }).Concat(
-                    _snippets3x.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
+                    TestExpressions.Snippets2x.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 }).Concat(
+                    TestExpressions.Statements3x.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
 
                 foreach (var testCase in allSnippets) {
                     Console.WriteLine(testCase);
@@ -415,6 +415,25 @@ namespace AnalysisTests {
             Assert.AreEqual(newCode, code);
         }
 
+        /// <summary>
+        /// Verify reflowing comment doesn't introduce extra new line
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void TestReflowComment4() {
+            var code = @"def f(): # foo
+    pass";
+
+            var parser = Parser.CreateParser(
+                new StringReader(code),
+                PythonLanguageVersion.V27,
+                new ParserOptions() { Verbatim = true }
+            );
+
+            var ast = parser.ParseFile();
+            var newCode = ast.ToCodeString(ast, new CodeFormattingOptions() { WrapComments = true, WrappingWidth = 20 });
+            Assert.AreEqual(newCode, code);
+        }
+
         static readonly string[] _commentInsertionSnippets = new[] {
             "class C(a, [INSERT]\r\n    b): pass",
             "class C( [INSERT]\r\n    ): pass", 
@@ -454,58 +473,6 @@ namespace AnalysisTests {
                3)"*/
         };
 
-        static readonly string[] _snippets2x = new[] { 
-                // expressions
-                "a",
-                "a()",
-                "a[42]",
-                "a + b",
-                "+a",
-                "-a",
-                "a and b",
-                "a or b",
-                "`foo`",
-                "42",
-                "'abc'",
-                "42 if True else False",
-                "{}",
-                "[]",
-                "[x for x in abc]",
-                "(x for x in abc)",
-                "lambda x: 2",
-                "a.b",
-                "(a)",
-                "()",
-                "(1, 2, 3)",
-                "1, 2, 3",
-                "yield 42",
-
-                // statements
-                "assert True",
-                "x = 42",
-                "x += 42",
-                "break",
-                "continue",
-                "def f(): pass",
-                "class C: pass",
-                "del x",
-                "pass",
-                "exec 'hello'",
-                "for i in xrange(42): pass",
-                "import foo",
-                "from foo import bar",
-                "global x",
-                "if True: pass",
-                "print abc",
-                "raise Exception()",
-                "return abc",
-                "try:\r\n    pass\r\nexcept:\r\n    pass",
-                "while True:\r\n    pass",
-                "with abc: pass",
-                "@property\r\ndef f(): pass",
-            };
-
-        static readonly string[] _snippets3x = new[] { "nonlocal foo" };
 
         /// <summary>
         /// Verifies that the proceeding white space is consistent across all nodes.
@@ -514,8 +481,8 @@ namespace AnalysisTests {
         public void TestStartWhiteSpace() {
             foreach (var preceedingText in new[] { "#foo\r\n" }) {
                 var allSnippets = 
-                    _snippets2x.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 }).Concat(
-                    _snippets3x.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
+                    TestExpressions.Snippets2x.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 }).Concat(
+                    TestExpressions.Statements3x.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
                 
                 foreach (var testCase in allSnippets) {
                     var exprText = testCase.Text;
@@ -541,7 +508,7 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TestExpressions() {            
+        public void ExpressionsTest() {            
             // TODO: Trailing white space tests
             // Unary Expressions
             TestOneString(PythonLanguageVersion.V27, "x=~42");
@@ -1060,6 +1027,11 @@ def f(): pass");
         public void TestExplicitLineJoin() {
             TestOneString(PythonLanguageVersion.V27, @"foo(4 + \
                     5)");
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestTrailingComment() {
+            TestOneString(PythonLanguageVersion.V27, "def f(): pass\r\n#foo");
         }
 
         [TestMethod, Priority(0)]

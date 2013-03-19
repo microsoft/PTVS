@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System;
+
 namespace Microsoft.PythonTools.Parsing {
     /// <summary>
     /// Specifies the version of the Python language to be used for parsing.
@@ -37,6 +39,10 @@ namespace Microsoft.PythonTools.Parsing {
 
         public static bool Is3x(this PythonLanguageVersion version) {
             return (((int)version >> 8) & 0xff) == 3;
+        }
+
+        public static Version ToVersion(this PythonLanguageVersion version) {
+            return new Version(((int)version) >> 8, ((int)version) & 0xff);
         }
     }
 }

@@ -78,5 +78,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return null;
         }
 
+        public override void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            var itemWhiteSpace = this.GetListWhiteSpace(ast);
+            if (itemWhiteSpace != null && itemWhiteSpace.Length > 0) {
+                itemWhiteSpace[0] = whiteSpace;
+            }
+        }
     }
 }

@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
                         int proceedingLength = (removed.Node.GetLeadingWhiteSpace(_ast) ?? "").Length;
                         int start = span.Start.Index - proceedingLength;
-                        int length = span.Length + removed.Node.GetTrailingWhitespace(_ast).Length + proceedingLength;
+                        int length = span.Length + proceedingLength;
 
                         edit.Delete(start, length);
                         edit.Insert(span.Start.Index, newCode);

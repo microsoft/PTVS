@@ -26,8 +26,9 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly SelectionTarget _target;
         private readonly int _indentSize;
         private readonly bool _insertTabs;
+        private readonly string _newline;
 
-        public ExtractedMethodCreator(PythonAst ast, ScopeStatement[] scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs) {
+        public ExtractedMethodCreator(PythonAst ast, ScopeStatement[] scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs, string newline) {
             _ast = ast;
             _scopes = scopes;
             _inputVars = new List<PythonVariable>(inputVariables);
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.Refactoring {
             _target = target;
             _indentSize = indentSize;
             _insertTabs = insertTabs;
+            _newline = newline;
         }
 
         private static int CompareVariables(PythonVariable left, PythonVariable right) {
@@ -102,6 +104,11 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var body = _target.GetBody(_ast);
 
+            // reset leading indentation to single newline + indentation, this
+            // strips out any proceeding comments which we don't extract
+            var leading = _newline + body.GetIndentationLevel(_ast);
+            body.SetLeadingWhiteSpace(_ast, leading);
+
             if (_outputVars.Count > 0) {
                 // need to add a return statement
                 Expression retValue;
@@ -117,27 +124,17 @@ namespace Microsoft.PythonTools.Refactoring {
                 retValue = tuple;
 
                 var retStmt = new ReturnStatement(retValue);
-                if (body is SuiteStatement) {
-                    SuiteStatement suite = (SuiteStatement)body;
-                    Node.CopyLeadingWhiteSpace(_ast, suite.Statements[0], retStmt);
-                    Node.CopyTrailingNewLine(_ast, suite.Statements[0], suite.Statements[suite.Statements.Count - 1]);
+                retStmt.SetLeadingWhiteSpace(_ast, leading);
 
-                    Statement[] statements = new Statement[suite.Statements.Count + 1];
-                    for (int i = 0; i < suite.Statements.Count; i++) {
-                        statements[i] = suite.Statements[i];
+                body = new SuiteStatement(
+                    new Statement[] { 
+                        body,
+                        retStmt
                     }
-                    statements[statements.Length - 1] = retStmt;
-                    body = new SuiteStatement(statements);
-                } else {
-                    Node.CopyLeadingWhiteSpace(_ast, body, retStmt);
-
-                    body = new SuiteStatement(
-                        new Statement[] { 
-                            body,
-                            retStmt
-                        }
-                    );
-                }
+                );
+            } else {
+                // we need a SuiteStatement to give us our colon
+                body = new SuiteStatement(new Statement[] { body });
             }
 
             DecoratorStatement decorators = null;
@@ -148,11 +145,11 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             var res = new FunctionDefinition(new NameExpression(info.Name), parameters.ToArray(), body, decorators);
-
-            StringBuilder newCall = new StringBuilder();            
+            
+            StringBuilder newCall = new StringBuilder();
             newCall.Append(_target.IndentationLevel);
             var method = res.ToCodeString(_ast);
-            
+
             // fix up indentation...
             for (int curScope = 0; curScope < _scopes.Length; curScope++) {
                 if (_scopes[curScope] == info.TargetScope) {
@@ -175,7 +172,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     newLines.Append(indentationLevel);
                     newLines.Append(lines[0]);
                     if (decorators != null) {
-                        newLines.Append("\r\n");
+                        newLines.Append(_newline);
                         newLines.Append(indentationLevel);
                         newLines.Append(lines[1]);
                     }
@@ -185,7 +182,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     for (; endLine >= 0 && String.IsNullOrWhiteSpace(lines[endLine]); endLine--) {
                     }
 
-                    newLines.Append("\r\n");
+                    newLines.Append(_newline);
                     for (int curLine = decorators == null ? 1 : 2; curLine <= endLine; curLine++) {
                         var line = lines[curLine];
 
@@ -199,9 +196,9 @@ namespace Microsoft.PythonTools.Refactoring {
                         if (line.Length > minWhiteSpace) {
                             newLines.Append(line, minWhiteSpace, line.Length - minWhiteSpace);
                         }
-                        newLines.Append("\r\n");
+                        newLines.Append(_newline);
                     }
-                    newLines.Append("\r\n");
+                    newLines.Append(_newline);
                     method = newLines.ToString();
                     break;
                 }

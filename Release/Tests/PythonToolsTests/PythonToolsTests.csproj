@@ -62,6 +62,7 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodeFormatterTests.cs" />
     <Compile Include="CommentBlockTests.cs" />
     <Compile Include="CommonUtilsTests.cs" />
     <Compile Include="CompletionContextTests.cs" />
@@ -95,6 +96,10 @@
     <ProjectReference Include="..\..\Product\Python\ReplWindow\ReplWindow.csproj">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Name>ReplWindow</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\AnalysisTests\AnalysisTests.csproj">
+      <Project>{c2c1c6a1-3c1e-45e4-9ee2-1181db641818}</Project>
+      <Name>AnalysisTests</Name>
     </ProjectReference>
     <ProjectReference Include="..\Common\TestUtilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>

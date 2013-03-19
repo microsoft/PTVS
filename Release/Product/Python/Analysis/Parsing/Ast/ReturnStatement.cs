@@ -45,16 +45,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append("return");
             if (_expression != null) {
                 int len = res.Length;
+
                 _expression.AppendCodeString(res, ast, format);
                 if (this.IsAltForm(ast)) {
-                    for (int i = len; i < res.Length; i++) {
-                        if (!Char.IsWhiteSpace(res[i])) {
-                            res.Remove(len, i - len);
-                            break;
-                        } 
-                    }
-                    
-                    // ensure a space between the return and the expression
+                    // remove the leading white space and insert a single space
+                    res.Remove(len, _expression.GetLeadingWhiteSpace(ast).Length);
                     res.Insert(len, ' ');
                 }
             }

@@ -100,6 +100,8 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
         output_png = data.get('image/png', None)
         if output_png is not None:
             try:            
+                if isinstance(output_png, str) and sys.version_info[0] >= 3:
+                    output_png = output_png.encode('ascii')
                 self._vs_backend.write_png(decodestring(output_png))
                 self._vs_backend.write_stdout('\n') 
                 return

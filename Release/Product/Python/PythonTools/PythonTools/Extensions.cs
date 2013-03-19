@@ -511,9 +511,8 @@ namespace Microsoft.PythonTools {
             return Task.Factory.StartNew(func, default(CancellationToken), TaskCreationOptions.None, scheduler);
         }
 
-        internal static int GetStartIncludingWhiteSpace(this Node self, PythonAst ast) {
-            return self.StartIndex - (self.GetLeadingWhiteSpace(ast) ?? "").Length;
+        internal static int GetStartIncludingIndentation(this Node self, PythonAst ast) {
+            return self.StartIndex - (self.GetIndentationLevel(ast) ?? "").Length;
         }
-
     }
 }

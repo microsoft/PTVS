@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     if (_targetNode != null) {
                         // we have found our extracted code below this,
                         // we should insert before this statement.
-                        _insertLocations[_parents[_parents.Count - 1]] = stmt.GetStartIncludingWhiteSpace(_root);
+                        _insertLocations[_parents[_parents.Count - 1]] = stmt.GetStartIncludingIndentation(_root);
                         break;
                     }
                 }
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     }
                 }
                 for (int i = node.Statements.Count - 1; i >= 0; i--) {
-                    if (node.Statements[i].StartIndex < _selectedSpan.End) {
+                    if (node.Statements[i].StartIndex <= _selectedSpan.End) {
                         endIndex = i;
                         break;
                     }
@@ -109,8 +109,8 @@ namespace Microsoft.PythonTools.Refactoring {
                     endIndex
                 );
                 _insertLocations[_parents[_parents.Count - 1]] = node.Statements.Count == 0 ?
-                    node.GetStartIncludingWhiteSpace(_root) :
-                    node.Statements[startIndex].GetStartIncludingWhiteSpace(_root);
+                    node.GetStartIncludingIndentation(_root) :
+                    node.Statements[startIndex].GetStartIncludingIndentation(_root);
             }
         }
 

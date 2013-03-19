@@ -61,11 +61,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public static readonly object ExtraVerbatimText = new object();
 
         /// <summary>
-        /// Stores the trailing new line for statements
-        /// </summary>
-        public static readonly object TrailingNewLine = new object();
-
-        /// <summary>
         /// The tuple expression was constructed without parenthesis.  The value doesn't matter, only the
         /// presence of the metadata indicates the value is set.
         /// </summary>
@@ -153,10 +148,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return GetWhiteSpace(node, ast, NodeAttributes.ExtraVerbatimText, null);
         }
 
-        public static string GetTrailingNewLine(this Node node, PythonAst ast) {
-            return GetWhiteSpace(node, ast, NodeAttributes.TrailingNewLine, null);
-        }
-
         public static bool IsAltForm(this Node node, PythonAst ast) {
             object dummy;
             if (ast.TryGetAttribute(node, NodeAttributes.IsAltFormValue, out dummy)) {
@@ -219,24 +210,5 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 return null;
             }
         }
-
-        public static void AppendTrailingNewLine(this Statement node, StringBuilder res, PythonAst ast) {
-            var trailingNewLine = node.GetTrailingNewLine(ast);
-            if (trailingNewLine != null) {
-                res.Append(trailingNewLine);
-            }
-        }
-
-        public static void AppendTrailingNewLine(this Statement node, StringBuilder res, PythonAst ast, CodeFormattingOptions options) {
-            if (options == null) {
-                AppendTrailingNewLine(node, res, ast);
-            } else {
-                var trailingNewLine = node.GetTrailingNewLine(ast);
-                if (trailingNewLine != null) {
-                    options.ReflowComment(res, trailingNewLine);
-                }
-            }
-        }
     }
-
 }

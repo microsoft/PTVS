@@ -75,10 +75,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             parentNode.SetAttribute(toNode, NodeAttributes.PreceedingWhiteSpace, fromNode.GetLeadingWhiteSpace(parentNode));
         }
 
-        public static void CopyTrailingNewLine(PythonAst parentNode, Node fromNode, Node toNode) {
-            parentNode.SetAttribute(toNode, NodeAttributes.TrailingNewLine, fromNode.GetTrailingNewLine(parentNode));
-        }
-
         /// <summary>
         /// Returns the proceeeding whitespace (newlines and comments) that
         /// shows up before this node.
@@ -87,6 +83,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// </summary>
         public virtual string GetLeadingWhiteSpace(PythonAst ast) {
             return this.GetProceedingWhiteSpaceDefaultNull(ast) ?? "";
+        }
+
+        /// <summary>
+        /// Sets the proceeding whitespace (newlines and comments) that shows up
+        /// before this node.
+        /// </summary>
+        /// <param name="ast"></param>
+        /// <param name="whiteSpace"></param>
+        public virtual void SetLeadingWhiteSpace(PythonAst ast, string whiteSpace) {
+            ast.SetAttribute(this, NodeAttributes.PreceedingWhiteSpace, whiteSpace);
         }
 
         /// <summary>
