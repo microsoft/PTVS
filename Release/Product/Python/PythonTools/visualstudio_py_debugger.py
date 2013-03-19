@@ -36,11 +36,6 @@ except ImportError:
 from os import path
 
 try:
-    import stackless
-except ImportError:
-    stackless = None
-
-try:
     xrange
 except:
     xrange = range
@@ -90,7 +85,7 @@ class _SendLockContextManager(object):
     def __enter__(self):
         send_lock.acquire()
 
-    def __exit__(self, exc_type, exc_value, tb):
+    def __exit__(self, exc_type, exc_value, tb):        
         send_lock.release()
         if exc_type is not None:
             detach_threads()
@@ -461,34 +456,6 @@ class Thread(object):
         self.trace_func_stack = []
         self.reported_process_loaded = False
         self.django_stepping = None
-
-        # stackless changes
-        if stackless is not None:
-            stackless.set_schedule_callback(self.context_dispatcher)
-            # the tasklets need to be traced on a case by case basis
-            # sys.trace needs to be called within their calling context
-            def __call__(tsk, *args, **kwargs):
-                f = tsk.tempval
-                def new_f(old_f, args, kwargs):
-                    sys.settrace(self.trace_func)
-                    try:
-                        if old_f is not None:
-                            return old_f(*args, **kwargs)
-                    finally:
-                        sys.settrace(None)
-
-                tsk.tempval = new_f
-                stackless.tasklet.setup(tsk, f, args, kwargs)
-                return tsk
-    
-            def settrace(tsk, tb):
-                if hasattr(tsk.frame, "f_trace"):
-                    tsk.frame.f_trace = tb
-                sys.settrace(tb)
-
-            self.__oldstacklesscall__ = stackless.tasklet.__call__
-            stackless.tasklet.settrace = settrace
-            stackless.tasklet.__call__ = __call__
         if sys.platform == 'cli':
             self.frames = []
     
@@ -509,36 +476,18 @@ class Thread(object):
         def pop_frame(self):
             self.cur_frame = self.cur_frame.f_back
 
-    def context_dispatcher(self, old, new):
-        self.stepping = STEPPING_NONE
-        # for those tasklets that started before we started tracing
-        # we need to make sure that the trace is set by patching
-        # it in the context switch
-        if not old:
-            pass # starting new
-        elif not new:
-            pass # killing prev
-        else:
-            if hasattr(new.frame, "f_trace") and not new.frame.f_trace:
-                sys.call_tracing(new.settrace,(self.trace_func,))
-
     def trace_func(self, frame, event, arg):
         # If we're so far into process shutdown that sys is already gone, just stop tracing.
         if sys is None:
             return None
 
         try:
-            # if should_debug_code(frame.f_code) is not true during attach
-            # the current frame is None and a pop_frame will cause an exception and 
-            # break the debugger
-            if self.cur_frame is None:
-                # happens during attach, we need frame for blocking
-                self.push_frame(frame)
             if self.stepping == STEPPING_BREAK and should_debug_code(frame.f_code):
+                if self.cur_frame is None:
+                    # happens during attach, we need frame for blocking
+                    self.push_frame(frame)
+
                 if self.detach:
-                    if stackless is not None:
-                        stackless.set_schedule_callback(None)
-                        stackless.tasklet.__call__ = self.__oldstacklesscall__
                     sys.settrace(None)
                     return None
 

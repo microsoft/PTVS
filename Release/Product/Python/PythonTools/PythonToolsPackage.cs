@@ -473,7 +473,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     return ((CommonPackage)Instance).UserRegistryRoot;
                 }
 
-#if DEV11
+#if DEV12
+                return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
+#elif DEV11
                 return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
 #else
                 return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
@@ -488,7 +490,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 }
 
 
-#if DEV11
+#if DEV12
+                return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
+#elif DEV11
                 return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
 #else
                 return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");

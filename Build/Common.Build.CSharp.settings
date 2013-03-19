@@ -30,10 +30,14 @@
     <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(VSTarget)' == '12.0' ">
+    <DefineConstants>$(DefineConstants);DEV12;DEV11</DefineConstants>
+  </PropertyGroup>
+  
   <PropertyGroup Condition=" '$(VSTarget)' == '11.0' ">
     <DefineConstants>$(DefineConstants);DEV11</DefineConstants>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <VSCTDefinitions Condition="'$(VSTarget)' != '10.0'">DEV11</VSCTDefinitions>
   </PropertyGroup>

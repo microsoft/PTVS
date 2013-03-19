@@ -39,7 +39,9 @@ namespace TestUtilities
         public const string VSAddInName = "TcVsIdeTestHost";
 
         private static readonly string ProgId = "VisualStudio.DTE." + Version;
-#if DEV11
+#if DEV12
+        public static readonly string Version = "12.0";
+#elif DEV11
         public static readonly string Version = "11.0";
 #else
         public static readonly string Version = "10.0";

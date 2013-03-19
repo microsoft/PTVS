@@ -556,17 +556,19 @@
             bitmap strip containing the bitmaps and then there are the numeric ids of the elements used 
             inside a button definition. An important aspect of this declaration is that the element id 
             must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
-      <Bitmap guid="guidImages" href="..\Icons\Dev10.0\Images_32bit.bmp" usedList="ipyReplPic, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, ipyDebugRepl"
+      <Bitmap guid="guidImages" href="..\Icons\Dev12.0\Images_32bit.bmp" usedList="ipyReplPic, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, ipyDebugRepl"
+              Condition="Defined(DEV12)"/>
+      <Bitmap guid="guidImages" href="..\Icons\Dev11.0\Images_32bit.bmp" usedList="ipyReplPic, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, ipyDebugRepl"
+              Condition="!Defined(DEV12) and Defined(DEV11)"/>
+      <Bitmap guid="guidImages" href="..\Icons\Dev10.0\Images_32bit.png" usedList="ipyReplPic, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, ipyDebugRepl"
               Condition="!Defined(DEV11)"/>
 
-      <Bitmap guid="guidImages" href="..\Icons\Dev11.0\Images_32bit.png" usedList="ipyReplPic, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows, ipyDebugRepl"
-              Condition="Defined(DEV11)"/>
-
+      <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev12.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"
+              Condition="Defined(DEV12)"/>
+      <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev11.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"
+              Condition="!Defined(DEV12) and Defined(DEV11)"/>
       <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev10.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"
               Condition="!Defined(DEV11)"/>
-
-      <Bitmap guid="guidImagesRefactoring" href="..\Icons\Dev11.0\Refactoring_Commands.bmp" usedList="imgRemoveUsing, imgSortUsings"
-              Condition="Defined(DEV11)"/>
     </Bitmaps>
   </Commands>
 

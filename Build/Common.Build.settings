@@ -20,6 +20,7 @@
     <CodeCoverageEnabled Condition="'$(CodeCoverageEnabled)'==''">true</CodeCoverageEnabled>
 
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='12.0'">12.0</VSTarget>
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
     <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
     <TargetFrameworkVersion Condition="'$(VSTarget)' == '10.0'">v4.0</TargetFrameworkVersion>

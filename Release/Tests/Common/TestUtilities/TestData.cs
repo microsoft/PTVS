@@ -29,7 +29,9 @@ namespace TestUtilities {
 #else
             @"Release" + 
 #endif
-#if DEV11
+#if DEV12
+            @"12.0";
+#elif DEV11
             @"11.0";
 #else
             @"10.0";

@@ -67,6 +67,8 @@ try {
         }
     }
     
+    $dev12InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\12.0" -name InstallDir -EA 0
+    $dev12InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\12.0" -name InstallDir -EA 0
     $dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
     $dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
     $dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir -EA 0
@@ -74,6 +76,13 @@ try {
     
     $targetVersions = New-Object System.Collections.ArrayList($null)
     
+    if ($dev12InstallDir64 -or $dev12InstallDir) {
+        if (-not $vsTarget -or $vsTarget -eq "12.0") {
+            echo "Will build for VS DEV12"
+            $targetVersions.Add(@{number="12.0"; name="VS DEV12"}) | Out-Null
+        }
+    }
+
     if ($dev11InstallDir64 -or $dev11InstallDir) {
         if (-not $vsTarget -or $vsTarget -eq "11.0") {
             echo "Will build for VS 2012"
