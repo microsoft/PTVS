@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                     if (commonNode != null && commonNode.CanGoToSource) {
                         descrItems.Add(new DescriptionItem(
                             Array.AsReadOnly(new[] { new DescriptionRun("Line:", bold: true) }),
-                            Array.AsReadOnly(new[] { new DescriptionRun(commonNode.SourceSpan.iStartLine.ToString()) })));
+                            Array.AsReadOnly(new[] { new DescriptionRun((commonNode.SourceSpan.iStartLine + 1).ToString()) })));
                     }
                 }
             }

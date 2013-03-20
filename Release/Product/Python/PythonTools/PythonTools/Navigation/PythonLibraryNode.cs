@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Navigation {
                     ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
                     if (defaultValue != null) {
                         // FIXME: Use python repr
-                        name = name + " = " + defaultValue.ToString(); //PythonOps.Repr(DefaultContext.Default, defaultValue.Value);
+                        name = name + " = " + defaultValue.GetConstantRepr(def.GlobalParent.LanguageVersion);
                     }
                 }
 

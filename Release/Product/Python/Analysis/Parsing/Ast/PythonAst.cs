@@ -23,15 +23,17 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     /// Top-level ast for all Python code.  Holds onto the body and the line mapping information.
     /// </summary>
     public sealed class PythonAst : ScopeStatement, ILocationResolver {
+        private readonly PythonLanguageVersion _langVersion;
         private readonly Statement _body;
         internal readonly int[] _lineLocations;
         private readonly Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();
         private string _privatePrefix;
 
-        public PythonAst(Statement body, int[] lineLocations) {
+        public PythonAst(Statement body, int[] lineLocations, PythonLanguageVersion langVersion) {
             if (body == null) {
                 throw new ArgumentNullException("body");
             }
+            _langVersion = langVersion;
             _body = body;
             _lineLocations = lineLocations;
         }
@@ -64,6 +66,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public override Statement Body {
             get { return _body; }
+        }
+
+        public PythonLanguageVersion LanguageVersion {
+            get { return _langVersion; }
         }
 
         internal bool TryGetAttribute(Node node, object key, out object value) {

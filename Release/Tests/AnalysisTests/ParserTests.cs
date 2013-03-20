@@ -576,7 +576,7 @@ namespace AnalysisTests {
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
-                        CheckConstantStmt("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A"),
+                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "u'\\\\\\'\"\\a\\b\\f\\n\\r\\t\u2026\\v\x2A\x2A'", PythonLanguageVersion.V27),
                         IgnoreStmt(), // u'\N{COLON}',
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
@@ -659,7 +659,7 @@ namespace AnalysisTests {
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
-                        CheckConstantStmt("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A"),
+                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "'\\\\\\'\"\\a\\b\\f\\n\\r\\t\u2026\\v\x2A\x2A'", PythonLanguageVersion.V33),
                         IgnoreStmt()  // u'\N{COLON}'
                     )
                 );
@@ -2649,6 +2649,10 @@ namespace AnalysisTests {
             return CheckExprStmt(CheckConstant(value));
         }
 
+        private static Action<Statement> CheckConstantStmtAndRepr(object value, string repr, PythonLanguageVersion ver) {
+            return CheckExprStmt(CheckConstant(value, repr, ver));
+        }
+
         private static Action<Statement> CheckLambdaStmt(Action<Parameter>[] args, Action<Expression> body) {
             return CheckExprStmt(CheckLambda(args, body));
         }
@@ -3104,7 +3108,7 @@ namespace AnalysisTests {
             };
         }
 
-        private static Action<Expression> CheckConstant(object value) {
+        private static Action<Expression> CheckConstant(object value, string expectedRepr = null, PythonLanguageVersion ver = PythonLanguageVersion.V27) {
             return expr => {
                 Assert.AreEqual(typeof(ConstantExpression), expr.GetType());
 
@@ -3119,6 +3123,10 @@ namespace AnalysisTests {
                     }
                 } else {
                     Assert.AreEqual(value, ((ConstantExpression)expr).Value);
+                }
+
+                if (expectedRepr != null) {
+                    Assert.AreEqual(expectedRepr, ((ConstantExpression)expr).GetConstantRepr(ver));
                 }
             };
         }

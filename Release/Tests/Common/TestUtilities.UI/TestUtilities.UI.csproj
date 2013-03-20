@@ -98,6 +98,7 @@
     <Compile Include="UI\MenuItem.cs" />
     <Compile Include="UI\MessageBoxButton.cs" />
     <Compile Include="UI\Mouse.cs" />
+    <Compile Include="UI\NavigateToDialog.cs" />
     <Compile Include="UI\NewItemDialog.cs" />
     <Compile Include="UI\NewProjectDialog.cs" />
     <Compile Include="UI\ObjectBrowser.cs" />

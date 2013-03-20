@@ -72,6 +72,14 @@ namespace TestUtilities.UI {
             Dte.ExecuteCommand("View.ObjectBrowser");
         }
 
+        /// <summary>
+        /// Opens and activates the Navigate To window.
+        /// </summary>
+        public NavigateToDialog OpenNavigateTo() {
+            ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Edit.NavigateTo"));
+            return new NavigateToDialog(WaitForDialog());
+        }
+
         public SaveDialog SaveAs() {
             ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("File.SaveSelectedItemsAs"));
             return new SaveDialog(WaitForDialog());

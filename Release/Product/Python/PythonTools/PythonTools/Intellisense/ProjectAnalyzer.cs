@@ -683,7 +683,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         foreach (var ast in asts) {
                             bodies.Add(ast.Body);
                         }
-                        finalAst = new PythonAst(new SuiteStatement(bodies.ToArray()), new int[0]);
+                        finalAst = new PythonAst(new SuiteStatement(bodies.ToArray()), new int[0], asts[0].LanguageVersion);
                     }
 
                     pyProjEntry.UpdateTree(finalAst, new SnapshotCookie(snapshots[0])); // SnapshotCookie is not entirely right, we should merge the snapshots

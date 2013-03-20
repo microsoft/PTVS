@@ -19,28 +19,21 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
 
-namespace PythonToolsUITests
-{
+namespace PythonToolsUITests {
     [TestClass]
-    public class ObjectBrowerTest
-    {
+    public class ObjectBrowerTest {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
 
         [TestCleanup]
-        public void MyTestCleanup()
-        {
-            for (int i = 0; i < 100; i++)
-            {
-                try
-                {
+        public void MyTestCleanup() {
+            for (int i = 0; i < 100; i++) {
+                try {
                     VsIdeTestHostContext.Dte.Solution.Close(false);
                     break;
-                }
-                catch
-                {
+                } catch {
                     VsIdeTestHostContext.Dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
                     System.Threading.Thread.Sleep(200);
                 }
@@ -49,8 +42,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserBasicTest()
-        {
+        public void ObjectBrowserBasicTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Outlining.sln");
             System.Threading.Thread.Sleep(1000);
@@ -61,27 +53,26 @@ namespace PythonToolsUITests
 
             int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
             Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
-            
+
             string str = objectBrowser.TypeBrowserPane.Nodes[0].Value;
             Assert.AreEqual("Program.py", str, "");
-            
-            objectBrowser.TypeBrowserPane.Nodes[0].Select();            
+
+            objectBrowser.TypeBrowserPane.Nodes[0].Select();
             System.Threading.Thread.Sleep(1000);
 
             nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
             Assert.AreEqual(1, nodeCount, "Node Count: " + nodeCount.ToString());
-                        
+
             str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
             Assert.AreEqual("f()", str.Trim(), "");
-                        
+
             str = objectBrowser.DetailPane.Value;
             Assert.AreEqual("Program.py", str.Trim(), "");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserSearchTextTest()
-        {
+        public void ObjectBrowserSearchTextTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Outlining.sln");
             System.Threading.Thread.Sleep(1000);
@@ -107,16 +98,13 @@ namespace PythonToolsUITests
 
             nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
             Assert.IsTrue(nodeCount >= 1, "Node count: " + nodeCount.ToString());
-            if (objectBrowser.TypeBrowserPane.Nodes[0].Value.ToLower().Contains("namespace"))
-            {
+            if (objectBrowser.TypeBrowserPane.Nodes[0].Value.ToLower().Contains("namespace")) {
                 objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
                 System.Threading.Thread.Sleep(1000);
                 Assert.AreEqual("f", objectBrowser.TypeBrowserPane.Nodes[1].Value.Trim(), "");
                 objectBrowser.TypeBrowserPane.Nodes[1].Select();
                 System.Threading.Thread.Sleep(1000);
-            }
-            else
-            {
+            } else {
                 Assert.AreEqual("f", objectBrowser.TypeBrowserPane.Nodes[0].Value.Trim(), "");
             }
 
@@ -138,8 +126,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserExpandTypeBrowserTest()
-        {
+        public void ObjectBrowserExpandTypeBrowserTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Inheritance.sln");
             System.Threading.Thread.Sleep(1000);
@@ -169,8 +156,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserCommentsTest()
-        {
+        public void ObjectBrowserCommentsTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Inheritance.sln");
             System.Threading.Thread.Sleep(1000);
@@ -203,7 +189,7 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
 
             nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-            Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());            
+            Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
             str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
             Assert.IsTrue(str.Trim().StartsWith("__init__(self"), str);
             str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
@@ -226,8 +212,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserInheritanceRelationshipTest()
-        {
+        public void ObjectBrowserInheritanceRelationshipTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Inheritance.sln");
             System.Threading.Thread.Sleep(1000);
@@ -241,7 +226,7 @@ namespace PythonToolsUITests
 
             string str = objectBrowser.TypeBrowserPane.Nodes[0].Value;
             Assert.AreEqual("Program.py", str, "");
-            
+
             objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
             System.Threading.Thread.Sleep(1000);
 
@@ -274,12 +259,11 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserNavigationTest()
-        {
+        public void ObjectBrowserNavigationTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\MultiModule.sln");
             System.Threading.Thread.Sleep(1000);
-            
+
             app.OpenObjectBrowser();
             var objectBrowser = app.ObjectBrowser;
             System.Threading.Thread.Sleep(1000);
@@ -330,8 +314,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserContextMenuBasicTest()
-        {
+        public void ObjectBrowserContextMenuBasicTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\MultiModule.sln");
             System.Threading.Thread.Sleep(1000);
@@ -357,7 +340,7 @@ namespace PythonToolsUITests
             Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
 
             objectBrowser.TypeBrowserPane.Nodes[0].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);            
+            System.Threading.Thread.Sleep(1000);
             Condition con = new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
                                     "ContextMenu"
@@ -377,7 +360,7 @@ namespace PythonToolsUITests
             Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
 
             objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);           
+            System.Threading.Thread.Sleep(1000);
             el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
             Assert.IsNotNull(el);
             menu = new Menu(el);
@@ -395,7 +378,7 @@ namespace PythonToolsUITests
             Assert.AreEqual("Sort By Object Access", menu.Items[9].Value.Trim(), "");
             Assert.AreEqual("Group By Object Type", menu.Items[10].Value.Trim(), "");
             Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
-                        
+
             objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
             System.Threading.Thread.Sleep(1000);
             objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
@@ -404,8 +387,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserTypeBrowserViewTest()
-        {
+        public void ObjectBrowserTypeBrowserViewTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\MultiModule.sln");
             System.Threading.Thread.Sleep(1000);
@@ -421,7 +403,7 @@ namespace PythonToolsUITests
             Assert.AreEqual("MyModule.py", str, "");
             str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
             Assert.AreEqual("Program.py", str, "");
-                        
+
             objectBrowser.TypeBrowserPane.Nodes[0].ShowContextMenu();
             System.Threading.Thread.Sleep(1000);
             Condition con = new PropertyCondition(
@@ -435,12 +417,12 @@ namespace PythonToolsUITests
             Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
             menu.Items[1].Check();
             System.Threading.Thread.Sleep(1000);
-            
+
             nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
             Assert.AreEqual(8, nodeCount, "Node count: " + nodeCount.ToString());
 
             objectBrowser.TypeBrowserPane.Nodes[0].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);            
+            System.Threading.Thread.Sleep(1000);
             el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
             Assert.IsNotNull(el);
             menu = new Menu(el);
@@ -456,8 +438,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserTypeBrowserSortTest()
-        {
+        public void ObjectBrowserTypeBrowserSortTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\MultiModule.sln");
             System.Threading.Thread.Sleep(1000);
@@ -525,7 +506,7 @@ namespace PythonToolsUITests
 
             nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
             Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
-            
+
             objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
             System.Threading.Thread.Sleep(1000);
             objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
@@ -553,8 +534,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserNavigateVarContextMenuTest()
-        {
+        public void ObjectBrowserNavigateVarContextMenuTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\MultiModule.sln");
             System.Threading.Thread.Sleep(1000);
@@ -600,10 +580,10 @@ namespace PythonToolsUITests
             Assert.AreEqual(14, lineNo, "Line number: " + lineNo.ToString());
 
             objectBrowser.TypeBrowserPane.Nodes[4].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);            
+            System.Threading.Thread.Sleep(1000);
             el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
             Assert.IsNotNull(el);
-            menu = new Menu(el);            
+            menu = new Menu(el);
             menu.Items[0].Check();
             System.Threading.Thread.Sleep(1000);
 
@@ -618,8 +598,7 @@ namespace PythonToolsUITests
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserFindAllReferencesTest()
-        {
+        public void ObjectBrowserFindAllReferencesTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\MultiModule.sln");
             System.Threading.Thread.Sleep(1000);
@@ -657,19 +636,19 @@ namespace PythonToolsUITests
             Assert.AreEqual(11, itemCount, "Item count: " + itemCount.ToString());
             menu.Items[3].Check();
             System.Threading.Thread.Sleep(1000);
-            
+
             //this needs to be updated for bug #4840
             str = app.Dte.ActiveWindow.Caption;
             Assert.IsTrue(str.Contains("2 matches found"), str);
 
             objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);            
+            System.Threading.Thread.Sleep(1000);
             el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
             Assert.IsNotNull(el);
-            menu = new Menu(el);            
+            menu = new Menu(el);
             menu.Items[3].Check();
             System.Threading.Thread.Sleep(1000);
-                        
+
             str = app.Dte.ActiveWindow.Caption;
             Assert.IsTrue(str.Contains("2 matches found"), str);
 
@@ -677,6 +656,34 @@ namespace PythonToolsUITests
             System.Threading.Thread.Sleep(1000);
             objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
             System.Threading.Thread.Sleep(1000);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void NavigateTo() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            VsIdeTestHostContext.Dte.Solution.Open(TestData.GetPath(@"TestData\Navigation.sln"));
+            Assert.IsTrue(VsIdeTestHostContext.Dte.Solution.IsOpen, "The solution is not open");
+            var dialog = app.OpenNavigateTo();
+
+            dialog.SearchTerm = "Class";
+            Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
+            dialog.Close();
+
+            dialog = app.OpenNavigateTo();
+            dialog.SearchTerm = "cls";
+            Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
+            dialog.Close();
+
+            dialog = app.OpenNavigateTo();
+            dialog.SearchTerm = "func";
+            Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
+            dialog.Close();
+
+            dialog = app.OpenNavigateTo();
+            dialog.SearchTerm = "fn";
+            Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
+            dialog.Close();
         }
     }
 }

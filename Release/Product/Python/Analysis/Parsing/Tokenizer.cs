@@ -84,6 +84,12 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
+        public PythonLanguageVersion LanguageVersion {
+            get {
+                return _langVersion;
+            }
+        }
+
         /// <summary>
         /// Get all tokens over a block of the stream.
         /// </summary>
