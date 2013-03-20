@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static bool IsAdvanced(Completion comp) {
-            return comp.InsertionText.StartsWith("__") && comp.InsertionText.EndsWith("__");
+            return comp.DisplayText.StartsWith("__") && comp.DisplayText.EndsWith("__");
         }
 
         /// <summary>
@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (_shouldHideAdvanced && IsAdvanced(c) && !text.StartsWith("__")) {
                         c.Visible = false;
                     } else if (_shouldFilter) {
-                        c.Visible = _comparer.IsCandidateMatch(c.InsertionText, text);
+                        c.Visible = _comparer.IsCandidateMatch(c.DisplayText, text);
                     } else {
                         c.Visible = true;
                     }
@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // Using the Completions property to only search through visible
             // completions.
             foreach (var comp in Completions) {
-                int value = _comparer.GetSortKey(comp.InsertionText, text);
+                int value = _comparer.GetSortKey(comp.DisplayText, text);
                 if (bestMatch == null || value > bestValue) {
                     bestMatch = comp;
                     bestValue = value;
@@ -289,6 +289,33 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _previousSelection = bestMatch;
+        }
+
+        internal bool SelectSingleBest() {
+            var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
+
+            Completion bestMatch = null;
+
+            // Using the _completions field to search through all completions
+            // and ignore filtering settings.
+            foreach (var comp in _completions) {
+                if (_comparer.IsCandidateMatch(comp.DisplayText, text)) {
+                    if (bestMatch == null) {
+                        bestMatch = comp;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+
+            if (bestMatch != null) {
+                SelectionStatus = new CompletionSelectionStatus(bestMatch,
+                    isSelected: true,
+                    isUnique: true);
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 }

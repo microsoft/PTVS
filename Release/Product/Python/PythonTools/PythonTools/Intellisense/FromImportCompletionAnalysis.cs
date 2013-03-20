@@ -25,43 +25,76 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
 namespace Microsoft.PythonTools.Intellisense {
+    internal class ImportKeywordCompletionAnalysis : CompletionAnalysis {
+        public ImportKeywordCompletionAnalysis(ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
+            : base(span, buffer, options) { }
+
+        public override CompletionSet GetCompletions(IGlyphService glyphService) {
+            var completion = new[] { PythonCompletion(glyphService, "import", null, StandardGlyphGroup.GlyphKeyword) };
+            return new FuzzyCompletionSet("PythonImportKeyword", "Python", Span, completion, _options, CompletionComparer.UnderscoresLast);
+        }
+    }
+
     /// <summary>
     /// Provides the completion context for when the user is doing an "import from"
     /// </summary>
     internal class FromImportCompletionAnalysis : CompletionAnalysis {
         private readonly string[] _namespace;
-        private readonly bool _modulesOnly;
-        private readonly bool _noCompletions;
-        private readonly bool _importKeywordOnly;
         private readonly bool _includeStar;
 
-        public FromImportCompletionAnalysis(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+        private FromImportCompletionAnalysis(string[] ns, bool includeStar, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
             : base(span, textBuffer, options) {
-            
-            Debug.Assert(tokens[0].Span.GetText() == "from");
 
+            _namespace = ns;
+            _includeStar = includeStar;
+        }
+
+        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+            Debug.Assert(tokens[0].Span.GetText() == "from");
             int beforeImportToken = tokens
-                .TakeWhile(tok => !(tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) && tok.Span.GetText() == "import"))
+                .TakeWhile(tok => !IsKeyword(tok, "import"))
                 .Count();
 
-            bool lastIsDot = tokens.Last().ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Dot);
-            _modulesOnly = beforeImportToken == tokens.Count;
-            _noCompletions = !_modulesOnly && lastIsDot;
-            _includeStar = beforeImportToken == tokens.Count - 1;
-
-            if (beforeImportToken >= 2) {
-                // If there are at least two tokens ('from' <name>) before the
-                // 'import' token, use completions from that package.
-                if (beforeImportToken < tokens.Count || lastIsDot) {
-                    _namespace = tokens
-                        .Take(beforeImportToken)
-                        .Where(tok => tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier))
-                        .Select(tok => tok.Span.GetText())
-                        .ToArray();
+            if (beforeImportToken == tokens.Count) {
+                if (tokens.Last().ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                    return new ImportKeywordCompletionAnalysis(span, textBuffer, options);
                 } else {
-                    _importKeywordOnly = true;
+                    return new ImportCompletionAnalysis(tokens, span, textBuffer, options);
                 }
             }
+
+            if (tokens.Last().ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                return EmptyCompletionContext;
+            }
+
+            if (tokens.Take(tokens.Count - 1).Any(tok => tok != null && tok.Span != null && tok.Span.GetText() == "*")) {
+                return EmptyCompletionContext;
+            }
+
+            var ns = new List<string>();
+            bool expectDot = false;
+            foreach (var tok in tokens.Take(beforeImportToken).Skip(1)) {
+                if (expectDot) {
+                    if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Dot)) {
+                        expectDot = false;
+                    } else {
+                        return EmptyCompletionContext;
+                    }
+                } else if (tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                    ns.Add(tok.Span.GetText());
+                    expectDot = true;
+                } else {
+                    return EmptyCompletionContext;
+                }
+            }
+
+            if (!expectDot) {
+                return EmptyCompletionContext;
+            }
+
+            bool includeStar = IsKeyword(tokens.Last(), "import");
+
+            return new FromImportCompletionAnalysis(ns.ToArray(), includeStar, span, textBuffer, options);
         }
 
         private static string GetText(ITextSnapshot snapshot, ClassificationSpan start, ClassificationSpan target, bool includeEnd) {
@@ -72,16 +105,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
-            if (_noCompletions) {
-                return null;
-            }
-            if (_importKeywordOnly) {
-                var completion = new[] { PythonCompletion(glyphService, "import", null, StandardGlyphGroup.GlyphKeyword) };
-                return new FuzzyCompletionSet("PythonImportKeyword", "Python", Span, completion, _options, CompletionComparer.UnderscoresLast);
-            }
-
             var start = _stopwatch.ElapsedMilliseconds;
-            var completions = GetModules(_namespace, _modulesOnly).Select(m => PythonCompletion(glyphService, m));
+            var completions = GetModules(_namespace, false).Select(m => PythonCompletion(glyphService, m));
 
             if (_includeStar) {
                 var completion = new[] { PythonCompletion(glyphService, "*", "Import all members from the module", StandardGlyphGroup.GlyphArrow) };
@@ -97,16 +122,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return res;
-        }
-        
-        private IEnumerable<DynamicallyVisibleCompletion> FromCompletions(IGlyphService glyphService, IEnumerable<DynamicallyVisibleCompletion> inputs) {
-            foreach (var input in inputs) {
-                if (input.InsertionText.IndexOf('.') == -1) {
-                    yield return input;
-                }
-            }
-
-            yield return PythonCompletion(glyphService, "*", "Import all members from the module", StandardGlyphGroup.GlyphArrow);
         }
     }
 }

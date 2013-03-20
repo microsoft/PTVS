@@ -951,7 +951,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (CompletionAnalysis.IsKeyword(first, "import")) {
                     return new ImportCompletionAnalysis(tokens, span, buffer, options);
                 } else if (CompletionAnalysis.IsKeyword(first, "from")) {
-                    return new FromImportCompletionAnalysis(tokens, span, buffer, options);
+                    return FromImportCompletionAnalysis.Make(tokens, span, buffer, options);
                 }
                 return null;
             } else if (snapshot.IsReplBufferWithCommand()) {

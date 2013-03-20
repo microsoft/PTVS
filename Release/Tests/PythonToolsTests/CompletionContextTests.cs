@@ -87,7 +87,7 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_CtrlSpace() {
+        public void CtrlSpaceCompletions() {
             string code = @"def f(param1, param2):
     g()";
 
@@ -123,7 +123,7 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_Keywords() {
+        public void KeywordCompletions() {
             string code = @"";
 
             var completionList = GetCompletionSetCtrlSpace(0, code).Completions.Select(x => x.DisplayText).ToArray();
@@ -154,7 +154,7 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_KeywordOrIdentifier() {
+        public void KeywordOrIdentifierCompletions() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
 def h():
@@ -192,7 +192,7 @@ yield_expression = 42
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_CtrlSpaceAfterKeyword() {
+        public void CtrlSpaceAfterKeyword() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
 def h():
@@ -217,7 +217,7 @@ print
 
 
         [TestMethod, Priority(0)]
-        public void Scenario_Exceptions() {
+        public void ExceptionCompletions() {
             foreach (string code in new[] { 
                 @"raise None", 
                 @"try:
@@ -256,7 +256,7 @@ except (None)"}) {
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_MemberCompletion() {
+        public void MemberCompletions() {
             // TODO: Negative tests
             //       Import / from import tests
             MemberCompletionTest(-1, "x = 2\r\nx.", "x.");
@@ -318,7 +318,7 @@ except (None)"}) {
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_MemberCompletion_Imports() {
+        public void ImportCompletions() {
             var code = "import sys, ";
             var completions = GetCompletions(code.Length - 1, code);
             AssertUtil.Contains(GetCompletionNames(completions), "exceptions");
@@ -326,6 +326,81 @@ except (None)"}) {
             var code2 = "import sys, ex";
             var completionList = GetCompletionSetCtrlSpace(code2.Length - 1, code2);
             AssertUtil.Contains(GetCompletionNames(completionList), "exceptions");
+        }
+
+        [TestMethod, Priority(0)]
+        public void FromImportCompletions() {
+            var code = "from ";
+            var completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "nt", "sys");
+
+            code = "from s";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "sys");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "nt");
+
+            code = "from sys ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "import");
+
+            code = "from sys import";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "import");
+
+            code = "from sys import ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions),
+                "*",                    // Contains *
+                "settrace",             // Contains functions
+                "api_version"           // Contains data members
+            );
+
+            code = "from sys.";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            Assert.AreEqual(0, completions.Completions.Count);
+
+            // Error case - no completions
+            code = "from sys. import ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            Assert.IsNull(completions);
+
+            code = "from sys import settrace,";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "api_version");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
+
+            // Only one completion after a comma
+            code = "from sys import settrace ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            Assert.IsNull(completions);
+
+            // No more completions after a *
+            code = "from sys import *, ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            Assert.IsNull(completions);
+        }
+
+        [TestMethod, Priority(0)]
+        public void FromImportMultilineCompletions() {
+            var code = "from sys import (";
+            var completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "settrace", "api_version");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
+
+            code = "from nt import (\r\n    ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "settrace", "api_version");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
+
+            code = "from nt import (getfilesystemencoding,\r\n    ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "settrace", "api_version");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
+
+            // Need a comma for more completions
+            code = "from sys import (settrace\r\n    ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            Assert.IsNull(completions);
         }
 
         private static IEnumerable<string> GetCompletionNames(CompletionSet completions) {            
@@ -367,7 +442,7 @@ baz
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_GotoDefinition() {
+        public void GotoDefinition() {
             string code = @"
 class C:
     def fff(self): pass
@@ -390,7 +465,7 @@ C().fff";
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_QuickInfo() {
+        public void QuickInfo() {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
 cls._parse_block(ast.expr)
@@ -434,7 +509,7 @@ e): <no type information available>");
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_NormalOverrides() {
+        public void NormalOverrideCompletions() {
             foreach (var code in new[] {
 @"class Foo(object):
     def func_a(self, a=100): pass
@@ -503,7 +578,7 @@ class Baz(Foo, Bar):
         }
 
         [TestMethod, Priority(0)]
-        public void Scenario_BuiltinOverrides() {
+        public void BuiltinOverrideCompletions() {
             var code = @"class Foo(str):
     def None
 ";
@@ -677,6 +752,7 @@ class B(dict):
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
+            
             var fact = new CPythonInterpreterFactory();
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer).GetCompletions(new MockGlyphService());
@@ -690,7 +766,9 @@ class B(dict):
             IntellisenseController.ForceCompletions = true;
             try {
                 var completionSet = GetCompletionSet(location, sourceCode, intersectMembers);
-                completionSet.Filter();
+                if (completionSet != null) {
+                    completionSet.Filter();
+                }
                 return completionSet;
             } finally {
                 IntellisenseController.ForceCompletions = false;

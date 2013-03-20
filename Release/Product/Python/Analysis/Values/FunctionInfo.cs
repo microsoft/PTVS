@@ -383,11 +383,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 res.Append("'");
                 var bytes = ((AsciiString)value.Value).String;
-                for (int i = 0; i < bytes.Length; i++) {
-                    if (bytes[i] == '\'') {
-                        res.Append("\\'");
-                    } else {
-                        res.Append(bytes[i]);
+                foreach (var b in bytes) {
+                    switch(b) {
+                        case '\a': res.Append("\\a"); break;
+                        case '\b': res.Append("\\b"); break;
+                        case '\f': res.Append("\\f"); break;
+                        case '\n': res.Append("\\n"); break;
+                        case '\r': res.Append("\\r"); break;
+                        case '\t': res.Append("\\t"); break;
+                        case '\v': res.Append("\\v"); break;
+                        case '\'': res.Append("\\'"); break;
+                        case '\\': res.Append("\\\\"); break;
+                        default: res.Append(b); break;
                     }
                 }
                 res.Append("'");
@@ -399,12 +406,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 res.Append("'");
-                string str = value.Value as string;
-                for (int i = 0; i < str.Length; i++) {
-                    if (str[i] == '\'') {
-                        res.Append("\\'");
-                    } else {
-                        res.Append(str[i]);
+                string str = (string)value.Value;
+                foreach (var c in str) {
+                    switch (c) {
+                        case '\a': res.Append("\\a"); break;
+                        case '\b': res.Append("\\b"); break;
+                        case '\f': res.Append("\\f"); break;
+                        case '\n': res.Append("\\n"); break;
+                        case '\r': res.Append("\\r"); break;
+                        case '\t': res.Append("\\t"); break;
+                        case '\v': res.Append("\\v"); break;
+                        case '\'': res.Append("\\'"); break;
+                        case '\\': res.Append("\\\\"); break;
+                        default: res.Append(c); break;
                     }
                 }
                 res.Append("'");

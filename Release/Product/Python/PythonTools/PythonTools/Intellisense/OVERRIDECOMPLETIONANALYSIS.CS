@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
             : base(span, textBuffer, options) {
         }
 
-        internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);
+        internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *= *.+)?", RegexOptions.IgnoreCase | RegexOptions.Singleline);
         internal static string GetSafeParameterName(ParameterResult result) {
             var match = ValidParameterName.Match(result.Name);
 

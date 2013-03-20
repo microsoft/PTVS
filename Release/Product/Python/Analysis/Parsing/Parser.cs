@@ -124,7 +124,9 @@ namespace Microsoft.PythonTools.Parsing {
         public static Parser CreateParser(Stream stream, PythonLanguageVersion version, ParserOptions parserOptions = null) {
             var options = parserOptions ?? ParserOptions.Default;
 
-            var reader = GetStreamReaderWithEncoding(stream, PythonAsciiEncoding.Instance, options.ErrorSink);
+            var defaultEncoding = version.Is3x() ? Encoding.UTF8 : PythonAsciiEncoding.Instance;
+
+            var reader = GetStreamReaderWithEncoding(stream, defaultEncoding, options.ErrorSink);
 
             return CreateParser(reader, version, options);
         }

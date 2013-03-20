@@ -15,6 +15,7 @@
 using System;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -93,13 +94,15 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             _activeSession = CompletionBroker.TriggerCompletion(_textView);
 
             if (_activeSession != null) {
-                _activeSession.Filter();
+                FuzzyCompletionSet set;
                 if (completeWord &&
                     _activeSession.CompletionSets.Count == 1 &&
-                    _activeSession.CompletionSets[0].Completions.Count == 1) {
+                    (set = _activeSession.CompletionSets[0] as FuzzyCompletionSet) != null &&
+                    set.SelectSingleBest()) {
                     _activeSession.Commit();
                     _activeSession = null;
                 } else {
+                    _activeSession.Filter();
                     _activeSession.Dismissed += OnCompletionSessionDismissedOrCommitted;
                     _activeSession.Committed += OnCompletionSessionDismissedOrCommitted;
                 }

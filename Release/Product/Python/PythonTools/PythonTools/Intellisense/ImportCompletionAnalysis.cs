@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal ImportCompletionAnalysis(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
             : base(span, textBuffer, options) {
 
-            Debug.Assert(tokens[0].Span.GetText() == "import");
+            Debug.Assert(tokens[0].Span.GetText() == "import" || tokens[0].Span.GetText() == "from");
 
             int beforeLastComma = tokens
                 .Reverse()

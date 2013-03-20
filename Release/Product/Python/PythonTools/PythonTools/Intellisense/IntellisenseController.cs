@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _provider = provider;
             _editOps = provider._EditOperationsFactory.GetEditorOperations(textView);
             _incSearch = provider._IncrementalSearch.GetIncrementalSearch(textView);
-            _textView.MouseHover += new EventHandler<MouseHoverEventArgs>(TextViewMouseHover);
+            _textView.MouseHover += TextViewMouseHover;
             textView.Properties.AddProperty(typeof(IntellisenseController), this);  // added so our key processors can get back to us
         }
 
@@ -356,15 +356,17 @@ namespace Microsoft.PythonTools.Intellisense {
             _activeSession = CompletionBroker.TriggerCompletion(_textView);
 
             if (_activeSession != null) {
-                _activeSession.Filter();
+                FuzzyCompletionSet set;
                 if (completeWord &&
                     _activeSession.CompletionSets.Count == 1 &&
-                    _activeSession.CompletionSets[0].Completions.Count == 1) {
+                    (set = _activeSession.CompletionSets[0] as FuzzyCompletionSet) != null &&
+                    set.SelectSingleBest()) {
                     _activeSession.Commit();
                     _activeSession = null;
                 } else {
-                    _activeSession.Dismissed += new EventHandler(OnCompletionSessionDismissedOrCommitted);
-                    _activeSession.Committed += new EventHandler(OnCompletionSessionDismissedOrCommitted);
+                    _activeSession.Filter();
+                    _activeSession.Dismissed += OnCompletionSessionDismissedOrCommitted;
+                    _activeSession.Committed += OnCompletionSessionDismissedOrCommitted;
                 }
             }
         }
@@ -377,7 +379,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _sigHelpSession = SignatureBroker.TriggerSignatureHelp(_textView);
 
             if (_sigHelpSession != null) {
-                _sigHelpSession.Dismissed += new EventHandler(OnSignatureSessionDismissed);
+                _sigHelpSession.Dismissed += OnSignatureSessionDismissed;
 
                 ISignature sig;
                 if (_sigHelpSession.Properties.TryGetProperty(typeof(PythonSignature), out sig)) {
