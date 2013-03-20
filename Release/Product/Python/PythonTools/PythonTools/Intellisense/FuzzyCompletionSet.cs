@@ -291,7 +291,15 @@ namespace Microsoft.PythonTools.Intellisense {
             _previousSelection = bestMatch;
         }
 
-        internal bool SelectSingleBest() {
+        /// <summary>
+        /// Determines and selects the only match in the completion set.
+        /// This ignores the user's filtering preferences.
+        /// </summary>
+        /// <returns>
+        /// True if a match is found and selected; otherwise, false if there
+        /// is no single match in the completion set.
+        /// </returns> 
+        public bool SelectSingleBest() {
             var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
 
             Completion bestMatch = null;
