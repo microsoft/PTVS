@@ -16,7 +16,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.Shell;
-#if DEV11
+#if DEV11_OR_LATER
 using Microsoft.VisualStudio.Shell.Interop;
 #endif
 
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools {
         private string _editorName;
         private Guid _linkedEditorGuid;
         private readonly string[] _extensions;
-#if DEV11
+#if DEV11_OR_LATER
         private __VSPHYSICALVIEWATTRIBUTES _commonViewAttrs;
 #endif
 
@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools {
             _extensions = extensions;
         }
 
-#if DEV11
+#if DEV11_OR_LATER
         public ProvideEditorExtension2Attribute(object factoryType, string extension, int priority, __VSPHYSICALVIEWATTRIBUTES commonViewAttributes, params string[] extensions) :
             this(factoryType, extension, priority, extensions) {
             _commonViewAttrs = commonViewAttributes;
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools {
             set { _linkedEditorGuid = new System.Guid(value); }
         }
 
-#if DEV11
+#if DEV11_OR_LATER
         public __VSPHYSICALVIEWATTRIBUTES CommonPhysicalViewAttributes {
             get {
                 return _commonViewAttrs;
@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools {
                 if (_linkedEditorGuid != Guid.Empty) {
                     editorKey.SetValue("LinkedEditorGuid", _linkedEditorGuid.ToString("B"));
                 }
-#if DEV11
+#if DEV11_OR_LATER
                 if (_commonViewAttrs != 0) {
                     editorKey.SetValue("CommonPhysicalViewAttributes", (int)_commonViewAttrs);
                 }

@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Navigation {
             editFilter.AttachKeyboardFilter(adapter);
             intellisenseController.AttachKeyboardFilter();
 
-#if DEV11
+#if DEV11_OR_LATER
             var viewFilter = new TextViewFilter();
             viewFilter.AttachFilter(adapter);
 #endif

@@ -218,9 +218,9 @@
       <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev12.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
               Condition="Defined(DEV12)"/>
       <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev11.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
-              Condition="!Defined(DEV12) and Defined(DEV11)"/>
+              Condition="Defined(DEV11)"/>
       <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev10.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
-              Condition="!Defined(DEV11)"/>
+              Condition="Defined(DEV10)"/>
     </Bitmaps>
  
   </Commands>

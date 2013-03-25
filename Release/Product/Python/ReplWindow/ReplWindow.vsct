@@ -247,9 +247,9 @@
           <Bitmap guid="guidReplToolbarImages" href="..\Icons\Dev12.0\ReplToolBarImages.bmp" usedList="bmpCancelEval, bmpResetSession, bmpClearScreen"
                   Condition="Defined(DEV12)"/>
           <Bitmap guid="guidReplToolbarImages" href="..\Icons\Dev11.0\ReplToolBarImages.bmp" usedList="bmpCancelEval, bmpResetSession, bmpClearScreen"
-                  Condition="!Defined(DEV12) and Defined(DEV11)"/>
+                  Condition="Defined(DEV11)"/>
           <Bitmap guid="guidReplToolbarImages" href="..\Icons\Dev10.0\ReplToolBarImages.png" usedList="bmpCancelEval, bmpResetSession, bmpClearScreen"
-                  Condition="!Defined(DEV11)"/>
+                  Condition="Defined(DEV10)"/>
         </Bitmaps>
 
     </Commands>

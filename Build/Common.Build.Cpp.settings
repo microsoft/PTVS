@@ -16,13 +16,19 @@
   
   <ItemDefinitionGroup Condition="'$(VSTarget)' == '12.0'">
     <ClCompile>
-      <PreprocessorDefinitions>DEV12;DEV11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEV12;DEV12_OR_LATER;DEV11_OR_LATER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
 
   <ItemDefinitionGroup Condition="'$(VSTarget)' == '11.0'">
     <ClCompile>
-      <PreprocessorDefinitions>DEV11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEV11;DEV11_OR_LATER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(VSTarget)' == '10.0'">
+    <ClCompile>
+      <PreprocessorDefinitions>DEV10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
 

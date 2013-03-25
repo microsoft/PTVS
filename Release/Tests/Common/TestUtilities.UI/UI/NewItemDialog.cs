@@ -44,7 +44,7 @@ namespace TestUtilities.UI {
                         TreeScope.Descendants,
                         new PropertyCondition(
                             AutomationElement.AutomationIdProperty,
-#if DEV11
+#if DEV11_OR_LATER
                             "Installed"
 #else
                             "Installed Templates"
@@ -58,7 +58,7 @@ namespace TestUtilities.UI {
                     // so we need to find the one that actually has our templates.
                     foreach (AutomationElement template in templates) {
                         var temp = new TreeView(template);
-#if DEV11
+#if DEV11_OR_LATER
                         var item = temp.FindItem("Templates");
 #else
                         var item = temp.FindItem("Visual C#");
@@ -120,7 +120,7 @@ namespace TestUtilities.UI {
         }
 
         public void FocusLanguageNode(string name = "Python") {
-#if DEV11
+#if DEV11_OR_LATER
             var item = InstalledTemplates.FindItem("Templates", name);
             if (item == null) {
                 item = InstalledTemplates.FindItem("Templates", "Other Languages", name);

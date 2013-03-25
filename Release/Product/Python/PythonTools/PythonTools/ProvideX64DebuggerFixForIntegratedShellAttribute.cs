@@ -20,7 +20,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools {
-#if DEV11
+#if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12 OR NOT
     /// <summary>
     /// VS 2012 integrated shell doesn't successfully debug x64 apps out of the box due to a bug.  This fixes that bug.
     /// </summary>

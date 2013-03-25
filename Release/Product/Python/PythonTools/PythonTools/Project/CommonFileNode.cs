@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-#if DEV11
+#if DEV11_OR_LATER
         public override __VSPROVISIONALVIEWINGSTATUS ProvisionalViewingStatus {
             get {
                 return __VSPROVISIONALVIEWINGSTATUS.PVS_Enabled;

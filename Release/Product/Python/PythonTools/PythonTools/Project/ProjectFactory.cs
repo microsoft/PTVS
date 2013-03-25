@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Project
     /// </summary>
 
     public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase
-#if DEV11
+#if DEV11_OR_LATER
         , IVsAsynchronousProjectCreate
 #endif
     {
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Project
         /// The msbuild project for the project file.
         /// </summary>
         private MSBuild.Project buildProject;
-#if DEV11
+#if DEV11_OR_LATER
         private static readonly Lazy<IVsTaskSchedulerService> taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Package.GetGlobalService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
 #endif
         #endregion
@@ -203,7 +203,7 @@ namespace Microsoft.PythonTools.Project
 
         #endregion
 
-#if DEV11
+#if DEV11_OR_LATER
 
         public virtual bool CanCreateProjectAsynchronously(ref Guid rguidProjectID, string filename, uint flags)
         {

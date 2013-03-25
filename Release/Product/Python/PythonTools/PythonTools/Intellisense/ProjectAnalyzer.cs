@@ -37,7 +37,7 @@ using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 
-#if DEV11
+#if DEV11_OR_LATER
 using System.IO.Compression;
 #endif
 
@@ -583,7 +583,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (zipFileName == null) {
                 cookie = (IAnalysisCookie)new FileCookie(filename);
             } else {
-#if DEV11
+#if DEV11_OR_LATER
                 cookie = new ZipFileCookie(zipFileName, pathInZipFile);
 #else
                 Debug.Fail("There should be no ProjectEntry objects loaded from zip archives in Dev10");
@@ -1084,7 +1084,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#if DEV11
+#if DEV11_OR_LATER
         /// <summary>
         /// Analyzes a .zip file including all of the contained files and packages.
         /// </summary>

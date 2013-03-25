@@ -652,16 +652,20 @@ namespace Microsoft.PythonTools.Interpreter {
                 return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
 #elif DEV11
                 return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#else
+#elif DEV10
                 return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#else
+#error Unsupported version of Visual Studio
 #endif
             } else {
 #if DEV12
                 return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
 #elif DEV11
                 return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#else
+#elif DEV10
                 return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#else
+#error Unsupported version of Visual Studio
 #endif
             }
         }

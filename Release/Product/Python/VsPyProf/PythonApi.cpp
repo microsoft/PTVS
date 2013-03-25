@@ -22,8 +22,10 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
 	const wchar_t *dllName = L"\\System32\\VsPerf120.dll";
 #elif DEV11
 	const wchar_t *dllName = L"\\System32\\VsPerf110.dll";
-#else
+#elif DEV10
 	const wchar_t *dllName = L"\\System32\\VsPerf100.dll";
+#else
+#error Unsupported version of Visual Studio
 #endif
 
 	if (!GetWindowsDirectory(buffer, MAX_PATH) ||

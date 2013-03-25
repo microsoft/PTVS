@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Django {
                 var controller = DjangoIntellisenseControllerProvider.GetOrCreateController(model, wpfView);
                 controller.AttachKeyboardFilter();
 
-#if DEV11
+#if DEV11_OR_LATER
                 var viewFilter = new TextViewFilter();
                 viewFilter.AttachFilter(textView);
 #endif

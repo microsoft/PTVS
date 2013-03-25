@@ -43,8 +43,10 @@ namespace TestUtilities
         public static readonly string Version = "12.0";
 #elif DEV11
         public static readonly string Version = "11.0";
-#else
+#elif DEV10
         public static readonly string Version = "10.0";
+#else
+#error Unsupported version of Visual Studio
 #endif
         private static readonly TimeSpan _ideStartupTimeout = TimeSpan.FromMinutes(2);
         private static readonly TimeSpan _addinWaitTimeout = TimeSpan.FromMinutes(1);

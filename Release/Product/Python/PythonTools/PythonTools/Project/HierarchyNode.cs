@@ -832,7 +832,7 @@ namespace Microsoft.PythonTools.Project
             
             }
 
-#if DEV11
+#if DEV11_OR_LATER
             __VSHPROPID5 id5 = (__VSHPROPID5)propId;
             switch(id5) {
                 case __VSHPROPID5.VSHPROPID_ProvisionalViewingStatus:
@@ -850,7 +850,7 @@ namespace Microsoft.PythonTools.Project
             return result;
         }
 
-#if DEV11
+#if DEV11_OR_LATER
         public virtual __VSPROVISIONALVIEWINGSTATUS ProvisionalViewingStatus {
             get {
                 return __VSPROVISIONALVIEWINGSTATUS.PVS_Disabled;

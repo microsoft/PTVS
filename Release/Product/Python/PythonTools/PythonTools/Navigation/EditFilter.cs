@@ -800,7 +800,7 @@ namespace Microsoft.PythonTools.Language {
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
-#if !DEV11
+#if DEV10
                             if (!IsCSharpInstalled()) {
                                 QueryStatusRename(prgCmds, i);
                             } else 
@@ -813,7 +813,7 @@ namespace Microsoft.PythonTools.Language {
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
-#if !DEV11
+#if DEV10
                             if (!IsCSharpInstalled()) {
                                 QueryStatusExtractMethod(prgCmds, i);
                             } else 
@@ -879,7 +879,7 @@ namespace Microsoft.PythonTools.Language {
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
-#if !DEV11
+#if DEV10
         internal static bool IsCSharpInstalled() {
             IVsShell shell = (IVsShell)PythonToolsPackage.GetGlobalService(typeof(IVsShell));
             Guid csharpPacakge = GuidList.guidCSharpProjectPacakge;

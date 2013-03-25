@@ -341,7 +341,7 @@ namespace Microsoft.PythonTools.Project {
         private void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
             // now add all of the missing files, any dups will automatically not be re-analyzed
             foreach (var dir in newDirs) {
-#if DEV11
+#if DEV11_OR_LATER
                 // If it's a file and not a directory, parse it as a .zip file in accordance with PEP 273.
                 if (File.Exists(dir)) {
                     _analyzer.AnalyzeZipArchive(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));

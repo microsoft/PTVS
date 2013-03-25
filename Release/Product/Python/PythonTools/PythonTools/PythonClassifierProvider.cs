@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools {
 
         [Export]
         [Name(PythonPredefinedClassificationTypeNames.Operator)]
-#if DEV11
+#if DEV11_OR_LATER
         [BaseDefinition(PredefinedClassificationTypeNames.Operator)]
 #else
         [BaseDefinition(PredefinedClassificationTypeNames.FormalLanguage)]

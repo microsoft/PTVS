@@ -815,7 +815,7 @@ namespace PythonToolsUITests {
             Keyboard.Type("."); // bad filename
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
-#if DEV11
+#if DEV11_OR_LATER
             VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
             VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
@@ -825,7 +825,7 @@ namespace PythonToolsUITests {
             Keyboard.Type(".."); // another bad filename
             Keyboard.Type(System.Windows.Input.Key.Enter);
 
-#if DEV11
+#if DEV11_OR_LATER
             VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
             VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");

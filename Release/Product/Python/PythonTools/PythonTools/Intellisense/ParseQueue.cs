@@ -26,7 +26,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
-#if DEV11
+#if DEV11_OR_LATER
 using System.IO.Compression;
 #endif
 
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Intellisense {
             });
         }
 
-#if DEV11
+#if DEV11_OR_LATER
         public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
             var pathInArchive = entry.FullName.Replace('/', '\\');
             var fileName = Path.Combine(zipFileName, pathInArchive);

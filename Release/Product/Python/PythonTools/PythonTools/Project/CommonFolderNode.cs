@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Project {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage;
         }
         
-#if DEV11
+#if DEV11_OR_LATER
         public override object GetProperty(int propId) {
             CommonFolderNode.BoldStartupOnIcon(propId, this);
 

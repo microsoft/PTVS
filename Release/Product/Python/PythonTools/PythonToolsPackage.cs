@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ZeroDivisionError")]
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue="#4000")]
-#if DEV11
+#if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
 #endif
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider {
@@ -477,8 +477,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
 #elif DEV11
                 return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#else
+#elif DEV10
                 return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#else
+#error Unsupported version of Visual Studio
 #endif
             }
         }
@@ -494,8 +496,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
 #elif DEV11
                 return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#else
+#elif DEV10
                 return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
+#else
+#error Unsupported version of Visual Studio
 #endif
             }
         }

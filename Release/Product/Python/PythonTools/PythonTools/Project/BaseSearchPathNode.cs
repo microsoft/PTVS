@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override object GetIconHandle(bool open) {
             return this.ProjectMgr.ImageHandler.GetIconHandle(CommonProjectNode.ImageOffset +
-#if DEV11
+#if DEV11_OR_LATER
                 (int)CommonImageName.SearchPath
 #else
                 (Directory.Exists(Url) || File.Exists(Url) ? (int)CommonImageName.SearchPath : (int)CommonImageName.MissingSearchPath)
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
             );
         }
 
-#if DEV11
+#if DEV11_OR_LATER
         protected override VSOVERLAYICON OverlayIconIndex {
             get {
                 return Directory.Exists(Url) || File.Exists(Url) ? base.OverlayIconIndex : (VSOVERLAYICON)__VSOVERLAYICON2.OVERLAYICON_NOTONDISK;

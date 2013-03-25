@@ -33,8 +33,10 @@ namespace TestUtilities {
             @"12.0";
 #elif DEV11
             @"11.0";
-#else
+#elif DEV10
             @"10.0";
+#else
+#error Unsupported version of Visual Studio
 #endif
         const string BinariesOutPath = "";
 
