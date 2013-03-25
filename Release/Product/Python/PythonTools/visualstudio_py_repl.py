@@ -12,6 +12,8 @@
  #
  # ###########################################################################
 
+from __future__ import with_statement
+
 try:
     import thread
 except ImportError:
@@ -35,6 +37,11 @@ import os
 import inspect
 import types
 from collections import deque
+
+try:
+    from visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+except ImportError:
+    from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
 
 try:
     unicode
@@ -62,6 +69,12 @@ class SafeSendLock(object):
     def __init__(self):
         self.lock = thread.allocate_lock()
 
+    def __enter__(self):
+        self.acquire()
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.release()
+
     def acquire(self):
         try:
             self.lock.acquire()
@@ -74,13 +87,6 @@ class SafeSendLock(object):
 
     def release(self):
         self.lock.release()
-
-
-def _cmd(cmd_str):
-    """creates a command string for sending out via sockets - this handles Python v2 vs v3"""
-    if sys.version >= '3.0':
-        return bytes(cmd_str, 'ascii')
-    return cmd_str
 
 def _command_line_to_args_list(cmdline):
     """splits a string into a list using Windows command line syntax."""
@@ -114,13 +120,6 @@ def _command_line_to_args_list(cmdline):
     return args_list
 
 
-def read_int(conn):
-    return struct.unpack('!q', conn.recv(8))[0]
-
-def write_int(conn, i):
-    conn.send(struct.pack('!q', i))
-
-
 class UnsupportedReplException(Exception):
     def __init__(self, reason):
         self.reason = reason
@@ -131,19 +130,24 @@ class ReplBackend(object):
     """back end for executing REPL code.  This base class handles all of the 
 communication with the remote process while derived classes implement the 
 actual inspection and introspection."""
-    _MRES = _cmd('MRES')
-    _SRES = _cmd('SRES')
-    _MODS = _cmd('MODS')
-    _IMGD = _cmd('IMGD')
-    _PRPC = _cmd('PRPC')
-    _RDLN = _cmd('RDLN')
-    _STDO = _cmd('STDO')
-    _STDE = _cmd('STDE')
-    _DBGA = _cmd('DBGA')
-    _DETC = _cmd('DETC')
-    _DPNG = _cmd('DPNG')
-    _UNICODE_PREFIX = _cmd('U')
-    _ASCII_PREFIX = _cmd('A')
+    _MRES = to_bytes('MRES')
+    _SRES = to_bytes('SRES')
+    _MODS = to_bytes('MODS')
+    _IMGD = to_bytes('IMGD')
+    _PRPC = to_bytes('PRPC')
+    _RDLN = to_bytes('RDLN')
+    _STDO = to_bytes('STDO')
+    _STDE = to_bytes('STDE')
+    _DBGA = to_bytes('DBGA')
+    _DETC = to_bytes('DETC')
+    _DPNG = to_bytes('DPNG')
+
+    _MERR = to_bytes('MERR')
+    _SERR = to_bytes('SERR')
+    _ERRE = to_bytes('ERRE')
+    _EXIT = to_bytes('EXIT')
+    _DONE = to_bytes('DONE')
+    _MODC = to_bytes('MODC')
     
     def __init__(self):
         self.conn = None
@@ -183,7 +187,7 @@ actual inspection and introspection."""
                 else:
                     timeout_exc_types = socket.timeout
                 try:
-                    inp = self.conn.recv(4)
+                    inp = read_bytes(self.conn, 4)
                 except timeout_exc_types: 
                     r, w, x = select.select([], [], [self.conn], 0)
                     if x:
@@ -216,40 +220,9 @@ actual inspection and introspection."""
     def check_for_exit_repl_loop(self):
         return False
 
-    def _send(self, *data):
-        self.send_lock.acquire()
-        try:
-            for d in data:
-                _debug_write(d + '\n')
-                if sys.version >= '3.0':
-                    self.conn.send(bytes(str(d), 'ascii'))
-                else:
-                    self.conn.send(str(d))
-        finally:
-            self.send_lock.release()        
-
-    def _read_string(self):
-        """ reads length of text to read, and then the text encoded in UTF-8, and returns the string"""
-        strlen = read_int(self.conn)
-        if not strlen:
-            return ''
-        res = _cmd('')
-        while len(res) < strlen:
-            res = res + self.conn.recv(strlen - len(res))
-
-        res = res.decode('utf8')
-        if sys.version[0] == '2' and sys.platform != 'cli':
-            # Py 2.x, we want an ASCII string if possible
-            try:
-                res = res.encode('ascii')
-            except UnicodeEncodeError:
-                pass
-
-        return res
-    
     def _cmd_run(self):
         """runs the received snippet of code"""
-        self.run_command(self._read_string())        
+        self.run_command(read_string(self.conn))
 
     def _cmd_abrt(self):
         """aborts the current running command"""
@@ -263,57 +236,55 @@ actual inspection and introspection."""
 
     def _cmd_mems(self):
         """gets the list of members available for the given expression"""
-        expression = self._read_string()
+        expression = read_string(self.conn)
         try:
             name, inst_members, type_members = self.get_members(expression)
         except:
-            self._send('MERR')
+            with self.send_lock:
+                write_bytes(self.conn, ReplBackend._MERR)
             _debug_write('error in eval')
             _debug_write(traceback.format_exc())
         else:
-            self.send_lock.acquire()
-            self.conn.send(ReplBackend._MRES)
-            self._write_string(name)
-            self._write_member_dict(inst_members)
-            self._write_member_dict(type_members)
-            self.send_lock.release()
+            with self.send_lock:
+                write_bytes(self.conn, ReplBackend._MRES)
+                write_string(self.conn, name)
+                self._write_member_dict(inst_members)
+                self._write_member_dict(type_members)
 
     def _cmd_sigs(self):
         """gets the signatures for the given expression"""
-        expression = self._read_string()
+        expression = read_string(self.conn)
         try:
             sigs = self.get_signatures(expression)
         except:
-            self._send('SERR')
+            with self.send_lock:
+                write_bytes(self.conn, ReplBackend._SERR)
             _debug_write('error in eval')
             _debug_write(traceback.format_exc())
         else:
-            self.send_lock.acquire()
-            self.conn.send(ReplBackend._SRES)
-            # single overload
-            write_int(self.conn, len(sigs))
-            for doc, args, vargs, varkw, defaults in sigs:
-                # write overload
-                self._write_string((doc or '')[:4096])
-                arg_count = len(args) + (vargs is not None) + (varkw is not None)
-                write_int(self.conn, arg_count)
-                for arg in args:
-                    if arg is None:
-                        self._write_string('')
-                    else:
-                        self._write_string(arg)
-
-                if vargs is not None:
-                    self._write_string('*' + vargs)
-                if varkw is not None:
-                    self._write_string('**' + varkw)
-
-            self.send_lock.release()
+            with self.send_lock:
+                write_bytes(self.conn, ReplBackend._SRES)
+                # single overload
+                write_int(self.conn, len(sigs))
+                for doc, args, vargs, varkw, defaults in sigs:
+                    # write overload
+                    write_string(self.conn, (doc or '')[:4096])
+                    arg_count = len(args) + (vargs is not None) + (varkw is not None)
+                    write_int(self.conn, arg_count)
+                    for arg in args:
+                        if arg is None:
+                            write_string(self.conn, '')
+                        else:
+                            write_string(self.conn, arg)
+                    if vargs is not None:
+                        write_string(self.conn, '*' + vargs)
+                    if varkw is not None:
+                        write_string(self.conn, '**' + varkw)
     
     def _cmd_setm(self):
         global exec_mod
         """sets the current module which code will execute against"""
-        mod_name = self._read_string()
+        mod_name = read_string(self.conn)
         self.set_current_module(mod_name)
 
     def _cmd_sett(self):
@@ -331,70 +302,52 @@ actual inspection and introspection."""
         except:
             res = []
         
-        self.send_lock.acquire()
-        self.conn.send(ReplBackend._MODS)
-        write_int(self.conn, len(res))
-        for name, filename in res:
-            self._write_string(name)
-            self._write_string(filename)
-    
-        self.send_lock.release()
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._MODS)
+            write_int(self.conn, len(res))
+            for name, filename in res:
+                write_string(self.conn, name)
+                write_string(self.conn, filename)
 
     def _cmd_inpl(self):
         """handles the input command which returns a string of input"""
-        self.input_string = self._read_string()
+        self.input_string = read_string(self.conn)
         self.input_event.release()
     
     def _cmd_excf(self):
         """handles executing a single file"""
-        filename = self._read_string()
-        args = self._read_string()
+        filename = read_string(self.conn)
+        args = read_string(self.conn)
         self.execute_file(filename, args)
 
     def _cmd_debug_attach(self):
         port = read_int(self.conn)
-        id = self._read_string()
+        id = read_string(self.conn)
         self.attach_process(port, id)
 
     _COMMANDS = {
-        _cmd('run ') : _cmd_run,
-        _cmd('abrt') : _cmd_abrt,
-        _cmd('exit'): _cmd_exit,
-        _cmd('mems') : _cmd_mems,
-        _cmd('sigs'): _cmd_sigs,
-        _cmd('mods'): _cmd_mods,
-        _cmd('setm') : _cmd_setm,
-        _cmd('sett') : _cmd_sett,
-        _cmd('inpl'): _cmd_inpl,
-        _cmd('excf'): _cmd_excf,
-        _cmd('dbga'): _cmd_debug_attach,
+        to_bytes('run '): _cmd_run,
+        to_bytes('abrt'): _cmd_abrt,
+        to_bytes('exit'): _cmd_exit,
+        to_bytes('mems'): _cmd_mems,
+        to_bytes('sigs'): _cmd_sigs,
+        to_bytes('mods'): _cmd_mods,
+        to_bytes('setm'): _cmd_setm,
+        to_bytes('sett'): _cmd_sett,
+        to_bytes('inpl'): _cmd_inpl,
+        to_bytes('excf'): _cmd_excf,
+        to_bytes('dbga'): _cmd_debug_attach,
     }
 
     def _write_member_dict(self, mem_dict):
         write_int(self.conn, len(mem_dict))
         for name, type_name in mem_dict.items():
-            self._write_string(name)
-            self._write_string(type_name)
-
-    def _write_string(self, string):
-        if isinstance(string, unicode):
-            bytes = string.encode('utf8')
-            bytes_len = len(bytes)
-            self.conn.send(ReplBackend._UNICODE_PREFIX)
-            write_int(self.conn, bytes_len)
-            if bytes_len > 0:
-                self.conn.send(bytes)
-        else:
-            string_len = len(string)
-            self.conn.send(ReplBackend._ASCII_PREFIX)
-            write_int(self.conn, string_len)
-            if string_len > 0:
-                self.conn.send(string)
+            write_string(self.conn, name)
+            write_string(self.conn, type_name)
 
     def on_debugger_detach(self):
-        self.send_lock.acquire()
-        self.conn.send(ReplBackend._DETC)
-        self.send_lock.release()
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._DETC)
 
     def init_debugger(self):
         from os import path
@@ -406,63 +359,60 @@ actual inspection and introspection."""
         visualstudio_py_debugger.intercept_threads(True)
 
     def send_image(self, filename):
-        self.send_lock.acquire()
-        self.conn.send(ReplBackend._IMGD)
-        self._write_string(filename)
-        self.send_lock.release()
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._IMGD)
+            write_string(self.conn, filename)
 
     def write_png(self, image_bytes):
-        self.send_lock.acquire()
-        self.conn.send(ReplBackend._DPNG)
-        write_int(self.conn, len(image_bytes))
-        self.conn.send(image_bytes)
-        self.send_lock.release()
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._DPNG)
+            write_int(self.conn, len(image_bytes))
+            write_bytes(self.conn, image_bytes)
 
     def send_prompt(self, ps1, ps2, update_all = True):
         """sends the current prompt to the interactive window"""
-        self.send_lock.acquire()
-        self.conn.send(ReplBackend._PRPC)
-        self._write_string(ps1)
-        self._write_string(ps2)
-        write_int(self.conn, update_all)
-        self.send_lock.release()
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._PRPC)
+            write_string(self.conn, ps1)
+            write_string(self.conn, ps2)
+            write_int(self.conn, update_all)
     
     def send_error(self):
         """reports that an error occured to the interactive window"""
-        self._send('ERRE')
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._ERRE)
         
     def send_exit(self):
         """reports the that the REPL process has exited to the interactive window"""
-        self._send('EXIT')
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._EXIT)
 
     def send_command_executed(self):
-        self._send('DONE')
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._DONE)
     
     def send_modules_changed(self):
-        self._send('MODC')
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._MODC)
 
     def read_line(self):    
         """reads a line of input from standard input"""
-        self.send_lock.acquire()        
-        self.conn.send(ReplBackend._RDLN)
-        self.send_lock.release()
-
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._RDLN)
         self.input_event.acquire()
         return self.input_string
 
     def write_stdout(self, value):
         """writes a string to standard output in the remote console"""
-        self.send_lock.acquire()
-        self.conn.send(ReplBackend._STDO)
-        self._write_string(value)
-        self.send_lock.release()
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._STDO)
+            write_string(self.conn, value)
     
     def write_stderr(self, value):
         """writes a string to standard input in the remote console"""
-        self.send_lock.acquire()
-        self.conn.send(ReplBackend._STDE)
-        self._write_string(value)
-        self.send_lock.release()
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._STDE)
+            write_string(self.conn, value)
 
     ################################################################
     # Implementation of execution, etc...
@@ -590,7 +540,7 @@ class BasicReplBackend(ReplBackend):
     def run_file_as_main(self, filename, args):
         f = open(filename, 'rb')
         try:
-            contents = f.read().replace(_cmd('\r\n'), _cmd('\n'))
+            contents = f.read().replace(to_bytes('\r\n'), to_bytes('\n'))
         finally:
             f.close()
         sys.argv = [filename]
@@ -799,13 +749,12 @@ due to the exec, so we do it here"""
 
     def interrupt_main(self):
         # acquire the send lock so we dont interrupt while we're communicting w/ the debugger
-        self.send_lock.acquire()
-        if sys.platform == 'cli' and sys.version_info[:3] < (2, 7, 1):
-            # IronPython doesn't get thread.interrupt_main until 2.7.1
-            self.main_thread.Abort(ReplAbortException())
-        else:
-            thread.interrupt_main()
-        self.send_lock.release()
+        with self.send_lock:
+            if sys.platform == 'cli' and sys.version_info[:3] < (2, 7, 1):
+                # IronPython doesn't get thread.interrupt_main until 2.7.1
+                self.main_thread.Abort(ReplAbortException())
+            else:
+                thread.interrupt_main()
 
     def exit_process(self):        
         self.execute_item = exit_work_item

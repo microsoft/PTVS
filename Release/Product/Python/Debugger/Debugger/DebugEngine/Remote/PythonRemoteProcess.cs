@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
     }
 
     internal class PythonRemoteProcess : PythonProcess {
-        public const byte DebuggerProtocolVersion = 1;
+        public const byte DebuggerProtocolVersion = 2;
         public const string DebuggerSignature = "PTVSDBG";
         public const string Accepted = "ACPT";
         public const string Rejected = "RJCT";
@@ -56,8 +56,8 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         private readonly string _secret;
         private readonly bool _useSsl;
 
-        private PythonRemoteProcess(string hostName, ushort portNumber, string secret, bool useSsl, PythonLanguageVersion langVer)
-            : base(langVer) {
+        private PythonRemoteProcess(int pid, string hostName, ushort portNumber, string secret, bool useSsl, PythonLanguageVersion langVer)
+            : base(pid, langVer) {
             _hostName = hostName;
             _portNumber = portNumber;
             _secret = secret;
@@ -131,9 +131,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                     stream = rawStream;
                 }
 
-                var buf = new byte[8];
-                int bufLen = stream.Read(buf, 0, DebuggerSignature.Length);
-                string sig = Encoding.ASCII.GetString(buf, 0, bufLen);
+                string sig = stream.ReadAsciiString(DebuggerSignature.Length);
                 if (sig != DebuggerSignature) {
                     return ConnErrorMessages.RemoteUnsupportedServer;
                 }
@@ -147,8 +145,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 stream.WriteInt64(DebuggerProtocolVersion);
 
                 stream.WriteString(secret);
-                bufLen = stream.Read(buf, 0, Accepted.Length);
-                string secretResp = Encoding.ASCII.GetString(buf, 0, bufLen);
+                string secretResp = stream.ReadAsciiString(Accepted.Length);
                 if (secretResp != Accepted) {
                     return ConnErrorMessages.RemoteSecretMismatch;
                 }
@@ -189,16 +186,16 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             if (err == ConnErrorMessages.None) {
                 bool attached = false;
                 PythonLanguageVersion langVer;
+                int pid;
                 try {
                     stream.Write(AttachCommandBytes);
 
-                    var buf = new byte[8];
-                    int bufLen = stream.Read(buf, 0, Accepted.Length);
-                    string attachResp = Encoding.ASCII.GetString(buf, 0, bufLen);
+                    string attachResp = stream.ReadAsciiString(Accepted.Length);
                     if (attachResp != Accepted) {
                         return ConnErrorMessages.RemoteAttachRejected;
                     }
 
+                    pid = stream.ReadInt32();
                     int langMajor = stream.ReadInt32();
                     int langMinor = stream.ReadInt32();
                     int langMicro = stream.ReadInt32();
@@ -221,7 +218,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                     }
                 }
 
-                process = new PythonRemoteProcess(hostName, portNumber, secret, useSsl, langVer);
+                process = new PythonRemoteProcess(pid, hostName, portNumber, secret, useSsl, langVer);
                 process.Connected(socket, stream);
             }
 

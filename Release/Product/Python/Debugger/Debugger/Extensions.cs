@@ -51,10 +51,7 @@ namespace Microsoft.PythonTools.Debugger {
                 
             int len = stream.ReadInt32();
             byte[] buffer = new byte[len];
-            int bytesRead = 0;
-            while (bytesRead != len) {
-                bytesRead += stream.Read(buffer, bytesRead, len - bytesRead);
-            } 
+            stream.ReadToFill(buffer);
 
             if (isUnicode) {
                 return Encoding.UTF8.GetString(buffer);
@@ -73,11 +70,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         internal static long ReadInt64(this Stream stream) {
             byte[] buf = new byte[8];
-            int bufLen = stream.Read(buf, 0, buf.Length);
-            if (bufLen != 8) {
-                Debug.Assert(false, "Socket.ReadInt64 failed to read 8 bytes");
-                throw new IOException();
-            }
+            stream.ReadToFill(buf);
 
             // Can't use BitConverter because we need to convert big-endian to little-endian here,
             // and BitConverter.IsLittleEndian is platform-dependent (and usually true).
@@ -86,8 +79,29 @@ namespace Microsoft.PythonTools.Debugger {
             return (long)((hi << 0x20) | lo);
         }
 
-        internal static int Read(this Stream stream, byte[] b) {
-            return stream.Read(b, 0, b.Length);
+        internal static string ReadAsciiString(this Stream stream, int length) {
+            var buf = new byte[length];
+            stream.ReadToFill(buf);
+            return Encoding.ASCII.GetString(buf, 0, buf.Length);
+        }
+
+        internal static void ReadToFill(this Stream stream, byte[] b) {
+            int count = stream.ReadBytes(b, b.Length);
+            if (count != b.Length) {
+                throw new EndOfStreamException();
+            }
+        }
+
+        internal static int ReadBytes(this Stream stream, byte[] b, int count) {
+            int i = 0;
+            while (i < count) {
+                int read = stream.Read(b, i, count - i);
+                if (read == 0) {
+                    break;
+                }
+                i += read;
+            }
+            return i;
         }
 
         internal static void WriteInt32(this Stream stream, int x) {

@@ -37,8 +37,8 @@ namespace Microsoft.PythonTools.Repl {
                 if (string.IsNullOrEmpty(arguments)) {
                     eval.DisplayActiveThread();
                 } else {
-                    int id;
-                    if (int.TryParse(arguments, out id)) {
+                    long id;
+                    if (long.TryParse(arguments, out id)) {
                         eval.ChangeActiveThread(id, true);
                     } else {
                         window.WriteError(String.Format("Invalid arguments '{0}'. Expected thread id.", arguments));

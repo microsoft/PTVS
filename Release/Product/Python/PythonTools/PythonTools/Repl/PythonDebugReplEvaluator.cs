@@ -46,7 +46,6 @@ namespace Microsoft.PythonTools.Repl {
         private const string currentPrefix = "=> ";
         private const string notCurrentPrefix = "   ";
 
-
         public PythonDebugReplEvaluator() {
             AD7Engine.EngineAttached += new EventHandler<AD7EngineEventArgs>(OnEngineAttached);
             AD7Engine.EngineDetaching += new EventHandler<AD7EngineEventArgs>(OnEngineDetaching);
@@ -375,7 +374,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal void ChangeActiveThread(int id, bool verbose) {
+        internal void ChangeActiveThread(long id, bool verbose) {
             if (_activeEvaluator != null) {
                 PythonThread thread = _activeEvaluator.GetThreads().SingleOrDefault(target => target.Id == id);
                 if (thread != null) {
@@ -621,9 +620,7 @@ namespace Microsoft.PythonTools.Repl {
                 try {
                     stream.Write(PythonRemoteProcess.ReplCommandBytes);
 
-                    var buf = new byte[8];
-                    int bufLen = stream.Read(buf, 0, PythonRemoteProcess.Accepted.Length);
-                    string attachResp = Encoding.ASCII.GetString(buf, 0, bufLen);
+                    string attachResp = stream.ReadAsciiString(PythonRemoteProcess.Accepted.Length);
                     if (attachResp != PythonRemoteProcess.Accepted) {
                         throw new InvalidOperationException();
                     }

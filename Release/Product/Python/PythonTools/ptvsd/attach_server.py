@@ -12,6 +12,8 @@
  #
  # ###########################################################################
 
+__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace']
+
 import atexit
 import getpass
 import os
@@ -29,8 +31,10 @@ try:
 except ImportError:
     ssl = None
 
-import ptvsd.visualstudio_py_debugger as _vspd
-import ptvsd.visualstudio_py_repl as _vspr
+import ptvsd.visualstudio_py_debugger as vspd
+import ptvsd.visualstudio_py_repl as vspr
+from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+
 
 # The server (i.e. the Python app) waits on a TCP port provided. Whenever anything connects to that port,
 # it immediately sends the octet sequence 'PTVSDBG', followed by version number represented as int64,
@@ -52,59 +56,67 @@ import ptvsd.visualstudio_py_repl as _vspr
 #   and then immediately closes connection. Note, all string fields can be empty or null strings.
 #
 # 'ATCH'
-#   Attach debugger to the process. If successful, the server responds with 'ACPT', followed by the Python
-#   language version that the server is running represented by three int64s - major, minor, micro; From there
-#   on the socket is assumed to be using the normal PTVS debugging protocol. If attaching was not successful
-#   (which can happen if some other debugger is already attached), the server responds with 'RJCT' and closes
-#   the connection. 
+#   Attach debugger to the process. If successful, the server responds with 'ACPT', followed by process ID
+#   (int64), and then the Python language version that the server is running represented by three int64s -
+#   major, minor, micro; From there on the socket is assumed to be using the normal PTVS debugging protocol.
+#   If attaching was not successful (which can happen if some other debugger is already attached), the server
+#   responds with 'RJCT' and closes the connection. 
 #
 # 'REPL'
 #   Attach REPL to the process. If successful, the server responds with 'ACPT', and from there on the socket
 #   is assumed to be using the normal PTVS REPL protocol. If not successful (which can happen if there is
 #   no debugger attached), the server responds with 'RJCT' and closes the connection. 
 
-PTVSDBG_VER = 1
-PTVSDBG = _vspd.cmd('PTVSDBG')
-ACPT = _vspd.cmd('ACPT')
-RJCT = _vspd.cmd('RJCT')
-INFO = _vspd.cmd('INFO')
-ATCH = _vspd.cmd('ATCH')
-REPL = _vspd.cmd('REPL')
+PTVS_VER = '2.0'
+DEFAULT_PORT = 5678
+PTVSDBG_VER = 2
+PTVSDBG = to_bytes('PTVSDBG')
+ACPT = to_bytes('ACPT')
+RJCT = to_bytes('RJCT')
+INFO = to_bytes('INFO')
+ATCH = to_bytes('ATCH')
+REPL = to_bytes('REPL')
 
 _attached = threading.Event()
-_vspd.DONT_DEBUG.append(__file__)
+vspd.DONT_DEBUG.append(__file__)
 
 
-def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile = None, redirect_output = True):
-    """Enables Python Tools for Visual Studio to attach to this process remotely to debug Python code.
+def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, keyfile = None, redirect_output = True):
+    """Enables Python Tools for Visual Studio to attach to this process remotely
+    to debug Python code.
 
-    The secret parameter is used to validate the clients - only those clients providing the valid
-    secret will be allowed to connect to this server. On client side, the secret is prepended to
-    the Qualifier string, separated from the hostname by '@', e.g.: secret@myhost.cloudapp.net:5678.
-    If secret is None, there's no validation, and any client can connect freely.
+    The secret parameter is used to validate the clients - only those clients
+    providing the valid secret will be allowed to connect to this server. On
+    client side, the secret is prepended to the Qualifier string, separated from
+    the hostname by '@', e.g.: secret@myhost.cloudapp.net:5678. If secret is
+    None, there's no validation, and any client can connect freely.
 
-    The address parameter specifies the interface and port on which the debugging server should listen
-    for TCP connections. It is in the same format as used for regular sockets of the AF_INET family,
-    i.e. a tuple of (hostname, port). On client side, the server is identified by the Qualifier string
-    in the usual hostname:port format, e.g.: myhost.cloudapp.net:5678.
+    The address parameter specifies the interface and port on which the
+    debugging server should listen for TCP connections. It is in the same format
+    as used for regular sockets of the AF_INET family, i.e. a tuple of
+    (hostname, port). On client side, the server is identified by the Qualifier
+    string in the usual hostname:port format, e.g.: myhost.cloudapp.net:5678.
 
-    The certfile parameter is used to enable SSL. If not specified, or if set to None, the connection
-    between this program and the debugger will be unsecure, and can be intercepted on the wire.
-    If specified, the meaning of this parameter is the same as for ssl.wrap_socket. 
+    The certfile parameter is used to enable SSL. If not specified, or if set to
+    None, the connection between this program and the debugger will be unsecure,
+    and can be intercepted on the wire. If specified, the meaning of this
+    parameter is the same as for ssl.wrap_socket. 
 
-    The keyfile parameter is used together with certfile when SSL is enabled. Its meaning is the same
-    as for ssl.wrap_socket.
+    The keyfile parameter is used together with certfile when SSL is enabled.
+    Its meaning is the same as for ssl.wrap_socket.
 
-    The redirect_output parameter specifies whether any output (on both stdout and stderr) produced
-    by this program should be sent to the debugger. 
+    The redirect_output parameter specifies whether any output (on both stdout
+    and stderr) produced by this program should be sent to the debugger. 
 
-    This function returns immediately after setting up the debugging server, and does not block program
-    execution. If you need to block until debugger is attached, call ptvsd.wait_for_attach. The debugger
-    can be detached and re-attached multiple times after enable_attach is called.
+    This function returns immediately after setting up the debugging server,
+    and does not block program execution. If you need to block until debugger
+    is attached, call ptvsd.wait_for_attach. The debugger can be detached and
+    re-attached multiple times after enable_attach is called.
 
-    Only the thread on which this function is called, and any threads that are created after it returns,
-    will be visible in the debugger once it is attached. Any threads that are already running before
-    this function is called will not be visible.
+    Only the thread on which this function is called, and any threads that are
+    created after it returns, will be visible in the debugger once it is
+    attached. Any threads that are already running before this function is
+    called will not be visible.
     """
 
     if not ssl and (certfile or keyfile):
@@ -120,9 +132,9 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
             raise RuntimeError('IronPython must be started with -X:Tracing and -X:Frames options to support PTVS remote debugging.')
 
     if redirect_output:
-        _vspd.enable_output_redirection()
+        vspd.enable_output_redirection()
 
-    atexit.register(_vspd.detach_process_and_notify_debugger)
+    atexit.register(vspd.detach_process_and_notify_debugger)
 
     server = socket.socket()
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -136,40 +148,40 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
                 client, addr = server.accept()
                 if certfile:
                     client = ssl.wrap_socket(client, server_side = True, ssl_version = ssl.PROTOCOL_TLSv1, certfile = certfile, keyfile = keyfile)
-                client.sendall(PTVSDBG)
-                _vspd.write_int(client, PTVSDBG_VER)
+                write_bytes(client, PTVSDBG)
+                write_int(client, PTVSDBG_VER)
 
-                response = client.recv(7)
+                response = read_bytes(client, 7)
                 if response != PTVSDBG:
                     continue
-                dbg_ver = _vspd.read_int(client)
+                dbg_ver = read_int(client)
                 if dbg_ver != PTVSDBG_VER:
                     continue
 
-                client_secret = _vspd.read_string(client)
+                client_secret = read_string(client)
                 if secret is None or secret == client_secret:
-                    client.sendall(ACPT)
+                    write_bytes(client, ACPT)
                 else:
-                    client.sendall(RJCT)
+                    write_bytes(client, RJCT)
                     continue
 
-                response = client.recv(4)
+                response = read_bytes(client, 4)
 
                 if response == INFO:
                     try:
                         pid = os.getpid()
                     except AttributeError:
                         pid = 0
-                    _vspd.write_int(client, pid)
+                    write_int(client, pid)
 
                     exe = sys.executable or ''
-                    _vspd.write_string(client, exe)
+                    write_string(client, exe)
 
                     try:
                         username = getpass.getuser()
                     except AttributeError:
                         username = ''
-                    _vspd.write_string(client, username)
+                    write_string(client, username)
 
                     try:
                         impl = platform.python_implementation()
@@ -193,31 +205,36 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
                         pass
 
                     version = '%s %s.%s.%s (%s)' % (impl, major, minor, micro, os_and_arch)
-                    _vspd.write_string(client, version)
+                    write_string(client, version)
 
                 elif response == ATCH:
-                    if _vspd.DETACHED:
-                        client.send(ACPT)
+                    if vspd.DETACHED:
+                        write_bytes(client, ACPT)
+                        try:
+                            pid = os.getpid()
+                        except AttributeError:
+                            pid = 0
+                        write_int(client, pid)
 
                         major, minor, micro, release_level, serial = sys.version_info
-                        _vspd.write_int(client, major)
-                        _vspd.write_int(client, minor)
-                        _vspd.write_int(client, micro)
+                        write_int(client, major)
+                        write_int(client, minor)
+                        write_int(client, micro)
 
-                        _vspd.attach_process_from_socket(client, report = True)
-                        _vspd.mark_all_threads_for_break(_vspd.STEPPING_ATTACH_BREAK)
+                        vspd.attach_process_from_socket(client, report = True)
+                        vspd.mark_all_threads_for_break(vspd.STEPPING_ATTACH_BREAK)
                         _attached.set()
                         client = None
                     else:
-                        client.send(RJCT)
+                        write_bytes(client, RJCT)
 
                 elif response == REPL:
-                    if not _vspd.DETACHED:
-                        client.send(ACPT)
-                        _vspd.connect_repl_using_socket(client)
+                    if not vspd.DETACHED:
+                        write_bytes(client, ACPT)
+                        vspd.connect_repl_using_socket(client)
                         client = None
                     else:
-                        client.send(RJCT)
+                        write_bytes(client, RJCT)
 
             except (socket.error, OSError):
                 pass
@@ -237,7 +254,7 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
             break
         frames.append(f)
     frames.reverse()
-    cur_thread = _vspd.new_thread()
+    cur_thread = vspd.new_thread()
     for f in frames:
         cur_thread.push_frame(f)
     def replace_trace_func():
@@ -245,7 +262,7 @@ def enable_attach(secret, address = ('0.0.0.0', 5678), certfile = None, keyfile 
             f.f_trace = cur_thread.trace_func
     replace_trace_func()
     sys.settrace(cur_thread.trace_func)
-    _vspd.intercept_threads(for_attach = True)
+    vspd.intercept_threads(for_attach = True)
 
 
 # Alias for convenience of users of pydevd
@@ -253,21 +270,23 @@ settrace = enable_attach
 
 
 def wait_for_attach(timeout = None):
-    """If a PTVS remote debugger is attached, returns immediately. Otherwise, blocks until a remote
-    debugger attaches to this process, or until the optional timeout occurs.
+    """If a PTVS remote debugger is attached, returns immediately. Otherwise,
+    blocks until a remote debugger attaches to this process, or until the
+    optional timeout occurs.
 
-    When the timeout argument is present and not None, it should be a floating point number specifying
-    a timeout for the operation in seconds (or fractions thereof).
+    When the timeout argument is present and not None, it should be a floating
+    point number specifying the timeout for the operation in seconds (or
+    fractions thereof).
     """
-    if _vspd.DETACHED:
+    if vspd.DETACHED:
         _attached.clear()
         _attached.wait(timeout)
 
 
 def break_into_debugger():
-    """If a PTVS remote debugger is attached, pauses execution of all threads, and breaks into the
-    debugger with current thread as active.
+    """If a PTVS remote debugger is attached, pauses execution of all threads,
+    and breaks into the debugger with current thread as active.
     """
-    if not _vspd.DETACHED:
-        _vspd.SEND_BREAK_COMPLETE = thread.get_ident()
-        _vspd.mark_all_threads_for_break()
+    if not vspd.DETACHED:
+        vspd.SEND_BREAK_COMPLETE = thread.get_ident()
+        vspd.mark_all_threads_for_break()

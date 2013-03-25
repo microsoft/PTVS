@@ -25,15 +25,21 @@ import weakref
 import traceback
 import types
 import bisect
+from os import path
+
+try:
+    from visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+except ImportError:
+    from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+
 try:
     import visualstudio_py_repl as _vspr
 except ImportError:
     try:
         import ptvsd.visualstudio_py_repl as _vspr
     except ImportError:
-        # in the attach scenario, visualstudio_py_repl should already be defined
-        visualstudio_py_repl
-from os import path
+        # in the local attach scenario, visualstudio_py_repl should already be defined
+        _vspr = visualstudio_py_repl
 
 try:
     xrange
@@ -112,11 +118,6 @@ FRAME_KIND_NONE = 0
 FRAME_KIND_PYTHON = 1
 FRAME_KIND_DJANGO = 2
 
-def cmd(cmd_str):
-    if sys.version >= '3.0':
-        return bytes(cmd_str, 'ascii')
-    return cmd_str
-
 if sys.version[0] == '3':
   # work around a crashing bug on CPython 3.x where they take a hard stack overflow
   # we'll never see this exception but it'll allow us to keep our try/except handler
@@ -130,31 +131,28 @@ else:
 # decode here so that any required imports for it to succeed later have already
 # been imported.
 
-cmd('').decode('utf8')
+to_bytes('').decode('utf8')
 ''.encode('utf8') # just in case they differ in what they import...
 
-ASBR = cmd('ASBR')
-SETL = cmd('SETL')
-THRF = cmd('THRF')
-DETC = cmd('DETC')
-NEWT = cmd('NEWT')
-EXTT = cmd('EXTT')
-EXIT = cmd('EXIT')
-EXCP = cmd('EXCP')
-MODL = cmd('MODL')
-STPD = cmd('STPD')
-BRKS = cmd('BRKS')
-BRKF = cmd('BRKF')
-BRKH = cmd('BRKH')
-LOAD = cmd('LOAD')
-EXCE = cmd('EXCE')
-EXCR = cmd('EXCR')
-CHLD = cmd('CHLD')
-OUTP = cmd('OUTP')
-REQH = cmd('REQH')
-UNICODE_PREFIX = cmd('U')
-ASCII_PREFIX = cmd('A')
-NONE_PREFIX = cmd('N')
+ASBR = to_bytes('ASBR')
+SETL = to_bytes('SETL')
+THRF = to_bytes('THRF')
+DETC = to_bytes('DETC')
+NEWT = to_bytes('NEWT')
+EXTT = to_bytes('EXTT')
+EXIT = to_bytes('EXIT')
+EXCP = to_bytes('EXCP')
+MODL = to_bytes('MODL')
+STPD = to_bytes('STPD')
+BRKS = to_bytes('BRKS')
+BRKF = to_bytes('BRKF')
+BRKH = to_bytes('BRKH')
+LOAD = to_bytes('LOAD')
+EXCE = to_bytes('EXCE')
+EXCR = to_bytes('EXCR')
+CHLD = to_bytes('CHLD')
+OUTP = to_bytes('OUTP')
+REQH = to_bytes('REQH')
 
 def get_thread_from_id(id):
     THREADS_LOCK.acquire()
@@ -256,7 +254,7 @@ class ExceptionBreakInfo(object):
                     self.handler_lock.acquire()
                 
                     with _SendLockCtx:
-                        conn.send(REQH)
+                        write_bytes(conn, REQH)
                         write_string(conn, cur_frame.f_code.co_filename)
 
                     # wait for the handler data to be received
@@ -710,7 +708,7 @@ class Thread(object):
                     # multiple threads could be sending this...
                     SEND_BREAK_COMPLETE = False
                     sent_break_complete = True
-                    conn.send(ASBR)
+                    write_bytes(conn, ASBR)
                     write_int(conn, self.id)
 
             if sent_break_complete:
@@ -1028,7 +1026,7 @@ class Thread(object):
 
     def send_frame_list(self, frames, thread_name = None):
         with _SendLockCtx:
-            conn.send(THRF)
+            write_bytes(conn, THRF)
             write_int(conn, self.id)
             write_string(conn, thread_name)
         
@@ -1133,32 +1131,32 @@ class DebuggerLoop(object):
         self.conn = conn
         self.repl_backend = None
         self.command_table = {
-            cmd('stpi') : self.command_step_into,
-            cmd('stpo') : self.command_step_out,
-            cmd('stpv') : self.command_step_over,
-            cmd('brkp') : self.command_set_breakpoint,
-            cmd('brkc') : self.command_set_breakpoint_condition,
-            cmd('brkr') : self.command_remove_breakpoint,
-            cmd('brka') : self.command_break_all,
-            cmd('resa') : self.command_resume_all,
-            cmd('rest') : self.command_resume_thread,
-            cmd('exec') : self.command_execute_code,
-            cmd('chld') : self.command_enum_children,
-            cmd('setl') : self.command_set_lineno,
-            cmd('detc') : self.command_detach,
-            cmd('clst') : self.command_clear_stepping,
-            cmd('sexi') : self.command_set_exception_info,
-            cmd('sehi') : self.command_set_exception_handler_info,
-            cmd('bkdr') : self.command_remove_django_breakpoint,
-            cmd('bkda') : self.command_add_django_breakpoint,
-            cmd('crep') : self.command_connect_repl,
-            cmd('drep') : self.command_disconnect_repl,
+            to_bytes('stpi') : self.command_step_into,
+            to_bytes('stpo') : self.command_step_out,
+            to_bytes('stpv') : self.command_step_over,
+            to_bytes('brkp') : self.command_set_breakpoint,
+            to_bytes('brkc') : self.command_set_breakpoint_condition,
+            to_bytes('brkr') : self.command_remove_breakpoint,
+            to_bytes('brka') : self.command_break_all,
+            to_bytes('resa') : self.command_resume_all,
+            to_bytes('rest') : self.command_resume_thread,
+            to_bytes('exec') : self.command_execute_code,
+            to_bytes('chld') : self.command_enum_children,
+            to_bytes('setl') : self.command_set_lineno,
+            to_bytes('detc') : self.command_detach,
+            to_bytes('clst') : self.command_clear_stepping,
+            to_bytes('sexi') : self.command_set_exception_info,
+            to_bytes('sehi') : self.command_set_exception_handler_info,
+            to_bytes('bkdr') : self.command_remove_django_breakpoint,
+            to_bytes('bkda') : self.command_add_django_breakpoint,
+            to_bytes('crep') : self.command_connect_repl,
+            to_bytes('drep') : self.command_disconnect_repl,
         }
 
     def loop(self):
         try:
             while True:
-                inp = conn.recv(4)
+                inp = read_bytes(conn, 4)
                 cmd = self.command_table.get(inp)
                 if cmd is not None:
                     cmd()
@@ -1362,13 +1360,13 @@ class DebuggerLoop(object):
             newline = THREADS[tid].cur_frame.f_lineno
             THREADS_LOCK.release()
             with _SendLockCtx:
-                self.conn.send(SETL)
+                write_bytes(self.conn, SETL)
                 write_int(self.conn, 1)
                 write_int(self.conn, tid)
                 write_int(self.conn, newline)
         except:
             with _SendLockCtx:
-                self.conn.send(SETL)
+                write_bytes(self.conn, SETL)
                 write_int(self.conn, 0)
                 write_int(self.conn, tid)
                 write_int(self.conn, 0)
@@ -1427,8 +1425,7 @@ class DebuggerLoop(object):
             debugger_dll_handle = None
 
         with _SendLockCtx:
-            conn.send(DETC)
-
+            write_bytes(conn, DETC)
             detach_process()        
 
         for callback in DETACH_CALLBACKS:
@@ -1453,42 +1450,10 @@ def new_thread_wrapper(func, *posargs, **kwargs):
         if not DETACHED:
             report_thread_exit(cur_thread)
 
-def write_string(conn, string):
-    if string is None:
-        conn.send(NONE_PREFIX)
-    elif isinstance(string, unicode):
-        bytes = string.encode('utf8')
-        bytes_len = len(bytes)
-        conn.send(UNICODE_PREFIX)
-        write_int(conn, len(bytes))
-        if bytes_len > 0:
-            conn.send(bytes)
-    else:
-        string_len = len(string)
-        conn.send(ASCII_PREFIX)
-        write_int(conn, string_len)
-        if string_len > 0:
-            conn.send(string)
-
-def read_string(conn):
-    str_len = read_int(conn)
-    if not str_len:
-        return ''
-    res = cmd('')
-    while len(res) < str_len:
-        res = res + conn.recv(str_len - len(res))
-    return res.decode('utf8')
-
-def read_int(conn):
-    return struct.unpack('!q', conn.recv(8))[0]
-
-def write_int(conn, i):
-    conn.send(struct.pack('!q', i))
-
 def report_new_thread(new_thread):
     ident = new_thread.id
     with _SendLockCtx:
-        conn.send(NEWT)
+        write_bytes(conn, NEWT)
         write_int(conn, ident)
 
 def report_all_threads():
@@ -1500,7 +1465,7 @@ def report_all_threads():
 def report_thread_exit(old_thread):
     ident = old_thread.id
     with _SendLockCtx:
-        conn.send(EXTT)
+        write_bytes(conn, EXTT)
         write_int(conn, ident)
 
 def report_exception(frame, exc_info, tid, break_type):
@@ -1517,7 +1482,7 @@ def report_exception(frame, exc_info, tid, break_type):
     excp_text = str(exc_value)
 
     with _SendLockCtx:
-        conn.send(EXCP)
+        write_bytes(conn, EXCP)
         write_string(conn, exc_name)
         write_int(conn, tid)
         write_int(conn, break_type)
@@ -1531,39 +1496,39 @@ def new_module(frame):
 
 def report_module_load(mod):
     with _SendLockCtx:
-        conn.send(MODL)
+        write_bytes(conn, MODL)
         write_int(conn, mod.module_id)
         write_string(conn, mod.filename)
 
 def report_step_finished(tid):
     with _SendLockCtx:
-        conn.send(STPD)
+        write_bytes(conn, STPD)
         write_int(conn, tid)
 
 def report_breakpoint_bound(id):
     with _SendLockCtx:
-        conn.send(BRKS)
+        write_bytes(conn, BRKS)
         write_int(conn, id)
 
 def report_breakpoint_failed(id):
     with _SendLockCtx:
-        conn.send(BRKF)
+        write_bytes(conn, BRKF)
         write_int(conn, id)
 
 def report_breakpoint_hit(id, tid):    
     with _SendLockCtx:
-        conn.send(BRKH)
+        write_bytes(conn, BRKH)
         write_int(conn, id)
         write_int(conn, tid)
 
 def report_process_loaded(tid):
     with _SendLockCtx:
-        conn.send(LOAD)
+        write_bytes(conn, LOAD)
         write_int(conn, tid)
 
 def report_execution_error(exc_text, execution_id):
     with _SendLockCtx:
-        conn.send(EXCE)
+        write_bytes(conn, EXCE)
         write_int(conn, execution_id)
         write_string(conn, exc_text)
 
@@ -1601,7 +1566,7 @@ def report_execution_result(execution_id, result):
     obj_len = get_object_len(result)
 
     with _SendLockCtx:
-        conn.send(EXCR)
+        write_bytes(conn, EXCR)
         write_int(conn, execution_id)
         write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
 
@@ -1610,7 +1575,7 @@ def report_children(execution_id, attributes, indices, indices_are_index, indice
     indices = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in indices]
 
     with _SendLockCtx:
-        conn.send(CHLD)
+        write_bytes(conn, CHLD)
         write_int(conn, execution_id)
         write_int(conn, len(attributes))
         write_int(conn, len(indices))
@@ -1648,7 +1613,7 @@ except NameError:
     def execfile(file, globals, locals): 
         f = open(file, "rb")
         try:
-            exec(compile(f.read().replace(cmd('\r\n'), cmd('\n')), file, 'exec'), globals, locals) 
+            exec(compile(f.read().replace(to_bytes('\r\n'), to_bytes('\n')), file, 'exec'), globals, locals) 
         finally:
             f.close()
 
@@ -1670,16 +1635,21 @@ def intercept_threads(for_attach = False):
 
 def attach_process(port_num, debug_id, report_and_block = False):
     global conn
+    f = open('c:/temp/log.txt', 'a')
+    f.write('attaching ...\n')
+    f.close()
     for i in xrange(50):
         try:
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             conn.connect(('127.0.0.1', port_num))
+            print('attaching', len(debug_id), debug_id)
             write_string(conn, debug_id)
             write_int(conn, 0)  # success
             break
         except:
             import time
-            time.sleep(50./1000)
+            #time.sleep(50./1000)
+            time.sleep(1)
     else:
         raise Exception('failed to attach')
     attach_process_from_socket(conn, report_and_block, report_and_block)
@@ -1835,7 +1805,7 @@ class _DebuggerOutput(object):
         if not DETACHED:
             probe_stack(3)
             with _SendLockCtx:
-                conn.send(OUTP)
+                write_bytes(conn, OUTP)
                 write_int(conn, thread.get_ident())
                 write_string(conn, value)
         if self.old_out:
@@ -1863,7 +1833,7 @@ class DebuggerBuffer(object):
             probe_stack(3)
             str_data = data.decode('utf8')
             with _SendLockCtx:
-                conn.send(OUTP)
+                write_bytes(conn, OUTP)
                 write_int(conn, thread.get_ident())
                 write_string(conn, str_data)
         self.buffer.write(data)

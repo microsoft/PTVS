@@ -2285,7 +2285,7 @@ namespace Microsoft.VisualStudio.Repl {
                 _history.Last.Duration = _sw.Elapsed.Seconds;
             }
 
-            if (result.Exception != null || !result.Result.IsSuccessful) {
+            if (result.IsCanceled || result.Exception != null || !result.Result.IsSuccessful) {
                 if (_history.Last != null) {
                     _history.Last.Failed = true;
                 }

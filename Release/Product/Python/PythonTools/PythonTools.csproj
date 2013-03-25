@@ -721,6 +721,9 @@
     <Content Include="ptvsd\__init__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="ptvsd\__main__.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Templates\Projects\FromExistingCode\FromExistingCode.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -730,6 +733,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="visualstudio_py_repl.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="visualstudio_py_util.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -1197,7 +1204,9 @@
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
   -->
+  <Target Name="AfterBuild">
+    <!-- Recreate the full ptvsd package directory structure in the output, so that it can be imported by debugger tests -->
+    <Copy SourceFiles="visualstudio_py_debugger.py;visualstudio_py_repl.py;visualstudio_py_util.py" DestinationFolder="$(TargetDir)\ptvsd" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

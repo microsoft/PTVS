@@ -247,7 +247,6 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public void OutputThread() {
-                byte[] cmd_buffer = new byte[4];
                 try {
                     if (_stream == null) {
                         _socket = _socket.Accept();
@@ -273,10 +272,15 @@ namespace Microsoft.PythonTools.Repl {
                         }
                     }
 
-                    Stream stream;
-                    while ((stream = _stream) != null && stream.Read(cmd_buffer) == 4) {
+                    while (true) {
+                        Stream stream = _stream;
+                        if (stream == null) {
+                            break;
+                        }
+
+                        string cmd = stream.ReadAsciiString(4);
+
                         using (new SocketLock(this)) {
-                            string cmd = CommandtoString(cmd_buffer);
                             Debug.WriteLine("Repl {0} received command: {1}", _eval.DisplayName, cmd);
                             switch (cmd) {
                                 case "DONE": HandleExecutionDone(); break;
@@ -308,10 +312,23 @@ namespace Microsoft.PythonTools.Repl {
                 } catch (DisconnectedException) {
                 } catch (NullReferenceException) {
                 }
+
+                using (new SocketLock(this)) {
+                    if (_completion != null) {
+                        _completion.SetCanceled();
+                    }
+                }
             }
 
             private Stream Stream {
-                get { return _stream; }
+                get {
+                    var socket = Socket; // for Socket.get state checks
+                    var res = _stream;
+                    if (res == null) {
+                        throw new DisconnectedException("The interactive window has become disconnected from the remote process.  Please reset the window.");
+                    }
+                    return res;
+                }
             }
 
             private Socket Socket {
@@ -365,12 +382,12 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void DisplayPng() {
-                int len = _stream.ReadInt32();
+                int len = Stream.ReadInt32();
                 byte[] buffer = new byte[len];
                 if (len != 0) {
                     int bytesRead = 0;
                     do {
-                        bytesRead += _stream.Read(buffer, bytesRead, len - bytesRead);
+                        bytesRead += Stream.Read(buffer, bytesRead, len - bytesRead);
                     } while (bytesRead != len);
                 }
 
@@ -385,8 +402,7 @@ namespace Microsoft.PythonTools.Repl {
                 PythonProcess debugProcess;
                 using (new SocketLock(this)) {
                     Stream.Write(DebugAttachCommandBytes);
-
-                    debugProcess = PythonProcess.AttachRepl(_stream, _process.Id, _eval.AnalyzerProjectLanguageVersion);
+                    debugProcess = PythonProcess.AttachRepl(Stream, _process.Id, _eval.AnalyzerProjectLanguageVersion);
                 }
 
                 // TODO: Surround in SocketUnlock
@@ -582,7 +598,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            static string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;
+            static readonly string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;
             public Task<ExecutionResult> ExecuteText(string text) {
                 if (text.StartsWith("$")) {
                     _eval._window.WriteError(String.Format("Unknown command '{0}', use \"$help\" for help" + Environment.NewLine, text.Substring(1).Trim()));

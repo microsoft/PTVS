@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly bool _delayUnregister;
         private readonly object _socketLock = new object();
 
+        private int _pid;
         private bool _sentExited;
         private Socket _socket;
         private Stream _stream;
@@ -57,11 +58,13 @@ namespace Microsoft.PythonTools.Debugger {
         private int _defaultBreakMode;
         private ICollection<KeyValuePair<string, int>> _breakOn;
 
-        protected PythonProcess(PythonLanguageVersion languageVersion) {
+        protected PythonProcess(int pid, PythonLanguageVersion languageVersion) {
+            _pid = pid;
             _langVersion = languageVersion;
         }
 
         private PythonProcess(int pid) {
+            _pid = pid;
             _process = Process.GetProcessById(pid);
             _process.EnableRaisingEvents = true;
             _process.Exited += new EventHandler(_process_Exited);
@@ -81,6 +84,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private PythonProcess(Stream stream, int pid, PythonLanguageVersion version) {
+            _pid = pid;
             _process = Process.GetProcessById(pid);
             _process.EnableRaisingEvents = true;
             _process.Exited += new EventHandler(_process_Exited);
@@ -94,7 +98,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, string interpreterOptions, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
-            : this(languageVersion) {
+            : this(0, languageVersion) {
 
             ListenForConnection();
 
@@ -172,7 +176,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         public int Id {
             get {
-                return _process != null ? _process.Id : 0;
+                return _pid;
             }
         }
 
@@ -184,6 +188,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         public void Start(bool startListening = true) {
             _process.Start();
+            _pid = _process.Id;
             if (startListening) {
                 StartListening();
             }
@@ -215,10 +220,16 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void WaitForExit() {
+            if (_process == null) {
+                throw new InvalidOperationException();
+            }
             _process.WaitForExit();
         }
 
         public bool WaitForExit(int milliseconds) {
+            if (_process == null) {
+                throw new InvalidOperationException();
+            }
             return _process.WaitForExit(milliseconds);
         }
 
@@ -355,13 +366,17 @@ namespace Microsoft.PythonTools.Debugger {
                 System.Threading.Thread.Sleep(10);
             }
 
-            byte[] cmd_buffer = new byte[4];
             try {
-                Stream stream;
-                while ((stream = _stream) != null && stream.Read(cmd_buffer) == 4) {
-                    Debug.WriteLine(String.Format("Received Debugger command: {0} ({1})", CommandtoString(cmd_buffer), _processGuid));
+                while (true) {
+                    Stream stream = _stream;
+                    if (stream == null) {
+                        break;
+                    }
 
-                    switch (CommandtoString(cmd_buffer)) {
+                    string cmd = stream.ReadAsciiString(4);
+                    Debug.WriteLine(String.Format("Received Debugger command: {0} ({1})", cmd, _processGuid));
+
+                    switch (cmd) {
                         case "EXCP": HandleException(stream); break;
                         case "BRKH": HandleBreakPointHit(stream); break;
                         case "NEWT": HandleThreadCreate(stream); break;
@@ -1037,6 +1052,9 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         internal void SendStringToStdInput(string text) {
+            if (_process == null) {
+                throw new InvalidOperationException();
+            }
             _process.StandardInput.Write(text);
         }
 
