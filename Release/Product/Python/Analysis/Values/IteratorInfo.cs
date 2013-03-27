@@ -28,15 +28,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal static BuiltinClassInfo GetIteratorTypeFromType(BuiltinClassInfo klass, AnalysisUnit unit) {
             switch (klass.PythonType.TypeId) {
                 case BuiltinTypeId.List:
-                    return unit.ProjectState._listIteratorType;
+                    return unit.ProjectState.ClassInfos[BuiltinTypeId.ListIterator];
                 case BuiltinTypeId.Tuple:
-                    return unit.ProjectState._tupleIteratorType;
+                    return unit.ProjectState.ClassInfos[BuiltinTypeId.TupleIterator];
                 case BuiltinTypeId.Set:
-                    return unit.ProjectState._setIteratorType;
+                    return unit.ProjectState.ClassInfos[BuiltinTypeId.SetIterator];
                 case BuiltinTypeId.Str:
-                    return unit.ProjectState._strIteratorType;
+                    return unit.ProjectState.ClassInfos[BuiltinTypeId.StrIterator];
+                case BuiltinTypeId.Unicode:
+                    return unit.ProjectState.ClassInfos[BuiltinTypeId.UnicodeIterator];
                 case BuiltinTypeId.Bytes:
-                    return unit.ProjectState._bytesIteratorType;
+                    return unit.ProjectState.ClassInfos[BuiltinTypeId.BytesIterator];
                 case BuiltinTypeId.Generator:
                 case BuiltinTypeId.DictKeys:
                 case BuiltinTypeId.DictValues:
@@ -45,6 +47,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case BuiltinTypeId.TupleIterator:
                 case BuiltinTypeId.SetIterator:
                 case BuiltinTypeId.StrIterator:
+                case BuiltinTypeId.UnicodeIterator:
                 case BuiltinTypeId.BytesIterator:
                 case BuiltinTypeId.CallableIterator:
                     return klass;

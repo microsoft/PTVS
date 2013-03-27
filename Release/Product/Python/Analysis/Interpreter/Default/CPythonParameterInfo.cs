@@ -18,36 +18,31 @@ namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonParameterInfo : IParameterInfo {
         private readonly string _name, _doc, _defaultValue;
         private readonly bool _isSplat, _isKeywordSplat;
-        private readonly object _typeObj;
-        private IPythonType _type;
+        private List<IPythonType> _type;
 
         public CPythonParameterInfo(ITypeDatabaseReader typeDb, Dictionary<string, object> parameterTable) {
             if (parameterTable != null) {
-                object typeObj;
+                object value;
+
+                if (parameterTable.TryGetValue("type", out value)) {
+                    _type = new List<IPythonType>();
+                    typeDb.LookupType(value, (type, fromInstanceDb) => _type.Add(type));
+                }
                 
-                if (parameterTable.TryGetValue("type", out typeObj)) {
-                    typeDb.LookupType(typeObj, (value, fromInstanceDb) => _type = value);
+                if (parameterTable.TryGetValue("name", out value)) {
+                    _name = value as string;
                 }
-                _typeObj = typeObj;
+
+                if (parameterTable.TryGetValue("doc", out value)) {
+                    _doc = value as string;
+                }
+
+                if (parameterTable.TryGetValue("default_value", out value)) {
+                    _defaultValue = value as string;
+                }
                 
-                object nameObj;
-                if (parameterTable.TryGetValue("name", out nameObj)) {
-                    _name = nameObj as string;
-                }
-
-                object docObj;
-                if (parameterTable.TryGetValue("doc", out docObj)) {
-                    _doc = docObj as string;
-                }
-
-                object defaultValueObj;
-                if (parameterTable.TryGetValue("default_value", out defaultValueObj)) {
-                    _defaultValue = defaultValueObj as string;
-                }
-
-                object argFormatObj;
-                if (parameterTable.TryGetValue("arg_format", out argFormatObj)) {
-                    switch (argFormatObj as string) {
+                if (parameterTable.TryGetValue("arg_format", out value)) {
+                    switch (value as string) {
                         case "*": _isSplat = true; break;
                         case "**": _isKeywordSplat = true; break;
                     }
@@ -62,7 +57,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             get { return _name; }
         }
 
-        public IPythonType ParameterType {
+        public IList<IPythonType> ParameterTypes {
             get { return _type; }
         }
 

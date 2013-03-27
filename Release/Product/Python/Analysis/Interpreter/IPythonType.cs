@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-
 namespace Microsoft.PythonTools.Interpreter {
     public interface IPythonType : IMemberContainer, IMember {
         IPythonFunction GetConstructors();

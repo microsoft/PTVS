@@ -31,15 +31,15 @@ from Microsoft.Scripting.Generation import CompilerHelpers
 class NonPythonTypeException(Exception):
     pass
 
-def type_to_name(type_obj):
+def type_to_typelist(type_obj):
     if type_obj.IsArray:
-        return PythonScraper.type_to_name(tuple)
+        return PythonScraper.type_to_typelist(tuple)
     elif type_obj == Void:
-        return PythonScraper.type_to_name(type(None))
+        return PythonScraper.type_to_typelist(type(None))
     elif not PythonOps.IsPythonType(clr.GetPythonType(type_obj)):
         raise NonPythonTypeException
 
-    return PythonScraper.type_to_name(clr.GetPythonType(type_obj))
+    return PythonScraper.type_to_typelist(clr.GetPythonType(type_obj))
 
 
 def get_default_value(param):
@@ -74,7 +74,7 @@ def sanitize_name(param):
 
 def get_parameter_info(param):
     parameter_table = {
-        'type':type_to_name(param.ParameterType),
+        'type': type_to_typelist(param.ParameterType),
         'name': sanitize_name(param),
     }
 
@@ -110,17 +110,17 @@ def get_function_overloads(targets):
         try:
             arg_info = [get_parameter_info(arg) for arg in args]
             if not target.IsStatic and not target.IsConstructor:
-                arg_info = [{'type' : type_to_name(target.DeclaringType), 'name': 'self'}] + arg_info
+                arg_info.insert(0, {'type' : type_to_typelist(target.DeclaringType), 'name': 'self'})
 
-            res.append(
-             {'args' :  arg_info,
-              'ret_type' : type_to_name(get_return_type(target)), }
-            )
+            res.append({
+                'args' : tuple(arg_info),
+                'ret_type' : type_to_typelist(get_return_type(target))
+            })
         except NonPythonTypeException:
             pass
 
 
-    return tuple(res)
+    return res
 
 def get_overloads(func, is_method = False):
     if type(func) == type(list.append):
@@ -130,7 +130,7 @@ def get_overloads(func, is_method = False):
 
     res = get_function_overloads(targets)
 
-    return tuple(res)
+    return res
 
 
 def get_descriptor_type(descriptor):

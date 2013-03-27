@@ -15,6 +15,7 @@
 using System;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -84,14 +85,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 newArgs[i] = NamespaceSet.Empty;
             }
 
+            int lastPositionFilled = -1;
+
             for (int i = 0; i < kwArgsOffset; ++i) {
                 if (i < argCount && (listArgsIndex < 0 || i < listArgsIndex)) {
                     newArgs[i] = newArgs[i].Union(args[i]);
+                    lastPositionFilled = i;
                 } else if (listArgsIndex >= 0) {
                     foreach (var ns in args[i]) {
                         var sseq = ns as StarArgsSequenceInfo;
                         if (sseq != null && i < node.Parameters.Count && sseq._node == node.Parameters[i]) {
-                            seqArgs = seqArgs.Add(unit.ProjectState._tupleType.Instance);
+                            seqArgs = seqArgs.Add(unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple].Instance);
                         } else {
                             seqArgs = seqArgs.Add(ns);
                         }
@@ -108,14 +112,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 var name = keywordArgs[i - kwArgsOffset].Name;
                 if (name.Equals("*", StringComparison.Ordinal)) {
-                    if (listArgsIndex >= 0) {
-                        foreach (var ns in args[i]) {
-                            var sseq = ns as StarArgsSequenceInfo;
-                            if (sseq != null) {
-                                seqArgs = seqArgs.Union(sseq.IndexTypes.SelectMany(def => def.TypesNoCopy));
-                            } else {
-                                newArgs[listArgsIndex] = newArgs[listArgsIndex].Add(ns);
+                    foreach (var ns in args[i]) {
+                        SequenceInfo seq;
+                        StarArgsSequenceInfo sseq;
+                        if ((sseq = ns as StarArgsSequenceInfo) != null) {
+                            seqArgs = seqArgs.Union(sseq.IndexTypes.SelectMany(def => def.TypesNoCopy));
+                        } else if ((seq = ns as SequenceInfo) != null) {
+                            for (int j = 0; j < seq.IndexTypes.Length; ++j) {
+                                int k = lastPositionFilled + j + 1;
+                                if (k < node.Parameters.Count && node.Parameters[k].Kind == ParameterKind.Normal) {
+                                    newArgs[k] = newArgs[k].Union(seq.IndexTypes[j].TypesNoCopy);
+                                } else if (listArgsIndex >= 0) {
+                                    seqArgs = seqArgs.Union(seq.IndexTypes[j].TypesNoCopy);
+                                } else {
+                                    // TODO: Warn about extra parameters
+                                }
                             }
+                        } else if (listArgsIndex >= 0) {
+                            newArgs[listArgsIndex] = newArgs[listArgsIndex].Add(ns);
                         }
                     }
                 } else if (name.Equals("**", StringComparison.Ordinal)) {

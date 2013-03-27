@@ -61,6 +61,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="AnalysisTest.Perf.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
+    <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />

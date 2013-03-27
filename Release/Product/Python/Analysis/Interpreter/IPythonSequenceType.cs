@@ -12,16 +12,11 @@
  *
  * ***************************************************************************/
 
-
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
-    /// <summary>
-    /// Represents a Python module which can provide its documentation.
-    /// 
-    /// New in 1.1.
-    /// </summary>
-    public interface IPythonModule2 : IPythonModule {
-        string Documentation {
+    public interface IPythonSequenceType : IPythonType {
+        IEnumerable<IPythonType> IndexTypes {
             get;
         }
     }

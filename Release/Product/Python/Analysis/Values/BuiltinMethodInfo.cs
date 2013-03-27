@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private OverloadResult[] _overloads;
 
         public BuiltinMethodInfo(IPythonMethodDescriptor method, PythonAnalyzer projectState)
-            : base(projectState.Types.BuiltinMethodDescriptor, projectState) {
+            : base(projectState.Types[BuiltinTypeId.BuiltinMethodDescriptor], projectState) {
             var function = method.Function;
             _memberType = method.MemberType;
             _function = function;
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public BuiltinMethodInfo(IPythonFunction function, PythonMemberType memType, PythonAnalyzer projectState)
-            : base(projectState.Types.BuiltinMethodDescriptor, projectState) {
+            : base(projectState.Types[BuiltinTypeId.BuiltinMethodDescriptor], projectState) {
             _memberType = memType;
             _function = function;
             _returnTypes = Utils.GetReturnTypes(function, projectState);
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override INamespaceSet Call(Node node, Interpreter.AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
-            return _returnTypes;
+            return _returnTypes.GetInstanceType();
         }
 
         public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
@@ -177,17 +178,17 @@ namespace Microsoft.PythonTools.Analysis {
             string name = param.Name;
 
             string typeName;
-            if (param.ParameterType != null) {
-                typeName = param.ParameterType != _projectState.Types.None ? param.ParameterType.Name : null;
+            if (param.ParameterTypes != null) {
+                typeName = param.ParameterTypes.Where(p => p != _projectState.Types[BuiltinTypeId.NoneType]).Select(p => p.Name).FirstOrDefault();
             } else {
                 typeName = "object";
             }
             if (param.IsParamArray) {
                 name = "*" + name;
-                var advType = param.ParameterType as IAdvancedPythonType;
+                var advType = param.ParameterTypes as IAdvancedPythonType;
                 if (advType != null && advType.IsArray) {
                     var elemType = advType.GetElementType();
-                    if (elemType == _projectState.Types.Object) {
+                    if (elemType == _projectState.Types[BuiltinTypeId.Object]) {
                         typeName = "sequence";
                     } else {
                         typeName = elemType.Name + " sequence";

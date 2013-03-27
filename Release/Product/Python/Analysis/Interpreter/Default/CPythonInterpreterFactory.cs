@@ -19,7 +19,7 @@ using System.Reflection;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase2 {
+    class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
         private readonly string _description;
         private readonly Guid _id;
         private readonly InterpreterConfiguration _config;
@@ -40,6 +40,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _config = new CPythonInterpreterConfiguration(pythonPath, pythonwPath, pathEnvVar, arch, version);
         }
 
+        internal CPythonInterpreterFactory(Version version, PythonTypeDatabase typeDb)
+            : this(version, Guid.Empty, "Test interpreter", "", "", "PYTHONPATH", ProcessorArchitecture.X86) {
+            _typeDb = typeDb;
+        }
+
         public InterpreterConfiguration Configuration {
             get {
                 return _config;
@@ -58,10 +63,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             lock (_interpreters) {
                 if (_typeDb == null) {
                     _typeDb = MakeTypeDatabase();
-                } else if (_typeDb.DatabaseDirectory != GetConfiguredDatabasePath() && ConfigurableDatabaseExists()) {
+                } else if (_typeDb.DatabaseDirectory != DatabasePath && ConfigurableDatabaseExists()) {
                     // database has been generated for this interpreter, switch to the specific version.
                     _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
-                    _typeDb = new PythonTypeDatabase(GetConfiguredDatabasePath(), Is3x);
+                    _typeDb = new PythonTypeDatabase(DatabasePath, Is3x);
                     _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
                 }
 
@@ -75,7 +80,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         internal PythonTypeDatabase MakeTypeDatabase() {
             if (ConfigurableDatabaseExists()) {
-                var res = new PythonTypeDatabase(GetConfiguredDatabasePath(), Is3x);
+                var res = new PythonTypeDatabase(DatabasePath, Is3x);
                 res.DatabaseCorrupt += OnDatabaseCorrupt;
                 return res;
             }
@@ -85,8 +90,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private bool ConfigurableDatabaseExists() {
-            if (File.Exists(Path.Combine(GetConfiguredDatabasePath(), Is3x ? "builtins.idb" : "__builtin__.idb"))) {
-                string versionFile = Path.Combine(GetConfiguredDatabasePath(), "database.ver");
+            if (File.Exists(Path.Combine(DatabasePath, Is3x ? "builtins.idb" : "__builtin__.idb"))) {
+                string versionFile = Path.Combine(DatabasePath, "database.ver");
                 if (File.Exists(versionFile)) {
                     try {
                         string allLines = File.ReadAllText(versionFile);
@@ -100,17 +105,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return false;
         }
 
-        private string GetCompletionDatabaseDirPath() {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Python Tools\\CompletionDB"
-            );
-        }
-
-        private string GetConfiguredDatabasePath() {
-            return Path.Combine(GetCompletionDatabaseDirPath(), String.Format("{0}\\{1}", Id, Configuration.Version));
-        }
-
         bool IInterpreterWithCompletionDatabase.GenerateCompletionDatabase(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
             return GenerateCompletionDatabaseWorker(options, databaseGenerationCompleted);
         }
@@ -119,7 +113,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             lock (this) {
                 _generating = true;
             }
-            string outPath = GetConfiguredDatabasePath();
+            string outPath = DatabasePath;
 
             if (!PythonTypeDatabase.Generate(
                 new PythonTypeDatabaseCreationRequest() { DatabaseOptions = options, Factory = this, OutputPath = outPath },
@@ -188,6 +182,30 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             get {
                 return Configuration.Version.Major == 3;
             }
+        }
+
+        public void NotifyInvalidDatabase() {
+            if (_typeDb != null) {
+                _typeDb.OnDatabaseCorrupt();
+            }
+        }
+
+        public string DatabasePath {
+            get {
+                return Path.Combine(PythonTypeDatabase.CompletionDatabasePath, String.Format("{0}\\{1}", Id, Configuration.Version));
+            }
+        }
+
+        public string GetAnalysisLogContent() {
+            var analysisLog = Path.Combine(DatabasePath, "AnalysisLog.txt");
+            if (File.Exists(analysisLog)) {
+                try {
+                    return File.ReadAllText(analysisLog);
+                } catch (Exception e) {
+                    return "Error reading: " + e;
+                }
+            }
+            return null;
         }
     }
 }

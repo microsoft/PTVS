@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
@@ -114,12 +115,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     if (d != null) {
                         var decorator = ddg._eval.Evaluate(d);
 
-                        if (decorator.Contains(ProjectState._propertyObj)) {
+                        if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.Property])) {
                             Function.IsProperty = true;
-                        } else if (decorator.Contains(ProjectState._staticmethodObj)) {
+                        } else if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.StaticMethod])) {
                             // TODO: Warn if IsClassMethod is set
                             Function.IsStatic = true;
-                        } else if (decorator.Contains(ProjectState._classmethodObj)) {
+                        } else if (decorator.Contains(ProjectState.ClassInfos[BuiltinTypeId.ClassMethod])) {
                             // TODO: Warn if IsStatic is set
                             Function.IsClassMethod = true;
                         } else {
@@ -141,7 +142,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 INamespaceSet firstParam;
                 var clsScope = ddg.Scope as ClassScope;
                 if (clsScope == null) {
-                    firstParam = Function.IsClassMethod ? ProjectState._typeObj.SelfSet : NamespaceSet.Empty;
+                    firstParam = Function.IsClassMethod ? ProjectState.ClassInfos[BuiltinTypeId.Type].SelfSet : NamespaceSet.Empty;
                 } else {
                     firstParam = Function.IsClassMethod ? clsScope.Class.SelfSet : clsScope.Class.Instance.SelfSet;
                 }

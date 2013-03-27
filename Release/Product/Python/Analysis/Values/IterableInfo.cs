@@ -96,15 +96,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         protected string MakeDescription(string typeName) {
             EnsureUnionType();
-            if (UnionType == null || UnionType.Count == 0) {
-                return typeName;
-            } else if (UnionType.Count == 1) {
-                return typeName + " of " + UnionType.First().ShortDescription;
-            } else if (UnionType.Count < 4) {
-                return typeName + " of {" + string.Join(", ", UnionType.Select(ns => ns.ShortDescription)) + "}";
-            } else {
-                return typeName + " of multiple types";
+            return MakeDescription(this, typeName, UnionType);
+        }
+
+        internal static string MakeDescription(Namespace type, string typeName, INamespaceSet indexTypes) {
+            if (type.Push()) {
+                try {
+                    if (indexTypes == null || indexTypes.Count == 0) {
+                        return typeName;
+                    } else if (indexTypes.Count == 1) {
+                        return typeName + " of " + indexTypes.First().ShortDescription;
+                    } else if (indexTypes.Count < 4) {
+                        return typeName + " of {" + string.Join(", ", indexTypes.Select(ns => ns.ShortDescription)) + "}";
+                    } else {
+                        return typeName + " of multiple types";
+                    }
+                } finally {
+                    type.Pop();
+                }
             }
+            return typeName;
         }
 
         public override string Description {

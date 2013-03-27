@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private BuiltinMethodInfo _method;
 
         public BuiltinFunctionInfo(IPythonFunction function, PythonAnalyzer projectState)
-            : base(projectState.Types.BuiltinFunction, projectState) {
+            : base(projectState.Types[BuiltinTypeId.BuiltinFunction], projectState) {
 
             _function = function;
             _returnTypes = Utils.GetReturnTypes(function, projectState);
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override INamespaceSet Call(Node node, Interpreter.AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
-            return _returnTypes;
+            return _returnTypes.GetInstanceType();
         }
 
         public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {

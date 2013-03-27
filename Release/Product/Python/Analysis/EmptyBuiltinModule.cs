@@ -44,6 +44,10 @@ namespace Microsoft.PythonTools.Analysis {
         public void Imported(IModuleContext context) {
         }
 
+        public string Documentation {
+            get { return string.Empty; }
+        }
+
         #endregion
 
         #region IMemberContainer Members
@@ -65,5 +69,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
+
     }
 }

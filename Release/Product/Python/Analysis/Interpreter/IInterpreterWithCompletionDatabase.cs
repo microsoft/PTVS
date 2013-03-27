@@ -35,5 +35,32 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The database should be generated in the background.
         /// </summary>
         void AutoGenerateCompletionDatabase();
+
+        /// <summary>
+        /// Gets whether or not the completion database is currently up to date.
+        /// 
+        /// New in 1.1
+        /// </summary>
+        bool IsCurrent {
+            get;
+        }
+
+        /// <summary>
+        /// Called to inform the interpreter that its database requires
+        /// regeneration.
+        /// 
+        /// New in 2.0
+        /// </summary>
+        void NotifyInvalidDatabase();
+
+        /// <summary>
+        /// Returns logged information about the analysis of the interpreter's library.
+        /// 
+        /// May return null if no information is available, or a string containing error
+        /// text if an error occurs.
+        /// 
+        /// New in 2.0
+        /// </summary>
+        string GetAnalysisLogContent();
     }
 }

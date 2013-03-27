@@ -28,9 +28,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public interface IPythonInterpreter {
 
-        #region Analysis Support
-
-        void Initialize(IInterpreterState state);
+        void Initialize(PythonAnalyzer state);
 
         /// <summary>
         /// Gets a well known built-in type such as int, list, dict, etc...
@@ -61,6 +59,13 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         IModuleContext CreateModuleContext();
 
-        #endregion
+        /// <summary>
+        /// Called to inform the interpreter that its database requires regeneration.
+        /// 
+        /// This should typically forward the call to the interpreter factory, which controls the database.
+        /// 
+        /// New in 2.0
+        /// </summary>
+        void NotifyInvalidDatabase();
     }
 }

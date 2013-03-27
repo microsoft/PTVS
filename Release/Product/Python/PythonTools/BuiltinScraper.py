@@ -35,76 +35,75 @@ def get_builtin(name):
 BUILTIN_TYPES = [type_name for type_name in builtins_keys() if type(get_builtin(type_name)) is type]
 if sys.version >= '3.':
     BUILTIN = 'builtins'
+    unicode = str
 else:
     BUILTIN = '__builtin__'
 
-TYPE_OVERRIDES = {'string': PythonScraper.type_to_name(types.CodeType),
-                  's': PythonScraper.type_to_name(str),
-                  'integer': PythonScraper.type_to_name(int),
-                  'boolean': PythonScraper.type_to_name(bool),
-                  'number': PythonScraper.type_to_name(int),
-                  'pid': PythonScraper.type_to_name(int),
-                  'ppid': PythonScraper.type_to_name(int),
-                  'fd': PythonScraper.type_to_name(int),
-                  'handle': PythonScraper.type_to_name(int),
-                  'Exit': PythonScraper.type_to_name(int),
-                  'fd2': PythonScraper.type_to_name(int),
-                  'Integral': PythonScraper.type_to_name(int),
-                  'exit_status':PythonScraper.type_to_name(int),
-                  'old_mask': PythonScraper.type_to_name(int),
-                  'source': PythonScraper.type_to_name(str),
-                  'newpos': PythonScraper.type_to_name(int),
-                  'key': PythonScraper.type_to_name(str),
-                  'dictionary': PythonScraper.type_to_name(dict),
-                  'None': PythonScraper.type_to_name(type(None)),
-                  'floating': PythonScraper.type_to_name(float),
-                  'filename': PythonScraper.type_to_name(str),
-                  'path': PythonScraper.type_to_name(str),
-                  'byteswritten': PythonScraper.type_to_name(int),
-                  'Unicode': PythonScraper.type_to_name(float),
-                  'True':  PythonScraper.type_to_name(bool),
-                  'False':  PythonScraper.type_to_name(bool),
-                  'lock': PythonScraper.type_to_name(thread.LockType),
-                  'code': PythonScraper.type_to_name(types.CodeType),
-                  'module': PythonScraper.type_to_name(types.ModuleType),
-                  'size': PythonScraper.type_to_name(int),
-                  'INT': PythonScraper.type_to_name(int),
-                  'STRING': PythonScraper.type_to_name(str),
-                  'TUPLE': PythonScraper.type_to_name(tuple),
-                  'OBJECT': PythonScraper.type_to_name(object),
-                  'LIST': PythonScraper.type_to_name(list),
-                  'DICT': PythonScraper.type_to_name(dict),
+TYPE_OVERRIDES = {'string': PythonScraper.type_to_typeref(types.CodeType),
+                  's': PythonScraper.type_to_typeref(str),
+                  'integer': PythonScraper.type_to_typeref(int),
+                  'boolean': PythonScraper.type_to_typeref(bool),
+                  'number': PythonScraper.type_to_typeref(int),
+                  'pid': PythonScraper.type_to_typeref(int),
+                  'ppid': PythonScraper.type_to_typeref(int),
+                  'fd': PythonScraper.type_to_typeref(int),
+                  'handle': PythonScraper.type_to_typeref(int),
+                  'Exit': PythonScraper.type_to_typeref(int),
+                  'fd2': PythonScraper.type_to_typeref(int),
+                  'Integral': PythonScraper.type_to_typeref(int),
+                  'exit_status':PythonScraper.type_to_typeref(int),
+                  'old_mask': PythonScraper.type_to_typeref(int),
+                  'source': PythonScraper.type_to_typeref(str),
+                  'newpos': PythonScraper.type_to_typeref(int),
+                  'key': PythonScraper.type_to_typeref(str),
+                  'dictionary': PythonScraper.type_to_typeref(dict),
+                  'None': PythonScraper.type_to_typeref(type(None)),
+                  'floating': PythonScraper.type_to_typeref(float),
+                  'filename': PythonScraper.type_to_typeref(str),
+                  'path': PythonScraper.type_to_typeref(str),
+                  'byteswritten': PythonScraper.type_to_typeref(int),
+                  'unicode': PythonScraper.type_to_typeref(unicode),
+                  'Unicode': PythonScraper.type_to_typeref(unicode),
+                  'True':  PythonScraper.type_to_typeref(bool),
+                  'False':  PythonScraper.type_to_typeref(bool),
+                  'lock': PythonScraper.type_to_typeref(thread.LockType),
+                  'code': PythonScraper.type_to_typeref(types.CodeType),
+                  'module': PythonScraper.type_to_typeref(types.ModuleType),
+                  'size': PythonScraper.type_to_typeref(int),
+                  'INT': PythonScraper.type_to_typeref(int),
+                  'STRING': PythonScraper.type_to_typeref(str),
+                  'TUPLE': PythonScraper.type_to_typeref(tuple),
+                  'OBJECT': PythonScraper.type_to_typeref(object),
+                  'LIST': PythonScraper.type_to_typeref(list),
+                  'DICT': PythonScraper.type_to_typeref(dict),
                 }
 
 RETURN_TYPE_OVERRIDES = dict(TYPE_OVERRIDES)
-RETURN_TYPE_OVERRIDES.update({'string': PythonScraper.type_to_name(str)})
+RETURN_TYPE_OVERRIDES.update({'string': PythonScraper.type_to_typeref(str)})
 
-def type_name_to_type(name, mod, type_overrides = TYPE_OVERRIDES):
+def type_name_to_typeref(name, mod, type_overrides = TYPE_OVERRIDES):
     arg_type = type_overrides.get(name, None)
     if arg_type is None:
         if name in BUILTIN_TYPES:
-            arg_type = PythonScraper.type_to_name(get_builtin(name))
+            arg_type = PythonScraper.type_to_typeref(get_builtin(name))
         elif mod is not None and name in mod.__dict__:
-            arg_type = PythonScraper.memoize_type_name((mod.__name__, name))
+            arg_type = PythonScraper.typename_to_typeref(mod.__name__, name)
         elif name.startswith('list'):
-            arg_type = PythonScraper.type_to_name(list)
-        elif name == 'unicode':
-            # Py3k, some doc strings still have unicode in them.
-            arg_type = PythonScraper.type_to_name(str)
+            arg_type = PythonScraper.type_to_typeref(list)
         else:
             # see if we can find it in any module we've imported...
             for mod_name, mod in sys.modules.items():
                 if mod is not None and name in mod.__dict__ and isinstance(mod.__dict__[name], type):
-                    arg_type = (mod_name, name)
+                    arg_type = PythonScraper.typename_to_typeref(mod_name, name)
                     break
             else:
                 first_space = name.find(' ')
                 if first_space != -1:
-                    return type_name_to_type(name[:first_space], mod, type_overrides)
-                arg_type = ('', name)
+                    return type_name_to_typeref(name[:first_space], mod, type_overrides)
+                arg_type = PythonScraper.typename_to_typeref(name)
     return arg_type
 
-OBJECT_TYPE = PythonScraper.type_to_name(object)
+OBJECT_TYPE = PythonScraper.type_to_typeref(object)
 
 TOKENS_REGEX = (
     '('
@@ -133,9 +132,9 @@ def get_ret_type(ret_type, obj_class, mod):
     if ret_type is not None:
         if ret_type == 'copy' and obj_class is not None:
             # returns a copy of self
-            return PythonScraper.type_to_name(obj_class)
+            return PythonScraper.type_to_typelist(obj_class)
         else:
-            return type_name_to_type(ret_type, mod, RETURN_TYPE_OVERRIDES)
+            return [type_name_to_typeref(ret_type, mod, RETURN_TYPE_OVERRIDES)]
 
 
 def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_class = None):    
@@ -174,10 +173,10 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
                 continue
 
             start_token = cur_token
-            overload = {'args': extra_args + args, 'doc': doc_str}
-            ret_tuple = get_ret_type(ret_type, obj_class, mod)
-            if ret_tuple is not None:
-                overload['ret_type'] = ret_tuple
+            overload = {'args': tuple(extra_args + args), 'doc': doc_str}
+            ret_types = get_ret_type(ret_type, obj_class, mod)
+            if ret_types is not None:
+                overload['ret_type'] = ret_types
             overloads.append(overload)
         # see if we have funcname(
         elif (cur_token + 4 < len(tokens) and
@@ -201,10 +200,10 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
                 continue
             
             start_token = cur_token
-            overload = {'args': extra_args + args, 'doc': doc_str}
-            ret_tuple = get_ret_type(ret_type, obj_class, mod)
-            if ret_tuple is not None:
-                overload['ret_type'] = ret_tuple
+            overload = {'args': tuple(extra_args + args), 'doc': doc_str}
+            ret_types = get_ret_type(ret_type, obj_class, mod)
+            if ret_types is not None:
+                overload['ret_type'] = ret_types
             overloads.append(overload)
 
         else:
@@ -280,7 +279,9 @@ def parse_args(tokens, cur_token, module):
                 arg['default_value'] = 'None'
 
             if annotation is not None:
-                arg['type'] = type_name_to_type(annotation, module)
+                arg_type = type_name_to_typeref(annotation, module)
+                if arg_type is not None:
+                    arg['type'] = [arg_type]
             if star_args is not None:
                 arg['arg_format'] = star_args
             elif token == '...':
@@ -382,13 +383,13 @@ def get_overloads_from_doc_string(doc_str, mod, obj_class, func_name, extra_args
                         new_ret_type = get_ret_type(ret_type_str, obj_class, decl_mod)
                         res[i]['ret_type'] = new_ret_type
 
-            return tuple(res)
+            return res
     return None
 
 
 def get_overloads(func, is_method = False):
     if is_method:
-        extra_args = [{'type': PythonScraper.type_to_name(object), 'name': 'self'}]
+        extra_args = [{'type': PythonScraper.type_to_typelist(object), 'name': 'self'}]
     else:
         extra_args = []
 
@@ -399,14 +400,14 @@ def get_overloads(func, is_method = False):
                                          extra_args)
 
 def get_descriptor_type(descriptor):
-	return object
+    return object
 
 def get_new_overloads(type_obj, obj):
     res = get_overloads_from_doc_string(type_obj.__doc__, 
                                         getattr(type_obj, '__module__', None), 
                                         type(type_obj), 
                                         getattr(type_obj, '__name__', None),
-                                        [{'type': PythonScraper.type_to_name(type), 'name': 'cls'}])
+                                        [{'type': PythonScraper.type_to_typelist(type), 'name': 'cls'}])
 
     if not res:
         res = get_overloads_from_doc_string(obj.__doc__, 
@@ -420,14 +421,14 @@ def get_new_overloads(type_obj, obj):
 if __name__ == '__main__':
     r = parse_doc_str('reduce(function, sequence[, initial]) -> value', '__builtin__', sys.modules['__builtin__'], 'reduce')
     assert r == [
-           {'args': [
+           {'args': (
                 {'name': 'function'},
                 {'name': 'sequence'},
-                {'default_value': 'None', 'name': 'initial'}], 
+                {'default_value': 'None', 'name': 'initial'}), 
             'doc': '', 
-            'ret_type': ('', 'value')
+            'ret_type': [{'type_name': 'value'}]
            }
-        ]
+        ], repr(r)
 
     r = parse_doc_str('pygame.draw.arc(Surface, color, Rect, start_angle, stop_angle, width=1): return Rect', 
                          'draw',
@@ -435,15 +436,15 @@ if __name__ == '__main__':
                          'arc')
 
     assert r == [
-           {'args': [
+           {'args': (
                {'name': 'Surface'},
                {'name': 'color'},
                {'name': 'Rect'},
                {'name': 'start_angle'},
                {'name': 'stop_angle'},
-               {'default_value': '1', 'name': 'width'}],
+               {'default_value': '1', 'name': 'width'}),
             'doc': '',
-            'ret_type': ('', 'Rect')
+            'ret_type': [{'type_name': 'Rect'}]
            }
     ]
 
@@ -456,66 +457,70 @@ and there is at least one character in B, False otherwise.''',
                     'isdigit')
 
     assert r == [
-        {'args': [],
+        {'args': (),
          'doc': 'Return True if all characters in B are digits\nand there is at least one character in B, False otherwise.',
-         'ret_type': ('__builtin__', 'bool')}
-    ]
+         'ret_type': [{'module_name': '__builtin__', 'type_name': 'bool'}]}
+    ], repr(r)
     r = parse_doc_str('x.__init__(...) initializes x; see help(type(x)) for signature',
                       'str',
                       None,
                       '__init__')
 
-    assert r == [{'args': [{'arg_format': '*', 'name': '...'}],
-                  'doc': 'initializes x; see help(type(x)) for signature'}]
+    assert r == [{'args': ({'arg_format': '*', 'name': 'args'},),
+                  'doc': 'initializes x; see help(type(x)) for signature'}], repr(r)
 
     r = parse_doc_str('S.find(sub [,start [,end]]) -> int',
                          'str',
                          None,
                          'find')
 
-    assert r == [{'args': [{'name': 'sub'},
-                 {'default_value': 'None', 'name': 'start'},
-                 {'default_value': 'None', 'name': 'end'}],
-                  'doc': '',
-                  'ret_type': ('__builtin__', 'int')}]
+    assert r == [{
+        'args': (
+            {'name': 'sub'},
+            {'default_value': 'None', 'name': 'start'},
+            {'default_value': 'None', 'name': 'end'}
+        ),
+        'doc': '',
+        'ret_type': [{'module_name': '__builtin__', 'type_name': 'int'}]
+    }], repr(r)
 
     r = parse_doc_str('S.format(*args, **kwargs) -> unicode',
                       'str',
                       None,
                       'format')
     assert r == [
-                 {'args': [
+                 {'args': (
                            {'arg_format': '*', 'name': 'args'},
                            {'arg_format': '**', 'name': 'kwargs'}
-                          ],
+                          ),
                  'doc': '',
-                 'ret_type': ('__builtin__', 'unicode')}
-    ]
+                 'ret_type': [{'module_name': '__builtin__', 'type_name': 'unicode'}]}
+    ], repr(r)
     
     r = parse_doc_str("'ascii(object) -> string\n\nReturn the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
             'future_builtins',
             None,
             'ascii')
-    assert r == [{'args': [{'name': 'object'}],
+    assert r == [{'args': ({'name': 'object'},),
                  'doc': "Return the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
-                 'ret_type': ('__builtin__', 'str')}
-    ]
+                 'ret_type': [{'module_name': '__builtin__', 'type_name': 'str'}]}
+    ], repr(r)
 
     r = parse_doc_str('f(INT class_code) => SpaceID',
                 'foo',
                 None,
                 'f')    
-    assert r == [{'args': [{'name': 'class_code', 'type': ('__builtin__', 'int')}],
+    assert r == [{'args': ({'name': 'class_code', 'type': [{'module_name': '__builtin__', 'type_name': 'int'}]},),
         'doc': '',
-        'ret_type': ('', 'SpaceID')}]
+        'ret_type': [{'type_name': 'SpaceID'}]}], repr(r)
 
     r = parse_doc_str('compress(data, selectors) --> iterator over selected data\n\nReturn data elements',
                       'itertools',
                       None,
                       'compress')
-    assert r == [{'args': [{'name': 'data'}, {'name': 'selectors'}],
+    assert r == [{'args': ({'name': 'data'}, {'name': 'selectors'}),
                   'doc': 'Return data elements',
-                  'ret_type': ('', 'iterator')}]
+                  'ret_type': [{'type_name': 'iterator'}]}], repr(r)
                   
     r = parse_doc_str('isinstance(object, class-or-type-or-tuple) -> bool\n\nReturn whether an object is an '
                       'instance of a class or of a subclass thereof.\nWith a type as second argument, '
@@ -525,12 +530,12 @@ and there is at least one character in B, False otherwise.''',
                       None,
                       'isinstance')
     
-    assert r == [{'args': [{'name': 'object'}, {'name': 'class-or-type-or-tuple'}],
+    assert r == [{'args': ({'name': 'object'}, {'name': 'class-or-type-or-tuple'}),
                    'doc': "Return whether an object is an instance of a class or of a subclass thereof.\n"
                           "With a type as second argument, return whether that is the object's type.\n"
                           "The form using a tuple, isinstance(x, (A, B, ...)), is a shortcut for\n"
                           "isinstance(x, A) or isinstance(x, B) or ... (etc.).",
-                   'ret_type': ('__builtin__', 'bool')}]
+                   'ret_type': [{'module_name': '__builtin__', 'type_name': 'bool'}]}], repr(r)
 
     r = parse_doc_str('pygame.Rect(left, top, width, height): return Rect\n'
                       'pygame.Rect((left, top), (width, height)): return Rect\n'
@@ -540,18 +545,17 @@ and there is at least one character in B, False otherwise.''',
                       None,
                       'Rect'
      )
-    assert r == [{'args': [{'name': 'left'},
-                   {'name': 'top'},
-                   {'name': 'width'},
-                   {'name': 'height'}],
+    assert r == [
+        {'args': ({'name': 'left'}, {'name': 'top'}, {'name': 'width'}, {'name': 'height'}),
+         'doc': 'pygame object for storing rectangular coordinates',
+         'ret_type': [{'type_name': 'Rect'}]},
+         {'args': ({'name': 'left, top'}, {'name': 'width, height'}),
           'doc': 'pygame object for storing rectangular coordinates',
-          'ret_type': ('', 'Rect')},
-         {'args': [{'name': 'left, top'}, {'name': 'width, height'}],
+         'ret_type': [{'type_name': 'Rect'}]},
+         {'args': ({'name': 'object'},),
           'doc': 'pygame object for storing rectangular coordinates',
-          'ret_type': ('', 'Rect')},
-         {'args': [{'name': 'object'}],
-          'doc': 'pygame object for storing rectangular coordinates',
-          'ret_type': ('', 'Rect')}]
+         'ret_type': [{'type_name': 'Rect'}]}
+    ], repr(r)
 
     r = parse_doc_str('read([size]) -> read at most size bytes, returned as a string.\n\n'
                       'If the size argument is negative or omitted, read until EOF is reached.\n'
@@ -562,9 +566,11 @@ and there is at least one character in B, False otherwise.''',
                       'read'
      )
 
-    assert r == [{'args': [{'default_value': 'None', 'name': 'size'}],
-                  'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
-                  'ret_type': ('', '')}]
+    assert r == [{
+        'args': ({'default_value': 'None', 'name': 'size'},),
+        'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
+        'ret_type': [{'type_name': ''}]
+    }], repr(r)
 
 
     r = get_overloads_from_doc_string('read([size]) -> read at most size bytes, returned as a string.\n\n'
@@ -576,9 +582,9 @@ and there is at least one character in B, False otherwise.''',
                       'read'
      )
 
-    assert r == ({'args': [{'default_value': 'None', 'name': 'size'}],
+    assert r == [{'args': ({'default_value': 'None', 'name': 'size'},),
                  'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
-                 'ret_type': ('__builtin__', 'str')},)
+                 'ret_type': [{'type_name': ''}]}], repr(r)
 
     r = parse_doc_str('T.__new__(S, ...) -> a new object with type S, a subtype of T',
                       'struct',
@@ -586,4 +592,8 @@ and there is at least one character in B, False otherwise.''',
                       '__new__'
      )
 
-    assert r == [{'ret_type': ('', ''), 'doc': 'a new object with type S, a subtype of T', 'args': [{'name': 'S'}, {'arg_format': '*', 'name': '...'}]}]
+    assert r == [{
+        'ret_type': [{'type_name': ''}],
+        'doc': 'a new object with type S, a subtype of T',
+        'args': ({'name': 'S'}, {'arg_format': '*', 'name': 'args'})
+    }], repr(r)

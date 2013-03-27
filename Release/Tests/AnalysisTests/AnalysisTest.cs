@@ -46,7 +46,11 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void CheckInterpreter() {
-            Assert.AreEqual(Interpreter.GetBuiltinType((BuiltinTypeId)(-1)), null);
+            try {
+                Interpreter.GetBuiltinType((BuiltinTypeId)(-1));
+                Assert.Fail("Expected KeyNotFoundException");
+            } catch (KeyNotFoundException) {
+            }
             Assert.IsTrue(IntType.ToString() != "");
         }
 
@@ -414,15 +418,13 @@ a.original()
 
             var entry = ProcessText(code);
 
-            var expectedIntType1 = IntType;
+            var expectedIntType1 = new[] { IntType };
             var expectedIntType2 = new[] { IntType };
             var expectedTupleType1 = new[] { TupleType, NoneType };
             var expectedTupleType2 = new[] { TupleType, NoneType };
             if (this is StdLibAnalysisTest) {
-                expectedIntType1 = PyObjectType;
-                expectedIntType2 = new[] { IntType, PyObjectType };
-                expectedTupleType1 = new[] { PyObjectType, NoneType };
-                expectedTupleType2 = new[] { TupleType, PyObjectType, NoneType };
+                expectedIntType1 = expectedIntType2 = new IPythonType[0];
+                expectedTupleType1 = new[] { NoneType };
             }
 
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("x1", code.IndexOf("x1, y1, _1 =")), expectedIntType1);
@@ -809,7 +811,7 @@ iC = iter(C)
 ", PythonLanguageVersion.V27);
 
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("iA", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iB", 1), Interpreter.GetBuiltinType(BuiltinTypeId.StrIterator));
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iB", 1), Interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator));
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("iC", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
 
             entry = ProcessText(@"
@@ -823,7 +825,7 @@ iC = C.__iter__()
 ", PythonLanguageVersion.V27);
 
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("iA", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iB", 1), Interpreter.GetBuiltinType(BuiltinTypeId.StrIterator));
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iB", 1), Interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator));
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("iC", 1), Interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
 
 
@@ -1740,10 +1742,10 @@ foo2 = u'abc' + u'%d'
 bar2 = foo2 * 100";
 
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y", text.IndexOf("y =")), UnicodeStringType);
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y1", text.IndexOf("y1 =")), "str");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar", text.IndexOf("bar =")), "str");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar2", text.IndexOf("bar2 =")), UnicodeStringType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("y", text.IndexOf("y =")), UnicodeType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("y1", text.IndexOf("y1 =")), BytesType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("bar", text.IndexOf("bar =")), BytesType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("bar2", text.IndexOf("bar2 =")), UnicodeType);
 
             text = @"
 x = u'abc %d'
@@ -1760,10 +1762,10 @@ foo2 = u'abc' + u'%d'
 bar2 = 100 * foo2";
 
             entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y", text.IndexOf("y =")), UnicodeStringType);
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y1", text.IndexOf("y1 =")), "str");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar", text.IndexOf("bar =")), "str");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar2", text.IndexOf("bar2 =")), UnicodeStringType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("y", text.IndexOf("y =")), UnicodeType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("y1", text.IndexOf("y1 =")), BytesType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("bar", text.IndexOf("bar =")), BytesType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("bar2", text.IndexOf("bar2 =")), UnicodeType);
         }
 
         [TestMethod, Priority(0)]
@@ -2862,18 +2864,18 @@ z = f(a=42, x)";
             Assert.AreEqual(values.First().Description, "int");
         }
 
-        //[TestMethod, Priority(2)]
+        [TestMethod, Priority(0)]
         public void PositionalSplat() {
-            var funcDef = @"def f(a, b, c): 
+            var funcDef = @"def f(a, b, c, *d): 
     pass";
             var classWithInit = @"class f(object):
-    def __init__(self, a, b, c):
+    def __init__(self, a, b, c, *d):
         pass";
             var classWithNew = @"class f(object):
-    def __new__(cls, a, b, c):
+    def __new__(cls, a, b, c, *d):
         pass";
             var method = @"class x(object):
-    def g(self, a, b, c):
+    def g(self, a, b, c, *d):
         pass
 
 f = x().g";
@@ -2885,15 +2887,26 @@ f = x().g";
                     "f(*[3j, 42, 'abc'])", 
                     "f(*(3j, 42, 'abc', 4L))",  // extra argument
                     "f(*[3j, 42, 'abc', 4L])",  // extra argument
+                    "f(3j, *(42, 'abc'))",
+                    "f(3j, 42, *('abc',))",
+                    "f(3j, *(42, 'abc', 4L))",
+                    "f(3j, 42, *('abc', 4L))",
+                    "f(3j, 42, 'abc', *[4L])",
+                    "f(3j, 42, 'abc', 4L)"
                 };
 
                 foreach (var testCall in testCalls) {
                     var text = decl + Environment.NewLine + testCall;
+                    Console.WriteLine(testCall);
                     var entry = ProcessText(text);
 
                     AssertUtil.ContainsExactly(entry.GetTypesByIndex("a", text.IndexOf("pass")), ComplexType);
                     AssertUtil.ContainsExactly(entry.GetTypesByIndex("b", text.IndexOf("pass")), IntType);
                     AssertUtil.ContainsExactly(entry.GetTypesByIndex("c", text.IndexOf("pass")), BytesType);
+                    AssertUtil.ContainsExactly(entry.GetTypesByIndex("d", text.IndexOf("pass")), TupleType);
+                    if (testCall.Contains("4L")) {
+                        AssertUtil.ContainsExactly(entry.GetTypesByIndex("d[0]", text.IndexOf("pass")), LongType);
+                    }
                 }
             }
         }
@@ -3856,6 +3869,8 @@ min(a, D())
                     analysisStopped.Set();
                 } catch (ThreadAbortException) {
                     Console.WriteLine("Thread was aborted");
+                } catch (Exception ex) {
+                    Console.WriteLine("Exception on thread:\n{0}", ex);
                 }
             });
 
@@ -4585,8 +4600,8 @@ def fn(a, b, c):
 r1 = fn('foo', (int, str), 'bar')
 r2 = fn(123, None, 4.5)
 
-# b1 and b2 will be type or object, since the elements of `type` are assumed to
-# be objects.
+# b1 and b2 will only be type (from the tuple), since indexing into 'type'
+# will result in nothing
 b1 = r1.b[0]
 b2 = r2.b[0]
 ";
@@ -4594,12 +4609,12 @@ b2 = r2.b[0]
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("r1.a", text.IndexOf("r1 =")), BytesType);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("r1.b", text.IndexOf("r1 =")), TypeType, TupleType);
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("b1", text.IndexOf("b1 =")), TypeType, PyObjectType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("b1", text.IndexOf("b1 =")), TypeType);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("r1.c", text.IndexOf("r1 =")), BytesType);
 
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("r2.a", text.IndexOf("r2 =")), BytesType);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("r2.b", text.IndexOf("r2 =")), TypeType, TupleType);
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("b2", text.IndexOf("b2 =")), TypeType, PyObjectType);
+            AssertUtil.ContainsExactly(entry.GetTypesByIndex("b2", text.IndexOf("b2 =")), TypeType);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("r2.c", text.IndexOf("r2 =")), BytesType);
         }
 
@@ -5334,6 +5349,10 @@ class Derived3(object):
 
         public static IEnumerable<IPythonType> GetTypesByIndex(this ModuleAnalysis analysis, string exprText, int index) {
             return analysis.GetValuesByIndex(exprText, index).Select(m => m.PythonType);
+        }
+
+        public static IEnumerable<BuiltinTypeId> GetTypeIdsByIndex(this ModuleAnalysis analysis, string exprText, int index) {
+            return analysis.GetValuesByIndex(exprText, index).Select(m => m.PythonType.TypeId);
         }
 
         public static IEnumerable<string> GetDescriptionsByIndex(this ModuleAnalysis entry, string variable, int index) {

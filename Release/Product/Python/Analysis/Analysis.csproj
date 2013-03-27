@@ -47,7 +47,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression"  Condition="'$(VSTarget)' != '10.0'" />
+    <Reference Include="System.IO.Compression" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="System.IO.Compression.FileSystem" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xaml" />
@@ -67,6 +67,8 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
+    <Compile Include="Interpreter\IPythonSequenceType.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
@@ -96,8 +98,6 @@
     <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
     <Compile Include="ILocationResolver.cs" />
-    <Compile Include="Interpreter\IPythonModule2.cs" />
-    <Compile Include="Interpreter\IInterpreterWithCompletionDatabase2.cs" />
     <Compile Include="Interpreter\ILocatedMember.cs" />
     <Compile Include="Interpreter\Default\CPythonBuiltinModule.cs" />
     <Compile Include="Interpreter\IBuiltinPythonModule.cs" />
@@ -122,7 +122,6 @@
     <Compile Include="IAnalysisCookie.cs" />
     <Compile Include="IAnalysisValue.cs" />
     <Compile Include="IAnalysisVariable.cs" />
-    <Compile Include="IInterpreterState.cs" />
     <Compile Include="Analyzer\ClassScope.cs" />
     <Compile Include="Analyzer\DDG.cs" />
     <Compile Include="Analyzer\EmptySet.cs" />
@@ -289,6 +288,7 @@
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
     <Compile Include="Values\IterBoundBuiltinMethod.cs" />
+    <Compile Include="Values\SequenceBuiltinInstanceInfo.cs" />
     <Compile Include="Values\SpecializedCallableNoAnalyze.cs" />
     <Compile Include="Values\IteratorInfo.cs" />
     <Compile Include="Values\IterableInfo.cs" />

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.PythonTools.Interpreter;
@@ -63,16 +64,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal static INamespaceSet GetReturnTypes(IPythonFunction func, PythonAnalyzer projectState) {
-            var result = NamespaceSet.EmptyUnion;
-            var found = new HashSet<IPythonType>();
-            foreach (var target in func.Overloads) {
-                var pyType = target.ReturnType;
-                if (pyType != null && !found.Contains(pyType)) {
-                    result = result.Add(((BuiltinClassInfo)projectState.GetNamespaceFromObjects(pyType)).Instance);
-                    found.Add(pyType);
-                }
-            }
-            return result;
+            return NamespaceSet.UnionAll(func.Overloads
+                .Where(fn => fn.ReturnType != null)
+                .Select(fn => projectState.GetNamespacesFromObjects(fn.ReturnType)));
         }
 
         internal static T First<T>(IEnumerable<T> sequence) where T : class {

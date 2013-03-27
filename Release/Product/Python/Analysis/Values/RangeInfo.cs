@@ -19,11 +19,11 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class RangeInfo : BuiltinInstanceInfo {
         public RangeInfo(IPythonType seqType, PythonAnalyzer state)
-            : base(state._listType) {
+            : base(state.ClassInfos[BuiltinTypeId.List]) {
         }
 
         public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            return ProjectState._intType.SelfSet;
+            return ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet;
         }
 
         public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _indexTypes[constIndex.Value];
             }*/
 
-            return ProjectState._intType.SelfSet;
+            return ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet;
         }
     }
 }

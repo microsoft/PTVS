@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using IronPython.Runtime;
 using IronPython.Runtime.Operations;
@@ -26,7 +27,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private ObjectIdentityHandle _parameterInfo;
         private string _name;
         private ParameterKind _paramKind;
-        private IPythonType _paramType;
+        private IPythonType[] _paramType;
         private string _defaultValue;
         private static readonly string _noDefaultValue = "<No Default Value>";  // sentinel value to mark when an object doesn't have a default value
 
@@ -37,10 +38,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         #region IParameterInfo Members
 
-        public IPythonType ParameterType {
+        public IList<IPythonType> ParameterTypes {
             get {
                 if (_paramType == null) {
-                    _paramType = _interpreter.GetTypeFromType(_interpreter.Remote.GetParameterPythonType(_parameterInfo));
+                    _paramType = new [] { _interpreter.GetTypeFromType(_interpreter.Remote.GetParameterPythonType(_parameterInfo)) };
                 }
                 return _paramType;
             }

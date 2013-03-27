@@ -37,7 +37,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly IronPythonInterpreterFactory _factory;
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
-        private IInterpreterState _state;
+        private PythonAnalyzer _state;
         private PythonTypeDatabase _typeDb;
 #if DEBUG
         private int _id;
@@ -148,18 +148,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public void Initialize(IInterpreterState state) {
-            PythonAnalyzer analyzer = _state as PythonAnalyzer;
-            if (analyzer != null) {
-                analyzer.AnalysisDirectoriesChanged -= AnalysisDirectoryChanged;
+        public void Initialize(PythonAnalyzer state) {
+            if (_state != null) {
+                _state.AnalysisDirectoriesChanged -= AnalysisDirectoryChanged;
             }
 
             _state = state;
             SpecializeClrFunctions();
 
-            analyzer = _state as PythonAnalyzer;
-            if (analyzer != null) {
-                analyzer.AnalysisDirectoriesChanged += AnalysisDirectoryChanged;
+            if (_state != null) {
+                _state.AnalysisDirectoriesChanged += AnalysisDirectoryChanged;
             }
         }
 
@@ -314,7 +312,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IPythonInterpreter Members
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
-            return GetTypeFromType(Remote.GetBuiltinType(id));
+            var res = GetTypeFromType(Remote.GetBuiltinType(id));
+            if (res == null) {
+                throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));
+            }
+            return res;
         }
 
         public IList<string> GetModuleNames() {
@@ -365,6 +367,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IModuleContext CreateModuleContext() {
             return new IronPythonModuleContext();
+        }
+
+        public void NotifyInvalidDatabase() {
+            _typeDb.OnDatabaseCorrupt();
         }
 
         #endregion
@@ -433,7 +439,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 builtin = (IronPythonBuiltinModule)_modules["__builtin__"];
             }
 
-            _typeDb = new PythonTypeDatabase(_factory.GetConfiguredDatabasePath(), false, builtin);
+            _typeDb = new PythonTypeDatabase(_factory.DatabasePath, false, builtin);
         }
 
         class DomainUnloader : IDisposable {

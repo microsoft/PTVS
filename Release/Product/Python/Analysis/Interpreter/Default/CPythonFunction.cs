@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
@@ -24,10 +26,20 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly int _line, _column;
         private readonly IPythonType _declaringType;
         private readonly CPythonModule _declaringModule;
-        private readonly CPythonFunctionOverload[] _overloads;
+        private readonly List<IPythonFunctionOverload> _overloads;
         private readonly bool _isBuiltin, _isStatic;
-        private static readonly CPythonFunctionOverload[] EmptyOverloads = new CPythonFunctionOverload[0];
+        private static readonly List<IPythonFunctionOverload> EmptyOverloads = new List<IPythonFunctionOverload>();
 
+        internal CPythonFunction(string name, string doc, bool isBuiltin, bool isStatic, IMemberContainer declaringType) {
+            _name = name;
+            _doc = doc;
+            _isBuiltin = isBuiltin;
+            _isStatic = isStatic;
+            _declaringModule = CPythonModule.GetDeclaringModuleFromContainer(declaringType);
+            _declaringType = declaringType as IPythonType;
+            _overloads = new List<IPythonFunctionOverload>();
+        }
+        
         public CPythonFunction(ITypeDatabaseReader typeDb, string name, Dictionary<string, object> functionTable, IMemberContainer declaringType, bool isMethod = false) {
             _name = name;
 
@@ -52,27 +64,27 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _hasLocation = PythonTypeDatabase.TryGetLocation(functionTable, ref _line, ref _column);
 
             _declaringModule = CPythonModule.GetDeclaringModuleFromContainer(declaringType);
-            object overloads;
-            functionTable.TryGetValue("overloads", out overloads);
-            _overloads = LoadOverloads(typeDb, overloads, isMethod);
             _declaringType = declaringType as IPythonType;
+
+            if (functionTable.TryGetValue("overloads", out value)) {
+                _overloads = LoadOverloads(typeDb, value, isMethod);
+            }
         }
 
-        private CPythonFunctionOverload[] LoadOverloads(ITypeDatabaseReader typeDb, object overloads, bool isMethod) {
-            var overloadsArr = overloads as IList<object>;
-            if (overloadsArr != null) {
-                CPythonFunctionOverload[] res = new CPythonFunctionOverload[overloadsArr.Count];
-
-                for (int i = 0; i < overloadsArr.Count; i++) {
-                    res[i] = LoadOverload(typeDb, overloadsArr[i], isMethod);
-                }
-                return res;
+        private List<IPythonFunctionOverload> LoadOverloads(ITypeDatabaseReader typeDb, object data, bool isMethod) {
+            var overloads = data as List<object>;
+            if (overloads != null) {
+                return overloads
+                    .OfType<Dictionary<string, object>>()
+                    .Select(o => new CPythonFunctionOverload(typeDb, o, isMethod))
+                    .ToList<IPythonFunctionOverload>();
             }
             return EmptyOverloads;
         }
 
-        private CPythonFunctionOverload LoadOverload(ITypeDatabaseReader typeDb, object overloadObj, bool isMethod) {
-            return new CPythonFunctionOverload(typeDb, overloadObj as Dictionary<string, object>, isMethod);
+        internal void AddOverload(IPythonFunctionOverload overload) {
+            Debug.Assert(!object.ReferenceEquals(_overloads, EmptyOverloads));
+            _overloads.Add(overload);
         }
 
         #region IBuiltinFunction Members

@@ -97,12 +97,11 @@ namespace Microsoft.PythonTools.Commands {
                     res.AppendLine("        Path Env: " + factory.Configuration.PathEnvironmentVariable);
                     res.AppendLine();
 
-                    string analysisLog = Path.Combine(GetCompletionDatabaseDirPath(), factory.Id.ToString("D"), factory.Configuration.Version.ToString(), "AnalysisLog.txt");
-                    if (File.Exists(analysisLog)) {
-                        try {
-                            res.AppendLine(File.ReadAllText(analysisLog));
-                        } catch (Exception e) {
-                            res.AppendLine("Error reading: " + e);
+                    var withDb = factory as IInterpreterWithCompletionDatabase;
+                    if (withDb != null) {
+                        string analysisLog = withDb.GetAnalysisLogContent();
+                        if (!string.IsNullOrEmpty(analysisLog)) {
+                            res.AppendLine(analysisLog);
                         }
                     }
                 }
@@ -117,7 +116,7 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine();
             }
 
-            string globalAnalysisLog = Path.Combine(GetCompletionDatabaseDirPath(), "AnalysisLog.txt");
+            string globalAnalysisLog = PythonTypeDatabase.GlobalLogFilename;
             if (File.Exists(globalAnalysisLog)) {
                 res.AppendLine("Global Analysis:");
                 try {
@@ -127,13 +126,6 @@ namespace Microsoft.PythonTools.Commands {
                 }
             }
             return res.ToString();
-        }
-
-        private string GetCompletionDatabaseDirPath() {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Python Tools\\CompletionDB"
-            );
         }
 
         private static string GetProjectProperty(EnvDTE.Project project, string name) {

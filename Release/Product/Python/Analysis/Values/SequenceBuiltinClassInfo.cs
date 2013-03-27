@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -22,15 +23,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized ClassInfo for sequence types.
     /// </summary>
     abstract class SequenceBuiltinClassInfo : BuiltinClassInfo {
+        protected readonly INamespaceSet _indexTypes;
+
         public SequenceBuiltinClassInfo(IPythonType classObj, PythonAnalyzer projectState)
             : base(classObj, projectState) {
+            var seqType = classObj as IPythonSequenceType;
+            if (seqType != null && seqType.IndexTypes != null) {
+                _indexTypes = projectState.GetNamespacesFromObjects(seqType.IndexTypes).GetInstanceType();
+            } else {
+                _indexTypes = NamespaceSet.Empty;
+            }
+        }
+
+        internal INamespaceSet IndexTypes {
+            get { return _indexTypes; }
         }
 
         public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
                 var res = unit.Scope.GetOrMakeNodeValue(
                     node,
-                    (node_) => MakeFromIndexes(node_)
+                    (node_) => MakeFromIndexes(node_, unit.ProjectEntry)
                 ) as SequenceInfo;
 
                 List<INamespaceSet> seqTypes = new List<INamespaceSet>();
@@ -62,6 +75,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.Call(node, unit, args, keywordArgNames);
         }
 
-        public abstract SequenceInfo MakeFromIndexes(Node node);
+        private static string GetInstanceShortDescription(Namespace ns) {
+            var bci = ns as BuiltinClassInfo;
+            if (bci != null) {
+                return bci.Instance.ShortDescription;
+            }
+            return ns.ShortDescription;
+        }
+
+        protected string MakeDescription(string typeName) {
+            if (_indexTypes == null || _indexTypes.Count == 0) {
+                return typeName;
+            } else if (_indexTypes.Count == 1) {
+                return typeName + " of " + GetInstanceShortDescription(_indexTypes.First());
+            } else if (_indexTypes.Count < 4) {
+                return typeName + " of {" + string.Join(", ", _indexTypes.Select(GetInstanceShortDescription)) + "}";
+            } else {
+                return typeName + " of multiple types";
+            }
+        }
+
+        public override string ShortDescription {
+            get {
+                return MakeDescription(_type.Name);
+            }
+        }
+
+        public abstract SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry);
     }
 }

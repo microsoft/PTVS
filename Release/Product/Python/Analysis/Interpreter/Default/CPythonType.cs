@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public CPythonType(IMemberContainer parent, ITypeDatabaseReader typeDb, string typeName, Dictionary<string, object> typeTable, BuiltinTypeId typeId) {
             Debug.Assert(parent is CPythonType || parent is CPythonModule);
+            Debug.Assert(!typeId.IsVirtualId());
 
             _typeName = typeName;
             _typeId = typeId;
@@ -55,7 +56,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             if (typeTable.TryGetValue("bases", out value)) {
-                var basesList = value as List<object>;
+                var basesList = (List<object>)value;
                 if (basesList != null) {
                     _bases = new List<IPythonType>();
                     foreach (var baseType in basesList) {
@@ -65,7 +66,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             if (typeTable.TryGetValue("mro", out value)) {
-                var mroList = value as List<object>;
+                var mroList = (List<object>)value;
                 if (mroList != null) {
                     _mro = new List<CPythonType>();
                     foreach (var mroType in mroList) {
@@ -74,9 +75,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
             }
 
-            object membersData;
-            if (typeTable.TryGetValue("members", out membersData)) {
-                var membersTable = membersData as Dictionary<string, object>;
+            if (typeTable.TryGetValue("members", out value)) {
+                var membersTable = (Dictionary<string, object>)value;
                 if (membersTable != null) {
                     LoadMembers(typeDb, membersTable);
                 }
@@ -86,18 +86,18 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private CPythonModule GetDeclaringModule(IMemberContainer parent) {
-            return  parent as CPythonModule ?? (CPythonModule)((CPythonType)parent).DeclaringModule;
+            return parent as CPythonModule ?? (CPythonModule)((CPythonType)parent).DeclaringModule;
         }
 
         private void StoreBase(IPythonType type, bool isInstance) {
-            if (type != null) {
+            if (type != null && _bases != null) {
                 _bases.Add(type);
             }
         }
 
         private void StoreMro(IPythonType type, bool isInstance) {
             var cpt = type as CPythonType;
-            if (cpt != null) {
+            if (cpt != null && _mro != null) {
                 _mro.Add(cpt);
             }
         }
@@ -108,6 +108,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 var memberValue = memberEntry.Value as Dictionary<string, object>;
 
                 if (memberValue != null) {
+                    _members[memberName] = null;
                     typeDb.ReadMember(memberName, memberValue, StoreMember, this);
                 }
             }
@@ -165,7 +166,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 if (TypeId != BuiltinTypeId.Unknown) {
                     return _module.TypeDb.GetBuiltinTypeName(TypeId);
                 }
-                return _typeName; 
+                return _typeName;
             }
         }
 
@@ -196,19 +197,26 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region IMemberContainer Members
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
+            var seen = new HashSet<string>();
             foreach (var key in _members.Keys) {
-                yield return key;
+                if (seen.Add(key)) {
+                    yield return key;
+                }
             }
             if (_mro != null) {
                 foreach (var type in _mro) {
                     foreach (var key in type._members.Keys) {
-                        yield return key;
+                        if (seen.Add(key)) {
+                            yield return key;
+                        }
                     }
                 }
             } else if (_bases != null) {
                 foreach (var type in _bases) {
                     foreach (var key in type.GetMemberNames(moduleContext)) {
-                        yield return key;
+                        if (seen.Add(key)) {
+                            yield return key;
+                        }
                     }
                 }
             }

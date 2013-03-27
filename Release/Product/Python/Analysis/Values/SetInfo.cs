@@ -13,12 +13,13 @@
  * ***************************************************************************/
 
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class SetInfo : SequenceInfo {
         public SetInfo(PythonAnalyzer projectState, Node node)
-            : base(VariableDef.EmptyArray, projectState._setType, node) { }
+            : base(VariableDef.EmptyArray, projectState.ClassInfos[BuiltinTypeId.Set], node) { }
 
         public void AddTypes(AnalysisUnit unit, INamespaceSet types) {
             base.AddTypes(unit, new[] { types });

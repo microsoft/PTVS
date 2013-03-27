@@ -20,7 +20,7 @@ using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase2 {
+    class IronPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
         private static readonly Guid _ipyInterpreterGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
         private static readonly Guid _ipy64InterpreterGuid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
         private readonly InterpreterConfiguration _config;
@@ -106,7 +106,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
             _generating = true;
-            string outPath = GetConfiguredDatabasePath();
+            string outPath = DatabasePath;
 
             if (!PythonTypeDatabase.Generate(
                 new PythonTypeDatabaseCreationRequest() { DatabaseOptions = options, Factory = this, OutputPath = outPath },
@@ -134,20 +134,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        internal string GetConfiguredDatabasePath() {
-            return Path.Combine(GetCompletionDatabaseDirPath(), String.Format("{0}\\{1}", Id, Configuration.Version));
-        }
-
-        private string GetCompletionDatabaseDirPath() {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Python Tools\\CompletionDB"
-            );
-        }
-
         internal bool ConfigurableDatabaseExists() {
-            if (File.Exists(Path.Combine(GetConfiguredDatabasePath(), "__builtin__.idb"))) {
-                string versionFile = Path.Combine(GetConfiguredDatabasePath(), "database.ver");
+            if (File.Exists(Path.Combine(DatabasePath, "__builtin__.idb"))) {
+                string versionFile = Path.Combine(DatabasePath, "database.ver");
                 if (File.Exists(versionFile)) {
                     try {
                         string allLines = File.ReadAllText(versionFile);
@@ -171,6 +160,34 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _interpreters.Clear();
         }
 
+        public void NotifyInvalidDatabase() {
+            foreach (var interpreter in _interpreters) {
+                var curInterpreter = interpreter.Target as IronPythonInterpreter;
+                if (curInterpreter != null) {
+                    curInterpreter.NotifyInvalidDatabase();
+                }
+            }
+        }
+
+        public string DatabasePath {
+            get {
+                return Path.Combine(PythonTypeDatabase.CompletionDatabasePath, String.Format("{0}\\{1}", Id, Configuration.Version));
+            }
+        }
+
+        public string GetAnalysisLogContent() {
+            var analysisLog = Path.Combine(DatabasePath, "AnalysisLog.txt");
+            if (File.Exists(analysisLog)) {
+                try {
+                    return File.ReadAllText(analysisLog);
+                } catch (Exception e) {
+                    return "Error reading: " + e;
+                }
+            }
+            return null;
+        }
+
         #endregion
+
     }
 }

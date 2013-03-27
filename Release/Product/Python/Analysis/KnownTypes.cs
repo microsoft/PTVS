@@ -12,48 +12,66 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.PyAnalysis {
-    class KnownTypes {
-        public readonly IPythonType Set, Function, Generator, Dict, Bool, List, Tuple, BuiltinFunction, BuiltinMethodDescriptor, Object, Float, Int, Str, None, Complex, Long, Ellipsis, Bytes, Module, Type, DictItems, ListIterator, TupleIterator, SetIterator, StrIterator, BytesIterator, CallableIterator;
+    internal interface IKnownPythonTypes {
+        IPythonType this[BuiltinTypeId id] { get; }
+    }
+
+    internal interface IKnownClasses {
+        BuiltinClassInfo this[BuiltinTypeId id] { get; }
+    }
+
+    internal class KnownTypes : IKnownPythonTypes, IKnownClasses {
+        internal readonly IPythonType[] _types;
+        internal readonly BuiltinClassInfo[] _classInfos;
 
         public KnownTypes(PythonAnalyzer state) {
+            ITypeDatabaseReader fallbackDb = null;
+            IBuiltinPythonModule fallback = null;
+
+            int count = (int)BuiltinTypeIdExtensions.LastTypeId + 1;
+            _types = new IPythonType[count];
+            _classInfos = new BuiltinClassInfo[count];
+
             var interpreter = state.Interpreter;
 
-            None = interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
-            Set = interpreter.GetBuiltinType(BuiltinTypeId.Set);
-            Function = interpreter.GetBuiltinType(BuiltinTypeId.Function);
-            Generator = interpreter.GetBuiltinType(BuiltinTypeId.Generator);
-            Dict = interpreter.GetBuiltinType(BuiltinTypeId.Dict);
-            Bool = interpreter.GetBuiltinType(BuiltinTypeId.Bool);
-            List = interpreter.GetBuiltinType(BuiltinTypeId.List);
-            Tuple = interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
-            BuiltinFunction = interpreter.GetBuiltinType(BuiltinTypeId.BuiltinFunction);
-            BuiltinMethodDescriptor = interpreter.GetBuiltinType(BuiltinTypeId.BuiltinMethodDescriptor);
-            Object = interpreter.GetBuiltinType(BuiltinTypeId.Object);
-            Float = interpreter.GetBuiltinType(BuiltinTypeId.Float);
-            Int = interpreter.GetBuiltinType(BuiltinTypeId.Int);
-            Str = interpreter.GetBuiltinType(BuiltinTypeId.Str);
-            Bytes = interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
-            Complex = interpreter.GetBuiltinType(BuiltinTypeId.Complex);
-            Module = interpreter.GetBuiltinType(BuiltinTypeId.Module);
-            if (!state.LanguageVersion.Is3x()) {
-                Long = interpreter.GetBuiltinType(BuiltinTypeId.Long);
+            for (int value = 0; value < count; ++value) {
+                try {
+                    _types[value] = interpreter.GetBuiltinType((BuiltinTypeId)value);
+                } catch (KeyNotFoundException) {
+                    if (fallback == null) {
+                        var tempDb = PythonTypeDatabase.CreateDefaultTypeDatabase(state.LanguageVersion.ToVersion());
+                        fallbackDb = (ITypeDatabaseReader)tempDb;
+                        fallback = tempDb.BuiltinModule;
+                    }
+                    
+                    _types[value] = fallback.GetAnyMember(fallbackDb.GetBuiltinTypeName((BuiltinTypeId)value)) as IPythonType;
+                }
+                if (_types[value] != null) {
+                    _classInfos[value] = state.GetBuiltinType(_types[value]);
+                }
             }
-            Ellipsis = interpreter.GetBuiltinType(BuiltinTypeId.Ellipsis);
-            Type = interpreter.GetBuiltinType(BuiltinTypeId.Type);
-            DictItems = interpreter.GetBuiltinType(BuiltinTypeId.DictItems);
-            ListIterator = interpreter.GetBuiltinType(BuiltinTypeId.ListIterator);
-            TupleIterator = interpreter.GetBuiltinType(BuiltinTypeId.TupleIterator);
-            SetIterator = interpreter.GetBuiltinType(BuiltinTypeId.SetIterator);
-            StrIterator = interpreter.GetBuiltinType(BuiltinTypeId.StrIterator);
-            if (state.LanguageVersion.Is3x()) {
-                BytesIterator = interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator);
+        }
+
+        IPythonType IKnownPythonTypes.this[BuiltinTypeId id] {
+            get {
+                return _types[(int)id];
             }
-            CallableIterator = interpreter.GetBuiltinType(BuiltinTypeId.CallableIterator);
+        }
+
+        BuiltinClassInfo IKnownClasses.this[BuiltinTypeId id] {
+            get {
+                return _classInfos[(int)id];
+            }
         }
     }
 }

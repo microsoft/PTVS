@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -32,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.NotEqual:
                 case PythonOperator.Is:
                 case PythonOperator.IsNot:
-                    return ProjectState._boolType.Instance;
+                    return ProjectState.ClassInfos[BuiltinTypeId.Bool].Instance;
                 case PythonOperator.TrueDivide:
                 case PythonOperator.Add:
                 case PythonOperator.Subtract:

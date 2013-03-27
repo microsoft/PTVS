@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return newResult;
             }
 
-            if (newResult.Count == 0 || newResult.All(ns => ns == unit.ProjectState._objectType.Instance)) {
+            if (newResult.Count == 0 || newResult.All(ns => ns.IsOfType(unit.ProjectState.ClassInfos[BuiltinTypeId.Object]))) {
                 return _instanceInfo.SelfSet;
             }
             return newResult;
@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IPythonType PythonType {
             get {
-                return this._analysisUnit.ProjectState.Types.Type;
+                return this._analysisUnit.ProjectState.Types[BuiltinTypeId.Type];
             }
         }
 
@@ -288,6 +288,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override INamespaceSet GetInstanceType() {
+            return Instance;
+        }
+
         /// <summary>
         /// Gets all members of this class that are not inherited from its base classes.
         /// </summary>
@@ -331,7 +335,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private Namespace GetObjectMember(IModuleContext moduleContext, string name) {
-            return _analysisUnit.ProjectState.GetNamespaceFromObjects(_analysisUnit.ProjectState.Types.Object.GetMember(moduleContext, name));
+            return _analysisUnit.ProjectState.GetNamespaceFromObjects(_analysisUnit.ProjectState.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
         }
 
         internal override void AddReference(Node node, AnalysisUnit unit) {
@@ -471,7 +475,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var mro2 = ci.Mro.ToArray();
                 return mro1.FirstOrDefault(cls => mro2.AnyContains(cls)) ?? this;
             } else {
-                return _projectState._typeObj;
+                return _projectState.ClassInfos[BuiltinTypeId.Type];
             }
         }
 
@@ -485,7 +489,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var ci = ns as ClassInfo;
                 if (ci == null) {
                     var bci = ns as BuiltinClassInfo;
-                    if (bci == null || bci == _projectState._objectType) {
+                    if (bci == null || bci == _projectState.ClassInfos[BuiltinTypeId.Object]) {
                         return false;
                     }
                     return Mro.AnyContains(bci);
@@ -493,7 +497,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 var mro1 = Mro.SelectMany();
                 var mro2 = ci.Mro.ToArray();
-                return mro1.Any(cls => cls != _projectState._objectType && mro2.AnyContains(cls));
+                return mro1.Any(cls => cls != _projectState.ClassInfos[BuiltinTypeId.Object] && mro2.AnyContains(cls));
             } else {
                 return ns is ClassInfo;
             }
@@ -503,7 +507,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength < MERGE_TO_BASE_STRENGTH) {
                 return GetHashCode();
             } else {
-                return _projectState._typeObj.GetHashCode();
+                return _projectState.ClassInfos[BuiltinTypeId.Type].GetHashCode();
             }
         }
 

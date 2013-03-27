@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
-            return _method.ReturnTypes;
+            return _method.ReturnTypes.GetInstanceType();
         }
 
         public override ICollection<OverloadResult> Overloads {

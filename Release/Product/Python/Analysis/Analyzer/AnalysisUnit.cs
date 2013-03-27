@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -372,7 +373,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (Ast.Bases.Count == 0) {
                 if (ddg.ProjectState.LanguageVersion.Is3x()) {
                     // 3.x all classes inherit from object by default
-                    bases.Add(ddg.ProjectState._objectSet);
+                    bases.Add(ddg.ProjectState.ClassInfos[BuiltinTypeId.Object]);
                 }
             } else {
                 // Process base classes
@@ -514,7 +515,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     class ListComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
         public ListComprehensionAnalysisUnit(Comprehension node, PythonAst parent, AnalysisUnit outerUnit, InterpreterScope outerScope)
             : base(node, parent,
-            new ComprehensionScope(new ListInfo(VariableDef.EmptyArray, outerUnit.ProjectState._listType, node), node, outerScope),
+            new ComprehensionScope(new ListInfo(VariableDef.EmptyArray, outerUnit.ProjectState.ClassInfos[BuiltinTypeId.List], node), node, outerScope),
             outerUnit) { }
 
         protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         IParameterInfo[] GetParameters();
 
-        IPythonType ReturnType {
+        IList<IPythonType> ReturnType {
             get;
         }
     }

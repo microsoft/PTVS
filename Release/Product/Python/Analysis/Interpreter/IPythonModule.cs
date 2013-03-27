@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -27,5 +26,14 @@ namespace Microsoft.PythonTools.Interpreter {
         IEnumerable<string> GetChildrenModules();
 
         void Imported(IModuleContext context);
+
+        /// <summary>
+        /// The documentation of the module
+        /// 
+        /// New in 1.1.
+        /// </summary>
+        string Documentation {
+            get;
+        }
     }
 }

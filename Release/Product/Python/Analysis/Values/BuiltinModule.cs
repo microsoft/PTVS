@@ -60,12 +60,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Documentation {
             get {
-                IPythonModule2 mod2 = _type as IPythonModule2;
-                if (mod2 != null) {
-                    return mod2.Documentation;
-                }
-
-                return String.Empty;
+                return _type.Documentation;
             }
         }
 
@@ -83,7 +78,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IPythonType PythonType {
             get {
-                return this.ProjectState.Types.Module;
+                return this.ProjectState.Types[BuiltinTypeId.Module];
             }
         }
 

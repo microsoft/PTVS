@@ -21,7 +21,9 @@ using IronPython.Hosting;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.Scripting.Hosting;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -380,6 +382,63 @@ except (None)"}) {
             Assert.IsNull(completions);
         }
 
+
+        [TestMethod, Priority(0)]
+        public void FromOSPathImportCompletions2x() {
+            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "ntpath", "posixpath")) {
+                OSPathImportTest(db);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void FromOSPathImportCompletions3x() {
+            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33, "os", "ntpath", "posixpath")) {
+                OSPathImportTest(db);
+            }
+        }
+
+        private static void OSPathImportTest(MockCompletionDB db) {
+            var fact = new CPythonInterpreterFactory(db.LanguageVersion.ToVersion(), db.Database);
+
+            var code = "from ";
+            var completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "os", "sys");
+
+            code = "from o";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "os");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "sys");
+
+            code = "from os ";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "import");
+
+            code = "from os import";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "import");
+
+            code = "from os.";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "path");
+
+            code = "from os.path import ";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "abspath", "relpath");
+
+            var allNames = new HashSet<string>();
+            code = "from ntpath import ";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            allNames.UnionWith(GetCompletionNames(completions));
+            code = "from posixpath import ";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            allNames.UnionWith(GetCompletionNames(completions));
+
+            code = "from os.path import ";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            var osNames = new HashSet<string>(GetCompletionNames(completions));
+            AssertUtil.ContainsAtLeast(osNames, allNames);
+        }
+
         [TestMethod, Priority(0)]
         public void FromImportMultilineCompletions() {
             var code = "from sys import (";
@@ -487,11 +546,11 @@ while True:
 
 
             // we get the appropriate subexpression
-            TestQuickInfo(code, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: <no type information available>");
-            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: <no type information available>");
-            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4, "ast: <no type information available>");
-            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3, "ast.expr: <no type information available>");
-            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 5 + 3 + 1 + 1, "cls._parse_block(ast.expr): <no type information available>");
+            TestQuickInfo(code, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: <unknown type>");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: <unknown type>");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4, "ast: <unknown type>");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3, "ast.expr: <unknown type>");
+            TestQuickInfo(code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 5 + 3 + 1 + 1, "cls._parse_block(ast.expr): <unknown type>");
 
             // the whole strieng shows up in quick info
             TestQuickInfo(code, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
@@ -505,7 +564,7 @@ while True:
             // multiline function, hover at the close paren
             TestQuickInfo(code, code.IndexOf("e)") + 1, code.IndexOf("e)") + 2, @"f(a,
 (b, c, d),
-e): <no type information available>");
+e): <unknown type>");
         }
 
         [TestMethod, Priority(0)]
@@ -748,13 +807,15 @@ class B(dict):
             }
         }
 
-        private static CompletionSet GetCompletionSet(int location, string sourceCode, bool intersectMembers = true) {
+        private static CompletionSet GetCompletionSet(int location, string sourceCode, bool intersectMembers = true, IPythonInterpreterFactory factory = null) {
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-            
-            var fact = new CPythonInterpreterFactory();
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
+
+            if (factory == null) {
+                factory = new CPythonInterpreterFactory();
+            }
+            using (var analyzer = new VsProjectAnalyzer(factory, new[] { factory }, new MockErrorProviderFactory())) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer).GetCompletions(new MockGlyphService());
             }
         }
@@ -762,10 +823,10 @@ class B(dict):
         /// <summary>
         /// Simulates the user hitting Ctrl-Space to get completions.
         /// </summary>
-        private static CompletionSet GetCompletionSetCtrlSpace(int location, string sourceCode, bool intersectMembers = true) {
+        private static CompletionSet GetCompletionSetCtrlSpace(int location, string sourceCode, bool intersectMembers = true, IPythonInterpreterFactory factory = null) {
             IntellisenseController.ForceCompletions = true;
             try {
-                var completionSet = GetCompletionSet(location, sourceCode, intersectMembers);
+                var completionSet = GetCompletionSet(location, sourceCode, intersectMembers, factory);
                 if (completionSet != null) {
                     completionSet.Filter();
                 }

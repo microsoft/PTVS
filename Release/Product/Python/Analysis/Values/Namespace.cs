@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.IsNot:
                 case PythonOperator.In:
                 case PythonOperator.NotIn:
-                    return unit.DeclaringModule.ProjectEntry.ProjectState._boolType.Instance;
+                    return unit.DeclaringModule.ProjectEntry.ProjectState.ClassInfos[BuiltinTypeId.Bool].Instance;
                 default:
                     var res = NamespaceSet.Empty;
                     foreach (var value in rhs) {
@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             // TODO: need more than constant 0...
             //index = (VariableRef(ConstantInfo(0, self.ProjectState, False)), )
             //self.AssignTo(self._state.IndexInto(listRefs, index), node, node.Left)
-            return GetIndex(node, unit, unit.ProjectState._intType.SelfSet);
+            return GetIndex(node, unit, unit.ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet);
         }
 
         public virtual INamespaceSet GetIterator(Node node, AnalysisUnit unit) {
@@ -204,6 +204,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public virtual INamespaceSet GetDescriptor(PythonAnalyzer projectState, Namespace instance, Namespace context) {
+            return SelfSet;
+        }
+
+        public virtual INamespaceSet GetInstanceType() {
             return SelfSet;
         }
 

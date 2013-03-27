@@ -59,6 +59,9 @@ class Y(object): pass
 union = X()
 union = Y()
 
+list_of_int = [1, 2, 3]
+tuple_of_str = 'a', 'b', 'c'
+
 import nt
 m = max
 
@@ -120,6 +123,8 @@ dx = test.D().x
 scg = test.C.g
 f1 = test.f1
 union = test.union
+list_of_int = test.list_of_int
+tuple_of_str = test.tuple_of_str
 f1 = test.f1
 f2 = test.f2
 m = test.m
@@ -135,9 +140,9 @@ MultipleInheritance = test.MultipleInheritance
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
 
-                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValuesByIndex("abc", pos).First().PythonType);
-                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValuesByIndex("cf", pos).First().PythonType);
-                Assert.AreEqual(newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int), newMod.Analysis.GetValuesByIndex("cg", pos).First().PythonType);
+                AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("abc", pos), BuiltinTypeId.Int);
+                AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("cf", pos), BuiltinTypeId.Int);
+                AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("cg", pos), BuiltinTypeId.Int);
                 Assert.AreEqual("function f1", newMod.Analysis.GetValuesByIndex("f1", pos).First().Description);
                 Assert.AreEqual("bound method x", newMod.Analysis.GetValuesByIndex("dx", pos).First().Description);
                 Assert.AreEqual("function g", newMod.Analysis.GetValuesByIndex("scg", pos).First().Description);
@@ -145,7 +150,11 @@ MultipleInheritance = test.MultipleInheritance
                 Assert.AreEqual(unionMembers.Count, 2);
                 AssertUtil.ContainsExactly(unionMembers.Select(x => x.PythonType.Name), "X", "Y");
 
-                Assert.AreEqual("type int", newMod.Analysis.GetValuesByIndex("foo", pos).First().ShortDescription);
+                var list = newMod.Analysis.GetValuesByIndex("list_of_int", pos).First();
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("list_of_int", pos), "list of int");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("tuple_of_str", pos), "tuple of str");
+
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("foo", pos), "type int");
 
                 var result = newMod.Analysis.GetSignaturesByIndex("f1", pos).ToArray();
                 Assert.AreEqual(1, result.Length);
@@ -190,6 +199,21 @@ C.abc = C
         }
 
         [TestMethod, Priority(0)]
+        public void SaveRecursionSequenceClasses() {
+            string code = @"
+C = []
+C.append(C)
+";
+            using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
+                string code2 = @"import test
+C = test.C";
+                var newMod = newPs.NewModule("test2", code2);
+
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("C", 0), "list of list");
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void SaveModuleRef() {
             string foo = @"
 import bar
@@ -208,6 +232,25 @@ abc = foo.x
                 Assert.AreEqual(newMod.Analysis.GetValuesByIndex("abc", code.LastIndexOf('\n')).First().PythonType, newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int));
             }
         }
+
+        [TestMethod, Priority(0)]
+        public void SaveFunctionOverloads() {
+            string code = @"
+def f(a, b):
+    return a * b
+
+f(1, 2)
+f(3, 'abc')
+f([1, 2], 3)
+";
+            using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
+                var newMod = newPs.NewModule("test2", "from test import f; x = f()");
+
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("x", 0), "int", "str", "list of int");
+            }
+        }
+
+
 
         private SaveLoadResult SaveLoad(params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
@@ -228,7 +271,7 @@ abc = foo.x
 
             new SaveAnalysis().Save(state, tmpFolder);
 
-            File.Copy(Path.Combine(PythonTypeDatabase.GetBaselineDatabasePath(), "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
+            File.Copy(Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
 
             return new SaveLoadResult(
                 new PythonAnalyzer(new CPythonInterpreter(new CPythonInterpreterFactory(), new PythonTypeDatabase(tmpFolder)), PythonLanguageVersion.V27),

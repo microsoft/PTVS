@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         private Namespace GetObjectMember(IModuleContext moduleContext, string name) {
-            return AnalysisUnit.ProjectState.GetNamespaceFromObjects(AnalysisUnit.ProjectState.Types.Object.GetMember(moduleContext, name));
+            return AnalysisUnit.ProjectState.GetNamespaceFromObjects(AnalysisUnit.ProjectState.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
         }
 
         public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {

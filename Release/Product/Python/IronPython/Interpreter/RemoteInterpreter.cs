@@ -487,7 +487,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             switch (Type.GetTypeCode(value.__clrtype__())) {
                 case TypeCode.Boolean: return BuiltinTypeId.Bool;
                 case TypeCode.Int32: return BuiltinTypeId.Int;
-                case TypeCode.String: return BuiltinTypeId.Str;
+                case TypeCode.String: return BuiltinTypeId.Unicode;
                 case TypeCode.Double: return BuiltinTypeId.Float;
                 case TypeCode.Object:
                     if (clrType == typeof(object)) {
@@ -1002,6 +1002,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 case BuiltinTypeId.Object: return MakeHandle(GetTypeFromType(typeof(object)));
                 case BuiltinTypeId.Set: return MakeHandle(GetTypeFromType(typeof(SetCollection)));
                 case BuiltinTypeId.Str: return MakeHandle(GetTypeFromType(typeof(string)));
+                case BuiltinTypeId.Unicode: return MakeHandle(GetTypeFromType(typeof(string)));
                 case BuiltinTypeId.Bytes: return MakeHandle(GetTypeFromType(typeof(string)));   // keep strings and bytes the same on Ipy because '' and u'abc' create the same type
                 case BuiltinTypeId.Tuple: return MakeHandle(GetTypeFromType(typeof(PythonTuple)));
                 case BuiltinTypeId.Type: return MakeHandle(GetTypeFromType(typeof(PythonType)));
@@ -1016,7 +1017,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 case BuiltinTypeId.SetIterator: return MakeHandle(GetTypeFromType(typeof(SetIterator)));
                 case BuiltinTypeId.StrIterator: return MakeHandle(GetTypeFromType(typeof(IEnumeratorOfTWrapper<string>)));
                 case BuiltinTypeId.BytesIterator: return MakeHandle(GetTypeFromType(typeof(IEnumeratorOfTWrapper<string>)));
+                case BuiltinTypeId.UnicodeIterator: return MakeHandle(GetTypeFromType(typeof(IEnumeratorOfTWrapper<string>)));
                 case BuiltinTypeId.CallableIterator: return MakeHandle(GetTypeFromType(typeof(SentinelIterator)));
+                case BuiltinTypeId.Property: return MakeHandle(GetTypeFromType(typeof(PythonProperty)));
+                case BuiltinTypeId.ClassMethod: return MakeHandle(GetTypeFromType(typeof(classmethod)));
+                case BuiltinTypeId.StaticMethod: return MakeHandle(GetTypeFromType(typeof(staticmethod)));
                 default:
                     return new ObjectIdentityHandle();
             }

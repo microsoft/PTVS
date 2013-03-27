@@ -36,6 +36,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool IsProperty;
         private ReferenceDict _references;
         private readonly int _declVersion;
+        private int _callDepthLimit;
+        private int _callsSinceLimitChange;
 
         static readonly CallChain _arglessCall = new CallChain(new CallExpression(null, null));
         internal Dictionary<CallChain, FunctionAnalysisUnit> _allCalls;
@@ -44,6 +46,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _projectEntry = declUnit.ProjectEntry;
             _functionDefinition = node;
             _declVersion = declUnit.ProjectEntry.AnalysisVersion;
+            _callDepthLimit = declUnit.ProjectState.Limits.CallDepth;
 
             if (Name == "__new__") {
                 IsClassMethod = true;
@@ -95,7 +98,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (callArgs.Count == 0 || (ProjectState.Limits.UnifyCallsToNew && Name == "__new__")) {
                 calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
             } else {
-                var chain = new CallChain(node, unit, unit.ProjectState.Limits.CallDepth);
+                var chain = new CallChain(node, unit, _callDepthLimit);
                 if (!_allCalls.TryGetValue(chain, out calledUnit)) {
                     if (unit.ForEval) {
                         // Call expressions that weren't analyzed get the union result
@@ -108,6 +111,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     } else {
                         _allCalls[chain] = calledUnit = new FunctionAnalysisUnit((FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
                         updateArguments = false;
+                        _callsSinceLimitChange += 1;
+                        if (_callsSinceLimitChange >= ProjectState.Limits.DecreaseCallDepth && _callDepthLimit > 1) {
+                            _callDepthLimit -= 1;
+                            _callsSinceLimitChange = 0;
+                            AnalysisLog.ReduceCallDepth(this, _allCalls.Count, _callDepthLimit);
+                        }
                     }
                 }
             }
@@ -399,15 +408,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return unit.ProjectState.GetConstant(FunctionDefinition.Name);
             }
 
-            return ProjectState._functionType.GetMember(node, unit, name);
+            return ProjectState.ClassInfos[BuiltinTypeId.Function].GetMember(node, unit, name);
         }
 
         public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
             if (_functionAttrs == null || _functionAttrs.Count == 0) {
-                return ProjectState._functionType.GetAllMembers(moduleContext);
+                return ProjectState.ClassInfos[BuiltinTypeId.Function].GetAllMembers(moduleContext);
             }
 
-            var res = new Dictionary<string, INamespaceSet>(ProjectState._functionType.GetAllMembers(moduleContext));
+            var res = new Dictionary<string, INamespaceSet>(ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.GetAllMembers(moduleContext));
             foreach (var variable in _functionAttrs) {
                 INamespaceSet existing;
                 if (!res.TryGetValue(variable.Key, out existing)) {
@@ -427,7 +436,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             VariableDef param;
             var name = FunctionDefinition.Parameters[index].Name;
             if (scope.Variables.TryGetValue(name, out param)) {
-                var ns = ProjectState.GetNamespaceFromObjects(info.ParameterType);
+                var ns = ProjectState.GetNamespacesFromObjects(info.ParameterTypes);
 
                 if ((info.IsParamArray && !(param is ListParameterVariableDef)) ||
                     (info.IsKeywordDict && !(param is DictParameterVariableDef))) {
@@ -524,7 +533,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IPythonType PythonType {
-            get { return ProjectState.Types.Function; }
+            get { return ProjectState.Types[BuiltinTypeId.Function]; }
         }
 
         public override bool Equals(object obj) {
@@ -546,7 +555,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength < REQUIRED_STRENGTH) {
                 return base.UnionEquals(ns, strength);
             } else {
-                return ns == ProjectState._functionType.Instance || ns is FunctionInfo;
+                return ns.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Function]) || ns is FunctionInfo;
             }
         }
 
@@ -554,7 +563,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength < REQUIRED_STRENGTH) {
                 return base.UnionHashCode(strength);
             } else {
-                return ProjectState._functionType.Instance.GetHashCode();
+                return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.GetHashCode();
             }
         }
 
@@ -562,7 +571,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength < REQUIRED_STRENGTH) {
                 return base.UnionMergeTypes(ns, strength);
             } else {
-                return ProjectState._functionType.Instance;
+                return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
             }
         }
 

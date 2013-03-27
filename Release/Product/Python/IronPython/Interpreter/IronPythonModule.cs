@@ -17,7 +17,7 @@ using IronPython.Runtime;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonModule : PythonObject, IPythonModule2 {
+    class IronPythonModule : PythonObject, IPythonModule {
         private string _name;
 
         public IronPythonModule(IronPythonInterpreter interpreter, ObjectIdentityHandle mod, string name = null)

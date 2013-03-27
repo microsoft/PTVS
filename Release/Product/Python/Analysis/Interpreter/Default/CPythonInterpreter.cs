@@ -19,6 +19,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreter : IPythonInterpreter, IPythonInterpreter2 {
@@ -34,13 +35,33 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region IPythonInterpreter Members
 
         public IPythonType GetBuiltinType(BuiltinTypeId id) {
-            string name = ((ITypeDatabaseReader)_typeDb).GetBuiltinTypeName(id);
-            if (name == null) {
+            if (id == BuiltinTypeId.Unknown) {
                 return null;
             }
+            
+            if (id == BuiltinTypeId.Str) {
+                if (_factory.Configuration.Version.Major == 3) {
+                    id = BuiltinTypeId.Unicode;
+                } else {
+                    id = BuiltinTypeId.Bytes;
+                }
+            } else if (id == BuiltinTypeId.StrIterator) {
+                if (_factory.Configuration.Version.Major == 2) {
+                    id = BuiltinTypeId.UnicodeIterator;
+                } else {
+                    id = BuiltinTypeId.BytesIterator;
+                }
+            } else if (id == BuiltinTypeId.Long) {
+                if (_factory.Configuration.Version.Major == 3) {
+                    id = BuiltinTypeId.Int;
+                }
+            }
 
+            var name = SharedDatabaseState.GetBuiltinTypeName(id, _factory.GetLanguageVersion().Is3x());
             var res = _typeDb.BuiltinModule.GetAnyMember(name) as IPythonType;
-            Debug.Assert(res != null);
+            if (res == null) {
+                throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));
+            }
             return res;
         }
 
@@ -57,7 +78,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return null;
         }
 
-        public void Initialize(IInterpreterState state) {
+        public void Initialize(PythonAnalyzer state) {
+        }
+
+        public void NotifyInvalidDatabase() {
+            var withDb = _factory as IInterpreterWithCompletionDatabase;
+            if (withDb != null) {
+                withDb.NotifyInvalidDatabase();
+            }
         }
 
         internal PythonTypeDatabase TypeDb {

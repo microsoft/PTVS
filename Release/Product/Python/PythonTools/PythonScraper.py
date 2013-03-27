@@ -21,23 +21,22 @@ top-level: module_table
         
 module_table:
     {
-        'members': {},             # member_table
-        'doc': doc_string,         # doc string
+        'members': member_table,
+        'doc': doc_string,
     }
 
 type_table:
-   {
-    'mro' :  list of type_name,     
-    'bases' : list of type_name,
-    'members' : member_table,
-    'doc' : doc_string,
-    'is_hidden': bool,
-    'builtin': bool
-   }
+    {
+        'mro' :  type_list,
+        'bases' : type_list,
+        'members' : member_table,
+        'doc' : doc_string,
+        'is_hidden': bool,
+        'builtin': bool
+    }
 
 member_table:
-    {member_name : member_entry}
-
+    { member_name : member_entry }
 
 member_name: str
 
@@ -45,95 +44,156 @@ member_entry:
     {
         'kind': member_kind
         'value': member_value
-
     }
 
 member_kind: 'function' | 'method' | 'property' | 'data' | 'type' | 'multiple' | 'typeref' | 'moduleref'
 member_value: builtin_function | getset_descriptor | data | type_table | multiple_value | typeref | moduleref
 
 moduleref:
-    {'module_name' : name }
+    { 'module_name' : name }
 
 typeref: 
-    {'type_name' : type_name }
+    {
+        'module_name' : module name,        # optional
+        'type_name' : type name,
+        'index_types' : type_list           # optional
+    }
 
 multiple_value:
     { 'members' : (member_entry, ... ) }
 
 builtin_function:
-    {'doc': doc string,
-     'overloads': overload_table,
-     'builtin' : bool,
-     'static": bool,
-     }
+    {
+        'doc': doc string,
+        'overloads': overload_table,
+        'builtin' : bool,
+        'static': bool,
+    }
 
 overload_table:
-    (overload, ...)
+    [overload, ...]
 
 overload:
-    {'args': args_info,
-     'ret_type': type_name }
+    {
+        'args': args_info,
+        'ret_type': type_list
+    }
 
 args_info:
-    [arg_info, ...]
+    (arg_info, ...)
 
 arg_info:
-    {'type': type_name,
-     'name': argument name,
-     'default_value': repr of default value,
-     'arg_format' : ('*' | '**')
+    {
+        'type': type_list,
+        'name': argument name,
+        'default_value': repr of default value,
+        'arg_format' : ('*' | '**')
     }
 
 getset_descriptor:
-    {'doc': doc string,
-     'type': type_name
+    {
+        'doc': doc string,
+        'type': type_list
     }
 
 data:
-    {'type': type_name}
+    { 'type': type_list }
 
-type_name:
-    (module name, type name)
-    
+type_list:
+    [type_ref, ...]
 """
 
-import types
 try:
-    import cPickle
+    import cPickle as pickle
 except ImportError:
-    import pickle as cPickle # Py3k
+    import pickle # Py3k
 
-import sys
-import os
 import datetime
-from os.path import join
+import os
+import subprocess
+import sys
+import types
 
 # The version number should match the value of PythonTypeDatabase.CurrentVersion in
-#  \Main\Open_Source\Release\Product\Python\Analysis\Interpreter\PythonTypeDatabase.cs
+#  \Release\Product\Python\Analysis\Interpreter\PythonTypeDatabase.cs
 #
 # To update the baseline DB:
 #  1. Check out all files in Product\Python\PythonTools\CompletionDB
 #  2. Run ipy.exe PythonScraper.py ...\CompletionDB
 #  3. Undo unnecessary edits (tfpt uu) and delete new files (tfpt treeclean ...\CompletionDB)
 #
-CURRENT_DATABASE_VERSION = '20'
+CURRENT_DATABASE_VERSION = '21'
+
+if sys.version_info[0] == 2:
+    builtin_name = '__builtin__'
+else:
+    builtin_name = 'builtins'
+
 
 TYPE_NAMES = {}
 
-def type_to_name(type):
-    if hasattr(type, '__module__'):
-        name = type.__module__, type.__name__
+def types_to_typelist(iterable):
+    return [type_to_typeref(type) for type in iterable]
+
+def type_to_typelist(type):
+    return [type_to_typeref(type)]
+
+def typename_to_typeref(n1, n2=None):
+    '''If both n1 and n2 are specified, n1 is the module name and n2 is the type name.
+    If only n1 is specified, it is the type name.
+    '''
+    if n2 is None:
+        name = { 'type_name': n1 }
+    elif n1 == '__builtin__':
+        name = { 'module_name': builtin_name, 'type_name': n2 }
     else:
-        name = '', type.__name__
+        name = { 'module_name': n1, 'type_name': n2 }
+    return memoize_type_name(name)
+
+def type_to_typeref(type):
+    if hasattr(type, '__module__'):
+        if type.__module__ == '__builtin__':
+            name = { 'module_name': builtin_name, 'type_name': type.__name__ }
+        else:
+            name = { 'module_name': type.__module__, 'type_name': type.__name__ }
+    else:
+        name = { 'type_name': type.__name__ }
     # memoize so when we pickle we can share refs
     return memoize_type_name(name)
 
 def memoize_type_name(name):
-    if name in TYPE_NAMES:
-        return TYPE_NAMES[name]
-    TYPE_NAMES[name] = name
+    key = repr(name)
+    if key in TYPE_NAMES:
+        return TYPE_NAMES[key]
+    TYPE_NAMES[key] = name
     return name
 
+def maybe_to_typelist(type):
+    if isinstance(type, list) and len(type) > 0 and isinstance(type[0], dict) and 'type_name' in type[0]:
+        return type
+    elif isinstance(type, dict) and 'type_name' in type:
+        return [type]
+    else:
+        return type_to_typelist(type)
+
+def generate_overload(ret_type, *args):
+    '''ret_type is either a type suitable for type_to_typelist, or it is the result of
+    one of the *_to_typelist() or *_to_typeref() functions.
+
+    Each arg is a tuple of ('name', type or type_ref or type_list, '' or '*' or '**', 'default value string')
+    The last two elements are optional, but the format is required if the default value
+    is specified.
+    '''
+    res = { 'ret_type': maybe_to_typelist(ret_type) }
+    arglist = []
+    for arg in args:
+        arglist.append({ 'name': arg[0], 'type': maybe_to_typelist(arg[1]) })
+        if len(arg) >= 3 and arg[2]:
+            arglist[-1]['arg_format'] = arg[2]
+        if len(arg) >= 4:
+            arglist[-1]['default_value'] = arg[3]
+    res['args'] = tuple(arglist)
+    return res
 
 if sys.platform == "cli":
     # provides extra type info when generating against IronPython which can be used w/ CPython completions
@@ -163,10 +223,11 @@ def generate_getset_descriptor(descriptor):
         descriptor_table['doc'] = descriptor.__doc__
     
     desc_type = BuiltinScraper.get_descriptor_type(descriptor)
-    descriptor_table['type'] = type_to_name(desc_type)
+    descriptor_table['type'] = type_to_typelist(desc_type)
     
     return descriptor_table
 
+NoneType = type(None)
 slot_wrapper_type = type(int.__add__)
 method_descriptor_type = type(str.center)
 member_descriptor_type = type(property.fdel)
@@ -194,13 +255,13 @@ def generate_member(obj, is_hidden=False, from_type = False):
 
         member_table['value'] = generate_builtin_function(obj, from_type)
     elif isinstance(obj, (type, OldStyleClassType)):
-        member_table['kind'] = 'type'        
+        member_table['kind'] = 'type'
         member_table['value'] = generate_type(obj, is_hidden=is_hidden)
     elif isinstance(obj, (types.BuiltinMethodType, slot_wrapper_type, method_descriptor_type)):
-        member_table['kind'] = 'method'        
+        member_table['kind'] = 'method'
         member_table['value'] = generate_builtin_function(obj, True)
     elif isinstance(obj, (getset_descriptor_type, member_descriptor_type)):
-        member_table['kind'] = 'property'        
+        member_table['kind'] = 'property'
         member_table['value'] = generate_getset_descriptor(obj)
     else:
         member_table['kind'] = 'data'
@@ -247,7 +308,7 @@ def generate_type_new(type_obj, obj):
 def oldstyle_mro(type_obj, res):
     for base in type_obj.__bases__:
         if base not in res:
-            res.append(type_to_name(base))
+            res.append(type_to_typeref(base))
 
     for base in type_obj.__bases__:
         oldstyle_mro(base, res)
@@ -257,11 +318,11 @@ def generate_type(type_obj, is_hidden=False):
     type_table = {}
     
     if hasattr(type_obj, '__mro__'):
-        type_table['mro'] = [type_to_name(mro_type) for mro_type in type_obj.__mro__]
+        type_table['mro'] = types_to_typelist(type_obj.__mro__)
     else:
         type_table['mro'] = oldstyle_mro(type_obj, [])
 
-    type_table['bases'] = [type_to_name(mro_type) for mro_type in type_obj.__bases__]
+    type_table['bases'] = types_to_typelist(type_obj.__bases__)
     type_table['members'] = members_table = {}
     
     if isinstance(type_obj.__doc__, str):
@@ -275,7 +336,10 @@ def generate_type(type_obj, is_hidden=False):
         if member == '__new__':
             found_new = True
             if type_obj is object:
-                members_table[member] = {'kind' : 'function', 'value': { 'overloads': ({'args': [{'name': 'cls', 'type': (builtin_name, 'type'), 'ret_type': (builtin_name, 'object')}]}, )}}
+                members_table[member] = {
+                    'kind' : 'function',
+                    'value': { 'overloads': [generate_overload(object, ('cls', type))] }
+                }
             else:
                 members_table[member] = generate_type_new(type_obj, type_obj.__dict__[member])
         elif member == '__getattribute__' and type(type_obj.__dict__[member]) is slot_wrapper_type and type_obj is not object:
@@ -296,7 +360,7 @@ def generate_data(data_value):
     data_table = {}
     
     data_type = type(data_value)
-    data_table['type'] = type_to_name(data_type)
+    data_table['type'] = type_to_typelist(data_type)
     
     return data_table
 
@@ -309,7 +373,7 @@ def lookup_module(module_name):
         for name in module_name.split('.')[1:]:
             try:
                 module = getattr(module, name)
-            except:
+            except AttributeError:
                 module = sys.modules[module_name]
     
     return module
@@ -338,11 +402,6 @@ def get_module_members(module):
 
     return module.__dict__
 
-if sys.version_info[0] == 2:
-    builtin_name = '__builtin__'
-else:
-    builtin_name = 'builtins'
-
 def generate_builtin_module():
     res  = generate_module(lookup_module(builtin_name))
 
@@ -353,7 +412,7 @@ def generate_builtin_module():
     members_table['builtin_function'] = generate_member(types.BuiltinFunctionType, is_hidden=True)
     members_table['builtin_method_descriptor'] = generate_member(types.BuiltinMethodType, is_hidden=True)
     members_table['generator'] = generate_member(types.GeneratorType, is_hidden=True)
-    members_table['NoneType'] = generate_member(type(None), is_hidden=True)
+    members_table['NoneType'] = generate_member(NoneType, is_hidden=True)
     members_table['ellipsis'] = generate_member(type(Ellipsis), is_hidden=True)
     members_table['module_type'] = generate_member(types.ModuleType, is_hidden=True)
     if sys.version_info[0] == 2:
@@ -388,31 +447,22 @@ def merge_type(baseline_type, new_type):
     return new_type
 
 def merge_function(baseline_func, new_func):
+    new_func['overloads'].extend(baseline_func['overloads'])
     return new_func
 
 def merge_property(baseline_prop, new_prop):
-    if new_prop['type'] != baseline_prop['type']:
-        if new_prop['type'] == (builtin_name, 'object'):
-            new_prop['type'] = baseline_prop['type']
-            #print 'property different types', new_prop['type'], baseline_prop['type']
-
+    new_prop['type'].extend(baseline_prop['type'])
     return new_prop
 
 def merge_data(baseline_data, new_data):
-    if new_data['type'] != baseline_data['type']:
-        if new_data['type'] == (builtin_name, 'object'):
-            new_data['type'] = baseline_data['type']
-            #print 'data different types', new_data['type'], baseline_data['type']
-
+    new_data['type'].extend(baseline_data['type'])
     return new_data
 
 def merge_method(baseline_method, new_method):
-    if 'overloads' in baseline_method and ('overloads' not in new_method or new_method['overloads'] is None):
-        #print 'merging method', new_method
+    if new_method.get('overloads') is None:
         new_method['overloads'] = baseline_method['overloads']
-    elif 'overloads' in new_method:
-        #print('has overloads', new_method['overloads'])
-        pass
+    else:
+        new_method['overloads'].extend(baseline_method['overloads'])
     
     if 'doc' in baseline_method and 'doc' not in new_method:
         new_method['doc'] = baseline_method['doc']
@@ -462,19 +512,42 @@ def mark_minimum_version(mod, items, version = '2.6'):
             # if we're running on a later version for the real scrap we may not have the member
             mod['members'][two_only]['value']['version'] = '>=' + version
 
+InitMethodEntry = {
+    'kind': 'method',
+    'value': {
+        'doc': 'x.__init__(...) initializes x; see help(type(x)) for signature',
+        'overloads': [generate_overload(NoneType, ('self', object), ('args', object, '*'), ('kwargs', object, '**'))]
+    }
+}
+
+NewMethodEntry = {
+    'kind': 'function',
+    'value': {
+        'doc': 'T.__new__(S, ...) -> a new object with type S, a subtype of T',
+        'overloads': [generate_overload(object, ('self', object), ('args', object, '*'), ('kwargs', object, '**'))]
+    }
+}
+
+ReprMethodEntry = {
+    'kind': 'method',
+    'value': {
+        'doc': 'x.__repr__() <==> repr(x)',
+        'overloads': [generate_overload(str, ('self', object))]
+    }
+}
+
 def thread_fixer(mod):
     mark_minimum_version(mod, ['_count'], '2.7')
 
     # 3.x members
     mod['members']['TIMEOUT_MAX'] = {'kind': 'data', 'value': 
                                      {'version' : '>=3.2', 
-                                      'type': ('builtins', 'float')}}
+                                      'type': type_to_typelist(float)}}
     mod['members']['RLock'] = {'kind': 'type',  'value': 
                                {'version': '>=3.2', 
-                                'bases': [('builtins', 'object')],
+                                'bases': type_to_typelist(object),
         'members': {'__doc__': {'kind': 'data',
-                        'value': {'type': ('builtins',
-                                            'NoneType')}},
+                        'value': {'type': type_to_typelist(NoneType)}},
             '__enter__': {'kind': 'method',
                         'value': {'doc': 'acquire(blocking=True) -> bool\n\n'
                                   'Lock the lock.  `blocking` indicates '
@@ -508,56 +581,20 @@ def thread_fixer(mod):
                                  ' as many times for the lock\nto be available '
                                  'for other threads.',
                                     'overloads': None}},
-            '__new__': {'kind': 'function',
-                        'value': {'doc': 'T.__new__(S, *args) -> a new object '
-                                  'with type S, a subtype of T',
-                                    'overloads': ({'args': [{'name': 'S',
-                                                        'type': ('builtins',
-                                                                    'object')},
-                                                        {'arg_format': '*',
-                                                        'name': 'args',
-                                                        'type': ('builtins',
-                                                                    'object')},
-                                                        {'arg_format': '*',
-                                                        'name': 'args',
-                                                        'type': ('builtins',
-                                                                    'object')}],
-                                                    'ret_type': ('',
-                                                                'a')},)}},
-            '__repr__': {'kind': 'method',
-                        'value': {'doc': 'x.__repr__() <==> repr(x)',
-                                'overloads': ({'args': [{'name': 'self',
-                                                            'type': ('builtins',
-                                                                    'object')}],
-                                                'ret_type': ('builtins',
-                                                            'NoneType')},)}},
+            '__new__': NewMethodEntry,
+            '__repr__': ReprMethodEntry,
             '_acquire_restore': {'kind': 'method',
                                 'value': {'doc': '_acquire_restore(state) -> None\n\n'
                                           'For internal use by `threading.Condition`.',
-                                    'overloads': ({'args': [{'name': 'self',
-                                                                'type': ('builtins',
-                                                                        'object')},
-                                                            {'name': 'state',
-                                                                'type': ('builtins',
-                                                                        'object')}],
-                                                    'ret_type': ('builtins',
-                                                                'NoneType')},)}},
+                                    'overloads': [generate_overload(NoneType, ('self', object), ('state', object))]}},
             '_is_owned': {'kind': 'method',
                         'value': {'doc': '_is_owned() -> bool\n\nFor internal use by'
                                  ' `threading.Condition`.',
-                                    'overloads': ({'args': [{'name': 'self',
-                                                                'type': ('builtins',
-                                                                        'object')}],
-                                                    'ret_type': ('builtins',
-                                                                    'bool')},)}},
+                                    'overloads': [generate_overload(bool, ('self', object))]}},
             '_release_save': {'kind': 'method',
                             'value': {'doc': '_release_save() -> tuple\n\nFor internal use'
                                      ' by `threading.Condition`.',
-                                        'overloads': ({'args': [{'name': 'self',
-                                                                    'type': ('builtins',
-                                                                            'object')}],
-                                                        'ret_type': ('builtins',
-                                                                        'tuple')},)}},
+                                        'overloads': [generate_overload(tuple, ('self', object))]}},
             'acquire': {'kind': 'method',
                         'value': {'doc': 'acquire(blocking=True) -> bool\n\n'
                                   'Lock the lock.  `blocking` indicates '
@@ -590,17 +627,8 @@ def thread_fixer(mod):
                                   'current thread, release() needs to be '
                                   'called as many times for the lock\n'
                                   'to be available for other threads.',
-                                    'overloads': ({'args': [{'name': 'self',
-                                                            'type': ('builtins',
-                                                                        'object')}],
-                                                    'ret_type': ('builtins',
-                                                                'NoneType')},
-                                                {'args': [{'name': 'self',
-                                                            'type': ('builtins',
-                                                                        'object')}],
-                                                    'ret_type': ('builtins',
-                                                                'NoneType')})}}},
-            'mro': [('_thread', 'RLock'), ('builtins', 'object')]}}
+                                    'overloads': [generate_overload(NoneType, ('self', object))]}}},
+            'mro': [typename_to_typeref('_thread', 'RLock'), type_to_typeref(object)]}}
     return mod
 
 def builtin_fixer(mod):
@@ -629,20 +657,7 @@ def builtin_fixer(mod):
           ' an object, which can be a string or a code\nobject.\nThe globals'
           ' and locals are dictionaries, defaulting to the current\nglobals'
           ' and locals.  If only globals is given, locals defaults to it.',
-        'overloads': (
-                {
-                    'args': [ 
-                        {'name': 'object', 'type': ('builtins', 'object')},
-                        {'default_value': 'None', 
-                         'name': 'globals', 
-                         'type': ('builtins', 'dict')},
-                        {'default_value': 'None', 
-                         'name': 'locals', 
-                         'type': ('builtins', 'dict')}
-                    ],
-                    'ret_type': ('builtins', 'object')
-                },
-            ),
+        'overloads': [generate_overload(object, ('object', object), ('globals', dict, '', 'None'), ('locals', dict, '', 'None'))],
         'version': '>=3.0'
         }
     }
@@ -657,16 +672,11 @@ def builtin_fixer(mod):
         'the current sys.stdout.\nsep:  string inserted between values, '
         'default a space.\nend:  string appended after the last value, default '
         'a newline.',
-        'overloads': (
-                {
-                    'args': [ 
-                        {'name': 'value', 'type': ('builtins', 'object')},
-                        {'default_value': "' '", 'name': 'sep', 'type': ('builtins', 'str')},
-                        {'default_value': 'sys.stdout', 'name': 'file', 'type': ('io', 'IOBase')}
-                    ],
-                    'ret_type': ('builtins', 'NoneType')
-                },
-            ),
+        'overloads': [generate_overload(NoneType,
+                                        ('value', object),
+                                        ('sep', str, '', "' '"),
+                                        ('file', typename_to_typeref('io', 'IOBase'), '', 'sys.stdout')
+                                       )],
         'version': '>=3.0'
         }
         
@@ -676,49 +686,21 @@ def builtin_fixer(mod):
     mod['members']['ResourceWarning'] = {
             'kind': 'type',
             'value': {
-                    'version': '>=3.2',
-                    'bases': [('builtins', 'Warning')],
-                    'doc': 'Base class for warnings about resource usage.',
-                    'members': {'__doc__': {'kind': 'data',
-                            'value': {'type': ('builtins', 'str')}
-                        },
-                '__init__': {'kind': 'method',
-                'value': {'doc': 'x.__init__(...) initializes x; see '
-                            'help(type(x)) for signature',
-                            'overloads': ({'args': [{'name': 'self',
-                                                        'type': ('builtins',
-                                                                'object')},
-                                                    {'arg_format': '*',
-                                                        'name': 'args',
-                                                        'type': ('builtins',
-                                                                'object')},
-                                                    {'arg_format': '*',
-                                                        'name': 'args',
-                                                        'type': ('builtins',
-                                                                'object')}],
-                                            'ret_type': ('builtins',
-                                                        'NoneType')},)}},
-                '__new__': {'kind': 'function',
-                'value': {'doc': 'T.__new__(S, ...) -> a new object with type '
-                          'S, a subtype of T',
-                            'overloads': ({'args': [{'name': 'S',
-                                                    'type': ('builtins',
-                                                                'object')},
-                                                    {'arg_format': '*',
-                                                    'name': 'args',
-                                                    'type': ('builtins',
-                                                                'object')},
-                                                    {'arg_format': '*',
-                                                    'name': 'args',
-                                                    'type': ('builtins',
-                                                                'object')}],
-                                            'ret_type': ('',
-                                                        'a')},)}}},
-            'mro': [('builtins', 'ResourceWarning'),
-                     ('builtins', 'Warning'),
-                     ('builtins', 'Exception'),
-                     ('builtins', 'BaseException'),
-                     ('builtins', 'object')]}}
+                'version': '>=3.2',
+                'bases': [typename_to_typeref(builtin_name, 'Warning')],
+                'doc': 'Base class for warnings about resource usage.',
+                'members': {
+                    '__doc__': { 'kind': 'data', 'value': { 'type': type_to_typelist(str) } },
+                    '__init__': InitMethodEntry,
+                    '__new__': NewMethodEntry,
+                },
+                'mro': [typename_to_typeref(builtin_name, 'ResourceWarning'),
+                        typename_to_typeref(builtin_name, 'Warning'),
+                        typename_to_typeref(builtin_name, 'Exception'),
+                        typename_to_typeref(builtin_name, 'BaseException'),
+                        typename_to_typeref(builtin_name, 'object')]
+            }
+        }
 
     return mod
 
@@ -733,54 +715,72 @@ def sys_fixer(mod):
 
     # new in 3x
 
-    mod['members']['int_info'] = {'kind': 'data', 
-                                  'value': 
-                                    {'type': ('sys', 'int_info'), 
-                                     'version': '>=3.1'}
-                                 }
-    mod['members']['_xoptions'] = {'kind': 'data', 
-                                   'value': 
-                                    {'type': ('builtins', 'dict'), 
-                                     'version': '>=3.1'}}
-    mod['members']['intern'] = {'kind': 'function',
-                                'value': {'version': '>=3.0', 
-                                    'doc': "intern(string) -> string\n\n"
-                                    "Intern the given string.  This enters the"
-                                    " string in the (global)\ntable of "
-                                    "interned strings whose purpose is to "
-                                    "speed up dictionary lookups.\nReturn"
-                                    " the string itself or the previously"
-                                    " interned string object with the\nsame "
-                                    "value.",
-                                'overloads': ({'args': [{'name': 'string',
-                                'type': ('builtins', 'str')}],
-                                'ret_type': ('builtins', 'str')},)}}
-    mod['members']['setswitchinterval'] = {'kind': 'function',
-                                         'value': {'version': '>=3.2', 
-                                            'doc': 'setswitchinterval(n)\n\n'
-                                            'Set the ideal thread switching '
-                                            'delay inside the Python '
-                                            'interpreter\nThe actual frequency'
-                                            ' of switching threads can be '
-                                            'lower if the\ninterpreter '
-                                            'executes long sequences of'
-                                            ' uninterruptible code\n(this is'
-                                            ' implementation-specific and '
-                                            'workload-dependent).\n\nThe '
-                                            'parameter must represent the '
-                                            'desired switching delay in '
-                                            'seconds\nA typical value '
-                                            'is 0.005 (5 milliseconds).',
-                                        'overloads': ({'args': [{'name': 'n',
-                                        'type': ('builtins', 'object')}],
-                                        'ret_type': ('builtins', 'NoneType')},)}}
-    mod['members']['getswitchinterval'] =   {'kind': 'function',
-            'value': {'version':'>=3.2', 'doc': 'getswitchinterval() -> current '
-                      'thread switch interval; see setswitchinterval().',
-            'overloads': ({'args': [], 'ret_type': ('', 'current')},)}}
-    mod['members']['hash_info'] =   {'kind': 'data', 'value': 
-                                     {'version':'>=3.2', 
-                                      'type': ('sys', 'hash_info')}}
+    mod['members']['int_info'] = {
+        'kind': 'data', 
+        'value': {
+            'type': [typename_to_typeref('sys', 'int_info')], 
+            'version': '>=3.1'
+        }
+    }
+    mod['members']['_xoptions'] = {
+        'kind': 'data', 
+        'value': {
+            'type': [typename_to_typeref(builtin_name, 'dict')], 
+            'version': '>=3.1'
+        }
+    }
+    mod['members']['intern'] = {
+        'kind': 'function',
+        'value': {
+            'version': '>=3.0', 
+            'doc': "intern(string) -> string\n\n"
+                   "Intern the given string.  This enters the"
+                   " string in the (global)\ntable of "
+                   "interned strings whose purpose is to "
+                   "speed up dictionary lookups.\nReturn"
+                   " the string itself or the previously"
+                   " interned string object with the\nsame "
+                   "value.",
+            'overloads': [generate_overload(str, ('string', str))]
+        }
+    }
+    mod['members']['setswitchinterval'] = {
+        'kind': 'function',
+        'value': {
+            'version': '>=3.2', 
+            'doc': 'setswitchinterval(n)\n\n'
+                   'Set the ideal thread switching '
+                   'delay inside the Python '
+                   'interpreter\nThe actual frequency'
+                   ' of switching threads can be '
+                   'lower if the\ninterpreter '
+                   'executes long sequences of'
+                   ' uninterruptible code\n(this is'
+                   ' implementation-specific and '
+                   'workload-dependent).\n\nThe '
+                   'parameter must represent the '
+                   'desired switching delay in '
+                   'seconds\nA typical value '
+                   'is 0.005 (5 milliseconds).',
+            'overloads': [generate_overload(NoneType, ('n', float))]
+        }
+    }
+    mod['members']['getswitchinterval'] = {
+        'kind': 'function',
+        'value': {
+            'version': '>=3.2',
+            'doc': 'getswitchinterval() -> current'
+                   'thread switch interval; see setswitchinterval().',
+            'overloads': [generate_overload(float)]
+        }
+    }
+    mod['members']['hash_info'] = {
+        'kind': 'data',
+        'value': {
+            'version': '>=3.2', 
+            'type': [typename_to_typeref('sys', 'hash_info')]
+        }
+    }
     return mod
 
 def nt_fixer(mod):
@@ -789,71 +789,98 @@ def nt_fixer(mod):
                                'tmpnam'])
     mark_minimum_version(mod, ['closerange'], '2.6')
 
-    mod['members']['_isdir'] = {'kind': 'function',
-     'value': {'doc': 'Return true if the pathname refers to an existing'
-                      ' directory.',
-                'overloads': None,
-                'version': '>=3.2'}}
-    mod['members']['getlogin'] = {'kind': 'function',
-     'value': {'doc': 'getlogin() -> string\n\nReturn the actual login name.',
-                'overloads': ({'args': [],
-                                'ret_type': ('builtins', 'code')},),
-                'version': '>=3.2'}}
-    mod['members']['_getfileinformation'] = {'kind': 'function', 'value': 
-                                             {'overloads': None, 
-                                              'version': '>=3.2'}}
-    mod['members']['getppid'] = {'kind': 'function',
-     'value': {'doc': "getppid() -> ppid\n\nReturn the parent's process id.  "
-                      "If the parent process has already exited,\nWindows "
-                      "machines will still return its id; others systems will"
-                      " return the id\nof the 'init' process (1).",
-                'overloads': ({'args': [], 'ret_type': ('builtins', 'int')},),
-                'version': '>=3.2'}}
-    mod['members']['symlink'] = {'kind': 'function',
-     'value': {'doc': 'symlink(src, dst, target_is_directory=False)\n\nCreate'
-                      ' a symbolic link pointing to src named dst.\n'
-                      'target_is_directory is required if the target is to '
-                      'be interpreted as\na directory.\nThis function requires'
-                      ' Windows 6.0 or greater, and raises a\n'
-                      'NotImplementedError otherwise.',
-                'overloads': ({'args': [{'name': 'src',
-                                           'type': ('builtins', 'object')},
-                                          {'default_value': 'False',
-                                           'name': 'target_is_directory=False',
-                                           'type': ('builtins', 'object')}],
-                                'ret_type': ('builtins', 'NoneType')},),
-                'version': '>=3.2'}}
-    mod['members']['link'] = {'kind': 'function',
-     'value': {'doc': 'link(src, dst)\n\nCreate a hard link to a file.',
-                'overloads': ({'args': [{'name': 'src',
-                                           'type': ('builtins', 'object')},
-                                          {'name': 'dst',
-                                           'type': ('builtins', 'object')}],
-                                'ret_type': ('builtins', 'NoneType')},),
-                'version': '>=3.2'}}
-    mod['members']['device_encoding'] = {'kind': 'function',
-     'value': {'doc': 'device_encoding(fd) -> str\n\nReturn a string '
-                      'describing the encoding of the device\nif the'
-                      ' output is a terminal; else return None.',
-                'overloads': ({'args': [{'name': 'fd',
-                                           'type': ('builtins', 'object')}],
-                                'ret_type': ('builtins', 'str')},),
-                'version': '>=3.0'}}
-    mod['members']['_getfinalpathname'] = {'kind': 'function', 'value': 
-                                           {'overloads': None, 
-                                            'version': '>=3.2'}}
-    mod['members']['readlink'] = {'kind': 'function',
-     'value': {'doc': 'readlink(path) -> path\n\nReturn a string representing'
-                      ' the path to which the symbolic link points.',
-                'overloads': ({'args': [{'name': 'path',
-                                           'type': ('builtins', 'object')}],
-                                'ret_type': ('builtins', 'str')},),
-                'version': '>=3.2'}}
-    mod['members']['getcwdb'] = {'kind': 'function',
-     'value': {'doc': 'getcwdb() -> path\n\nReturn a bytes string '
-                      'representing the current working directory.',
-                'overloads': ({'args': [], 'ret_type': ('builtins', 'str')},),
-                'version': '>=3.0'}}
+    mod['members']['_isdir'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'Return true if the pathname refers to an existing'
+                   ' directory.',
+            'overloads': [generate_overload(bool, ('pathname', str))],
+            'version': '>=3.2'
+        }
+    }
+
+    mod['members']['getlogin'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'getlogin() -> string\n\nReturn the actual login name.',
+            'overloads': [generate_overload(typename_to_typeref(builtin_name, 'code'))],
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['_getfileinformation'] = {
+        'kind': 'function',
+        'value': {
+            'overloads': None, 
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['getppid'] = {
+        'kind': 'function',
+        'value': {
+            'doc': "getppid() -> ppid\n\nReturn the parent's process id.  "
+                   "If the parent process has already exited,\nWindows "
+                   "machines will still return its id; others systems will"
+                   " return the id\nof the 'init' process (1).",
+            'overloads': [generate_overload(int)],
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['symlink'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'symlink(src, dst, target_is_directory=False)\n\nCreate'
+                   ' a symbolic link pointing to src named dst.\n'
+                   'target_is_directory is required if the target is to '
+                   'be interpreted as\na directory.\nThis function requires'
+                   ' Windows 6.0 or greater, and raises a\n'
+                   'NotImplementedError otherwise.',
+            'overloads': [generate_overload(NoneType, ('src', object), ('target_is_directory', bool, '', 'False'))],
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['link'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'link(src, dst)\n\nCreate a hard link to a file.',
+            'overloads': [generate_overload(NoneType, ('src', object), ('dst', object))],
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['device_encoding'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'device_encoding(fd) -> str\n\nReturn a string '
+                   'describing the encoding of the device\nif the'
+                   ' output is a terminal; else return None.',
+            'overloads': [generate_overload(str, ('fd', object))],
+            'version': '>=3.0'
+        }
+    }
+    mod['members']['_getfinalpathname'] = {
+        'kind': 'function',
+        'value': {
+            'overloads': None, 
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['readlink'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'readlink(path) -> path\n\nReturn a string representing'
+                   ' the path to which the symbolic link points.',
+            'overloads': [generate_overload(str, ('path', object))],
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['getcwdb'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'getcwdb() -> path\n\nReturn a bytes string '
+                   'representing the current working directory.',
+            'overloads': [generate_overload(str)],
+            'version': '>=3.0'
+        }
+    }
     return mod
 
 def msvcrt_fixer(mod):
@@ -862,16 +889,26 @@ def msvcrt_fixer(mod):
                                'getwch', 'putwch', 
                                'VC_ASSEMBLY_PUBLICKEYTOKEN'], '2.6')
 
-    mod['members']['SEM_FAILCRITICALERRORS'] = {'kind': 'data',
-     'value': {'type': ('builtins', 'int'), 'version': '>=3.2'}}
-    mod['members']['SEM_NOALIGNMENTFAULTEXCEPT'] = {'kind': 'data',
-     'value': {'type': ('builtins', 'int'), 'version': '>=3.2'}}
-    mod['members']['SetErrorMode'] = {'kind': 'function', 'value': 
-                                      {'overloads': None, 'version': '>=3.2'}}
-    mod['members']['SEM_NOGPFAULTERRORBOX'] = {'kind': 'data',
-     'value': {'type': ('builtins', 'int'), 'version': '>=3.2'}}
-    mod['members']['SEM_NOOPENFILEERRORBOX'] = {'kind': 'data',
-     'value': {'type': ('builtins', 'int'), 'version': '>=3.2'}}
+    mod['members']['SEM_FAILCRITICALERRORS'] = {
+        'kind': 'data',
+        'value': {'type': type_to_typelist(int), 'version': '>=3.2'}
+    }
+    mod['members']['SEM_NOALIGNMENTFAULTEXCEPT'] = {
+        'kind': 'data',
+        'value': {'type': type_to_typelist(int), 'version': '>=3.2'}
+    }
+    mod['members']['SetErrorMode'] = {
+        'kind': 'function', 
+        'value': {'overloads': None, 'version': '>=3.2'}
+    }
+    mod['members']['SEM_NOGPFAULTERRORBOX'] = {
+        'kind': 'data',
+        'value': {'type': type_to_typelist(int), 'version': '>=3.2'}
+    }
+    mod['members']['SEM_NOOPENFILEERRORBOX'] = {
+        'kind': 'data',
+        'value': {'type': type_to_typelist(int), 'version': '>=3.2'}
+    }
     return mod
 
 def gc_fixer(mod):
@@ -885,32 +922,39 @@ def cmath_fixer(mod):
     mark_minimum_version(mod, ['lgamma', 'expm1', 'erfc', 'erf', 'gamma'], 
                          '2.7')
 
-    mod['members']['isfinite'] = {'kind': 'function',
- 'value': {'doc': 'isfinite(z) -> bool\nReturn True if both the real and '
-                  'imaginary parts of z are finite, else False.',
-            'overloads': ({'args': [{'name': 'z',
-                                       'type': ('builtins', 'object')}],
-                            'ret_type': ('builtins', 'bool')},),
-            'version': '>=3.2'}}
+    mod['members']['isfinite'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'isfinite(z) -> bool\nReturn True if both the real and '
+                   'imaginary parts of z are finite, else False.',
+            'overloads': [generate_overload(bool, ('z', object))],
+            'version': '>=3.2'
+        }
+    }
     return mod
 
 def _symtable_fixer(mod):
     mark_maximum_version(mod, ['OPT_BARE_EXEC', 'OPT_EXEC'])
     mark_minimum_version(mod, ['SCOPE_OFF', 'SCOPE_MASK'], '2.6')
 
-    mod['members']['OPT_TOPLEVEL'] = {'kind': 'data', 'value': 
-                                      {'type': ('builtins', 'int'), 
-                                       'version': '>=3.2'}}
+    mod['members']['OPT_TOPLEVEL'] = {
+        'kind': 'data',
+        'value': {'type': type_to_typelist(int), 'version': '>=3.2'}
+    }
 
     return mod
 
 def _warnings_fixer(mod):
     mark_maximum_version(mod, ['default_action', 'once_registry'])
 
-    mod['members']['_defaultaction'] = {'kind': 'data',
-     'value': {'type': ('builtins', 'str'), 'version': '>=3.0'}}
-    mod['members']['_onceregistry'] = {'kind': 'data',
-     'value': {'type': ('builtins', 'dict'), 'version': '>=3.0'}}
+    mod['members']['_defaultaction'] = {
+        'kind': 'data',
+        'value': {'type': type_to_typelist(str), 'version': '>=3.0'}
+    }
+    mod['members']['_onceregistry'] = {
+        'kind': 'data',
+        'value': {'type': type_to_typelist(dict), 'version': '>=3.0'}
+    }
 
     return mod
 
@@ -924,11 +968,15 @@ def _codecs_fixer(mod):
 
 def _md5_fixer(mod):
     mark_maximum_version(mod, ['new', 'MD5Type', 'digest_size'])
-    mod['members']['md5'] = {'kind': 'function',
-     'value': {'doc': 'Return a new MD5 hash object; optionally initialized '
-                      'with a string.',
-                'overloads': None,
-                'version': '>=3.0'}}
+    mod['members']['md5'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'Return a new MD5 hash object; optionally initialized '
+                   'with a string.',
+            'overloads': None,
+            'version': '>=3.0'
+        }
+    }
 
     return mod
 
@@ -937,49 +985,66 @@ def math_fixer(mod):
                                'copysign', 'asinh', 'isinf', 'acosh', 
                                'log1p', 'trunc'], '2.6')
 
-    mod['members']['isfinite'] = {'kind': 'function',
-     'value': {'doc': 'isfinite(x) -> bool\n\nReturn True if x is neither'
-                      ' an infinity nor a NaN, and False otherwise.',
-                'overloads': ({'args': [{'name': 'x',
-                                           'type': ('builtins', 'object')}],
-                                'ret_type': ('builtins', 'bool')},),
-                'version': '>=3.2'}}
+    mod['members']['isfinite'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'isfinite(x) -> bool\n\nReturn True if x is neither'
+                   ' an infinity nor a NaN, and False otherwise.',
+            'overloads': [generate_overload(bool, ('x', object))],
+            'version': '>=3.2'
+        }
+    }
 
     return mod
 
 def imp_fixer(mod):
     mark_minimum_version(mod, ['reload'], '2.6')
 
-    mod['members']['source_from_cache'] = {'kind': 'function',
-     'value': {'doc': 'Given the path to a .pyc./.pyo file, return the path '
-                       'to its .py file.\n\nThe .pyc/.pyo file does not need'
-                       ' to exist; this simply returns the path to\nthe .py '
-                       'file calculated to correspond to the .pyc/.pyo file.'
-                       '  If path\ndoes not conform to PEP 3147 format, '
-                       'ValueError will be raised.',
-                'overloads': None,
-                'version': '>=3.2'}}
-    mod['members']['get_tag'] = {'kind': 'function',
-     'value': {'doc': 'get_tag() -> string\nReturn the magic tag for .pyc or'
-                      ' .pyo files.',
-                'overloads': ({'args': [],
-                                'ret_type': ('builtins', 'code')},),
-                'version': '>=3.2'}}
-    mod['members']['cache_from_source'] = {'kind': 'function',
-     'value': {'doc': 'Given the path to a .py file, return the path to its'
-                      ' .pyc/.pyo file.\n\nThe .py file does not need to '
-                      'exist; this simply returns the path to the\n.pyc/'
-                      '.pyo file calculated as if the .py file were '
-                      'imported.  The extension\nwill be .pyc unless '
-                      '__debug__ is not defined, then it will be .pyo.'
-                      '\n\nIf debug_override is not None, then it must'
-                      ' be a boolean and is taken as\nthe value of '
-                      '__debug__ instead.',
-                'overloads': None,
-                'version': '>=3.2'}}
-    mod['members']['is_frozen_package'] = {'kind': 'function', 
-                                           'value': {'overloads': None, 
-                                                     'version': '>=3.1'}}
+    mod['members']['source_from_cache'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'Given the path to a .pyc./.pyo file, return the path '
+                   'to its .py file.\n\nThe .pyc/.pyo file does not need'
+                   ' to exist; this simply returns the path to\nthe .py '
+                   'file calculated to correspond to the .pyc/.pyo file.'
+                   '  If path\ndoes not conform to PEP 3147 format, '
+                   'ValueError will be raised.',
+            'overloads': None,
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['get_tag'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'get_tag() -> string\nReturn the magic tag for .pyc or'
+                   ' .pyo files.',
+            'overloads': [generate_overload(typename_to_typeref(builtin_name, 'code'))],
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['cache_from_source'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'Given the path to a .py file, return the path to its'
+                   ' .pyc/.pyo file.\n\nThe .py file does not need to '
+                   'exist; this simply returns the path to the\n.pyc/'
+                   '.pyo file calculated as if the .py file were '
+                   'imported.  The extension\nwill be .pyc unless '
+                   '__debug__ is not defined, then it will be .pyo.'
+                   '\n\nIf debug_override is not None, then it must'
+                   ' be a boolean and is taken as\nthe value of '
+                   '__debug__ instead.',
+            'overloads': None,
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['is_frozen_package'] = {
+        'kind': 'function', 
+        'value': {
+            'overloads': None, 
+            'version': '>=3.1'
+        }
+    }
     return mod
 
 def operator_fixer(mod):
@@ -1002,138 +1067,137 @@ def itertools_fixer(mod):
     mark_minimum_version(mod, ['combinations_with_replacement', 'compress'], 
                                 '2.7')
 
-    mod['members']['accumulate'] = {'kind': 'type', 'value': {'bases': [('builtins', 'object')],
-        'doc': 'accumulate(iterable) --> accumulate object\n\nReturn series of accumulated sums.',
-        'members': {'__doc__': {'kind': 'data',
-                        'value': {'type': ('builtins',
-                                            'str')}},
-            '__getattribute__': {'kind': 'method',
-                        'value': {'doc': "x.__getattribute__('name') <==> x.name",
-                                    'overloads': None}},
-            '__iter__': {'kind': 'method',
-                        'value': {'doc': 'x.__iter__() <==> iter(x)',
-                            'overloads': ({'args': [{'name': 'self',
-                                                        'type': ('builtins',
-                                                                'object')}],
-                                            'ret_type': ('builtins',
-                                                        'NoneType')},)}},
-            '__new__': {'kind': 'function',
-                        'value': {'doc': 'T.__new__(S, ...) -> a new object '
-                                  'with type S, a subtype of T',
-                                    'overloads': ({'args': [{'name': 'iterable',
-                                                    'type': ('builtins',
-                                                                'object')}],
-                                                    'ret_type': ('builtins',
-                                                                'NoneType')},)}},
-            '__next__': {'kind': 'method',
-                        'value': {'doc': 'x.__next__() <==> next(x)',
-                            'overloads': ({'args': [{'name': 'self',
-                                                        'type': ('builtins',
-                                                                'object')}],
-                                            'ret_type': ('builtins',
-                                                        'NoneType')},)}}},
-        'mro': [('itertools', 'accumulate'), ('builtins', 'object')],
-        'version': '>=3.2'}}
-    mod['members']['zip_longest'] = {'kind': 'type',
-     'value': {'bases': [('builtins', 'object')],
-                'doc': 'zip_longest(iter1 [,iter2 [...]], [fillvalue=None]) '
-                '--> zip_longest object\n\nReturn an zip_longest object whose'
-                ' .__next__() method returns a tuple where\nthe i-th element'
-                ' comes from the i-th iterable argument.  The .__next__()'
-                '\nmethod continues until the longest iterable in the argument'
-                ' sequence\nis exhausted and then it raises StopIteration.  '
-                'When the shorter iterables\nare exhausted, the fillvalue is '
-                'substituted in their place.  The fillvalue\ndefaults to None'
-                ' or can be specified by a keyword argument.\n',
-                'members': {'__doc__': {'kind': 'data',
-                        'value': {'type': ('builtins',
-                                            'str')}},
-            '__getattribute__': {'kind': 'method',
-                                'value': {'doc': "x.__getattribute__('name') "
-                                          "<==> x.name",
-                                            'overloads': None}},
-            '__iter__': {'kind': 'method',
-                        'value': {'doc': 'x.__iter__() <==> iter(x)',
-                        'overloads': ({'args': [{'name': 'self',
-                                                    'type': ('builtins',
-                                                            'object')}],
-                                        'ret_type': ('builtins',
-                                                    'NoneType')},)}},
-            '__new__': {'kind': 'function',
-                        'value': {'doc': 'T.__new__(S, ...) -> a new object '
-                                  'with type S, a subtype of T',
-                                    'overloads': ({'args': [{'name': 'S',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')}],
-                                        'ret_type': ('',
-                                                    'a')},)}},
-            '__next__': {'kind': 'method',
-                        'value': {'doc': 'x.__next__() <==> next(x)',
-                        'overloads': ({'args': [{'name': 'self',
-                                                    'type': ('builtins',
-                                                            'object')}],
-                                        'ret_type': ('builtins',
-                                                    'NoneType')},)}}},
-                'mro': [('itertools', 'zip_longest'),
-                         ('builtins', 'object')],
-                'version': '>=3.0'}}
-    mod['members']['filterfalse'] = {'kind': 'type',
-     'value': {'bases': [('builtins', 'object')],
-                'doc': 'filterfalse(function or None, sequence) --> '
-                'filterfalse object\n\nReturn those items of sequence'
-                ' for which function(item) is false.\nIf function is None,'
-                ' return the items that are false.',
-                'members': {'__doc__': {'kind': 'data',
-                            'value': {'type': ('builtins','str')}},
-                    '__getattribute__': {'kind': 'method',
-                                'value': {'doc': "x.__getattribute__('name') <==> x.name",
-                                            'overloads': None}},
-                    '__iter__': {'kind': 'method',
-                                'value': {'doc': 'x.__iter__() <==> iter(x)',
-                            'overloads': ({'args': [{'name': 'self',
-                                                        'type': ('builtins',
-                                                                'object')}],
-                                            'ret_type': ('builtins',
-                                                        'NoneType')},)}},
-                    '__new__': {'kind': 'function',
-                                'value': {'doc': 'T.__new__(S, ...) -> a new '
-                                          'object with type S, a subtype of T',
-                            'overloads': ({'args': [{'name': 'S',
-                                                    'type': ('builtins',
-                                                                'object')},
-                                                    {'arg_format': '*',
-                                                    'name': 'args',
-                                                    'type': ('builtins',
-                                                                'object')},
-                                                    {'arg_format': '*',
-                                                    'name': 'args',
-                                                    'type': ('builtins',
-                                                                'object')}],
-                                            'ret_type': ('',
-                                                        'a')},)}},
-                    '__next__': {'kind': 'method',
-                                'value': {'doc': 'x.__next__() <==> next(x)',
-                            'overloads': ({'args': [{'name': 'self',
-                                                        'type': ('builtins',
-                                                                'object')}],
-                                            'ret_type': ('builtins',
-                                                        'NoneType')},)}}},
-                'mro': [('itertools', 'filterfalse'),
-                         ('builtins', 'object')],
-                'version': '>=3.0'}}
+    mod['members']['accumulate'] = {
+        'kind': 'type',
+        'value': {
+            'bases': [type_to_typeref(object)],
+            'doc': 'accumulate(iterable) --> accumulate object\n\nReturn series of accumulated sums.',
+            'members': {
+                '__doc__': {'kind': 'data', 'value': { 'type': type_to_typelist(str) } },
+                '__getattribute__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': "x.__getattribute__('name') <==> x.name",
+                        'overloads': None
+                    }
+                },
+                '__iter__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'x.__iter__() <==> iter(x)',
+                        'overloads': [generate_overload(NoneType, ('self', object))],
+                    }
+                },
+                '__new__': {
+                    'kind': 'function',
+                    'value': {
+                        'doc': 'T.__new__(S, ...) -> a new object '
+                               'with type S, a subtype of T',
+                        'overloads': [generate_overload(NoneType, ('iterable', object))],
+                    }
+                },
+                '__next__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'x.__next__() <==> next(x)',
+                        'overloads': [generate_overload(NoneType, ('self', object))],
+                    }
+                },
+            },
+            'mro': [typename_to_typeref('itertools', 'accumulate'), type_to_typeref(object)],
+            'version': '>=3.2'
+        },
+    }
+    mod['members']['zip_longest'] = {
+        'kind': 'type',
+        'value': {
+            'bases': [type_to_typeref(object)],
+            'doc': 'zip_longest(iter1 [,iter2 [...]], [fillvalue=None]) '
+                   '--> zip_longest object\n\nReturn an zip_longest object whose'
+                   ' .__next__() method returns a tuple where\nthe i-th element'
+                   ' comes from the i-th iterable argument.  The .__next__()'
+                   '\nmethod continues until the longest iterable in the argument'
+                   ' sequence\nis exhausted and then it raises StopIteration.  '
+                   'When the shorter iterables\nare exhausted, the fillvalue is '
+                   'substituted in their place.  The fillvalue\ndefaults to None'
+                   ' or can be specified by a keyword argument.\n',
+            'members': {
+                '__doc__': {
+                    'kind': 'data',
+                    'value': { 'type': type_to_typelist(str) },
+                },
+                '__getattribute__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': "x.__getattribute__('name') <==> x.name",
+                        'overloads': None
+                    }
+                },
+                '__iter__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'x.__iter__() <==> iter(x)',
+                        'overloads': [generate_overload(NoneType, ('self', object))],
+                    }
+                },
+                '__new__': NewMethodEntry,
+                '__next__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'x.__next__() <==> next(x)',
+                        'overloads': [generate_overload(NoneType, ('self', object))],
+                    }
+                }
+            },
+            'mro': [typename_to_typeref('itertools', 'zip_longest'), type_to_typeref(object)],
+            'version': '>=3.0'
+        }
+    }
+    mod['members']['filterfalse'] = {
+        'kind': 'type',
+        'value': {
+            'bases': [type_to_typeref(object)],
+            'doc': 'filterfalse(function or None, sequence) --> '
+                   'filterfalse object\n\nReturn those items of sequence'
+                   ' for which function(item) is false.\nIf function is None,'
+                   ' return the items that are false.',
+            'members': {
+                '__doc__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(str)}
+                },
+                '__getattribute__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': "x.__getattribute__('name') <==> x.name",
+                        'overloads': None
+                    }
+                },
+                '__iter__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'x.__iter__() <==> iter(x)',
+                        'overloads': [generate_overload(NoneType, ('self', object))],
+                    },
+                },
+                '__new__': NewMethodEntry,
+                '__next__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'x.__next__() <==> next(x)',
+                        'overloads': [generate_overload(NoneType, ('self', object))],
+                    }
+                }
+            },
+            'mro': [typename_to_typeref('itertools', 'filterfalse'), type_to_typeref(object)],
+            'version': '>=3.0'
+        }
+    }
     return mod
 
 def cPickle_fixer(mod):
     mark_maximum_version(mod, ['HIGHEST_PROTOCOL', 'format_version', 
-                               'UnpickleableError', '__builtins__', 
+                               'UnpickleableError', '__builtin__', 
                                'BadPickleGet', '__version__', 
                                'compatible_formats'])
     return mod
@@ -1151,13 +1215,21 @@ def parser_fixer(mod):
     return mod
 
 def array_fixer(mod):
-    mod['members']['_array_reconstructor'] = {'kind': 'function',
-     'value': {'doc': 'Internal. Used for pickling support.',
-                'overloads': None,
-                'version': '>=3.2'}}
-    mod['members']['typecodes'] = {'kind': 'data', 
-                                   'value': {'type': ('builtins', 'str'), 
-                                             'version': '>=3.0'}}
+    mod['members']['_array_reconstructor'] = {
+        'kind': 'function',
+        'value': {
+            'doc': 'Internal. Used for pickling support.',
+            'overloads': None,
+            'version': '>=3.2'
+        }
+    }
+    mod['members']['typecodes'] = {
+        'kind': 'data', 
+        'value': {
+            'type': type_to_typelist(str), 
+            'version': '>=3.0'
+        }
+    }
 
     return mod
 
@@ -1166,144 +1238,123 @@ def _ast_fixer(mod):
     mark_minimum_version(mod, ['ExceptHandler'], '2.6')
     mark_minimum_version(mod, ['SetComp', 'Set', 'DictComp'], '2.7')
 
-    mod['members']['Starred'] = {'kind': 'type',
-     'value': {'bases': [('_ast', 'expr')],
-        'members': {'__doc__': {'kind': 'data',
-                        'value': {'type': ('builtins',
-                                            'NoneType')}},
-            '__module__': {'kind': 'data',
-                            'value': {'type': ('builtins',
-                                                'str')}},
-            '__new__': {'kind': 'function',
-                        'value': {'doc': 'T.__new__(S, ...) -> a new object'
-                                 ' with type S, a subtype of T',
-                    'overloads': ({'args': [{'name': 'S',
-                                            'type': ('builtins',
-                                                        'object')},
-                                            {'arg_format': '*',
-                                            'name': 'args',
-                                            'type': ('builtins',
-                                                        'object')},
-                                            {'arg_format': '*',
-                                            'name': 'args',
-                                            'type': ('builtins',
-                                                        'object')}],
-                                    'ret_type': ('',
-                                                'a')},)}},
-            '_fields': {'kind': 'data',
-                        'value': {'type': ('builtins',
-                                            'tuple')}}},
-        'mro': [('_ast', 'Starred'),
-                    ('_ast', 'expr'),
-                    ('_ast', 'AST'),
-                    ('builtins', 'object')],
-        'version': '>=3.0'}}
-    mod['members']['Bytes'] = {'kind': 'type',
-     'value': {'bases': [('_ast', 'expr')],
-        'members': {'__doc__': {'kind': 'data',
-                                    'value': {'type': ('builtins',
-                                                        'NoneType')}},
-                        '__module__': {'kind': 'data',
-                                        'value': {'type': ('builtins',
-                                                            'str')}},
-                        '__new__': {'kind': 'function',
-                                    'value': {'doc': 'T.__new__(S, ...) -> a '
-                                              'new object with type S, a '
-                                              'subtype of T',
-                        'overloads': ({'args': [{'name': 'S',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')}],
-                                        'ret_type': ('',
-                                                    'a')},)}},
-                        '_fields': {'kind': 'data',
-                                    'value': {'type': ('builtins',
-                                                        'tuple')}}},
-        'mro': [('_ast', 'Bytes'),
-                    ('_ast', 'expr'),
-                    ('_ast', 'AST'),
-                    ('builtins', 'object')],
-        'version': '>=3.0'}}
-    mod['members']['Nonlocal'] = {'kind': 'type',
-     'value': {'bases': [('_ast', 'stmt')],
-        'members': {'__doc__': {'kind': 'data',
-                            'value': {'type': ('builtins',
-                                                'NoneType')}},
-                '__module__': {'kind': 'data',
-                                'value': {'type': ('builtins',
-                                                    'str')}},
-                '__new__': {'kind': 'function',
-                            'value': {'doc': 'T.__new__(S, ...) -> a new '
-                            'object with type S, a subtype of T',
-                        'overloads': ({'args': [{'name': 'S',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')}],
-                                        'ret_type': ('',
-                                                    'a')},)}},
-                '_fields': {'kind': 'data',
-                            'value': {'type': ('builtins',
-                                                'tuple')}}},
-        'mro': [('_ast', 'Nonlocal'),
-                    ('_ast', 'stmt'),
-                    ('_ast', 'AST'),
-                    ('builtins', 'object')],
-        'version': '>=3.0'}}
-    mod['members']['arg'] = {'kind': 'type',
-     'value': {'bases': [('_ast', 'AST')],
-                'members': {'__dict__': {'kind': 'property',
-                                    'value': {'doc': 'dictionary for'
-                                        ' instance variables (if defined)',
-                                                'type': ('builtins',
-                                                        'object')}},
-                        '__doc__': {'kind': 'data',
-                                    'value': {'type': ('builtins',
-                                                        'NoneType')}},
-                        '__module__': {'kind': 'data',
-                                        'value': {'type': ('builtins',
-                                                            'str')}},
-                        '__new__': {'kind': 'function',
-                        'value': {'doc': 'T.__new__(S, ...) -> a new object '
-                                  'with type S, a subtype of T',
-                                    'overloads': ({'args': [{'name': 'S',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')},
-                                                {'arg_format': '*',
-                                                'name': 'args',
-                                                'type': ('builtins',
-                                                            'object')}],
-                                        'ret_type': ('',
-                                                    'a')},)}},
-                        '__weakref__': {'kind': 'property',
-                            'value': {'doc': 'list of weak '
-                                    'references to the object (if defined)',
-                                            'type': ('builtins',
-                                                    'object')}},
-                        '_fields': {'kind': 'data',
-                                    'value': {'type': ('builtins',
-                                                        'tuple')}}},
-                'mro': [('_ast', 'arg'),
-                         ('_ast', 'AST'),
-                         ('builtins', 'object')],
-                'version': '>=3.0'}}
+    mod['members']['Starred'] = {
+        'kind': 'type',
+        'value': {
+            'bases': [typename_to_typeref('_ast', 'expr')],
+            'members': {
+                '__doc__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(NoneType)}
+                },
+                '__module__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(str)}
+                },
+                '__new__': NewMethodEntry,
+                '_fields': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(tuple)}
+                },
+            },
+            'mro': [typename_to_typeref('_ast', 'Starred'),
+                    typename_to_typeref('_ast', 'expr'),
+                    typename_to_typeref('_ast', 'AST'),
+                    type_to_typeref(object)],
+            'version': '>=3.0'
+        }
+    }
+    mod['members']['Bytes'] = {
+        'kind': 'type',
+        'value': {
+            'bases': [typename_to_typeref('_ast', 'expr')],
+            'members': {
+                '__doc__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(object)}
+                },
+                '__module__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(str)}
+                },
+                '__new__': NewMethodEntry,
+                '_fields': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(tuple)}
+                }
+            },
+            'mro': [typename_to_typeref('_ast', 'Bytes'),
+                    typename_to_typeref('_ast', 'expr'),
+                    typename_to_typeref('_ast', 'AST'),
+                    type_to_typeref(object)],
+            'version': '>=3.0'
+        }
+    }
+    mod['members']['Nonlocal'] = {
+        'kind': 'type',
+        'value': {
+            'bases': [typename_to_typeref('_ast', 'stmt')],
+            'members': {
+                '__doc__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(NoneType)}
+                },
+                '__module__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(str)}
+                },
+                '__new__': NewMethodEntry,
+                '_fields': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(tuple)}
+                }
+            },
+            'mro': [typename_to_typeref('_ast', 'Nonlocal'),
+                    typename_to_typeref('_ast', 'stmt'),
+                    typename_to_typeref('_ast', 'AST'),
+                    type_to_typeref(object)],
+            'version': '>=3.0'
+        }
+    }
+    mod['members']['arg'] = {
+        'kind': 'type',
+        'value': {
+            'bases': [typename_to_typeref('_ast', 'AST')],
+            'members': {
+                '__dict__': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'dictionary for instance variables (if defined)',
+                        'type': type_to_typelist(object)
+                    }
+                },
+                '__doc__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(object)}
+                },
+                '__module__': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(str)}
+                },
+                '__new__': NewMethodEntry,
+                '__weakref__': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'list of weak references to the object (if defined)',
+                        'type': type_to_typelist(object)
+                    }
+                },
+                '_fields': {
+                    'kind': 'data',
+                    'value': {'type': type_to_typelist(tuple)}
+                }
+            },
+            'mro': [typename_to_typeref('_ast', 'arg'),
+                    typename_to_typeref('_ast', 'AST'),
+                    type_to_typeref(object)],
+            'version': '>=3.0'
+        }
+    }
     return mod
 
 def mmap_fixer(mod):
@@ -1351,466 +1402,262 @@ def _sre_post_fixer(mod):
     mod['members']['compile'] = {
         'kind': 'function',
         'value': {
-            'overloads': (
-                {'args': (
-                  {'name': 'pattern'},
-                  {'name': 'flags'},
-                  {'name': 'code'},
-                  {'name': 'groups'},
-                  {'name': 'groupindex'},
-                  {'name': 'indexgroup'},
-                 ), 
-                 'ret_type': ('_sre', 'SRE_Pattern') },
-              ),
+            'overloads': [generate_overload(typename_to_typeref('_sre', 'SRE_Pattern'),
+                ('pattern', object), ('flags', object), ('code', object), ('groups', object),
+                ('groupindex', object), ('indexgroup', object))],
             'builtin' : True,
             'static': True,
         }
     }
     mod['members']['SRE_Match'] = {
-            'kind': 'type',
-            'value': {'bases': [(builtin_name, 'object')],
+        'kind': 'type',
+        'value': {
+            'bases': [(builtin_name, 'object')],
             'doc': 'SRE_Match(m: Match, pattern: SRE_Pattern, text: str)\r\nRE_Match(m: Match, pattern: SRE_Pattern, text: str, pos: int, endpos: int)\r\n',
-            'members': 
-                         {'__new__': {'kind': 'function',
-                                      'value': {'doc': '__new__(cls: type, m: Match, pattern: SRE_Pattern, text: str)\r\n__new__(cls: type, m: Match, pattern: SRE_Pattern, text: str, pos: int, endpos: int)\r\n',
-                                                 'overloads': ()}},
-                         'end': {'kind': 'method',
-                                  'value': {'doc': 'end(self: SRE_Match, group: object) -> int\r\nend(self: SRE_Match) -> int\r\n',
-                                             'overloads': ({'args': [{'name': 'self',
-                                                                        'type': ('re',
-                                                                                  'SRE_Match')},
-                                                                       {'name': 'group',
-                                                                        'type': (builtin_name,
-                                                                                  'object')}],
-                                                             'ret_type': (builtin_name,
-                                                                           'int')},
-                                                            {'args': [{'name': 'self',
-                                                                        'type': ('re',
-                                                                                  'SRE_Match')}],
-                                                             'ret_type': (builtin_name,
-                                                                           'int')})}},
-                         'endpos': {'kind': 'property',
-                                     'value': {'doc': 'Get: endpos(self: SRE_Match) -> int\r\n\r\n',
-                                                'type': (builtin_name,
-                                                          'int')}},
-                         'expand': {'kind': 'method',
-                                     'value': {'doc': 'expand(self: SRE_Match, template: object) -> str\r\n',
-                                                'overloads': ({'args': [{'name': 'self',
-                                                                           'type': ('re',
-                                                                                     'SRE_Match')},
-                                                                          {'name': 'template',
-                                                                           'type': (builtin_name,
-                                                                                     'object')}],
-                                                                'ret_type': (builtin_name,
-                                                                              'str')},)}},
-                         'group': {'kind': 'method',
-                                    'value': {'doc': 'group(self: SRE_Match) -> str\r\ngroup(self: SRE_Match, index: object) -> str\r\ngroup(self: SRE_Match, index: object, *additional: Array[object]) -> object\r\n',
-                                               'overloads': ({'args': [{'name': 'self',
-                                                                          'type': ('re',
-                                                                                    'SRE_Match')}],
-                                                               'ret_type': (builtin_name,
-                                                                             'str')},
-                                                              {'args': [{'name': 'self',
-                                                                          'type': ('re',
-                                                                                    'SRE_Match')},
-                                                                         {'name': 'index',
-                                                                          'type': (builtin_name,
-                                                                                    'object')}],
-                                                               'ret_type': (builtin_name,
-                                                                             'str')},
-                                                              {'args': [{'name': 'self',
-                                                                          'type': ('re',
-                                                                                    'SRE_Match')},
-                                                                         {'name': 'index',
-                                                                          'type': (builtin_name,
-                                                                                    'object')},
-                                                                         {'arg_format': '*',
-                                                                          'name': 'additional',
-                                                                          'type': (builtin_name,
-                                                                                    'tuple')}],
-                                                               'ret_type': (builtin_name,
-                                                                             'object')})}},
-                         'groupdict': {'kind': 'method',
-                                        'value': {'doc': 'groupdict(self: SRE_Match, value: object) -> dict (of str to object)\r\ngroupdict(self: SRE_Match, value: str) -> dict (of str to str)\r\ngroupdict(self: SRE_Match) -> dict (of str to str)\r\n',
-                                                   'overloads': ({'args': [{'name': 'self',
-                                                                              'type': ('re',
-                                                                                        'SRE_Match')},
-                                                                             {'name': 'value',
-                                                                              'type': (builtin_name,
-                                                                                        'object')}],
-                                                                   'ret_type': (builtin_name,
-                                                                                 'dict')},
-                                                                  {'args': [{'name': 'self',
-                                                                              'type': ('re',
-                                                                                        'SRE_Match')},
-                                                                             {'name': 'value',
-                                                                              'type': (builtin_name,
-                                                                                        'str')}],
-                                                                   'ret_type': (builtin_name,
-                                                                                 'dict')},
-                                                                  {'args': [{'name': 'self',
-                                                                              'type': ('re',
-                                                                                        'SRE_Match')}],
-                                                                   'ret_type': (builtin_name,
-                                                                                 'dict')})}},
-                         'groups': {'kind': 'method',
-                                     'value': {'doc': 'groups(self: SRE_Match, default: object) -> tuple\r\ngroups(self: SRE_Match) -> tuple (of str)\r\n',
-                                                'overloads': ({'args': [{'name': 'self',
-                                                                           'type': ('re',
-                                                                                     'SRE_Match')},
-                                                                          {'name': 'default',
-                                                                           'type': (builtin_name,
-                                                                                     'object')}],
-                                                                'ret_type': (builtin_name,
-                                                                              'tuple')},
-                                                               {'args': [{'name': 'self',
-                                                                           'type': ('re',
-                                                                                     'SRE_Match')}],
-                                                                'ret_type': (builtin_name,
-                                                                              'tuple')})}},
-                         'lastgroup': {'kind': 'property',
-                                        'value': {'doc': 'Get: lastgroup(self: SRE_Match) -> str\r\n\r\n',
-                                                   'type': (builtin_name,
-                                                             'str')}},
-                         'lastindex': {'kind': 'property',
-                                        'value': {'doc': 'Get: lastindex(self: SRE_Match) -> object\r\n\r\n',
-                                                   'type': (builtin_name,
-                                                             'object')}},
-                         'pos': {'kind': 'property',
-                                  'value': {'doc': 'Get: pos(self: SRE_Match) -> int\r\n\r\n',
-                                             'type': (builtin_name,
-                                                       'int')}},
-                         're': {'kind': 'property',
-                                 'value': {'doc': 'Get: re(self: SRE_Match) -> SRE_Pattern\r\n\r\n',
-                                            'type': ('re',
-                                                      'SRE_Pattern')}},
-                         'regs': {'kind': 'property',
-                                   'value': {'doc': 'Get: regs(self: SRE_Match) -> tuple\r\n\r\n',
-                                              'type': (builtin_name,
-                                                        'tuple')}},
-                         'span': {'kind': 'method',
-                                   'value': {'doc': 'span(self: SRE_Match, group: object) -> tuple (of int)\r\nspan(self: SRE_Match) -> tuple (of int)\r\n',
-                                              'overloads': ({'args': [{'name': 'self',
-                                                                         'type': ('re',
-                                                                                   'SRE_Match')},
-                                                                        {'name': 'group',
-                                                                         'type': (builtin_name,
-                                                                                   'object')}],
-                                                              'ret_type': (builtin_name,
-                                                                            'tuple')},
-                                                             {'args': [{'name': 'self',
-                                                                         'type': ('re',
-                                                                                   'SRE_Match')}],
-                                                              'ret_type': (builtin_name,
-                                                                            'tuple')})}},
-                         'start': {'kind': 'method',
-                                    'value': {'doc': 'start(self: SRE_Match, group: object) -> int\r\nstart(self: SRE_Match) -> int\r\n',
-                                               'overloads': ({'args': [{'name': 'self',
-                                                                          'type': ('re',
-                                                                                    'SRE_Match')},
-                                                                         {'name': 'group',
-                                                                          'type': (builtin_name,
-                                                                                    'object')}],
-                                                               'ret_type': (builtin_name,
-                                                                             'int')},
-                                                              {'args': [{'name': 'self',
-                                                                          'type': ('re',
-                                                                                    'SRE_Match')}],
-                                                               'ret_type': (builtin_name,
-                                                                             'int')})}},
-                         'string': {'kind': 'property',
-                                     'value': {'doc': 'Get: string(self: SRE_Match) -> str\r\n\r\n',
-                                                'type': (builtin_name,
-                                                          'str')}}},
-            'mro': [('re', 'SRE_Match'), (builtin_name, 'object')]}
+            'members': {
+                '__new__': {
+                    'kind': 'function',
+                    'value': {
+                        'doc': '__new__(cls: type, m: Match, pattern: SRE_Pattern, text: str)\r\n__new__(cls: type, m: Match, pattern: SRE_Pattern, text: str, pos: int, endpos: int)\r\n',
+                        'overloads': None
+                    }
+                },
+                'end': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'end(self: SRE_Match, group: object) -> int\r\nend(self: SRE_Match) -> int\r\n',
+                        'overloads': [
+                            generate_overload(int, ('self', typename_to_typeref('re', 'SRE_Match'))),
+                            generate_overload(int, ('self', typename_to_typeref('re', 'SRE_Match')), ('group', object))
+                        ],
+                    }
+                },
+                'endpos': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: endpos(self: SRE_Match) -> int\r\n\r\n',
+                        'type': type_to_typelist(int)
+                    }
+                },
+                'expand': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'expand(self: SRE_Match, template: object) -> str\r\n',
+                        'overloads': [generate_overload(str, ('self', typename_to_typeref('re', 'SRE_Match')), ('template', object))],
+                    }
+                },
+                'group': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'group(self: SRE_Match) -> str\r\ngroup(self: SRE_Match, index: object) -> str\r\ngroup(self: SRE_Match, index: object, *additional: Array[object]) -> object\r\n',
+                        'overloads': [
+                            generate_overload(str, ('self', typename_to_typeref('re', 'SRE_Match'))),
+                            generate_overload(str, ('self', typename_to_typeref('re', 'SRE_Match')), ('index', object)),
+                            generate_overload(object, ('self', typename_to_typeref('re', 'SRE_Match')), ('index', object), ('additional', tuple, '*'))
+                        ],
+                    },
+                },
+                'groupdict': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'groupdict(self: SRE_Match, value: object) -> dict (of str to object)\r\ngroupdict(self: SRE_Match, value: str) -> dict (of str to str)\r\ngroupdict(self: SRE_Match) -> dict (of str to str)\r\n',
+                        'overloads': [
+                            generate_overload(dict, ('self', typename_to_typeref('re', 'SRE_Match')), ('value', types_to_typelist([object, str]))),
+                            generate_overload(dict, ('self', typename_to_typeref('re', 'SRE_Match')))
+                        ],
+                    }
+                },
+                'groups': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'groups(self: SRE_Match, default: object) -> tuple\r\ngroups(self: SRE_Match) -> tuple (of str)\r\n',
+                        'overloads': [
+                            generate_overload(tuple, ('self', typename_to_typeref('re', 'SRE_Match')), ('default', object)),
+                            generate_overload(tuple, ('self', typename_to_typeref('re', 'SRE_Match')))
+                        ],
+                    }
+                },
+                'lastgroup': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: lastgroup(self: SRE_Match) -> str\r\n\r\n',
+                        'type': type_to_typelist(str)
+                    }
+                },
+                'lastindex': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: lastindex(self: SRE_Match) -> object\r\n\r\n',
+                        'type': type_to_typelist(object)
+                    }
+                },
+                'pos': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: pos(self: SRE_Match) -> int\r\n\r\n',
+                        'type': type_to_typelist(int)
+                    }
+                },
+                're': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: re(self: SRE_Match) -> SRE_Pattern\r\n\r\n',
+                        'type': [typename_to_typeref('re', 'SRE_Pattern')]
+                    }
+                },
+                'regs': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: regs(self: SRE_Match) -> tuple\r\n\r\n',
+                        'type': type_to_typelist(tuple)
+                    }
+                },
+                'span': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'span(self: SRE_Match, group: object) -> tuple (of int)\r\nspan(self: SRE_Match) -> tuple (of int)\r\n',
+                        'overloads': [
+                            generate_overload(tuple, ('self', typename_to_typeref('re', 'SRE_Match'))),
+                            generate_overload(tuple, ('self', typename_to_typeref('re', 'SRE_Match')), ('group', object))
+                        ]
+                    }
+                },
+                'start': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'start(self: SRE_Match, group: object) -> int\r\nstart(self: SRE_Match) -> int\r\n',
+                        'overloads': [
+                            generate_overload(int, ('self', typename_to_typeref('re', 'SRE_Match'))),
+                            generate_overload(int, ('self', typename_to_typeref('re', 'SRE_Match')), ('group', object))
+                        ]
+                    }
+                },
+                'string': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: string(self: SRE_Match) -> str\r\n\r\n',
+                        'type': type_to_typelist(str)
+                    }
+                }
+            },
+            'mro': [typename_to_typeref('re', 'SRE_Match'), type_to_typeref(object)]
+        }
     }
     mod['members']['SRE_Pattern'] = {
             'kind': 'type',
-             'value': {'bases': [(builtin_name, 'object')],
+             'value': {'bases': [type_to_typeref(object)],
             'doc': '',
             'members': {
-                         '__eq__': {'kind': 'method',
-                                     'value': {'doc': 'x.__eq__(y) <==> x==y',
-                                                'overloads': ({'args': [{'name': 'self',
-                                                                           'type': ('_sre',
-                                                                                     'SRE_Pattern')},
-                                                                          {'name': 'obj',
-                                                                           'type': (builtin_name,
-                                                                                     'object')}],
-                                                                'ret_type': (builtin_name,
-                                                                              'bool')},)}},
-                         '__ne__': {'kind': 'method',
-                                     'value': {'doc': '__ne__(x: object, y: object) -> bool\r\n',
-                                                'overloads': ({'args': [{'name': 'x',
-                                                                           'type': (builtin_name,
-                                                                                     'object')},
-                                                                          {'name': 'y',
-                                                                           'type': (builtin_name,
-                                                                                     'object')}],
-                                                                'ret_type': (builtin_name,
-                                                                              'bool')},)}},
-                         '__new__': {'kind': 'function',
-                                      'value': {'doc': '__new__(cls: type, **kwargs, *args) -> object\r\n__new__(cls: type, *args) -> object\r\n__new__(cls: type) -> object\r\n',
-                                                 'overloads': ({'args': [{'name': 'cls',
-                                                                            'type': (builtin_name,
-                                                                                      'type')},
-                                                                           {'arg_format': '**',
-                                                                            'name': 'kwargs',
-                                                                            'type': (builtin_name,
-                                                                                      'dict')},
-                                                                           {'arg_format': '*',
-                                                                            'name': 'args',
-                                                                            'type': (builtin_name,
-                                                                                      'tuple')}],
-                                                                 'ret_type': (builtin_name,
-                                                                               'object')},
-                                                                {'args': [{'name': 'cls',
-                                                                            'type': (builtin_name,
-                                                                                      'type')},
-                                                                           {'arg_format': '*',
-                                                                            'name': 'args',
-                                                                            'type': (builtin_name,
-                                                                                      'tuple')}],
-                                                                 'ret_type': (builtin_name,
-                                                                               'object')},
-                                                                {'args': [{'name': 'cls',
-                                                                            'type': (builtin_name,
-                                                                                      'type')}],
-                                                                 'ret_type': (builtin_name,
-                                                                               'object')})}},
-                         'findall': {'kind': 'method',
-                                      'value': {'doc': 'findall(self: SRE_Pattern, string: object, pos: int, endpos: object) -> object\r\nfindall(self: SRE_Pattern, string: str, pos: int) -> object\r\nfindall(self: SRE_Pattern, string: str) -> object\r\n',
-                                                 'overloads': ({'args': [{'name': 'self',
-                                                                            'type': ('_sre',
-                                                                                      'SRE_Pattern')},
-                                                                           {'name': 'string',
-                                                                            'type': (builtin_name,
-                                                                                      'object')},
-                                                                           {'name': 'pos',
-                                                                            'type': (builtin_name,
-                                                                                      'int')},
-                                                                           {'name': 'endpos',
-                                                                            'type': (builtin_name,
-                                                                                      'object')}],
-                                                                 'ret_type': (builtin_name,
-                                                                               'list')},
-                                                                {'args': [{'name': 'self',
-                                                                            'type': ('_sre',
-                                                                                      'SRE_Pattern')},
-                                                                           {'name': 'string',
-                                                                            'type': (builtin_name,
-                                                                                      'str')},
-                                                                           {'name': 'pos',
-                                                                            'type': (builtin_name,
-                                                                                      'int')}],
-                                                                 'ret_type': (builtin_name,
-                                                                               'object')},
-                                                                {'args': [{'name': 'self',
-                                                                            'type': ('_sre',
-                                                                                      'SRE_Pattern')},
-                                                                           {'name': 'string',
-                                                                            'type': (builtin_name,
-                                                                                      'str')}],
-                                                                 'ret_type': (builtin_name,
-                                                                               'object')})}},
-                         'finditer': {'kind': 'method',
-                                       'value': {'doc': 'finditer(self: SRE_Pattern, string: object, pos: int, endpos: int) -> object\r\nfinditer(self: SRE_Pattern, string: object, pos: int) -> object\r\nfinditer(self: SRE_Pattern, string: object) -> object\r\n',
-                                                  'overloads': ({'args': [{'name': 'self',
-                                                                             'type': ('_sre',
-                                                                                       'SRE_Pattern')},
-                                                                            {'name': 'string',
-                                                                             'type': (builtin_name,
-                                                                                       'object')},
-                                                                            {'name': 'pos',
-                                                                             'type': (builtin_name,
-                                                                                       'int')},
-                                                                            {'name': 'endpos',
-                                                                             'type': (builtin_name,
-                                                                                       'int')}],
-                                                                  'ret_type': (builtin_name,
-                                                                                'object')},
-                                                                 {'args': [{'name': 'self',
-                                                                             'type': ('_sre',
-                                                                                       'SRE_Pattern')},
-                                                                            {'name': 'string',
-                                                                             'type': (builtin_name,
-                                                                                       'object')},
-                                                                            {'name': 'pos',
-                                                                             'type': (builtin_name,
-                                                                                       'int')}],
-                                                                  'ret_type': (builtin_name,
-                                                                                'object')},
-                                                                 {'args': [{'name': 'self',
-                                                                             'type': ('_sre',
-                                                                                       'SRE_Pattern')},
-                                                                            {'name': 'string',
-                                                                             'type': (builtin_name,
-                                                                                       'object')}],
-                                                                  'ret_type': (builtin_name,
-                                                                                'object')})}},
-                         'flags': {'kind': 'property',
-                                    'value': {'doc': 'Get: flags(self: SRE_Pattern) -> int\r\n\r\n',
-                                               'type': (builtin_name,
-                                                         'int')}},
-                         'groupindex': {'kind': 'property',
-                                         'value': {'doc': 'Get: groupindex(self: SRE_Pattern) -> dict\r\n\r\n',
-                                                    'type': (builtin_name,
-                                                              'dict')}},
-                         'groups': {'kind': 'property',
-                                     'value': {'doc': 'Get: groups(self: SRE_Pattern) -> int\r\n\r\n',
-                                                'type': (builtin_name,
-                                                          'int')}},
-                         'match': {'kind': 'method',
-                                    'value': {'doc': 'match(self: SRE_Pattern, text: object, pos: int, endpos: int) -> RE_Match\r\nmatch(self: SRE_Pattern, text: object, pos: int) -> RE_Match\r\nmatch(self: SRE_Pattern, text: object) -> RE_Match\r\n',
-                                               'overloads': ({'args': [{'name': 'self',
-                                                                          'type': ('_sre',
-                                                                                    'SRE_Pattern')},
-                                                                         {'name': 'text',
-                                                                          'type': (builtin_name,
-                                                                                    'object')},
-                                                                         {'default_value': '0',
-                                                                          'name': 'pos',
-                                                                          'type': (builtin_name,
-                                                                                    'int')},
-                                                                         {'name': 'endpos',
-                                                                          'type': (builtin_name,
-                                                                                    'int')}],
-                                                               'ret_type': ('_sre',
-                                                                             'SRE_Match')},
-                                                              {'args': [{'name': 'self',
-                                                                          'type': ('_sre',
-                                                                                    'SRE_Pattern')},
-                                                                         {'name': 'text',
-                                                                          'type': (builtin_name,
-                                                                                    'object')},
-                                                                         {'name': 'pos',
-                                                                          'type': (builtin_name,
-                                                                                    'int')}],
-                                                               'ret_type': ('_sre',
-                                                                             'SRE_Match')},
-                                                              {'args': [{'name': 'self',
-                                                                          'type': ('_sre',
-                                                                                    'SRE_Pattern')},
-                                                                         {'name': 'text',
-                                                                          'type': (builtin_name,
-                                                                                    'object')}],
-                                                               'ret_type': ('_sre',
-                                                                             'SRE_Match')})}},
-                         'pattern': {'kind': 'property',
-                                      'value': {'doc': 'Get: pattern(self: SRE_Pattern) -> str\r\n\r\n',
-                                                 'type': (builtin_name,
-                                                           'str')}},
-                         'search': {'kind': 'method',
-                                     'value': {'doc': 'search(self: SRE_Pattern, text: object, pos: int, endpos: int) -> RE_Match\r\nsearch(self: SRE_Pattern,text: object, pos: int) -> RE_Match\r\nsearch(self: SRE_Pattern, text: object) -> RE_Match\r\n',
-                                                'overloads': ({'args': [{'name': 'self',
-                                                                           'type': ('_sre',
-                                                                                     'SRE_Pattern')},
-                                                                          {'name': 'text',
-                                                                           'type': (builtin_name,
-                                                                                     'object')},
-                                                                          {'name': 'pos',
-                                                                           'type': (builtin_name,
-                                                                                     'int')},
-                                                                          {'name': 'endpos',
-                                                                           'type': (builtin_name,
-                                                                                     'int')}],
-                                                                'ret_type': ('_sre',
-                                                                              'RE_Match')},
-                                                               {'args': [{'name': 'self',
-                                                                           'type': ('_sre',
-                                                                                     'SRE_Pattern')},
-                                                                          {'name': 'text',
-                                                                           'type': (builtin_name,
-                                                                                     'object')},
-                                                                          {'name': 'pos',
-                                                                           'type': (builtin_name,
-                                                                                     'int')}],
-                                                                'ret_type': ('_sre',
-                                                                              'RE_Match')},
-                                                               {'args': [{'name': 'self',
-                                                                           'type': ('_sre',
-                                                                                     'SRE_Pattern')},
-                                                                          {'name': 'text',
-                                                                           'type': (builtin_name,
-                                                                                     'object')}],
-                                                                'ret_type': ('_sre',
-                                                                              'RE_Match')})}},
-                         'split': {'kind': 'method',
-                                    'value': {'doc': 'split(self: SRE_Pattern, string: object, maxsplit: int) -> list (of str)\r\nsplit(self: SRE_Pattern, string: str) -> list (of str)\r\n',
-                                               'overloads': ({'args': [{'name': 'self',
-                                                                          'type': ('_sre',
-                                                                                    'SRE_Pattern')},
-                                                                         {'name': 'string',
-                                                                          'type': (builtin_name,
-                                                                                    'object')},
-                                                                         {'name': 'maxsplit',
-                                                                          'type': (builtin_name,
-                                                                                    'int')}],
-                                                               'ret_type': (builtin_name,
-                                                                             'list')},
-                                                              {'args': [{'name': 'self',
-                                                                          'type': ('_sre',
-                                                                                    'SRE_Pattern')},
-                                                                         {'name': 'string',
-                                                                          'type': (builtin_name,
-                                                                                    'str')}],
-                                                               'ret_type': (builtin_name,
-                                                                             'list')})}},
-                         'sub': {'kind': 'method',
-                                  'value': {'doc': 'sub(self: SRE_Pattern, repl: object, string: object, count: int) -> str\r\nsub(self: SRE_Pattern, repl: object, string: object) -> str\r\n',
-                                             'overloads': ({'args': [{'name': 'self',
-                                                                        'type': ('_sre',
-                                                                                  'SRE_Pattern')},
-                                                                       {'name': 'repl',
-                                                                        'type': (builtin_name,
-                                                                                  'object')},
-                                                                       {'name': 'string',
-                                                                        'type': (builtin_name,
-                                                                                  'object')},
-                                                                       {'name': 'count',
-                                                                        'type': (builtin_name,
-                                                                                  'int')}],
-                                                             'ret_type': (builtin_name,
-                                                                           'str')},
-                                                            {'args': [{'name': 'self',
-                                                                        'type': ('_sre',
-                                                                                  'SRE_Pattern')},
-                                                                       {'name': 'repl',
-                                                                        'type': (builtin_name,
-                                                                                  'object')},
-                                                                       {'name': 'string',
-                                                                        'type': (builtin_name,
-                                                                                  'object')}],
-                                                             'ret_type': (builtin_name,
-                                                                           'str')})}},
-                         'subn': {'kind': 'method',
-                                   'value': {'doc': 'subn(self: SRE_Pattern, repl: object, string: object, count: int) -> object\r\nsubn(self: SRE_Pattern, repl: object, string: str) -> object\r\n',
-                                              'overloads': ({'args': [{'name': 'self',
-                                                                         'type': ('_sre',
-                                                                                   'SRE_Pattern')},
-                                                                        {'name': 'repl',
-                                                                         'type': (builtin_name,
-                                                                                   'object')},
-                                                                        {'name': 'string',
-                                                                         'type': (builtin_name,
-                                                                                   'object')},
-                                                                        {'name': 'count',
-                                                                         'type': (builtin_name,
-                                                                                   'int')}],
-                                                              'ret_type': (builtin_name,
-                                                                            'object')},
-                                                             {'args': [{'name': 'self',
-                                                                         'type': ('_sre',
-                                                                                   'SRE_Pattern')},
-                                                                        {'name': 'repl',
-                                                                         'type': (builtin_name,
-                                                                                   'object')},
-                                                                        {'name': 'string',
-                                                                         'type': (builtin_name,
-                                                                                   'str')}],
-                                                              'ret_type': (builtin_name,
-                                                                            'object')})}}},
-            'mro': [('_sre', 'SRE_Pattern'), (builtin_name, 'object')]}}
+                '__eq__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'x.__eq__(y) <==> x==y',
+                        'overloads': [generate_overload(bool, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('obj', object))],
+                    }
+                },
+                '__ne__': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': '__ne__(x: object, y: object) -> bool\r\n',
+                        'overloads': [generate_overload(bool, ('x', object), ('y', object))]
+                    }
+                },
+                '__new__': NewMethodEntry,
+                'findall': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'findall(self: SRE_Pattern, string: object, pos: int, endpos: object) -> object\r\nfindall(self: SRE_Pattern, string: str, pos: int) -> object\r\nfindall(self: SRE_Pattern, string: str) -> object\r\n',
+                        'overloads': [
+                            generate_overload(bool, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('pos', int, '', '0'), ('endpos', object, '', 'None')),
+                        ]
+                    }
+                },
+                'finditer': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'finditer(self: SRE_Pattern, string: object, pos: int, endpos: int) -> object\r\nfinditer(self: SRE_Pattern, string: object, pos: int) -> object\r\nfinditer(self: SRE_Pattern, string: object) -> object\r\n',
+                        'overloads': [
+                            generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('pos', int, '', '0'), ('endpos', int, '', 'None')),
+                        ]
+                    }
+                },
+                'flags': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: flags(self: SRE_Pattern) -> int\r\n\r\n',
+                        'type': type_to_typelist(int)
+                    }
+                },
+                'groupindex': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: groupindex(self: SRE_Pattern) -> dict\r\n\r\n',
+                        'type': type_to_typelist(dict)
+                    }
+                },
+                'groups': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: groups(self: SRE_Pattern) -> int\r\n\r\n',
+                        'type': type_to_typelist(int)
+                    }
+                },
+                'match': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'match(self: SRE_Pattern, text: object, pos: int, endpos: int) -> RE_Match\r\nmatch(self: SRE_Pattern, text: object, pos: int) -> RE_Match\r\nmatch(self: SRE_Pattern, text: object) -> RE_Match\r\n',
+                        'overloads': [
+                            generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('text', str), ('pos', int, '', '0'), ('endpos', int, '', 'None')),
+                        ],
+                    }
+                },
+                'pattern': {
+                    'kind': 'property',
+                    'value': {
+                        'doc': 'Get: pattern(self: SRE_Pattern) -> str\r\n\r\n',
+                        'type': type_to_typelist(str)
+                    }
+                },
+                'search': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'search(self: SRE_Pattern, text: object, pos: int, endpos: int) -> RE_Match\r\nsearch(self: SRE_Pattern,text: object, pos: int) -> RE_Match\r\nsearch(self: SRE_Pattern, text: object) -> RE_Match\r\n',
+                        'overloads': [
+                            generate_overload(typename_to_typeref('_sre', 'RE_Match'), ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('text', str), ('pos', int, '', '0'), ('endpos', int, '', 'None')),
+                        ]
+                    }
+                },
+                'split': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'split(self: SRE_Pattern, string: object, maxsplit: int) -> list (of str)\r\nsplit(self: SRE_Pattern, string: str) -> list (of str)\r\n',
+                        'overloads': [
+                            generate_overload(list, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('maxsplit', int, '', 'None'))
+                        ]
+                    }
+                },
+                'sub': {
+                    'kind': 'method',
+                    'value': {
+                        'doc': 'sub(self: SRE_Pattern, repl: object, string: object, count: int) -> str\r\nsub(self: SRE_Pattern, repl: object, string: object) -> str\r\n',
+                        'overloads': [
+                            generate_overload(str, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('repl', object), ('string', str), ('count', int, '', 'None'))
+                        ]
+                    }
+                },
+                'subn': {
+                    'kind': 'method',
+                    'value': {'doc': 'subn(self: SRE_Pattern, repl: object, string: object, count: int) -> object\r\nsubn(self: SRE_Pattern, repl: object, string: str) -> object\r\n',
+                        'overloads': [
+                            generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('repl', object), ('string', str), ('count', int, '', 'None'))
+                        ]
+                    }
+                },
+            },
+            'mro': [typename_to_typeref('_sre', 'SRE_Pattern'),
+                    type_to_typeref(object)]
+        }
+    }
 
     return mod
 
@@ -1855,7 +1702,7 @@ def merge_with_baseline(mod_name, baselinepath, final):
         if os.path.exists(baseline_file):
             print(baseline_file)
             f = open(baseline_file, 'rb')
-            baseline = cPickle.load(f)
+            baseline = pickle.load(f)
             f.close()
 
             #import pprint
@@ -1878,7 +1725,7 @@ def merge_with_baseline(mod_name, baselinepath, final):
 
 def write_analysis(out_filename, analysis):
     out_file = open(out_filename + '.idb', 'wb')
-    saved_analysis = cPickle.dumps(analysis, 2)
+    saved_analysis = pickle.dumps(analysis, 2)
     if sys.platform == 'cli':
         # work around strings always being unicode on IronPython, we fail to
         # write back out here because IronPython doesn't like the non-ascii
@@ -1965,16 +1812,13 @@ if __name__ == "__main__":
                 if os.path.split(cur_dirname)[1] == 'win32comext':
                     pkg_name = 'win32com.' + pkg_name
 
-                os.spawnl(os.P_WAIT, 
-                            sys.executable,
-                            sys.executable,
-                            "\"" + os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py') + "\"",
-                            'scrape',
-                            pkg_name,
-                            '-',        # providing __import__ name rather than a path
-                            "\"" + os.path.join(outpath, pkg_name) + "\""
-                )
+                subprocess.call([sys.executable,
+                                 os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py'),
+                                 'scrape',
+                                 pkg_name,      # name to pass to __import__()
+                                 '-',           # not providing a path
+                                 os.path.join(outpath, pkg_name)])
 
-    site_packages = join(join(sys.prefix, 'Lib'), 'site-packages')
+    site_packages = os.path.join(os.path.join(sys.prefix, 'Lib'), 'site-packages')
     for root, dirs, files in os.walk(site_packages):
         package_inspector(site_packages, root, files)

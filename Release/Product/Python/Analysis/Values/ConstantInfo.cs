@@ -51,11 +51,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var rhsType = ns.TypeId;
 
                 // First handle string operations
-                if (lhsType == BuiltinTypeId.Bytes || lhsType == BuiltinTypeId.Str) {
+                if (lhsType == BuiltinTypeId.Bytes || lhsType == BuiltinTypeId.Unicode) {
                     if (operation == PythonOperator.Mod) {
                         res = res.Union(lhs.ClassInfo.Instance);
                     } else if (operation == PythonOperator.Add &&
-                        (rhsType == BuiltinTypeId.Bytes || rhsType == BuiltinTypeId.Str)) {
+                        (rhsType == BuiltinTypeId.Bytes || rhsType == BuiltinTypeId.Unicode)) {
                         res = res.Union(lhs.ClassInfo.Instance);
                     } else if (operation == PythonOperator.Multiply &&
                         (rhsType == BuiltinTypeId.Int || rhsType == BuiltinTypeId.Long)) {
@@ -64,17 +64,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     continue;
                 } else if (operation == PythonOperator.Multiply &&
                            (lhsType == BuiltinTypeId.Int || lhsType == BuiltinTypeId.Long)) {
-                    if (rhsType == BuiltinTypeId.Bytes) {
-                        res = res.Union(unit.ProjectState._bytesType.Instance);
-                        continue;
-                    } else if (rhsType == BuiltinTypeId.Str) {
-                        res = res.Union(unit.ProjectState._unicodeType.Instance);
-                        continue;
-                    } else if (rhsType == BuiltinTypeId.Tuple) {
-                        res = res.Union(unit.ProjectState._tupleType.Instance);
-                        continue;
-                    } else if (rhsType == BuiltinTypeId.List) {
-                        res = res.Union(unit.ProjectState._listType.Instance);
+                    if (rhsType == BuiltinTypeId.Str || rhsType == BuiltinTypeId.Bytes || rhsType == BuiltinTypeId.Unicode ||
+                        rhsType == BuiltinTypeId.Tuple || rhsType == BuiltinTypeId.List) {
+                        res = res.Union(unit.ProjectState.ClassInfos[rhsType].Instance);
                         continue;
                     }
                 }
@@ -94,13 +86,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     // Non-numeric types require the reverse operation
                     res = res.Union(ns.ReverseBinaryOperation(node, unit, operation, lhs));
                 } else if (lhsType == BuiltinTypeId.Complex || rhsType == BuiltinTypeId.Complex) {
-                    res = res.Union(unit.ProjectState._complexType.Instance);
+                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Complex].Instance);
                 } else if (lhsType == BuiltinTypeId.Float || rhsType == BuiltinTypeId.Float) {
-                    res = res.Union(unit.ProjectState._floatType.Instance);
+                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Float].Instance);
                 } else if (lhsType == BuiltinTypeId.Long || rhsType == BuiltinTypeId.Long) {
-                    res = res.Union(unit.ProjectState._longType.Instance);
+                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Long].Instance);
                 } else {
-                    res = res.Union(unit.ProjectState._intType.Instance);
+                    res = res.Union(unit.ProjectState.ClassInfos[BuiltinTypeId.Int].Instance);
                 }
             }
 
@@ -133,10 +125,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
             // indexing/slicing strings should return the string type.
-            if (_value is AsciiString) {                
-                return ProjectState._bytesType.Instance.SelfSet;
-            } else if (_value is string) {
-                return ProjectState._unicodeType.Instance.SelfSet;
+            if (_value is AsciiString || _value is string) {
+                return ClassInfo.Instance;
             }
 
             return base.GetIndex(node, unit, index);

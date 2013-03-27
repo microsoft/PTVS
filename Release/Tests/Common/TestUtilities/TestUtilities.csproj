@@ -79,6 +79,7 @@
     <Compile Include="Mocks\MockBufferGraph.cs" />
     <Compile Include="Mocks\MockClassificationType.cs" />
     <Compile Include="Mocks\MockClassificationTypeRegistryService.cs" />
+    <Compile Include="Mocks\MockCompletionDB.cs" />
     <Compile Include="Mocks\MockComponentModel.cs" />
     <Compile Include="Mocks\MockContentType.cs" />
     <Compile Include="Mocks\MockContentTypeRegistryService.cs" />

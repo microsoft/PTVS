@@ -77,6 +77,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                             continue;
                         }
                         string basePath = basePathObj.ToString();
+                        if (basePath.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
+                            // Invalid path in registry
+                            continue;
+                        }
                         if (!registeredPaths.Add(basePath)) {
                             // registered in both HCKU and HKLM
                             continue;

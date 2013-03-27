@@ -464,7 +464,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal static bool IsAnalysisCurrent(this IPythonInterpreterFactory factory) {
-            var interpFact = factory as IInterpreterWithCompletionDatabase2;
+            var interpFact = factory as IInterpreterWithCompletionDatabase;
             if (interpFact != null) {
                 return interpFact.IsCurrent;
             }

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -27,9 +28,9 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// The type of the parameter or object if it accepts any type.
+        /// The types of the parameter.
         /// </summary>
-        IPythonType ParameterType {
+        IList<IPythonType> ParameterTypes {
             get;
         }
 

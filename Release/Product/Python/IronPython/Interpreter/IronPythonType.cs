@@ -105,6 +105,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        public IEnumerable<IPythonType> IndexTypes {
+            get {
+                return null;
+            }
+        }
+
         public bool IsArray {
             get {
                 return Interpreter.Remote.IsPythonTypeArray(Value);

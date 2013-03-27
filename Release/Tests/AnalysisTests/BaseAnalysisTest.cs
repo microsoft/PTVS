@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.PyAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -31,7 +32,7 @@ namespace AnalysisTests {
     /// </summary>
     public class BaseAnalysisTest {
         public IPythonInterpreter Interpreter;
-        public IPythonType PyObjectType, IntType, BytesType, UnicodeType, FloatType, TypeType, ListType, TupleType, SetType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
+        public IPythonType PyObjectType, IntType, LongType, BytesType, UnicodeType, FloatType, TypeType, ListType, TupleType, SetType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
         public string[] _objectMembers, _functionMembers;
         public string[] _strMembers;
         public string[] _listMembers, _intMembers;
@@ -51,9 +52,10 @@ namespace AnalysisTests {
             PyObjectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
             Assert.IsNotNull(PyObjectType);
             IntType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);
+            LongType = Interpreter.GetBuiltinType(BuiltinTypeId.Long);
             ComplexType = Interpreter.GetBuiltinType(BuiltinTypeId.Complex);
             BytesType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
-            UnicodeType = Interpreter.GetBuiltinType(BuiltinTypeId.Str);
+            UnicodeType = Interpreter.GetBuiltinType(BuiltinTypeId.Unicode);
             FloatType = Interpreter.GetBuiltinType(BuiltinTypeId.Float);
             TypeType = Interpreter.GetBuiltinType(BuiltinTypeId.Type);
             ListType = Interpreter.GetBuiltinType(BuiltinTypeId.List);
@@ -86,7 +88,18 @@ namespace AnalysisTests {
 
         public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null, bool useAnalysisLog = false) {
             var sourceUnit = GetSourceUnit(text, "foo");
-            var state = new PythonAnalyzer(Interpreter, version);
+            // Explicitly provide the builtins name, since we aren't recreating
+            // the interpreter for each version like we should be.
+            var state = new PythonAnalyzer(Interpreter, version, "__builtin__");
+
+            if (version.Is3x() || this is IronPythonAnalysisTest) {
+                var types = (KnownTypes)state.Types;
+                types._types[(int)BuiltinTypeId.Str] = state.Types[BuiltinTypeId.Unicode];
+                types._types[(int)BuiltinTypeId.StrIterator] = state.Types[BuiltinTypeId.UnicodeIterator];
+                types._classInfos[(int)BuiltinTypeId.Str] = state.ClassInfos[BuiltinTypeId.Unicode];
+                types._classInfos[(int)BuiltinTypeId.StrIterator] = state.ClassInfos[BuiltinTypeId.UnicodeIterator];
+            }
+
             state.Limits = GetLimits();
             if (analysisDirs != null) {
                 foreach (var dir in analysisDirs) {

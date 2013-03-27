@@ -20,6 +20,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public IMember GetAnyMember(string name) {
+            if (string.IsNullOrEmpty(name)) {
+                return null;
+            }
+
             EnsureLoaded();
 
             IMember res;

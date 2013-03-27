@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -31,20 +32,27 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Version _langVersion;  // language version, null when we have a generated database, set when using the shared DB.
         private readonly List<WeakReference> _corruptListeners = new List<WeakReference>();
         private IBuiltinPythonModule _builtinModule;
+        private IPythonType _objectType;
+
+        internal const string BuiltinName2x = "__builtin__";
+        internal const string BuiltinName3x = "builtins";
+        private readonly string _builtinName;
 
         public SharedDatabaseState(string databaseDirectory, bool is3x, IBuiltinPythonModule builtinsModule) {
             _dbDir = databaseDirectory;
-            _modules["__builtin__"] = _builtinModule = builtinsModule ?? MakeBuiltinModule(databaseDirectory, is3x);
             _is3x = is3x;
+            _builtinName = _is3x ? BuiltinName3x : BuiltinName2x;
+            _modules[_builtinName] = _builtinModule = builtinsModule ?? MakeBuiltinModule(databaseDirectory, is3x);
 
-            InitializeModules(databaseDirectory, is3x);
+            InitializeModules(databaseDirectory, _is3x);
         }
 
         public SharedDatabaseState(string databaseDirectory, Version pythonLanguageVersion) {
             _dbDir = databaseDirectory;
             _is3x = pythonLanguageVersion.Major >= 3;
-            _modules["__builtin__"] = _builtinModule = MakeBuiltinModule(databaseDirectory, _is3x);
+            _builtinName = _is3x ? BuiltinName3x : BuiltinName2x;
             _langVersion = pythonLanguageVersion;
+            _modules[_builtinName] = _builtinModule = MakeBuiltinModule(databaseDirectory, _is3x);
 
             InitializeModules(databaseDirectory, _is3x);
         }
@@ -53,7 +61,7 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var file in Directory.GetFiles(databaseDirectory)) {
                 if (!file.EndsWith(".idb", StringComparison.OrdinalIgnoreCase) || file.IndexOf('$') != -1) {
                     continue;
-                } else if (String.Equals(Path.GetFileName(file), is3x ? "builtins.idb" : "__builtin__.idb", StringComparison.OrdinalIgnoreCase)) {
+                } else if (String.Equals(Path.GetFileNameWithoutExtension(file), _builtinName, StringComparison.OrdinalIgnoreCase)) {
                     continue;
                 }
 
@@ -70,14 +78,14 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private CPythonBuiltinModule MakeBuiltinModule(string databaseDirectory, bool is3x) {
-            string filename = Path.Combine(databaseDirectory, "__builtin__.idb");
+            string filename = Path.Combine(databaseDirectory, _builtinName + ".idb");
             if (is3x && !File.Exists(filename)) {
-                // Python 3.x the module is builtins, but we may have __builtin__.idb even if
-                // we're 3.x when using the default completion DB that we install w/ PTVS.
-                filename = Path.Combine(databaseDirectory, "builtins.idb");
+                // Python 3.x the module is builtins, but we may have __builtin__.idb if
+                // we're using the default completion DB that we install w/ PTVS.
+                filename = Path.Combine(databaseDirectory, "__builtin__.idb");
             }
 
-            return new CPythonBuiltinModule(this, "__builtin__", filename, true);
+            return new CPythonBuiltinModule(this, _builtinName, filename, true);
         }
 
         public IPythonModule GetModule(string name, PythonTypeDatabase instanceDb = null) {
@@ -101,63 +109,111 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
+            if (name == BuiltinName2x || name == BuiltinName3x) {
+                // Handle both names for builtins if the correct one was not
+                // found above.
+                isInstanceMember = false;
+                return BuiltinModule;
+            }
+
             isInstanceMember = false;
             return null;
+        }
+
+        private IPythonType ObjectType {
+            get {
+                if (_objectType == null) {
+                    _objectType = _builtinModule.GetAnyMember(GetBuiltinTypeName(BuiltinTypeId.Object)) as IPythonType;
+                }
+                return _objectType;
+            }
         }
 
         /// <summary>
         /// Looks up a type and queues a fixup if the type is not yet available.  Receives a delegate
         /// which assigns the value to the appropriate field.
         /// </summary>
-        public void LookupType(object type, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb = null) {
-            bool isInstance;
-            var value = LookupType(type, out isInstance, instanceDb);
-
-            if (value == null) {
-                AddFixup(
-                    () => {
-                        var delayedType = LookupType(type, out isInstance, instanceDb);
-                        if (delayedType == null) {
-                            delayedType = BuiltinModule.GetAnyMember("object") as IPythonType;
+        public void LookupType(object typeRef, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb = null) {
+            foreach (var keyValue in LookupTypes(typeRef, instanceDb)) {
+                if (keyValue.Key == null) {
+                    AddFixup(
+                        () => {
+                            foreach (var delayedType in LookupTypes(typeRef, instanceDb)) {
+                                var value = delayedType.Key ?? ObjectType;
+                                Debug.Assert(value != null);
+                                assign(value, delayedType.Value);
+                            }
                         }
-                        Debug.Assert(delayedType != null);
-                        assign(delayedType, isInstance);
-                    }
-                );
-            } else {
-                assign(value, isInstance);
+                    );
+                } else {
+                    assign(keyValue.Key, keyValue.Value);
+                }
             }
         }
 
-        private IPythonType LookupType(object type, out bool isInstance, PythonTypeDatabase instanceDb) {
-            if (type != null) {
-                object[] typeInfo = (object[])type;
-                if (typeInfo.Length == 2) {
-                    string modName = typeInfo[0] as string;
-                    string typeName = typeInfo[1] as string;
+        private IEnumerable<KeyValuePair<IPythonType, bool>> LookupTypes(object typeRefOrList, PythonTypeDatabase instanceDb) {
+            var typeRef = typeRefOrList as Dictionary<string, object>;
+            if (typeRef != null) {
+                object value;
+                string modName = null, typeName = null;
+                List<object> indexTypes = null;
+                bool isInstanceMember = false;
+                IPythonType res = null;
 
-                    if (modName != null) {
-                        if (typeName != null) {
-                            var module = GetModule(modName, out isInstance, instanceDb);
-                            if (module != null) {
-                                IBuiltinPythonModule builtin = module as IBuiltinPythonModule;
-                                if (builtin != null) {
-                                    return builtin.GetAnyMember(typeName) as IPythonType;
-                                }
-                                return module.GetMember(null, typeName) as IPythonType;
+                if (typeRef.TryGetValue("module_name", out value)) {
+                    modName = value as string;
+                }
+                if (typeRef.TryGetValue("type_name", out value)) {
+                    typeName = value as string;
+                }
+                if (typeRef.TryGetValue("index_types", out value)) {
+                    indexTypes = value as List<object>;
+                }
+
+                if (typeName == null) {
+                    Debug.Assert(modName == null, "moduleref should not be passed to LookupType");
+                    res = ObjectType;
+                } else {
+                    IPythonModule module;
+                    if (modName == null) {
+                        res = BuiltinModule.GetAnyMember(typeName) as IPythonType;
+                    } else {
+                        module = GetModule(modName, out isInstanceMember, instanceDb);
+                        if (module != null) {
+                            IBuiltinPythonModule builtin = module as IBuiltinPythonModule;
+                            if (builtin != null) {
+                                res = builtin.GetAnyMember(typeName) as IPythonType;
+                            } else {
+                                res = module.GetMember(null, typeName) as IPythonType;
                             }
                         }
                     }
+                    if (indexTypes != null && res != null) {
+                        res = new CPythonSequenceType(res, this, indexTypes);
+                    }
                 }
-            } else {
-                isInstance = false;
-                return BuiltinModule.GetAnyMember("object") as IPythonType;
+                yield return new KeyValuePair<IPythonType, bool>(res, isInstanceMember);
+                yield break;
             }
-            isInstance = false;
-            return null;
+
+            var multiple = typeRefOrList as List<object>;
+            if (multiple != null) {
+                foreach (var typeInfo in multiple) {
+                    foreach (var res in LookupTypes(typeInfo, instanceDb)) {
+                        yield return res;
+                    }
+                }
+                yield break;
+            }
+
+            yield return new KeyValuePair<IPythonType, bool>(ObjectType, false);
         }
 
         public string GetBuiltinTypeName(BuiltinTypeId id) {
+            return GetBuiltinTypeName(id, _is3x);
+        }
+
+        public static string GetBuiltinTypeName(BuiltinTypeId id, bool is3x) {
             string name;
             switch (id) {
                 case BuiltinTypeId.Bool: name = "bool"; break;
@@ -169,20 +225,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.Long: name = "long"; break;
                 case BuiltinTypeId.Object: name = "object"; break;
                 case BuiltinTypeId.Set: name = "set"; break;
-                case BuiltinTypeId.Str:
-                    if (_is3x) {
-                        name = "str";
-                    } else {
-                        name = "unicode";
-                    }
-                    break;
-                case BuiltinTypeId.Bytes:
-                    if (_is3x) {
-                        name = "bytes";
-                    } else {
-                        name = "str";
-                    }
-                    break;
+                case BuiltinTypeId.Str: name = "str"; break;
+                case BuiltinTypeId.Unicode: name = is3x ? "str" : "unicode"; break;
+                case BuiltinTypeId.Bytes: name = is3x ? "bytes" : "str"; break;
                 case BuiltinTypeId.Tuple: name = "tuple"; break;
                 case BuiltinTypeId.Type: name = "type"; break;
 
@@ -199,11 +244,19 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.ListIterator: name = "list_iterator"; break;
                 case BuiltinTypeId.TupleIterator: name = "tuple_iterator"; break;
                 case BuiltinTypeId.SetIterator: name = "set_iterator"; break;
-                case BuiltinTypeId.StrIterator: name = "str_iterator"; break;
+                case BuiltinTypeId.StrIterator: name = is3x ? "str_iterator" : "bytes_iterator"; break;
+                case BuiltinTypeId.UnicodeIterator: name = "str_iterator"; break;
                 case BuiltinTypeId.BytesIterator: name = "bytes_iterator"; break;
                 case BuiltinTypeId.CallableIterator: name = "callable_iterator"; break;
 
-                default: return null;
+                case BuiltinTypeId.Property: name = "property"; break;
+                case BuiltinTypeId.ClassMethod: name = "classmethod"; break;
+                case BuiltinTypeId.StaticMethod: name = "staticmethod"; break;
+                case BuiltinTypeId.FrozenSet: name = "frozenset"; break;
+
+                case BuiltinTypeId.Unknown:
+                default:
+                    return null;
             }
             return name;
         }
@@ -291,7 +344,11 @@ namespace Microsoft.PythonTools.Interpreter {
                             LookupType(
                                 typeInfo,
                                 (dataType, fromInstanceDb) => {
-                                    assign(memberName, fromInstanceDb ? instanceDb.GetConstant(dataType) : GetConstant(dataType));
+                                    if (!(dataType is IPythonSequenceType)) {
+                                        assign(memberName, fromInstanceDb ? instanceDb.GetConstant(dataType) : GetConstant(dataType));
+                                    } else {
+                                        assign(memberName, dataType);
+                                    }
                                 },
                                 instanceDb
                             );
@@ -311,12 +368,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                         break;
                     case "typeref":
-                        object typeName;
-                        if (valueDict.TryGetValue("type_name", out typeName)) {
-                            LookupType(typeName, (dataType, fromInstanceDb) => {
-                                assign(memberName, dataType);
-                            }, instanceDb);
-                        }
+                        LookupType(valueDict, (dataType, fromInstanceDb) => {
+                            assign(memberName, dataType);
+                        }, instanceDb);
                         break;
                     case "moduleref":
                         object modName;
@@ -346,7 +400,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
         }
-        
+
         /// <summary>
         /// Sets up a weak reference for notification of when the shared database
         /// has become corrupted.  Doesn't keep the listening database alive.
@@ -415,7 +469,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
-        private bool OneVersionApplies(string strVer) {            
+        private bool OneVersionApplies(string strVer) {
             Version specifiedVer;
             if (strVer.StartsWith(">=")) {
                 if (Version.TryParse(strVer.Substring(2), out specifiedVer) && _langVersion >= specifiedVer) {
@@ -455,6 +509,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private BuiltinTypeId GetBuiltinTypeId(string typeName) {
+            // Never return BuiltinTypeId.Str, StrIterator, or any value where
+            // IsVirtualId() is true from this function.
             switch (typeName) {
                 case "list": return BuiltinTypeId.List;
                 case "tuple": return BuiltinTypeId.Tuple;
@@ -464,20 +520,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 case "dict": return BuiltinTypeId.Dict;
                 case "bool": return BuiltinTypeId.Bool;
                 case "generator": return BuiltinTypeId.Generator;
+                case "ModuleType": return BuiltinTypeId.Module;
                 case "function": return BuiltinTypeId.Function;
                 case "set": return BuiltinTypeId.Set;
                 case "type": return BuiltinTypeId.Type;
                 case "object": return BuiltinTypeId.Object;
                 case "long": return BuiltinTypeId.Long;
-                case "str":
-                    if (_is3x) {
-                        return BuiltinTypeId.Str;
-                    }
-                    return BuiltinTypeId.Bytes;
-                case "unicode":
-                    return BuiltinTypeId.Str;
-                case "bytes":
-                    return BuiltinTypeId.Bytes;
+                case "str": return _is3x ? BuiltinTypeId.Unicode : BuiltinTypeId.Bytes;
+                case "unicode": return BuiltinTypeId.Unicode;
+                case "bytes": return BuiltinTypeId.Bytes;
                 case "builtin_function": return BuiltinTypeId.BuiltinFunction;
                 case "builtin_method_descriptor": return BuiltinTypeId.BuiltinMethodDescriptor;
                 case "NoneType": return BuiltinTypeId.NoneType;
@@ -488,9 +539,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 case "list_iterator": return BuiltinTypeId.ListIterator;
                 case "tuple_iterator": return BuiltinTypeId.TupleIterator;
                 case "set_iterator": return BuiltinTypeId.SetIterator;
-                case "str_iterator": return BuiltinTypeId.StrIterator;
+                case "str_iterator": return BuiltinTypeId.UnicodeIterator;
                 case "bytes_iterator": return BuiltinTypeId.BytesIterator;
                 case "callable_iterator": return BuiltinTypeId.CallableIterator;
+                case "property": return BuiltinTypeId.Property;
+                case "classmethod": return BuiltinTypeId.ClassMethod;
+                case "staticmethod": return BuiltinTypeId.StaticMethod;
+                case "frozenset": return BuiltinTypeId.FrozenSet;
             }
             return BuiltinTypeId.Unknown;
         }

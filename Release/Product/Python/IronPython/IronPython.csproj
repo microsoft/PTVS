@@ -186,12 +186,12 @@
     </Content>
     <Content Include="Templates\Files\WpfWindow\WpfWindow.py" />
     <Content Include="Templates\Files\WpfWindow\WpfWindow.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="Templates\Projects\ConsoleProject\ConsoleProject.pyproj" />
     <Content Include="Templates\Projects\ConsoleProject\ConsoleProject.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="Templates\Projects\WinformsProject\WinformsApp.pyproj" />
@@ -200,7 +200,7 @@
     <None Include="Templates\Projects\ConsoleProject\Program.py" />
     <Content Include="Templates\Projects\ConsoleProject\ConsoleProject.vstemplate" />
     <Content Include="Templates\Projects\WinformsProject\WinformsApp.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="Templates\Projects\WpfProject\Program.py" />
@@ -212,12 +212,12 @@
     </None>
     <None Include="Templates\Projects\SilverlightProject\SilverlightProject.pyproj" />
     <Content Include="Templates\Projects\SilverlightProject\SilverlightProject.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="Templates\Projects\WpfProject\WpfApp.pyproj" />
     <Content Include="Templates\Projects\WpfProject\WpfApp.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>

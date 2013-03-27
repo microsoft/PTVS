@@ -16,11 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Interpreter;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
@@ -29,6 +27,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ImportCompletionAnalysis : CompletionAnalysis {
+        private static readonly Regex _validNameRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
         private readonly string[] _namespace;
         
         internal ImportCompletionAnalysis(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
@@ -71,7 +70,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start = _stopwatch.ElapsedMilliseconds;
 
-            var completions = GetModules(_namespace, true).Select(m => PythonCompletion(glyphService, m));
+            var completions = GetModules(_namespace, true)
+                .Where(m => _validNameRegex.IsMatch(m.Name))
+                .Select(m => PythonCompletion(glyphService, m));
 
             var res = new FuzzyCompletionSet("PythonImports", "Python", Span, completions, _options, CompletionComparer.UnderscoresLast);
 

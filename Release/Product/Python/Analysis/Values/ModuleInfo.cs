@@ -257,7 +257,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IPythonType PythonType {
-            get { return this.ProjectEntry.ProjectState.Types.Module; }
+            get { return this.ProjectEntry.ProjectState.Types[BuiltinTypeId.Module]; }
         }
 
         #region IVariableDefContainer Members

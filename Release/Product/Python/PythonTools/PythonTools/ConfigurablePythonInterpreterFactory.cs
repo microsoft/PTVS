@@ -53,6 +53,18 @@ namespace Microsoft.PythonTools {
             ((IInterpreterWithCompletionDatabase)_realFactory).AutoGenerateCompletionDatabase();
         }
 
+        public bool IsCurrent {
+            get { return ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrent; }
+        }
+
+        public void NotifyInvalidDatabase() {
+            ((IInterpreterWithCompletionDatabase)_realFactory).NotifyInvalidDatabase();
+        }
+
+        public string GetAnalysisLogContent() {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GetAnalysisLogContent();
+        }
+
         #endregion
     }
 }

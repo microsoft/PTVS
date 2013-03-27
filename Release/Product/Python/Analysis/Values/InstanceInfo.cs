@@ -100,11 +100,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (getAttribute.Count > 0) {
                 foreach (var getAttrFunc in getAttribute) {
                     var func = getAttrFunc as BuiltinMethodInfo;
-                    if (func != null && func.Function.Overloads.Count == 1 && func.Function.DeclaringType == ProjectState.Types.Object) {
+                    if (func != null && func.Function.Overloads.Count == 1 && func.Function.DeclaringType == ProjectState.Types[BuiltinTypeId.Object]) {
                         continue;
                     }
                     // TODO: We should really do a get descriptor / call here
-                    getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, ProjectState._stringType.Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
+                    getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, ProjectState.ClassInfos[BuiltinTypeId.Str].Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                 }
                 if (getattrRes.Count > 0) {
                     return getattrRes;
@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     foreach (var getAttrFunc in getAttr) {
                         // TODO: We should really do a get descriptor / call here
                         //FIXME: new string[0]
-                        getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, _classInfo.AnalysisUnit.ProjectState._stringType.Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
+                        getattrRes = getattrRes.Union(getAttrFunc.Call(node, unit, new[] { SelfSet, _classInfo.AnalysisUnit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance.SelfSet }, ExpressionEvaluator.EmptyNames));
                     }
                 }
                 return getattrRes;
@@ -331,7 +331,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
                 return ClassInfo.UnionHashCode(strength);
             } else {
-                return ProjectState._objectType.UnionHashCode(strength);
+                return ProjectState.ClassInfos[BuiltinTypeId.Object].UnionHashCode(strength);
             }
         }
 
@@ -350,7 +350,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 return classInfo.Instance;
             } else {
-                return ProjectState._objectType.Instance;
+                return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
             }
         }
 

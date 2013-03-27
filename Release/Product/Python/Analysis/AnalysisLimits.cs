@@ -28,7 +28,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static AnalysisLimits GetStandardLibraryLimits() {
             var limits = new AnalysisLimits();
-            limits.CallDepth = 1;
+            limits.CallDepth = 2;
+            limits.DecreaseCallDepth = 20;
             limits.NormalArgumentTypes = 10;
             limits.ListArgumentTypes = 5;
             limits.DictArgumentTypes = 5;
@@ -41,6 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public AnalysisLimits() {
             CallDepth = 3;
+            DecreaseCallDepth = 30;
             NormalArgumentTypes = 50;
             ListArgumentTypes = 20;
             DictArgumentTypes = 20;
@@ -60,14 +62,25 @@ namespace Microsoft.PythonTools.Analysis {
         public int? CrossModule { get; set; }
 
         /// <summary>
-        /// The call stack depth to compare for reusing function analysis
-        /// units.
+        /// The initial call stack depth to compare for reusing function
+        /// analysis units.
         /// 
         /// The minimum value (1) will produce one unit for each call site.
         /// Higher values take the callers of the function containing the call
         /// site into account. Calls outside of functions are unaffected.
+        /// 
+        /// This value cannot vary during analysis.
         /// </summary>
         public int CallDepth { get; set; }
+
+        /// <summary>
+        /// The number of calls to a function at which to decrement the depth
+        /// used to distinguish calls to that function.
+        /// 
+        /// This value applies to all new calls following the last decrement.
+        /// It is permitted to vary during analysis.
+        /// </summary>
+        public int DecreaseCallDepth { get; set; }
 
         /// <summary>
         /// The number of types in a normal argument at which to start

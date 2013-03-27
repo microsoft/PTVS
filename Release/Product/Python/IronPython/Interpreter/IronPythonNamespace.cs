@@ -36,6 +36,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return Interpreter.Remote.GetNamespaceChildren(Value);
         }
 
+        public string Documentation {
+            get { return string.Empty; }
+        }
+
         #endregion
     }
 }

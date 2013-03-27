@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using IronPython.Runtime;
 using IronPython.Runtime.Operations;
@@ -30,9 +31,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         #region IParameterInfo Members
 
-        public IPythonType ParameterType {
+        public IList<IPythonType> ParameterTypes {
             get {
-                return _declaringType;
+                return new[] { _declaringType };
             }
         }
 
@@ -59,7 +60,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public string DefaultValue {
-            get {                
+            get {
                 return null;
             }
         }

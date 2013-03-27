@@ -74,9 +74,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public override INamespaceSet GetInstanceType() {
+            return Instance;
+        }
+
         private BuiltinInstanceInfo MakeInstance() {
-            if (_type.TypeId == BuiltinTypeId.Int || _type.TypeId == BuiltinTypeId.Long || _type.TypeId == BuiltinTypeId.Float || _type.TypeId  == BuiltinTypeId.Complex) {
+            if (_type.TypeId == BuiltinTypeId.Int || _type.TypeId == BuiltinTypeId.Long || _type.TypeId == BuiltinTypeId.Float || _type.TypeId == BuiltinTypeId.Complex) {
                 return new NumericInstanceInfo(this);
+            } else if (_type.TypeId == BuiltinTypeId.Str || _type.TypeId == BuiltinTypeId.Unicode || _type.TypeId == BuiltinTypeId.Bytes) {
+                return new SequenceBuiltinInstanceInfo(this, true, true);
+            } else if (_type.TypeId == BuiltinTypeId.Tuple || _type.TypeId == BuiltinTypeId.List) {
+                return new SequenceBuiltinInstanceInfo(this, false, false);
             }
 
             return new BuiltinInstanceInfo(this);
@@ -258,11 +266,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return base.UnionEquals(ns, strength);
             } else if (strength < MERGE_TO_TYPE_STRENGTH) {
                 var ci = ns as ClassInfo;
-                if (this != ProjectState._objectType && 
+                if (this != ProjectState.ClassInfos[BuiltinTypeId.Object] && 
                     ci != null && ci.Mro.AnyContains(this)) {
                     return true;
                 }
-            } else if (this == ProjectState._typeObj) {
+            } else if (this == ProjectState.ClassInfos[BuiltinTypeId.Type]) {
                 return ns is ClassInfo;
             }
             return base.UnionEquals(ns, strength);

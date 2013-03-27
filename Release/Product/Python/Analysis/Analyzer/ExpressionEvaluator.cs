@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -261,7 +262,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         private static INamespaceSet EvaluateBackQuote(ExpressionEvaluator ee, Node node) {
-            return ee.ProjectState._stringType.SelfSet;
+            return ee.ProjectState.ClassInfos[BuiltinTypeId.Str].SelfSet;
         }
 
         private static INamespaceSet EvaluateAnd(ExpressionEvaluator ee, Node node) {
@@ -353,7 +354,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 var listInfo = (ListInfo)ee.Scope.GetOrMakeNodeValue(
                     node,
-                    (x) => new ListInfo(VariableDef.EmptyArray, ee._unit.ProjectState._listType, node).SelfSet);
+                    (x) => new ListInfo(VariableDef.EmptyArray, ee._unit.ProjectState.ClassInfos[BuiltinTypeId.List], node).SelfSet);
 
                 listInfo.AddTypes(ee._unit, new[] { ee.Evaluate(listComp.Item) });
 
@@ -480,10 +481,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private INamespaceSet MakeSequence(ExpressionEvaluator ee, Node node) {
             var sequence = (SequenceInfo)ee.Scope.GetOrMakeNodeValue(node, x => {
                 if (node is ListExpression) {
-                    return new ListInfo(VariableDef.EmptyArray, _unit.ProjectState._listType, node).SelfSet;
+                    return new ListInfo(VariableDef.EmptyArray, _unit.ProjectState.ClassInfos[BuiltinTypeId.List], node).SelfSet;
                 } else {
                     Debug.Assert(node is TupleExpression);
-                    return new SequenceInfo(VariableDef.EmptyArray, _unit.ProjectState._tupleType, node).SelfSet;
+                    return new SequenceInfo(VariableDef.EmptyArray, _unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], node).SelfSet;
                 }
             });
             var seqItems = ((SequenceExpression)node).Items;

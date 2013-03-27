@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Analysis {
 #if DEBUG
             } finally {
                 _timer.Stop();
-                Debug.WriteLine(string.Format("ModuleLoadTime: {0} Total: {1}", _timer.ElapsedMilliseconds - start, _timer.ElapsedMilliseconds));
+                Debug.WriteLine(string.Format("ModuleLoadTime: {0} {1}ms Total: {2}ms", name, _timer.ElapsedMilliseconds - start, _timer.ElapsedMilliseconds));
             }
 #endif
         }
@@ -193,7 +193,7 @@ namespace Microsoft.PythonTools.Analysis {
         private bool ShouldMergeModules(BuiltinModule module, INamespaceSet existing) {
             if (existing.Count == 1) {
                 var existingValue = existing.First();
-                if (existingValue is ConstantInfo && existingValue.PythonType == _analyzer._objectType) {
+                if (existingValue is ConstantInfo && existingValue.PythonType == _analyzer.Types[BuiltinTypeId.Object]) {
                     // something's typed to object and won't provide useful completions, don't
                     // merge the types with that so we get better completions.
                     return false;

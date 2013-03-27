@@ -1953,7 +1953,7 @@ namespace Microsoft.PythonTools.Parsing {
                     } else if ((nameRet = ret as NameExpression) != null) {
                         parameter = new Parameter(nameRet.Name, kind);
                         if (_verbatim) {
-                            AddThirdPreceedingWhiteSpace(parameter,  (string) _attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
+                            AddThirdPreceedingWhiteSpace(parameter, (string)_attributes[nameRet][NodeAttributes.PreceedingWhiteSpace]);
                             AddIsAltForm(parameter);
                             if (!ateRightParen) {
                                 AddErrorMissingCloseGrouping(parameter);
@@ -2363,7 +2363,7 @@ namespace Microsoft.PythonTools.Parsing {
             IfStatementTest[] tests = l.ToArray();
             IfStatement ret = new IfStatement(tests, else_);
             if (_verbatim) {
-                if(elseWhiteSpace != null) {
+                if (elseWhiteSpace != null) {
                     AddPreceedingWhiteSpace(ret, elseWhiteSpace);
                 }
                 if (itemWhiteSpace != null) {
@@ -2727,14 +2727,14 @@ namespace Microsoft.PythonTools.Parsing {
                 string secondWhiteSpace = null;
                 bool isLessThanGreaterThan = false, isIncomplete = false;                
                 switch (PeekToken().Kind) {
-                    case TokenKind.LessThan:  NextToken();  op = PythonOperator.LessThan;  break;
-                    case TokenKind.LessThanOrEqual:  NextToken();  op = PythonOperator.LessThanOrEqual;  break;
-                    case TokenKind.GreaterThan:  NextToken();  op = PythonOperator.GreaterThan;  break;
-                    case TokenKind.GreaterThanOrEqual:  NextToken();  op = PythonOperator.GreaterThanOrEqual;  break;
-                    case TokenKind.Equals:  NextToken();  op = PythonOperator.Equal;  break;
-                    case TokenKind.NotEquals:  NextToken();  op = PythonOperator.NotEqual;  break;
+                    case TokenKind.LessThan: NextToken(); op = PythonOperator.LessThan; break;
+                    case TokenKind.LessThanOrEqual: NextToken(); op = PythonOperator.LessThanOrEqual; break;
+                    case TokenKind.GreaterThan: NextToken(); op = PythonOperator.GreaterThan; break;
+                    case TokenKind.GreaterThanOrEqual: NextToken(); op = PythonOperator.GreaterThanOrEqual; break;
+                    case TokenKind.Equals: NextToken(); op = PythonOperator.Equal; break;
+                    case TokenKind.NotEquals: NextToken(); op = PythonOperator.NotEqual; break;
                     case TokenKind.LessThanGreaterThan: NextToken(); op = PythonOperator.NotEqual; isLessThanGreaterThan = true; break;
-                    case TokenKind.KeywordIn:  NextToken();  op = PythonOperator.In;  break;
+                    case TokenKind.KeywordIn: NextToken(); op = PythonOperator.In; break;
 
                     case TokenKind.KeywordNot: NextToken(); isIncomplete = !Eat(TokenKind.KeywordIn); secondWhiteSpace = _tokenWhiteSpace; op = PythonOperator.NotIn; break;
 
@@ -3539,7 +3539,7 @@ namespace Microsoft.PythonTools.Parsing {
         private Expression ParseStarExpression() {
             
             if (MaybeEat(TokenKind.Multiply)) {
-                string whitespace  = _tokenWhiteSpace;
+                string whitespace = _tokenWhiteSpace;
                 if (!_langVersion.Is3x()) {
                     ReportSyntaxError("invalid syntax");
                 }
@@ -3574,7 +3574,7 @@ namespace Microsoft.PythonTools.Parsing {
             List<string> itemWhiteSpace;
             bool trailingComma;
             List<Expression> l = ParseTestListAsExpr(expr, out itemWhiteSpace, out trailingComma);
-            return MakeTupleOrExpr(l, itemWhiteSpace,  trailingComma, parenFreeTuple: true);
+            return MakeTupleOrExpr(l, itemWhiteSpace, trailingComma, parenFreeTuple: true);
         }
 
         private List<Expression> ParseTestListAsExpr(Expression expr, out List<string> itemWhiteSpace, out bool trailingComma) {

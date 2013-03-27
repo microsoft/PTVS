@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonModule : IPythonModule2, IProjectEntry, ILocatedMember {
+    class CPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
         private readonly string _modName;
         private readonly string _dbFile;
         private readonly ITypeDatabaseReader _typeDb;
@@ -29,9 +29,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private Dictionary<object, object> _properties;
         internal Dictionary<string, IMember> _hiddenMembers;
         private string _docString, _filename;
-        private object[] _children;        
+        private List<object> _children;
         private bool _loaded;
-        [ThreadStatic] private static int _loadDepth;
+        [ThreadStatic]
+        private static int _loadDepth;
 
         public CPythonModule(ITypeDatabaseReader typeDb, string moduleName, string databaseFilename, bool isBuiltin) {
             _modName = moduleName;
@@ -81,7 +82,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private void LoadModule(Dictionary<string, object> data) {
             object membersValue;
             if (data.TryGetValue("members", out membersValue)) {
-                var dataVal = membersValue as Dictionary<string, object>;
+                var dataVal = (Dictionary<string, object>)membersValue;
                 if (dataVal != null) {
                     LoadMembers(dataVal);
                 }
@@ -99,14 +100,20 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             object children;
             if (data.TryGetValue("children", out children)) {
-                _children = children as object[];
+                _children = children as List<object>;
+                if (_children == null) {
+                    var asArray = children as object[];
+                    if (asArray != null) {
+                        _children = new List<object>(asArray);
+                    }
+                }
             }
         }
 
         private void LoadMembers(Dictionary<string, object> membersTable) {
             foreach (var dataInfo in membersTable) {
                 var memberName = dataInfo.Key;
-                var memberTable = dataInfo.Value as Dictionary<string, object>;
+                var memberTable = (Dictionary<string, object>)dataInfo.Value;
 
                 if (memberTable != null) {
                     _typeDb.ReadMember(memberName, memberTable, StoreMember, this);
@@ -219,7 +226,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public string FilePath {
             get {
                 EnsureLoaded();
-                return _filename; 
+                return _filename;
             }
         }
 
@@ -255,7 +262,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IEnumerable<LocationInfo> Locations {
             get {
                 EnsureLoaded();
-                yield return new LocationInfo(this, 1, 1); 
+                yield return new LocationInfo(this, 1, 1);
             }
         }
 

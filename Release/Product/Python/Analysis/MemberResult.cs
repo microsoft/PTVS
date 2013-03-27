@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -72,13 +73,50 @@ namespace Microsoft.PythonTools.Analysis {
 
         public string Documentation {
             get {
-                var docs = new HashSet<string>();
+                var docSeen = new HashSet<string>();
+                var typeSeen = new HashSet<string>();
+                var docs = new List<string>();
+                var types = new List<string>();
+
                 var doc = new StringBuilder();
+
                 foreach (var ns in _vars()) {
-                    if (docs.Add(ns.Documentation)) {
-                        doc.AppendLine(ns.Documentation);
-                        doc.AppendLine();
+                    var docString = ns.Documentation;
+                    if (docSeen.Add(docString)) {
+                        docs.Add(docString);
                     }
+                    var typeString = ns.ShortDescription;
+                    if (typeSeen.Add(typeString)) {
+                        types.Add(typeString);
+                    }
+                }
+
+                var mt = MemberType;
+                if (mt == PythonMemberType.Instance || mt == PythonMemberType.Constant) {
+                    switch (mt) {
+                        case PythonMemberType.Instance:
+                            doc.Append("Instance of ");
+                            break;
+                        case PythonMemberType.Constant:
+                            doc.Append("Constant ");
+                            break;
+                        default:
+                            doc.Append("Value of ");
+                            break;
+                    }
+                    if (types.Count == 0) {
+                        doc.AppendLine("unknown type");
+                    } else if (types.Count == 1) {
+                        doc.AppendLine(types[0]);
+                    } else {
+                        var orStr = types.Count == 2 ? " or " : ", or ";
+                        doc.AppendLine(string.Join(", ", types.Take(types.Count - 1)) + orStr + types.Last());
+                    }
+                    doc.AppendLine();
+                }
+                foreach (var str in docs.OrderBy(s => s)) {
+                    doc.AppendLine(str);
+                    doc.AppendLine();
                 }
                 return Utils.CleanDocumentation(doc.ToString());
             }
@@ -91,22 +129,35 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private PythonMemberType GetMemberType() {
+            bool includesNone = false;
             PythonMemberType result = PythonMemberType.Unknown;
-            foreach (var ns in _vars()) {
+
+            var allVars = _vars().SelectMany(ns => {
+                var mmi = ns as MultipleMemberInfo;
+                if (mmi != null) {
+                    return mmi.Members;
+                } else {
+                    return Enumerable.Repeat(ns, 1);
+                }
+            });
+
+            foreach (var ns in allVars) {
                 var nsType = ns.MemberType;
-                if (result == PythonMemberType.Unknown) {
+                if (ns.TypeId == BuiltinTypeId.NoneType) {
+                    includesNone = true;
+                } else if (result == PythonMemberType.Unknown) {
                     result = nsType;
-                } else if (result != nsType) {
-                    if ((nsType == PythonMemberType.Constant && result == PythonMemberType.Instance) ||
-                        (nsType == PythonMemberType.Instance && result == PythonMemberType.Constant)) {
-                        nsType = PythonMemberType.Instance;
-                    } else {
-                        return PythonMemberType.Multiple;
-                    }
+                } else if (result == nsType) {
+                    // No change
+                } else if (result == PythonMemberType.Constant && nsType == PythonMemberType.Instance) {
+                    // Promote from Constant to Instance
+                    result = PythonMemberType.Instance;
+                } else {
+                    return PythonMemberType.Multiple;
                 }
             }
             if (result == PythonMemberType.Unknown) {
-                return PythonMemberType.Instance;
+                return includesNone ? PythonMemberType.Constant : PythonMemberType.Instance;
             }
             return result;
         }

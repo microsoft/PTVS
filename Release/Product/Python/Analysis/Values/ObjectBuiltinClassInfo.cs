@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     return instance;
                 }
-                return ProjectState._objectType.Instance;
+                return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
             }
         }
     }

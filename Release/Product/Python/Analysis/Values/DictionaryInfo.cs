@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
 
         public DictionaryInfo(ProjectEntry declaringModule, Node node)
-            : base(declaringModule.ProjectState._dictType) {
+            : base(declaringModule.ProjectState.ClassInfos[BuiltinTypeId.Dict]) {
             _keysAndValues = new DependentKeyValue();
             _declaringModule = declaringModule;
             _declVersion = declaringModule.AnalysisVersion;
@@ -272,7 +272,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                     _keyValueTuple = new SequenceInfo(
                         new[] { keysDef, valuesDef },
-                        ProjectState._tupleType,
+                        ProjectState.ClassInfos[BuiltinTypeId.Tuple],
                         _node
                     );
                     _keysAndValues.AddDependency(new UpdateItemsAnalysisUnit(this));
@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_list == null) {
                     _list = new ListInfo(
                         new[] { _myDict.KeyValueTupleVariable },
-                        unit.ProjectState._listType,
+                        unit.ProjectState.ClassInfos[BuiltinTypeId.List],
                         node
                     );
                 }
@@ -358,7 +358,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_list == null) {
                     var listVar = new VariableDef();
                     _myDict._keysAndValues.CopyKeysTo(listVar);
-                    _list = new ListInfo(new[] { listVar }, unit.ProjectState._listType, node);
+                    _list = new ListInfo(new[] { listVar }, unit.ProjectState.ClassInfos[BuiltinTypeId.List], node);
                 }
                 return _list;
             }
@@ -384,7 +384,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_list == null) {
                     var valuesVar = new VariableDef();
                     _myDict._keysAndValues.CopyValuesTo(valuesVar);
-                    _list = new ListInfo(new[] { valuesVar }, unit.ProjectState._listType, node);
+                    _list = new ListInfo(new[] { valuesVar }, unit.ProjectState.ClassInfos[BuiltinTypeId.List], node);
                 }
                 return _list;
             }
@@ -410,7 +410,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_list == null) {
                     var listVar = new VariableDef();
                     _myDict._keysAndValues.CopyKeysTo(listVar);
-                    _list = new IteratorInfo(new[] { listVar }, unit.ProjectState._dictKeysType, node);
+                    _list = new IteratorInfo(new[] { listVar }, unit.ProjectState.ClassInfos[BuiltinTypeId.DictKeys], node);
                 }
                 return _list;
             }
@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_list == null) {
                     var valuesVar = new VariableDef();
                     _myDict._keysAndValues.CopyValuesTo(valuesVar);
-                    _list = new IteratorInfo(new[] { valuesVar }, unit.ProjectState._dictValuesType, node);
+                    _list = new IteratorInfo(new[] { valuesVar }, unit.ProjectState.ClassInfos[BuiltinTypeId.DictValues], node);
                 }
                 return _list;
             }
@@ -460,7 +460,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
-                    _list = new IteratorInfo(new[] { _myDict.KeyValueTupleVariable }, unit.ProjectState._dictItemsType, node);
+                    _list = new IteratorInfo(new[] { _myDict.KeyValueTupleVariable }, unit.ProjectState.ClassInfos[BuiltinTypeId.DictItems], node);
                 }
                 return _list;
             }

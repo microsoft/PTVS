@@ -37,7 +37,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 20;
+        public static readonly int CurrentVersion = 21;
+
+        private static string _completionDatabasePath;
+        private static string _baselineDatabasePath;
 
         public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
             _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
@@ -319,11 +322,11 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public static PythonTypeDatabase CreateDefaultTypeDatabase() {
-            return new PythonTypeDatabase(GetBaselineDatabasePath());
+            return new PythonTypeDatabase(BaselineDatabasePath);
         }
 
         public static PythonTypeDatabase CreateDefaultTypeDatabase(Version pythonLanguageVersion) {
-            return new PythonTypeDatabase(GetBaselineDatabasePath(), pythonLanguageVersion);
+            return new PythonTypeDatabase(BaselineDatabasePath, pythonLanguageVersion);
         }
 
         public IEnumerable<string> GetModuleNames() {
@@ -388,8 +391,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 psi.FileName = request.Factory.Configuration.InterpreterPath;
                 psi.Arguments =
                     "\"" + Path.Combine(GetPythonToolsInstallPath(), "PythonScraper.py") + "\"" +       // script to run
-                    " \"" + outPath + "\"" +                                                // output dir
-                    " \"" + GetBaselineDatabasePath() + "\"";           // baseline file
+                    " \"" + outPath + "\"" +                       // output dir
+                    " \"" + BaselineDatabasePath + "\"";           // baseline file
                 psi.RedirectStandardError = true;
                 psi.RedirectStandardOutput = true;
 
@@ -548,29 +551,52 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
-        private static string GetLogFilename() {
-            return Path.Combine(GetCompletionDatabaseDirPath(), "AnalysisLog.txt");
+        public static string GlobalLogFilename {
+            get {
+                return Path.Combine(CompletionDatabasePath, "AnalysisLog.txt");
+            }
         }
 
-        internal static string GetBaselineDatabasePath() {
-            return Path.Combine(GetPythonToolsInstallPath(), "CompletionDB");
+        internal static string BaselineDatabasePath {
+            get {
+                if (_baselineDatabasePath == null) {
+                    _baselineDatabasePath = Path.Combine(GetPythonToolsInstallPath(), "CompletionDB");
+                }
+                return _baselineDatabasePath;
+            }
         }
 
-        private static string GetCompletionDatabaseDirPath() {
-            return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Python Tools\\CompletionDB"
-            );
+        public static string CompletionDatabasePath {
+            get {
+                if (_completionDatabasePath == null) {
+                    _completionDatabasePath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "Python Tools",
+                        "CompletionDB",
+#if DEBUG
+                        "Debug",
+#endif
+#if DEV12
+                        "12.0"
+#elif DEV11
+                        "11.0"
+#else
+                        "10.0"
+#endif
+                    );
+                }
+                return _completionDatabasePath;
+            }
         }
 
         private static void LogEvent(PythonTypeDatabaseCreationRequest request, string contents) {
             for (int i = 0; i < 10; i++) {
                 try {
                     File.AppendAllText(
-                        GetLogFilename(),
+                        GlobalLogFilename,
                         String.Format(
                             "\"{0}\" \"{1}\" \"{2}\" \"{3}\"{4}",
-                            DateTime.Now.ToString("yyyy/MM/dd h:mm:ss.fff tt"),
+                            DateTime.Now.ToString("s"),
                             request.Factory.Configuration.InterpreterPath,
                             request.OutputPath,
                             contents,
@@ -609,7 +635,7 @@ namespace Microsoft.PythonTools.Interpreter {
             OnDatabaseCorrupt();
         }
 
-        internal void OnDatabaseCorrupt() {
+        public void OnDatabaseCorrupt() {
             var dbCorrupt = DatabaseCorrupt;
             if (dbCorrupt != null) {
                 dbCorrupt(this, EventArgs.Empty);

@@ -13,29 +13,40 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonFunctionOverload : IPythonFunctionOverload {
         private readonly CPythonParameterInfo[] _parameters;
         private readonly string _doc, _returnDoc;
-        private IPythonType _retType;
+        private readonly List<IPythonType> _retType;
         private static readonly CPythonParameterInfo[] EmptyParameters = new CPythonParameterInfo[0];
 
+        internal CPythonFunctionOverload(CPythonParameterInfo[] parameters, IEnumerable<IPythonType> returnType, bool isMethod) {
+            if (isMethod && parameters != null) {
+                if (parameters.Length > 1) {
+                    _parameters = parameters.Skip(1).ToArray();
+                } else {
+                    _parameters = EmptyParameters;
+                }
+            } else {
+                _parameters = parameters ?? EmptyParameters;
+            }
+            _retType = returnType.ToList();
+        }
+        
         public CPythonFunctionOverload(ITypeDatabaseReader typeDb, Dictionary<string, object> argInfo, bool isMethod) {
             if (argInfo != null) {
                 object args;
-                IList<object> argList;
-                if (argInfo.TryGetValue("args", out args)) {
-                    argList = (IList<object>)args;
-                    if (argList != null) {
-                        if (argList.Count == 0 || (isMethod && argList.Count == 1)) {
-                            _parameters = EmptyParameters;
-                        } else {
-                            _parameters = new CPythonParameterInfo[isMethod ? argList.Count - 1 : argList.Count];
-                            for (int i = 0; i < _parameters.Length; i++) {
-                                _parameters[i] = new CPythonParameterInfo(typeDb, (isMethod ? argList[i + 1] : argList[i]) as Dictionary<string, object>);
-                            }
-                        }
+                object[] argList;
+                if (argInfo.TryGetValue("args", out args) && (argList = args as object[]) != null) {
+                    if (argList.Length == 0 || (isMethod && argList.Length <= 1)) {
+                        _parameters = EmptyParameters;
+                    } else {
+                        _parameters = argList.Skip(isMethod ? 1 : 0)
+                            .OfType<Dictionary<string, object>>()
+                            .Select(arg => new CPythonParameterInfo(typeDb, arg))
+                            .ToArray();
                     }
                 }
 
@@ -48,10 +59,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     _returnDoc = docObj as string;
                 }
 
-                object retTypeObj;
-                argInfo.TryGetValue("ret_type", out retTypeObj);
+                object retType;
+                if (argInfo.TryGetValue("ret_type", out retType)) {
+                    _retType = new List<IPythonType>();
+                    typeDb.LookupType(retType, (value, isInstance) => _retType.Add(value));
+                }
 
-                typeDb.LookupType(retTypeObj, (value, fromInstanceDb) => _retType = value);
             }
         }
         
@@ -69,7 +82,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return _parameters;
         }
 
-        public IPythonType ReturnType {
+        public IList<IPythonType> ReturnType {
             get { return _retType; }
         }
 

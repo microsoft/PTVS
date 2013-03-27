@@ -32,20 +32,16 @@ namespace Microsoft.PythonTools.Analysis {
     /// <summary>
     /// Performs analysis of multiple Python code files and enables interrogation of the resulting analysis.
     /// </summary>
-    public class PythonAnalyzer : IInterpreterState, IGroupableAnalysisProject, IDisposable {
+    public class PythonAnalyzer : IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
         private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
         private readonly Dictionary<object, Namespace> _itemCache;
+        private readonly string _builtinName;
         internal BuiltinModule _builtinModule;
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
-        internal Namespace _propertyObj, _classmethodObj, _staticmethodObj, _typeObj, _rangeFunc, _frozensetType;
-        internal INamespaceSet _objectSet;
-        internal BuiltinClassInfo _functionType;
-        internal BuiltinClassInfo _dictType, _listType, _tupleType, _generatorType, _intType, _stringType, _boolType, _setType, _objectType, _dictKeysType, _dictValuesType, _dictItemsType, _longType, _floatType, _unicodeType, _bytesType, _complexType, _listIteratorType, _tupleIteratorType, _setIteratorType, _strIteratorType, _bytesIteratorType, _callableIteratorType;
         internal ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
-        private KnownTypes _types;
         internal readonly IModuleContext _defaultContext;
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
@@ -58,9 +54,14 @@ namespace Microsoft.PythonTools.Analysis {
             : this(interpreterFactory.CreateInterpreter(), interpreterFactory.GetLanguageVersion()) {
         }
 
-        public PythonAnalyzer(IPythonInterpreter pythonInterpreter, PythonLanguageVersion langVersion) {
+        public PythonAnalyzer(IPythonInterpreter pythonInterpreter, PythonLanguageVersion langVersion)
+            : this(pythonInterpreter, langVersion, langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x) {
+        }
+
+        internal PythonAnalyzer(IPythonInterpreter pythonInterpreter, PythonLanguageVersion langVersion, string builtinName) {
             _langVersion = langVersion;
             _interpreter = pythonInterpreter;
+            _builtinName = builtinName;
             _modules = new ModuleTable(this, _interpreter, _interpreter.GetModuleNames());
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _itemCache = new Dictionary<object, Namespace>();
@@ -71,78 +72,34 @@ namespace Microsoft.PythonTools.Analysis {
 
             pythonInterpreter.Initialize(this);
 
-            _defaultContext = pythonInterpreter.CreateModuleContext();
+            _defaultContext = _interpreter.CreateModuleContext();
 
             _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
         }
 
         private void LoadKnownTypes() {
-            _types = new KnownTypes(this);
-            _builtinModule = (BuiltinModule)Modules["__builtin__"].Module;
-            _propertyObj = GetBuiltin("property");
-            _classmethodObj = GetBuiltin("classmethod");
-            _staticmethodObj = GetBuiltin("staticmethod");
-            _typeObj = GetBuiltin("type");
-            _intType = (BuiltinClassInfo)GetBuiltin("int");
-            _complexType = (BuiltinClassInfo)GetBuiltin("complex");
-            _stringType = (BuiltinClassInfo)GetBuiltin("str");
-            if (_langVersion.Is2x()) {
-                _unicodeType = (BuiltinClassInfo)GetBuiltin("unicode");
-                _bytesType = (BuiltinClassInfo)GetBuiltin("str");
-            } else {
-                _unicodeType = (BuiltinClassInfo)GetBuiltin("str");
-                _bytesType = (BuiltinClassInfo)GetBuiltin("bytes");
-            }
+            _builtinModule = (BuiltinModule)Modules[_builtinName].Module;
 
-            _objectType = (BuiltinClassInfo)GetBuiltin("object");
-            _objectSet = _objectType.SelfSet;
+            Types = new KnownTypes(this);
+            ClassInfos = (IKnownClasses)Types;
 
-            _setType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Set));
-            _rangeFunc = GetBuiltin("range");
-            _frozensetType = GetBuiltin("frozenset");
-            _functionType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Function));
-            _generatorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Generator));
-            _dictType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Dict));
-            _boolType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Bool));
             _noneInst = (ConstantInfo)GetNamespaceFromObjects(null);
-            _listType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.List));
-            if (_langVersion.Is2x()) {
-                _longType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Long));
-            } else {
-                _longType = _intType;
-            }
-            _tupleType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Tuple));
-            _floatType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.Float));
-            _dictKeysType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictKeys));
-            _dictValuesType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictValues));
-            _dictItemsType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.DictItems));
 
-            _listIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.ListIterator));
-            _tupleIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.TupleIterator));
-            _setIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.SetIterator));
-            _strIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.StrIterator));
-            if (_langVersion.Is2x()) {
-                _bytesIteratorType = _strIteratorType;
-            } else {
-                _bytesIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.BytesIterator));
-            }
-            _callableIteratorType = (BuiltinClassInfo)GetNamespaceFromObjects(_interpreter.GetBuiltinType(BuiltinTypeId.CallableIterator));
-
-            SpecializeFunction("__builtin__", "range", (n, unit, args, argNames) => unit.Scope.GetOrMakeNodeValue(n, (nn) => new RangeInfo(_types.List, unit.ProjectState).SelfSet), analyze: false);
-            SpecializeFunction("__builtin__", "min", ReturnUnionOfInputs);
-            SpecializeFunction("__builtin__", "max", ReturnUnionOfInputs);
-            SpecializeFunction("__builtin__", "getattr", SpecialGetAttr, analyze: false);
-            SpecializeFunction("__builtin__", "next", SpecialNext, analyze: false);
-            SpecializeFunction("__builtin__", "iter", SpecialIter, analyze: false);
-            SpecializeFunction("__builtin__", "super", SpecialSuper, analyze: false);
+            SpecializeFunction(_builtinName, "range", (n, unit, args, argNames) => unit.Scope.GetOrMakeNodeValue(n, (nn) => new RangeInfo(Types[BuiltinTypeId.List], unit.ProjectState).SelfSet), analyze: false);
+            SpecializeFunction(_builtinName, "min", ReturnUnionOfInputs);
+            SpecializeFunction(_builtinName, "max", ReturnUnionOfInputs);
+            SpecializeFunction(_builtinName, "getattr", SpecialGetAttr, analyze: false);
+            SpecializeFunction(_builtinName, "next", SpecialNext, analyze: false);
+            SpecializeFunction(_builtinName, "iter", SpecialIter, analyze: false);
+            SpecializeFunction(_builtinName, "super", SpecialSuper, analyze: false);
 
             // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
             // copied, and always returns the same type).  So we specialize these away so they return the type passed
             // in and don't do any analyze.  Ditto for the rest of the functions here...  
             SpecializeFunction("copy", "deepcopy", CopyFunction, analyze: false);
             SpecializeFunction("copy", "copy", CopyFunction, analyze: false);
-            SpecializeFunction("pickle", "dumps", ReturnsString, analyze: false);
+            SpecializeFunction("pickle", "dumps", ReturnsBytes, analyze: false);
             SpecializeFunction("UserDict.UserDict", "update", Nop, analyze: false);
             SpecializeFunction("pprint", "pprint", Nop, analyze: false);
             SpecializeFunction("pprint", "pformat", ReturnsString, analyze: false);
@@ -177,8 +134,6 @@ namespace Microsoft.PythonTools.Analysis {
             LoadKnownTypes();
 
             _interpreter.Initialize(this);
-
-            _itemCache.Clear();
 
             foreach (var mod in _modulesByFilename.Values) {
                 mod.Clear();
@@ -564,10 +519,14 @@ namespace Microsoft.PythonTools.Analysis {
 
         #region Internal Implementation
 
-        internal KnownTypes Types {
-            get {
-                return _types;
-            }
+        internal IKnownPythonTypes Types {
+            get;
+            private set;
+        }
+
+        internal IKnownClasses ClassInfos {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -797,8 +756,12 @@ namespace Microsoft.PythonTools.Analysis {
             return NamespaceSet.Empty;
         }
 
+        private INamespaceSet ReturnsBytes(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
+            return ClassInfos[BuiltinTypeId.Bytes].Instance;
+        }
+
         private INamespaceSet ReturnsString(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            return _stringType.Instance;
+            return ClassInfos[BuiltinTypeId.Str].Instance;
         }
 
         private INamespaceSet SpecialGetAttr(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
@@ -836,7 +799,7 @@ namespace Microsoft.PythonTools.Analysis {
             } else if (args.Length == 2) {
                 var iterator = unit.Scope.GetOrMakeNodeValue(call, n => {
                     var iterTypes = new[] { new VariableDef() };
-                    return new IteratorInfo(iterTypes, _callableIteratorType, call);
+                    return new IteratorInfo(iterTypes, ClassInfos[BuiltinTypeId.CallableIterator], call);
                 });
                 foreach (var iter in iterator.OfType<IteratorInfo>()) {
                     // call the callable object
@@ -912,18 +875,11 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        /// <summary>
-        /// Gets a builtin value
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        internal Namespace GetBuiltin(string name) {
-            return _builtinModule[name].First();
-        }
-
         internal Namespace GetCached(object key, Func<Namespace> maker) {
             Namespace result;
             if (!_itemCache.TryGetValue(key, out result)) {
+                // Set the key to prevent recursion
+                _itemCache[key] = null;
                 _itemCache[key] = result = maker();
             }
             return result;
@@ -950,6 +906,21 @@ namespace Microsoft.PythonTools.Analysis {
                 case BuiltinTypeId.Object: return new ObjectBuiltinClassInfo(type, this);
                 default: return new BuiltinClassInfo(type, this);
             }
+        }
+
+        internal INamespaceSet GetNamespacesFromObjects(object objects) {
+            var typeList = objects as IEnumerable<object>;
+            if (typeList == null) {
+                return NamespaceSet.Empty;
+            }
+            return NamespaceSet.UnionAll(typeList.Select(GetNamespaceFromObjects));
+        }
+
+        internal INamespaceSet GetNamespacesFromObjects(IEnumerable<IPythonType> typeList) {
+            if (typeList == null) {
+                return NamespaceSet.Empty;
+            }
+            return NamespaceSet.UnionAll(typeList.Select(GetNamespaceFromObjects));
         }
 
         internal Namespace GetNamespaceFromObjects(object attr) {
@@ -1028,26 +999,22 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal IPythonType GetTypeFromObject(object value) {
             if (value == null) {
-                return Types.None;
+                return Types[BuiltinTypeId.NoneType];
             }
             switch (Type.GetTypeCode(value.GetType())) {
-                case TypeCode.Boolean: return Types.Bool;
-                case TypeCode.Double: return Types.Float;
-                case TypeCode.Int32: return Types.Int;
-                case TypeCode.String: return Types.Str;
+                case TypeCode.Boolean: return Types[BuiltinTypeId.Bool];
+                case TypeCode.Double: return Types[BuiltinTypeId.Float];
+                case TypeCode.Int32: return Types[BuiltinTypeId.Int];
+                case TypeCode.String: return Types[BuiltinTypeId.Unicode];
                 case TypeCode.Object:
                     if (value.GetType() == typeof(Complex)) {
-                        return Types.Complex;
+                        return Types[BuiltinTypeId.Complex];
                     } else if (value.GetType() == typeof(AsciiString)) {
-                        return Types.Bytes;
+                        return Types[BuiltinTypeId.Bytes];
                     } else if (value.GetType() == typeof(BigInteger)) {
-                        if (LanguageVersion.Is3x()) {
-                            return Types.Int;
-                        } else {
-                            return Types.Long;
-                        }
+                        return Types[BuiltinTypeId.Long];
                     } else if (value.GetType() == typeof(Ellipsis)) {
-                        return Types.Ellipsis;
+                        return Types[BuiltinTypeId.Ellipsis];
                     }
                     break;
             }

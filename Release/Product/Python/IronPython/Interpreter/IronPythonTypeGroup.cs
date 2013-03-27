@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Remoting;
 using Microsoft.PythonTools.Interpreter;
 
@@ -96,6 +97,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsBuiltin {
             get {
                 return true;
+            }
+        }
+
+        public IEnumerable<IPythonType> IndexTypes {
+            get {
+                return null;
             }
         }
 

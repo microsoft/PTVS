@@ -23,7 +23,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly ObjectIdentityHandle _overload;
         private readonly IronPythonType _declaringType;
         private IParameterInfo[] _params;
-        private IPythonType _returnType;
+        private List<IPythonType> _returnType;
 
         public IronPythonBuiltinFunctionTarget(IronPythonInterpreter interpreter, ObjectIdentityHandle overload, IronPythonType declType) {
             Debug.Assert(interpreter.Remote.TypeIs<MethodBase>(overload));
@@ -65,10 +65,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return _params;
         }
 
-        public IPythonType ReturnType {
+        public IList<IPythonType> ReturnType {
             get {
                 if (_returnType == null) {
-                    _returnType = _interpreter.GetTypeFromType(_interpreter.Remote.GetBuiltinFunctionOverloadReturnType(_overload));
+                    _returnType = new List<IPythonType>();
+                    _returnType.Add(_interpreter.GetTypeFromType(_interpreter.Remote.GetBuiltinFunctionOverloadReturnType(_overload)));
                 }
                 return _returnType;
             }

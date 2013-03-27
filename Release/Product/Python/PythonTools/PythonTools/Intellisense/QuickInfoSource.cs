@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 result.Append(expr);
                 result.Append(": ");
-                result.Append("<no type information available>");
+                result.Append("<unknown type>");
             }
 
             quickInfoContent.Add(result.ToString());

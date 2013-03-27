@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis {
     internal static class AnalysisLog {
@@ -137,6 +138,10 @@ namespace Microsoft.PythonTools.Analysis {
 
         public static void Cancelled(Deque<AnalysisUnit> queue) {
             Add("Cancel", queue.Count);
+        }
+
+        public static void ReduceCallDepth(FunctionInfo functionInfo, int callCount, int newLimit) {
+            Add("R", functionInfo, callCount, newLimit);
         }
     }
 }

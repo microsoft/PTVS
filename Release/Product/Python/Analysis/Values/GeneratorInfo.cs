@@ -14,6 +14,7 @@
 
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public readonly VariableDef Returns;
 
         public GeneratorInfo(PythonAnalyzer projectState, Node node)
-            : base(projectState._generatorType) {
+            : base(projectState.ClassInfos[BuiltinTypeId.Generator]) {
             _node = node;
             Yields = new VariableDef();
             Sends = new VariableDef();

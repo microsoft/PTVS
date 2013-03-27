@@ -210,7 +210,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static void Log(StreamWriter writer, string contents) {
             writer.WriteLine(
                 "\"{0}\" {1}",
-                DateTime.Now.ToString("yyyy/MM/dd h:mm:ss.fff tt"),
+                DateTime.Now.ToString("s"),
                 contents
             );
             writer.Flush();

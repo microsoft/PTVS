@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -541,13 +542,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {
-            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType, location);
+            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
             base.AddTypes(unit, List);
         }
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState._tupleType, location);
+            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
             base.AddTypes(unit, List);
         }
     }

@@ -193,5 +193,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return type ?? union.FirstOrDefault();
         }
 
+        public static INamespaceSet GetInstanceType(this INamespaceSet types) {
+            return NamespaceSet.Create(types.SelectMany(ns => ns.GetInstanceType()));
+        }
+
     }
 }
