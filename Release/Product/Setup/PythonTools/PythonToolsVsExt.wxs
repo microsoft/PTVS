@@ -8,9 +8,6 @@
             <Directory Id="dir1B4805CEC92CD8586B8C95875EA0F7DF" Name="CompletionDB" />
         </DirectoryRef>
         <DirectoryRef Id="INSTALLLOCATION">
-            <Directory Id="dir550D5637E4804BC5AA8590B918C5FB54" Name="ptvsd" />
-        </DirectoryRef>
-        <DirectoryRef Id="INSTALLLOCATION">
             <Directory Id="GAC" Name="GAC" />
         </DirectoryRef>
     </Fragment>
@@ -103,6 +100,9 @@
             </Component>
             <Component Id="cmpDB0F99EF784848118948BD253AAD3DAC" Directory="INSTALLLOCATION" Guid="{F7F114D3-373E-4E9F-B9BE-39F825B8E836}">
                 <File Id="filA1E852F7F32640F1B95890D8FFDF3A15" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
+            </Component>
+            <Component Id="cmp1393F48D784445999595E484B451E3BC" Directory="INSTALLLOCATION" Guid="{C476FF73-0141-4A00-A467-CC6011632293}">
+                <File Id="fil28E24E1EDA274E3AA3F9F60DF884FA5C" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_util.py" />
             </Component>
             <Component Id="cmp67E450890B9C4F48901224A227A5C4CC" Directory="INSTALLLOCATION" Guid="{B04EE073-FC98-4F4C-A02D-0219E6B202B6}">
                 <File Id="fil939E6C6B5F3D48A8A6C64E29C3688CC1" KeyPath="yes" Source="$(var.TargetDir)\PythonScraper.py" />
@@ -301,20 +301,6 @@
             </Component>
             <Component Id="cmpD347FDE36E244F478BF31A6B7CA70458" Directory="INSTALLLOCATION" Guid="{F8B00369-E01C-430B-8F54-6B389FB13F68}">
                 <File Id="fil7AED81D9701E48FA942D4591A0D81849" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttachX86.dll" />
-            </Component>
-
-            <!-- ptvsd -->
-            <Component Id="cmpB03399D3B158416B9968685B3BBC67E7" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{519512D1-9F16-48AF-8D71-99A18A1A9F7E}">
-                <File Id="fil413A9D671B4E49D7A312831E11EE64BD" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_repl.py" />
-            </Component>
-            <Component Id="cmp2CE4F623807B4A3B91867F71019CDA12" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{86A4432B-6BB2-4C6C-947E-782E21A0AE1C}">
-                <File Id="fil6DAD7293178C43FD9A6C5555036C32B0" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
-            </Component>
-            <Component Id="cmp0CB867460D334B0F97FBB733530B903F" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{15493026-7494-4DC9-92C7-D8728652B59C}">
-                <File Id="filF08102B4E3334178B72D36536BF1FB89" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\attach_server.py" />
-            </Component>
-            <Component Id="cmp93B2912AA65744D19E7F7C60F8F33850" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{4A19349F-1316-42B9-B694-9BF52084701F}">
-                <File Id="fil0D872412BDDF4653A7A66C026C31A86C" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__init__.py" />
             </Component>
 
             <!-- WebPI Components -->

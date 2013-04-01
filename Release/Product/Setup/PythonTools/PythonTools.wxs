@@ -7,6 +7,7 @@
 
     <?include ..\InstallPath.wxi ?>
     <?include ..\MergeModule.wxi ?>
+    <?include ..\PythonToolsInstaller\PythonToolsInstallerVars.wxi ?>
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="EXTENSION_INSTALLPATH">
@@ -33,9 +34,30 @@
                   </Directory> 
               </Directory> 
           </Directory> 
+
+          <Directory Id="APPLICATIONFOLDER" Name="$(var.ProductName)">
+            <Directory Id="dir550D5637E4804BC5AA8590B918C5FB54" Name="ptvsd">
+              <Component Id="cmpB03399D3B158416B9968685B3BBC67E7" Guid="{519512D1-9F16-48AF-8D71-99A18A1A9F7E}">
+                <File Id="fil413A9D671B4E49D7A312831E11EE64BD" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_repl.py" />
+              </Component>
+              <Component Id="cmp2CE4F623807B4A3B91867F71019CDA12" Guid="{86A4432B-6BB2-4C6C-947E-782E21A0AE1C}">
+                <File Id="fil6DAD7293178C43FD9A6C5555036C32B0" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
+              </Component>
+              <Component Id="cmpCC0524F077D04474BABBF66644F1AB04" Guid="{5EEA2DDD-AC8A-4A32-958F-768E96895E72}">
+                <File Id="filC194540AD9184FA5B13807364A666176" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_util.py" />
+              </Component>
+              <Component Id="cmp0CB867460D334B0F97FBB733530B903F" Guid="{15493026-7494-4DC9-92C7-D8728652B59C}">
+                <File Id="filF08102B4E3334178B72D36536BF1FB89" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\attach_server.py" />
+              </Component>
+              <Component Id="cmp93B2912AA65744D19E7F7C60F8F33850" Guid="{4A19349F-1316-42B9-B694-9BF52084701F}">
+                <File Id="fil0D872412BDDF4653A7A66C026C31A86C" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__init__.py" />
+              </Component>
+              <Component Id="cmp63F59CCB28BB48C5BB67D7B08E776099" Guid="{8AE068E7-7625-436E-AD0A-51FF13BDE6E5}">
+                <File Id="fil367A2890295845708024C1AC5D8140A5" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__main__.py" />
+              </Component>
+            </Directory>
+          </Directory>
       </Directory>
-
-
     </Directory>
 
     <ComponentGroupRef Id="PythonToolsExt"/>
