@@ -54,6 +54,10 @@
     <VSCTDefinitions Condition="'$(VSTarget)' == '10.0'">DEV10</VSCTDefinitions>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(SuppressCommonAssemblyMetadata)">
+    <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_METADATA</DefineConstants>
+  </PropertyGroup>
+
   <PropertyGroup>
     <SignManifests>false</SignManifests>
     <SignAssembly>true</SignAssembly>
