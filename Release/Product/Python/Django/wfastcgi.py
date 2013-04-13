@@ -17,8 +17,14 @@ import struct
 import cStringIO
 import os
 import traceback
+import ctypes
 from os import path
 from xml.dom import minidom
+import re
+import datetime
+import thread
+
+__version__ = '2.0.0'
 
 # http://www.fastcgi.com/devkit/doc/fcgi-spec.html#S3
 
@@ -269,6 +275,8 @@ def log(txt):
     if log_file:
         f = file(log_file, 'a+')
         try:
+            f.write(str(datetime.datetime.now()))
+            f.write(': ')
             f.write(txt)
         finally:
           f.close()
@@ -314,6 +322,7 @@ terminate the stream"""
         os.write(stdout, data)
         if len_remaining == 0 or not streaming:
             break
+    sys.stdin.flush()
 
 def get_environment(dir):
     web_config = path.join(dir, 'Web.config')
@@ -333,7 +342,7 @@ def get_environment(dir):
                         for curAdd in values:
                             key = curAdd.getAttribute('key')
                             value = curAdd.getAttribute('value')
-                            if key and value:
+                            if key and value is not None:
                                 d[key] = value
             finally:
               wc.close()
@@ -343,6 +352,130 @@ def get_environment(dir):
             pass
     return d
 
+ReadDirectoryChangesW = ctypes.WinDLL('kernel32').ReadDirectoryChangesW
+ReadDirectoryChangesW.restype = ctypes.c_bool
+ReadDirectoryChangesW.argtypes  = [ctypes.c_void_p,     # HANDLE hDirectory
+                                   ctypes.c_void_p,     # LPVOID lpBuffer
+                                   ctypes.c_uint32,     # DWORD nBufferLength
+                                   ctypes.c_bool,       # BOOL bWatchSubtree
+                                   ctypes.c_uint32,     # DWORD dwNotifyFilter
+                                   ctypes.POINTER(ctypes.c_uint32),  # LPDWORD lpBytesReturned
+                                   ctypes.c_void_p,     # LPOVERLAPPED lpOverlapped
+                                   ctypes.c_void_p      # LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+                                  ]
+
+CreateFile = ctypes.WinDLL('kernel32').CreateFileW
+CreateFile.restype = ctypes.c_void_p
+CreateFile.argtypes  = [ctypes.c_wchar_p,     # lpFilename
+                                   ctypes.c_uint32,      # dwDesiredAccess
+                                   ctypes.c_uint32,      # dwShareMode
+                                   ctypes.c_voidp,       # LPSECURITY_ATTRIBUTES,
+                                   ctypes.c_uint32,      # dwCreationDisposition,
+                                   ctypes.c_uint32,      # dwFlagsAndAttributes,
+                                   ctypes.c_void_p       # hTemplateFile
+                                  ]
+
+ExitProcess = ctypes.WinDLL('kernel32').ExitProcess
+ExitProcess.restype = ctypes.c_void_p
+ExitProcess.argtypes  = [ctypes.c_uint32]
+
+FILE_LIST_DIRECTORY = 1
+FILE_SHARE_READ = 0x00000001
+FILE_SHARE_WRITE = 0x00000002
+FILE_SHARE_DELETE = 0x00000004
+OPEN_EXISTING = 3
+FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+MAX_PATH = 260
+FILE_NOTIFY_CHANGE_LAST_WRITE  = 0x10
+
+class FILE_NOTIFY_INFORMATION(ctypes.Structure):
+    _fields_ = [('NextEntryOffset', ctypes.c_uint32),
+                ('Action', ctypes.c_uint32),
+                ('FileNameLength', ctypes.c_uint32),
+                ('Filename', ctypes.c_wchar)]
+
+def start_file_watcher(path, restartRegex):
+    if restartRegex is None:
+        restartRegex = ".*((\\.py)|(\\.config))$"
+    elif not restartRegex:
+        # restart regex set to empty string, no restart behavior
+        return
+    
+    log('wfastcgi.py will restart when files in ' + path + ' are changed: ' + restartRegex + '\n')
+    restart = re.compile(restartRegex)
+    def watcher(path, restart):
+        the_dir = CreateFile(path, 
+                                FILE_LIST_DIRECTORY, 
+                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                None,
+                                OPEN_EXISTING,
+                                FILE_FLAG_BACKUP_SEMANTICS,
+                                None
+                            )
+        
+        buffer = ctypes.create_string_buffer(32 * 1024)
+        bytes_ret = ctypes.c_uint32()
+
+        while ReadDirectoryChangesW(the_dir, 
+                                buffer, 
+                                ctypes.sizeof(buffer), 
+                                True, 
+                                FILE_NOTIFY_CHANGE_LAST_WRITE,
+                                ctypes.byref(bytes_ret),
+                                None,
+                                None):
+            cur_pointer = ctypes.addressof(buffer)
+            while True:
+                fni = ctypes.cast(cur_pointer, ctypes.POINTER(FILE_NOTIFY_INFORMATION))
+                filename = ctypes.wstring_at(cur_pointer + 12)
+                if restart.match(filename):
+                    log('wfastcgi.py exiting because ' + filename + ' has changed, matching ' + restartRegex + '\n')
+                    # we call ExitProcess directly to quickly shutdown the whole process
+                    # because sys.exit(0) won't have an effect on the main thread.
+                    ExitProcess(0)
+                if fni.contents.NextEntryOffset == 0:
+                    break
+                cur_pointer = cur_pointer + fni.contents.NextEntryOffset
+
+    thread.start_new_thread(watcher, (path, restart))
+
+
+def get_wsgi_handler(physical_path):
+    env = get_environment(physical_path)
+    os.environ.update(env)
+    for env_name in env:
+        if env_name.lower() == 'pythonpath':
+            for path_location in env[env_name].split(';'):
+                sys.path.append(path_location)
+            break
+    
+    handler_ex = None
+    try:
+        handler_name = os.getenv('WSGI_HANDLER')
+        if not handler_name:
+            raise Exception('WSGI_HANDLER env var must be set')
+    
+        module, _, callable = handler_name.rpartition('.')
+        if not module:
+            raise Exception('WSGI_HANDLER must be set to module_name.wsgi_handler, got %s' % handler_name)
+    
+        if isinstance(callable, unicode):
+            callable = callable.encode('ascii')
+
+        if callable.endswith('()'):
+            callable = callable.rstrip('()')
+            handler = getattr(__import__(module, fromlist=[callable]), callable)()
+        else:
+            handler = getattr(__import__(module, fromlist=[callable]), callable)
+    
+        if handler is None:
+            raise Exception('WSGI_HANDLER "' + handler_name + '" was set to None')
+    except:
+        handler = None
+        handler_ex = sys.exc_info()
+    
+    
+    return env, handler, handler_ex
 
 if __name__ == '__main__': 
     stdout = sys.stdin.fileno()
@@ -355,8 +488,9 @@ if __name__ == '__main__':
     _REQUESTS = {}
     
     initialized = False
-
-    while True:
+    fatal_error = False
+    log('wfastcgi.py ' + __version__ + ' started\n')
+    while fatal_error is False:
         try:
             record = read_fastcgi_record(sys.stdin)
             if record:
@@ -369,65 +503,59 @@ if __name__ == '__main__':
 
                 physical_path = record.params.get('DOCUMENT_ROOT', path.dirname(__file__))
                 
+                errors = sys.stderr = sys.__stderr__ = record.params['wsgi.errors'] = cStringIO.StringIO()
+                output = sys.stdout = sys.__stdout__ = cStringIO.StringIO()
+                
                 if not initialized:
-                    env = get_environment(physical_path)
-                    os.environ.update(env)
-                    for env_name in env:
-                        if env_name.lower() == 'pythonpath':
-                            for path_location in env[env_name].split(';'):
-                                sys.path.append(path_location)
-                            break
-                    
-                    handler_name = os.getenv('WSGI_HANDLER')
-                    if not handler_name:
-                        sys.stderr.write('WSGI_HANDLER env var must be set')
-                        sys.exit(1)
+                    os.chdir(physical_path)
 
-                    module, _, callable = handler_name.rpartition('.')
-                    if not module:
-                        sys.stderr.write('WSGI_HANDLER must be set to module_name.wsgi_handler, got %s' % handler_name)
-                        sys.exit(2)
+                    env, handler, handler_ex = get_wsgi_handler(physical_path)
 
-                    if callable.endswith('()'):
-                        callable = callable.rstrip('()')
-                        handler = getattr(__import__(module, fromlist=[callable]), callable)()
-                    else:
-                        handler = getattr(__import__(module, fromlist=[callable]), callable)
+                    start_file_watcher(physical_path, env.get('WSGI_RESTART_FILE_REGEX'))
+
+                    log('wfastcgi.py ' + __version__ + ' initialized\n')
                     initialized = True
                     
                 def start_response(status, headers, exc_info = None):
-                    global response_headers, status_line
-                    response_headers = headers
-                    status_line = status
-                
-                errors = sys.stderr = sys.__stderr__ = record.params['wsgi.errors'] = cStringIO.StringIO()
-                sys.stdout = sys.__stdout__ = cStringIO.StringIO()
+                    status = 'Status: ' + status + '\r\n'
+                    headers = ''.join('%s: %s\r\n' % (name, value) for name, value in headers)
+                    send_response(record.req_id, FCGI_STDOUT, status + headers + '\r\n')
                 
                 os.environ.update(env)
                 if 'HTTP_X_ORIGINAL_URL' in record.params:
                     # We've been re-written for shared FastCGI hosting, send the original URL as the PATH_INFO.
                     record.params['PATH_INFO'] = record.params['HTTP_X_ORIGINAL_URL']
                 
+                # PATH_INFO is not supposed to include the query parameters, so remove them
+                record.params['PATH_INFO'] = record.params['PATH_INFO'].partition('?')[0]
+
                 # SCRIPT_NAME + PATH_INFO is supposed to be the full path http://www.python.org/dev/peps/pep-0333/
                 # but by default (http://msdn.microsoft.com/en-us/library/ms525840(v=vs.90).aspx) IIS is sending us 
                 # the full URL in PATH_INFO, so we need to clear the script name here
                 if 'AllowPathInfoForScriptMappings' not in os.environ:
                     record.params['SCRIPT_NAME'] = ''
 
-                try: 
-                    response = ''.join(handler(record.params, start_response)) 
-                except:
-                    send_response(record.req_id, FCGI_STDERR, errors.getvalue() + '\n\n' + traceback.format_exc())
-                else:
-                    status = 'Status: ' + status_line + '\r\n'
-                    headers = ''.join('%s: %s\r\n' % (name, value) for name, value in response_headers)
-                    full_response = status + headers + '\r\n' + response
-                    send_response(record.req_id, FCGI_STDOUT, full_response)
+                if handler is None:
+                    fatal_error = True
+                    error_msg = ('Error while importing WSGI_HANDLER:\n\n' +
+                                    ''.join(traceback.format_exception(*handler_ex)) + '\n\n' +
+                                    'StdOut: ' + output.getvalue() + '\n\n'
+                                    'StdErr: ' + errors.getvalue() + '\n\n')
+                    log(error_msg)
+                    send_response(record.req_id, FCGI_STDERR, error_msg)
+                else:                    
+                    try: 
+                        for part in handler(record.params, start_response):
+                            if part:
+                                send_response(record.req_id, FCGI_STDOUT, part)
+                    except:
+                        log('Exception from handler: ' + traceback.format_exc())
+                        send_response(record.req_id, FCGI_STDERR, errors.getvalue() + '\n\n' + traceback.format_exc())
 
                 send_response(record.req_id, FCGI_END_REQUEST, '\x00\x00\x00\x00\x00\x00\x00\x00', streaming=False)
                 del _REQUESTS[record.req_id]
         except _ExitException:
             break
         except:
-            log(traceback.format_exc())    
+            log('Unhandled exception in wfastcgi.py: ' + traceback.format_exc())
 
