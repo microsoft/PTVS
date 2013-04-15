@@ -1635,9 +1635,6 @@ def intercept_threads(for_attach = False):
 
 def attach_process(port_num, debug_id, report_and_block = False):
     global conn
-    f = open('c:/temp/log.txt', 'a')
-    f.write('attaching ...\n')
-    f.close()
     for i in xrange(50):
         try:
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -1648,8 +1645,7 @@ def attach_process(port_num, debug_id, report_and_block = False):
             break
         except:
             import time
-            #time.sleep(50./1000)
-            time.sleep(1)
+            time.sleep(50./1000)
     else:
         raise Exception('failed to attach')
     attach_process_from_socket(conn, report_and_block, report_and_block)
