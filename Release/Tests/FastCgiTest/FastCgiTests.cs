@@ -205,7 +205,7 @@ namespace FastCgiTest {
                 Path.Combine(dirName, "applicationHost.config"));
 
             File.Copy(
-                "wfastcgi.py",
+                WFastCgiPath,
                 Path.Combine(dirName, "wfastcgi.py")
             );
 
@@ -1112,7 +1112,7 @@ namespace FastCgiTest {
                     return packageLoc;
                 }
 
-                var msbuildPath = Path.Combine(
+                var wfastcgiPath = Path.Combine(
                     Environment.GetEnvironmentVariable("ProgramFiles"),
                     "MSbuild",
                     "Microsoft",
@@ -1130,8 +1130,8 @@ namespace FastCgiTest {
                     "wfastcgi.py"
                 );
 
-                if (File.Exists(msbuildPath)) {
-                    return msbuildPath;
+                if (File.Exists(wfastcgiPath)) {
+                    return wfastcgiPath;
                 }
 
                 throw new InvalidOperationException("Failed to find wfastcgi.py");
