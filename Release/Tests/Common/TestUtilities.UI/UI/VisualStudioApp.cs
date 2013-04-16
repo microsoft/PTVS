@@ -253,6 +253,27 @@ namespace TestUtilities.UI {
             return hwnd;
         }
 
+        /// <summary>
+        /// Waits for no dialog. If a dialog appears before the timeout expires
+        /// then the test fails and the dialog is closed.
+        /// </summary>
+        public void WaitForNoDialog(TimeSpan timeout) {
+            IVsUIShell uiShell = VsIdeTestHostContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
+            IntPtr hwnd;
+            uiShell.GetDialogOwnerHwnd(out hwnd);
+
+            for (int i = 0; i < 100 && hwnd.ToInt32() == Dte.MainWindow.HWnd; i++) {
+                System.Threading.Thread.Sleep((int)timeout.TotalMilliseconds / 100);
+                uiShell.GetDialogOwnerHwnd(out hwnd);
+            }
+
+            if (hwnd != (IntPtr)Dte.MainWindow.HWnd) {
+                AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
+                NativeMethods.EndDialog(hwnd, (IntPtr)(int)MessageBoxButton.Cancel);
+                Assert.Fail("Dialog appeared - see output for details");
+            }
+        }
+
         internal static void CheckMessageBox(params string[] text) {
             CheckMessageBox(MessageBoxButton.Cancel, text);
         }

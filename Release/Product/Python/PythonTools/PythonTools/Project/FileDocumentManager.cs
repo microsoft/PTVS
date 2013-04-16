@@ -196,20 +196,24 @@ namespace Microsoft.PythonTools.Project
             string caption = this.GetOwnerCaption();
             string fullPath = this.GetFullPathForDocument();
 
-            // Make sure that the file is on disk before we open the editor and display message if not found
-            if (!((FileNode)this.Node).IsFileOnDisk(!reopen))
-            {
-                // Inform clients that we have an invalid item (wrong icon)
-                this.Node.OnInvalidateItems(this.Node.Parent);
+            IVsUIShellOpenDocument uiShellOpenDocument = this.Node.ProjectMgr.Site.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
+            IOleServiceProvider serviceProvider = this.Node.ProjectMgr.Site.GetService(typeof(IOleServiceProvider)) as IOleServiceProvider;
 
+#if DEV11_OR_LATER
+            var openState = uiShellOpenDocument as IVsUIShellOpenDocument3;
+            bool showDialog = !reopen && (openState == null || !((__VSNEWDOCUMENTSTATE)openState.NewDocumentState).HasFlag(__VSNEWDOCUMENTSTATE.NDS_Provisional));
+#else
+            bool showDialog = !reopen;
+#endif
+
+            // Make sure that the file is on disk before we open the editor and display message if not found
+            if (!((FileNode)this.Node).IsFileOnDisk(showDialog))
+            {
                 // Bail since we are not able to open the item
                 // Do not return an error code otherwise an internal error message is shown. The scenario for this operation
                 // normally is already a reaction to a dialog box telling that the item has been removed.
                 return VSConstants.S_FALSE;
             }
-
-            IVsUIShellOpenDocument uiShellOpenDocument = this.Node.ProjectMgr.Site.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
-            IOleServiceProvider serviceProvider = this.Node.ProjectMgr.Site.GetService(typeof(IOleServiceProvider)) as IOleServiceProvider;
 
             try
             {

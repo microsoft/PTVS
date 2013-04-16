@@ -1032,6 +1032,83 @@ namespace PythonToolsUITests {
             CountIs(itemCount, "HelloWorld.py", 0);     // not included because the actual name is Program.py
         }
 
+
+#if DEV11_OR_LATER
+        private static IEnumerable<Window> GetOpenDocumentWindows(DTE dte) {
+            foreach (var win in VsIdeTestHostContext.Dte.Windows.OfType<Window>()) {
+                if (win.Document != null) {
+                    yield return win;
+                }
+            }
+        }
+        
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void PreviewFile() {
+            var solution = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+
+            var dte = VsIdeTestHostContext.Dte;
+            var app = new PythonVisualStudioApp(dte);
+
+            foreach (var win in GetOpenDocumentWindows(dte)) {
+                if (win.Document != null) {
+                    win.Close(vsSaveChanges.vsSaveChangesNo);
+                }
+            }
+            
+            Assert.AreEqual(0, GetOpenDocumentWindows(dte).Count());
+
+            app.OpenSolutionExplorer();
+
+            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld").GetClickablePoint());
+            Mouse.Click();
+
+            app.WaitForNoDialog(TimeSpan.FromSeconds(5));
+            Assert.AreEqual(0, GetOpenDocumentWindows(dte).Count());
+            
+            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py").GetClickablePoint());
+            Mouse.Click();
+
+            app.WaitForNoDialog(TimeSpan.FromSeconds(5));
+            try {
+                app.WaitForDocument("Program.py");
+            } catch (InvalidOperationException) {
+                Assert.Fail("Document was not opened");
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void PreviewMissingFile() {
+            var solution = DebuggerUITests.DebugProject.OpenProject(@"TestData\MissingFiles.sln");
+
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+
+            foreach (var win in GetOpenDocumentWindows(VsIdeTestHostContext.Dte)) {
+                if (win.Document != null) {
+                    win.Close(vsSaveChanges.vsSaveChangesNo);
+                }
+            }
+
+            Assert.AreEqual(0, GetOpenDocumentWindows(VsIdeTestHostContext.Dte).Count());
+
+            app.OpenSolutionExplorer();
+
+            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'MissingFiles' (1 project)", "HelloWorld").GetClickablePoint());
+            Mouse.Click();
+
+            app.WaitForNoDialog(TimeSpan.FromSeconds(5));
+            Assert.AreEqual(0, GetOpenDocumentWindows(VsIdeTestHostContext.Dte).Count());
+
+            Mouse.MoveTo(app.SolutionExplorerTreeView.FindItem("Solution 'MissingFiles' (1 project)", "HelloWorld", "Program2.py").GetClickablePoint());
+            Mouse.Click();
+
+            app.WaitForNoDialog(TimeSpan.FromSeconds(5));
+            Assert.AreEqual(0, GetOpenDocumentWindows(VsIdeTestHostContext.Dte).Count());
+        }
+
+#endif
+
         private static void CountIs(Dictionary<string, int> count, string key, int expected){
             int actual;
             if (!count.TryGetValue(key, out actual)) {
