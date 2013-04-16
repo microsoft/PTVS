@@ -100,24 +100,24 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
-  <ItemGroup Condition="'$(VSTarget)' == '10.0'">
-    <Reference Include="Microsoft.Windows.Design.Host, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Microsoft Visual Studio 10.0\Common7\IDE\PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(VSTarget)' == '11.0'">
-    <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition="'$(VSTarget)' == '12.0'">
-    <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+  <Choose>
+    <When Condition="'$(VSTarget)' == '10.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.Windows.Design.Host, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(VSTarget)' == '11.0' or '$(VSTarget)' == '12.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+          <SpecificVersion>False</SpecificVersion>
+          <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Reference Include="Accessibility">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -702,6 +702,14 @@
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="VsCredentials.cs" />
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <ZipProject>
+      <Language>Python</Language>
+    </ZipProject>
+    <ZipItem>
+      <Language>Python</Language>
+    </ZipItem>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <!-- VSIX -->
     <Content Include="ptvsd\attach_server.py">
@@ -711,22 +719,15 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj">
-      <OutputSubPath>FromExistingCode</OutputSubPath>
-    </None>
-    <None Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
+    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj" />
+    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
       <SubType>Designer</SubType>
-      <OutputSubPath>FromExistingCode</OutputSubPath>
-    </None>
+    </ZipProject>
     <Content Include="ptvsd\__init__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ptvsd\__main__.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Templates\Projects\FromExistingCode\FromExistingCode.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -774,8 +775,8 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="Templates\Files\TextFile\textfile.txt" />
-    <Content Include="Templates\Files\TextFile\textfile.vstemplate" />
+    <ZipItem Include="Templates\Files\TextFile\textfile.txt" />
+    <ZipItem Include="Templates\Files\TextFile\textfile.vstemplate" />
     <Content Include="Templates\NewItem\class.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -801,10 +802,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Python Tools for VS License.rtf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Templates\Files\TextFile\TextFile.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -1073,36 +1070,19 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Templates\Files\EmptyPackage\EmptyPackage.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <None Include="Templates\Files\EmptyPackage\package\__init__.py" />
-    <None Include="Templates\Files\EmptyPyFile\empty.py" />
-    <Content Include="Templates\Files\EmptyPackage\package.vstemplate" />
-    <Content Include="Templates\Files\EmptyPackage\__TemplateIcon.ico" />
-    <Content Include="Templates\Files\EmptyPyFile\EmptyPyFile.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <None Include="Templates\Files\PyClass\class.py" />
-    <Content Include="Templates\Files\PyClass\PyClass.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Templates\Files\EmptyPyFile\empty.vstemplate">
+    <ZipItem Include="Templates\Files\EmptyPackage\__init__.py" />
+    <ZipItem Include="Templates\Files\EmptyPyFile\empty.py" />
+    <ZipItem Include="Templates\Files\EmptyPackage\package.vstemplate" />
+    <ZipItem Include="Templates\Files\PyClass\class.py" />
+    <ZipItem Include="Templates\Files\EmptyPyFile\empty.vstemplate">
       <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Templates\Files\PyClass\class.vstemplate" />
-    <Content Include="Templates\Projects\ConsoleAppProject\PythonApp.pyproj" />
-    <Content Include="Templates\Projects\ConsoleAppProject\Program.py" />
-    <Content Include="Templates\Projects\ConsoleAppProject\PythonConsoleApp.vstemplate">
+    </ZipItem>
+    <ZipItem Include="Templates\Files\PyClass\class.vstemplate" />
+    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonApp.pyproj" />
+    <ZipProject Include="Templates\Projects\ConsoleAppProject\Program.py" />
+    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonConsoleApp.vstemplate">
       <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Templates\Projects\ConsoleAppProject\ConsoleApp.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
+    </ZipProject>
   </ItemGroup>
   <ItemGroup>
     <!-- Resources -->
@@ -1189,6 +1169,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
   <PropertyGroup>
     <!--

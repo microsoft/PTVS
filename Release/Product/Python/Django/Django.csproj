@@ -157,6 +157,14 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </COMReference>
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <ZipProject>
+      <Language>Python</Language>
+    </ZipProject>
+    <ZipItem>
+      <Language>Python</Language>
+    </ZipItem>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Project\DjangoProjectConfig.cs" />
@@ -232,47 +240,39 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoTemplate.html" />
+    <ZipItem Include="Templates\Files\DjangoHtml\DjangoTemplate.html" />
     <Content Include="FastCgiTutorial\FastCGI Getting Started.html" />
     <Resource Include="FastCgiTutorial\images\IIS - Enable FastCGI Role.png" />
     <Resource Include="FastCgiTutorial\images\CGI in Vista.png" />
     <Resource Include="FastCgiTutorial\images\handler mappings.jpg" />
     <Resource Include="FastCgiTutorial\images\PyFastCgiMapping.png" />
     <Resource Include="FastCgiTutorial\images\AddModuleMapping.jpg" />
-    <Content Include="Templates\Projects\DjangoProject\settings.py" />
-    <Content Include="Templates\Projects\DjangoProject\urls.py" />
-    <Content Include="Templates\Projects\DjangoProject\wsgi.py" />
-    <Content Include="Templates\Projects\DjangoProject\__init__.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\settings.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\urls.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\wsgi.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\__init__.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoNewAppFiles.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoTemplate.html" />
     <Content Include="wfastcgi.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.vstemplate">
+    <ZipItem Include="Templates\Files\DjangoHtml\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Templates\Files\DjangoNewAppFiles\models.py">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Templates\Files\DjangoNewAppFiles\tests.py">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Templates\Files\DjangoNewAppFiles\views.py">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Templates\Files\DjangoNewAppFiles\__init__.py">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Templates\Projects\DjangoProject\manage.py" />
-    <Content Include="Templates\Projects\DjangoProject\DjangoApp.pyproj">
+    </ZipItem>
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\models.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\tests.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\views.py" />
+    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\__init__.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\manage.py" />
+    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.pyproj">
       <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
       <SubType>Designer</SubType>
-    </Content>
+    </ZipProject>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Debugger\DjangoLauncherOptions.resx">
@@ -293,14 +293,6 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <Content Include="Templates\Projects\DjangoProject\DjangoApp.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Templates\Files\DjangoHtmlTemplate\DjangoHtml.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Django.vsct">

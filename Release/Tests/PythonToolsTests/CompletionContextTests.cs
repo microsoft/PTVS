@@ -493,7 +493,10 @@ baz
                     buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                     var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 #pragma warning disable 618
-                    var context = snapshot.GetCompletions(new MockTrackingSpan(snapshot, i, 0), new MockTrackingPoint(snapshot, i), new CompletionOptions());
+                    var context = snapshot.GetCompletions(
+                        new MockTrackingSpan(snapshot, i, 0),
+                        new MockTrackingPoint(snapshot, i),
+                        new CompletionOptions { HideAdvancedMembers = false });
 #pragma warning restore 618
                     Assert.AreEqual(context, NormalCompletionAnalysis.EmptyCompletionContext);
                 }
@@ -724,6 +727,7 @@ class B(dict):
                     new MockTrackingSpan(newSnapshot, location, 0),
                     new MockTrackingPoint(newSnapshot, location),
                     new CompletionOptions {
+                        HideAdvancedMembers = false,
                         ConvertTabsToSpaces = true,
                         IndentSize = 4
                     }
@@ -855,6 +859,7 @@ class B(dict):
                 span, 
                 new MockTrackingPoint(snapshot, location),
                 new CompletionOptions {
+                    HideAdvancedMembers = false,
                     IntersectMembers = intersectMembers,
                     ConvertTabsToSpaces = true,
                     IndentSize = 4

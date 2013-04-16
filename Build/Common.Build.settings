@@ -2,10 +2,10 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Ensures that if this file changes it forces a rebuild -->
-  <PropertyGroup>                 
+  <PropertyGroup>
     <MSBuildAllProjects>
         $(MSBuildAllProjects);$(MSBuildThisFileFullPath)
-    </MSBuildAllProjects>        
+    </MSBuildAllProjects>
   </PropertyGroup>
 
 
@@ -54,7 +54,9 @@
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 
-    <DevEnvDir>$(VS100COMNTOOLS)..\IDE</DevEnvDir>                  <!-- CHECK RELEVANCE -->
+    <DevEnvDir Condition="'$(DevEnvDir)' == '' and '$(VSTarget)'=='10.0'">$(VS100COMNTOOLS)..\IDE\</DevEnvDir>
+    <DevEnvDir Condition="'$(DevEnvDir)' == '' and '$(VSTarget)'=='11.0'">$(VS110COMNTOOLS)..\IDE\</DevEnvDir>
+    <DevEnvDir Condition="'$(DevEnvDir)' == '' and '$(VSTarget)'=='12.0'">$(VS120COMNTOOLS)..\IDE\</DevEnvDir>
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />

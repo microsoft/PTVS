@@ -256,7 +256,6 @@ namespace Microsoft.PythonTools.Project.Automation
                         item = new OAProjectItem<HierarchyNode>(this.Project, nodeAdded);
                     }
 
-                    this.Items.Add(item);
                     return item;
                 }
             }

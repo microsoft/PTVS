@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Options {
 
         public override void LoadSettingsFromStorage() {
             _enterCommitsIntellisense = LoadBool(EnterCommitsSetting) ?? true;
-            _intersectMembers = LoadBool(IntersectMembersSetting) ?? true;
+            _intersectMembers = LoadBool(IntersectMembersSetting) ?? false;
             _addNewLineAtEndOfFullyTypedWord = LoadBool(NewLineAtEndOfWordSetting) ?? false;
             _completionCommittedBy = LoadString("CompletionCommittedBy") ?? _defaultCompletionChars;
             _enterOutliningMode = LoadBool(EnterOutlingModeOnOpenSetting) ?? true;

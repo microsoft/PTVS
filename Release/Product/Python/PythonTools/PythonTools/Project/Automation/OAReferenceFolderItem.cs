@@ -42,29 +42,11 @@ namespace Microsoft.PythonTools.Project.Automation
         {
             get
             {
-                return new OANavigableProjectItems(this.Project, this.GetListOfProjectItems(), this.Node);
+                return new OANavigableProjectItems(this.Project, this.Node);
             }
         }
 
 
-        #endregion
-
-        #region Helper methods
-        private List<EnvDTE.ProjectItem> GetListOfProjectItems()
-        {
-            List<EnvDTE.ProjectItem> list = new List<EnvDTE.ProjectItem>();
-            for (HierarchyNode child = this.Node.FirstChild; child != null; child = child.NextSibling)
-            {
-                ReferenceNode node = child as ReferenceNode;
-
-                if (node != null)
-                {
-                    list.Add(new OAReferenceItem(this.Project, node));
-                }
-            }
-
-            return list;
-        }
         #endregion
     }
 }

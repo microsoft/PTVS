@@ -184,47 +184,35 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="Templates\Files\WpfWindow\WpfWindow.py" />
-    <Content Include="Templates\Files\WpfWindow\WpfWindow.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <None Include="Templates\Projects\ConsoleProject\ConsoleProject.pyproj" />
-    <Content Include="Templates\Projects\ConsoleProject\ConsoleProject.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <None Include="Templates\Projects\WinformsProject\WinformsApp.pyproj" />
-    <Content Include="Templates\Files\WpfWindow\WpfWindow.vstemplate" />
-    <Content Include="Templates\Projects\ConsoleProject\Program.html" />
-    <None Include="Templates\Projects\ConsoleProject\Program.py" />
-    <Content Include="Templates\Projects\ConsoleProject\ConsoleProject.vstemplate" />
-    <Content Include="Templates\Projects\WinformsProject\WinformsApp.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <None Include="Templates\Projects\WpfProject\Program.py" />
-    <None Include="Templates\Projects\WinformsProject\Program.py" />
-    <Content Include="Templates\Projects\WinformsProject\WinformsApp.vstemplate" />
-    <Content Include="Templates\Projects\WpfProject\WpfApp.vstemplate" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ZipProject>
+      <Language>Python</Language>
+    </ZipProject>
+    <ZipItem>
+      <Language>Python</Language>
+    </ZipItem>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.py" />
+    <ZipProject Include="Templates\Projects\ConsoleProject\ConsoleProject.pyproj" />
+    <ZipProject Include="Templates\Projects\WinformsProject\WinformsApp.pyproj" />
+    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.vstemplate" />
+    <ZipProject Include="Templates\Projects\ConsoleProject\Program.py" />
+    <ZipProject Include="Templates\Projects\ConsoleProject\ConsoleProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\WpfProject\Program.py" />
+    <ZipProject Include="Templates\Projects\WinformsProject\Program.py" />
+    <ZipProject Include="Templates\Projects\WinformsProject\WinformsApp.vstemplate" />
+    <ZipProject Include="Templates\Projects\WpfProject\WpfApp.vstemplate" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Templates\Projects\SilverlightProject\SilverlightProject.pyproj" />
-    <Content Include="Templates\Projects\SilverlightProject\SilverlightProject.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <None Include="Templates\Projects\WpfProject\WpfApp.pyproj" />
-    <Content Include="Templates\Projects\WpfProject\WpfApp.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Templates\Projects\SilverlightProject\Program.html" />
-    <Content Include="Templates\Projects\SilverlightProject\SilverlightProject.vstemplate" />
-    <None Include="Templates\Projects\SilverlightProject\Program.py" />
+    <ZipProject Include="Templates\Projects\SilverlightProject\SilverlightProject.pyproj" />
+    <ZipProject Include="Templates\Projects\WpfProject\WpfApp.pyproj" />
+    <ZipProject Include="Templates\Projects\SilverlightProject\Program.html" />
+    <ZipProject Include="Templates\Projects\SilverlightProject\SilverlightProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\SilverlightProject\Program.py" />
+    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Debugger\IronPythonLauncherOptions.resx">
@@ -232,12 +220,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Page Include="Templates\Files\WpfWindow\WpfWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
+    <ZipProject Include="Templates\Projects\WpfProject\Program.xaml">
       <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
+    </ZipProject>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

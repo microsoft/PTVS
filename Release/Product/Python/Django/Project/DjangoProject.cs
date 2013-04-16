@@ -675,19 +675,11 @@ namespace Microsoft.PythonTools.Django.Project {
                     } else {
                         parentItems = ((EnvDTE.ProjectItem)selectedObj).ProjectItems;
                     }
-                    EnvDTE.ProjectItem newFolder;
-                    try {
-                        newFolder = parentItems.AddFolder(dialog.ViewModel.Name);
-                    } catch (ArgumentException ex) {
-                        MessageBox.Show(ex.Message);
-                        return;
-                    }
 
-                    var newAppFilesDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Templates", "Files", "DjangoNewAppFiles");
-                    foreach (string file in Directory.GetFiles(newAppFilesDir)) {
-                        newFolder.Collection.AddFromTemplate(file, Path.GetFileName(file));
-                    }
-                    newFolder.Collection.AddFolder("Templates");
+                    // TODO: Use the actual Django version
+                    var sln = (EnvDTE80.Solution2)project.DTE.Solution;
+                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "Python");
+                    parentItems.AddFromTemplate(newAppTemplate, dialog.ViewModel.Name);
                 }
             }
         }

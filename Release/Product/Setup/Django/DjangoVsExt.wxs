@@ -36,24 +36,15 @@
                 <File Id="filBAF64E97BE09427086DEBB9703D146C6" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Django.pkgdef" />
             </Component>
             <Component Id="cmp843B7FB2D6434D2799C80D60D9842459" Directory="dir117EF6E430844404B5E87390FC3DFD4E" Guid="{26F95137-B41F-47CB-B3A2-6769E513D11F}">
-                <File Id="filC0DD732153BC4B168791158F3DEF4CAD" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\DjangoProject\DjangoApp.zip" />
+                <File Id="filC0DD732153BC4B168791158F3DEF4CAD" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\DjangoProject.zip" />
             </Component>
             <Component Id="cmpE95A9B6479B549C5BCFADF24CBF605FD" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{1296CCF7-C82C-4D7A-8086-9742FD984D3B}">
-                <File Id="filAD9E9715475C402D8927BFA29168E597" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\DjangoHtmlTemplate\DjangoHtml.zip" />
+                <File Id="filAD9E9715475C402D8927BFA29168E597" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoHtml.zip" />
             </Component>
 
 
-            <Component Id="cmpF5CD922636854E0693E5E6026EAFB17E" Directory="dir1BD051D972A14535AD8882E451431619" Guid="{92CB37C2-642A-49C1-AE9E-74041082B704}">
-                <File Id="fil85464CF9C4D24E63B7FDEDA5FEEF5591" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\DjangoNewAppFiles\models.py" />
-            </Component>
-            <Component Id="cmpDA674C86F7E146D39F03122C53C5A1B5" Directory="dir1BD051D972A14535AD8882E451431619" Guid="{3F549A16-5014-46A4-ACD6-C88EB03AAC2E}">
-                <File Id="filCE87CEFE21124FE790F09D597E53294E" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\DjangoNewAppFiles\tests.py" />
-            </Component>
-            <Component Id="cmp19044273ADE9455893A3AC12D4A8073A" Directory="dir1BD051D972A14535AD8882E451431619" Guid="{5B154E4D-06EF-41FC-9C3F-8651E71A8A7A}">
-                <File Id="fil93C4F6D1EF3A41D981956710A6BDF30E" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\DjangoNewAppFiles\views.py" />
-            </Component>
-            <Component Id="cmp0F06AEC295824FFFA68A46911AB81953" Directory="dir1BD051D972A14535AD8882E451431619" Guid="{A34CF174-544C-4CCA-A538-11767A25C1F2}">
-                <File Id="fil3B8D5539BD474652B696F861AEC7F272" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\DjangoNewAppFiles\__init__.py" />
+            <Component Id="cmp8FD2DCD84D064839ADBA2841550496C7" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{1654E889-E8E9-4B57-BEAD-DD268EB0C709}">
+                <File Id="filAD5040460E0C42D8BE43C8E81DBAD43F" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoNewAppFiles14.zip" />
             </Component>
             
             

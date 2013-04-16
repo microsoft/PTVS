@@ -139,15 +139,15 @@ try {
             copy -force $bindir\*.msi $destdir\
             copy -force Prerequisites\*.reg $destdir\
             
-            mkdir $destdir\Symbols
+            mkdir $destdir\Symbols -EA 0
             copy -force -recurse $bindir\*.pdb $destdir\Symbols\
             
-            mkdir $destdir\Binaries
+            mkdir $destdir\Binaries -EA 0
             copy -force -recurse $bindir\*.dll $destdir\Binaries\
             copy -force -recurse $bindir\*.exe $destdir\Binaries\
             copy -force -recurse $bindir\*.pkgdef $destdir\Binaries\
             
-            mkdir $destdir\Binaries\ReplWindow
+            mkdir $destdir\Binaries\ReplWindow -EA 0
             copy -force -recurse Release\Product\Python\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
         }
         

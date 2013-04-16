@@ -108,7 +108,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public CompletionOptions() {
             MemberOptions = GetMemberOptions.IncludeStatementKeywords |
-                GetMemberOptions.IncludeExpressionKeywords;
+                GetMemberOptions.IncludeExpressionKeywords |
+                GetMemberOptions.HideAdvancedMembers;
             FilterCompletions = true;
             SearchMode = FuzzyMatchMode.Default;
         }

@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
@@ -29,22 +28,10 @@ namespace Microsoft.PythonTools.Project.Automation
     {
         #region fields
         private OAProject project;
-        private IList<EnvDTE.ProjectItem> items;
         private HierarchyNode nodeWithItems;
         #endregion
 
         #region properties
-        /// <summary>
-        /// Defines an internal list of project items
-        /// </summary>
-        internal IList<EnvDTE.ProjectItem> Items
-        {
-            get
-            {
-                return this.items;
-            }
-        }
-
         /// <summary>
         /// Defines a relationship to the associated project.
         /// </summary>
@@ -78,21 +65,8 @@ namespace Microsoft.PythonTools.Project.Automation
         {
             this.project = project;
             this.nodeWithItems = nodeWithItems;
-            this.items = this.GetListOfProjectItems();
         }
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="project">The associated project.</param>
-        /// <param name="items">A list of items that will make up the items defined by this object.</param>
-        /// <param name="nodeWithItems">The node that defines the items.</param>
-        public OANavigableProjectItems(OAProject project, IList<EnvDTE.ProjectItem> items, HierarchyNode nodeWithItems)
-        {
-            this.items = items;
-            this.project = project;
-            this.nodeWithItems = nodeWithItems;
-        }
         #endregion
 
         #region EnvDTE.ProjectItems
@@ -104,7 +78,15 @@ namespace Microsoft.PythonTools.Project.Automation
         {
             get
             {
-                return items.Count;
+                int count = 0;
+                for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
+                {
+                    if (child.GetAutomationObject() is EnvDTE.ProjectItem)
+                    {
+                        count += 1;
+                    }
+                }
+                return count;
             }
         }
 
@@ -217,17 +199,29 @@ namespace Microsoft.PythonTools.Project.Automation
             if (index is int)
             {
                 int realIndex = (int)index - 1;
-                if (realIndex >= 0 && realIndex < this.items.Count)
+                if (realIndex >= 0)
                 {
-                    return (EnvDTE.ProjectItem)items[realIndex];
+                    for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
+                    {
+                        var item = child.GetAutomationObject() as EnvDTE.ProjectItem;
+                        if (item != null)
+                        {
+                            if (realIndex == 0)
+                            {
+                                return item;
+                            }
+                            realIndex -= 1;
+                        }
+                    }
                 }
             }
             else if (index is string)
             {
                 string name = (string)index;
-                foreach (EnvDTE.ProjectItem item in items)
+                for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
                 {
-                    if (String.Compare(item.Name, name, StringComparison.OrdinalIgnoreCase) == 0)
+                    var item = child.GetAutomationObject() as EnvDTE.ProjectItem;
+                    if (item != null && String.Compare(item.Name, name, StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         return item;
                     }
@@ -242,39 +236,16 @@ namespace Microsoft.PythonTools.Project.Automation
         /// <returns>An IEnumerator for this object.</returns>
         public virtual IEnumerator GetEnumerator()
         {
-            if (this.items == null)
-            {
-                yield return null;
-            }
-
-            int count = items.Count;
-            for (int i = 0; i < count; i++)
-            {
-                yield return items[i];
-            }
-        }
-
-        #endregion
-
-        #region virtual methods
-        /// <summary>
-        /// Retrives a list of items associated with the current node.
-        /// </summary>
-        /// <returns>A List of project items</returns>
-        protected IList<EnvDTE.ProjectItem> GetListOfProjectItems()
-        {
-            List<EnvDTE.ProjectItem> list = new List<EnvDTE.ProjectItem>();
             for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
             {
-                EnvDTE.ProjectItem item = child.GetAutomationObject() as EnvDTE.ProjectItem;
-                if (null != item)
+                var item = child.GetAutomationObject() as EnvDTE.ProjectItem;
+                if (item != null)
                 {
-                    list.Add(item);
+                    yield return item;
                 }
             }
-
-            return list;
         }
+
         #endregion
     }
 }

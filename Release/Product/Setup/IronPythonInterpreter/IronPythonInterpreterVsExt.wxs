@@ -32,19 +32,19 @@
                 <File Id="fil8B6431B474834558A48DCB708060FC79" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.IronPython.pkgdef" />
             </Component>
             <Component Id="cmpDD08B213874C495EBEE23D51F077B436" Directory="dir041BB14BAC9592609EC93BFD263C1679" Guid="{9F2F96C6-CE1B-4556-ADD6-558AFFF9ECFF}">
-                <File Id="filBE1A3903EEFE43C99E704F3A55E573CA" KeyPath="yes" Source="$(var.TargetDir)\Templates\Files\WpfWindow\WpfWindow.zip" />
+                <File Id="filBE1A3903EEFE43C99E704F3A55E573CA" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\WpfWindow.zip" />
             </Component>
             <Component Id="cmp8683E6C3200A433AA285D8708EDF2D24" Directory="dirB8A29750C71B9A312D4757EEBE831332" Guid="{7E12DECB-6DF2-42E8-93B9-A6F30536C3A4}">
-                <File Id="filD75CDAB2B3E542BD849E3CDCA378D8D2" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\SilverlightProject\SilverlightProject.zip" />
+                <File Id="filD75CDAB2B3E542BD849E3CDCA378D8D2" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\SilverlightProject.zip" />
             </Component>
             <Component Id="cmpF1E7795CF44641B9A2B0299EA89EC9DD" Directory="dirE40177D2D8C394B5C5097124A223252D" Guid="{1AF4468D-852E-4995-93A8-FA4F17DCF2EA}">
-                <File Id="fil225FBD987F444A5886EB51A3D64D9810" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\WinformsProject\WinformsApp.zip" />
+                <File Id="fil225FBD987F444A5886EB51A3D64D9810" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\WinformsProject.zip" />
             </Component>
             <Component Id="cmp51C6FE51A3E144CFB6D3BBFBDC61503E" Directory="dir4373EC4F5A09E3740B14E661A10DCD52" Guid="{11DC2CA7-104E-46D8-B517-1468E5FBEA67}">
-                <File Id="fil57ED8E47ADD64E0D89199AAAC4DD026F" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\WpfProject\WpfApp.zip" />
+                <File Id="fil57ED8E47ADD64E0D89199AAAC4DD026F" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\WpfProject.zip" />
             </Component>
             <Component Id="cmp6541998E98EC44749220E0FBFA6508F1" Directory="dirDCCF5264823D44DDA6D5D3A453254D62" Guid="{36D9A52B-4169-4EEF-9930-4C9784945A3C}">
-                <File Id="fil663B43B46676465E9DF6F86202FF3F88" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\ConsoleProject\ConsoleProject.zip" />
+                <File Id="fil663B43B46676465E9DF6F86202FF3F88" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\ConsoleProject.zip" />
             </Component>
             <Component Id="cmp0775519BE75E42899297B336091A299B" Directory="INSTALLLOCATION" Guid="{728CE51B-1B1B-48DC-BAA0-3FC999EC3AAB}">
                 <File Id="filB42D7C02C97741BB8853394C1C43AEFA" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
