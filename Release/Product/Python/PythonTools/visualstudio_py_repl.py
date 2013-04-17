@@ -39,9 +39,20 @@ import types
 from collections import deque
 
 try:
-    from visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+    import visualstudio_py_util as _vspu
 except ImportError:
-    from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+    try:
+        import ptvsd.visualstudio_py_util as _vspu
+    except ImportError:
+        # in the local attach scenario, visualstudio_py_util should already be defined
+        _vspu = visualstudio_py_util
+to_bytes = _vspu.to_bytes
+read_bytes = _vspu.read_bytes
+read_int = _vspu.read_int
+read_string = _vspu.read_string
+write_bytes = _vspu.write_bytes
+write_int = _vspu.write_int
+write_string = _vspu.write_string
 
 try:
     unicode

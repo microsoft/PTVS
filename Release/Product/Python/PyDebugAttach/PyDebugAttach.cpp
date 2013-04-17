@@ -601,12 +601,14 @@ public:
                 if(connect(sock, (sockaddr*)&serveraddr, sizeof(sockaddr_in)) == 0) {
                     // send our debug ID as an ASCII string.  
                     send(sock, "A", 1, 0);
-                    DWORD len = (DWORD)strlen(Buffer->DebugId);
-                    send(sock, (const char*)&len, sizeof(DWORD), 0);
-                    send(sock, Buffer->DebugId, len, 0);
+                    int len = (int)strlen(Buffer->DebugId);
+                    unsigned long long lenBE64 = _byteswap_uint64(len);
+                    send(sock, (const char*)&lenBE64, sizeof(lenBE64), 0);
+                    send(sock, Buffer->DebugId, (int)len, 0);
 
                     // send our error number
-                    send(sock, (const char*)&errorNum, sizeof(errorNum), 0);
+                    unsigned long long errorNumBE64 = _byteswap_uint64(errorNum);
+                    send(sock, (const char*)&errorNumBE64, sizeof(errorNumBE64), 0);
                 }
             }
         }
@@ -988,17 +990,29 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         wchar_t debuggerModuleFilePath[MAX_PATH];
         wchar_t replModuleFilePath[MAX_PATH];
+        wchar_t utilModuleFilePath[MAX_PATH];
         _wmakepath_s(debuggerModuleFilePath, drive, dir, L"visualstudio_py_debugger", L".py");
         _wmakepath_s(replModuleFilePath, drive, dir, L"visualstudio_py_repl", L".py");
+        _wmakepath_s(utilModuleFilePath, drive, dir, L"visualstudio_py_util", L".py");
 
-        // visualstudio_py_debugger has a dependency on visualstudio_py_repl, so we need to load that one first
+        // Load modules in dependency order. Dependency graph:
+        //
+        // visualstudio_py_debugger --> visualstudio_py_repl --> visualstudio_py_util
+        //                        \______________________________^
+
+        auto utilModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_util"));
+        auto utilModuleDict = pyModuleGetDict(utilModule.ToPython());
+        LoadAndEvaluateCode(utilModuleFilePath, "visualstudio_py_util.py", connInfo, isDebug, utilModuleDict, 
+                            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
+
         auto replModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_repl"));
         auto replModuleDict = pyModuleGetDict(replModule.ToPython());
+        dictSetItem(replModuleDict, "visualstudio_py_util", utilModule.ToPython());
         LoadAndEvaluateCode(replModuleFilePath, "visualstudio_py_repl.py", connInfo, isDebug, replModuleDict, 
                             pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
 
-        // set the visualstudio_py_repl module in the globals dictionary, so the import of it succeeds
         auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
+        dictSetItem(globalsDict.ToPython(), "visualstudio_py_util", utilModule.ToPython());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_repl", replModule.ToPython());
         LoadAndEvaluateCode(debuggerModuleFilePath, "visualstudio_py_debugger.py", connInfo, isDebug, globalsDict.ToPython(), 
                             pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);

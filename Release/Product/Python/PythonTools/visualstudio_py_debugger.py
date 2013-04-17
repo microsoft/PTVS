@@ -28,9 +28,20 @@ import bisect
 from os import path
 
 try:
-    from visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+    import visualstudio_py_util as _vspu
 except ImportError:
-    from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_string, write_bytes, write_int, write_string
+    try:
+        import ptvsd.visualstudio_py_util as _vspu
+    except ImportError:
+        # in the local attach scenario, visualstudio_py_util should already be defined
+        _vspu = visualstudio_py_util
+to_bytes = _vspu.to_bytes
+read_bytes = _vspu.read_bytes
+read_int = _vspu.read_int
+read_string = _vspu.read_string
+write_bytes = _vspu.write_bytes
+write_int = _vspu.write_int
+write_string = _vspu.write_string
 
 try:
     import visualstudio_py_repl as _vspr
@@ -304,7 +315,7 @@ def probe_stack(depth = 10):
 # specifies list of files not to debug, can be added to externally (the REPL does this
 # for $attach support and not stepping into the REPL)
  
-DONT_DEBUG = [__file__]
+DONT_DEBUG = [__file__, _vspu.__file__]
 def should_debug_code(code):
     if not DEBUG_STDLIB and code.co_filename.startswith(sys.prefix):
         return False
@@ -1639,7 +1650,6 @@ def attach_process(port_num, debug_id, report_and_block = False):
         try:
             conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             conn.connect(('127.0.0.1', port_num))
-            print('attaching', len(debug_id), debug_id)
             write_string(conn, debug_id)
             write_int(conn, 0)  # success
             break
