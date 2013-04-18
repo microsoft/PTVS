@@ -1963,9 +1963,30 @@ int main(int argc, char* argv[]) {
             );
 
             startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
-            startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(GetVCInstallDir(), "INCLUDE") + ";" + Path.Combine(GetWindowsSDKDir(), "Include");
-            startInfo.EnvironmentVariables["LIB"] = Path.Combine(GetVCInstallDir(), "LIB") + ";" + Path.Combine(GetWindowsSDKDir(), "Lib");
-            Console.WriteLine(startInfo.EnvironmentVariables["LIB"]);
+
+            var vcDir = GetVCInstallDir();
+            var kitsDir = GetWindowsKitsDir();
+            if (!string.IsNullOrEmpty(kitsDir)) {
+                startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(vcDir, "INCLUDE")
+                    + ";" + Path.Combine(kitsDir, "Include\\um")
+                    + ";" + Path.Combine(kitsDir, "Include\\shared");
+                startInfo.EnvironmentVariables["LIB"] = Path.Combine(vcDir, "LIB") 
+                    + ";" + Path.Combine(kitsDir, "Lib\\win8\\um\\x86");
+            } else {
+                var sdkDir = GetWindowsSDKDir();
+                if (!string.IsNullOrEmpty(sdkDir)) {
+                    startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(vcDir, "INCLUDE")
+                        + ";" + Path.Combine(sdkDir, "Include");
+                    startInfo.EnvironmentVariables["LIB"] = Path.Combine(vcDir, "LIB")
+                        + ";" + Path.Combine(sdkDir, "Lib");
+                } else {
+                    Assert.Fail("Windows SDK is not installed");
+                }
+            }
+
+            Console.WriteLine("\n\nPATH:\n" + startInfo.EnvironmentVariables["PATH"]);
+            Console.WriteLine("\n\nINCLUDE:\n" + startInfo.EnvironmentVariables["INCLUDE"]);
+            Console.WriteLine("\n\nLIB:\n" + startInfo.EnvironmentVariables["LIB"]);
 
             startInfo.UseShellExecute = false;
             startInfo.RedirectStandardError = true;
@@ -1999,9 +2020,33 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        /// <summary>
+        /// Scans the registry looking for the latest installed Windows Kits root.
+        /// </summary>
+        /// <returns>Path to the install dir.</returns>
+        private static string GetWindowsKitsDir() {
+            object regValue = null;
+            regValue = Registry.GetValue(
+                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
+                "KitsRoot",
+                null);
+
+            if (regValue != null && Directory.Exists(Path.Combine(regValue.ToString(), "Include")))
+                return regValue.ToString();
+
+            return null;
+        }
+
+        /// <summary>
+        /// Scans the registry looking for the latest installed Windows SDK root.
+        /// If no registry entry try a few well known directory locations
+        /// </summary>
+        /// <returns>Path to the install dir.</returns>
         private static string GetWindowsSDKDir() {
             string[] sdkVersions = new[] { "v7.0A", "v8.0A", "v7.0" };
             object regValue = null;
+
+            //  Scan for Windows SDKS
             foreach (var sdkVersion in sdkVersions) {
                 regValue = Registry.GetValue(
                     "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Microsoft SDKs\\Windows\\" + sdkVersion,
@@ -2009,16 +2054,26 @@ int main(int argc, char* argv[]) {
                     null);
 
                 if (regValue != null && Directory.Exists(Path.Combine(regValue.ToString(), "Include"))) {
-                    break;
+                    return regValue.ToString();
                 }
             }
 
+            //No Windows SDKs installations found
+            //  As a last resort lets check some known locations
+            string[] wellKnownLocations = new[] { "C:\\Program Files\\Microsoft SDKs\\Windows\\!<version>!",
+                                                  "C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\!<version>!" };
+
             if (regValue == null) {
-                Assert.IsTrue(Directory.Exists("C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0\\Include"), "Windows SDK is not installed");
-                return "C:\\Program Files\\Microsoft SDKs\\Windows\\v7.0";
+                foreach (var sdkVersion in sdkVersions) {
+                    foreach (var wellKnownLocation in wellKnownLocations) {
+                        string path = wellKnownLocation.Replace("!<version>!", sdkVersion);
+                        if (Directory.Exists(path + "\\Include"))
+                            return path;
+                    }
+                }
             }
 
-            return regValue.ToString();
+            return null;
         }
 
         private static string GetVSIDEInstallDir() {
