@@ -2,17 +2,18 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Ensures that if this file changes it forces a rebuild -->
-  <PropertyGroup>                 
+  <PropertyGroup>
     <MSBuildAllProjects>
         $(MSBuildAllProjects);$(MSBuildThisFileFullPath)
-    </MSBuildAllProjects>        
+    </MSBuildAllProjects>
   </PropertyGroup>
 
 
   <PropertyGroup>
     <Language>WiX</Language>
-    <WixToolPath>$(BuildRoot)\Tools\Wix\3.5</WixToolPath>
-    <WixExtDir>$(BuildRoot)\Tools\Wix\3.5</WixExtDir>
+    <WixToolsVersion Condition="'$(WixToolsVersion)'==''">3.5</WixToolsVersion>
+    <WixToolPath Condition="'$(WixToolPath)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixToolPath>
+    <WixExtDir Condition="'$(WixExtDir)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixExtDir>
     <WixTargetsPath>$(WixToolPath)\Targets\Wix.targets</WixTargetsPath>
     <WixTasksPath>$(WixToolPath)\Targets\WixTasks.dll</WixTasksPath>
     <LuxTargetsPath>$(WixToolPath)\Targets\Lux.targets</LuxTargetsPath>
