@@ -2,19 +2,20 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <?include PythonToolsInstallerVars.wxi ?>
+  <?include UpgradeCodes.wxi ?>
 
   <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
     <Package InstallerVersion="300" Compressed="yes"  />
     <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes"
                   DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
-    <Upgrade Id="$(var.TemplateUpgradeGuid)">
-      <UpgradeVersion Property="REMOVE_TEMPLATE"
-                      Minimum="0.0.0.0"
-                      IncludeMinimum="yes"
-                      Maximum="$(var.MsiVersion)"
-                      IncludeMaximum="no"
-                      ExcludeLanguages="yes"/>
-    </Upgrade>
+    <?if "$(var.UpgradeCodeList)" != "-"?>
+      <?foreach UpgradeId in $(var.UpgradeCodeList)?>
+        <Upgrade Id="$(var.UpgradeId)">
+          <UpgradeVersion Property="REMOVE_TEMPLATE" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+      <?endforeach?>
+    <?endif?>
+
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
     <!-- Properties that we need to search for -->
