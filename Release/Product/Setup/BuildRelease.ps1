@@ -1,186 +1,487 @@
-param( [string] $outdir, [switch] $skiptests, [switch] $noclean, [switch] $uninstall, [string] $reinstall, [switch] $scorch, [string] $vsTarget, [switch] $nocopy, [switch] $skipdebug)
+<#
+.Synopsis
+    Builds a release of Python Tools for Visual Studio from this branch.
 
-if (-not (get-command msbuild -EA 0))
-{
-    Write-Error "Visual Studio x86 build tools are required."
-    exit 1
+.Description
+    This script is used to build a set of installers for Python Tools for
+    Visual Studio based on the code in this branch.
+    
+    The assembly and file versions are generated automatically and provided by
+    modifying .\Build\AssemblyVersion.cs.
+    
+    The source is determined from the location of this script; to build another
+    branch, use its Copy-Item of BuildRelease.ps1.
+
+.Parameter outdir
+    Directory to store the build.
+    
+    If `release` is specified, defaults to '\\pytools\release\<build number>'.
+
+.Parameter vstarget
+    [Optional] The VS version to build for. If omitted, builds for all versions
+    that are installed.
+    
+    Valid values: "10.0", "11.0", "12.0"
+
+.Parameter name
+    [Optional] A suffix to append to the name of the build.
+    
+    Typical values: "Alpha", "RC1", "My Feature Name"
+    (Avoid: "RTM", "2.0")
+
+.Parameter release
+    When specified:
+    * `outdir` will default to \\pytools\release if unspecified
+    * A build number is generated and appended to `outdir`
+     - The build number includes an index
+    * Debug configurations are not built
+    * Binaries and symbols are sent for indexing
+    * Binaries and installers are sent for signing
+    
+    This switch requires the code signing object to be installed, and a smart
+    card and reader must be available.
+    
+    See also: `mockrelease`.
+
+.Parameter internal
+    When specified:
+    * `outdir` will default to \\pytools\release\Internal\$name if
+      unspecified
+    * A build number is generated and appended to `outdir`
+     - The build number includes an index
+    * Both Release and Debug configurations are built
+    * No binaries are sent for indexing or signing
+    
+    See also: `release`, `mockrelease`
+
+.Parameter mockrelease
+    When specified:
+    * A build number is generated and appended to `outdir`
+     - The build number includes an index
+    * Both Release and Debug configurations are built
+    * Indexing requests are displayed in the output but are not sent
+    * Signing requests are displayed in the output but are not sent
+    
+    Note that `outdir` is required and has no default.
+    
+    This switch requires the code signing object to be installed, but no smart
+    card or reader is necessary.
+    
+    See also: `release`, `internal`
+
+.Parameter scorch
+    If specified, the enlistment is cleaned before and after building.
+
+.Parameter skiptests
+    If specified, test projects are not built.
+
+.Parameter skipclean
+    If specified, the output directory is not cleaned before building. This has
+    no effect when used with `release`, since the output directory will not
+    exist before the build.
+
+.Parameter skipcopy
+    If specified, does not copy the source files to the output directory.
+
+.Parameter skipdebug
+    If specified, does not build Debug configurations.
+
+.Example
+    .\BuildRelease.ps1 -release
+    
+    Creates signed installers for public release in \\pytools\release\<version>
+
+.Example
+    .\BuildRelease.ps1 -name "Beta" -release
+    
+    Create installers for a public beta in \\pytools\release\<version>
+
+.Example
+    .\BuildRelease.ps1 -name "My Feature" -internal
+    
+    Create installers for an internal feature test in 
+    \\pytools\release\Internal\My Feature\<version>
+
+#>
+[CmdletBinding()]
+param( [string] $outdir, [string] $vsTarget, [string] $name, [switch] $release, [switch] $internal, [switch] $mockrelease, [switch] $scorch, [switch] $skiptests, [switch] $skipclean, [switch] $skipcopy, [switch] $skipdebug)
+
+# This value is used to determine the most significant digit of the build number.
+$base_year = 2012
+
+if (-not (get-command msbuild -EA 0)) {
+    Write-Error -EA:Stop "
+    Visual Studio build tools are required."
 }
 
-if (-not $outdir)
-{
-    Write-Error "Must provide valid output directory: '$outdir'"
-    exit 1
-}
-
-if (-not $noclean)
-{
-    if (Test-Path $outdir)
-    {
-        "Cleaning previous release..."
-        rmdir -Recurse -Force $outdir
-        if (-not $?)
-        {
-            Write-Error "Could not clean output directory: $outdir"
-            exit 1
-        }
+if (-not $outdir) {
+    if ($release -or $internal) {
+        $outdir = Get-Item \\pytools\Release -EA 0
     }
-    mkdir $outdir | Out-Null
-    if (-not $?)
-    {
-        Write-Error "Could not make output directory: $outdir"
-        exit 1
+    if (-not $outdir) {
+        Write-Error -EA:Stop "
+    Invalid output directory '$outdir'"
     }
 }
 
-$version = "2.0." + ([DateTime]::Now.Year - 2011 + 4).ToString() + [DateTime]::Now.Month.ToString('00') + [DateTime]::Now.Day.ToString('00') + ".0"
-"Product to be stamped with Version: $version"
-
-# Add new products here:
-
-$products = @{name="PythonTools"; wxi=".\PythonToolsInstaller\PythonToolsInstallerVars.wxi"; msi="PythonToolsInstaller.msi"}, `
-            @{name="PyKinect";    wxi=".\PyKinectInstaller\PyKinectInstallerVars.wxi";       msi="PyKinectInstaller.msi"}, `
-            @{name="Pyvot";       wxi=".\PyvotInstaller\PyvotInstallerVars.wxi";             msi="PyvotInstaller.msi"}
-
-$buildroot = (Get-Location).Path
-while ((Test-Path $buildroot) -and -not (Test-Path ([System.IO.Path]::Combine($buildroot, "build.root")))) {
-    $buildroot = [System.IO.Path]::Combine($buildroot, "..")
+if ($name -eq "RTM") {
+    $result = $host.ui.PromptForChoice(
+        "Build Name",
+        "'RTM' is not a recommended build name. Final releases should have a blank name.",
+        [System.Management.Automation.Host.ChoiceDescription[]](
+            (New-Object System.Management.Automation.Host.ChoiceDescription "&Continue", "Continue anyway"),
+            (New-Object System.Management.Automation.Host.ChoiceDescription "&Abort", "Abort the build"),
+            (New-Object System.Management.Automation.Host.ChoiceDescription "C&lear", "Clear the build name and continue")
+        ),
+        2
+    )
+    if ($result -eq 1) {
+        exit 0
+    } elseif ($result -eq 2) {
+        $name = ""
+    }
 }
-$buildroot = [System.IO.Path]::GetFullPath($buildroot)
-"Build Root: $buildroot"
+
+$spacename = ""
+if ($name) {
+    $spacename = " $name"
+} elseif ($internal) {
+    Write-Error -EA:Stop "
+    '-name [build name]' must be specified when using '-internal'"
+}
+
+if ($internal) {
+    $outdir = "$outdir\Internal\$name"
+}
+
+if ($release -or $mockrelease) {
+    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "zacha", "gilbertw", "huvalo"
+    $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
+    $symbol_contacts = "$env:username;dinov;smortaz;stevdo;gilbertw"
+    
+    $projectName = "Python Tools for Visual Studio"
+    $projectUrl = "http://pytools.codeplex.com"
+    $projectKeywords = "PTVS; Visual Studio; Python"
+
+    Push-Location (Split-Path -Parent $MyInvocation.MyCommand.Definition)
+    if ($mockrelease) {
+        Set-Variable -Name DebugPreference -Value "Continue" -Scope "global"
+        Import-Module .\ReleaseMockHelpers.psm1
+    } else {
+        Import-Module .\ReleaseHelpers.psm1
+    }
+    Pop-Location
+}
+
+# Add new products here
+# $($_.name) is currently unused
+# $($_.msi) is the name of the built MSI
+# $($_.outname1)$(buildname) $(targetvs.name)$($_.outname2) is the name of the final MSI
+$products = @(
+    @{name="PythonTools";
+      msi="PythonToolsInstaller.msi";
+      signtag="";
+      outname1="PTVS"; outname2=".msi"
+    },
+    @{name="PyKinect";
+      msi="PyKinectInstaller.msi";
+      signtag=" - PyKinect";
+      outname1="PTVS"; outname2=" - PyKinect Sample.msi"
+    },
+    @{name="Pyvot";
+      msi="PyvotInstaller.msi";
+      signtag=" - Pyvot";
+      outname1="PTVS"; outname2=" - Pyvot Sample.msi"
+    },
+    @{name="WFastCGI";
+      msi="WFastCGI.msi";
+      signtag=" - WFastCGI";
+      outname1="WFastCGI"; outname2=".msi"
+    }
+)
+
+
+$buildroot = (Split-Path -Parent $MyInvocation.MyCommand.Definition)
+while ((Test-Path $buildroot) -and -not (Test-Path "$buildroot\build.root")) {
+    $buildroot = (Split-Path -Parent $buildroot)
+}
+Write-Output "Build Root: $buildroot"
 Push-Location $buildroot
 
 $asmverfileBackedUp = 0
 $asmverfile = Get-ChildItem Build\AssemblyVersion.cs
+# Force use of a backup if there are pending changes to $asmverfile
+$asmverfileUseBackup = 0
+if ((tf status $asmverfile /format:detailed | Select-String ": edit")) {
+    Write-Output "$asmverfile has pending changes. Using backup instead of tf undo."
+    $asmverfileUseBackup = 1
+}
+$asmverfileIsReadOnly = $asmverfile.Attributes -band [io.fileattributes]::ReadOnly
+
+
+$buildnumber = '{0}{1:MMdd}.{2:D2}' -f (((Get-Date).Year - $base_year), (Get-Date), 0)
+if ($release -or $mockrelease -or $internal) {
+    for ($buildindex = 0; $buildindex -lt 10000; $buildindex += 1) {
+        $buildnumber = '{0}{1:MMdd}.{2:D2}' -f (((Get-Date).Year - $base_year), (Get-Date), $buildindex)
+        if (-not (Test-Path $outdir\$buildnumber)) {
+            break
+        }
+        $buildnumber = ''
+    }
+}
+if (-not $buildnumber) {
+    Write-Error -EA:Stop "
+    Cannot create version number. Try another output folder."
+}
+if ([int]::Parse([regex]::Match($buildnumber, '^[0-9]+').Value) -ge 65535) {
+    Write-Error -EA:Stop "
+    Build number $buildnumber is invalid. Update `$base_year in this script.
+    (If the year is not yet $($base_year + 7) then something else has gone wrong.)"
+}
+
+$releaseVersion = [regex]::Match((Get-Content $asmverfile), 'ReleaseVersion = "([0-9.]+)";').Groups[1].Value
+$minorVersion = [regex]::Match((Get-Content $asmverfile), 'MinorVersion = "([0-9.]+)";').Groups[1].Value
+$version = "$releaseVersion.$buildnumber"
+
+if ($release -or $mockrelease -or $internal) {
+    $outdir = "$outdir\$buildnumber"
+}
+
+Write-Output "Output Dir: $outdir"
+Write-Output ""
+Write-Output "Product version: $releaseversion.$minorversion.`$(VS version)"
+Write-Output "File version: $version"
+Write-Output ""
+
+if (-not $skipclean) {
+    if (Test-Path $outdir) {
+        "Cleaning previous release..."
+        rmdir -Recurse -Force $outdir
+        if (-not $? -and (Get-ChildItem $outdir) -gt 0) {
+            Write-Error -EA:Stop "
+    Could not clean output directory: $outdir"
+        }
+    }
+    mkdir $outdir -EA 0 | Out-Null
+    if (-not $?) {
+        Write-Error -EA:Stop "
+    Could not make output directory: $outdir"
+    }
+}
+
+$supportedVersions = @{number="12.0"; name="VS 2013"}, @{number="11.0"; name="VS 2012"}, @{number="10.0"; name="VS 2010"}
+$targetVersions = @()
+
+foreach ($targetVs in $supportedVersions) {
+    if ($vstarget -eq "" -or $vstarget -eq $targetVs.number) {
+        if ((Test-Path -Path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\$($targetVs.number)") -or `
+            (Test-Path -Path "HKLM:\Software\Microsoft\VisualStudio\$($targetVs.number)")) {
+            Write-Output "Will build for $($targetVs.name)"
+            $targetVersions += $targetVs
+        }
+    }
+}
+
+if ($skipdebug -or $release) {
+    $targetConfigs = ("Release")
+} else {
+    $targetConfigs = ("Release", "Debug")
+}
+
+$target = "Rebuild"
+if ($skipclean) {
+    $target = "Build"
+}
+
+if ($scorch) {
+    tfpt scorch /noprompt
+}
 
 try {
-    if ($uninstall)
-    {
-        $guidregexp = "<\?define InstallerGuid=(.*)\?>"
-        foreach ($product in $products)
-        {
-            foreach ($line in ( Get-Content ([System.IO.Path]::Combine($buildroot, "Release\Product\Setup", $product.wxi)) ))
-            {
-                if ($line -match $guidregexp) { $guid = $matches[1] ; break }
-            }
-            "Got product guid for $($product.name): $guid"
-            start -wait msiexec "/uninstall","{$guid}","/passive"
-        }
-    }
-    
-    $dev12InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\12.0" -name InstallDir -EA 0
-    $dev12InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\12.0" -name InstallDir -EA 0
-    $dev11InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
-    $dev11InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\11.0" -name InstallDir -EA 0
-    $dev10InstallDir64 = Get-ItemProperty -path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\10.0" -name InstallDir -EA 0
-    $dev10InstallDir = Get-ItemProperty -path "HKLM:\Software\Microsoft\VisualStudio\10.0" -name InstallDir -EA 0
-    
-    $targetVersions = New-Object System.Collections.ArrayList($null)
-    
-    if ($dev12InstallDir64 -or $dev12InstallDir) {
-        if (-not $vsTarget -or $vsTarget -eq "12.0") {
-            echo "Will build for VS DEV12"
-            $targetVersions.Add(@{number="12.0"; name="VS DEV12"}) | Out-Null
-        }
-    }
-
-    if ($dev11InstallDir64 -or $dev11InstallDir) {
-        if (-not $vsTarget -or $vsTarget -eq "11.0") {
-            echo "Will build for VS 2012"
-            $targetVersions.Add(@{number="11.0"; name="VS 2012"}) | Out-Null
-        }
-    }
-    
-    if ($dev10InstallDir64 -or $dev10InstallDir) {
-        if (-not $vsTarget -or $vsTarget -eq "10.0") {
-            echo "Will build for VS 2010"
-            $targetVersions.Add(@{number="10.0"; name="VS 2010"}) | Out-Null
-        }
-    }
-    
-    $targetConfigs = ("Release", "Debug")
-    if ($skipdebug) { $targetConfigs = ("Release") }
-    
-    foreach ($targetVs in $targetVersions) {
-
-        $asmverfileBackedUp = 0
+    $successful = $false
+    if ($asmverfileUseBackup -eq 0) {
         tf edit $asmverfile
-        if ($LASTEXITCODE -gt 0) {
-            # running outside of MS
-            attrib -r $asmverfile
-            copy -force $asmverfile $($asmverfile.FullName).bak
-            $asmverfileBackedUp = 1
-        }
-        (Get-Content $asmverfile) | %{ $_ -replace "0.7.4100.000", $version } | Set-Content $asmverfile
-        
-        Get-Content $asmverfile
-        
+    }
+    if ($asmverfileUseBackup -or $LASTEXITCODE -gt 0) {
+        # running outside of MS
+        Copy-Item -force $asmverfile "$($asmverfile).bak"
+        $asmverfileBackedUp = 1
+    }
+    Set-ItemProperty $asmverfile -Name IsReadOnly -Value $false
+    (Get-Content $asmverfile) | %{ $_ -replace '"4100.00"', ('"' + $buildnumber + '"') } | Set-Content $asmverfile
+
+
+    foreach ($targetVs in $targetVersions) {
         foreach ($config in $targetConfigs)
         {
+            $bindir = "Binaries\$config$($targetVs.number)"
+            $destdir = "$outdir\$($targetVs.name)\$config"
+            mkdir $destdir -EA 0 | Out-Null
+            
             if (-not $skiptests)
             {
-                msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).tests.log" /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$($targetVs.number) /p:VisualStudioVersion=$($targetVs.number) Release\Tests\dirs.proj
-                if ($LASTEXITCODE -gt 0)
-                {
-                    Write-Error "Test build failed: $config"
-                    exit 4
+                msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).tests.log" `
+                    /t:$target `
+                    /p:Configuration=$config `
+                    /p:WixVersion=$version `
+                    /p:VSTarget=$($targetVs.number) `
+                    /p:VisualStudioVersion=$($targetVs.number) `
+                    Release\Tests\dirs.proj
+                if ($LASTEXITCODE -gt 0) {
+                    Write-Error -EA:Stop "
+    Test build failed: $config"
                 }
             }
             
-            msbuild /v:n /m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).log" /p:Configuration=$config /p:WixVersion=$version /p:VSTarget=$($targetVs.number) /p:VisualStudioVersion=$($targetVs.number) Release\Product\Setup\dirs.proj
+            msbuild /v:n /m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).log" `
+                /t:$target `
+                /p:Configuration=$config `
+                /p:WixVersion=$version `
+                /p:VSTarget=$($targetVs.number) `
+                /p:VisualStudioVersion=$($targetVs.number) `
+                Release\Product\Setup\dirs.proj `
+                > $destdir\build.log
             if ($LASTEXITCODE -gt 0) {
-                Write-Error "Build failed: $config"
-                exit 3
+                Write-Error -EA:Stop "
+    Build failed: $config"
             }
             
-            $bindir = "Binaries\$config$($targetVs.number)"
-            $destdir = "$outdir\$($targetVs.name)\$config"
+            Copy-Item -force $bindir\*.msi $destdir\
+            Copy-Item -force Prerequisites\*.reg $destdir\
             
-            if (-not (Test-Path $destdir)) { mkdir $destdir }
-            copy -force $bindir\*.msi $destdir\
-            copy -force Prerequisites\*.reg $destdir\
+            mkdir $destdir\Symbols -EA 0 | Out-Null
+            Copy-Item -force -recurse $bindir\*.pdb $destdir\Symbols\
             
-            mkdir $destdir\Symbols -EA 0
-            copy -force -recurse $bindir\*.pdb $destdir\Symbols\
+            mkdir $destdir\Binaries -EA 0 | Out-Null
+            Copy-Item -force -recurse $bindir\*.dll $destdir\Binaries\
+            Copy-Item -force -recurse $bindir\*.exe $destdir\Binaries\
+            Copy-Item -force -recurse $bindir\*.pkgdef $destdir\Binaries\
             
-            mkdir $destdir\Binaries -EA 0
-            copy -force -recurse $bindir\*.dll $destdir\Binaries\
-            copy -force -recurse $bindir\*.exe $destdir\Binaries\
-            copy -force -recurse $bindir\*.pkgdef $destdir\Binaries\
+            mkdir $destdir\Binaries\ReplWindow -EA 0 | Out-Null
+            Copy-Item -force -recurse Release\Product\Python\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
             
-            mkdir $destdir\Binaries\ReplWindow -EA 0
-            copy -force -recurse Release\Product\Python\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
+            ######################################################################
+            ##  BEGIN SIGNING CODE
+            ######################################################################
+            if ($release -or $mockrelease) {
+                submit_symbols "PTVS$spacename" "$buildnumber $($targetvs.name)" "symbols" "$destdir\Symbols" $symbol_contacts
+
+                $managed_files = @((
+                    "Microsoft.PythonTools.Analysis.dll", 
+                    "Microsoft.PythonTools.Analyzer.exe", 
+                    "Microsoft.PythonTools.Attacher.exe", 
+                    "Microsoft.PythonTools.AttacherX86.exe", 
+                    "Microsoft.PythonTools.Debugger.dll", 
+                    "Microsoft.PythonTools.dll", 
+                    "Microsoft.PythonTools.Hpc.dll", 
+                    "Microsoft.PythonTools.ImportWizard.dll", 
+                    "Microsoft.PythonTools.IronPython.dll", 
+                    "Microsoft.PythonTools.MpiShim.exe", 
+                    "Microsoft.PythonTools.Profiling.dll", 
+                    "Microsoft.VisualStudio.ReplWindow.dll",
+                    "Microsoft.PythonTools.PyKinect.dll",
+                    "Microsoft.PythonTools.WebRole.dll",
+                    "Microsoft.PythonTools.Django.dll",
+                    "Microsoft.PythonTools.AzureSetup.exe",
+                    "Microsoft.IronPythonTools.Resolver.dll",
+                    "Microsoft.PythonTools.Pyvot.dll"
+                    ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}})
+                
+                $native_files = @((
+                    "PyDebugAttach.dll",
+                    "PyDebugAttachX86.dll",
+                    "VsPyProf.dll",
+                    "VsPyProfX86.dll",
+                    "PyKinectAudio.dll"
+                    ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}})
+
+                $job1 = begin_sign_files $managed_files "$destdir\SignedBinaries" $approvers `
+                    $projectName $projectUrl "$projectName - managed code" $projectKeywords `
+                    "authenticode;strongname"
+
+                $job2 = begin_sign_files $native_files "$destdir\SignedBinaries" $approvers `
+                    $projectName $projectUrl "$projectName - native code" $projectKeywords `
+                    "authenticode"
+
+                end_sign_files @($job1, $job2)
+                Copy-Item "$destdir\SignedBinaries" $bindir -Recurse -Force
+
+                submit_symbols "PTVS$spacename" "$buildnumber $($targetvs.name)" "binaries" "$destdir\SignedBinaries" $symbol_contacts
+                
+                foreach ($cmd in (Get-Content $destdir\build.log) | Select-String "light.exe.+-out") {
+                    $targetdir = [regex]::Match($cmd, 'Release\\Product\\Setup\\([^\\]+)').Groups[1].Value
+
+                    Write-Output "Rebuilding MSI in $targetdir"
+
+                    try {
+                        Push-Location $buildroot\Release\Product\Setup\$targetdir
+                    } catch {
+                        Write-Error "Unable to cd to $targetdir to execute line $cmd"
+                        Write-Output "Enter directory name to cd to: "
+                        $targetDir = [Console]::ReadLine()
+                        Push-Location $targetdir
+                    }
+
+                    try {
+                        Invoke-Expression $cmd | Out-Null
+                    } finally {
+                        Pop-Location
+                    }
+                }
+
+                mkdir $destdir\UnsignedMsi -EA 0 | Out-Null
+                mkdir $destdir\SignedBinariesUnsignedMsi -EA 0 | Out-Null
+                
+                Move-Item $destdir\*.msi $destdir\UnsignedMsi -Force
+                Move-Item $bindir\*.msi $destdir\SignedBinariesUnsignedMsi -Force
+                
+                $msi_files = @($products | 
+                    ForEach {@{
+                        path="$destdir\SignedBinariesUnsignedMsi\$($_.msi)";
+                        name="Python Tools for Visual Studio$($_.signtag)"
+                    }}
+                )
+                
+                $job = begin_sign_files $msi_files $destdir $approvers `
+                    $projectName $projectUrl "$projectName - installer" $projectKeywords `
+                    "authenticode"
+                end_sign_files @($job)
+            }
+            ######################################################################
+            ##  END SIGNING CODE
+            ######################################################################
         }
         
-        if ($asmverfileBackedUp) {
-            copy -force ($asmverfile.FullName + ".bak") $asmverfile
-            attrib +r $asmverfile
-            del ($asmverfile.FullName + ".bak")
-            $asmverfileBackedUp = 0
-        } else {
-            tf undo /noprompt $asmverfile
+        foreach ($product in $products) {
+            Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename $($targetvs.name)$($product.outname2)" -Force
         }
     }
     
-    if ($scorch) { tfpt scorch /noprompt }
+    if ($scorch) {
+        tfpt scorch /noprompt
+    }
     
-    if (-not $nocopy) { robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing | Out-Null }
+    if (-not $skipcopy) {
+        robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing obj | Out-Null
+    }
+    $successful = $true
 } finally {
     if ($asmverfileBackedUp) {
-        copy -force ($asmverfile.FullName + ".bak") $asmverfile
-        attrib +r $asmverfile
-        del ($asmverfile.FullName + ".bak")
-    } else {
+        Move-Item "$($asmverfile).bak" $asmverfile -Force
+        if ($asmverfileIsReadOnly) {
+            Set-ItemProperty $asmverfile -Name IsReadOnly -Value $true
+        }
+    } elseif (-not $asmverfileUseBackup) {
         tf undo /noprompt $asmverfile
     }
     
     Pop-Location
 }
 
-if ($reinstall -eq "Debug" -or $reinstall -eq "Release")
-{
-    foreach ($product in $products)
-    {
-        "Installing $($product.name) from $outdir\$reinstall\$($product.msi)"
-        start -wait msiexec "/package","$outdir\$reinstall\$($product.msi)","/passive"
-    }
+if ($successful) {
+    Write-Output ""
+    Write-Output "Build complete"
+    Write-Output ""
+    Write-Output "Installers were output to:"
+    Write-Output "    $outdir"
 }

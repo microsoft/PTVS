@@ -35,7 +35,7 @@
     <OutputPath Condition="'$(OutputPath)' == '' and '$(OutDir)' == ''">$(BuildRoot)\Binaries\$(Configuration)$(VSTarget)\</OutputPath>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(IntDir)' != '' and $(IntDir.EndsWith(`\`))">$(IntDir)</IntermediateOutputPath>
     <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == '' and '$(IntDir)' != '' and !$(IntDir.EndsWith(`\`))">$(IntDir)\</IntermediateOutputPath>
-    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">obj\Dev$(VSTarget)\$(Configuration)\</IntermediateOutputPath>
+    <IntermediateOutputPath Condition="'$(IntermediateOutputPath)' == ''">$(MSBuildProjectDirectory)\obj\Dev$(VSTarget)\$(Configuration)\</IntermediateOutputPath>
 
     <OutDir>$(OutputPath)</OutDir>
     <IntDir>$(IntermediateOutputPath)</IntDir>
@@ -49,14 +49,16 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <TreatWarningsAsErrors Condition="'$(TreatWarningsAsErrors)' == ''">true</TreatWarningsAsErrors>
+    <!-- Suppress warning about multiply defined AssemblyVersionInfo -->
+    <NoWarn>436</NoWarn>
     <RunCodeAnalysis>$(RunFXCop)</RunCodeAnalysis>
     <StyleCopEnabled>$(RunStyleCop)</StyleCopEnabled>
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 
-    <DevEnvDir Condition="'$(DevEnvDir)' == '' and '$(VSTarget)'=='10.0'">$(VS100COMNTOOLS)..\IDE\</DevEnvDir>
-    <DevEnvDir Condition="'$(DevEnvDir)' == '' and '$(VSTarget)'=='11.0'">$(VS110COMNTOOLS)..\IDE\</DevEnvDir>
-    <DevEnvDir Condition="'$(DevEnvDir)' == '' and '$(VSTarget)'=='12.0'">$(VS120COMNTOOLS)..\IDE\</DevEnvDir>
+    <DevEnvDir Condition="'$(VSTarget)'=='10.0'">$(VS100COMNTOOLS)..\IDE\</DevEnvDir>
+    <DevEnvDir Condition="'$(VSTarget)'=='11.0'">$(VS110COMNTOOLS)..\IDE\</DevEnvDir>
+    <DevEnvDir Condition="'$(VSTarget)'=='12.0'">$(VS120COMNTOOLS)..\IDE\</DevEnvDir>
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />

@@ -14,6 +14,6 @@
   <?else?>
       <?define InstallerGuid=EF3C5467-8CC0-4789-AC60-9E0EB40938D9?>
       <?define InstallerUpgradeGuid=5C803A64-3058-410B-A6E6-A954484442DC?>  
-      <?define ProductName = "Python Tools for Visual Studio Dev12 - PyKinect Sample" ?>
+      <?define ProductName = "Python Tools for Visual Studio 2013 - PyKinect Sample" ?>
   <?endif ?>
 </Include>

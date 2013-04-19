@@ -29,15 +29,7 @@ namespace TestUtilities {
 #else
             @"Release" + 
 #endif
-#if DEV12
-            @"12.0";
-#elif DEV11
-            @"11.0";
-#elif DEV10
-            @"10.0";
-#else
-#error Unsupported version of Visual Studio
-#endif
+            AssemblyVersionInfo.VSVersion;
         const string BinariesOutPath = "";
 
         const string DataAltSourcePath = @"TestData";

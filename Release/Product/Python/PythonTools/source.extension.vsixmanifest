@@ -28,6 +28,14 @@
         <Edition>VSTS</Edition>
         <Edition>VSTD</Edition>
       </VisualStudio>
+      <VisualStudio Version="12.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
   </Identifier>
@@ -38,7 +46,7 @@
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-    <Assembly AssemblyName="Microsoft.PythonTools, Version=1.8.50330.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">|%CurrentProject%|</Assembly>
+    <Assembly AssemblyName="Microsoft.PythonTools">|%CurrentProject%|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.ImportWizard;AssemblyName|">|Microsoft.PythonTools.ImportWizard|</Assembly>

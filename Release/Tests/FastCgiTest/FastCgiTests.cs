@@ -1117,16 +1117,8 @@ namespace FastCgiTest {
                     "MSbuild",
                     "Microsoft",
                     "VisualStudio",
-#if DEV10
-                    "v10.0",
-#elif DEV11
-                    "v11.0",
-#elif DEV12
-                    "v12.0",
-#else
-#error Unsupported Visual Studio version
-#endif
- "Python Tools",
+                    "v" + AssemblyVersionInfo.VSVersion,
+                    "Python Tools",
                     "wfastcgi.py"
                 );
 

@@ -130,15 +130,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private string GetPerfToolsPath() {
-#if DEV12
-            RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\VisualStudio\12.0");
-#elif DEV11
-            RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\VisualStudio\11.0");
-#elif DEV10
-            RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\VisualStudio\10.0");
-#else
-#error Unsupported version of Visual Studio
-#endif
+            RegistryKey key = Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
             var shFolder = key.GetValue("ShellFolder") as string;
             if (shFolder == null) {
                 throw new InvalidOperationException("Cannot find shell folder for Visual Studio");

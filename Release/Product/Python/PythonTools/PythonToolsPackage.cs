@@ -60,11 +60,8 @@ namespace Microsoft.PythonTools {
     /// register itself and its components with the shell.
     /// </summary>    
     [PackageRegistration(UseManagedResourcesOnly = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
-#pragma warning disable 0436    // InternalsVisibleTo in debugger causes us to conflict on AssemblyVersionInfo
-
     // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
-#pragma warning restore 0436
     [ProvideMenuResource(1000, 1)]                              // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]
     [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
@@ -473,15 +470,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     return ((CommonPackage)Instance).UserRegistryRoot;
                 }
 
-#if DEV12
-                return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
-#elif DEV11
-                return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#elif DEV10
-                return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
-#else
-#error Unsupported version of Visual Studio
-#endif
+                return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
             }
         }
 
@@ -492,15 +481,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 }
 
 
-#if DEV12
-                return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
-#elif DEV11
-                return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#elif DEV10
-                return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
-#else
-#error Unsupported version of Visual Studio
-#endif
+                return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
             }
         }
 

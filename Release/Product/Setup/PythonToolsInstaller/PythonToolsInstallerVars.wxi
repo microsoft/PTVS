@@ -14,6 +14,6 @@
   <?else?>
       <?define InstallerGuid=*?>
       <?define InstallerUpgradeGuid=D3FFD34D-B716-4496-BFF0-0C34E536DC64?>  
-      <?define ProductName = "Python Tools for Visual Studio Dev12" ?>
+      <?define ProductName = "Python Tools for Visual Studio 2013" ?>
   <?endif ?>
 </Include>

@@ -14,6 +14,6 @@
   <?else?>
       <?define InstallerGuid=86274B02-5EA0-4BA5-85EB-865577497BE4?>
       <?define InstallerUpgradeGuid=F16829AC-8954-4D4C-BEE3-AE19E3EA1302?>  
-      <?define ProductName = "Python Tools for Visual Studio Dev12 - Pyvot Sample" ?>
+      <?define ProductName = "Python Tools for Visual Studio 2013 - Pyvot Sample" ?>
   <?endif ?>
 </Include>

@@ -35,7 +35,7 @@
   <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
     <Condition Message="Visual Studio 2012 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at http://www.microsoft.com/visualstudio/11/en-us/downloads#vs-shell"> VSINSTALLPATH OR Installed </Condition>
   <?else?>
-    <Condition Message="Visual Studio Dev12 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at TODO."> VSINSTALLPATH OR Installed </Condition>
+    <Condition Message="Visual Studio 2013 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at TODO."> VSINSTALLPATH OR Installed </Condition>
   <?endif ?>
     
     <!-- Files/Components/MSMs to install -->
