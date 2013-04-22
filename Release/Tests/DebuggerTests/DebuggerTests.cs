@@ -206,8 +206,7 @@ namespace DebuggerTests {
             }
 
             process.Continue();
-
-            process.WaitForExit();
+            WaitForExit(process);
         }
 
         private bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
@@ -300,8 +299,7 @@ namespace DebuggerTests {
             new HashSet<string>(new[] { "sys", "g" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
 
             process.Continue();
-
-            process.WaitForExit();
+            WaitForExit(process);
         }
 
         #endregion
@@ -469,8 +467,7 @@ namespace DebuggerTests {
             }
 
             process.Continue();
-
-            process.WaitForExit();
+            WaitForExit(process);
         }
 
 
@@ -499,8 +496,7 @@ namespace DebuggerTests {
             Assert.AreEqual(children[2 + extraCount].StringRepr, "4");
 
             thread.Process.Continue();
-
-            thread.Process.WaitForExit();
+            WaitForExit(thread.Process);
         }
 
         [TestMethod, Priority(0)]
@@ -775,7 +771,7 @@ namespace DebuggerTests {
                 }
             };
             process.Start();
-            process.WaitForExit();
+            WaitForExit(process);
         }
 
         [TestMethod, Priority(0)]
@@ -924,8 +920,7 @@ namespace DebuggerTests {
             };
 
             process.Start();
-
-            process.WaitForExit();
+            WaitForExit(process);
 
             Assert.AreEqual(bindFailed, true);
         }
@@ -1084,7 +1079,7 @@ namespace DebuggerTests {
             };
 
             process.Start();
-            process.WaitForExit();
+            WaitForExit(process);
 
             Assert.AreEqual(exceptions.Length, curException);
         }
@@ -1195,7 +1190,7 @@ namespace DebuggerTests {
             };
 
             process.Start();
-            process.WaitForExit();
+            WaitForExit(process);
 
             Assert.IsTrue(receivedFilenames.Count >= expectedModulesLoaded.Length);
             var set = new HashSet<string>();
@@ -1250,25 +1245,32 @@ namespace DebuggerTests {
         private void TestExitCode(PythonDebugger debugger, string filename, int expectedExitCode, string interpreterOptions = null, string pythonExe = null) {
             var process = DebugProcess(debugger, filename, interpreterOptions: interpreterOptions, pythonExe: pythonExe);
 
-            bool created = false, exited = false;
+            // Collect these values and assert on them on the main thread
+            bool threadCreated = false, threadExited = false;
+            bool processExited = false;
+            int exitCode = -1;
+
             process.ThreadCreated += (sender, args) => {
-                created = true;
+                threadCreated = true;
             };
             process.ThreadExited += (sender, args) => {
-                exited = true;
+                threadExited = true;
             };
             process.ProcessExited += (sender, args) => {
-                Assert.AreEqual(args.ExitCode, expectedExitCode);
+                exitCode = args.ExitCode;
+                processExited = true;
             };
             process.ExceptionRaised += (sender, args) => {
                 process.Resume();
             };
 
             process.Start();
-            process.WaitForExit();
+            WaitForExit(process);
 
-            Assert.IsTrue(created, "Never got notification of thread creation");
-            Assert.IsTrue(exited, "Process failed to exit");
+            Assert.IsTrue(threadCreated, "Never got notification of thread creation");
+            Assert.IsTrue(threadExited, "Process failed to exit");
+            Assert.IsTrue(processExited, "Process failed to exit");
+            Assert.AreEqual(expectedExitCode, exitCode, String.Format("Unexpected Python process exit code for '{0}'", filename));
         }
 
         private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string pythonExe = null) {
@@ -1442,7 +1444,7 @@ namespace DebuggerTests {
                 Assert.IsTrue(attached.WaitOne(10000));
                 proc.Resume();
                 Debug.WriteLine("Waiting for exit");
-                Assert.IsTrue(proc.WaitForExit(20000));
+                WaitForExit(proc);
             }
         }
 
@@ -1999,7 +2001,7 @@ int main(int argc, char* argv[]) {
             compileProcess.ErrorDataReceived += outputReceiver.OutputDataReceived;
             compileProcess.BeginErrorReadLine();
             compileProcess.BeginOutputReadLine();
-            compileProcess.WaitForExit();
+            Assert.IsTrue(compileProcess.WaitForExit(DefaultWaitForExitTimeout), "Timeout while waiting for compiler process to exit.");
 
             Assert.AreEqual(0, compileProcess.ExitCode,
                 "Incorrect exit code: " + compileProcess.ExitCode + Environment.NewLine +
@@ -2101,7 +2103,7 @@ int main(int argc, char* argv[]) {
                 }, debugOptions: PythonDebugOptions.RedirectOutput);
 
                 process.Start();
-                process.WaitForExit();
+                WaitForExit(process);
 
                 Assert.IsTrue(gotOutput, "failed to get output");
             }
@@ -2127,7 +2129,7 @@ int main(int argc, char* argv[]) {
             process.Start();
             Thread.Sleep(1000);
             process.SendStringToStdInput("foo\n");
-            process.WaitForExit();
+            WaitForExit(process);
 
             Assert.AreEqual(expectedOutput, actualOutput);
         }

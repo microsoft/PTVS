@@ -28,6 +28,8 @@ using TestUtilities;
 
 namespace DebuggerTests {
     public class BaseDebuggerTests {
+        protected const int DefaultWaitForExitTimeout = 20000;
+
         internal virtual string DebuggerTestPath {
             get {
                 return TestData.GetPath(@"TestData\DebuggerProject\");
@@ -123,7 +125,7 @@ namespace DebuggerTests {
             process.Start();
 
             if (waitForExit) {
-                process.WaitForExit(20000);
+                WaitForExit(process);
             } else {
                 allBreakpointsHit.WaitOne(20000);
                 process.Terminate();
@@ -187,7 +189,7 @@ namespace DebuggerTests {
             process.Continue();
 
             if (waitForExit) {
-                process.WaitForExit();
+                WaitForExit(process);
             } else {
                 process.Terminate();
             }
@@ -337,9 +339,17 @@ namespace DebuggerTests {
             }
 
             if (waitForExit) {
-                process.WaitForExit();
+                WaitForExit(process);
             } else {
                 process.Terminate();
+            }
+        }
+
+        internal void WaitForExit(PythonProcess process) {
+            bool exited = process.WaitForExit(DefaultWaitForExitTimeout);
+            if (!exited) {
+                process.Terminate();
+                Assert.Fail("Timeout while waiting for Python process to exit.");
             }
         }
     }
