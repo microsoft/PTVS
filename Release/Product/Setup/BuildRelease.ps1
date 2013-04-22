@@ -247,39 +247,24 @@ if ($release -or $mockrelease -or $internal) {
     $outdir = "$outdir\$buildnumber"
 }
 
-Write-Output "Output Dir: $outdir"
-Write-Output ""
-Write-Output "Product version: $releaseversion.$minorversion.`$(VS version)"
-Write-Output "File version: $version"
-Write-Output ""
-
-if (-not $skipclean) {
-    if (Test-Path $outdir) {
-        "Cleaning previous release..."
-        rmdir -Recurse -Force $outdir
-        if (-not $? -and (Get-ChildItem $outdir) -gt 0) {
-            Write-Error -EA:Stop "
-    Could not clean output directory: $outdir"
-        }
-    }
-    mkdir $outdir -EA 0 | Out-Null
-    if (-not $?) {
-        Write-Error -EA:Stop "
-    Could not make output directory: $outdir"
-    }
-}
-
 $supportedVersions = @{number="12.0"; name="VS 2013"}, @{number="11.0"; name="VS 2012"}, @{number="10.0"; name="VS 2010"}
 $targetVersions = @()
 
 foreach ($targetVs in $supportedVersions) {
-    if ($vstarget -eq "" -or $vstarget -eq $targetVs.number) {
-        if ((Test-Path -Path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\$($targetVs.number)") -or `
-            (Test-Path -Path "HKLM:\Software\Microsoft\VisualStudio\$($targetVs.number)")) {
-            Write-Output "Will build for $($targetVs.name)"
+    if (-not $vstarget -or ($vstarget -match $targetVs.number)) {
+        $vspath = Get-ItemProperty -Path "HKLM:\Software\Wow6432Node\Microsoft\VisualStudio\$($targetVs.number)" -EA 0
+        if (-not $vspath) {
+            $vspath = Get-ItemProperty -Path "HKLM:\Software\Microsoft\VisualStudio\$($targetVs.number)" -EA 0
+        }
+        if ($vspath -and $vspath.InstallDir -and (Test-Path -Path $vspath.InstallDir)) {
             $targetVersions += $targetVs
         }
     }
+}
+
+if (-not $targetVersions) {
+    Write-Error -EA:Stop "
+    No supported versions of Visual Studio installed."
 }
 
 if ($skipdebug -or $release) {
@@ -291,6 +276,32 @@ if ($skipdebug -or $release) {
 $target = "Rebuild"
 if ($skipclean) {
     $target = "Build"
+}
+
+
+Write-Output "Output Dir: $outdir"
+Write-Output ""
+Write-Output "Product version: $releaseversion.$minorversion.`$(VS version)"
+Write-Output "File version: $version"
+foreach ($targetVs in $targetversions) {
+    Write-Output "Building for: $($targetVs.name)"
+}
+Write-Output ""
+
+if (-not $skipclean) {
+    if (Test-Path $outdir) {
+        "Cleaning previous release..."
+        rmdir -Recurse -Force $outdir -EA 0
+        if (-not $? -and (Get-ChildItem $outdir).Count -gt 0) {
+            Write-Error -EA:Stop "
+    Could not clean output directory: $outdir"
+        }
+    }
+    mkdir $outdir -EA 0 | Out-Null
+    if (-not $?) {
+        Write-Error -EA:Stop "
+    Could not make output directory: $outdir"
+    }
 }
 
 if ($scorch) {
@@ -328,8 +339,8 @@ try {
                     /p:VisualStudioVersion=$($targetVs.number) `
                     Release\Tests\dirs.proj
                 if ($LASTEXITCODE -gt 0) {
-                    Write-Error -EA:Stop "
-    Test build failed: $config"
+                    Write-Error -EA:Continue "Test build failed: $config"
+                    continue
                 }
             }
             
@@ -339,11 +350,10 @@ try {
                 /p:WixVersion=$version `
                 /p:VSTarget=$($targetVs.number) `
                 /p:VisualStudioVersion=$($targetVs.number) `
-                Release\Product\Setup\dirs.proj `
-                > $destdir\build.log
+                Release\Product\Setup\dirs.proj
             if ($LASTEXITCODE -gt 0) {
-                Write-Error -EA:Stop "
-    Build failed: $config"
+                Write-Error -EA:Continue "Build failed: $config"
+                continue
             }
             
             Copy-Item -force $bindir\*.msi $destdir\
@@ -408,7 +418,7 @@ try {
 
                 submit_symbols "PTVS$spacename" "$buildnumber $($targetvs.name)" "binaries" "$destdir\SignedBinaries" $symbol_contacts
                 
-                foreach ($cmd in (Get-Content $destdir\build.log) | Select-String "light.exe.+-out") {
+                foreach ($cmd in (Get-Content "BuildRelease.$config.$($targetVs.number).log") | Select-String "light.exe.+-out") {
                     $targetdir = [regex]::Match($cmd, 'Release\\Product\\Setup\\([^\\]+)').Groups[1].Value
 
                     Write-Output "Rebuilding MSI in $targetdir"
@@ -453,7 +463,10 @@ try {
         }
         
         foreach ($product in $products) {
-            Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename $($targetvs.name)$($product.outname2)" -Force
+            Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename $($targetvs.name)$($product.outname2)" -Force -EA:0
+            if (-not $?) {
+                Write-Output "Failed to copy $destdir\$($product.msi)"
+            }
         }
     }
     
