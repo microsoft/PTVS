@@ -54,15 +54,15 @@ namespace Microsoft.PythonTools.Hpc {
         }
 
         public void LoadSettings() {
-            _options.ApplicationArguments = ((IPythonProject2)_project).GetUnevaluatedProperty(ClusterOptions.AppArgumentsSetting);
-            _options.PythonInterpreter = ((IPythonProject2)_project).GetUnevaluatedProperty(ClusterOptions.AppCommandSetting);
+            _options.ApplicationArguments = _project.GetUnevaluatedProperty(ClusterOptions.AppArgumentsSetting);
+            _options.PythonInterpreter = _project.GetUnevaluatedProperty(ClusterOptions.AppCommandSetting);
             _options.PublishBeforeRun = _project.PublishBeforeRun();
-            _options.LoadRunEnvironment(new ClusterEnvironment(((IPythonProject2)_project).GetUnevaluatedProperty(ClusterOptions.RunEnvironmentSetting)));
-            _options.WorkingDir = ((IPythonProject2)_project).GetUnevaluatedProperty(ClusterOptions.WorkingDirSetting);
-            _options.MpiExecPath = ((IPythonProject2)_project).GetUnevaluatedProperty(ClusterOptions.MpiExecPathSetting);
-            _options.DeploymentDirectory = ((IPythonProject2)_project).GetUnevaluatedProperty(ClusterOptions.DeploymentDirSetting);
+            _options.LoadRunEnvironment(new ClusterEnvironment(_project.GetUnevaluatedProperty(ClusterOptions.RunEnvironmentSetting)));
+            _options.WorkingDir = _project.GetUnevaluatedProperty(ClusterOptions.WorkingDirSetting);
+            _options.MpiExecPath = _project.GetUnevaluatedProperty(ClusterOptions.MpiExecPathSetting);
+            _options.DeploymentDirectory = _project.GetUnevaluatedProperty(ClusterOptions.DeploymentDirSetting);
             _options.TargetPlatform = _project.TargetPlatform();
-            _options.InterpreterArguments = ((IPythonProject2)_project).GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
+            _options.InterpreterArguments = _project.GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
 
             _propGrid.SelectedObject = _options;
         }
