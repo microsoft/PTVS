@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+    <Fragment>
+        <Property Id="UpgradeVersionsDummyProperty" Value="0" />
+        <?if "$(var.VSTargetVersion)" = "12.0" ?>
+        <Upgrade Id="{6C78F23C-355A-4970-9713-6B2351B3CEFF}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1028" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{5CD9EC74-44C9-460D-B8E2-86E99468A0A4}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1029" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{5E237850-4FBB-4822-AAFD-8CDFC1E9434E}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1031" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{313AF19A-99DE-48F4-A9F5-65D932487E77}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1033" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{3FA526E1-28FE-448D-A2BE-EBB8B9A50DB6}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1036" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{E59FBD1A-8B36-40E5-9659-9A30DD1B910E}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1040" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{7A666A19-D8F7-426C-9500-8D8D8AA9E1F5}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1041" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{A79C8B74-DF77-4F09-A11F-034B80AE05CF}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1042" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{0D572245-F033-45CF-9238-4C1D57F42925}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1045" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{6EC39190-263F-4DB6-B5F6-7978DCC0332B}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1046" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{5A5A68B0-7F9B-43AC-90AE-44EDE6833804}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1049" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{EBBCBAA5-0453-48C4-B19C-610AA6EA3758}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_1055" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{2C6BBFE4-B39B-4489-AC99-92F9798E67DD}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_2052" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <Upgrade Id="{AC009493-D585-4FAF-99D7-84BB2183D77E}">
+            <UpgradeVersion Property="REMOVE_TEMPLATE_3082" Minimum="0.0.0.0" IncludeMinimum="yes" Maximum="$(var.MsiVersion)" IncludeMaximum="no" ExcludeLanguages="yes"/>
+        </Upgrade>
+        <?endif?>
+    </Fragment>
+</Wix>

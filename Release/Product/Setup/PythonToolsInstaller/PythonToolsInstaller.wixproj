@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="PythonToolsInstaller.wxs" />
+    <Compile Include="UpgradeCodes.wxs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="License.rtf" />
