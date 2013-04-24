@@ -169,7 +169,7 @@ namespace PythonToolsUITests {
             // Need to lock inside the worker and around the SaveAll command to ensure that AddSearchPath
             // has a chance to complete before saving the project. Otherwise, the search paths will never
             // show up.
-            ThreadPool.QueueUserWorkItem(x => { lock(app) app.Dte.ExecuteCommand("Project.AddSearchPath"); });
+            ThreadPool.QueueUserWorkItem(x => { lock(app) app.Dte.ExecuteCommand("Project.AddFolderToSearchPath"); });
 
             var dialog = new SelectFolderDialog(app.WaitForDialog());
             dialog.FolderName = TestData.GetPath(@"TestData\Outlining");
@@ -179,7 +179,7 @@ namespace PythonToolsUITests {
 
             var text = File.ReadAllText(TestData.GetPath(@"TestData\AddSearchPaths\AddSearchPaths.pyproj"));
             string actual = Regex.Match(text, @"<SearchPath>.*</SearchPath>", RegexOptions.Singleline).Value;
-            Assert.AreEqual("<SearchPath>..\\Outlining\\</SearchPath>", actual);
+            Assert.AreEqual("<SearchPath>..\\Outlining</SearchPath>", actual);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

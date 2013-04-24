@@ -719,7 +719,7 @@ namespace Microsoft.PythonTools.Project {
         /// Parses SearchPath property into a list of distinct absolute paths, preserving the order.
         /// </summary>
         protected IList<string> ParseSearchPath() {
-            string searchPath = this.ProjectMgr.GetProjectProperty(CommonConstants.SearchPath, true);
+            var searchPath = ProjectMgr.GetProjectProperty(CommonConstants.SearchPath, true);
             return ParseSearchPath(searchPath);
         }
 
@@ -727,26 +727,36 @@ namespace Microsoft.PythonTools.Project {
         /// Parses SearchPath string into a list of distinct absolute paths, preserving the order.
         /// </summary>
         protected IList<string> ParseSearchPath(string searchPath) {
-            List<string> parsedPaths = new List<string>();
+            var result = new List<string>();
+
             if (!string.IsNullOrEmpty(searchPath)) {
-                foreach (string path in searchPath.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    string resolvedPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
-                    if (!parsedPaths.Contains(resolvedPath)) {
-                        parsedPaths.Add(resolvedPath);
+                var seen = new HashSet<string>();
+                foreach (var path in searchPath.Split(';')) {
+                    if (string.IsNullOrEmpty(path)) {
+                        continue;
+                    }
+
+                    var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
+                    if (seen.Add(absPath)) {
+                        result.Add(absPath);
                     }
                 }
             }
-            return parsedPaths;
+
+            return result;
         }
 
         /// <summary>
         /// Saves list of paths back as SearchPath project property.
         /// </summary>
         private void SaveSearchPath(IList<string> value) {
-            string valueStr = "";
-            if (value != null && value.Count > 0) {
-                valueStr = value.Aggregate((joined, path) => joined + ';' + path);
-            }
+            var valueStr = string.Join(";", value.Select(path => {
+                var relPath = CommonUtils.GetRelativeFilePath(ProjectHome, path);
+                if (string.IsNullOrEmpty(relPath)) {
+                    relPath = ".";
+                }
+                return relPath;
+            }));
             this.ProjectMgr.SetProjectProperty(CommonConstants.SearchPath, valueStr);
         }
 
@@ -757,12 +767,11 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNull("newpath", newpath);
 
             IList<string> searchPath = ParseSearchPath();
-            var relativePath = CommonUtils.GetRelativeFilePath(ProjectHome, CommonUtils.GetAbsoluteFilePath(ProjectHome, newpath));
-            if (searchPath.Contains(newpath, StringComparer.OrdinalIgnoreCase) ||
-                searchPath.Contains(relativePath, StringComparer.OrdinalIgnoreCase)) {
+            var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, newpath);
+            if (searchPath.Contains(absPath, StringComparer.OrdinalIgnoreCase)) {
                 return;
             }
-            searchPath.Add(relativePath);
+            searchPath.Add(absPath);
             SaveSearchPath(searchPath);
         }
 
@@ -771,6 +780,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         internal void RemoveSearchPathEntry(string path) {
             IList<string> searchPath = ParseSearchPath();
+            var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
             if (searchPath.Remove(path)) {
                 SaveSearchPath(searchPath);
             }

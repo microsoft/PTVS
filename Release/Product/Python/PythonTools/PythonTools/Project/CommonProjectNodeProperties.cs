@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Returns/Sets the WorkingDirectory project property
+        /// Returns the SearchPath project property
         /// </summary>
         [Browsable(false)]
         public string SearchPath {

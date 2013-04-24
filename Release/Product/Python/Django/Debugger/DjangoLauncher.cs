@@ -116,7 +116,18 @@ namespace Microsoft.PythonTools.Django.Debugger {
                 return _realProject.Publish(options);
             }
 
+            public string GetUnevaluatedProperty(string name) {
+                switch (name) {
+                    case CommonConstants.CommandLineArguments:
+                    case "DjangoDebugging":
+                        return GetProperty(name);
+                }
+
+                return _realProject.GetUnevaluatedProperty(name);
+            }
+
             #endregion
+
         }
 
         #region IPythonLauncher Members

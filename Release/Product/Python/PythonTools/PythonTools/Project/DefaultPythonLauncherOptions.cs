@@ -53,17 +53,17 @@ namespace Microsoft.PythonTools.Project {
 
         public void LoadSettings() {
             _loadingSettings = true;
-            SearchPaths = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.SearchPath);
-            InterpreterPath = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.InterpreterPath);
-            Arguments = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
-            InterpreterArguments = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
+            SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
+            InterpreterPath = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterPath);
+            Arguments = _properties.GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
+            InterpreterArguments = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
             _loadingSettings = false;
         }
 
         public void ReloadSetting(string settingName) {
             switch (settingName) {
                 case CommonConstants.SearchPath:
-                    SearchPaths = ((IPythonProject2)_properties).GetUnevaluatedProperty(CommonConstants.SearchPath);
+                    SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
                     break;
             }
         }

@@ -36,7 +36,7 @@ using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    public class PythonProjectNode : CommonProjectNode, IPythonProject, IPythonProject2 {
+    public class PythonProjectNode : CommonProjectNode, IPythonProject {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -89,9 +89,7 @@ namespace Microsoft.PythonTools.Project {
                     dirToAdd = Path.GetDirectoryName(dirToAdd);
                 }
 
-                // Search paths are 'friendly' to ensure that they are never blank and don't end in
-                // a directory separator.
-                AddSearchPathEntry(CommonUtils.CreateFriendlyDirectoryPath(ProjectHome, dirToAdd));
+                AddSearchPathEntry(dirToAdd);
             }
 
             base.LinkFileAdded(filename);
@@ -669,11 +667,7 @@ namespace Microsoft.PythonTools.Project {
             return base.Publish(options, false);
         }
 
-        #endregion
-
-        #region IPythonProject2 Members
-
-        string IPythonProject2.GetUnevaluatedProperty(string name) {
+        string IPythonProject.GetUnevaluatedProperty(string name) {
             return base.GetUnevaluatedProperty(name);
         }
 

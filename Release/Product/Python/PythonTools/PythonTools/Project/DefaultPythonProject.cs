@@ -71,6 +71,12 @@ namespace Microsoft.PythonTools.Project {
             return false;
         }
 
+        string IPythonProject.GetUnevaluatedProperty(string name) {
+            return null;
+        }
+
         #endregion
+
+
     }
 }

@@ -332,7 +332,6 @@
     <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
     <Compile Include="PythonTools\Project\BuildDependency.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
-    <Compile Include="PythonTools\Project\IPythonProject2.cs" />
     <Compile Include="PythonTools\Project\PythonAssemblyReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonExtensionReferenceNode.cs" />
     <Compile Include="PythonTools\Project\IDEBuildLogger.cs" />

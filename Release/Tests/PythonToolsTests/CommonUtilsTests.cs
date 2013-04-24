@@ -250,12 +250,15 @@ namespace PythonToolsTests {
                 @"C:\a\b\c\d", @"C:\.dottedname", @"\.dottedname\",
                 @"C:\a\b\c\d", @"C:\..dottedname", @"\..dottedname\",
                 @"C:\a\b\c\d", @"C:\a\.dottedname", @"..\..\..\.dottedname\",
-                @"C:\a\b\c\d", @"C:\a\..dottedname", @"..\..\..\..dottedname\"
+                @"C:\a\b\c\d", @"C:\a\..dottedname", @"..\..\..\..dottedname\",
+
+                "C:\\a\\b\\", @"C:\a\b", @"",
+                @"C:\a\b", "C:\\a\\b\\", @""
                 )) {
                 var expected = testCase.Item3;
                 var actual = CommonUtils.GetRelativeDirectoryPath(testCase.Item1, testCase.Item2);
 
-                Assert.AreEqual(expected, actual);
+                Assert.AreEqual(expected, actual, string.Format("From {0} to {1}", testCase.Item1, testCase.Item2));
             }
         }
 
@@ -284,12 +287,21 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/share/path", @"ftp://me@example.com/share/Path/subpath/file.exe", @"../Path/subpath/file.exe",
                 @"ftp://me@example.com/share/path/subpath", @"ftp://me@example.com/share/path/othersubpath/file.exe", @"../othersubpath/file.exe",
                 @"ftp://me@example.com/share/path/subpath", @"ftp://me@example.com/share/Path/othersubpath/file.exe", @"../../Path/othersubpath/file.exe",
-                @"ftp://me@example.com/path", @"ftp://me@example.com/otherpath/file.exe", @"/otherpath/file.exe"
+                @"ftp://me@example.com/path", @"ftp://me@example.com/otherpath/file.exe", @"/otherpath/file.exe",
+
+                @"C:\a\b", "C:\\a\\b\\", @"",
+                // This is the expected behavior for GetRelativeFilePath
+                // because the 'b' in the second part is assumed to be a file
+                // and hence may be different to the directory 'b' in the first
+                // part.
+                // GetRelativeDirectoryPath returns an empty string, because it
+                // assumes that both paths are directories.
+                "C:\\a\\b\\", @"C:\a\b", @"..\b"
                 )) {
                 var expected = testCase.Item3;
                 var actual = CommonUtils.GetRelativeFilePath(testCase.Item1, testCase.Item2);
 
-                Assert.AreEqual(expected, actual);
+                Assert.AreEqual(expected, actual, string.Format("From {0} to {1}", testCase.Item1, testCase.Item2));
             }
         }
 

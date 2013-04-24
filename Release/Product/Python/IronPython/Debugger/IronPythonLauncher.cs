@@ -459,17 +459,7 @@ namespace Microsoft.IronPythonTools.Debugger {
         private void SetupEnvironment(StringDictionary environment) {
             if (_project != null) {
                 //IronPython passes search path via IRONPYTHONPATH environment variable
-                string searchPath = _project.GetProperty(CommonConstants.SearchPath);
-                if (!string.IsNullOrEmpty(searchPath)) {
-                    var paths = searchPath.Split(';');
-                    for (int i = 0; i < paths.Length; i++) {
-                        if (!Path.IsPathRooted(paths[i])) {
-                            paths[i] = Path.Combine(_project.ProjectDirectory, paths[i]);
-                        }
-                    }
-
-                    environment["IRONPYTHONPATH"] = string.Join(";", paths);
-                }
+                environment["IRONPYTHONPATH"] = string.Join(";", _project.GetSearchPaths());
             }
         }
     }

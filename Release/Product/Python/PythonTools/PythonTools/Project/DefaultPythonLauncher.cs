@@ -232,17 +232,9 @@ namespace Microsoft.PythonTools.Project {
         /// Sets up environment variables before starting the project.
         /// </summary>
         private void SetupEnvironment(StringDictionary environment) {
-            string searchPath = _project.GetProperty(CommonConstants.SearchPath);
             string pathEnvVar = _project.GetInterpreterFactory().Configuration.PathEnvironmentVariable;
-            if (!String.IsNullOrWhiteSpace(searchPath) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
-                var paths = searchPath.Split(';');
-                for (int i = 0; i < paths.Length; i++) {
-                    if (!Path.IsPathRooted(paths[i])) {
-                        paths[i] = CommonUtils.GetAbsoluteDirectoryPath(_project.ProjectDirectory, paths[i]);
-                    }
-                }
-
-                environment[pathEnvVar] = string.Join(";", paths);
+            if (!String.IsNullOrWhiteSpace(pathEnvVar)) {
+                environment[pathEnvVar] = string.Join(";", _project.GetSearchPaths());
             }
         }
 

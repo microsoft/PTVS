@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
@@ -81,5 +82,42 @@ namespace Microsoft.PythonTools.Project {
         /// 
         /// </summary>
         bool Publish(PublishProjectOptions options);
+
+        /// <summary>
+        /// Gets a property for the project.  Users can get/set their own properties, also these properties
+        /// are available:
+        /// 
+        ///     CommandLineArguments -> arguments to be passed to the debugged program.
+        ///     InterpreterPath  -> gets a configured directory where the interpreter should be launched from.
+        ///     IsWindowsApplication -> determines whether or not the application is a windows application (for which no console window should be created)
+        ///     
+        /// The returned property does not have any MSBuild syntax evaluated.
+        /// </summary>
+        /// <param name="name">The name of the property.</param>
+        /// <returns>The property value without evaluating any MSBuild syntax.</returns>
+        /// <remarks>New in 1.5.</remarks>
+        string GetUnevaluatedProperty(string name);
+    }
+
+    public static class IPythonProjectExtensions {
+        /// <summary>
+        /// Returns a sequence of absolute search paths for the provided project.
+        /// </summary>
+        public static IEnumerable<string> GetSearchPaths(this IPythonProject project) {
+            var paths = project.GetProperty(CommonConstants.SearchPath);
+            if (!string.IsNullOrEmpty(paths)) {
+                var seen = new HashSet<string>();
+                foreach (var path in paths.Split(';')) {
+                    if (string.IsNullOrEmpty(path)) {
+                        continue;
+                    }
+
+                    var absPath = CommonUtils.GetAbsoluteFilePath(project.ProjectDirectory, path);
+                    if (seen.Add(absPath)) {
+                        yield return absPath;
+                    }
+                }
+            }
+        }
     }
 }

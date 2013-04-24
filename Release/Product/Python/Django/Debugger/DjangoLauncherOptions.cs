@@ -64,21 +64,21 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
         public void LoadSettings() {
             _loadingSettings = true;
-            SearchPaths = _properties.GetProperty(CommonConstants.SearchPath);
-            InterpreterPath = _properties.GetProperty(CommonConstants.InterpreterPath);
-            Arguments = _properties.GetProperty(CommonConstants.CommandLineArguments);
-            SettingsModule = _properties.GetProperty(SettingModulesSetting);
-            _interpArgs.Text = _properties.GetProperty(CommonConstants.InterpreterArguments);
+            SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
+            InterpreterPath = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterPath);
+            Arguments = _properties.GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
+            SettingsModule = _properties.GetUnevaluatedProperty(SettingModulesSetting);
+            _interpArgs.Text = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
             _loadingSettings = false;
         }
 
         public void ReloadSetting(string settingName) {
             switch (settingName) {
                 case CommonConstants.SearchPath:
-                    SearchPaths = _properties.GetProperty(CommonConstants.SearchPath);
+                    SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
                     break;
                 case CommonConstants.InterpreterPath:
-                    InterpreterPath = _properties.GetProperty(CommonConstants.InterpreterPath);
+                    InterpreterPath = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterPath);
                     break;
             }
         }
