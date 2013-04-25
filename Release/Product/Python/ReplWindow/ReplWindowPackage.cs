@@ -40,10 +40,10 @@ namespace Microsoft.VisualStudio.Repl {
     [Description("Visual Studio Interactive Window")]
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideKeyBindingTable(ReplWindow.TypeGuid, 200)]        // Resource ID: "Interactive Console"
-    [ProvideToolWindow(typeof(ReplWindow), MultiInstances = true)]
+    [ProvideToolWindow(typeof(ReplWindow), Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow, MultiInstances = true)]
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]
-    [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
+    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
+    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
     [Guid(GuidList.guidReplWindowPkgString)]
     internal sealed class ReplWindowPackage : Package, IVsToolWindowFactory {
         int IVsToolWindowFactory.CreateToolWindow(ref Guid toolWindowType, uint id) {
