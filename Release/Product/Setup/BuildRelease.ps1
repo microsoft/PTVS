@@ -270,7 +270,7 @@ if (-not $targetVersions) {
 if ($skipdebug -or $release) {
     $targetConfigs = ("Release")
 } else {
-    $targetConfigs = ("Release", "Debug")
+    $targetConfigs = ("Debug", "Release")
 }
 
 $target = "Rebuild"
@@ -290,11 +290,12 @@ Write-Output ""
 
 if (-not $skipclean) {
     if (Test-Path $outdir) {
-        "Cleaning previous release..."
+        Write-Output "Cleaning previous release in $outdir"
         rmdir -Recurse -Force $outdir -EA 0
-        if (-not $? -and (Get-ChildItem $outdir).Count -gt 0) {
-            Write-Error -EA:Stop "
-    Could not clean output directory: $outdir"
+        while (Test-Path $outdir) {
+            Write-Output "Failed to clean release. Retrying in five seconds. (Press Ctrl+C to abort)"
+            Sleep -Seconds 5
+            rmdir -Recurse -Force $outdir -EA 0
         }
     }
     mkdir $outdir -EA 0 | Out-Null
@@ -475,6 +476,7 @@ try {
     }
     
     if (-not $skipcopy) {
+        Write-Output "Copying source files"
         robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing obj | Out-Null
     }
     $successful = $true
@@ -486,6 +488,10 @@ try {
         }
     } elseif (-not $asmverfileUseBackup) {
         tf undo /noprompt $asmverfile
+    }
+    
+    if (-not (Get-Content $asmverfile) -match '"4100.00"') {
+        Write-Error "Failed to undo $asmverfile"
     }
     
     Pop-Location

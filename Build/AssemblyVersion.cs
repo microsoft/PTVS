@@ -23,9 +23,9 @@ class AssemblyVersionInfo {
     // Servicing branches should retain the value
     public const string MinorVersion = "1";
 
-    // This version should never change; BuildRelease.ps1 replaces it with a
-    // generated value.
-    public const string BuildNumber = "10419.00";
+    // This version should never change from "4100.00"; BuildRelease.ps1
+    // will replace it with a generated value.
+    public const string BuildNumber = "4100.00";
 
 #if DEV10
     public const string VSMajorVersion = "10";
